@@ -15,7 +15,7 @@ export function materializeStudy(study,currentCase,{normalResult='Sin alteracion
  const native=(currentCase?.studies||[]).find(s=>s.id===study?.id);
  const s=native||study;
  if(!s)return null;
- return {...s,result:native?.result||normalResult,nativeResult:!!native};
+ return {...s,result:native?.result ?? normalResult,nativeResult:!!native};
 }
 export function studyReadyAt(now,study){
  const gameHours=Math.max(1,Number(study?.gameHours ?? study?.delayHours ?? study?.delay ?? 1));
