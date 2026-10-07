@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {FrameScheduler} from './frame-scheduler.js';
+const s=new FrameScheduler({stepHz:60,maxCatchUpSteps:5,mobileRenderHz:30});
+s.reset(0);let sim=0,maint=0,render=0;
+for(let t=16;t<=160;t+=16)s.tick(t,{simulate:()=>sim++,maintain:()=>maint++,render:()=>render++,isMobile:true});
+assert(sim>=8&&sim<=10);
+assert.equal(maint,10);
+assert(render>=4&&render<=5);
+const before=sim;s.tick(1000,{simulate:()=>sim++,maintain:()=>maint++,render:()=>render++,isMobile:true});
+assert(sim-before<=5,'catch-up must be bounded');
+console.log('frame scheduler OK',{sim,maint,render});
