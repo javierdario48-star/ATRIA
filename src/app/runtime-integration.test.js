@@ -1,9 +1,6 @@
-import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import assert from 'node:assert/strict';import fs from'node:fs';
 const b=fs.readFileSync('build.js','utf8');
-assert.match(b,/maxCatchUp:5/);
-assert.match(b,/updateSimulation\(0\);mentorTick\(\);qaBotTick\(now\)/);
-assert.match(b,/sim\.gameMinute\+=step\*0\.12/);
-assert.match(b,/mobile\(\)\?30:15/);
-assert(!/task13 social voice disabled/.test(b),'voice isolation hack must be gone');
-console.log('runtime integration contract OK');
+assert.match(b,/expected stable 4\.8\.6 baseline/,'build must pin the verified golden master');
+assert.doesNotMatch(b,/updateFrame\s*=|optimizedFrame|maxCatchUp:5|task13 social voice disabled/,'build must not patch runtime behavior');
+assert.match(b,/task\\d\+\\\.js/,'build must preserve external task scripts');
+console.log('clean build boundary OK');
