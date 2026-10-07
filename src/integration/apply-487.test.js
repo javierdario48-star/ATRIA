@@ -22,4 +22,10 @@ assert.match(out,/Conectando tu perfil automáticamente/,'People should represen
 assert.match(out,/ensureSession:async\(\)=>\{const data=await acquireSession\(\);await refresh\(\);return data\.user\}/,'social module must expose one idempotent session owner');
 assert.match(out,/await nsSocial\.ensureSession\(\)/,'lobby bootstrap must use the shared session owner');
 assert.doesNotMatch(out,/nsSocial\?\.register\?\.\(\)\.then/,'People must not race a second registration caller');
+assert.equal((out.match(/window\.nsLobbyRtcPulse=function/g)||[]).length,1,'integrated artifact must have exactly one RTC pulse owner');
+assert.equal((out.match(/ensureSession:async/g)||[]).length,1,'integrated artifact must have exactly one exported social session owner');
+assert.match(out,/lastRtcSend>=220/,'RTC state sends must be throttled');
+assert.match(out,/lastDiscovery>=2500/,'RTC discovery must be bounded');
+assert.match(out,/bufferedAmount\|\|0\)>65536/,'shared-mode data channel must apply backpressure');
+assert.doesNotMatch(out,/sesión social vencida/i,'integrated artifact must not expose expired-social-session UX');
 console.log('4.8.7 source integration OK');
