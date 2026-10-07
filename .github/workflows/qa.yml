@@ -4,7 +4,7 @@ on:
     branches: [main, atria-4.8.7-qa]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   architecture-and-build:
     runs-on: ubuntu-latest
@@ -46,6 +46,20 @@ jobs:
           fs.writeFileSync(dir+'/MANIFEST.json',JSON.stringify(manifest,null,2)+'\n');
           console.log(manifest);
           NODE
+      - name: Persist golden master in repository when absent
+        run: |
+          rm -rf vendor/atria-4.8.6
+          mkdir -p vendor/atria-4.8.6
+          cp golden-master-4.8.6/* vendor/atria-4.8.6/
+          if git diff --quiet -- vendor/atria-4.8.6 && ! git ls-files --others --exclude-standard vendor/atria-4.8.6 | grep -q .; then
+            echo "Golden master already current"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add vendor/atria-4.8.6
+            git commit -m "Persist byte-faithful ATRIA 4.8.6 golden master"
+            git push origin HEAD:atria-4.8.7-qa
+          fi
       - name: Upload golden master capture
         uses: actions/upload-artifact@v4
         with:
