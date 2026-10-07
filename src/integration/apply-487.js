@@ -38,6 +38,21 @@ export function apply487(html){
  const activationAt=s.indexOf(activationText);if(activationAt<0)throw new Error('integration anchor missing: people-auto-presence');
  const activationStart=s.lastIndexOf("else if(!s.user){",activationAt),activationEnd=s.indexOf("}\n else{",activationAt);if(activationStart<0||activationEnd<0)throw new Error('integration anchor malformed: people-auto-presence');
  s=s.slice(0,activationStart)+"else if(!s.user){html+='<div class=\"nsPeopleOffline\">Conectando tu perfil automáticamente…</div>';nsSocial?.ensureSession?.().then(()=>{if(document.getElementById('nsPeopleModal')?.classList.contains('show'))openPeople()}).catch(()=>{})}"+s.slice(activationEnd+1);
+ // Smooth the legacy 220 ms guard-network snapshots at render cadence instead of drawing raw packet positions.
+ const rawRemote=`function csDrawRemote(){
+ const r=csCoop.remote;if(!csCoop.connected||!r||!C||r.caseId!==C.id)return;
+ const key=r.coat?'coat':(r.color||'navy'),im=csVariantImgs[key]||csVariantImgs.navy;if(!im?.complete)return;
+ const actor={x:r.x||0,y:r.y||0,dir:r.dir||'S',moving:!!r.moving,walkPhase:r.walkPhase||0};drawSprite(im,actor,60);csDrawNameplate(actor,r.name||'Compañero',r.level||1,true)
+}`;
+ const smoothRemote=`let csRemotePose=null;
+function csRemoteVisual(r,now=performance.now()){if(!csRemotePose){csRemotePose={x:Number(r.x)||0,y:Number(r.y)||0,fromX:Number(r.x)||0,fromY:Number(r.y)||0,toX:Number(r.x)||0,toY:Number(r.y)||0,at:now}}if(csRemotePose.toX!==(Number(r.x)||0)||csRemotePose.toY!==(Number(r.y)||0)){const p=csRemoteVisualSample(now);csRemotePose={x:p.x,y:p.y,fromX:p.x,fromY:p.y,toX:Number(r.x)||0,toY:Number(r.y)||0,at:now}}return csRemoteVisualSample(now)}
+function csRemoteVisualSample(now=performance.now()){const p=csRemotePose;if(!p)return{x:0,y:0};const t=Math.max(0,Math.min(1,(now-p.at)/220)),e=t*t*(3-2*t);return{x:p.fromX+(p.toX-p.fromX)*e,y:p.fromY+(p.toY-p.fromY)*e}}
+function csDrawRemote(){
+ const r=csCoop.remote;if(!csCoop.connected||!r||!C||r.caseId!==C.id){csRemotePose=null;return}
+ const key=r.coat?'coat':(r.color||'navy'),im=csVariantImgs[key]||csVariantImgs.navy;if(!im?.complete)return;
+ const p=csRemoteVisual(r),actor={x:p.x,y:p.y,dir:r.dir||'S',moving:!!r.moving,walkPhase:r.walkPhase||0};drawSprite(im,actor,60);csDrawNameplate(actor,r.name||'Compañero',r.level||1,true)
+}`;
+ s=replaceOnce(s,rawRemote,smoothRemote,'guard-remote-interpolation');
  const oldPeer=`function csSendPeerState(){\n if(!csCoop.dc||csCoop.dc.readyState!=='open'||!csProfile)return;`;
  const newPeer=`function csSendPeerState(){\n if(!csCoop.dc||csCoop.dc.readyState!=='open'||!csProfile)return;\n if((csCoop.dc.bufferedAmount||0)>65536)return;`;
  s=replaceOnce(s,oldPeer,newPeer,'peer-backpressure');
