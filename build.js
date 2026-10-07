@@ -17,6 +17,7 @@ addEventListener('error',e=>fatal(e.error||e.message));addEventListener('unhandl
 const optimizedFrame=function(now){
  if(perfLast!=null&&now-perfLast>50)perfLong++;perfLast=now;perfFrames++;if(now-perfWindowStart>=2000){window.__ATRIA_PERF={fps:Math.round(perfFrames*1000/(now-perfWindowStart)),longFrames:perfLong,at:Date.now()};perfFrames=0;perfLong=0;perfWindowStart=now}
  if(runtimeFailed){updateFrame=legacyFrame;return legacyFrame(now)}
+ if(typeof C==='undefined'||!C||editorOpen){updateFrame=legacyFrame;acc=0;return legacyFrame(now)}
  try{
   if(lastFrame==null)lastFrame=now;
   const elapsed=Math.max(0,Math.min(.25,(now-lastFrame)/1000));lastFrame=now;acc+=elapsed;const step=1/60;
@@ -38,7 +39,19 @@ const optimizedFrame=function(now){
  }catch(e){runtimeFailed=true;window.__ATRIA_ARCH&&(window.__ATRIA_ARCH.fallback='legacy');console.error('[ATRIA] optimized loop failed; reverting to legacy',e);updateFrame=legacyFrame;return legacyFrame(now)}
  requestAnimationFrame(optimizedFrame);
 };
-updateFrame=optimizedFrame;
+// Never replace the boot/lobby loop. Arm the optimized guard loop only after a clinical case exists.
+const __armGuardLoop=()=>{
+ try{
+  if(runtimeFailed)return;
+  if(typeof C!=='undefined'&&C&&!editorOpen&&updateFrame===legacyFrame){
+    lastFrame=performance.now();acc=0;updateFrame=optimizedFrame;
+    window.__ATRIA_ARCH.guardOptimized=true;
+    console.info('[ATRIA] optimized loop armed for clinical guard');
+  }
+ }catch(e){console.warn('[ATRIA] guard loop not armed',e)}
+};
+const __armTimer=setInterval(__armGuardLoop,500);
+
 window.__ATRIA_ARCH={version:1,mode:'bounded-fixed-step',maxCatchUp:5,mobileRenderMs:30};
 setTimeout(()=>{try{const canvas=document.querySelector('canvas'),chat=document.getElementById('chatDock'),selector=document.getElementById('selector');if(!canvas||!chat||!selector)throw new Error('boot surfaces incomplete');window.__ATRIA_ARCH.bootReady=true;console.info('[ATRIA] boot surfaces ready')}catch(e){fatal(e)}},1800);
 try{if(typeof csSendPeerState==='function'){const __sendPeerState=csSendPeerState;csSendPeerState=function(){const dc=typeof csCoop!=='undefined'?csCoop?.dc:null;if(dc&&((dc.bufferedAmount||0)>65536))return false;return __sendPeerState.apply(this,arguments)};window.__ATRIA_ARCH.networkBackpressure=true}}catch(e){console.warn('[ATRIA] optional network backpressure unavailable',e)}
