@@ -14,11 +14,13 @@ for(const src of [...new Set(scripts)]){
  await fs.writeFile(out+'/'+u.pathname.split('/').pop(),await r.text());
 }
 
-// Diagnostic only: report exact common clinical-loop signatures from current public 4.8.6.
-const diagNeedles=["updateOrders();updateHud()","updateHud();if(floatMode","updateSimulation(step);mentorTick();qaBotTick(now)","updateSimulation(step);mentorTick()"];
-const diag={};
-for(const needle of diagNeedles){const i=html.indexOf(needle);diag[needle]={count:html.split(needle).length-1,context:i>=0?html.slice(Math.max(0,i-500),i+needle.length+700):null};}
-await fs.writeFile(out+'/diag.json',JSON.stringify(diag,null,2));
+// Clinical guard performance: keep 60Hz physics/physiology, throttle only expensive UI maintenance.
+{
+ const re=/updateOrders\(\);\s*updateHud\(\)/g;
+ const matches=[...html.matchAll(re)];
+ if(matches.length!==1) throw new Error('clinical UI pair match count '+matches.length);
+ html=html.replace(re,"const __uiNow=performance.now();if(__uiNow-(sim.lastOrderUiUpdate||0)>125){sim.lastOrderUiUpdate=__uiNow;updateOrders()}if(__uiNow-(sim.lastHudUpdate||0)>250){sim.lastHudUpdate=__uiNow;updateHud()}");
+}
 
 await fs.writeFile(out+'/index.html',html);
 console.log('ATRIA diagnostic mirror: untouched public 4.8.6; tasks copied:',scripts.length);
