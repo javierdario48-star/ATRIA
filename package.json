@@ -1,1 +1,10 @@
-{"name":"atria-487-candidate","private":true,"type":"module","scripts":{"build":"node build.js"}}
+{
+  "name": "atria-487-candidate",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node src/app/frame-scheduler.test.js",
+    "check": "npm test && npm run build"
+  }
+}
