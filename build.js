@@ -14,12 +14,11 @@ for(const src of [...new Set(scripts)]){
  await fs.writeFile(out+'/'+u.pathname.split('/').pop(),await r.text());
 }
 
-// Performance fix limited to the common clinical simulation loop.
-// Keep 60 Hz physics/physiology; throttle DOM/order maintenance that does not need per-frame execution.
-const simFrom="updateOrders();updateHud();if(floatMode==='monitor'&&performance.now()-(sim.lastMonitorDomUpdate||0)>180)";
-const simTo="const __uiNow=performance.now();if(__uiNow-(sim.lastOrderUiUpdate||0)>125){sim.lastOrderUiUpdate=__uiNow;updateOrders()}if(__uiNow-(sim.lastHudUpdate||0)>250){sim.lastHudUpdate=__uiNow;updateHud()}if(floatMode==='monitor'&&__uiNow-(sim.lastMonitorDomUpdate||0)>180)";
+// Performance fix limited to clinical non-physics maintenance.
+const simFrom="updateOrders();updateHud()";
+const simTo="const __uiNow=performance.now();if(__uiNow-(sim.lastOrderUiUpdate||0)>125){sim.lastOrderUiUpdate=__uiNow;updateOrders()}if(__uiNow-(sim.lastHudUpdate||0)>250){sim.lastHudUpdate=__uiNow;updateHud()}";
 const simCount=html.split(simFrom).length-1;
-if(simCount!==1) throw new Error('clinical loop target match count '+simCount);
+if(simCount!==1) throw new Error('clinical maintenance target match count '+simCount);
 html=html.replace(simFrom,simTo);
 
 await fs.writeFile(out+'/index.html',html);
