@@ -23,7 +23,7 @@ rep("if(rim?.complete)drawSprite(rim,{x:p.x,y:p.y,dir:p.dir||'S',moving:!!p.movi
 rep("if(!state.demo&&t-state.lastStateSent>280)sendState();if(!state.demo&&!state.polling&&(state._lastPoll||0)+650<t)",
 "if(!state.demo&&t-state.lastStateSent>(player.moving?110:220))sendState();if(!state.demo&&!state.polling&&(state._lastPoll||0)+180<t)",
 'lobby cadence');
-html=html.replace(/version:'4\.8\.6'/g,"version:'4.8.7'").replace(/4\.8\.6/g,'4.8.7');
+{const n=html.split("version:'4.8.6'").length-1;if(n!==1)throw new Error('version marker count '+n);html=html.replace("version:'4.8.6'","version:'4.8.7'");}
 const scripts=[...html.matchAll(/<script[^>]+src=["'](\/task\d+\.js[^"']*)["']/g)].map(m=>m[1]);
 for(const src of [...new Set(scripts)]){const u=new URL(src,BASE);const body=await (await fetch(u)).text();await fs.writeFile(out+'/'+u.pathname.split('/').pop(),body)}
 await fs.writeFile(out+'/index.html',html);
