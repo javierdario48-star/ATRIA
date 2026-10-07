@@ -10,4 +10,10 @@ assert.equal(out.includes('s.delay*1000'),false,'legacy seconds-scale study timi
 assert.equal(src.includes('universalFallback:true'),false,'golden master must remain immutable');
 assert.doesNotMatch(out,/Radio de voz pendiente/,'candidate must not intentionally disable existing WebRTC voice transport');
 assert.match(src,/Radio de voz pendiente/,'golden master remains unchanged while candidate removes the disable gate');
+assert.match(out,/atria-boot-paint-guard/,'first paint must be guarded before legacy HUD can flash');
+assert.match(out,/classList\.add\('atriaBootReady'\)/,'boot guard must release only after splash creation');
+assert.doesNotMatch(out,/Reconectando tu perfil/,'automatic social bootstrap must not expose legacy re-registration failure state');
+assert.match(out,/window\.nsLobbyRtcPulse=function/,'RTC must be scheduled by the primary lobby lifecycle');
+assert.doesNotMatch(out,/setTimeout\(discovery,250\);requestAnimationFrame\(animate\)/,'duplicate permanent RTC RAF must be removed');
+assert.match(out,/\+2500<t/,'social refresh must be bounded in the lobby scheduler');
 console.log('4.8.7 source integration OK');
