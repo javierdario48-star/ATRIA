@@ -14,12 +14,12 @@ for(const src of [...new Set(scripts)]){
  await fs.writeFile(out+'/'+u.pathname.split('/').pop(),await r.text());
 }
 
-// Clinical guard performance: keep 60Hz physics/physiology, throttle only expensive UI maintenance.
+// Guard performance: waiting-patient maintenance never needs frame-rate polling.
 {
- const re=/updateOrders\(\);\s*updateHud\(\)/g;
+ const re=/if\(shiftSession\?\.active\)announceWaitingPatient\(\)/g;
  const matches=[...html.matchAll(re)];
- if(matches.length!==1) throw new Error('clinical UI pair match count '+matches.length);
- html=html.replace(re,"const __uiNow=performance.now();if(__uiNow-(sim.lastOrderUiUpdate||0)>125){sim.lastOrderUiUpdate=__uiNow;updateOrders()}if(__uiNow-(sim.lastHudUpdate||0)>250){sim.lastHudUpdate=__uiNow;updateHud()}");
+ if(matches.length!==1) throw new Error('waiting-patient tick match count '+matches.length);
+ html=html.replace(re,"if(shiftSession?.active&&performance.now()-(sim.__lastWaitingTick||0)>250){sim.__lastWaitingTick=performance.now();announceWaitingPatient()}");
 }
 
 await fs.writeFile(out+'/index.html',html);
