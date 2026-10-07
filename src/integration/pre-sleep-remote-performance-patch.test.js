@@ -20,8 +20,10 @@ context.csCoop.dc.bufferedAmount=0;context.player.moving=false;now=330;intervalC
 now=500;intervalCb();assert.equal(audio,1,'audio maintenance should run at 500ms cadence');
 
 now=0;context.csDrawRemote();remote.x=100;remote.y=50;now=65;context.csDrawRemote();
-assert.ok(drawSeen.at(-1).x>0&&drawSeen.at(-1).x<100,'remote x must interpolate rather than teleport');
-assert.ok(drawSeen.at(-1).y>0&&drawSeen.at(-1).y<50,'remote y must interpolate rather than teleport');
+assert.equal(drawSeen.at(-1).x,0,'first frame after a new sample must not teleport');
+now=100;context.csDrawRemote();
+assert.ok(drawSeen.at(-1).x>0&&drawSeen.at(-1).x<100,'subsequent frame must interpolate remote x');
+assert.ok(drawSeen.at(-1).y>0&&drawSeen.at(-1).y<50,'subsequent frame must interpolate remote y');
 assert.equal(remote.x,100,'raw remote x must be restored after draw');
 assert.equal(remote.y,50,'raw remote y must be restored after draw');
 now=300;context.csDrawRemote();assert.equal(Math.round(drawSeen.at(-1).x),100);
