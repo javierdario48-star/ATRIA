@@ -31,3 +31,25 @@ jobs:
       - name: Syntax-check generated task scripts
         run: |
           for f in out/task*.js; do [ -e "$f" ] || continue; node --check "$f"; done
+      - name: Package byte-faithful 4.8.6 capture
+        run: |
+          mkdir -p golden-master-4.8.6
+          cp out/index.html golden-master-4.8.6/
+          cp out/task*.js golden-master-4.8.6/ 2>/dev/null || true
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import crypto from 'node:crypto';
+          const dir='golden-master-4.8.6';
+          const files=fs.readdirSync(dir).sort();
+          const manifest={version:'4.8.6',capturedFrom:'https://night-shift-clinical.vercel.app',files:{}};
+          for(const f of files){const b=fs.readFileSync(dir+'/'+f);manifest.files[f]={bytes:b.length,sha256:crypto.createHash('sha256').update(b).digest('hex')}}
+          fs.writeFileSync(dir+'/MANIFEST.json',JSON.stringify(manifest,null,2)+'\n');
+          console.log(manifest);
+          NODE
+      - name: Upload golden master capture
+        uses: actions/upload-artifact@v4
+        with:
+          name: atria-golden-master-4.8.6
+          path: golden-master-4.8.6/
+          retention-days: 30
+          if-no-files-found: error
