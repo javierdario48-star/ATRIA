@@ -21,8 +21,8 @@ export function parseNaturalStudyOrders(input,caseStudies,catalog){
  for(const m of matches){
   if(seen.has(m.study.id))continue;
   if(Array.from({length:m.end-m.start},(_,i)=>m.start+i).some(i=>occupied.has(i)))continue;
-  selected.push(m.study);seen.add(m.study.id);
+  selected.push(m);seen.add(m.study.id);
   for(let i=m.start;i<m.end;i++)occupied.add(i);
  }
- return selected;
+ return selected.sort((a,b)=>a.start-b.start).map(m=>m.study);
 }
