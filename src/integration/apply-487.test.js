@@ -16,4 +16,7 @@ assert.doesNotMatch(out,/Reconectando tu perfil/,'automatic social bootstrap mus
 assert.match(out,/window\.nsLobbyRtcPulse=function/,'RTC must be scheduled by the primary lobby lifecycle');
 assert.doesNotMatch(out,/setTimeout\(discovery,250\);requestAnimationFrame\(animate\)/,'duplicate permanent RTC RAF must be removed');
 assert.match(out,/\+2500<t/,'social refresh must be bounded in the lobby scheduler');
+assert.doesNotMatch(out,/Activa una vez tu perfil social/,'People must never require manual social activation');
+assert.doesNotMatch(out,/>Activar<\/button>/,'manual social activation control must be removed');
+assert.match(out,/Conectando tu perfil automáticamente/,'People should represent automatic presence bootstrap');
 console.log('4.8.7 source integration OK');
