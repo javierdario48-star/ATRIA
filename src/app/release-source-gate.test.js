@@ -1,0 +1,4 @@
+import assert from'node:assert/strict';import fs from'node:fs';
+const required=['src/app/frame-scheduler.js','src/app/lifecycle.js','src/app/boot-guard.js','src/clinical/dialogue-router.js','src/clinical/physical-exam.js','src/clinical/treatment-state.js','src/clinical/history.js','src/clinical/patient-state.js','src/clinical/mentor-policy.js','src/clinical/study-contract.js','src/clinical/study-registry.js','src/social/friends-store.js','src/social/network-scheduler.js','src/social/room-state.js','src/social/remote-motion.js','src/social/competitive-clock.js','src/social/voice-session.js','src/render/adaptive-policy.js','src/ui/mobile-chat.js'];
+for(const p of required)assert(fs.existsSync(p),p+' missing');
+const build=fs.readFileSync('build.js','utf8');assert(!/replace\s*\(/.test(build),'release build must not patch production runtime strings');assert(!/task13 social voice disabled/.test(build));console.log('release source gate OK',{modules:required.length});
