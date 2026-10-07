@@ -41,6 +41,7 @@ const optimizedFrame=function(now){
 updateFrame=optimizedFrame;
 window.__ATRIA_ARCH={version:1,mode:'bounded-fixed-step',maxCatchUp:5,mobileRenderMs:30};
 setTimeout(()=>{try{const canvas=document.querySelector('canvas'),chat=document.getElementById('chatDock'),selector=document.getElementById('selector');if(!canvas||!chat||!selector)throw new Error('boot surfaces incomplete');window.__ATRIA_ARCH.bootReady=true;console.info('[ATRIA] boot surfaces ready')}catch(e){fatal(e)}},1800);
+try{if(typeof csSendPeerState==='function'){const __sendPeerState=csSendPeerState;csSendPeerState=function(){const dc=typeof csCoop!=='undefined'?csCoop?.dc:null;if(dc&&((dc.bufferedAmount||0)>65536))return false;return __sendPeerState.apply(this,arguments)};window.__ATRIA_ARCH.networkBackpressure=true}}catch(e){console.warn('[ATRIA] optional network backpressure unavailable',e)}
 console.info('[ATRIA] architecture runtime active',window.__ATRIA_ARCH);
 })();
 </script>`;
