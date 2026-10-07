@@ -14,12 +14,16 @@ for(const src of [...new Set(scripts)]){
  await fs.writeFile(out+'/'+u.pathname.split('/').pop(),await r.text());
 }
 
-// Guard performance: waiting-patient maintenance never needs frame-rate polling.
+// Guard performance patch: preserve 60Hz simulation; reduce mobile render/layout pressure.
 {
- const re=/if\(shiftSession\?\.active\)announceWaitingPatient\(\)/g;
- const matches=[...html.matchAll(re)];
- if(matches.length!==1) throw new Error('waiting-patient tick match count '+matches.length);
- html=html.replace(re,"if(shiftSession?.active&&performance.now()-(sim.__lastWaitingTick||0)>250){sim.__lastWaitingTick=performance.now();announceWaitingPatient()}");
+ const domRe=/const act=document\.getElementById\('act'\),ctxEl=document\.getElementById\('context'\);act\.classList\.toggle\('ready',near!=='none'\);act\.textContent=near==='patient'\?'PACIENTE':near==='nurse'\?'ENFERMERA':'ACT';if\(near!=='none'\)\{ctxEl\.style\.display='block';ctxEl\.textContent=near==='patient'\?'Hablar \/ examinar \/ revisar historia':'Hablar \/ indicar tareas'\}else ctxEl\.style\.display='none'/g;
+ const dm=[...html.matchAll(domRe)];
+ if(dm.length===1) html=html.replace(domRe,"if(window.__atriaNearUI!==near){window.__atriaNearUI=near;const act=document.getElementById('act'),ctxEl=document.getElementById('context');act.classList.toggle('ready',near!=='none');act.textContent=near==='patient'?'PACIENTE':near==='nurse'?'ENFERMERA':'ACT';if(near!=='none'){ctxEl.style.display='block';ctxEl.textContent=near==='patient'?'Hablar / examinar / revisar historia':'Hablar / indicar tareas'}else ctxEl.style.display='none'}");
+ else console.warn('near UI optimization skipped',dm.length);
+ const renderRe=/draw\(\);requestAnimationFrame\(updateFrame\)/g;
+ const rm=[...html.matchAll(renderRe)];
+ if(rm.length!==1) throw new Error('render loop match count '+rm.length);
+ html=html.replace(renderRe,"const __rn=performance.now();const __mobile=matchMedia('(pointer:coarse)').matches||innerWidth<820;if(!__mobile||__rn-(window.__atriaLastRender||0)>=30){window.__atriaLastRender=__rn;draw()}requestAnimationFrame(updateFrame)");
 }
 
 await fs.writeFile(out+'/index.html',html);
