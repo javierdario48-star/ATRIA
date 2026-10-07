@@ -1,6 +1,10 @@
 import assert from'node:assert/strict';import fs from'node:fs';import{apply487}from'./apply-487.js';
 const src=fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'),out=apply487(src);
 assert.match(out,/Sin alteraciones significativas para esta patología\./);
+assert.match(src,/task8\.js\?v=482/,'golden master must retain legacy task8 loader');
+assert.match(src,/task12\.js\?v=485/,'golden master must retain legacy task12 loader');
+assert.doesNotMatch(out,/task8\.js\?v=482/,'4.8.7 artifact must not load legacy task8 DOM poller');
+assert.doesNotMatch(out,/task12\.js\?v=485/,'4.8.7 artifact must not load legacy task12 DOM poller');
 assert.match(out,/universalFallback:true/);
 assert.match(out,/id:'universal_'/,'arbitrary named studies must remain orderable');
 assert.doesNotMatch(out,/No pude traducir esa orden/,'study commands must not fall into legacy unrecognized-order response');
