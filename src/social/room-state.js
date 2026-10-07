@@ -7,6 +7,7 @@ export function roomReducer(state,event){
   case'READY':s.phase=s.players.length>=2?'ready':'lobby';return s;
   case'START':if(s.players.length<2)throw new Error('need at least two players');s.phase='starting';s.startToken=event.token;return s;
   case'ACK_START':{const a=new Set(s.startAcks||[]);a.add(event.id);s.startAcks=[...a];if(s.players.every(id=>a.has(id)))s.phase='active';return s}
+  case'START_TIMEOUT':if(s.phase==='starting'){s.phase=s.players.length>=2?'ready':'lobby';s.startAcks=[];s.startToken=null;}return s;
   case'END':s.phase='ended';return s;
   default:return s;
  }
