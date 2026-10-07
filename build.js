@@ -15,9 +15,10 @@ for(const src of [...new Set(scripts)]){
 }
 
 // Diagnostic only: report exact common clinical-loop signatures from current public 4.8.6.
-for(const needle of ["updateOrders();updateHud()","updateHud();if(floatMode","updateSimulation(step);mentorTick();qaBotTick(now)","updateSimulation(step);mentorTick()"]){
- console.log("DIAG",JSON.stringify(needle),"count",html.split(needle).length-1);
-}
+const diagNeedles=["updateOrders();updateHud()","updateHud();if(floatMode","updateSimulation(step);mentorTick();qaBotTick(now)","updateSimulation(step);mentorTick()"];
+const diag={};
+for(const needle of diagNeedles){const i=html.indexOf(needle);diag[needle]={count:html.split(needle).length-1,context:i>=0?html.slice(Math.max(0,i-500),i+needle.length+700):null};}
+await fs.writeFile(out+'/diag.json',JSON.stringify(diag,null,2));
 
 await fs.writeFile(out+'/index.html',html);
 console.log('ATRIA diagnostic mirror: untouched public 4.8.6; tasks copied:',scripts.length);
