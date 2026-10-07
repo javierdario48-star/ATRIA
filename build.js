@@ -8,10 +8,10 @@ const files=Object.keys(manifest.files||{});if(!files.includes('index.html'))thr
 // 180/700 ms scans would only add guard-mode jank.
 const retiredHotLoops=new Set(['task8.js','task12.js']);
 for(const name of files){
- if(name==='index.html'||!/^task\\d+\\.js$/.test(name))continue;
+ if(name==='index.html'||!/^task\d+\.js$/.test(name))continue;
  if(retiredHotLoops.has(name)){
-   const marker='__ATRIA_RETIRED_'+name.replace(/\\W/g,'_').toUpperCase()+'__';
-   await fs.writeFile(out+'/'+name,"(()=>{'use strict';window."+marker+"=true;})();\\n");
+   const marker='__ATRIA_RETIRED_'+name.replace(/\W/g,'_').toUpperCase()+'__';
+   await fs.writeFile(out+'/'+name,"(()=>{'use strict';window."+marker+"=true;})();\n");
    continue;
  }
  await fs.copyFile(base+'/'+name,out+'/'+name)
