@@ -5,6 +5,8 @@ export function apply487(html){
  s=replaceOnce(s,'<script src="/task7.js?v=483"></script>','<!-- legacy study fallback 7 retired in 4.8.7 -->','retire-task7-study-fallback');
  s=replaceOnce(s,'<script src="/task8.js?v=482"></script>','<!-- legacy study poller 8 retired in 4.8.7 -->','retire-task8-study-poller');
  s=replaceOnce(s,'<script src="/task12.js?v=485"></script>','<!-- legacy study poller 12 retired in 4.8.7 -->','retire-task12-study-poller');
+ // task13 captures the same clinical PTT gesture before task5 group voice can receive it. Task5 owns mic permission + group peers in 4.8.7.
+ s=replaceOnce(s,'<script src="/task13.js?v=486"></script>','<!-- conflicting legacy PTT primer 13 retired in 4.8.7; task5 owns group voice -->','retire-task13-ptt-primer');
  // Prevent the legacy HUD/map from painting before the branded splash exists.
  const bootStyle=`<style id="atria-boot-paint-guard">html:not(.atriaBootReady) body>*{visibility:hidden!important}html:not(.atriaBootReady) body{background:#07121d!important}</style>`;
  s=replaceOnce(s,'</head>',bootStyle+'</head>','first-paint-guard');
