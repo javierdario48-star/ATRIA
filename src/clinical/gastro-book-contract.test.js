@@ -24,6 +24,6 @@ assert(alg['COLON-001'].conditionalStudies.includes('cea'));
 assert(alg['PERI-SEC-001'].conditionalStudies.includes('peri_rx')&&alg['PERI-SEC-001'].conditionalStudies.includes('peri_fluid'));
 assert(alg['APP-001'].conditionalStudies.includes('app_ct')&&alg['APP-001'].conditionalStudies.includes('app_urine'));
 assert(JSON.stringify(alg['ILEO-001']).includes('estrangul'),'ileus algorithm must explicitly detect strangulation risk');
-assert(alg['MESI-001'].planTeach.toLowerCase().includes('reperf'));
+assert(/repermeabil|revascular/.test(alg['MESI-001'].planTeach.toLowerCase()),'mesenteric ischemia must require urgent restoration of arterial flow');
 assert(alg['CHOLANG-001'].planTeach.includes('CPRE')||alg['CHOLANG-001'].planTeach.includes('drenaje'));
 console.log('gastro book clinical contract OK',{cases:cases.length,algorithms:Object.keys(alg).length});
