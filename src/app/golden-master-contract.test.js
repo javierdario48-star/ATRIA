@@ -1,0 +1,16 @@
+import assert from'node:assert/strict';import fs from'node:fs';
+const h=fs.readFileSync('vendor/atria-4.8.6/index.html','utf8');
+assert.match(h,/4\.8\.6/);
+assert.match(h,/Volver al lobby/,'return action must be explicit');
+assert.match(h,/Personas y guardias|<h3>Personas<\/h3>/,'People surface must exist');
+assert.match(h,/2 a 4 jugadores/,'shared guards must support 2–4 players');
+assert.match(h,/se activan automáticamente al abrir la versión online/,'social presence must be automatic');
+assert.match(h,/async function ensureSocial\(\)/,'lobby must self-heal/register social state');
+assert.match(h,/await nsSocial\.register\(alias\)/,'lobby must auto-register the current profile');
+assert.match(h,/if\(r\.status===401&&retry&&window\.nsSocial\?\.refresh\)/,'expired social session must attempt refresh');
+assert.match(h,/#chatDock\{[\s\S]*display:block!important/,'chat dock must remain available in world/lobby UI');
+assert.match(h,/try\{i\.blur\(\)\}/,'mobile input must dismiss keyboard after monitor send');
+assert.match(h,/24 minutos = 24 horas/,'competitive clock contract must be visible');
+assert.match(h,/bufferedAmount|_sendBusy/,'network path must include backpressure/coalescing');
+assert.doesNotMatch(h,/activar social/i,'legacy activate-social UX must not return');
+console.log('4.8.6 historical-flow contracts OK');
