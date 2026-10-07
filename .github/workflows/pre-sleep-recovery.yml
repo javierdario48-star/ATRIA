@@ -1,0 +1,72 @@
+name: ATRIA Pre-Sleep Recovery Audit
+on:
+  push:
+    branches: [atria-pre-sleep-recovery]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  baseline-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Source regressions
+        run: npm test
+      - name: Rebuild immutable baseline
+        run: npm run build
+      - name: Verify golden-master hashes
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import crypto from 'node:crypto';
+          const manifest=JSON.parse(fs.readFileSync('vendor/atria-4.8.6/MANIFEST.json','utf8'));
+          for (const [name,meta] of Object.entries(manifest.files)) {
+            const b=fs.readFileSync('vendor/atria-4.8.6/'+name);
+            const sha=crypto.createHash('sha256').update(b).digest('hex');
+            if (b.length!==meta.bytes || sha!==meta.sha256) throw new Error(name+' hash mismatch');
+          }
+          console.log('golden master hashes OK');
+          NODE
+      - name: Syntax-check generated JavaScript
+        run: |
+          for f in out/task*.js; do [ -e "$f" ] || continue; node --check "$f"; done
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import os from 'node:os';
+          import path from 'node:path';
+          import {spawnSync} from 'node:child_process';
+          const html=fs.readFileSync('out/index.html','utf8');
+          const re=/<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+          const dir=fs.mkdtempSync(path.join(os.tmpdir(),'atria-inline-'));
+          let checked=0,m;
+          while((m=re.exec(html))){
+            const attrs=m[1]||'', code=m[2]||'';
+            const type=(attrs.match(/\btype\s*=\s*["']([^"']+)["']/i)||[])[1]?.toLowerCase();
+            if(type && !['text/javascript','application/javascript','module'].includes(type)) continue;
+            if(!code.trim()) continue;
+            const file=path.join(dir,'inline-'+(++checked)+'.js');
+            fs.writeFileSync(file,code);
+            const q=spawnSync(process.execPath,['--check',file],{encoding:'utf8'});
+            if(q.status!==0) throw new Error('inline script '+checked+' syntax failure\n'+q.stderr);
+          }
+          console.log('inline executable scripts syntax OK:',checked);
+          NODE
+      - name: Validate protected baseline markers
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const h=fs.readFileSync('out/index.html','utf8');
+          for(const marker of ['4.8.6','Estudios solicitados']) if(!h.includes(marker)) throw new Error('missing marker: '+marker);
+          console.log('baseline markers OK');
+          NODE
+      - name: Upload audited baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: atria-pre-sleep-baseline
+          path: out/
+          retention-days: 14
+          if-no-files-found: error
