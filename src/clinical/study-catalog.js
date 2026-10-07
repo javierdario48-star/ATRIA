@@ -26,7 +26,9 @@ function scoreStudy(st,input){
 }
 
 export function resolveStudy(cases,currentCase,input){
- const catalog=buildStudyCatalog(cases),native=currentCase?.studies||[];
+ const catalog=buildStudyCatalog(cases),native=currentCase?.studies||[],n=norm(input);
+ const exactCatalog=catalog.find(st=>norm(st.id)===n);
+ if(exactCatalog){const own=native.find(st=>st.id===exactCatalog.id);if(own)return {...own,gameHours:Number(own.gameHours??own.delayHours??own.delay??1),universalFallback:false};return {...exactCatalog,result:exactCatalog.normalResult,delay:exactCatalog.gameHours,universalFallback:true}}
  let best=null,bestScore=0;
  for(const st of native){const sc=scoreStudy(st,input);if(sc>bestScore){best=st;bestScore=sc}}
  if(best)return {...best,gameHours:Number(best.gameHours??best.delayHours??best.delay??1),universalFallback:false};
