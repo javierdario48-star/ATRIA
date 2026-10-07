@@ -33,9 +33,13 @@ rep("csDrawRemote=function(){if(!shared())return oldRemoteDraw.apply(this,argume
  if(n===1){html=html.replace(from,to);console.log('Applied lobby draw interpolation');}
  else console.warn('Skipping lobby draw interpolation: match count',n);
 }
-rep("if(!state.demo&&t-state.lastStateSent>280)sendState();if(!state.demo&&!state.polling&&(state._lastPoll||0)+650<t)",
-"if(!state.demo&&t-state.lastStateSent>(player.moving?110:220))sendState();if(!state.demo&&!state.polling&&(state._lastPoll||0)+180<t)",
-'lobby cadence');
+{
+ const from="if(!state.demo&&t-state.lastStateSent>280)sendState();if(!state.demo&&!state.polling&&(state._lastPoll||0)+650<t)";
+ const to="if(!state.demo&&t-state.lastStateSent>(player.moving?110:220))sendState();if(!state.demo&&!state.polling&&(state._lastPoll||0)+180<t)";
+ const n=html.split(from).length-1;
+ if(n===1){html=html.replace(from,to);console.log('Applied lobby cadence');}
+ else console.warn('Skipping lobby cadence: match count',n);
+}
 {const n=html.split("version:'4.8.6'").length-1;if(n!==1)throw new Error('version marker count '+n);html=html.replace("version:'4.8.6'","version:'4.8.7'");}
 const scripts=[...html.matchAll(/<script[^>]+src=["'](\/task\d+\.js[^"']*)["']/g)].map(m=>m[1]);
 for(const src of [...new Set(scripts)]){const u=new URL(src,BASE);const body=await (await fetch(u)).text();await fs.writeFile(out+'/'+u.pathname.split('/').pop(),body)}
