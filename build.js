@@ -13,16 +13,17 @@ for(const src of scripts){
  if(!r.ok) throw new Error('Task fetch '+u.pathname+' '+r.status);
  assets.set(u.pathname.split('/').pop(),await r.text());
 }
-const frameRe=/function\s+updateFrame\s*\(now\)\s*\{[\s\S]{0,5000}?requestAnimationFrame\s*\(\s*updateFrame\s*\)\s*\}/g;
+const dprRe=/\bdpr\s*=\s*Math\.min\s*\(\s*devicePixelRatio\s*\|\|\s*1\s*,\s*2\s*\)/g;
 const candidates=[['index.html',html],...assets.entries()];
-const hits=[];
-for(const [name,body] of candidates){const ms=[...body.matchAll(frameRe)];for(const m of ms)hits.push({name,original:m[0]});}
-if(hits.length!==1) throw new Error('updateFrame total match count '+hits.length+' across '+candidates.map(x=>x[0]).join(','));
-const hit=hits[0];
-const drawRe=/draw\s*\(\s*\)\s*;\s*requestAnimationFrame\s*\(\s*updateFrame\s*\)/;
-if(!drawRe.test(hit.original)) throw new Error('draw/rAF sequence not found in '+hit.name);
-const optimized=hit.original.replace(drawRe,"const __rn=performance.now(),__mobile=matchMedia('(pointer:coarse)').matches||innerWidth<820;if(!__mobile||__rn-(window.__atriaLastRender||0)>=30){window.__atriaLastRender=__rn;draw()}requestAnimationFrame(updateFrame)");
-if(hit.name==='index.html')html=html.replace(hit.original,optimized);else assets.set(hit.name,assets.get(hit.name).replace(hit.original,optimized));
+let dprHits=0;
+for(const [name,body] of candidates){
+ const n=[...body.matchAll(dprRe)].length;
+ if(!n)continue;
+ dprHits+=n;
+ const patched=body.replace(dprRe,"dpr=Math.min(devicePixelRatio||1,(matchMedia('(pointer:coarse)').matches?1.25:2))");
+ if(name==='index.html')html=patched;else assets.set(name,patched);
+}
+if(dprHits!==1) throw new Error('main canvas DPR match count '+dprHits);
 for(const [name,body] of assets)await fs.writeFile(out+'/'+name,body);
 await fs.writeFile(out+'/index.html',html);
-console.log('ATRIA guard performance preview patched:',hit.name,'tasks:',scripts.length);
+console.log('ATRIA mobile canvas DPR optimized; matches:',dprHits,'scripts:',scripts.length);
