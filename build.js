@@ -10,11 +10,12 @@ const scripts=[...new Set([...html.matchAll(/<script[^>]+src=["'](\/task\d+\.js[
 for(const src of scripts){const u=new URL(src,BASE),q=await fetch(u);if(!q.ok)throw new Error('asset '+u.pathname);await fs.writeFile(out+'/'+u.pathname.split('/').pop(),await q.text())}
 const runtime=`<script id="atria-runtime-architecture-v1">
 (()=>{'use strict';
-const legacyFrame=updateFrame;let acc=0,lastFrame=null,lastMaintenance=0,lastRender=0,runtimeFailed=false;
+const legacyFrame=updateFrame;let acc=0,lastFrame=null,lastMaintenance=0,lastRender=0,runtimeFailed=false,perfLast=null,perfFrames=0,perfLong=0,perfWindowStart=performance.now();
 const mobile=()=>matchMedia('(pointer:coarse)').matches||innerWidth<820;
 const fatal=(e)=>{console.error('[ATRIA runtime]',e);let x=document.getElementById('atriaFatal');if(!x){x=document.createElement('div');x.id='atriaFatal';x.style.cssText='position:fixed;inset:0;z-index:999999;background:#07181a;color:white;padding:24px;font:16px system-ui';document.body.appendChild(x)}x.textContent='ATRIA encontró un error de ejecución. Recargá esta versión QA.'};
 addEventListener('error',e=>fatal(e.error||e.message));addEventListener('unhandledrejection',e=>fatal(e.reason));
 const optimizedFrame=function(now){
+ if(perfLast!=null&&now-perfLast>50)perfLong++;perfLast=now;perfFrames++;if(now-perfWindowStart>=2000){window.__ATRIA_PERF={fps:Math.round(perfFrames*1000/(now-perfWindowStart)),longFrames:perfLong,at:Date.now()};perfFrames=0;perfLong=0;perfWindowStart=now}
  if(runtimeFailed){updateFrame=legacyFrame;return legacyFrame(now)}
  try{
   if(lastFrame==null)lastFrame=now;
