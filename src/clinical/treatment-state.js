@@ -1,0 +1,5 @@
+export function createTreatmentState(){return{access:false,monitor:false,medications:[],events:[]}}
+export function establishAccess(s,{by='nurse',at=Date.now()}={}){return{...s,access:true,events:[...s.events,{type:'access',by,at}]}}
+export function connectMonitor(s,{by='nurse',at=Date.now()}={}){return{...s,monitor:true,events:[...s.events,{type:'monitor',by,at}]}}
+export function giveMedication(s,{name,dose=null,route='IV',requiresAccess=true,by='nurse',at=Date.now()}){if(!name)throw new Error('medication name required');if(requiresAccess&&!s.access)return{state:s,ok:false,reason:'vascular-access-required'};const m={name,dose,route,by,at};return{state:{...s,medications:[...s.medications,m],events:[...s.events,{type:'medication',...m}]},ok:true}}
+export function expandVolume(s,{fluid='Cristaloide',volumeMl=500,...rest}={}){return giveMedication(s,{name:fluid,dose:volumeMl+' mL',route:'IV',requiresAccess:true,...rest})}
