@@ -6,4 +6,6 @@ assert.equal((out.match(/\*60000/g)||[]).length>=2,true,'study turnaround must u
 assert.match(out,/csCoop\.dc\.bufferedAmount\|\|0\)>65536/);
 assert.equal(out.includes('s.delay*1000'),false,'legacy seconds-scale study timing must be gone');
 assert.equal(src.includes('universalFallback:true'),false,'golden master must remain immutable');
+assert.doesNotMatch(out,/Radio de voz pendiente/,'candidate must not intentionally disable existing WebRTC voice transport');
+assert.match(src,/Radio de voz pendiente/,'golden master remains unchanged while candidate removes the disable gate');
 console.log('4.8.7 source integration OK');
