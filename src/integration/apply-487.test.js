@@ -75,5 +75,5 @@ assert.match(out,/window\.nsLobby\.enter=enter/,'integrated artifact must export
 
 assert.match(out,/natural-language-study-orders|const csStudyIntent=/,'artifact must accept natural-language study intent');
 for(const verb of ['pedime','solicito','haceme','quiero','ordena','necesito'])assert.match(out,new RegExp(verb),'natural study vocabulary missing '+verb);
-assert.match(out,/for\(const h of hits\)orderStudy/,'one natural sentence must be able to order multiple recognized studies');
-assert.match(out,/seen\.has\(st\.id\)/,'multi-study natural orders must deduplicate canonical studies');
+assert.match(out,/for\(const h of chosen\.sort/,'one natural sentence must order multiple recognized studies in spoken sequence');
+assert.match(out,/seen\.has\(h\.st\.id\)/,'multi-study natural orders must deduplicate canonical studies');
