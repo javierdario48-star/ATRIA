@@ -1,0 +1,54 @@
+{
+  "version": "4.8.6",
+  "capturedFrom": "https://night-shift-clinical.vercel.app",
+  "files": {
+    "index.html": {
+      "bytes": 1980964,
+      "sha256": "b552a5314586e886f46e1278166ef1d6d6aa40d6eaa3a77518674d7337f1754c"
+    },
+    "task10.js": {
+      "bytes": 782,
+      "sha256": "fcfc2f9f6098f7a4c10eb415bfe8572a9a0e681e2773417ac008b96d96a51a89"
+    },
+    "task11.js": {
+      "bytes": 7527,
+      "sha256": "651006e18d7cfc148fe3974a2eb0e9a06df8f2914028aaf08430f86b5e8c084d"
+    },
+    "task12.js": {
+      "bytes": 5673,
+      "sha256": "e9f89012dde5751bf71d6ac671164e5560e6171d14c5259770b7435272ecbbfe"
+    },
+    "task13.js": {
+      "bytes": 4203,
+      "sha256": "176024935f18d1cad22169edea41d69c745b6f81bfb75a0724ce67d9cb12728c"
+    },
+    "task3.js": {
+      "bytes": 4104,
+      "sha256": "9192bc3227febbbd024643205912e5a4d3d26b6cb44b2c4db6729d21daaacdce"
+    },
+    "task4.js": {
+      "bytes": 7641,
+      "sha256": "f7911d5fb69b309d530447ff16367e87e37a12b036eb53c179d70ba8e2c5960f"
+    },
+    "task5.js": {
+      "bytes": 16089,
+      "sha256": "ac780e16b4c28d1f16a736ed96262c98d9d935639d95daf15d23cb41400598cb"
+    },
+    "task6.js": {
+      "bytes": 8835,
+      "sha256": "de4d2db2d7612fdb69efa8b2b1dbb46fad1c2af573d31ad7dac84c6cc8f2a991"
+    },
+    "task7.js": {
+      "bytes": 11009,
+      "sha256": "3a81d390fa7368fe50338bfed73baf0e304c0981ac9944b025beb7a5f11ac11e"
+    },
+    "task8.js": {
+      "bytes": 4912,
+      "sha256": "49dee369d9b0b98ed0a73db3f44a4a122b92de48866f145de7ea80d601cc586d"
+    },
+    "task9.js": {
+      "bytes": 4847,
+      "sha256": "53797c45a596627faabb089391838100afaad53a31d7c8e07f3fd8c32f9e6976"
+    }
+  }
+}
