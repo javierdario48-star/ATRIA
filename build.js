@@ -26,9 +26,13 @@ rep("csDrawRemote=function(){if(!shared())return oldRemoteDraw.apply(this,argume
  if(matches.length===1){html=html.replace(matches[0],target);console.log('Applied lobby target interpolation');}
  else console.warn('Skipping lobby target interpolation: unambiguous target not found; matches=',matches.length);
 }
-rep("if(rim?.complete)drawSprite(rim,{x:p.x,y:p.y,dir:p.dir||'S',moving:!!p.moving,walkPhase:p.walkPhase||0},60);csDrawNameplate({x:p.x,y:p.y},p.name||'Jugador',p.level||1,true);if(p.bubble&&performance.now()<(p.bubbleUntil||0)&&isVisible(p.x,p.y))speech(p.bubble,p.x,p.y-6,'#ccecff',p.bubbleUntil)",
-"const tx=Number.isFinite(p.__tx)?p.__tx:(Number(p.x)||0),ty=Number.isFinite(p.__ty)?p.__ty:(Number(p.y)||0);if(!Number.isFinite(p.__vx))p.__vx=tx;if(!Number.isFinite(p.__vy))p.__vy=ty;const dd=Math.hypot(tx-p.__vx,ty-p.__vy);if(dd>320){p.__vx=tx;p.__vy=ty}else{const aa=1-Math.exp(-16/80);p.__vx+=(tx-p.__vx)*aa;p.__vy+=(ty-p.__vy)*aa}if(rim?.complete)drawSprite(rim,{x:p.__vx,y:p.__vy,dir:p.dir||'S',moving:!!p.moving,walkPhase:p.walkPhase||0},60);csDrawNameplate({x:p.__vx,y:p.__vy},p.name||'Jugador',p.level||1,true);if(p.bubble&&performance.now()<(p.bubbleUntil||0)&&isVisible(p.__vx,p.__vy))speech(p.bubble,p.__vx,p.__vy-6,'#ccecff',p.bubbleUntil)",
-'lobby interpolation');
+{
+ const from="if(rim?.complete)drawSprite(rim,{x:p.x,y:p.y,dir:p.dir||'S',moving:!!p.moving,walkPhase:p.walkPhase||0},60);csDrawNameplate({x:p.x,y:p.y},p.name||'Jugador',p.level||1,true);if(p.bubble&&performance.now()<(p.bubbleUntil||0)&&isVisible(p.x,p.y))speech(p.bubble,p.x,p.y-6,'#ccecff',p.bubbleUntil)";
+ const to="const tx=Number.isFinite(p.__tx)?p.__tx:(Number(p.x)||0),ty=Number.isFinite(p.__ty)?p.__ty:(Number(p.y)||0);if(!Number.isFinite(p.__vx))p.__vx=tx;if(!Number.isFinite(p.__vy))p.__vy=ty;const dd=Math.hypot(tx-p.__vx,ty-p.__vy);if(dd>320){p.__vx=tx;p.__vy=ty}else{const aa=1-Math.exp(-16/80);p.__vx+=(tx-p.__vx)*aa;p.__vy+=(ty-p.__vy)*aa}if(rim?.complete)drawSprite(rim,{x:p.__vx,y:p.__vy,dir:p.dir||'S',moving:!!p.moving,walkPhase:p.walkPhase||0},60);csDrawNameplate({x:p.__vx,y:p.__vy},p.name||'Jugador',p.level||1,true);if(p.bubble&&performance.now()<(p.bubbleUntil||0)&&isVisible(p.__vx,p.__vy))speech(p.bubble,p.__vx,p.__vy-6,'#ccecff',p.bubbleUntil)";
+ const n=html.split(from).length-1;
+ if(n===1){html=html.replace(from,to);console.log('Applied lobby draw interpolation');}
+ else console.warn('Skipping lobby draw interpolation: match count',n);
+}
 rep("if(!state.demo&&t-state.lastStateSent>280)sendState();if(!state.demo&&!state.polling&&(state._lastPoll||0)+650<t)",
 "if(!state.demo&&t-state.lastStateSent>(player.moving?110:220))sendState();if(!state.demo&&!state.polling&&(state._lastPoll||0)+180<t)",
 'lobby cadence');
