@@ -42,8 +42,8 @@ assert.equal(crossCase.result,'Sin alteraciones significativas para esta patolog
 assert.equal(crossCase.universalFallback,true);
 context.processCommand('/estudio ecocardiograma');
 assert.equal(ordered.at(-1).s.label,'ecocardiograma','short alias eco must not hijack ecocardiograma');assert.equal(ordered.at(-1).s.universalFallback,true);
-assert.equal(ordered.at(-1).s.type,'immediate');
-assert.equal(ordered.at(-1).s.delay,30,'0.5 game hour immediate study must become 30 legacy seconds');
+assert.equal(ordered.at(-1).s.type,'imaging');
+assert.equal(ordered.at(-1).s.delay,240,'4 game hour imaging study must become 240 legacy seconds');
 context.orderStudy({id:'ct',label:'TC',delay:3,type:'image'});
 assert.equal(ordered.at(-1).s.delay,180,'legacy delay must be interpreted as game hours');
 assert.equal(context.__atriaUniversalStudyPatch487,true);
