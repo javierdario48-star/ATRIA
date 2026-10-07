@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {FrameScheduler} from './frame-scheduler.js';
+const s=new FrameScheduler({stepHz:60,maxCatchUpSteps:5,mobileRenderHz:30});
+s.reset(0);
+let physics=0,maintenance=0,render=0;
+s.tick(16,{simulate:()=>physics++,maintain:()=>maintenance++,render:()=>render++,isMobile:true});
+const before={physics,maintenance,render};
+s.tick(516,{simulate:()=>physics++,maintain:()=>maintenance++,render:()=>render++,isMobile:true});
+assert(physics-before.physics<=5,'physics catch-up bounded');
+assert.equal(maintenance-before.maintenance,1,'maintenance must run once per browser frame, not once per physics step');
+assert(render-before.render<=1,'render must run at most once per browser frame');
+console.log('guard spiral regression OK',{physics,maintenance,render});
