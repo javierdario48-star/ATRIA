@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.js",
-    "test": "node src/app/frame-scheduler.test.js && node src/app/guard-spiral.test.js && node src/app/runtime-integration.test.js",
+    "test": "node src/app/frame-scheduler.test.js && node src/app/guard-spiral.test.js && node src/app/runtime-integration.test.js && node src/social/network-scheduler.test.js",
     "check": "npm test && npm run build"
   }
 }
