@@ -1,0 +1,1 @@
+import assert from'node:assert/strict';import{chooseRenderPolicy}from'./adaptive-policy.js';assert.deepEqual(chooseRenderPolicy({fps:60,p95:16,mobile:false}),{renderHz:60,quality:'full'});assert.equal(chooseRenderPolicy({fps:25,p95:50,mobile:true}).quality,'reduced');assert.equal(chooseRenderPolicy({fps:15,p95:90}).renderHz,20);console.log('adaptive render policy OK');
