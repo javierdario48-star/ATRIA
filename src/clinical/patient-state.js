@@ -1,0 +1,3 @@
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));export function createPatientState({severity=50}={}){return{severity:clamp(severity,0,100),status:'active',trend:'stable',resolved:false,dead:false}}
+export function evolvePatient(s,{delta=0,treated=false}={}){if(s.resolved||s.dead)return s;const severity=clamp(s.severity+delta+(treated?-8:0),0,100);const dead=severity>=100,resolved=severity<=10;return{...s,severity,dead,resolved,status:dead?'dead':resolved?'resolved':'active',trend:severity<s.severity?'better':severity>s.severity?'worse':'stable'}}
+export function patientResponse(s){return s.dead?'Sin respuesta.':s.resolved?'Me siento mucho mejor.':s.trend==='better'?'Me siento mejor.':s.trend==='worse'?'Me siento peor.':'Me siento igual.'}
