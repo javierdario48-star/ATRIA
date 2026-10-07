@@ -31,7 +31,7 @@ function install(){
  }
  function inferUnknown(label){
   const n=localNorm(label);
-  const imaging=/\b(tc|tac|tomografia|resonancia|rm|radiografia|rayos x|ecografia|ultrasonido|doppler|angiografia)\b/.test(n);
+  const imaging=/\b(tc|tac|tomografia|resonancia|rm|radiografia|rayos x|ecografia|ecocardiograma|ultrasonido|doppler|angiografia)\b/.test(n);
   const immediate=/\b(ecg|electrocardiograma|oximetria|glucemia capilar|tira reactiva)\b/.test(n);
   return {type:immediate?'immediate':imaging?'imaging':'lab',delayHours:immediate?.5:imaging?4:2};
  }
