@@ -19,4 +19,7 @@ assert.match(out,/\+2500<t/,'social refresh must be bounded in the lobby schedul
 assert.doesNotMatch(out,/Activa una vez tu perfil social/,'People must never require manual social activation');
 assert.doesNotMatch(out,/>Activar<\/button>/,'manual social activation control must be removed');
 assert.match(out,/Conectando tu perfil automáticamente/,'People should represent automatic presence bootstrap');
+assert.match(out,/ensureSession:async\(\)=>\{const data=await acquireSession\(\);await refresh\(\);return data\.user\}/,'social module must expose one idempotent session owner');
+assert.match(out,/await nsSocial\.ensureSession\(\)/,'lobby bootstrap must use the shared session owner');
+assert.doesNotMatch(out,/nsSocial\?\.register\?\.\(\)\.then/,'People must not race a second registration caller');
 console.log('4.8.7 source integration OK');
