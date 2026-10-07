@@ -8,5 +8,7 @@ export function apply487(html){
  const oldPeer=`function csSendPeerState(){\n if(!csCoop.dc||csCoop.dc.readyState!=='open'||!csProfile)return;`;
  const newPeer=`function csSendPeerState(){\n if(!csCoop.dc||csCoop.dc.readyState!=='open'||!csProfile)return;\n if((csCoop.dc.bufferedAmount||0)>65536)return;`;
  s=replaceOnce(s,oldPeer,newPeer,'peer-backpressure');
+ const disabledVoice=` // Player radio needs a voice transport; this release provides clinical data and text only.\n const refreshVoice=csRefreshVoiceButtons;\n csRefreshVoiceButtons=function(){const r=refreshVoice.apply(this,arguments),b=document.getElementById('radioPttBtn');if(b){b.disabled=true;b.hidden=true;b.title='La sala comparte texto y acciones. Radio de voz pendiente.';}return r;};\n csRefreshVoiceButtons();`;
+ s=replaceOnce(s,disabledVoice,` // Existing WebRTC audio transport is enabled; task13 handles mic permission priming.\n csRefreshVoiceButtons();`,'social-voice-enable');
  return s;
 }
