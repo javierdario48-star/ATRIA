@@ -51,13 +51,14 @@ jobs:
           rm -rf vendor/atria-4.8.6
           mkdir -p vendor/atria-4.8.6
           cp golden-master-4.8.6/* vendor/atria-4.8.6/
-          if git diff --quiet -- vendor/atria-4.8.6 && ! git ls-files --others --exclude-standard vendor/atria-4.8.6 | grep -q .; then
+          git add -f vendor/atria-4.8.6
+          if git diff --cached --quiet; then
             echo "Golden master already current"
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add vendor/atria-4.8.6
             git commit -m "Persist byte-faithful ATRIA 4.8.6 golden master"
+            git pull --rebase origin atria-4.8.7-qa
             git push origin HEAD:atria-4.8.7-qa
           fi
       - name: Upload golden master capture
