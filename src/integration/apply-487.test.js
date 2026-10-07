@@ -12,8 +12,15 @@ assert.match(src,/task13\.js\?v=486/,'golden master must retain task13 PTT prime
 assert.doesNotMatch(out,/task13\.js\?v=486/,'4.8.7 artifact must not load task13 because its capture handler preempts task5 group voice');
 assert.match(out,/task5\.js\?v=475/,'task5 automatic lobby\/room group voice must remain loaded');
 assert.match(out,/universalFallback:true/);
-assert.match(out,/id:'universal_'/,'arbitrary named studies must remain orderable');
-assert.doesNotMatch(out,/No pude traducir esa orden/,'study commands must not fall into legacy unrecognized-order response');
+assert.doesNotMatch(out,/id:'universal_'/,'unknown names must never create invented studies');
+assert.match(out,/Ese nombre no corresponde a un estudio del catálogo/,'only genuinely unknown studies may be rejected');
+assert.doesNotMatch(out,/No pude traducir esa orden/,'recognized study commands must not fall into legacy response');
+const orderUpdate=out.match(/function updateOrders\(\)\{[\s\S]*?\}\}\nfunction updateSimulation/)?.[0]||'';
+assert.doesNotMatch(orderUpdate,/o\.result/,'study completion notification must not reveal result content');
+assert.match(orderUpdate,/Resultado disponible: /,'study completion may record availability only');
+const background=out.match(/function csBackgroundResultsV203\(\)\{[\s\S]*?setInterval\(csBackgroundResultsV203/)?.[0]||'';
+assert.doesNotMatch(background,/o\.result/,'inactive-patient completion notification must not reveal result content');
+assert.match(background,/resultado\$\{newResults===1\?'':'s'\} disponible/,'background notification must announce availability only');
 assert.equal((out.match(/\*60000/g)||[]).length>=2,true,'study turnaround must use 1 real minute per game hour');
 assert.match(out,/csCoop\.dc\.bufferedAmount\|\|0\)>65536/);
 assert.equal(out.includes('s.delay*1000'),false,'legacy seconds-scale study timing must be gone');
