@@ -35,3 +35,18 @@ Production 4.8.6 remains untouched. 4.3.2 is structural reference only. The QA b
 The repository does not contain the full 4.8.6 application document; current build mirrors the 4.8.6 production document at build time. Therefore the new source modules cannot honestly be declared integrated into the live application until a current 4.8.6 build artifact/source is available to the QA build. Do not substitute 4.3.2.
 
 Next release action after Vercel build access is available: produce exactly one QA candidate from the 4.8.6 golden master, integrate the verified modules at source/build level, run the complete repository suite, then browser/mobile/two-client smoke QA. Do not promote production before those gates pass.
+
+## 2026-10-07 golden-master recovery and source integration
+- Recovered byte-faithful 4.8.6 via GitHub Actions and persisted it under vendor/atria-4.8.6 (index.html plus task3.js–task13.js and SHA-256 manifest).
+- Normal QA build is now offline/reproducible from repository state; build.js no longer fetches the Vercel production alias.
+- QA workflow no longer requires Vercel to run tests/build.
+- Added historical-flow contracts against the real 4.8.6 source.
+- Added deterministic source integration transform with strict anchors; immutable vendor snapshot is never edited.
+- Integrated universal study resolution: native case result wins; otherwise a normal fallback is returned.
+- Added arbitrary /estudio <nombre> fallback so valid named studies are not rejected merely because the current case omitted them.
+- Converted both direct and post-collection study turnaround paths to 1 real minute = 1 game hour.
+- Added peer data-channel backpressure guard.
+- Removed the intentional UI gate that hid/disabled the existing WebRTC social voice transport; task13 continues microphone permission priming.
+- CI reached green after the direct/lab timing correction (ded7048a...) and after universal free-form study implementation (d45dd180...).
+
+Remaining release gate: browser/mobile/two-client behavior must be exercised on an actual served candidate before any production promotion. The Vercel account currently connected to ChatGPT does not expose the night-shift-clinical project, so production/deployment access remains separate from source development.
