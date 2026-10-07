@@ -1,4 +1,4 @@
-const n=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const n=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9/]+/g,' ').trim();
 export function classifyClinicalUtterance(text){
  const x=n(text);
  if(/^(hola|buen dia|buenas|como esta|como estas|que tal)/.test(x))return{intent:'greeting',target:'patient'};
