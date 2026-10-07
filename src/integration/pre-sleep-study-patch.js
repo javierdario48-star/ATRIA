@@ -15,6 +15,26 @@ function install(){
   }
   return out;
  }
+ function currentHas(id){return !!(typeof C!=='undefined'&&C?.studies?.some(s=>s.id===id))}
+ function materialize(s){return currentHas(s?.id)?s:{...s,result:NORMAL,universalFallback:true}}
+ function explicitMatch(label){
+  const n=localNorm(label);if(!n)return null;
+  const pool=[...(typeof C!=='undefined'&&C?.studies||[]),...allCaseStudies()];
+  let best=null,score=-1;
+  for(const s of pool)for(const a of [s.label,...(s.aliases||[])]){
+    const x=localNorm(a);if(!x)continue;
+    const exact=n===x;
+    const phrase=x.length>=4&&(' '+n+' ').includes(' '+x+' ');
+    if((exact||phrase)&&x.length>score){best=s;score=x.length}
+  }
+  return best?materialize(best):null;
+ }
+ function inferUnknown(label){
+  const n=localNorm(label);
+  const imaging=/\b(tc|tac|tomografia|resonancia|rm|radiografia|rayos x|ecografia|ultrasonido|doppler|angiografia)\b/.test(n);
+  const immediate=/\b(ecg|electrocardiograma|oximetria|glucemia capilar|tira reactiva)\b/.test(n);
+  return {type:immediate?'immediate':imaging?'imaging':'lab',delayHours:immediate?.5:imaging?4:2};
+ }
  findStudy=function(text){
   const native=originalFind(text);
   if(native)return native;
@@ -23,21 +43,24 @@ function install(){
     const x=localNorm(a);
     if(x&&n.includes(x)&&x.length>score){best=s;score=x.length}
   }
-  return best?{...best,result:NORMAL,universalFallback:true}:null;
+  return best?materialize(best):null;
  };
  orderStudy=function(study,quiet=false,requestedBy='Jugador'){
   if(!study)return;
-  const gameHours=Math.max(1,Number(study.gameHours??study.delayHours??study.delay??1));
+  const gameHours=Math.max(.1,Number(study.gameHours??study.delayHours??study.delay??1));
   return originalOrder({...study,delay:gameHours*60},quiet,requestedBy);
  };
  processCommand=function(q){
   const raw=String(q||'').trim().replace(/^\//,'').trim();
   if(/^estudio\s+/i.test(raw)){
     const label=raw.replace(/^estudio\s+/i,'').trim();
-    if(label&&!findStudy(label)){
+    if(label){
+      const known=explicitMatch(label);
+      if(known)return orderStudy(known);
+      const inferred=inferUnknown(label);
       return orderStudy({
         id:'universal_'+localNorm(label).replace(/\s+/g,'_').slice(0,48),
-        label,aliases:[label],type:'lab',delayHours:2,result:NORMAL,universalFallback:true
+        label,aliases:[label],type:inferred.type,delayHours:inferred.delayHours,result:NORMAL,universalFallback:true
       });
     }
   }
