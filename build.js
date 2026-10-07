@@ -10,10 +10,11 @@ for(const name of files){if(name!=='index.html'&&!/^task\d+\.js$/.test(name))con
 const html=await fs.readFile(out+'/index.html','utf8');
 if(!html.includes('4.8.6'))throw new Error('golden master marker missing');
 
-const studyPatch=await fs.readFile('src/integration/pre-sleep-study-patch.js','utf8');
 const task13=out+'/task13.js';
 const task13Base=await fs.readFile(task13,'utf8');
-if(task13Base.includes('__atriaUniversalStudyPatch487'))throw new Error('study patch already present in baseline');
-await fs.writeFile(task13,task13Base+'\n'+studyPatch);
+const studyPatch=await fs.readFile('src/integration/pre-sleep-study-patch.js','utf8');
+const remotePatch=await fs.readFile('src/integration/pre-sleep-remote-performance-patch.js','utf8');
+if(task13Base.includes('__atriaUniversalStudyPatch487')||task13Base.includes('__atriaRemotePerformancePatch487'))throw new Error('recovery patch already present in baseline');
+await fs.writeFile(task13,task13Base+'\n'+studyPatch+'\n'+remotePatch);
 
-console.log('ATRIA pre-sleep recovery build: 4.8.6 baseline + isolated study patch; files',files.length);
+console.log('ATRIA pre-sleep recovery build: 4.8.6 baseline + isolated studies/remote-performance patches; files',files.length);
