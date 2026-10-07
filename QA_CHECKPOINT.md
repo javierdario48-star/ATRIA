@@ -60,3 +60,60 @@ Remaining release gate: browser/mobile/two-client behavior must be exercised on 
 - HEAD 9f2b396414ab3fd942cbe1e78ee1b8ca9acaa3d7 passed the complete GitHub Architecture QA workflow (run 37697662396), including tests, offline golden-master build, artifact safety, generated JavaScript syntax checks and artifact upload.
 - task3/task4/task5 remain loaded intentionally: audit shows they still own friends persistence/automatic social repair, return-to-lobby/mobile UI repair, and automatic group voice respectively. They were not removed merely for containing timers.
 - Remaining browser gate: real guard FPS/jank and two-client symmetry/voice must be exercised on a served preview. The connected Vercel team currently exposes no linked ATRIA/night-shift project, so no existing-project preview can be created from this connection without creating/relinking infrastructure.
+
+
+## 2026-10-07 forensic runtime audit — shared multiplayer / voice
+
+### Root causes found and corrected
+- The first guard interpolation fix only covered the legacy single-peer `csDrawRemote`. The real shared-room layer later overrides that function and iterated `csCoop.remotes` while still drawing raw `r.x/r.y`. Therefore 2–4 player server rooms could still visibly jump even though the legacy renderer regression was green.
+- Shared-room state transmission also overrode the legacy sender, so the earlier legacy backpressure assertion did not prove the actual shared-room sender was protected.
+- Corrected the real shared-room override: each remote peer now owns independent interpolation state in `csSharedRemotePose`; rendering iterates every entry in `csCoop.remotes`; shared packets carry monotonic `stateSeq`; older sequenced state is rejected; disconnected/stale interpolation entries are removed; the shared sender checks channel backpressure.
+- Voice audit found two owners for the same clinical PTT gesture. `task13.js` captures `pointerdown` on `radioPttBtn` at document capture phase and calls legacy `csRadioDown` with `stopImmediatePropagation()`, while `task5.js` owns automatic lobby/room group voice and wires the same button. This can prevent task5's room-voice handler from receiving the gesture.
+- 4.8.7 therefore retires the task13 loader only. The immutable task13 golden-master file remains copied in `out/`. Task5 remains loaded and owns mic acquisition, one persistent stream, per-target voice peers, PTT, lobby/room targeting and peer cleanup. Browser/device audio remains an E2E gate.
+- Investigated task3's automatic `register()` call. It routes through the same `acquireSession()`/shared `connectPromise` as 4.8.7 `ensureSession()`, so the apparent duplicate caller does not create two concurrent registration requests. task3 remains loaded for friend persistence; its 1200 ms compatibility tick/MutationObserver remains a bounded legacy cost rather than being removed blindly.
+
+### Executed stress / artifact evidence
+- CI run 37699721540: SUCCESS at `f77f8d8c73af8f520cbd0599ac9425e4232f000d`.
+- Runtime scheduler stress: 5,000 frames, 4,831 simulation steps, 5,000 maintenance passes, 2,338 renders, 1,000 lifecycle transitions; no unbounded catch-up or generic lifecycle leak.
+- Hostile shared-motion stress: 10,000 frames with three simultaneous remotes (four players total), deterministic jitter/duplicate/stale injection; 2,390 accepted packets, 58 stale/duplicate packets rejected, maximum rendered frame displacement 2.779 units. Independent remote pose state remained bounded and disconnect removed one peer without affecting the others.
+- CI run 37699822906: SUCCESS after task13 retirement and single-PTT-owner regression.
+- Artifact integration regressions verify the shared renderer iterates all `csCoop.remotes`, draws interpolated `p.x/p.y` rather than raw packet coordinates, carries `stateSeq`, rejects stale sequence values, and retains task5 while excluding task13 from runtime.
+- Golden-master files remain untouched. Retired task7/task8/task12/task13 files are preserved as immutable build copies; only their artifact loaders are removed.
+
+### Runtime inventory notes
+- Golden-master inline document contains 33 RAF call sites, 12 intervals, 11 MutationObservers, 2 ResizeObservers, 2 RTCPeerConnection construction sites and 12 `getBoundingClientRect` call sites before external task scripts are counted.
+- No `TreeWalker`, `document.body.innerText`, `querySelectorAll('*')` or IntersectionObserver call sites were found in the golden-master inline document.
+- High-frequency legacy intervals inspected include peer state at 220 ms, mentor coffee watcher at 120 ms, hospital audio at 250 ms and monitor/audio maintenance at 120 ms. The 220 ms peer timer is explicitly replaced on restart and cleared by `csCoopDisconnect`; board refresh is modal-scoped. Browser profiling is still required to quantify actual main-thread cost of the remaining audio/UI compatibility loops.
+
+### Evidence matrix
+| Area | State | Evidence |
+|---|---|---|
+| Golden master | DEMONSTRADO | Immutable vendor snapshot retained; integration edits loaders/output only |
+| Build | DEMONSTRADO | Offline golden-master build passes CI |
+| Artifact | DEMONSTRADO | Integration + generated-JS syntax gates pass |
+| Local lifecycle | FUERTE EVIDENCIA | 1,000 generic lifecycle transitions; actual browser resource counts still unavailable |
+| Guard performance | FUERTE EVIDENCIA | redundant study pollers removed; real shared raw-coordinate renderer fixed; browser FPS remains |
+| Solo | FUERTE EVIDENCIA | source/clinical/runtime regressions; visual browser gate remains |
+| Apprentice | FUERTE EVIDENCIA | mentor policy/clinical regressions; visual browser gate remains |
+| Clinical | FUERTE EVIDENCIA | study, dialogue, exam, treatment, history, evolution tests green |
+| Social | FUERTE EVIDENCIA | single session owner plus shared connectPromise; real server/browser reconnect remains |
+| Coop 2P | FUERTE EVIDENCIA | actual shared artifact wiring audited; two-device E2E remains |
+| Coop 3P | FUERTE EVIDENCIA | actual renderer iterates all remotes + deterministic 3-remote stress |
+| Coop 4P | FUERTE EVIDENCIA | room supports max four; 3 simultaneous remotes stressed |
+| Competitive | FUERTE EVIDENCIA | room/start/clock contracts green; browser E2E remains |
+| Remote interpolation | DEMONSTRADO | both legacy and real shared-room render paths now interpolate |
+| Network jitter | DEMONSTRADO | 10,000-frame deterministic hostile-network stress |
+| Disconnect | FUERTE EVIDENCIA | pose cleanup/room reducer/RTC teardown contracts; browser transport remains |
+| Reconnect | FUERTE EVIDENCIA | session/room retry architecture audited; real network E2E remains |
+| Voice lifecycle | FUERTE EVIDENCIA | conflicting PTT owner removed; task5 single-stream/peer-map architecture retained |
+| Mobile contract | REQUIERE BROWSER | source handlers/regressions exist; Android keyboard/viewport is environment-dependent |
+| Long-session stability | FUERTE EVIDENCIA | 10k-frame network stress + 5k scheduler stress; browser heap/main-thread profiling remains |
+
+### Remaining genuine browser gates
+- Real Android/desktop FPS and main-thread jank.
+- Two-device symmetric presence under actual network conditions.
+- Physical microphone permission/audio playback and WebRTC behavior.
+- Keyboard/visualViewport behavior on Android.
+- Perceptual rendering/layout correctness.
+
+No production deployment or promotion was performed.
