@@ -117,3 +117,34 @@ Remaining release gate: browser/mobile/two-client behavior must be exercised on 
 - Perceptual rendering/layout correctness.
 
 No production deployment or promotion was performed.
+
+
+## 2026-10-07 universal study invariant
+
+### Root cause and architecture
+- The previous 4.8.7 fallback was not a true catalog invariant: it synthesized arbitrary `universal_<text>` studies and used one generic result. That made misspellings indistinguishable from valid studies and did not prove every valid case/study pair.
+- Consolidated the source contract into the existing `src/clinical/study-registry.js` rather than keeping a second resolver. It now owns catalog construction, canonical/alias resolution, case override materialization, normal fallback generation and the 60,000 ms/game-hour turnaround conversion.
+- Runtime artifact wiring mirrors that contract from the real `CASES` data: native/current-case aliases are resolved first, then the universal catalog; a valid non-native study receives its catalog normal; genuinely unknown names are rejected and never materialized as invented studies.
+- Case-specific result precedence is preserved. Seed/etiology overrides that wrap `orderStudy` remain downstream and can still replace the resolved case result intentionally.
+
+### Exhaustive evidence
+- Cases: **13**
+- Canonical catalog studies: **51**
+- Exhaustive matrix: **663/663 case × study combinations**
+- Native case overrides: **54**
+- Universal normal fallbacks: **609**
+- Native label/alias checks: **293**
+- Unknown control `banana cuántica`: rejected as absent from catalog.
+- Every catalog entry is required to have a non-empty normal fallback and positive turnaround.
+- Pipeline stress created **663 simultaneous logical orders** across all 13 patient states, with maximum turnaround **8 game hours** and invariant **1 game hour = 60,000 real ms**. Every result matured only in its owning patient map; deterministic repeated resolution for the same patient+study was verified.
+
+### Result privacy / UI
+- Study completion notifications contain availability only: active-patient nursing notification names the study but not `o.result`; inactive-patient global notification reports only the count of available results.
+- Removed result content from the general Chart/History view. That view now reports only how many results are available and directs the player to **Estudios**.
+- `studiesHTML()` remains the sole normal clinical view that renders `o.result`. Integration regressions fail if history/completion notification paths render the result content.
+- No golden-master file was modified; this is source integration on the immutable 4.8.6 baseline.
+
+### Final verification for this phase
+- CI run **37701174403**: **SUCCESS** at `67b42fae3ccc1a07e9f67fa450e68f7a2c4557d2`.
+- Full architecture/history regressions, exhaustive study matrix, study pipeline stress, offline golden-master build, artifact output-safety and generated inline JavaScript syntax all passed.
+- Browser remains required only to confirm presentation/interaction visually; the catalog/fallback/precedence/timing/no-result-banner contracts are now mechanically tested.
