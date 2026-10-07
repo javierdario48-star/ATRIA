@@ -6,7 +6,7 @@ const patch=fs.readFileSync(new URL('./pre-sleep-study-patch.js',import.meta.url
 const ordered=[],timers=[];
 const context={
  console,performance:{now:()=>1000},globalThis:null,
- C:{studies:[{id:'cbc',label:'Hemograma',aliases:['cbc'],result:'Leucocitosis',delay:2,type:'lab'}]},
+ C:{studies:[{id:'cbc',label:'Hemograma',aliases:['cbc'],result:'Leucocitosis',delay:2,type:'lab'},{id:'eco',label:'Ecografía abdominal',aliases:['eco'],result:'Ascitis',delay:4,type:'imaging'}]},
  CASES:[
   {studies:[{id:'cbc',label:'Hemograma',aliases:['cbc'],result:'Leucocitosis',delay:2,type:'lab'}]},
   {studies:[{id:'mri',label:'Resonancia de rodilla',aliases:['rm rodilla'],result:'Lesión meniscal',delay:4,type:'image'}]}
@@ -41,8 +41,9 @@ const crossCase=context.findStudy('rm rodilla');
 assert.equal(crossCase.result,'Sin alteraciones significativas para esta patología.');
 assert.equal(crossCase.universalFallback,true);
 context.processCommand('/estudio ecocardiograma');
-assert.equal(ordered.at(-1).s.label,'ecocardiograma');assert.equal(ordered.at(-1).s.universalFallback,true);
-assert.equal(ordered.at(-1).s.delay,120,'2 game hours must become 120 legacy seconds = 2 real minutes');
+assert.equal(ordered.at(-1).s.label,'ecocardiograma','short alias eco must not hijack ecocardiograma');assert.equal(ordered.at(-1).s.universalFallback,true);
+assert.equal(ordered.at(-1).s.type,'immediate');
+assert.equal(ordered.at(-1).s.delay,30,'0.5 game hour immediate study must become 30 legacy seconds');
 context.orderStudy({id:'ct',label:'TC',delay:3,type:'image'});
 assert.equal(ordered.at(-1).s.delay,180,'legacy delay must be interpreted as game hours');
 assert.equal(context.__atriaUniversalStudyPatch487,true);
