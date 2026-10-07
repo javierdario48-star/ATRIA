@@ -25,10 +25,14 @@ function scoreStudy(st,input){
  return score;
 }
 
+export function resolveStudyById(cases,currentCase,id){
+ const catalog=buildStudyCatalog(cases),native=currentCase?.studies||[],own=native.find(st=>st.id===id);
+ if(own)return {...own,gameHours:Number(own.gameHours??own.delayHours??own.delay??1),universalFallback:false};
+ const st=catalog.find(x=>x.id===id);return st?{...st,result:st.normalResult,delay:st.gameHours,universalFallback:true}:null;
+}
+
 export function resolveStudy(cases,currentCase,input){
- const catalog=buildStudyCatalog(cases),native=currentCase?.studies||[],n=norm(input);
- const exactCatalog=catalog.find(st=>norm(st.id)===n);
- if(exactCatalog){const own=native.find(st=>st.id===exactCatalog.id);if(own)return {...own,gameHours:Number(own.gameHours??own.delayHours??own.delay??1),universalFallback:false};return {...exactCatalog,result:exactCatalog.normalResult,delay:exactCatalog.gameHours,universalFallback:true}}
+ const catalog=buildStudyCatalog(cases),native=currentCase?.studies||[];
  let best=null,bestScore=0;
  for(const st of native){const sc=scoreStudy(st,input);if(sc>bestScore){best=st;bestScore=sc}}
  if(best)return {...best,gameHours:Number(best.gameHours??best.delayHours??best.delay??1),universalFallback:false};
