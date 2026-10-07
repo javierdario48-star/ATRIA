@@ -7,6 +7,9 @@ assert.match(src,/task8\.js\?v=482/,'golden master must retain legacy task8 load
 assert.match(src,/task12\.js\?v=485/,'golden master must retain legacy task12 loader');
 assert.doesNotMatch(out,/task8\.js\?v=482/,'4.8.7 artifact must not load legacy task8 DOM poller');
 assert.doesNotMatch(out,/task12\.js\?v=485/,'4.8.7 artifact must not load legacy task12 DOM poller');
+assert.match(src,/task13\.js\?v=486/,'golden master must retain task13 PTT primer');
+assert.doesNotMatch(out,/task13\.js\?v=486/,'4.8.7 artifact must not load task13 because its capture handler preempts task5 group voice');
+assert.match(out,/task5\.js\?v=475/,'task5 automatic lobby\/room group voice must remain loaded');
 assert.match(out,/universalFallback:true/);
 assert.match(out,/id:'universal_'/,'arbitrary named studies must remain orderable');
 assert.doesNotMatch(out,/No pude traducir esa orden/,'study commands must not fall into legacy unrecognized-order response');
