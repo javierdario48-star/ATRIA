@@ -7,7 +7,7 @@ export function normalStudyResult(study){
  if(study?.id==='grupo')return label+': tipificación y pruebas de compatibilidad sin incidencias.';
  if(study?.type==='imaging')return label+': sin hallazgos patológicos agudos ni alteraciones significativas.';
  if(study?.type==='procedure')return label+': sin hallazgos patológicos relevantes.';
- return label+': parámetros dentro de límites de referencia, sin alteraciones significativas.';
+ return label+': Sin alteraciones significativas; parámetros dentro de límites de referencia.';
 }
 export function buildStudyCatalog(cases){
  const map=new Map();
