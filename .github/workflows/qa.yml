@@ -26,6 +26,9 @@ jobs:
           const h=fs.readFileSync('out/index.html','utf8');
           if(!/4\.8\.6/.test(h)) throw new Error('QA baseline marker missing');
           if(!/Estudios solicitados/i.test(h)) throw new Error('Study UI contract missing');
+          if(!/__ATRIA_ARCH/.test(h)) throw new Error('Architecture runtime missing');
+          if(!/maxCatchUp:5/.test(h)) throw new Error('Bounded catch-up missing');
+          if(!/updateSimulation\(0\);mentorTick\(\);qaBotTick\(now\)/.test(h)) throw new Error('Maintenance separation missing');
           console.log('output safety OK');
           NODE
       - name: Syntax-check generated task scripts
