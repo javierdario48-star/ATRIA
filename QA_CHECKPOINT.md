@@ -50,3 +50,13 @@ Next release action after Vercel build access is available: produce exactly one 
 - CI reached green after the direct/lab timing correction (ded7048a...) and after universal free-form study implementation (d45dd180...).
 
 Remaining release gate: browser/mobile/two-client behavior must be exercised on an actual served candidate before any production promotion. The Vercel account currently connected to ChatGPT does not expose the night-shift-clinical project, so production/deployment access remains separate from source development.
+
+
+## 2026-10-07 guard-performance recovery
+- Restored build.js to byte-copy golden-master task files; runtime retirement is expressed only in the 4.8.7 integration layer.
+- Retired legacy study fallback loaders task7.js, task8.js and task12.js from the integrated artifact. Their golden-master files remain unchanged and copied by the build.
+- Fixed QA output-safety and inline-script syntax gates. CI run 37697563154 established a fully green source/build/artifact baseline before the runtime smoothing change.
+- Confirmed the legacy guard data channel transmits movement snapshots every 220 ms while csDrawRemote previously rendered raw packet coordinates. Wired render-cadence interpolation into the actual guard renderer and added integration regression coverage.
+- HEAD 9f2b396414ab3fd942cbe1e78ee1b8ca9acaa3d7 passed the complete GitHub Architecture QA workflow (run 37697662396), including tests, offline golden-master build, artifact safety, generated JavaScript syntax checks and artifact upload.
+- task3/task4/task5 remain loaded intentionally: audit shows they still own friends persistence/automatic social repair, return-to-lobby/mobile UI repair, and automatic group voice respectively. They were not removed merely for containing timers.
+- Remaining browser gate: real guard FPS/jank and two-client symmetry/voice must be exercised on a served preview. The connected Vercel team currently exposes no linked ATRIA/night-shift project, so no existing-project preview can be created from this connection without creating/relinking infrastructure.
