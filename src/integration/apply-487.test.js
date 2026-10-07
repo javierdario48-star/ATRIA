@@ -38,6 +38,15 @@ assert.match(out,/\(now-p\.at\)\/220/,'guard interpolation must bridge the legac
 const remoteDraw=out.match(/function csDrawRemote\(\)\{[\s\S]*?\n\}/)?.[0]||'';
 assert.match(remoteDraw,/const p=csRemoteVisual\(r\)/,'guard renderer must sample the interpolated remote pose');
 assert.doesNotMatch(remoteDraw,/actor=\{x:r\.x\|\|0,y:r\.y\|\|0/,'guard renderer must not draw raw remote packet coordinates');
+assert.match(out,/const csSharedRemotePose=new Map\(\)/,'shared rooms must keep independent interpolation state per remote peer');
+assert.match(out,/stateSeq:\+\+csSharedStateSeq/,'shared room state packets must carry monotonic sequence numbers');
+assert.match(out,/seq>Number\(prev\.stateSeq\|\|0\)/,'shared rooms must reject stale sequenced state packets');
+assert.match(out,/csCoop\.dc\.bufferedAmount\|\|0\)<=65536/,'shared 2-4 player sender must apply data-channel backpressure');
+const sharedDraw=out.match(/csDrawRemote=function\(\)\{if\(!shared\(\)\)[\s\S]*?csSharedRemotePose\.delete\(id\)\}\;/)?.[0]||'';
+assert.match(sharedDraw,/Object\.values\(csCoop\.remotes\|\|\{\}\)/,'shared renderer must iterate all remote players');
+assert.match(sharedDraw,/actor=\{x:p\.x,y:p\.y/,'shared renderer must draw interpolated per-peer positions');
+assert.doesNotMatch(sharedDraw,/actor=\{x:r\.x\|\|0,y:r\.y\|\|0/,'shared renderer must not draw raw packet coordinates');
+
 assert.doesNotMatch(out,/sesión social vencida/i,'integrated artifact must not expose expired-social-session UX');
 assert.match(out,/window\.nsLobbyRtcStop=function/,'lobby RTC must expose deterministic teardown');
 assert.match(out,/net\.peers\.clear\(\);net\.roster\.clear\(\);net\.remotes\.clear\(\)/,'RTC teardown must release peer and interpolation state');
