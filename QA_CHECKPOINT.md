@@ -148,3 +148,14 @@ No production deployment or promotion was performed.
 - CI run **37701174403**: **SUCCESS** at `67b42fae3ccc1a07e9f67fa450e68f7a2c4557d2`.
 - Full architecture/history regressions, exhaustive study matrix, study pipeline stress, offline golden-master build, artifact output-safety and generated inline JavaScript syntax all passed.
 - Browser remains required only to confirm presentation/interaction visually; the catalog/fallback/precedence/timing/no-result-banner contracts are now mechanically tested.
+
+
+## 2026-10-07 natural-language stabilization checkpoint
+
+- Baseline QA HEAD: `aa47767165692e59d558a9b391ea567ffa4dd7a9` (CI `37703470096` SUCCESS).
+- Root cause: natural-language requests used substring scoring on the entire utterance; this could order nested/overlapping study names and did not guard questions or negation.
+- Added `src/clinical/natural-study-orders.js` with token-boundary recognition, negation/question guard, alias de-duplication, longest nonoverlapping matching and preservation of spoken order. Added `natural-study-orders.test.js` and wired it into the full CI suite.
+- Updated the source-integrated artifact order handler to enforce the same matching constraints while preserving existing `orderStudy` ownership. Did not modify the golden master, network, voice, auth or production.
+- CI `37704324289` **SUCCESS** at `e1cd5973cf915addd231f23c2408a8b2949b56e3`: full tests, offline build and artifact safety checks.
+- Remaining browser gates: actual nurse input behavior on Android, keyboard/layout, multiplayer symmetry, WebRTC audio, frame pacing and visual UI. No preview deployed in this phase.
+- This checkpoint does not claim browser E2E coverage. No production deployment or promotion.
