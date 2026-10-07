@@ -2,6 +2,7 @@ const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new E
 export function apply487(html){
  let s=html;
  // 4.8.7 replaces the legacy external study-repair pollers with source-level study resolution.
+ s=replaceOnce(s,'<script src="/task7.js?v=483"></script>','<!-- legacy study fallback 7 retired in 4.8.7 -->','retire-task7-study-fallback');
  s=replaceOnce(s,'<script src="/task8.js?v=482"></script>','<!-- legacy study poller 8 retired in 4.8.7 -->','retire-task8-study-poller');
  s=replaceOnce(s,'<script src="/task12.js?v=485"></script>','<!-- legacy study poller 12 retired in 4.8.7 -->','retire-task12-study-poller');
  // Prevent the legacy HUD/map from painting before the branded splash exists.
