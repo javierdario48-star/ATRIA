@@ -26,7 +26,10 @@ jobs:
           const h=fs.readFileSync('out/index.html','utf8');
           if(!/4\.8\.6/.test(h)) throw new Error('QA baseline marker missing');
           if(!/Estudios solicitados/i.test(h)) throw new Error('Study UI contract missing');
-          for(const f of ['task8.js','task12.js']){const x=fs.readFileSync('out/'+f,'utf8');if(/MutationObserver|setInterval/.test(x))throw new Error(f+' legacy DOM hot loop still active');}\n          console.log('output safety OK; redundant study DOM hot loops retired');
+          if(/<script[^>]+src=["'][^"']*task8\.js/i.test(h)) throw new Error('legacy task8 study poller is still loaded');
+          if(/<script[^>]+src=["'][^"']*task12\.js/i.test(h)) throw new Error('legacy task12 study poller is still loaded');
+          for(const f of ['task8.js','task12.js']) if(!fs.existsSync('out/'+f)) throw new Error(f+' golden-master copy missing');
+          console.log('output safety OK; golden-master files preserved but redundant study pollers are not loaded');
           NODE
       - name: Syntax-check generated JavaScript
         run: |
