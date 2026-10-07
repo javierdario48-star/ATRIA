@@ -1,4 +1,4 @@
-import assert from'node:assert/strict';import fs from'node:fs';import{buildStudyCatalog,resolveStudy}from'./study-catalog.js';
+import assert from'node:assert/strict';import fs from'node:fs';import{buildStudyCatalog,resolveStudy,resolveStudyById}from'./study-catalog.js';
 
 function extractCases(html){
  const mark='const CASES=',start=html.indexOf(mark);assert(start>=0);
@@ -12,7 +12,7 @@ assert(catalog.every(x=>x.normalResult&&x.gameHours>0),'every catalog study requ
 let overrides=0,fallbacks=0,combos=0,aliases=0;
 for(const c of cases){
  for(const st of catalog){
-  const r=resolveStudy(cases,c,st.id);assert(r,'valid catalog study must always resolve');
+  const r=resolveStudyById(cases,c,st.id);assert(r,'valid catalog study must always resolve');
   const native=(c.studies||[]).find(x=>x.id===st.id);
   if(native){overrides++;assert.equal(r.universalFallback,false);assert.equal(r.result,native.result,'case override must beat normal fallback')}
   else{fallbacks++;assert.equal(r.universalFallback,true);assert.equal(r.result,st.normalResult);assert(r.result)}
