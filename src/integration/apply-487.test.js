@@ -1,6 +1,8 @@
 import assert from'node:assert/strict';import fs from'node:fs';import{apply487}from'./apply-487.js';
 const src=fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'),out=apply487(src);
 assert.match(out,/Sin alteraciones significativas para esta patología\./);
+assert.match(src,/task7\.js\?v=483/,'golden master must retain legacy task7 fallback loader');
+assert.doesNotMatch(out,/task7\.js\?v=483/,'4.8.7 artifact must not load superseded task7 study fallback');
 assert.match(src,/task8\.js\?v=482/,'golden master must retain legacy task8 loader');
 assert.match(src,/task12\.js\?v=485/,'golden master must retain legacy task12 loader');
 assert.doesNotMatch(out,/task8\.js\?v=482/,'4.8.7 artifact must not load legacy task8 DOM poller');
