@@ -28,4 +28,7 @@ assert.match(out,/lastRtcSend>=220/,'RTC state sends must be throttled');
 assert.match(out,/lastDiscovery>=2500/,'RTC discovery must be bounded');
 assert.match(out,/bufferedAmount\|\|0\)>65536/,'shared-mode data channel must apply backpressure');
 assert.doesNotMatch(out,/sesión social vencida/i,'integrated artifact must not expose expired-social-session UX');
+assert.match(out,/window\.nsLobbyRtcStop=function/,'lobby RTC must expose deterministic teardown');
+assert.match(out,/net\.peers\.clear\(\);net\.roster\.clear\(\);net\.remotes\.clear\(\)/,'RTC teardown must release peer and interpolation state');
+assert.match(out,/state\.active=false;window\.nsLobbyRtcStop\?\.\(\)/,'leaving lobby must invoke RTC teardown');
 console.log('4.8.7 source integration OK');
