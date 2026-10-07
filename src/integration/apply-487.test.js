@@ -1,6 +1,7 @@
 import assert from'node:assert/strict';import fs from'node:fs';import{apply487}from'./apply-487.js';
 const src=fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'),out=apply487(src);
-assert.match(out,/Sin alteraciones significativas para esta patología\./);
+assert.match(out,/function csStudyCatalog\(\)/,'artifact must build one universal catalog from all case study definitions');
+assert.match(out,/function csNormalStudyResult\(st\)/,'artifact must provide a normal fallback for every catalog entry');
 assert.match(src,/task7\.js\?v=483/,'golden master must retain legacy task7 fallback loader');
 assert.doesNotMatch(out,/task7\.js\?v=483/,'4.8.7 artifact must not load superseded task7 study fallback');
 assert.match(src,/task8\.js\?v=482/,'golden master must retain legacy task8 loader');
