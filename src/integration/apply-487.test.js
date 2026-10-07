@@ -33,8 +33,6 @@ assert.match(out,/net\.peers\.clear\(\);net\.roster\.clear\(\);net\.remotes\.cle
 assert.match(out,/state\.active=false;window\.nsLobbyRtcStop\?\.\(\)/,'leaving lobby must invoke RTC teardown');
 console.log('4.8.7 source integration OK');
 
-assert.match(out,/function nsEnterLobbySafe\(splash\)/,'splash must use a deterministic lobby handoff');
-assert.match(out,/if\(window\.nsLobby\?\.enter\)\{window\.nsLobby\.enter\(\);return\}/,'handoff must enter lobby once module is ready');
-assert.match(out,/tries<40/,'handoff must have a bounded wait rather than an infinite map-only state');
-assert.match(out,/Reintentar entrada →/,'failed lobby handoff must restore a visible recovery path');
-assert.doesNotMatch(out,/else if\(window\.nsLobby\?\.enter\)window\.nsLobby\.enter\(\);else renderSelector\(\)/,'splash must not use the fragile one-shot lobby branch');
+assert.doesNotMatch(out,/html\+=\\\\`/,'integrated inline JS must not contain escaped template delimiters');
+assert.doesNotMatch(out,/nsEnterLobbySafe/,'timeout watchdog must not replace deterministic lobby initialization');
+assert.match(out,/window\.nsLobby\.enter=enter/,'integrated artifact must export lobby enter');
