@@ -28,9 +28,24 @@ jobs:
           if(!/Estudios solicitados/i.test(h)) throw new Error('Study UI contract missing');
           console.log('output safety OK');
           NODE
-      - name: Syntax-check generated task scripts
+      - name: Syntax-check generated JavaScript
         run: |
           for f in out/task*.js; do [ -e "$f" ] || continue; node --check "$f"; done
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import os from 'node:os';
+          import path from 'node:path';
+          import {spawnSync} from 'node:child_process';
+          const html=fs.readFileSync('out/index.html','utf8');
+          const scripts=[...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script>/gi)].map((m,i)=>({n:i+1,code:m[1]})).filter(x=>x.code.trim());
+          const dir=fs.mkdtempSync(path.join(os.tmpdir(),'atria-inline-'));
+          for(const s of scripts){
+            const file=path.join(dir,'inline-'+s.n+'.js');fs.writeFileSync(file,s.code);
+            const q=spawnSync(process.execPath,['--check',file],{encoding:'utf8'});
+            if(q.status!==0)throw new Error('inline script '+s.n+' syntax failure\\n'+q.stderr);
+          }
+          console.log('inline scripts syntax OK:',scripts.length);
+          NODE
       - name: Upload integrated QA candidate
         uses: actions/upload-artifact@v4
         with:
