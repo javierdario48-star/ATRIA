@@ -1,6 +1,6 @@
 # ATRIA 4.8.7 QA checkpoint
 
-Last local engineering checkpoint: 2026-10-07.
+Last source-audit checkpoint: 2026-10-07.
 
 ## Verified by executed Node regressions
 - bounded frame catch-up / maintenance separation
@@ -18,6 +18,12 @@ Last local engineering checkpoint: 2026-10-07.
 - patient better/worse/resolved/dead evolution
 - clinical history source/certainty
 - Vega uncertainty/critical-rescue policy
+
+## Additional source audit completed
+- Fixed brittle runtime-integration CI gate; CI reached a fully green architecture/build run at 844578e450f9ad243227950b8e4cdb1b34bfbb73.
+- Fixed Vega uncertainty classifier typo (incertainty -> uncertainty).
+- Added stale transient-speech cleanup regression coverage for lobby/mode transitions.
+- Hardened multiplayer restart: START clears previous ACKs; disconnect while starting clears token/ACK state before returning to ready/lobby.
 
 ## Source modules present
 App lifecycle/frame/boot guard; clinical dialogue/exam/treatment/history/evolution/mentor/studies; social friends/network/rooms/interpolation/competitive clock/voice; adaptive render; mobile chat.
