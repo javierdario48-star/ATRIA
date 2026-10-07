@@ -26,6 +26,7 @@ jobs:
           const h=fs.readFileSync('out/index.html','utf8');
           if(!/4\.8\.6/.test(h)) throw new Error('QA baseline marker missing');
           if(!/Estudios solicitados/i.test(h)) throw new Error('Study UI contract missing');
+          if(/<script[^>]+src=["'][^"']*task7\.js/i.test(h)) throw new Error('legacy task7 study fallback is still loaded');
           if(/<script[^>]+src=["'][^"']*task8\.js/i.test(h)) throw new Error('legacy task8 study poller is still loaded');
           if(/<script[^>]+src=["'][^"']*task12\.js/i.test(h)) throw new Error('legacy task12 study poller is still loaded');
           for(const f of ['task8.js','task12.js']) if(!fs.existsSync('out/'+f)) throw new Error(f+' golden-master copy missing');
