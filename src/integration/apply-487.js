@@ -1,6 +1,10 @@
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
 export function apply487(html){
  let s=html;
+ // Prevent the legacy HUD/map from painting before the branded splash exists.
+ const bootStyle=`<style id="atria-boot-paint-guard">html:not(.atriaBootReady) body>*{visibility:hidden!important}html:not(.atriaBootReady) body{background:#07121d!important}</style>`;
+ s=replaceOnce(s,'</head>',bootStyle+'</head>','first-paint-guard');
+ s=replaceOnce(s,`showSplash();renderSelector();brandHud();`,`showSplash();document.documentElement.classList.add('atriaBootReady');renderSelector();brandHud();`,'splash-first-paint-release');
  const oldFind=`function findStudy(text){const n=norm(text);let best=null,score=0;for(const s of C.studies)for(const a of [s.label,...s.aliases]){const na=norm(a);if(n.includes(na)&&na.length>score){best=s;score=na.length}}return best}`;
  const newFind=`function findStudy(text){const n=norm(text);let best=null,score=0,native=false;const nativeIds=new Set((C.studies||[]).map(x=>x.id)),pool=[...(C.studies||[])];for(const c of CASES||[])for(const x of c.studies||[])if(!pool.some(y=>y.id===x.id))pool.push(x);for(const st of pool)for(const a of [st.label,...(st.aliases||[])]){const na=norm(a);if(na&&n.includes(na)&&na.length>score){best=st;score=na.length;native=nativeIds.has(st.id)}}return best&&!native?{...best,result:'Sin alteraciones significativas para esta patología.',universalFallback:true}:best}`;
  s=replaceOnce(s,oldFind,newFind,'universal-study-resolution');
@@ -9,6 +13,15 @@ export function apply487(html){
  s=replaceOnce(s,unknownStudy,universalOrder,'free-universal-study-order');
  let direct=0;s=s.replace(/s\.delay\*1000/g,()=>{direct++;return 'Math.max(1,Number(s.gameHours??s.delayHours??s.delay??1))*60000'});if(direct!==1)throw new Error('direct study timing anchor expected 1, got '+direct);
  let lab=0;s=s.replace(/t\.study\.delay\*1000/g,()=>{lab++;return 'Math.max(1,Number(t.study.gameHours??t.study.delayHours??t.study.delay??1))*60000'});if(lab!==1)throw new Error('lab study timing anchor expected 1, got '+lab);
+ // Social bootstrap is idempotent: acquire/resume the profile instead of racing a second registration.
+ const oldEnsureSocial=`async function ensureSocial(){try{await nsSocial?.health?.();let s=social();if(!s.available){state.status='Lobby local · el servidor social no está conectado.';return false}if(!s.user){const raw=(csProfile?.name||'medico').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,22)||'medico';const alias=raw.length>=3?raw:(raw+'_med').slice(0,22);try{await nsSocial.register(alias)}catch(err){state.status='Reconectando tu perfil · '+(err?.message||'sin conexión');return false}s=social()}await nsSocial.refresh();return true}catch(err){state.status='Lobby local · '+(err?.message||'sin conexión');return false}}`;
+ const newEnsureSocial=`async function ensureSocial(){try{await nsSocial?.health?.();let s=social();if(!s.available){state.status='Lobby local · el servidor social no está conectado.';return false}if(!s.user){await nsSocial.register();s=social()}if(!s.user){state.status='Lobby local · perfil social no disponible.';return false}await nsSocial.refresh();return true}catch(err){console.warn('ATRIA social bootstrap',err);state.status='Lobby local · conexión social temporalmente no disponible.';return false}}`;
+ s=replaceOnce(s,oldEnsureSocial,newEnsureSocial,'idempotent-social-bootstrap');
+ // The legacy RTC lobby installed a second permanent RAF/network scheduler. Keep one owner: nsLobby tick.
+ const rtcStart=`setTimeout(discovery,250);requestAnimationFrame(animate);`;
+ s=replaceOnce(s,rtcStart,`// RTC discovery is driven conservatively from the primary lobby scheduler; no second permanent RAF.\n  window.nsLobbyRtcPulse=function(ts){if(!window.nsLobby?.active)return;ts=Number(ts)||performance.now();if(ts-net.lastRtcSend>=220){net.lastRtcSend=ts;var p=localState();if(p)sendRtc(p)}if(ts-net.lastDiscovery>=2500){net.lastDiscovery=ts;discovery()}};`,'single-lobby-scheduler');
+ const socialPulse=`if((state._lastSocial||0)+1000<t){state._lastSocial=t;nsSocial?.refresh?.().then(()=>{renderHud();if(document.getElementById('nsLobbyGuard')?.classList.contains('show')&&social().room)openWaitingRoom()}).catch(()=>{})}`;
+ s=replaceOnce(s,socialPulse,`if((state._lastSocial||0)+2500<t){state._lastSocial=t;nsSocial?.refresh?.().then(()=>{renderHud();if(document.getElementById('nsLobbyGuard')?.classList.contains('show')&&social().room)openWaitingRoom()}).catch(()=>{})}window.nsLobbyRtcPulse?.(t)`,'bounded-social-rtc-pulse');
  const oldPeer=`function csSendPeerState(){\n if(!csCoop.dc||csCoop.dc.readyState!=='open'||!csProfile)return;`;
  const newPeer=`function csSendPeerState(){\n if(!csCoop.dc||csCoop.dc.readyState!=='open'||!csProfile)return;\n if((csCoop.dc.bufferedAmount||0)>65536)return;`;
  s=replaceOnce(s,oldPeer,newPeer,'peer-backpressure');
