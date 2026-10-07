@@ -6,7 +6,7 @@ const res=await fetch(BASE+'/',{headers:{'cache-control':'no-cache'}});
 if(!res.ok) throw new Error('Baseline fetch '+res.status);
 let html=await res.text();
 if(!html.includes("version:'4.8.6'")&&!html.includes('4.8.6')) throw new Error('Expected public 4.8.6 baseline');
-const scripts=[...new Set([...html.matchAll(/<script[^>]+src=["'](\/task\d+\.js[^"']*)["']/g)].map(m=>m[1]))];
+const scripts=[...new Set([...html.matchAll(/<script[^>]+src=["'](\\/[^"']+\\.js(?:\\?[^"']*)?)["']/g)].map(m=>m[1]))];
 const assets=new Map();
 for(const src of scripts){
  const u=new URL(src,BASE),r=await fetch(u,{headers:{'cache-control':'no-cache'});
