@@ -1,4 +1,4 @@
-import assert from'node:assert/strict';import fs from'node:fs';import{buildStudyCatalog,resolveStudy,resolveStudyById}from'./study-catalog.js';
+import assert from'node:assert/strict';import fs from'node:fs';import{buildStudyCatalog,resolveStudy,resolveStudyById,materializeStudy}from'./study-registry.js';
 
 function extractCases(html){
  const mark='const CASES=',start=html.indexOf(mark);assert(start>=0);
@@ -12,16 +12,16 @@ assert(catalog.every(x=>x.normalResult&&x.gameHours>0),'every catalog study requ
 let overrides=0,fallbacks=0,combos=0,aliases=0;
 for(const c of cases){
  for(const st of catalog){
-  const r=resolveStudyById(cases,c,st.id);assert(r,'valid catalog study must always resolve');
+  const raw=resolveStudyById(st.id,c,catalog),r=materializeStudy(raw,c);assert(r,'valid catalog study must always resolve');
   const native=(c.studies||[]).find(x=>x.id===st.id);
   if(native){overrides++;assert.equal(r.universalFallback,false);assert.equal(r.result,native.result,'case override must beat normal fallback')}
   else{fallbacks++;assert.equal(r.universalFallback,true);assert.equal(r.result,st.normalResult);assert(r.result)}
   combos++;
  }
  for(const native of c.studies||[])for(const alias of [native.label,...(native.aliases||[])]){
-  const r=resolveStudy(cases,c,alias);assert(r,'native alias must resolve: '+alias);assert.equal(r.id,native.id,'native alias must preserve case override: '+c.id+' '+alias);aliases++;
+  const r=resolveStudy(alias,c,catalog);assert(r,'native alias must resolve: '+alias);assert.equal(r.id,native.id,'native alias must preserve case override: '+c.id+' '+alias);aliases++;
  }
 }
-assert.equal(resolveStudy(cases,cases[0],'banana cuántica'),null,'unknown names must not become invented studies');
+assert.equal(resolveStudy('banana cuántica',cases[0],catalog),null,'unknown names must not become invented studies');
 assert.equal(combos,cases.length*catalog.length);
 console.log('universal study matrix OK',{cases:cases.length,studies:catalog.length,combinations:combos,overrides,fallbacks,aliases});
