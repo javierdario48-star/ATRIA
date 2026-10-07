@@ -29,7 +29,7 @@ jobs:
           if(/<script[^>]+src=["'][^"']*task7\.js/i.test(h)) throw new Error('legacy task7 study fallback is still loaded');
           if(/<script[^>]+src=["'][^"']*task8\.js/i.test(h)) throw new Error('legacy task8 study poller is still loaded');
           if(/<script[^>]+src=["'][^"']*task12\.js/i.test(h)) throw new Error('legacy task12 study poller is still loaded');
-          for(const f of ['task8.js','task12.js']) if(!fs.existsSync('out/'+f)) throw new Error(f+' golden-master copy missing');
+          for(const f of ['task7.js','task8.js','task12.js']) if(!fs.existsSync('out/'+f)) throw new Error(f+' golden-master copy missing');
           console.log('output safety OK; golden-master files preserved but redundant study pollers are not loaded');
           NODE
       - name: Syntax-check generated JavaScript
