@@ -21,6 +21,11 @@ assert.match(orderUpdate,/Resultado disponible: /,'study completion may record a
 const background=out.match(/function csBackgroundResultsV203\(\)\{[\s\S]*?setInterval\(csBackgroundResultsV203/)?.[0]||'';
 assert.doesNotMatch(background,/o\.result/,'inactive-patient completion notification must not reveal result content');
 assert.match(background,/resultado\$\{newResults===1\?'':'s'\} disponible/,'background notification must announce availability only');
+const historyView=out.match(/function historyHTML\(\)\{[\s\S]*?\}\nfunction studiesHTML/)?.[0]||'';
+assert.doesNotMatch(historyView,/o\.result/,'chart/history must not reveal study result content');
+assert.match(historyView,/Consultá la pestaña Estudios/,'chart must direct the player to Studies for result content');
+const studiesView=out.match(/function studiesHTML\(\)\{[\s\S]*?\}\nfunction examHTML/)?.[0]||'';
+assert.match(studiesView,/o\.result/,'Studies tab must remain the place that renders result content');
 assert.equal((out.match(/\*60000/g)||[]).length>=2,true,'study turnaround must use 1 real minute per game hour');
 assert.match(out,/csCoop\.dc\.bufferedAmount\|\|0\)>65536/);
 assert.equal(out.includes('s.delay*1000'),false,'legacy seconds-scale study timing must be gone');
