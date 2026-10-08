@@ -10,7 +10,8 @@ const helpers=between('function csVoiceWord(word){','function csEnsureRecognitio
 const adapter=between('  const VoiceV2={','  try {\n    // Replace old local-voice behavior');
 const sender=between('function sendMessage(q){','function findStudy(text){');
 let now=0, counter=0;
-const timers=new Map(),recognizers=[],history=[],inbox=[],orders=[],trace=[];
+const timers=new Map(),recognizers=[],history=[],inbox=[],orders=[],trace=[],micListeners=[];
+const micButton={id:'voiceLocalBtn',textContent:'🎤',classList:{toggle(){},add(){},remove(){}},contains(node){return node===this}};
 class MockRecognition{
  constructor(){recognizers.push(this);this.started=false}
  start(){this.started=true;this.onstart?.()}
@@ -21,7 +22,7 @@ class MockRecognition{
 const context={
  window:{isSecureContext:true,SpeechRecognition:MockRecognition},location:{protocol:'https:'},
  navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop(){}}]})}},
- document:{getElementById:()=>null},performance:{now:()=>now},
+ document:{getElementById:id=>id==='voiceLocalBtn'?micButton:null,addEventListener(type,fn,capture){if(type==='click'&&capture)micListeners.push(fn)}},performance:{now:()=>now},
  csVoice:{localActive:false,recognition:null},csCoop:{radioHeld:false},
  csUpdateMicTrack(){},csPlaySound(){},toast(){},strip:s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9ñ/ ]/g,' ').trim(),
  sim:{},player:{bubble:'',bubbleUntil:0},pendingAddress:null,chatRole:null,role:'patient',
@@ -43,7 +44,15 @@ let passed=0;
 async function scenario(label,steps,expected,{role='patient',cancel=false,error=false}={}){
  context.role=role;context.csCoop.radioHeld=false;
  const oldHistory=history.length,oldInbox=inbox.length,oldOrders=orders.length;
- await context.bot.startVoiceV2();const mic=recognizers.at(-1);
+ const oldRecognizers=recognizers.length;
+ assert.equal(micListeners.length,1,label+': one delegated real button owner');
+ let prevented=0,stopped=0;
+ micListeners[0]({target:micButton,preventDefault(){prevented++},stopImmediatePropagation(){stopped++}});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(prevented,1,label+': button default intercepted');
+ assert.equal(stopped,1,label+': conflicting legacy button handler suppressed');
+ assert.equal(recognizers.length,oldRecognizers+1,label+': exactly one recognition instance per button tap');
+ const mic=recognizers.at(-1);
  assert(mic.started,label+': actual recognizer must start');
  for(const step of steps){
   mic.result(step.results,step.index||0);
@@ -53,6 +62,11 @@ async function scenario(label,steps,expected,{role='patient',cancel=false,error=
  else if(error)mic.onerror({error:'network'});
  else mic.onend();
  mic.onend();
+ const diagnostics=JSON.parse(context.window.nsAtriaVoiceReport());
+ assert.equal(diagnostics.micClicks,passed+1,label+': /vozdiag sees this actual button click');
+ assert(diagnostics.sessions.length>0,label+': real click creates a voice session');
+ assert.equal(diagnostics.sessions.at(-1).events.length,steps.length,label+': onresult event provenance retained');
+ if(expected!==null)assert.equal(diagnostics.sessions.at(-1).committed,expected,label+': diagnostic matches clinical history');
  // The real nurse delivery is intentionally queued by sendMessage; advance that fake clock.
  if(role==='nurse')for(const [id,fn] of [...timers]){timers.delete(id);fn()}
  if(expected===null){
@@ -82,7 +96,7 @@ const examples=[
 ];
 for(let i=0;i<examples.length;i++)await scenario('reported-'+i,[{results:[final(examples[i][0])]}],examples[i][1]);
 const subjects=['Hola cómo estás','Necesito una tomografía de tórax','No tengo fiebre','Tengo mucho dolor','¿Dónde te duele?','Solicitar resonancia cerebral','Tomo medicación habitual','¿Cuándo comenzó?','No no tengo alergias','muy muy intenso'];
-for(let i=0;i<40;i++){
+for(let i=0;i<56;i++){
  const phrase=subjects[i%subjects.length];
  const parts=phrase.split(' '),n=Math.max(1,Math.floor(parts.length/2));
  await scenario('revision-'+i,[
@@ -115,11 +129,12 @@ for(let i=0;i<12;i++){
  const text='siguiente mensaje '+i;
  await scenario('new-after-late-'+i,[{results:[final(text)]}],text);
 }
-const expectedTotal=examples.length+40+24+20+20+24;
+const expectedTotal=examples.length+56+24+20+20+24;
+assert(expectedTotal>=150,'at least 150 full-path click -> game history cases');
 assert.equal(passed,expectedTotal);
 assert.equal(timers.size,0,'no pending timers can commit a stale speech fragment');
 const before=history.length;
 context.sendMessage('Hola Hola');
 assert.equal(history.at(-1)?.text,'Hola Hola','typed words are not microphone-cleaned');
 assert.equal(history.length,before+1);
-console.log('ATRIA VOICE QA BOT PASS',JSON.stringify({scenarios:passed,typedControl:1,sampleTraces:trace.slice(0,8),engines:'active VoiceV2 + compiled game sendMessage',audio:'WebSpeech events simulated, no physical microphone'}));
+console.log('ATRIA VOICE QA BOT PASS',JSON.stringify({scenarios:passed,typedControl:1,sampleTraces:trace.slice(0,8),engines:'delegated real microphone button + active VoiceV2 + compiled game sendMessage + clinical history and /vozdiag',audio:'WebSpeech events simulated, no physical microphone'}));
