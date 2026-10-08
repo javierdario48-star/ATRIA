@@ -109,3 +109,9 @@ assert.match(out,/\+900<t\)/,'authoritative backend lobby polling uses bounded c
 assert.match(out,/sessionStorage.getItem\('atria.lobby.peer.v2'\)/,'player presence uses a unique tab-local peer id');
 assert.match(out,/csStudyTiming=\{/,'integrated artifact must include complete ED turnaround catalog');
 console.log('4.8.7 authoritative lobby transport and ED timing source contract OK');
+
+assert.match(out,/window\.nsLobbyTransportDiagnostics=\(\)=>/,'transport diagnostics must ship without credentials');
+assert.match(out,/state\._lastServerPollAt=Date\.now\(\)/,'successful backend polls must be recorded');
+assert.match(out,/state\._lastServerPollError=String\(/,'actual lobby failures must be reportable');
+assert.match(out,/if\(!window\.nsLobby\?\.active&&window\.csV41Challenge/,'RTC lobby identity must remain independent from room identity');
+console.log('real backend diagnostics and tab-local RTC identity OK');

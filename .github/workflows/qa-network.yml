@@ -1,0 +1,20 @@
+name: ATRIA Read-only QA Backend Probe
+on:
+  push:
+    branches: [atria-4.8.7-qa]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  read-only-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe preview backend without creating users
+        env:
+          QA_BASE: https://night-shift-clinical-git-atria-487-qa-javierdario4878-7324.vercel.app
+        run: node scripts/qa-network-readonly.mjs
