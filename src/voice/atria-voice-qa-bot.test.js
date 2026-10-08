@@ -10,7 +10,7 @@ const helpers=between('function csVoiceWord(word){','function csEnsureRecognitio
 const adapter=between('  const VoiceV2={','  try {\n    // Replace old local-voice behavior');
 const sender=between('function sendMessage(q){','function findStudy(text){');
 let now=0, counter=0;
-const timers=new Map(),recognizers=[],history=[],inbox=[],orders=[],trace=[],micListeners=[];
+const timers=new Map(),recognizers=[],history=[],inbox=[],orders=[],trace=[],micListeners=[],diagnosticCopies=[];
 const micButton={id:'voiceLocalBtn',textContent:'🎤',classList:{toggle(){},add(){},remove(){}},contains(node){return node===this}};
 class MockRecognition{
  constructor(){recognizers.push(this);this.started=false}
@@ -20,7 +20,7 @@ class MockRecognition{
  result(results,index=0){this.onresult?.({resultIndex:index,results})}
 }
 const context={
- window:{isSecureContext:true,SpeechRecognition:MockRecognition},location:{protocol:'https:'},
+ window:{isSecureContext:true,SpeechRecognition:MockRecognition,prompt:(_title,report)=>diagnosticCopies.push(report)},location:{protocol:'https:'},
  navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop(){}}]})}},
  document:{getElementById:id=>id==='voiceLocalBtn'?micButton:null,addEventListener(type,fn,capture){if(type==='click'&&capture)micListeners.push(fn)}},performance:{now:()=>now},
  csVoice:{localActive:false,recognition:null},csCoop:{radioHeld:false},
@@ -62,7 +62,10 @@ async function scenario(label,steps,expected,{role='patient',cancel=false,error=
  else if(error)mic.onerror({error:'network'});
  else mic.onend();
  mic.onend();
- const diagnostics=JSON.parse(context.window.nsAtriaVoiceReport());
+ const beforeDiagnosticHistory=history.length;
+ context.sendMessage('/vozdiag');
+ assert.equal(history.length,beforeDiagnosticHistory,label+': /vozdiag must stay out of clinical history');
+ const diagnostics=JSON.parse(diagnosticCopies.at(-1));
  assert.equal(diagnostics.micClicks,passed+1,label+': /vozdiag sees this actual button click');
  assert(diagnostics.sessions.length>0,label+': real click creates a voice session');
  assert.equal(diagnostics.sessions.at(-1).events.length,steps.length,label+': onresult event provenance retained');
