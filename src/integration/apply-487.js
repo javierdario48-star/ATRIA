@@ -89,7 +89,7 @@ function findStudy(text){const n=norm(text),catalog=csStudyCatalog(),canonical=c
  // Room start/snapshot carries the complete authored clinical snapshot, often > 6 KB.
  // Compress losslessly and frame over existing authenticated QA room messages.
  // Keep server cap intact; reject untrusted chunks (sender verified from server envelope).
- s=replaceOnce(s,'function attach(r){',[csPartyEncode,csPartyDecode,b64toBytes].map(fn=>fn.toString()).join('\\n')+'\\nfunction attach(r){','party-lossless-payload-codec');
+ s=replaceOnce(s,'function attach(r){',[csPartyEncode,csPartyDecode,b64toBytes].map(fn=>fn.toString()).join('\n')+'\nfunction attach(r){','party-lossless-payload-codec');
  s=replaceOnce(s,
   "const queue=[];csCoop.remotes=csCoop.remotes||{};",
   "const queue=[],fragmentMap=new Map();csCoop.remotes=csCoop.remotes||{};",
