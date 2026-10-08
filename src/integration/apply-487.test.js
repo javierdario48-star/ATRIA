@@ -174,7 +174,7 @@ assert.match(out,/const VoiceV2=\{active:false,rec:null,permissionChecked:false,
 const v2=out.slice(out.indexOf('    r.onresult=(ev)=>{'),out.indexOf('    r.onerror=(ev)=>{',out.indexOf('    r.onresult=(ev)=>{')));
 assert.ok(v2.includes('csVoiceStageRevisions(VoiceV2.pendingByIndex,VoiceV2.delivered,ev,csVoiceChooseConfirmed)'),'active recognizer uses speech alternatives');
 assert.doesNotMatch(v2,/sendMessage\(/,'Android WebSpeech revisions must not directly send transient finals');
-assert.match(out,/r\.onend=\(\)=>\{if\(VoiceV2\.rec!==r\)return;voiceV2Commit\(\);VoiceV2\.active=false/);
+assert.ok(out.includes('r.onend=()=>{if(VoiceV2.rec!==r)return;voiceV2Commit();if(VoiceV2.trace)VoiceV2.trace.ended='),'recognition end records provenance after commit');
 assert.match(out,/function voiceV2Commit\(\)/);
 assert.match(out,/if\(VoiceV2\.committed\|\|VoiceV2\.aborted\)return/);
 console.log('active Android VoiceV2 indexed single-commit integration OK');
