@@ -31,7 +31,10 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
  async function updatePresence(user,body){
   const p={userId:user.id,name:user.name,handle:user.handle,peerId:safe(body.peerId,100),x:finite(body.x,0,10000),y:finite(body.y,0,10000),dir:/^[NESW]$/.test(body.dir)?body.dir:'S',moving:!!body.moving,walkPhase:finite(body.walkPhase,0,1),color:safe(body.color||'navy',24),coat:!!body.coat,level:finite(body.level,1,1000,1),seq:finite(body.seq,0,1e9),lastSeen:now()};
   if(!p.peerId||p.peerId.length<6)return failure(400,'Identificador del dispositivo inválido');
-  const k=bucket(user.id),prev=await get('presence',k,[]),list=(Array.isArray(prev)?prev:[]).filter(x=>x.userId!==user.id&&x.lastSeen>=now()-35000);
+  const k=bucket(user.id),prev=await get('presence',k,[]);
+  const last=(Array.isArray(prev)?prev:[]).find(x=>x.userId===user.id);
+  if(p.seq>0&&last?.seq>0&&p.seq<=last.seq)return success({ok:true,stale:true,seq:last.seq});
+  const list=(Array.isArray(prev)?prev:[]).filter(x=>x.userId!==user.id&&x.lastSeen>=now()-35000);
   list.push(p);await put('presence',k,list,ttl.presence);return success({ok:true,seq:p.seq});
  }
  async function publicRoom(raw,viewer){

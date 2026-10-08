@@ -48,3 +48,10 @@ assert.equal((await call('me','GET',{},tokC)).body.invites.length,1);
 assert.equal((await call('rooms/'+room.id+'/invite/decline','POST',{},tokC)).status,200,'invited user may decline');
 assert.equal((await call('me','GET',{},tokC)).body.invites.length,0,'declined invite must disappear');
 console.log('ATRIA QA social two-user presence, friend, invitations, coop, chat, security and signal simulation PASS');
+
+const staleA=await call('lobby/state','POST',{peerId:'peer-prueba-01',x:500,y:200,seq:8},tokA);
+assert.equal(staleA.status,200);
+const delayedA=await call('lobby/state','POST',{peerId:'peer-prueba-01',x:70,y:100,seq:7},tokA);
+assert.equal(delayedA.body.stale,true,'older movement snapshots must not rewind the player');
+assert.equal((await call('lobby','GET',{},tokA)).body.players.find(x=>x.userId===a.user.id)?.x,500,'stale packet cannot teleport avatar backwards');
+console.log('QA server prevents out-of-order movement rewind');

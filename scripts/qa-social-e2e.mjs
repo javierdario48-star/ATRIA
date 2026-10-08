@@ -44,6 +44,7 @@ try{
   await sleeps(600);
  }
  if(!lobby)throw Error('two profiles never appeared together in live QA lobby');
+ const presenceLatencyMs=Math.round(performance.now()-start);
  const s=await call('search?q='+names[1].toLowerCase(),{token:a.token});
  assert.equal(s.status,200);assert(s.json.users.some(p=>p.id===b.user.id));
  assert.equal((await call('friends',{method:'POST',token:a.token,body:{userId:b.user.id}})).status,200);
@@ -66,7 +67,7 @@ try{
  const answer=await call('lobby-sync?signal=offer&toPeer=qa-peer-'+seed+'-b&fromPeer=qa-peer-'+seed+'-a',{token:b.token});
  assert.equal(answer.status,200);assert.equal(answer.json.signal.description.sdp,'qa-test-no-sensitive-sdp');
  const bad=await call('rooms/'+roomId+'/messages?after=0',{token:'bogus'});assert.equal(bad.status,401);
- console.log(JSON.stringify({result:'PASS',scenario:'Two distinct QA users + live presence + chat + friendship + co-op + WebRTC signaling',rosterSize:lobby.json.players.length,firstPresenceMs:Math.round(performance.now()-start),lobbyRequestMs:lobby.latencyMs,roomPollMs:incoming.latencyMs,qaOnly:true}));
+ console.log(JSON.stringify({result:'PASS',scenario:'Two distinct QA users + live presence + chat + friendship + co-op + WebRTC signaling',rosterSize:lobby.json.players.length,firstPresenceMs:presenceLatencyMs,lobbyRequestMs:lobby.latencyMs,roomPollMs:incoming.latencyMs,qaOnly:true}));
 }finally{
  for(const x of [a,b])if(x?.token){try{await call('lobby/leave',{method:'POST',token:x.token})}catch{}}
  if(a?.token&&roomId){try{await call('rooms/'+roomId+'/cancel',{method:'POST',token:a.token})}catch{}}
