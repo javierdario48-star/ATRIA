@@ -205,7 +205,7 @@ console.log('SpeechRecognition mic ownership exclusion integration OK');
 
 assert.match(out,/csVoice\.localActive&&!window\.__atriaV2OwnsMic&&!csCoop\.radioHeld/,'legacy recognizer cannot restart from mirrored V2 UI status');
 
-assert.match(out,/const phrase=csVoiceCleanMicSpeech\(final\|\|VoiceV2.lastInterim\)/,'VoiceV2 commit normalizes repeated short lead-ins');
+assert.match(out,/const phrase=final\?csVoiceCleanMicSpeech\(final\):''/,'only finalized results are transmitted');
 assert.match(out,/function csRtcAuth\(\)/,'RTC signaling uses existing social bearer credential');
 assert.match(out,/headers:\{\.\.\.\(body\?\{'Content-Type':'application\/json'\}:\{\}\),\.\.\.csRtcAuth\(\)\}/,'RTC request carries bearer token');
 console.log('mic-only ASR short greetings and secure RTC signaling wiring OK');
@@ -216,3 +216,5 @@ console.log('QA lobby peer ID and monotonic sequence integration OK');
 
 assert.match(out,/if\(chest&&!abdomen&&ct\)return 'tc_torax'/,'active study resolver must distinguish thoracic CT');
 assert.match(out,/if\(chest&&!abdomen&&rx\)return 'rx_torax'/,'active study resolver must distinguish chest radiographs');
+
+assert.doesNotMatch(out,/setTimeout\(voiceV2Commit,6000\)/,'final revisions may never auto-send before recognition ends');

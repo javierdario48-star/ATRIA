@@ -61,3 +61,6 @@ assert.equal(sent.at(-1),'Qué tal todo bien','short Android ASR repeated openin
 await cx.adapter.startVoiceV2();const hello=recognizers.at(-1);hello.result([fin('Hola Hola')]);hello.onend();
 assert.equal(sent.at(-1),'Hola','short Android ASR duplicated greeting');
 console.log('Android VoiceV2 simulated session/revision/cancel/legacy ownership regression OK:',sent.length,'messages');
+
+const until=sent.length;
+await cx.adapter.startVoiceV2();const provisional=recognizers.at(-1);provisional.result([tmp('Hola Hola')]);provisional.onend();assert.equal(sent.length,until,'interim-only Android end must not send an incomplete utterance');
