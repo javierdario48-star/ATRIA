@@ -78,7 +78,7 @@ for(const verb of ['pedime','solicito','haceme','quiero','ordena','necesito'])as
 assert.match(out,/for\(const h of chosen\.sort/,'one natural sentence must order multiple recognized studies in spoken sequence');
 assert.match(out,/seen\.has\(h\.st\.id\)/,'multi-study natural orders must deduplicate canonical studies');
 
-assert.match(out,/findStudy=function\\(text\\)\\{if\\(negated\\(language\\(text\\)\\)\\|\\|question\\(text\\)\\)return null;const n=norm\\(text\\),canonical=/,'late clinical adapter must prioritize canonical IDs before fuzzy case aliases');
+assert.ok(out.includes('findStudy=function(text){if(negated(language(text))||question(text))return null;const n=norm(text),canonical='),'late clinical adapter must prioritize canonical IDs before fuzzy case aliases');
 assert.match(out,/const global=match\(csStudyCatalog\(\),text\)/,'late language overlay must resolve universal studies');
 assert.doesNotMatch(out,/findStudy=function\(text\)\{return negated\(language\(text\)\)\|\|question\(text\)\?null:match\(C\?\.studies,text\)/,'late overlay must not restore case-only study resolution');
 assert.match(out,/sentFinals:new Set\(\)/,'speech recognizer tracks finalized result indexes');
