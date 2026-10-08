@@ -1,3 +1,4 @@
+import {csCaseStudyFallback} from './contextual-study-results.js';
 export const REAL_MS_PER_GAME_HOUR=60_000;
 // Emergency-department turnaround estimates in GAME MINUTES; one game minute = one real second.
 // Nonurgent cultures/procedures intentionally take longer; workflow scheduling is a separate concern.
@@ -37,7 +38,7 @@ export function resolveStudyById(id,currentCase,catalog){
 }
 export function materializeStudy(study,currentCase){
  const native=(currentCase?.studies||[]).find(s=>s.id===study?.id),s=native||study;if(!s)return null;
- return {...s,gameHours:studyTurnaroundMinutes(s)/60,result:native?.result ?? study?.normalResult ?? normalStudyResult(study),nativeResult:!!native,universalFallback:!native};
+ return {...s,gameHours:studyTurnaroundMinutes(s)/60,result:native?.result ?? csCaseStudyFallback({...study,normalResult:study?.normalResult ?? normalStudyResult(study)},currentCase) ?? normalStudyResult(study),nativeResult:!!native,universalFallback:!native};
 }
 export function studyReadyAt(now,study){
  return now+studyTurnaroundMinutes(study)*1000;

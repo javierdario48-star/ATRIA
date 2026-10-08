@@ -151,3 +151,9 @@ assert.equal(mock.csVoice.sentFinals.size,1);
 update=mock.csVoiceStageRevisions(mock.csVoice.pendingByIndex,mock.csVoice.sentFinals,{resultIndex:0,results:[rt('¿Qué medicación habitual toma?',true)]});
 assert.equal(update.text,'','already committed result index must not be reprocessed');
 console.log('WebSpeech latest-revision-only integration regression OK');
+
+assert.match(out,/function csCaseStudyFallback\(study,currentCase\)/,'case-specific fallback must ship in artifact');
+assert.match(out,/result:csCaseStudyFallback\(best,C\)/,'direct study resolver must preserve case-native evidence');
+assert.match(out,/result:csCaseStudyFallback\(global,C\)/,'late study overlay must preserve case-native evidence');
+assert.match(out,/CASE_INCIDENTAL_FINDINGS/,'incidental results must be authored explicitly, never assigned at random');
+console.log('contextual result integration source contract OK');

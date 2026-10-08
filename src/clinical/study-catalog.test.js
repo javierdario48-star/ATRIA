@@ -1,4 +1,5 @@
-import assert from'node:assert/strict';import fs from'node:fs';import{buildStudyCatalog,resolveStudy,resolveStudyById,materializeStudy,studyTurnaroundMinutes,STUDY_TAT_MINUTES}from'./study-registry.js';
+import assert from'node:assert/strict';import fs from'node:fs';
+import {CASE_STUDY_CORRELATIONS,CASE_INCIDENTAL_FINDINGS,csCaseStudyFallback} from './contextual-study-results.js';import{buildStudyCatalog,resolveStudy,resolveStudyById,materializeStudy,studyTurnaroundMinutes,STUDY_TAT_MINUTES}from'./study-registry.js';
 
 function extractCases(html){
  const mark='const CASES=',start=html.indexOf(mark);assert(start>=0);
@@ -15,7 +16,7 @@ for(const c of cases){
   const raw=resolveStudyById(st.id,c,catalog),r=materializeStudy(raw,c);assert(r,'valid catalog study must always resolve');
   const native=(c.studies||[]).find(x=>x.id===st.id);
   if(native){overrides++;assert.equal(r.universalFallback,false);assert.equal(r.result,native.result,'case override must beat normal fallback')}
-  else{fallbacks++;assert.equal(r.universalFallback,true);assert.equal(r.result,st.normalResult);assert(r.result)}
+  else{fallbacks++;assert.equal(r.universalFallback,true);assert.equal(r.result,csCaseStudyFallback(st,c)||st.normalResult);assert(r.result)}
   combos++;
  }
  for(const native of c.studies||[])for(const alias of [native.label,...(native.aliases||[])]){
@@ -33,3 +34,27 @@ assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='hemograma')),35);
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='gasometria')),10);
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='tc')),120);
 console.log('emergency department 51-study turnaround matrix OK');
+
+let correlated=0,incidental=0,normal=0;
+for(const c of cases){
+ for(const [requested,sourceId] of Object.entries(CASE_STUDY_CORRELATIONS[c.id]||{})){
+  assert(!c.studies.some(s=>s.id===requested),'cannot supersede native test '+c.id+'/'+requested);
+  const source=c.studies.find(s=>s.id===sourceId);assert(source,'native source required '+c.id+'/'+sourceId);
+  const out=materializeStudy(catalog.find(s=>s.id===requested),c);
+  assert.equal(out.universalFallback,true);assert(out.result.includes(source.result),'mapped result must preserve native case evidence');correlated++;
+ }
+ for(const [requested,wording] of Object.entries(CASE_INCIDENTAL_FINDINGS[c.id]||{})){
+  assert(!c.studies.some(s=>s.id===requested));
+  assert.equal(materializeStudy(catalog.find(s=>s.id===requested),c).result,wording);incidental++;
+ }
+ for(const st of catalog){
+  if(c.studies.some(s=>s.id===st.id)||CASE_STUDY_CORRELATIONS[c.id]?.[st.id]||CASE_INCIDENTAL_FINDINGS[c.id]?.[st.id])continue;
+  assert.equal(materializeStudy(st,c).result,st.normalResult);normal++;
+ }
+}
+assert.equal(correlated,Object.values(CASE_STUDY_CORRELATIONS).reduce((n,map)=>n+Object.keys(map).length,0));
+assert.equal(incidental,1);
+assert.match(materializeStudy(catalog.find(s=>s.id==='hemograma'),cases.find(c=>c.id==='COLON-001')).result,/Anemia microcítica/);
+assert.match(materializeStudy(catalog.find(s=>s.id==='hemograma'),cases.find(c=>c.id==='CROHN-001')).result,/Anemia/);
+assert.match(materializeStudy(catalog.find(s=>s.id==='lipasa'),cases.find(c=>c.id==='CHOLE-001')).result,/menor de 3 veces/);
+console.log('13 x 51 clinically consistent fallback matrix OK',{correlated,incidental,normal});

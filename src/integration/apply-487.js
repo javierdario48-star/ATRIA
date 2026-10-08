@@ -1,4 +1,5 @@
 import {STUDY_TAT_MINUTES} from '../clinical/study-registry.js';
+import {CASE_STUDY_CORRELATIONS,CASE_INCIDENTAL_FINDINGS,csCaseStudyFallback} from '../clinical/contextual-study-results.js';
 import {csVoiceWord,csVoiceCleanSpeech,csMergeSpeech,csVoiceNovelText} from '../voice/transcript-normalizer.js';
 import {csVoiceStageRevisions,csVoiceCommitRevisions} from '../voice/revision-buffer.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
@@ -25,9 +26,25 @@ export function apply487(html){
 function csStudyDurationMs(s){const chosen=csStudyTiming[String(s?.id||'')],fallback=Number(s?.gameHours??s?.delayHours??s?.delay??1)*60,minutes=Number.isFinite(chosen)?chosen:(Number.isFinite(fallback)&&fallback>0?fallback:60);return Math.max(1,minutes)*1000}
 function csStudyTimeLabel(readyAt,now=performance.now()){const remaining=Math.max(1,Math.ceil((readyAt-now)/1000)),hours=Math.floor(remaining/60),minutes=remaining%60;return 'faltan '+(hours?(hours+' h'+(minutes?' '+minutes+' min':'')):(remaining+' min'))+' de juego'}
 function csNormalStudyResult(st){const label=String(st?.label||'Estudio'),n=norm(label);if(/cultivo|microbiolog|clostridium|materia fecal|sangre oculta/.test(n))return label+': sin evidencia de patógenos, toxinas ni sangrado oculto significativo.';if(st?.id==='grupo')return label+': tipificación y pruebas de compatibilidad sin incidencias.';if(st?.type==='imaging')return label+': sin hallazgos patológicos agudos ni alteraciones significativas.';if(st?.type==='procedure')return label+': sin hallazgos patológicos relevantes.';return label+': Sin alteraciones significativas; parámetros dentro de límites de referencia.'}
+const CASE_STUDY_CORRELATIONS={"CIRR-001":{"pbe_cbc":"hemograma","chole_cbc":"hemograma","chole_liver":"hepatograma","pbe_renal":"renal"},"PANC-001":{"app_cbc":"hemograma","pbe_cbc":"hemograma","chole_cbc":"hemograma","renal":"hemograma","peri_gas":"gasometria","ileo_gas":"gasometria","mesi_gas":"gasometria"},"CROHN-001":{"hemograma":"inflamatorio","pbe_cbc":"inflamatorio","chole_cbc":"inflamatorio","app_cbc":"inflamatorio"},"HDA-001":{"hemograma":"hda_lab","pbe_cbc":"hda_lab","renal":"hda_lab"},"COLON-001":{"hemograma":"iron","pbe_cbc":"iron","chole_cbc":"iron"},"PERI-PBE-001":{"hemograma":"pbe_cbc","chole_cbc":"pbe_cbc","renal":"pbe_renal","paracentesis":"pbe_paracentesis"},"PERI-SEC-001":{"hemograma":"peri_cbc","pbe_cbc":"peri_cbc","chole_cbc":"peri_cbc","gasometria":"peri_gas","renal":"peri_gas","tc":"peri_ct"},"PERI-TER-001":{"hemograma":"ter_cbc","renal":"ter_cbc","tc":"ter_ct"},"APP-001":{"hemograma":"app_cbc","pbe_cbc":"app_cbc","chole_cbc":"app_cbc","tc":"app_ct","eco":"app_us"},"CHOLE-001":{"hemograma":"chole_cbc","pbe_cbc":"chole_cbc","hepatograma":"chole_liver","eco":"chole_us"},"ILEO-001":{"hemograma":"ileo_lab","renal":"ileo_lab","gasometria":"ileo_gas","tc":"ileo_ct"},"MESI-001":{"hemograma":"mesi_lab","gasometria":"mesi_gas"},"CHOLANG-001":{"hemograma":"cholang_cbc","renal":"cholang_cbc","hepatograma":"cholang_liver","eco":"cholang_us"}};
+const CASE_INCIDENTAL_FINDINGS={"CHOLE-001":{"lipasa":"Lipasa sérica: elevación discreta, menor de 3 veces el límite superior de referencia. Hallazgo inespecífico, por sí solo no diagnóstico de pancreatitis aguda."}};
+function csCaseStudyFallback(study,currentCase){
+ const id=String(study?.id||''),caseId=String(currentCase?.id||'');
+ const own=(currentCase?.studies||[]).find(s=>s.id===id);
+ if(own)return own.result;
+ const sourceId=CASE_STUDY_CORRELATIONS[caseId]?.[id];
+ if(sourceId){
+  const source=(currentCase?.studies||[]).find(s=>s.id===sourceId);
+  if(source?.result)return String(study.label||id)+': hallazgos concordantes con el panel '+String(source.label||sourceId)+': '+String(source.result);
+ }
+ const incident=CASE_INCIDENTAL_FINDINGS[caseId]?.[id];
+ if(incident)return incident;
+ return study?.normalResult||null;
+}
+
 function csStudyCatalog(){const m=new Map();for(const c of CASES||[])for(const st of c.studies||[])if(st?.id&&!m.has(st.id))m.set(st.id,{id:st.id,label:st.label,aliases:[...(st.aliases||[])],type:st.type||'lab',delay:csStudyDurationMs(st)/1000,gameHours:csStudyDurationMs(st)/60000,normalResult:csNormalStudyResult(st)});return [...m.values()]}
 function csStudyScore(st,n){let score=0;for(const a of [st.id,st.label,...(st.aliases||[])]){const x=norm(a);if(!x)continue;if(n===x)score=Math.max(score,10000+x.length);else if(n.includes(x))score=Math.max(score,x.length)}return score}
-function findStudy(text){const n=norm(text),catalog=csStudyCatalog();let best=null,score=0;for(const st of C.studies||[]){const sc=csStudyScore(st,n);if(sc>score){best=st;score=sc}}if(best)return {...best,universalFallback:false};best=null;score=0;for(const st of catalog){const sc=csStudyScore(st,n);if(sc>score){best=st;score=sc}}return best?{...best,result:best.normalResult,universalFallback:true}:null}`;
+function findStudy(text){const n=norm(text),catalog=csStudyCatalog();let best=null,score=0;for(const st of C.studies||[]){const sc=csStudyScore(st,n);if(sc>score){best=st;score=sc}}if(best)return {...best,universalFallback:false};best=null;score=0;for(const st of catalog){const sc=csStudyScore(st,n);if(sc>score){best=st;score=sc}}return best?{...best,result:csCaseStudyFallback(best,C),universalFallback:true}:null}`;
  s=replaceOnce(s,oldFind,newFind,'universal-study-resolution');
  // Natural-language study orders share the same catalog resolver. Multiple named studies in one sentence are allowed.
  const naturalAnchor=`const i=findIntervention(raw.replace(/^orden\\s+/i,''));if(i){orderIntervention(i);return}`;
@@ -38,7 +55,7 @@ function findStudy(text){const n=norm(text),catalog=csStudyCatalog();let best=nu
  s=replaceOnce(s,unknownStudy,universalOrder,'free-universal-study-order');
 
  // Later clinical-language overlay replaces findStudy again; preserve universal resolution there.
- s=replaceOnce(s,"findStudy=function(text){return negated(language(text))||question(text)?null:match(C?.studies,text);};","findStudy=function(text){if(negated(language(text))||question(text))return null;const native=match(C?.studies,text);if(native)return native;const global=match(csStudyCatalog(),text);return global?{...global,result:global.normalResult,universalFallback:true}:null;};",'late-language-universal-study-resolution');
+ s=replaceOnce(s,"findStudy=function(text){return negated(language(text))||question(text)?null:match(C?.studies,text);};","findStudy=function(text){if(negated(language(text))||question(text))return null;const native=match(C?.studies,text);if(native)return native;const global=match(csStudyCatalog(),text);return global?{...global,result:csCaseStudyFallback(global,C),universalFallback:true}:null;};",'late-language-universal-study-resolution');
  // Continuous Android speech events can re-emit the same finalized result index.
  s=replaceOnce(s,"const csVoice={localActive:false,recognition:null,restarting:false,hearing:false};","const csVoice={localActive:false,recognition:null,restarting:false,hearing:false,sentFinals:new Set(),pendingByIndex:new Map(),pendingText:'',flushTimer:null,lastSentText:'',lastSentAt:0};",'speech-final-index-state');
  s=replaceOnce(s,"r.onstart=()=>{csVoice.hearing=true;csRefreshVoiceButtons()};","r.onstart=()=>{csVoice.sentFinals.clear();csVoice.pendingByIndex.clear();csVoice.pendingText='';csVoice.hearing=true;csRefreshVoiceButtons()};",'speech-new-session-reset');
