@@ -176,6 +176,8 @@ function csDrawRemote(){
  s=replaceOnce(s,"      VoiceV2.active=false;voiceUIV2(false);\n      if(code!=='aborted')","      VoiceV2.active=false;VoiceV2.aborted=true;if(VoiceV2.commitTimer){clearTimeout(VoiceV2.commitTimer);VoiceV2.commitTimer=null}voiceUIV2(false);\n      if(code!=='aborted')",'android-v2-error');
  s=replaceOnce(s,"    r.onerror=(ev)=>{\n      const code=","    r.onerror=(ev)=>{\n      if(VoiceV2.rec!==r)return;\n      const code=",'android-v2-stale-error');
  s=replaceOnce(s,"r.onend=()=>{const fallback=!VoiceV2.sentThisTurn?String(VoiceV2.lastInterim||'').trim():'';VoiceV2.active=false;voiceUIV2(false);if(fallback.length>1){sendMessage(fallback);VoiceV2.sentThisTurn=true;}};","r.onend=()=>{if(VoiceV2.rec!==r)return;voiceV2Commit();VoiceV2.active=false;voiceUIV2(false)};",'android-v2-single-send-end');
+ // Android may deliver delayed onstart after abort/end; never resurrect a released microphone.
+ s=replaceOnce(s,"r.onstart=()=>{VoiceV2.active=true;voiceUIV2(true);","r.onstart=()=>{if(VoiceV2.rec!==r||VoiceV2.aborted||VoiceV2.committed)return;VoiceV2.active=true;voiceUIV2(true);",'android-v2-stale-onstart-guard');
  // Resolve exact anamnesis intentions before fuzzy keywords and case-specific symptom scoring.
  s=replaceOnce(s,'function patientReply(q){',
    [csAnamnesisClassify,csAnamnesisFact].map(fn=>fn.toString()).join('\n')+'\n'+
