@@ -132,3 +132,32 @@ await cx.adapter.startVoiceV2();
 assert.equal(permissionRequests,previousRequests,'subsequent recognized mic start bypasses permission primer');
 const quickMic=recognizers.at(-1);quickMic.result([fin('hola')]);quickMic.onend();
 console.log('Android deferred-permission double-tap exclusivity and immediate second startup OK');
+
+
+const phrases=[
+ 'probando audio','hola cómo estás','solicitar tomografía de tórax',
+ 'cuándo comenzó el dolor','tienes alergias','paciente de guardia'
+];
+let botClicks=0;
+for(let index=0;index<150;index++){
+ const spoken=phrases[index%phrases.length]+' control '+index;
+ const before=sent.length,instances=recognizers.length;
+ captureClicks[0]({target:realMicButton,preventDefault(){},stopImmediatePropagation(){}});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(recognizers.length,instances+1,'button click creates exactly one WebSpeech recognizer: '+index);
+ const live=recognizers.at(-1);
+ live.result([tmp(spoken.split(' ').slice(0,2).join(' '))]);
+ assert.equal(sent.length,before,'interim text cannot leak to clinical chat: '+index);
+ live.result([fin(spoken)]);
+ assert.equal(sent.length,before,'final ASR hypotheses cannot send before onend: '+index);
+ live.onend();live.onend();
+ assert.equal(sent.length,before+1,'exactly one clinical send after end: '+index);
+ assert.equal(sent.at(-1),spoken,'recognized text is preserved: '+index);
+ const diagnostic=JSON.parse(cx.window.nsAtriaVoiceReport());
+ assert(diagnostic.sessions.length>=1,'button tap must leave visible /vozdiag session trace: '+index);
+ assert.equal(diagnostic.sessions.at(-1).committed,spoken,'diagnostic commit matches game transcript: '+index);
+ assert.equal(diagnostic.micClicks>=index+2,true,'delegated click counter increases: '+index);
+ botClicks++;
+}
+assert.equal(botClicks,150);
+console.log('ATRIA mic-button integration QA BOT PASS 150 real delegated clicks; one recognizer, one send, one /vozdiag session each');
