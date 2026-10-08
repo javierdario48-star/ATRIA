@@ -26,7 +26,7 @@ assert.doesNotMatch(historyView,/o\.result/,'chart/history must not reveal study
 assert.match(historyView,/Consultá la pestaña Estudios/,'chart must direct the player to Studies for result content');
 const studiesView=out.match(/function studiesHTML\(\)\{[\s\S]*?\}\nfunction examHTML/)?.[0]||'';
 assert.match(studiesView,/o\.result/,'Studies tab must remain the place that renders result content');
-assert.equal((out.match(/\*60000/g)||[]).length>=2,true,'study turnaround must use 1 real minute per game hour');
+assert.match(out,/function csStudyDurationMs\(s\)/,'every order must use ED-specific duration');assert.match(out,/csStudyDurationMs\(t.study\)/,'lab orders must use ED-specific turnaround');assert.match(out,/csStudyTimeLabel\(o.readyAt\)/,'countdown must render fractional game hours');
 assert.match(out,/csCoop\.dc\.bufferedAmount\|\|0\)>65536/);
 assert.equal(out.includes('s.delay*1000'),false,'legacy seconds-scale study timing must be gone');
 assert.equal(src.includes('universalFallback:true'),false,'golden master must remain immutable');
@@ -85,7 +85,7 @@ assert.match(out,/sentFinals:new Set\(\)/,'speech recognizer tracks finalized re
 assert.match(out,/csVoice\.sentFinals\.has\(i\)/,'speech recognizer must not resend finalized results');
 assert.match(out,/csVoice\.sentFinals\.clear\(\)/,'speech recognizer resets finalized indexes on new recognition session');
 
-assert.match(out,/faltan '\+Math\.max\(1,Math\.ceil\(\(o\.readyAt-performance\.now\(\)\)\/60000\)\)\+' h de juego'/,'pending studies must display real-time remaining game-hours');
+assert.match(out,/function csStudyTimeLabel\(readyAt,now=performance.now\(\)\)/,'pending studies display hours and minutes');
 
 assert.match(out,/id="atria-chat-bottom-anchor"/,'ward transcript positioning override must ship in the artifact');
 assert.match(out,/body:not\(\.keyboardOpen\) #chatDock:not\(\.nsLobbyChat\) \.chatRecent\{position:absolute!important;top:auto!important;bottom:calc/,'ward transcript must anchor to composer instead of expanded dock top');
@@ -102,3 +102,10 @@ mock.csVoiceQueue('Pedime hemograma');mock.csVoiceQueue('hemograma y lipasa');mo
 mock.csVoiceQueue('Hola hola');mock.csVoiceFlush();assert.equal(sent.at(-1),'Hola hola','literal spoken repetitions in a single final must be retained');
 mock.csVoiceFlush();assert.equal(sent.length,3,'flushing empty buffer must never resend speech');
 console.log('4.8.7 Android transcript anchoring and speech reconciliation OK');
+
+assert.doesNotMatch(out,/window.fetch=async function\(input,init\)/,'lobby must never monkey-patch fetch into fabricated success or empty rosters');
+assert.match(out,/window.nsLobbyRtcPulse=function/,'bounded RTC acceleration remains active');
+assert.match(out,/\+900<t\)/,'authoritative backend lobby polling uses bounded cadence');
+assert.match(out,/sessionStorage.getItem\('atria.lobby.peer.v2'\)/,'player presence uses a unique tab-local peer id');
+assert.match(out,/csStudyTiming=\{/,'integrated artifact must include complete ED turnaround catalog');
+console.log('4.8.7 authoritative lobby transport and ED timing source contract OK');
