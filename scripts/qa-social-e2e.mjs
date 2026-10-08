@@ -32,8 +32,8 @@ try{
  assert.notEqual(a.user.id,b.user.id);
  const fake=await call('me',{token:'invalid'});assert.equal(fake.status,401,'reject forged session');
  const heart=(u,peer,x)=>call('lobby/state',{method:'POST',token:u.token,body:{peerId:peer,x,y:150,dir:'S',seq:1,moving:false,level:1}});
- assert.equal((await heart(a,'qa-peer-'+seed+'-a',100)).status,200);
- assert.equal((await heart(b,'qa-peer-'+seed+'-b',180)).status,200);
+ const heartA=await heart(a,'qa-peer-'+seed+'-a',100);assert.equal(heartA.status,200,'lobby state: '+JSON.stringify(heartA.json));
+ const heartB=await heart(b,'qa-peer-'+seed+'-b',180);assert.equal(heartB.status,200,'second lobby state: '+JSON.stringify(heartB.json));
  const start=performance.now();
  const lobby=await eventually(async()=>{
   const r=await call('lobby?after=0',{token:a.token});

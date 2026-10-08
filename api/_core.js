@@ -15,7 +15,7 @@ export async function handler(req,res,{signaling=false}={}){
   if(typeof data==='string'){if(data.length>maxBytes){res.statusCode=413;res.end(JSON.stringify({error:'Solicitud demasiado extensa'}));return}data=JSON.parse(data||'{}')}
   if(Buffer.isBuffer(data)){if(data.byteLength>maxBytes){res.statusCode=413;res.end(JSON.stringify({error:'Solicitud demasiado extensa'}));return}data=JSON.parse(data.toString('utf8'))}
   const query=Object.fromEntries(url.searchParams);
-  const result=await (signaling?core.signalRoute({method:req.method,query,headers:req.headers,body:data}):core.route({method:req.method,path:url.pathname,query,headers:req.headers,body:data}));
+  const result=await (signaling?core.signalRoute({method:req.method,query,headers:req.headers,body:data}):core.route({method:req.method,path:query.route||url.pathname,query,headers:req.headers,body:data}));
   res.statusCode=result.status;res.end(JSON.stringify(result.body));
  }catch(e){
   console.error('ATRIA QA social request failed',e?.name||'Error');
