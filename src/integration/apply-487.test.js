@@ -84,3 +84,5 @@ assert.doesNotMatch(out,/findStudy=function\(text\)\{return negated\(language\(t
 assert.match(out,/sentFinals:new Set\(\)/,'speech recognizer tracks finalized result indexes');
 assert.match(out,/csVoice\.sentFinals\.has\(i\)/,'speech recognizer must not resend finalized results');
 assert.match(out,/csVoice\.sentFinals\.clear\(\)/,'speech recognizer resets finalized indexes on new recognition session');
+
+assert.match(out,/faltan '\+Math\.max\(1,Math\.ceil\(\(o\.readyAt-performance\.now\(\)\)\/60000\)\)\+' h de juego'/,'pending studies must display real-time remaining game-hours');
