@@ -31,8 +31,9 @@ export function buildStudyCatalog(cases){
 function score(s,n){let out=0;for(const a of [s.id,s.label,...(s.aliases||[])]){const x=norm(a);if(!x)continue;if(n===x)out=Math.max(out,10000+x.length);else if(n.includes(x))out=Math.max(out,x.length)}return out}
 export function resolveStudy(query,currentCase,catalog){
  const n=norm(query);
- const words=n.split(/\s+/),head=words.some(x=>['cerebral','cerebro','encefalo','craneo','cranial','cabeza'].includes(x));
- if(head){const id=words.some(x=>['tomografia','tac','tc'].includes(x))?'tc_cerebral':words.some(x=>['resonancia','rmn','rm'].includes(x))?'rm_cerebral':null;if(id){const matched=(catalog||[]).find(s=>s.id===id);if(matched)return matched}}
+ const words=n.split(/\s+/),has=arr=>words.some(x=>arr.includes(x)),head=has(['cerebral','cerebro','encefalo','craneo','cranial','cabeza']),chest=has(['torax','toracico','toracica','pecho','pulmonar']),abdomen=has(['abdomen','abdominal','abdominopelvica','abdominopelvico','pelvis']),ct=has(['tomografia','tac','tc','escaner']),mr=has(['resonancia','rmn','rm']),rx=has(['radiografia','rx','placa']);
+ const exact=head&&ct?'tc_cerebral':head&&mr?'rm_cerebral':chest&&!abdomen&&ct?'tc_torax':chest&&!abdomen&&rx?'rx_torax':null;
+ if(exact)return (catalog||[]).find(s=>s.id===exact)||null;
 let best=null,bestScore=0;
  for(const s of currentCase?.studies||[]){const sc=score(s,n);if(sc>bestScore){best=s;bestScore=sc}}
  if(best)return best;
