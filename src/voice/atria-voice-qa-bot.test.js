@@ -53,6 +53,8 @@ async function scenario(label,steps,expected,{role='patient',cancel=false,error=
  else if(error)mic.onerror({error:'network'});
  else mic.onend();
  mic.onend();
+ // The real nurse delivery is intentionally queued by sendMessage; advance that fake clock.
+ if(role==='nurse')for(const [id,fn] of [...timers]){timers.delete(id);fn()}
  if(expected===null){
   assert.equal(history.length,oldHistory,label+': canceled, error or interim-only dictation must not send');
  }else{
