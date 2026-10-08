@@ -46,7 +46,9 @@ assert.match(out,/await nsSocial\.ensureSession\(\)/,'lobby bootstrap must use t
 assert.doesNotMatch(out,/nsSocial\?\.register\?\.\(\)\.then/,'People must not race a second registration caller');
 assert.equal((out.match(/window\.nsLobbyRtcPulse=function/g)||[]).length,1,'integrated artifact must have exactly one RTC pulse owner');
 assert.equal((out.match(/ensureSession:async/g)||[]).length,1,'integrated artifact must have exactly one exported social session owner');
-assert.match(out,/lastRtcSend>=220/,'RTC state sends must be throttled');
+assert.match(out,/lastRtcSend>=100/,'RTC movement sends have bounded 10 Hz cadence');
+assert.match(out,/window\.nsLobbyRtcHasFresh=function/,'RTC can provide fresh positions to primary lobby frame');
+assert.match(out,/lobby-server-fallback-not-override-fresh-rtc|window\.nsLobbyRtcHasFresh\?\.\(p\.userId\)/,'HTTP snapshots must not override newer RTC positions');
 assert.match(out,/lastDiscovery>=2500/,'RTC discovery must be bounded');
 assert.match(out,/bufferedAmount\|\|0\)>65536/,'shared-mode data channel must apply backpressure');
 assert.match(out,/function csRemoteVisual\(/,'guard renderer must interpolate remote network snapshots');
