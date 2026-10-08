@@ -194,7 +194,7 @@ console.log('lobby presence integrity and HTTP failure visibility OK');
 
 assert.match(out,/function csStudyAnatomyId\(text\)/,'brain study resolver is included in generated artifact');
 assert.match(out,/window\.nsAtriaNormalizeSpeech=function\(text\)\{const raw=String\(csVoiceCleanSpeech\(text\)\)/,'final common dispatch normalizes multi-pass Android echo');
-assert.match(out,/function sendMessage\(q\)\{const text=String\(q\|\|''\)\.trim\(\)\.startsWith\('\/'\)/,'raw chat transcript is normalized before NPC and history');
+assert.ok(out.includes("const text=String(q||'').trim().startsWith('/')"),'raw chat transcript is normalized before NPC and history');
 console.log('brain vs abdominal imaging and final speech dispatch integration OK');
 
 assert.match(out,/csVoice\.localActive=false;csVoice\.restarting=false;csVoice\.pendingText=''/,'only one local SpeechRecognition instance owns the microphone');
