@@ -168,3 +168,13 @@ assert.match(out,/presenceVerified=!!state\._lastServerPollAt&&!state\._lastServ
 assert.match(out,/Amigos guardados disponibles\. No se pudo verificar quién está conectado/,'friends remain accessible with explicit presence warning');
 assert.match(out,/presencia sin verificar/,'offline/cached friend rows must not be labeled presently online without server evidence');
 console.log('friend list and backend presence truthfulness contract OK');
+
+// The real Android button is rebound to VoiceV2, not the earlier csVoice handler.
+assert.match(out,/const VoiceV2=\{active:false,rec:null,permissionChecked:false,lastInterim:'',pendingByIndex:new Map\(\)/);
+const v2=out.slice(out.indexOf('    r.onresult=(ev)=>{'),out.indexOf('    r.onerror=(ev)=>{',out.indexOf('    r.onresult=(ev)=>{')));
+assert.match(v2,/csVoiceStageRevisions\(VoiceV2\.pendingByIndex,VoiceV2\.delivered,ev\)/);
+assert.doesNotMatch(v2,/sendMessage\(/,'Android WebSpeech revisions must not directly send transient finals');
+assert.match(out,/r\.onend=\(\)=>\{voiceV2Commit\(\);VoiceV2\.active=false/);
+assert.match(out,/function voiceV2Commit\(\)/);
+assert.match(out,/if\(VoiceV2\.committed\|\|VoiceV2\.aborted\)return/);
+console.log('active Android VoiceV2 indexed single-commit integration OK');
