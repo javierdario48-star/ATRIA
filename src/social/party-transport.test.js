@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {roomTransportReady} from './party-transport.js';
+const room={allAccepted:true,members:[{userId:'a',online:true},{userId:'b',online:true}]};
+const ready=(patch={})=>roomTransportReady({room,localUserId:'a',connected:true,channelState:'open',...patch});
+assert.equal(ready(),true,'accepted + live peer + open channel can start');
+assert.equal(ready({connected:false}),false,'accepted does not imply transport');
+assert.equal(ready({channelState:'connecting'}),false,'connecting is not open');
+assert.equal(ready({room:{...room,allAccepted:false}}),false,'no start before everyone accepts');
+assert.equal(ready({room:{...room,members:[{userId:'a',online:true},{userId:'b',online:false}]}}),false,'offline invited peer does not count');
+assert.equal(ready({room:{...room,members:[{userId:'a',online:true}]}}),false,'solo participant cannot start coop');
+assert.equal(ready({room:{...room,members:[{userId:'a',online:true},{userId:'b',online:true},{userId:'c',online:true}]}}),true,'3-player room still supported');
+console.log('Cooperative host start requires real live peers and open data channel');

@@ -157,3 +157,9 @@ assert.match(out,/result:csCaseStudyFallback\(best,C\)/,'direct study resolver m
 assert.match(out,/result:csCaseStudyFallback\(global,C\)/,'late study overlay must preserve case-native evidence');
 assert.match(out,/CASE_INCIDENTAL_FINDINGS/,'incidental results must be authored explicitly, never assigned at random');
 console.log('contextual result integration source contract OK');
+
+assert.doesNotMatch(out,/try\{csCoop\.connected=true\}catch/,'never fabricate cooperative connection after a timer');
+assert.match(out,/roomTransportReady\(\{room:r,localUserId:uid\(\),connected:csCoop\?\.connected,channelState:csCoop\?\.dc\?\.readyState\}\)/,'guard start checks accepted room and real open transport');
+assert.match(out,/csCoop\.connected=opened&&live\.length>0/,'only online room peers can mark a channel connected');
+assert.match(out,/transportRetryAfter=Date\.now\(\)\+15000/,'failed room handshake must use backoff and give explicit feedback');
+console.log('cooperative room no phantom connected state integration contract OK');
