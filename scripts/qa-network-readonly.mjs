@@ -21,4 +21,5 @@ if(rtc.status===200&&!Array.isArray(rtc.json?.players))throw Error('RTC endpoint
 let legacy;
 try{legacy=await get('/api/lobby?after=0')}catch(e){legacy={error:String(e)}}
 console.log('READONLY social lobby GET:',JSON.stringify({status:legacy.status,error:legacy.json?.error||legacy.error||null}));
-console.log('Read-only social health passed; RTC is '+(rtc.status===200?'available':'degraded')+'; this is NOT multiplayer browser E2E.');
+if(![200,401,403].includes(legacy.status))throw Error('Release blocker: authoritative /api/lobby returned '+(legacy.status??'network error')+'; health 200 and RTC fallback alone are insufficient for multiplayer.');
+console.log('Read-only social readiness passed; this is NOT multiplayer browser E2E.');

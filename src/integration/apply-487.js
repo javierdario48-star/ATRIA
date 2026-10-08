@@ -162,5 +162,19 @@ function csDrawRemote(){
  // Correct the late command adapter: the universal catalog is authoritative, not the current case list.
  s=replaceOnce(s,"nurseSay('No reconozco ese estudio en este caso.');return false;","nurseSay('El estudio no está registrado en el catálogo.');return false;",'late-study-rejection-message');
  s=replaceOnce(s,"const badge=document.getElementById('csRebaseBadge');if(badge)badge.textContent='4.4.0';","const badge=document.getElementById('csRebaseBadge');if(badge)badge.textContent='4.8.7 QA';",'identify-current-qa-preview');
+ // The server, not RTC cache, certifies presence. Avoid a misleading "1 online" on HTTP 500.
+ s=replaceOnce(s,
+  "const {h,n}=overlay(),s=social(),online=1+[...state.players.values()].filter(p=>p.online!==false).length,pending=",
+  "const {h,n}=overlay(),s=social(),serverVerified=!!state._lastServerPollAt&&!state._lastServerPollError&&(Date.now()-state._lastServerPollAt<15000),online=serverVerified?1+[...state.players.values()].filter(p=>p.online!==false).length:'—',pending=",
+  'lobby-count-requires-server-proof');
+ s=replaceOnce(s,
+  "state.status='Lobby reconectando…';renderHud()}finally{state.polling=false}",
+  "state.status='Sin presencia verificada · '+String(err?.message||'error del servidor').slice(0,72)+' · reintentando';renderHud()}finally{state.polling=false}",
+  'lobby-server-error-visible');
+ s=replaceOnce(s,
+  "if(!r.ok)throw Error(data.error||'No se pudo conectar.');return data}finally{clearTimeout(to)}}\nfunction statePayload()",
+  "if(!r.ok)throw Error(typeof data.error==='string'?data.error:'HTTP '+r.status);return data}finally{clearTimeout(to)}}\nfunction statePayload()",
+  'lobby-http-status-instead-of-object');
+
  return s;
 }

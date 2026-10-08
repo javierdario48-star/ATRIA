@@ -185,3 +185,9 @@ assert.match(out,/El estudio no está registrado en el catálogo/,'late order ha
 assert.doesNotMatch(out,/No reconozco ese estudio en este caso/,'rejecting studies merely for case mismatch is obsolete');
 assert.match(out,/badge\.textContent='4\.8\.7 QA'/,'identify current candidate preview');
 console.log('amilasa late command integration and QA preview marker OK');
+
+assert.match(out,/serverVerified=!!state\._lastServerPollAt&&!state\._lastServerPollError/,'online count requires a successful and recent server poll');
+assert.match(out,/online=serverVerified\?1\+/,'unverified clients never claim a connected headcount');
+assert.match(out,/Sin presencia verificada/,'offline lobby must indicate the server failure');
+assert.match(out,/HTTP '\+r\.status/,'backend HTTP errors remain diagnosable without exposing tokens');
+console.log('lobby presence integrity and HTTP failure visibility OK');
