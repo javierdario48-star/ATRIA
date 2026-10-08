@@ -32,4 +32,6 @@ assert.equal(sent.length,count,'abort cancels final');
 await cx.adapter.startVoiceV2();const current=recognizers.at(-1);mic.result([fin('evento tardío')]);mic.onend();current.result([fin('mensaje válido')]);current.onend();
 assert.equal(sent.at(-1),'mensaje válido','old session ignored');
 const len=sent.length;current.result([fin('duplicado')]);assert.equal(sent.length,len);
-console.log('Android VoiceV2 simulated session/revision/cancel regression OK:',len,'messages');
+await cx.adapter.startVoiceV2();mic=recognizers.at(-1);mic.result([fin('Hola Hola cómo Hola cómo estás Hola cómo estás')]);mic.onend();
+assert.equal(sent.at(-1),'Hola cómo estás','screenshot reproduction through actual active VoiceV2 handler');
+console.log('Android VoiceV2 simulated session/revision/cancel and screenshot regression OK:',sent.length,'messages');

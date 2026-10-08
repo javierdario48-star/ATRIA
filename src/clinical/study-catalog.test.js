@@ -27,13 +27,13 @@ assert.equal(resolveStudy('banana cuántica',cases[0],catalog),null,'unknown nam
 assert.equal(combos,cases.length*catalog.length);
 console.log('universal study matrix OK',{cases:cases.length,studies:catalog.length,combinations:combos,overrides,fallbacks,aliases});
 
-assert.equal(catalog.length,51,'stable emergency catalog must contain all 51 studies');
-assert.equal(Object.keys(STUDY_TAT_MINUTES).length,51,'each catalog study must have an explicit turnaround');
+assert.equal(catalog.length,52,'52 emergency studies including amilasa');
+assert.equal(Object.keys(STUDY_TAT_MINUTES).length,52,'each catalog study must have an explicit turnaround');
 for(const st of catalog){assert.ok(Number.isFinite(STUDY_TAT_MINUTES[st.id]),'missing ED time '+st.id);assert.equal(st.gameHours*60,studyTurnaroundMinutes(st));}
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='hemograma')),35);
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='gasometria')),10);
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='tc')),120);
-console.log('emergency department 51-study turnaround matrix OK');
+console.log('emergency department 52-study turnaround matrix OK');
 
 let correlated=0,incidental=0,normal=0;
 for(const c of cases){
@@ -53,8 +53,15 @@ for(const c of cases){
  }
 }
 assert.equal(correlated,Object.values(CASE_STUDY_CORRELATIONS).reduce((n,map)=>n+Object.keys(map).length,0));
-assert.equal(incidental,1);
+assert.equal(incidental,2);
 assert.match(materializeStudy(catalog.find(s=>s.id==='hemograma'),cases.find(c=>c.id==='COLON-001')).result,/Anemia microcítica/);
 assert.match(materializeStudy(catalog.find(s=>s.id==='hemograma'),cases.find(c=>c.id==='CROHN-001')).result,/Anemia/);
 assert.match(materializeStudy(catalog.find(s=>s.id==='lipasa'),cases.find(c=>c.id==='CHOLE-001')).result,/menor de 3 veces/);
-console.log('13 x 51 clinically consistent fallback matrix OK',{correlated,incidental,normal});
+console.log('13 x 52 clinically consistent fallback matrix OK',{correlated,incidental,normal});
+
+assert.equal(resolveStudy('amilasa',cases.find(c=>c.id==='APP-001'),catalog)?.id,'amilasa');
+assert.equal(resolveStudy('amilasemia',cases.find(c=>c.id==='PANC-001'),catalog)?.id,'amilasa');
+assert.match(materializeStudy(catalog.find(s=>s.id==='amilasa'),cases.find(c=>c.id==='PANC-001')).result,/elevada/);
+assert.match(materializeStudy(catalog.find(s=>s.id==='amilasa'),cases.find(c=>c.id==='APP-001')).result,/límites de referencia/);
+assert.equal(studyTurnaroundMinutes(catalog.find(s=>s.id==='amilasa')),60);
+console.log('amilasa: case-aware result, alias and game-time contract OK');

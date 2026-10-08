@@ -178,3 +178,10 @@ assert.match(out,/r\.onend=\(\)=>\{if\(VoiceV2\.rec!==r\)return;voiceV2Commit\(\
 assert.match(out,/function voiceV2Commit\(\)/);
 assert.match(out,/if\(VoiceV2\.committed\|\|VoiceV2\.aborted\)return/);
 console.log('active Android VoiceV2 indexed single-commit integration OK');
+
+assert.match(out,/const csExtraStudies=/,'additional medically named studies must be embedded in output');
+assert.match(out,/Amilasa sérica: elevada, compatible con la pancreatitis aguda/,'case-specific amylase result must be authored');
+assert.match(out,/El estudio no está registrado en el catálogo/,'late order handler uses catalog feedback');
+assert.doesNotMatch(out,/No reconozco ese estudio en este caso/,'rejecting studies merely for case mismatch is obsolete');
+assert.match(out,/badge\.textContent='4\.8\.7 QA'/,'identify current candidate preview');
+console.log('amilasa late command integration and QA preview marker OK');
