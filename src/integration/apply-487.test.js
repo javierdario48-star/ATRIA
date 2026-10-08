@@ -172,7 +172,7 @@ console.log('friend list and backend presence truthfulness contract OK');
 // The real Android button is rebound to VoiceV2, not the earlier csVoice handler.
 assert.match(out,/const VoiceV2=\{active:false,rec:null,permissionChecked:false,lastInterim:'',pendingByIndex:new Map\(\)/);
 const v2=out.slice(out.indexOf('    r.onresult=(ev)=>{'),out.indexOf('    r.onerror=(ev)=>{',out.indexOf('    r.onresult=(ev)=>{')));
-assert.match(v2,/csVoiceStageRevisions\(VoiceV2\.pendingByIndex,VoiceV2\.delivered,ev\)/);
+assert.ok(v2.includes('csVoiceStageRevisions(VoiceV2.pendingByIndex,VoiceV2.delivered,ev,csVoiceChooseConfirmed)'),'active recognizer uses speech alternatives');
 assert.doesNotMatch(v2,/sendMessage\(/,'Android WebSpeech revisions must not directly send transient finals');
 assert.match(out,/r\.onend=\(\)=>\{if\(VoiceV2\.rec!==r\)return;voiceV2Commit\(\);VoiceV2\.active=false/);
 assert.match(out,/function voiceV2Commit\(\)/);
@@ -219,5 +219,5 @@ assert.match(out,/if\(chest&&!abdomen&&rx\)return 'rx_torax'/,'active study reso
 
 assert.doesNotMatch(out,/setTimeout\(voiceV2Commit,6000\)/,'final revisions may never auto-send before recognition ends');
 
-assert.match(out,/function csVoiceChooseConfirmed\\(result\\)/,'speech alternatives chooser is embedded');
-assert.match(out,/csVoiceStageRevisions\\(VoiceV2\\.pendingByIndex,VoiceV2\\.delivered,ev,csVoiceChooseConfirmed\\)/,'active Android recognizer uses confirmed ASR alternatives');
+assert.ok(out.includes('function csVoiceChooseConfirmed(result)'),'speech alternatives chooser is embedded');
+assert.ok(out.includes('csVoiceStageRevisions(VoiceV2.pendingByIndex,VoiceV2.delivered,ev,csVoiceChooseConfirmed)'),'active Android recognizer uses ASR alternatives');
