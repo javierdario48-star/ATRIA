@@ -1,3 +1,4 @@
+import {csPartyEncode,csPartyDecode,b64toBytes} from '../social/party-payload.js';
 import {STUDY_TAT_MINUTES,EXTRA_EMERGENCY_STUDIES} from '../clinical/study-registry.js';
 import {CASE_STUDY_CORRELATIONS,CASE_INCIDENTAL_FINDINGS,csCaseStudyFallback} from '../clinical/contextual-study-results.js';
 import {roomTransportReady} from '../social/party-transport.js';
@@ -85,6 +86,22 @@ function findStudy(text){const n=norm(text),catalog=csStudyCatalog(),canonical=c
  s=replaceOnce(s,"results=s.results||[],room=s.room;let html=","results=s.results||[],room=s.room,presenceVerified=!!state._lastServerPollAt&&!state._lastServerPollError&&(Date.now()-state._lastServerPollAt<15000);let html=",'friends-require-fresh-backend-presence');
  s=replaceOnce(s,"else{html+=`<div class=\"nsPeopleAlias\">Conectado como <b>@${e(s.user.handle)}</b></div>`;if(room){","else{html+=`<div class=\"nsPeopleAlias\">Conectado como <b>@${e(s.user.handle)}</b></div>`;if(!presenceVerified)html+='<div class=\"nsPeopleOffline\">Amigos guardados disponibles. No se pudo verificar quién está conectado en el lobby; la presencia se actualizará al restablecer el servidor.</div>';if(room){",'friends-show-server-presence-warning');
  s=replaceOnce(s,"return peopleRow(p,acts)}).join(''):'<div class=\"nsPeopleEmpty\">Todavía no tienes amigos.","return peopleRow(p,acts,presenceVerified?null:('@'+e(p.handle||'jugador')+' · presencia sin verificar'))}).join(''):'<div class=\"nsPeopleEmpty\">Todavía no tienes amigos.",'friends-cache-never-falsely-online');
+ // Room start/snapshot carries the complete authored clinical snapshot, often > 6 KB.
+ // Compress losslessly and frame over existing authenticated QA room messages.
+ // Keep server cap intact; reject untrusted chunks (sender verified from server envelope).
+ s=replaceOnce(s,'function attach(r){',[csPartyEncode,csPartyDecode,b64toBytes].map(fn=>fn.toString()).join('\\n')+'\\nfunction attach(r){','party-lossless-payload-codec');
+ s=replaceOnce(s,
+  "const queue=[];csCoop.remotes=csCoop.remotes||{};",
+  "const queue=[],fragmentMap=new Map();csCoop.remotes=csCoop.remotes||{};",
+  'party-fragment-buffer-per-room');
+ s=replaceOnce(s,
+  "send(value){if(closed)return;const data=JSON.parse(value);if(data.type==='state'||data.kind==='snapshot'){",
+  "send(value){if(closed)return;const data=JSON.parse(value);if(data.type==='cs_room_v411'&&['start','snapshot'].includes(data.kind)&&String(value).length>4500){const id='room_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);void csPartyEncode(value,r.id,id).then(parts=>{if(closed)return;for(const part of parts)queue.push(part);drain()}).catch(err=>{status='Guardia sin sincronizar: '+String(err?.message||err);render()});return}if(data.type==='state'||data.kind==='snapshot'){",
+  'party-encode-large-clinical-start');
+ s=replaceOnce(s,
+  "for(const m of data.messages)dc.onmessage?.({data:JSON.stringify(m.data)});cursor=data.cursor;",
+  "for(const m of data.messages){const packet=m.data;if(packet?.type==='atria_room_fragment'){if(m.userId!==r.hostUserId||packet.roomId!==r.id||packet.codec!=='gzip'||typeof packet.id!=='string'||packet.id.length>100||!Number.isInteger(packet.total)||packet.total<1||packet.total>90||!Number.isInteger(packet.index)||packet.index<0||packet.index>=packet.total||typeof packet.data!=='string'||packet.data.length>3600)continue;const key=m.userId+':'+packet.id;let fragment=fragmentMap.get(key);if(!fragment){fragment={parts:Array(packet.total).fill(null),at:Date.now(),count:0};fragmentMap.set(key,fragment)}if(fragment.parts.length!==packet.total)continue;if(fragment.parts[packet.index]===null){fragment.parts[packet.index]=packet.data;fragment.count++}if(fragment.count===packet.total){fragmentMap.delete(key);try{const full=await csPartyDecode(fragment.parts);dc.onmessage?.({data:JSON.stringify(full)})}catch(err){status='No se pudo reconstruir la guardia compartida: '+String(err?.message||err);render()}}continue}dc.onmessage?.({data:JSON.stringify(packet)})}for(const [key,frag] of fragmentMap)if(Date.now()-frag.at>45000)fragmentMap.delete(key);cursor=data.cursor;",
+  'party-reassemble-verified-server-fragments');
  // Social bootstrap is idempotent: acquire/resume the profile instead of racing a second registration.
  const oldEnsureSocial=`async function ensureSocial(){try{await nsSocial?.health?.();let s=social();if(!s.available){state.status='Lobby local · el servidor social no está conectado.';return false}if(!s.user){const raw=(csProfile?.name||'medico').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,22)||'medico';const alias=raw.length>=3?raw:(raw+'_med').slice(0,22);try{await nsSocial.register(alias)}catch(err){state.status='Reconectando tu perfil · '+(err?.message||'sin conexión');return false}s=social()}await nsSocial.refresh();return true}catch(err){state.status='Lobby local · '+(err?.message||'sin conexión');return false}}`;
  const newEnsureSocial=`async function ensureSocial(){try{await nsSocial?.health?.();let s=social();if(!s.available){state.status='Lobby local · el servidor social no está conectado.';return false}if(!s.user){await nsSocial.ensureSession();s=social()}if(!s.user){state.status='Lobby local · perfil social no disponible.';return false}await nsSocial.refresh();return true}catch(err){console.warn('ATRIA social bootstrap',err);state.status='Lobby local · conexión social temporalmente no disponible.';return false}}`;
