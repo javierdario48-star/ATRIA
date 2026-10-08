@@ -6,16 +6,8 @@
   ],
   "rewrites": [
     {
-      "source": "/api/lobby/:path*",
-      "destination": "/api/social?route=lobby/:path*"
-    },
-    {
-      "source": "/api/friends/:path*",
-      "destination": "/api/social?route=friends/:path*"
-    },
-    {
-      "source": "/api/rooms/:path*",
-      "destination": "/api/social?route=rooms/:path*"
+      "source": "/api/:path*",
+      "destination": "/api/social?route=:path*"
     }
   ]
 }
