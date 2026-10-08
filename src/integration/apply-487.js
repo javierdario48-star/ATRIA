@@ -3,6 +3,7 @@ import {CASE_STUDY_CORRELATIONS,CASE_INCIDENTAL_FINDINGS,csCaseStudyFallback} fr
 import {roomTransportReady} from '../social/party-transport.js';
 import {csVoiceWord,csVoiceCleanSpeech,csMergeSpeech,csVoiceNovelText} from '../voice/transcript-normalizer.js';
 import {csVoiceStageRevisions,csVoiceCommitRevisions} from '../voice/revision-buffer.js';
+import {csAnamnesisClassify,csAnamnesisFact} from '../clinical/anamnesis-intents.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
 export function apply487(html){
  let s=html;
@@ -146,5 +147,15 @@ function csDrawRemote(){
  s=replaceOnce(s,"    VoiceV2.active=false;\n    try { if(r) cancel?r.abort():r.stop(); } catch(e) {}","    VoiceV2.active=false;VoiceV2.aborted=!!cancel;\n    if(cancel&&VoiceV2.commitTimer){clearTimeout(VoiceV2.commitTimer);VoiceV2.commitTimer=null}\n    try { if(r) cancel?r.abort():r.stop(); } catch(e) {}",'android-v2-cancel');
  s=replaceOnce(s,"      VoiceV2.active=false;voiceUIV2(false);\n      if(code!=='aborted')","      VoiceV2.active=false;VoiceV2.aborted=true;if(VoiceV2.commitTimer){clearTimeout(VoiceV2.commitTimer);VoiceV2.commitTimer=null}voiceUIV2(false);\n      if(code!=='aborted')",'android-v2-error');
  s=replaceOnce(s,"r.onend=()=>{const fallback=!VoiceV2.sentThisTurn?String(VoiceV2.lastInterim||'').trim():'';VoiceV2.active=false;voiceUIV2(false);if(fallback.length>1){sendMessage(fallback);VoiceV2.sentThisTurn=true;}};","r.onend=()=>{voiceV2Commit();VoiceV2.active=false;voiceUIV2(false)};",'android-v2-single-send-end');
+ // Resolve exact anamnesis intentions before fuzzy keywords and case-specific symptom scoring.
+ s=replaceOnce(s,'function patientReply(q){',
+   [csAnamnesisClassify,csAnamnesisFact].map(fn=>fn.toString()).join('\n')+'\n'+
+   "function patientReply(q){\n const fact=csAnamnesisFact(C,q);if(fact){if(!fact.text)return 'No recuerdo ese dato, doctor. ¿Me puede preguntar de otra manera?';if(!sim.intentHistory.some(h=>h.id==='anamnesis:'+fact.intent))sim.intentHistory.push({id:'anamnesis:'+fact.intent,reveal:fact.intent+': '+fact.text,source:fact.source,caseId:C.id});complete('talk');return fact.text;}",
+   'live-patient-case-bound-anamnesis');
+ // Prevent a response queued in box A from being delivered to box B.
+ s=replaceOnce(s,
+   "function deliverPatientSpeech(text,localMode=false){sim.chats.patient.push(['doctor',text]);const a=patientReply(text);setTimeout(()=>{if(!sim||sim.caseEnded)return;",
+   "function deliverPatientSpeech(text,localMode=false){const activeSim=sim,activeCase=C;sim.chats.patient.push(['doctor',text]);const a=patientReply(text);setTimeout(()=>{if(!sim||sim!==activeSim||C!==activeCase||sim.caseEnded)return;",
+   'patient-delayed-answer-case-isolation');
  return s;
 }
