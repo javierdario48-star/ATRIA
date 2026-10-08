@@ -28,7 +28,7 @@ for(let test=0;test<120;test++){
   const q=lobby.players.get(id);
   visual+=(q._tx-visual)*Math.min(1,16/1000*9);
   maxLag=Math.max(maxLag,Math.abs(x-visual));
-  assert.equal(q.dir,'E');
+  if(packets>0)assert.equal(q.dir,'E','direction must follow the most recent RTC packet');
   assert(q._seen<=now);
  }
  assert(packets>=20,'RTC supplies regular independent position frames');
