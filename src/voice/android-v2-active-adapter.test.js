@@ -106,3 +106,25 @@ assert.equal(clickDiag.micClicks,1);
 assert(clickDiag.startAttempts>=1);
 assert(clickDiag.sessions.length>0,'click produces an observable diagnostic session');
 console.log('Real microphone button click -> VoiceV2 session -> speech dispatch OK');
+
+// Race reproducer: while Android's first permission prompt is unresolved, two taps
+// must not create two sessions or send two separate partial transcripts.
+let permissionRequests=0,grant;
+cx.navigator.mediaDevices.getUserMedia=()=>{permissionRequests++;return new Promise(resolve=>{grant=()=>resolve({getTracks:()=>[{stop(){}}]})})};
+vm.runInContext("VoiceV2.permissionChecked=false;",cx);
+const pendingCount=recognizers.length;
+const firstStart=cx.adapter.startVoiceV2();
+const secondStart=cx.adapter.startVoiceV2();
+assert.equal(permissionRequests,1,'one permission prompt even with rapid double tap');
+assert.equal(recognizers.length,pendingCount,'no recognizer before initial permission');
+grant();
+await Promise.all([firstStart,secondStart]);
+assert.equal(recognizers.length,pendingCount+1,'permission race must initialize one WebSpeech instance');
+const pendingMic=recognizers.at(-1);
+pendingMic.result([fin('probando audio')]);pendingMic.onend();
+assert.equal(sent.at(-1),'probando audio','first permitted dictation sends one complete utterance');
+const previousRequests=permissionRequests;
+await cx.adapter.startVoiceV2();
+assert.equal(permissionRequests,previousRequests,'subsequent recognized mic start bypasses permission primer');
+const quickMic=recognizers.at(-1);quickMic.result([fin('hola')]);quickMic.onend();
+console.log('Android deferred-permission double-tap exclusivity and immediate second startup OK');

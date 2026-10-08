@@ -227,3 +227,8 @@ assert.match(out,/window\.nsAtriaVoiceReport=\(\)=>JSON\.stringify/,'QA-local di
 assert.match(out,/window\.nsAtriaVoiceCopyReport=\(\)=>/,'in-game diagnostic is directly available');
 assert.match(out,/q\|\|''\)\.trim\(\)\.toLowerCase\(\)==='\/vozdiag'/,'/vozdiag intercepts before NPC and patient dispatch');
 assert.doesNotMatch(out,/fetch\(['"]\/api\/(?:voice|transcript|trace)/,'ASR diagnostics must not automatically upload');
+
+assert.match(out,/VoiceV2\.starting=true;const startEpoch=\+\+VoiceV2\.startEpoch/,'voice claims ownership before async permission');
+assert.match(out,/if\(!VoiceV2\.permissionChecked\)await requestMicPermissionV2\(\)/,'repeated taps avoid extra getUserMedia');
+assert.match(out,/if\(VoiceV2\.starting\)return/,'overlapping click ignored');
+assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response rejected');
