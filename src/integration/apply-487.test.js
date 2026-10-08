@@ -115,3 +115,9 @@ assert.match(out,/state\._lastServerPollAt=Date\.now\(\)/,'successful backend po
 assert.match(out,/state\._lastServerPollError=String\(/,'actual lobby failures must be reportable');
 assert.match(out,/if\(!window\.nsLobby\?\.active&&window\.csV41Challenge/,'RTC lobby identity must remain independent from room identity');
 console.log('real backend diagnostics and tab-local RTC identity OK');
+
+assert.match(out,/net\.syncFailures=Math\.min\(6/,'optional RTC discovery must use bounded backoff on server 500');
+assert.match(out,/performance\.now\(\)<\(net\.retryAt\|\|0\)/,'RTC discovery must skip API while backoff active');
+assert.match(out,/var d=await api\('GET',null,'\?roster=1'\)/,'unhealthy RTC service must not receive speculative presence POSTs');
+assert.match(out,/net\.lastSyncError=String\(/,'RTC failures must remain inspectable');
+console.log('optional RTC 500 backoff contract OK');
