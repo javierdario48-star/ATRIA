@@ -5,9 +5,9 @@ import {apply487} from '../integration/apply-487.js';
 
 const html=apply487(fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'));
 const lobbyStart=html.indexOf('function tick(t){const dt=Math.max(0,Math.min(.08,(t-state.lastTick)/1000))');
-const lobbyEnd=html.indexOf('requestAnimationFrame(tick);requestAnimationFrame(tick);',lobbyStart);
+const lobbyEnd=html.indexOf('requestAnimationFrame(tick)}requestAnimationFrame(tick);',lobbyStart);
 assert(lobbyStart>=0&&lobbyEnd>lobbyStart,'compiled primary lobby tick found');
-const lobbySource=html.slice(lobbyStart,lobbyEnd+'requestAnimationFrame(tick);requestAnimationFrame(tick);'.length);
+const lobbySource=html.slice(lobbyStart,lobbyEnd+'requestAnimationFrame(tick)}requestAnimationFrame(tick);'.length);
 const remote={x:10,y:20,_tx:150,_ty:20,_vx:0,_vy:0,_seen:0,dir:'E',moving:true,walkPhase:0};
 const lobby={active:true,lastTick:0,players:new Map([['FRIEND',remote]]),demo:true,_lastSocial:999999};
 const context={state:lobby,player:{path:[],pathIndex:0,target:null,moving:false},advanceActor(){},window:{nsLobbyRtcPulse(){}},
