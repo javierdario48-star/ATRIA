@@ -91,11 +91,12 @@ assert.match(out,/id="atria-chat-bottom-anchor"/,'ward transcript positioning ov
 assert.match(out,/body:not\(\.keyboardOpen\) #chatDock:not\(\.nsLobbyChat\) \.chatRecent\{position:absolute!important;top:auto!important;bottom:calc/,'ward transcript must anchor to composer instead of expanded dock top');
 assert.match(out,/body:not\(\.keyboardOpen\) #chatDock\.historyExpanded:not\(\.nsLobbyChat\) \.chatRecent\{top:auto!important/,'expanded history must stay bottom-anchored');
 assert.match(out,/function csMergeSpeech\(previous,incoming\)/,'speech must reconcile cumulative finalized fragments');
-assert.match(out,/csVoiceQueue\(final\)/,'final WebSpeech fragments must be buffered rather than sent individually');
+assert.match(out,/csVoiceQueue\(raw\)/,'final WebSpeech fragments must be buffered rather than sent individually');
+assert.match(out,/if\(speechSeen&&csVoice.pendingText\)csVoiceReschedule\(\)/,'interim Android hypothesis must postpone flush until speech pauses');
 assert.match(out,/r\.onend=\(\)=>\{csVoiceFlush\(\)/,'pending final speech must flush when recognition stops');
-const speechStart=out.indexOf('function csMergeSpeech(previous,incoming){'),speechEnd=out.indexOf('function csEnsureRecognition(){',speechStart);
+const speechStart=out.indexOf('function csVoiceWord(word){'),speechEnd=out.indexOf('function csEnsureRecognition(){',speechStart);
 assert.ok(speechStart>=0&&speechEnd>speechStart,'recognizer reconciliation helpers must be embedded');
-const sent=[];const mock={csVoice:{pendingText:'',flushTimer:null},csCoop:{radioHeld:false},clearTimeout(){},setTimeout(fn){return fn},sendMessage(value){sent.push(value)}};vm.runInNewContext(out.slice(speechStart,speechEnd),mock);
+const sent=[];let clock=1000;const mock={csVoice:{pendingText:'',flushTimer:null,lastSentText:'',lastSentAt:0},csCoop:{radioHeld:false},performance:{now:()=>clock},clearTimeout(){},setTimeout(fn){return fn},sendMessage(value){sent.push(value)}};vm.runInNewContext(out.slice(speechStart,speechEnd),mock);
 for(const fragment of ['Hola','Hola qué','Hola qué te','Hola qué te pasó'])mock.csVoiceQueue(fragment);
 mock.csVoiceFlush();assert.deepEqual(sent,['Hola qué te pasó'],'progressive Android speech must send exactly one complete utterance');
 mock.csVoiceQueue('Pedime hemograma');mock.csVoiceQueue('hemograma y lipasa');mock.csVoiceFlush();assert.deepEqual(sent,['Hola qué te pasó','Pedime hemograma y lipasa'],'overlapping speech segments must not repeat words');
@@ -121,3 +122,16 @@ assert.match(out,/performance\.now\(\)<\(net\.retryAt\|\|0\)/,'RTC discovery mus
 assert.match(out,/var d=await api\('GET',null,'\?roster=1'\)/,'unhealthy RTC service must not receive speculative presence POSTs');
 assert.match(out,/net\.lastSyncError=String\(/,'RTC failures must remain inspectable');
 console.log('optional RTC 500 backoff contract OK');
+
+assert.match(out,/function csVoiceCleanSpeech\(value\)/,'Android echo-cleaner must ship in generated artifact');
+assert.match(out,/function csVoiceNovelText\(previous,incoming\)/,'previously emitted phrase must not be resent');
+assert.match(out,/csVoice\.lastSentAt<8000/,'recently emitted WebSpeech phrase must be compared across flushes');
+clock+=9000;
+mock.csVoiceQueue('algún algún hábito algún hábito algún hábito algún hábito te va algún hábito te va con cigarro');
+mock.csVoiceFlush();assert.equal(sent.at(-1),'algún hábito te va con cigarro','real Android screen transcript repetition must collapse');
+const count=sent.length;clock+=100;
+mock.csVoiceQueue('algún hábito te va con cigarro');mock.csVoiceFlush();
+assert.equal(sent.length,count,'repeated cumulative Android final after an earlier flush must not be sent twice');
+clock+=9000;mock.csVoiceQueue('Hola hola');mock.csVoiceFlush();
+assert.equal(sent.at(-1),'Hola hola','explicit doubled words are still permissible in a new utterance');
+console.log('WebSpeech final/interim, cumulative fragment and echo-loop artifact tests OK');
