@@ -38,18 +38,18 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
   list.push(p);await put('presence',k,list,ttl.presence);return success({ok:true,seq:p.seq});
  }
  async function publicRoom(raw,viewer){
-  const live=await roster(),on=new Set(live.map(p=>p.userId)),r={...raw};
+  const targetBuckets=new Set((raw.members||[]).map(m=>bucket(m.userId)));const parts=await Promise.all([...targetBuckets].map(i=>get('presence',i,[])));const on=new Set(parts.flat().filter(x=>x&&x.lastSeen>=now()-35000).map(x=>x.userId)),r={...raw};
   r.members=(raw.members||[]).map(m=>({...m,online:on.has(m.userId)}));
   r.role=viewer===raw.hostUserId?'host':'guest';
   r.allAccepted=r.members.length>1&&r.members.every(m=>m.accepted);
   r.maxPlayers=4;
   return r;
  }
- async function userCard(id){const u=await profile(id);if(!u)return null;const live=await roster();return {id:u.id,handle:u.handle,name:u.name,online:live.some(p=>p.userId===id)}}
+ async function userCard(id,online){const u=await profile(id);if(!u)return null;return {id:u.id,handle:u.handle,name:u.name,online:online.has(id)}}
  async function links(id){
-  const ids=await get('friends',id,[]),incoming=await get('requests',id,[]),outgoing=await get('outgoing',id,[]),inv=await get('invites',id,[]);
-  const cards=await Promise.all(ids.map(userCard)),i=await Promise.all(incoming.map(userCard)),o=await Promise.all(outgoing.map(userCard));
-  const invites=await Promise.all(inv.map(async v=>{const r=await get('room',v.roomId);if(!r||r.closed)return null;const host=await userCard(r.hostUserId);return {roomId:r.id,host:host||{id:r.hostUserId,name:'Anfitrión',handle:'medico'},mode:r.mode,members:r.members.length,maxPlayers:4}}));
+  const [ids,incoming,outgoing,inv,live]=await Promise.all([get('friends',id,[]),get('requests',id,[]),get('outgoing',id,[]),get('invites',id,[]),roster()]);const online=new Set(live.map(x=>x.userId)),card=id=>userCard(id,online);
+  const cards=await Promise.all(ids.map(card)),i=await Promise.all(incoming.map(card)),o=await Promise.all(outgoing.map(card));
+  const invites=await Promise.all(inv.map(async v=>{const r=await get('room',v.roomId);if(!r||r.closed)return null;const host=await card(r.hostUserId);return {roomId:r.id,host:host||{id:r.hostUserId,name:'Anfitrión',handle:'medico'},mode:r.mode,members:r.members.length,maxPlayers:4}}));
   return {friends:cards.filter(Boolean),requests:{incoming:i.filter(Boolean),outgoing:o.filter(Boolean)},invites:invites.filter(Boolean)};
  }
  const addUnique=(items,x,max=50)=>[...new Set([...(Array.isArray(items)?items:[]),x])].slice(-max);
@@ -187,7 +187,7 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
    const from=safe(s.fromPeerId,100),to=safe(s.toPeerId,100),type=safe(s.type,10);
    if(!from||!to||!['offer','answer','ice'].includes(type))return failure(400,'Señal inválida');
    if(safe(s.fromUserId,64)!==user.id)return failure(403,'Emisor no autorizado');
-   const me=(await roster()).find(x=>x.userId===user.id&&x.peerId===from);
+   const me=(await get('presence',bucket(user.id),[])).find(x=>x.userId===user.id&&x.peerId===from&&x.lastSeen>=now()-35000);
    if(!me)return failure(403,'Señal sin presencia activa');
    const signal={type,fromUserId:user.id,fromPeerId:from,toPeerId:to,description:s.description};
    if(JSON.stringify(signal).length>12000)return failure(413,'Señal demasiado extensa');
@@ -196,7 +196,7 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
   }
   if(method==='GET'&&query.signal){
    const type=safe(query.signal,10),to=safe(query.toPeer,100),from=safe(query.fromPeer,100);
-   const self=(await roster()).find(x=>x.userId===user.id&&x.peerId===to);
+   const self=(await get('presence',bucket(user.id),[])).find(x=>x.userId===user.id&&x.peerId===to&&x.lastSeen>=now()-35000);
    if(!self)return failure(403,'Presencia no verificada');
    return success({signal:await get('signal',idHash(to+':'+from+':'+type))});
   }
