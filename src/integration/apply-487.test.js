@@ -1,4 +1,4 @@
-import assert from'node:assert/strict';import fs from'node:fs';import{apply487}from'./apply-487.js';
+import assert from'node:assert/strict';import vm from'node:vm';import fs from'node:fs';import{apply487}from'./apply-487.js';
 const src=fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'),out=apply487(src);
 assert.match(out,/function csStudyCatalog\(\)/,'artifact must build one universal catalog from all case study definitions');
 assert.match(out,/function csNormalStudyResult\(st\)/,'artifact must provide a normal fallback for every catalog entry');
@@ -86,3 +86,19 @@ assert.match(out,/csVoice\.sentFinals\.has\(i\)/,'speech recognizer must not res
 assert.match(out,/csVoice\.sentFinals\.clear\(\)/,'speech recognizer resets finalized indexes on new recognition session');
 
 assert.match(out,/faltan '\+Math\.max\(1,Math\.ceil\(\(o\.readyAt-performance\.now\(\)\)\/60000\)\)\+' h de juego'/,'pending studies must display real-time remaining game-hours');
+
+assert.match(out,/id="atria-chat-bottom-anchor"/,'ward transcript positioning override must ship in the artifact');
+assert.match(out,/body:not\(\.keyboardOpen\) #chatDock:not\(\.nsLobbyChat\) \.chatRecent\{position:absolute!important;top:auto!important;bottom:calc/,'ward transcript must anchor to composer instead of expanded dock top');
+assert.match(out,/body:not\(\.keyboardOpen\) #chatDock\.historyExpanded:not\(\.nsLobbyChat\) \.chatRecent\{top:auto!important/,'expanded history must stay bottom-anchored');
+assert.match(out,/function csMergeSpeech\(previous,incoming\)/,'speech must reconcile cumulative finalized fragments');
+assert.match(out,/csVoiceQueue\(final\)/,'final WebSpeech fragments must be buffered rather than sent individually');
+assert.match(out,/r\.onend=\(\)=>\{csVoiceFlush\(\)/,'pending final speech must flush when recognition stops');
+const speechStart=out.indexOf('function csMergeSpeech(previous,incoming){'),speechEnd=out.indexOf('function csEnsureRecognition(){',speechStart);
+assert.ok(speechStart>=0&&speechEnd>speechStart,'recognizer reconciliation helpers must be embedded');
+const sent=[];const mock={csVoice:{pendingText:'',flushTimer:null},csCoop:{radioHeld:false},clearTimeout(){},setTimeout(fn){return fn},sendMessage(value){sent.push(value)}};vm.runInNewContext(out.slice(speechStart,speechEnd),mock);
+for(const fragment of ['Hola','Hola qué','Hola qué te','Hola qué te pasó'])mock.csVoiceQueue(fragment);
+mock.csVoiceFlush();assert.deepEqual(sent,['Hola qué te pasó'],'progressive Android speech must send exactly one complete utterance');
+mock.csVoiceQueue('Pedime hemograma');mock.csVoiceQueue('hemograma y lipasa');mock.csVoiceFlush();assert.deepEqual(sent,['Hola qué te pasó','Pedime hemograma y lipasa'],'overlapping speech segments must not repeat words');
+mock.csVoiceQueue('Hola hola');mock.csVoiceFlush();assert.equal(sent.at(-1),'Hola hola','literal spoken repetitions in a single final must be retained');
+mock.csVoiceFlush();assert.equal(sent.length,3,'flushing empty buffer must never resend speech');
+console.log('4.8.7 Android transcript anchoring and speech reconciliation OK');
