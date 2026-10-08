@@ -36,7 +36,7 @@ vm.runInContext(bootstrap+'\n'+[
  range('function processCommand(q){','function nurseNatural(q){'),
  range('function nurseNatural(q){','function nurseSay(t){'),
  range('function orderStudy(s,quiet=false','const MONITOR_THERAPY_CATALOG='),
- range('function sendMessage(q){','function findStudy(text){'),
+ range('function sendMessage(q){','const csStudyTiming='),
  range('  const VoiceV2={','  try {\n    // Replace old local-voice behavior')
 ].join('\n')+'\nglobalThis.__runtime={startVoiceV2,select:q=>findStudy(q),duration:s=>csStudyDurationMs(s)};',cx);
 const expected=[['Solicitar tomografía de tórax','tc_torax'],['Solicitar tomografía cerebral','tc_cerebral'],['Solicitar resonancia cerebral','rm_cerebral'],['Solicitar radiografía de tórax','rx_torax'],['Solicitar amilasa','amilasa'],['Solicitar lipasa','lipasa']];
