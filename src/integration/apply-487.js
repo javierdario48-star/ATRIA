@@ -186,6 +186,12 @@ function csDrawRemote(){
  "    if(VoiceV2.active){ stopVoiceV2(false); return; }\n    const SR=speechCtorV2();",
  "    if(VoiceV2.active){ stopVoiceV2(false); return; }\n    // Disable the legacy mic BEFORE aborting it; its onend must never restart or flush a stale partial.\n    csVoice.localActive=false;csVoice.restarting=false;csVoice.pendingText='';\n    if(csVoice.flushTimer){clearTimeout(csVoice.flushTimer);csVoice.flushTimer=null}\n    csVoice.pendingByIndex?.clear();csVoice.sentFinals?.clear();\n    try{csVoice.recognition?.abort?.()}catch(_){try{csVoice.recognition?.stop?.()}catch(__){}}\n    const SR=speechCtorV2();",
  'v2-exclusive-microphone-ownership');
+ // Mirror of csVoice.localActive is reused by V2 voiceUIV2 for HUD/radio state.
+ // The legacy onend must NOT interpret that as permission to restart its old recognizer.
+ s=replaceOnce(s,
+ "if(csVoice.localActive&&!csCoop.radioHeld&&!csVoice.restarting)",
+ "if(csVoice.localActive&&!window.__atriaV2OwnsMic&&!csCoop.radioHeld&&!csVoice.restarting)",
+ 'legacy-voice-onend-must-not-restart-during-v2');
  // An old listener can deliver a late result after its abort/stop.
  s=replaceOnce(s,
  "r.onresult=e=>{if(!csVoice.localActive||csCoop.radioHeld)return;",

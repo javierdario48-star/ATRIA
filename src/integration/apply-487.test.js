@@ -202,3 +202,5 @@ assert.match(out,/csVoice\.recognition\?\.abort\?\.\(\)/,'legacy SpeechRecogniti
 assert.match(out,/window\.__atriaV2OwnsMic=true/,'active local voice engine owns mic');
 assert.match(out,/if\(!csVoice\.localActive\|\|window\.__atriaV2OwnsMic\|\|csCoop\.radioHeld\)return/,'stale legacy event cannot send duplicate messages');
 console.log('SpeechRecognition mic ownership exclusion integration OK');
+
+assert.match(out,/csVoice\.localActive&&!window\.__atriaV2OwnsMic&&!csCoop\.radioHeld/,'legacy recognizer cannot restart from mirrored V2 UI status');
