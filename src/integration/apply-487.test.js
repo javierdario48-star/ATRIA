@@ -82,8 +82,9 @@ assert.match(out,/findStudy=function\(text\)\{if\(negated\(language\(text\)\)\|\
 assert.match(out,/const global=match\(csStudyCatalog\(\),text\)/,'late language overlay must resolve universal studies');
 assert.doesNotMatch(out,/findStudy=function\(text\)\{return negated\(language\(text\)\)\|\|question\(text\)\?null:match\(C\?\.studies,text\)/,'late overlay must not restore case-only study resolution');
 assert.match(out,/sentFinals:new Set\(\)/,'speech recognizer tracks finalized result indexes');
-assert.match(out,/csVoice\.sentFinals\.has\(i\)/,'speech recognizer must not resend finalized results');
-assert.match(out,/csVoice\.sentFinals\.clear\(\)/,'speech recognizer resets finalized indexes on new recognition session');
+assert.match(out,/delivered.has\(i\)/,'speech recognizer must not resend delivered final result indexes');
+assert.match(out,/csVoice\.sentFinals\.clear\(\)/,'speech recognizer resets delivered indexes on new recognition session');
+assert.match(out,/csVoice\.pendingByIndex\.clear\(\)/,'new recognition clears staged revisions');
 
 assert.match(out,/function csStudyTimeLabel\(readyAt,now=performance.now\(\)\)/,'pending studies display hours and minutes');
 
@@ -91,12 +92,12 @@ assert.match(out,/id="atria-chat-bottom-anchor"/,'ward transcript positioning ov
 assert.match(out,/body:not\(\.keyboardOpen\) #chatDock:not\(\.nsLobbyChat\) \.chatRecent\{position:absolute!important;top:auto!important;bottom:calc/,'ward transcript must anchor to composer instead of expanded dock top');
 assert.match(out,/body:not\(\.keyboardOpen\) #chatDock\.historyExpanded:not\(\.nsLobbyChat\) \.chatRecent\{top:auto!important/,'expanded history must stay bottom-anchored');
 assert.match(out,/function csMergeSpeech\(previous,incoming\)/,'speech must reconcile cumulative finalized fragments');
-assert.match(out,/csVoiceQueue\(raw\)/,'final WebSpeech fragments must be buffered rather than sent individually');
-assert.match(out,/if\(speechSeen&&csVoice.pendingText\)csVoiceReschedule\(\)/,'interim Android hypothesis must postpone flush until speech pauses');
+assert.match(out,/csVoiceStageRevisions\(csVoice.pendingByIndex,csVoice.sentFinals,e\)/,'WebSpeech must replace revisions by result index');
+assert.match(out,/if\(update.finalCount\)csVoiceReschedule\(\)/,'final revisions only become chat messages after debounce');
 assert.match(out,/r\.onend=\(\)=>\{csVoiceFlush\(\)/,'pending final speech must flush when recognition stops');
 const speechStart=out.indexOf('function csVoiceWord(word){'),speechEnd=out.indexOf('function csEnsureRecognition(){',speechStart);
 assert.ok(speechStart>=0&&speechEnd>speechStart,'recognizer reconciliation helpers must be embedded');
-const sent=[];let clock=1000;const mock={csVoice:{pendingText:'',flushTimer:null,lastSentText:'',lastSentAt:0},csCoop:{radioHeld:false},performance:{now:()=>clock},clearTimeout(){},setTimeout(fn){return fn},sendMessage(value){sent.push(value)}};vm.runInNewContext(out.slice(speechStart,speechEnd),mock);
+const sent=[];let clock=1000;const mock={csVoice:{sentFinals:new Set(),pendingByIndex:new Map(),pendingText:'',flushTimer:null,lastSentText:'',lastSentAt:0},csCoop:{radioHeld:false},performance:{now:()=>clock},clearTimeout(){},setTimeout(fn){return fn},sendMessage(value){sent.push(value)}};vm.runInNewContext(out.slice(speechStart,speechEnd),mock);
 for(const fragment of ['Hola','Hola qué','Hola qué te','Hola qué te pasó'])mock.csVoiceQueue(fragment);
 mock.csVoiceFlush();assert.deepEqual(sent,['Hola qué te pasó'],'progressive Android speech must send exactly one complete utterance');
 mock.csVoiceQueue('Pedime hemograma');mock.csVoiceQueue('hemograma y lipasa');mock.csVoiceFlush();assert.deepEqual(sent,['Hola qué te pasó','Pedime hemograma y lipasa'],'overlapping speech segments must not repeat words');
@@ -135,3 +136,18 @@ assert.equal(sent.length,count,'repeated cumulative Android final after an earli
 clock+=9000;mock.csVoiceQueue('Hola hola');mock.csVoiceFlush();
 assert.equal(sent.at(-1),'Hola hola','explicit doubled words are still permissible in a new utterance');
 console.log('WebSpeech final/interim, cumulative fragment and echo-loop artifact tests OK');
+
+const rt=(text,isFinal)=>({0:{transcript:text},isFinal});
+clock+=10000;
+mock.csVoiceStageRevisions(mock.csVoice.pendingByIndex,mock.csVoice.sentFinals,{resultIndex:0,results:[rt('¿Qué medicación toma?',false)]});
+assert.equal(mock.csVoice.pendingByIndex.size,0,'interim hypothesis must never enter committed message');
+let update=mock.csVoiceStageRevisions(mock.csVoice.pendingByIndex,mock.csVoice.sentFinals,{resultIndex:0,results:[rt('¿Qué medicación toma?',true)]});
+assert.equal(update.text,'¿Qué medicación toma?');
+update=mock.csVoiceStageRevisions(mock.csVoice.pendingByIndex,mock.csVoice.sentFinals,{resultIndex:0,results:[rt('¿Qué medicación habitual toma?',true)]});
+assert.equal(update.text,'¿Qué medicación habitual toma?','the latest final interpretation must replace an earlier version');
+mock.csVoice.pendingText=update.text;mock.csVoiceFlush();
+assert.equal(sent.at(-1),'¿Qué medicación habitual toma?','only latest reviewed utterance reaches the patient');
+assert.equal(mock.csVoice.sentFinals.size,1);
+update=mock.csVoiceStageRevisions(mock.csVoice.pendingByIndex,mock.csVoice.sentFinals,{resultIndex:0,results:[rt('¿Qué medicación habitual toma?',true)]});
+assert.equal(update.text,'','already committed result index must not be reprocessed');
+console.log('WebSpeech latest-revision-only integration regression OK');
