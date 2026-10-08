@@ -27,8 +27,8 @@ assert.equal(resolveStudy('banana cuántica',cases[0],catalog),null,'unknown nam
 assert.equal(combos,cases.length*catalog.length);
 console.log('universal study matrix OK',{cases:cases.length,studies:catalog.length,combinations:combos,overrides,fallbacks,aliases});
 
-assert.equal(catalog.length,72,'original 51 + independently named requested studies');
-assert.equal(Object.keys(STUDY_TAT_MINUTES).length,72,'each catalog study must have an explicit turnaround');
+assert.equal(catalog.length,73,'original 51 + independently named requested studies');
+assert.equal(Object.keys(STUDY_TAT_MINUTES).length,73,'each catalog study must have an explicit turnaround');
 for(const st of catalog){assert.ok(Number.isFinite(STUDY_TAT_MINUTES[st.id]),'missing ED time '+st.id);assert.equal(st.gameHours*60,studyTurnaroundMinutes(st));}
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='hemograma')),35);
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='gasometria')),10);
@@ -75,3 +75,5 @@ for(const [request,id] of [['tomografía cerebral','tc_cerebral'],['tomografia d
 assert.equal(resolveStudy('tomografia abdominal',neuroCase,catalog)?.id,'app_ct','abdominal native alias retains priority');
 for(const st of catalog)assert.ok(st.normalResult,'every named study must have an authored fallback '+st.id);
 console.log('brain anatomy disambiguation and extended lab study catalog OK');
+
+for(const [phrase,id] of [['tomografía de tórax','tc_torax'],['tomografia toracica','tc_torax'],['TC torax','tc_torax'],['tomografia cerebral','tc_cerebral'],['resonancia cerebral','rm_cerebral']])for(const c of cases){const found=resolveStudy(phrase,c,catalog);if(id==='tc_torax')assert.notEqual(found?.id,'tc','thoracic order cannot become abdominal CT')} 
