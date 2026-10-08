@@ -47,7 +47,8 @@ function csCaseStudyFallback(study,currentCase){
 const csExtraStudies=${JSON.stringify(EXTRA_EMERGENCY_STUDIES)};
 function csStudyCatalog(){const m=new Map();for(const c of CASES||[])for(const st of c.studies||[])if(st?.id&&!m.has(st.id))m.set(st.id,{id:st.id,label:st.label,aliases:[...(st.aliases||[])],type:st.type||'lab',delay:csStudyDurationMs(st)/1000,gameHours:csStudyDurationMs(st)/60000,normalResult:csNormalStudyResult(st)});return [...m.values(),...csExtraStudies.filter(st=>!m.has(st.id))]}
 function csStudyScore(st,n){let score=0;for(const a of [st.id,st.label,...(st.aliases||[])]){const x=norm(a);if(!x)continue;if(n===x)score=Math.max(score,10000+x.length);else if(n.includes(x))score=Math.max(score,x.length)}return score}
-function findStudy(text){const n=norm(text),catalog=csStudyCatalog();let best=null,score=0;for(const st of C.studies||[]){const sc=csStudyScore(st,n);if(sc>score){best=st;score=sc}}if(best)return {...best,universalFallback:false};best=null;score=0;for(const st of catalog){const sc=csStudyScore(st,n);if(sc>score){best=st;score=sc}}return best?{...best,result:csCaseStudyFallback(best,C),universalFallback:true}:null}`;
+function csStudyAnatomyId(text){const words=norm(text).split(' ');if(!words.some(x=>['cerebral','cerebro','encefalo','craneo','cranial','cabeza'].includes(x)))return null;if(words.some(x=>['tomografia','tac','tc'].includes(x)))return 'tc_cerebral';if(words.some(x=>['resonancia','rmn','rm'].includes(x)))return 'rm_cerebral';return null}
+function findStudy(text){const n=norm(text),catalog=csStudyCatalog(),anatomy=csStudyAnatomyId(n);if(anatomy){const st=catalog.find(x=>x.id===anatomy);if(st)return {...st,result:csCaseStudyFallback(st,C),universalFallback:true}}let best=null,score=0;for(const st of C.studies||[]){const sc=csStudyScore(st,n);if(sc>score){best=st;score=sc}}if(best)return {...best,universalFallback:false};best=null;score=0;for(const st of catalog){const sc=csStudyScore(st,n);if(sc>score){best=st;score=sc}}return best?{...best,result:csCaseStudyFallback(best,C),universalFallback:true}:null}`;
  s=replaceOnce(s,oldFind,newFind,'universal-study-resolution');
  // Natural-language study orders share the same catalog resolver. Multiple named studies in one sentence are allowed.
  const naturalAnchor=`const i=findIntervention(raw.replace(/^orden\\s+/i,''));if(i){orderIntervention(i);return}`;
@@ -58,7 +59,7 @@ function findStudy(text){const n=norm(text),catalog=csStudyCatalog();let best=nu
  s=replaceOnce(s,unknownStudy,universalOrder,'free-universal-study-order');
 
  // Later clinical-language overlay replaces findStudy again; preserve universal resolution there.
- s=replaceOnce(s,"findStudy=function(text){return negated(language(text))||question(text)?null:match(C?.studies,text);};","findStudy=function(text){if(negated(language(text))||question(text))return null;const native=match(C?.studies,text);if(native)return native;const global=match(csStudyCatalog(),text);return global?{...global,result:csCaseStudyFallback(global,C),universalFallback:true}:null;};",'late-language-universal-study-resolution');
+ s=replaceOnce(s,"findStudy=function(text){return negated(language(text))||question(text)?null:match(C?.studies,text);};","findStudy=function(text){if(negated(language(text))||question(text))return null;const anatomy=csStudyAnatomyId(text);if(anatomy){const st=csStudyCatalog().find(s=>s.id===anatomy);if(st)return {...st,result:csCaseStudyFallback(st,C),universalFallback:true}}const native=match(C?.studies,text);if(native)return native;const global=match(csStudyCatalog(),text);return global?{...global,result:csCaseStudyFallback(global,C),universalFallback:true}:null;};",'late-language-universal-study-resolution');
  // Continuous Android speech events can re-emit the same finalized result index.
  s=replaceOnce(s,"const csVoice={localActive:false,recognition:null,restarting:false,hearing:false};","const csVoice={localActive:false,recognition:null,restarting:false,hearing:false,sentFinals:new Set(),pendingByIndex:new Map(),pendingText:'',flushTimer:null,lastSentText:'',lastSentAt:0};",'speech-final-index-state');
  s=replaceOnce(s,"r.onstart=()=>{csVoice.hearing=true;csRefreshVoiceButtons()};","r.onstart=()=>{csVoice.sentFinals.clear();csVoice.pendingByIndex.clear();csVoice.pendingText='';csVoice.hearing=true;csRefreshVoiceButtons()};",'speech-new-session-reset');
@@ -176,5 +177,8 @@ function csDrawRemote(){
   "if(!r.ok)throw Error(typeof data.error==='string'?data.error:'HTTP '+r.status);return data}finally{clearTimeout(to)}}\nfunction statePayload()",
   'lobby-http-status-instead-of-object');
 
+ // Final dispatch is a single source of truth even when Android/Gboard bypasses Web Speech adapters.
+ s=replaceOnce(s,"window.nsAtriaNormalizeSpeech=function(text){const raw=String(text||\"\").trim().replace(/\\s+/g,\" \");","window.nsAtriaNormalizeSpeech=function(text){const raw=String(csVoiceCleanSpeech(text)).trim().replace(/\\s+/g,\" \");",'normalize-speech-at-common-send-wrapper');
+ s=replaceOnce(s,"function sendMessage(q){const text=String(q||'').trim();","function sendMessage(q){const text=String(q||'').trim().startsWith('/')?String(q||'').trim():csVoiceCleanSpeech(q);",'normalize-before-chat-history-and-dialogue');
  return s;
 }

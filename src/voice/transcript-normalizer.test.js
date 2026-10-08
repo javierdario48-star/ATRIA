@@ -14,3 +14,5 @@ console.log('Android WebSpeech transcription anti-echo regressions OK');
 
 for(const [raw,expected] of [['Hola Hola cómo Hola cómo estás Hola cómo estás','Hola cómo estás'],['Por Por qué Por qué estás acá','Por qué estás acá'],['tienes tienes tienes tienes alguna tienes alguna otra enfermedad','tienes alguna otra enfermedad']])assert.equal(csVoiceCleanSpeech(raw),expected,'Android screenshot '+raw);
 console.log('three reported Android microphone echoes normalized OK');
+
+assert.equal(csVoiceCleanSpeech('Hola Hola Hola probando Hola probando micrófono'),'Hola probando micrófono','latest mobile screenshot exact transcript');

@@ -34,4 +34,6 @@ assert.equal(sent.at(-1),'mensaje válido','old session ignored');
 const len=sent.length;current.result([fin('duplicado')]);assert.equal(sent.length,len);
 await cx.adapter.startVoiceV2();mic=recognizers.at(-1);mic.result([fin('Hola Hola cómo Hola cómo estás Hola cómo estás')]);mic.onend();
 assert.equal(sent.at(-1),'Hola cómo estás','screenshot reproduction through actual active VoiceV2 handler');
+await cx.adapter.startVoiceV2();mic=recognizers.at(-1);mic.result([fin('Hola Hola Hola probando Hola probando micrófono')]);mic.onend();
+assert.equal(sent.at(-1),'Hola probando micrófono','new physical Android screenshot echo');
 console.log('Android VoiceV2 simulated session/revision/cancel and screenshot regression OK:',sent.length,'messages');

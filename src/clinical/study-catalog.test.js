@@ -27,8 +27,8 @@ assert.equal(resolveStudy('banana cuántica',cases[0],catalog),null,'unknown nam
 assert.equal(combos,cases.length*catalog.length);
 console.log('universal study matrix OK',{cases:cases.length,studies:catalog.length,combinations:combos,overrides,fallbacks,aliases});
 
-assert.equal(catalog.length,52,'52 emergency studies including amilasa');
-assert.equal(Object.keys(STUDY_TAT_MINUTES).length,52,'each catalog study must have an explicit turnaround');
+assert.equal(catalog.length,72,'original 51 + independently named requested studies');
+assert.equal(Object.keys(STUDY_TAT_MINUTES).length,72,'each catalog study must have an explicit turnaround');
 for(const st of catalog){assert.ok(Number.isFinite(STUDY_TAT_MINUTES[st.id]),'missing ED time '+st.id);assert.equal(st.gameHours*60,studyTurnaroundMinutes(st));}
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='hemograma')),35);
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='gasometria')),10);
@@ -65,3 +65,13 @@ assert.match(materializeStudy(catalog.find(s=>s.id==='amilasa'),cases.find(c=>c.
 assert.match(materializeStudy(catalog.find(s=>s.id==='amilasa'),cases.find(c=>c.id==='APP-001')).result,/límites de referencia/);
 assert.equal(studyTurnaroundMinutes(catalog.find(s=>s.id==='amilasa')),60);
 console.log('amilasa: case-aware result, alias and game-time contract OK');
+
+const neuroCase=cases.find(c=>c.id==='APP-001');
+for(const [request,id] of [['tomografía cerebral','tc_cerebral'],['tomografia de craneo','tc_cerebral'],['tac cerebral','tc_cerebral'],['resonancia cerebral','rm_cerebral'],['resonancia magnetica cerebral','rm_cerebral']]){
+ const st=resolveStudy(request,neuroCase,catalog);
+ assert.equal(st?.id,id,'must not silently substitute abdominal imaging: '+request);
+ assert.equal(materializeStudy(st,neuroCase)?.universalFallback,true);
+}
+assert.equal(resolveStudy('tomografia abdominal',neuroCase,catalog)?.id,'app_ct','abdominal native alias retains priority');
+for(const st of catalog)assert.ok(st.normalResult,'every named study must have an authored fallback '+st.id);
+console.log('brain anatomy disambiguation and extended lab study catalog OK');
