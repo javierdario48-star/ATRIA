@@ -49,7 +49,7 @@ for(const patient of cases){
   assert(Number.isFinite(recorded.readyAt),'study stuck without a valid due time: '+study.id);
   assert.equal(recorded.readyAt-clock,studyTurnaroundMinutes(item)*1000,'incorrect clock conversion');
   assert.equal(context.sim.events.length,1,'order missing from clinical event history');
-  assert(context.sim.events[0].t.includes(study.label),'wrong history label');
+  assert(context.sim.events[0].t.includes(expected.label),'wrong history label');
   assert(!said.slice(before).some(x=>/no reconozco|no está registrado/i.test(x)),'known study rejected by nurse');
   assert(clock<recorded.readyAt,'order completed before due time');
   clock=recorded.readyAt;recorded.status='done';
