@@ -64,3 +64,14 @@ console.log('Android VoiceV2 simulated session/revision/cancel/legacy ownership 
 
 const until=sent.length;
 await cx.adapter.startVoiceV2();const provisional=recognizers.at(-1);provisional.result([tmp('Hola Hola')]);provisional.onend();assert.equal(sent.length,until,'interim-only Android end must not send an incomplete utterance');
+
+await cx.adapter.startVoiceV2();
+const alt=recognizers.at(-1);
+alt.result([{0:{transcript:'supermercado supermercado pollo',confidence:0.85},1:{transcript:'supermercado pollo',confidence:0.82},length:2,isFinal:true}]);
+alt.onend();
+assert.equal(sent.at(-1),'supermercado pollo','active speech path chooses supported alternative without duplicate word');
+await cx.adapter.startVoiceV2();
+const noAlt=recognizers.at(-1);
+noAlt.result([{0:{transcript:'perro perro',confidence:0.9},isFinal:true}]);
+noAlt.onend();
+assert.equal(sent.at(-1),'perro perro','an ambiguous genuine repetition is never erased without ASR corroboration');

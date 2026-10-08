@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {csVoiceStageRevisions,csVoiceCommitRevisions} from './revision-buffer.js';
+import {csVoiceStageRevisions,csVoiceCommitRevisions,csVoiceChooseConfirmed} from './revision-buffer.js';
 const final=(text)=>({0:{transcript:text},isFinal:true});
 const interim=(text)=>({0:{transcript:text},isFinal:false});
 const pending=new Map(),delivered=new Set();
@@ -31,3 +31,14 @@ assert.equal(unsent.size,0,'new interim version revokes previously finalized unc
 csVoiceStageRevisions(unsent,unused,{resultIndex:0,results:[final('¿Tiene alergia a algún medicamento?')]});
 assert.equal(csVoiceCommitRevisions(unsent,unused),'¿Tiene alergia a algún medicamento?');
 console.log('Web Speech interim/final replacement by result index OK');
+
+const candidate=(phrase,confidence)=>({transcript:phrase,confidence});
+const confidencePair=(first,alt,primary=0.85,secondary=0.8)=>({0:candidate(first,primary),1:candidate(alt,secondary),length:2,isFinal:true});
+assert.equal(csVoiceChooseConfirmed(confidencePair('supermercado supermercado pollo','supermercado pollo')),'supermercado pollo');
+assert.equal(csVoiceChooseConfirmed(confidencePair('probando probando audio','probando audio')),'probando audio');
+assert.equal(csVoiceChooseConfirmed(confidencePair('perro perro','perro',0.92,0.3)),'perro perro','poor alternatives cannot erase intentional repetition');
+assert.equal(csVoiceChooseConfirmed({0:{transcript:'perro perro',confidence:0},isFinal:true}),'perro perro','ambiguous single final remains verbatim');
+const revised=new Map(),deliveredRevised=new Set();
+csVoiceStageRevisions(revised,deliveredRevised,{results:[confidencePair('supermercado supermercado pollo','supermercado pollo')]},csVoiceChooseConfirmed);
+assert.equal(csVoiceCommitRevisions(revised,deliveredRevised),'supermercado pollo','alternative reaches commit, not only analysis');
+console.log('Confidence-gated Android final alternatives regression OK');

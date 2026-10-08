@@ -218,3 +218,6 @@ assert.match(out,/if\(chest&&!abdomen&&ct\)return 'tc_torax'/,'active study reso
 assert.match(out,/if\(chest&&!abdomen&&rx\)return 'rx_torax'/,'active study resolver must distinguish chest radiographs');
 
 assert.doesNotMatch(out,/setTimeout\(voiceV2Commit,6000\)/,'final revisions may never auto-send before recognition ends');
+
+assert.match(out,/function csVoiceChooseConfirmed\\(result\\)/,'speech alternatives chooser is embedded');
+assert.match(out,/csVoiceStageRevisions\\(VoiceV2\\.pendingByIndex,VoiceV2\\.delivered,ev,csVoiceChooseConfirmed\\)/,'active Android recognizer uses confirmed ASR alternatives');
