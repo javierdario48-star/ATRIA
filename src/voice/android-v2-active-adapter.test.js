@@ -161,3 +161,25 @@ for(let index=0;index<150;index++){
 }
 assert.equal(botClicks,150);
 console.log('ATRIA mic-button integration QA BOT PASS 150 real delegated clicks; one recognizer, one send, one /vozdiag session each');
+
+// Aborting a still-pending permission request and immediately tapping again
+// must NOT allow the first request to clear the second request's ownership.
+const deferred=[];
+cx.navigator.mediaDevices.getUserMedia=()=>new Promise(resolve=>deferred.push(()=>resolve({getTracks:()=>[{stop(){}}]})));
+vm.runInContext('VoiceV2.permissionChecked=false;',cx);
+const atCancel=recognizers.length;
+const staleStart=cx.adapter.startVoiceV2();
+assert.equal(deferred.length,1);
+cx.adapter.stopVoiceV2(true);
+const liveStart=cx.adapter.startVoiceV2();
+assert.equal(deferred.length,2);
+deferred[0]();
+await staleStart;
+assert.equal(recognizers.length,atCancel,'stale permission continuation cannot create a recognizer');
+vm.runInContext('if(!VoiceV2.starting)throw Error("live mic start lost ownership");',cx);
+deferred[1]();
+await liveStart;
+assert.equal(recognizers.length,atCancel+1,'live continuation creates exactly one recognizer');
+const reentered=recognizers.at(-1);reentered.result([fin('segunda sesión válida')]);reentered.onend();
+assert.equal(sent.at(-1),'segunda sesión válida');
+console.log('Cancelled pending permission cannot invalidate a later mic session');
