@@ -6,7 +6,7 @@ const html=apply487(fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'));
 const a=html.indexOf('function csVoiceWord(word){'),b=html.indexOf('function csEnsureRecognition(){',a);
 const c=html.indexOf('  const VoiceV2={'),d=html.indexOf('  try {\n    // Replace old local-voice behavior',c);
 assert.ok(a>=0&&b>a&&c>=0&&d>c,'actual Android adapter and normalizer embedded');
-const sent=[],recognizers=[],timers=new Map(),captureClicks=[];let tid=0;const realMicButton={id:'voiceLocalBtn',contains(node){return node===this}};
+const sent=[],recognizers=[],timers=new Map(),captureClicks=[];let tid=0;const realMicButton={id:'voiceLocalBtn',textContent:'🎤',classList:{toggle(){},add(){},remove(){}},contains(node){return node===this}};
 class SpeechMock{
  constructor(){recognizers.push(this)}
  start(){this.onstart?.()}
