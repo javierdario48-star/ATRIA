@@ -158,13 +158,14 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
     if(host&&!room.closed)room.hostUserId=room.members[0].userId;
    }else if(action==='cancel'){
     if(!host)return failure(403,'Solo el anfitrión puede cancelar');room.closed=true;
-   }else if(action==='invite'){
+   }else if(action==='invite'&&!sub){
     if(!host)return failure(403,'Solo el anfitrión puede invitar');
     const other=safe(body.userId,64);if(!await profile(other))return failure(404,'Invitado inexistente');
     if(room.members.length+room.pending.length>=4)return failure(409,'Grupo completo');
     room.pending=addUnique(room.pending,other,3);
     await writeUserList('invites',other,a=>[...a,{roomId:id}].slice(-20));
    }else if(action==='invite'&&sub==='decline'){
+    if(!room.pending.includes(user.id))return failure(403,'No existe invitación para este usuario');
     room.pending=room.pending.filter(x=>x!==user.id);await writeUserList('invites',user.id,a=>a.filter(x=>x.roomId!==id));
    }else if(action==='invite'&&sub==='remove'){
     if(!host)return failure(403,'Solo el anfitrión puede quitar invitados');

@@ -64,3 +64,17 @@ export function csVoiceNovelText(previous,incoming){
  }
  return b;
 }
+
+// Only use at the recognized-voice commit boundary, never for typed chat.
+// Short duplicated lead-ins are a recurring Android ASR artifact. Do not rewrite
+// genuine emphasis such as "no, no" and "muy, muy".
+export function csVoiceCleanMicSpeech(value){
+ const s=csVoiceCleanSpeech(value),a=s.split(/\s+/).filter(Boolean);
+ if(a.length<2)return s;
+ const k=csVoiceWord(a[0]);
+ if(['hola','que','como','por','donde','tienes','tenes','usted','doctor'].includes(k)){
+  let i=1;while(i<a.length&&csVoiceWord(a[i])===k)i++;
+  if(i>1)return [a[0],...a.slice(i)].join(' ');
+ }
+ return s;
+}

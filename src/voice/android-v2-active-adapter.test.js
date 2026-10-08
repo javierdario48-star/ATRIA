@@ -56,4 +56,8 @@ assert.equal(cx.csVoice.pendingByIndex.size,0);
 const mic2=recognizers.at(-1);
 mic2.result([fin('Hola prueba de una sola voz')]);mic2.onend();
 assert.deepEqual(sent.slice(prior),['Hola prueba de una sola voz'],'exclusive active recognizer emits only one message');
+await cx.adapter.startVoiceV2();const short=recognizers.at(-1);short.result([fin('Qué Qué tal todo bien')]);short.onend();
+assert.equal(sent.at(-1),'Qué tal todo bien','short Android ASR repeated opening');
+await cx.adapter.startVoiceV2();const hello=recognizers.at(-1);hello.result([fin('Hola Hola')]);hello.onend();
+assert.equal(sent.at(-1),'Hola','short Android ASR duplicated greeting');
 console.log('Android VoiceV2 simulated session/revision/cancel/legacy ownership regression OK:',sent.length,'messages');

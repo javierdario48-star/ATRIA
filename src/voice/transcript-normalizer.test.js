@@ -16,3 +16,10 @@ for(const [raw,expected] of [['Hola Hola cómo Hola cómo estás Hola cómo est�
 console.log('three reported Android microphone echoes normalized OK');
 
 assert.equal(csVoiceCleanSpeech('Hola Hola Hola probando Hola probando micrófono'),'Hola probando micrófono','latest mobile screenshot exact transcript');
+
+for(const [utterance,expect] of [
+ ['Hola Hola','Hola'],['Qué Qué tal todo bien','Qué tal todo bien'],
+ ['No no estoy bien','No no estoy bien'],['muy muy intenso','muy muy intenso'],
+ ['Hola Hola cómo Hola cómo estás','Hola cómo estás']
+])assert.equal(csVoiceCleanMicSpeech(utterance),expect,'mic-only short fragment normalization');
+assert.equal(csVoiceCleanSpeech('Hola Hola'),'Hola Hola','typed text retains intentional repetitions');

@@ -204,3 +204,8 @@ assert.match(out,/if\(!csVoice\.localActive\|\|window\.__atriaV2OwnsMic\|\|csCoo
 console.log('SpeechRecognition mic ownership exclusion integration OK');
 
 assert.match(out,/csVoice\.localActive&&!window\.__atriaV2OwnsMic&&!csCoop\.radioHeld/,'legacy recognizer cannot restart from mirrored V2 UI status');
+
+assert.match(out,/const phrase=csVoiceCleanMicSpeech\(final\|\|VoiceV2.lastInterim\)/,'VoiceV2 commit normalizes repeated short lead-ins');
+assert.match(out,/function csRtcAuth\(\)/,'RTC signaling uses existing social bearer credential');
+assert.match(out,/headers:\{\.\.\.\(body\?\{'Content-Type':'application\/json'\}:\{\}\),\.\.\.csRtcAuth\(\)\}/,'RTC request carries bearer token');
+console.log('mic-only ASR short greetings and secure RTC signaling wiring OK');
