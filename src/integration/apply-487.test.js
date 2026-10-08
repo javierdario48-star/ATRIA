@@ -221,3 +221,9 @@ assert.doesNotMatch(out,/setTimeout\(voiceV2Commit,6000\)/,'final revisions may 
 
 assert.ok(out.includes('function csVoiceChooseConfirmed(result)'),'speech alternatives chooser is embedded');
 assert.ok(out.includes('csVoiceStageRevisions(VoiceV2.pendingByIndex,VoiceV2.delivered,ev,csVoiceChooseConfirmed)'),'active Android recognizer uses ASR alternatives');
+
+assert.match(out,/function csVoiceTraceEventV2\(ev,update\)/,'active V2 speech trace is embedded');
+assert.match(out,/window\.nsAtriaVoiceReport=\(\)=>JSON\.stringify/,'QA-local diagnostic can be copied without telemetry');
+assert.match(out,/window\.nsAtriaVoiceCopyReport=\(\)=>/,'in-game diagnostic is directly available');
+assert.match(out,/q\|\|''\)\.trim\(\)\.toLowerCase\(\)==='\/vozdiag'/,'/vozdiag intercepts before NPC and patient dispatch');
+assert.doesNotMatch(out,/fetch\(['"]\/api\/(?:voice|transcript|trace)/,'ASR diagnostics must not automatically upload');

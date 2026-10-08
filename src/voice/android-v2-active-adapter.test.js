@@ -75,3 +75,17 @@ const noAlt=recognizers.at(-1);
 noAlt.result([{0:{transcript:'perro perro',confidence:0.9},isFinal:true}]);
 noAlt.onend();
 assert.equal(sent.at(-1),'perro perro','an ambiguous genuine repetition is never erased without ASR corroboration');
+
+await cx.adapter.startVoiceV2();
+const diagnosed=recognizers.at(-1);
+diagnosed.result([{0:{transcript:'probando probando audio',confidence:0.87},1:{transcript:'probando audio',confidence:0.84},length:2,isFinal:true}]);
+diagnosed.onend();
+const report=JSON.parse(cx.window.nsAtriaVoiceReport());
+const session=report.sessions.at(-1);
+assert.equal(session.events.at(-1).segments[0].alternatives[0].text,'probando probando audio','report contains actual Android primary result');
+assert.equal(session.events.at(-1).segments[0].alternatives[1].text,'probando audio','report contains corroborating alternative');
+assert.equal(session.events.at(-1).segments[0].selected,'probando audio','report identifies chosen ASR segment');
+assert.equal(session.rawFinal,'probando audio','report records stage output');
+assert.equal(session.committed,'probando audio','report records committed text');
+assert(report.sessions.length<=10,'diagnostics stay bounded in local memory');
+console.log('Privacy-local Android speech provenance diagnostic and alt confidence regression OK');

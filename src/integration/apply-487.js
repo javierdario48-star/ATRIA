@@ -140,12 +140,37 @@ function csDrawRemote(){
  s=replaceOnce(s,disabledVoice,` // Existing WebRTC audio transport is enabled; task13 handles mic permission priming.\n csRefreshVoiceButtons();`,'social-voice-enable');
  // VoiceV2 (later in the 4.8.6 document) overrides the original mic.
  // Revise the *active* Android recognizer, not only the superseded csVoice.
- s=replaceOnce(s,"const VoiceV2={active:false,rec:null,permissionChecked:false,lastInterim:''};","const VoiceV2={active:false,rec:null,permissionChecked:false,lastInterim:'',pendingByIndex:new Map(),delivered:new Set(),committed:false,aborted:false,commitTimer:null};",'android-v2-index-buffer');
+ s=replaceOnce(s,"const VoiceV2={active:false,rec:null,permissionChecked:false,lastInterim:''};","const VoiceV2={active:false,rec:null,permissionChecked:false,lastInterim:'',pendingByIndex:new Map(),delivered:new Set(),committed:false,aborted:false,commitTimer:null,debugSessions:[],trace:null,traceSeq:0};",'android-v2-index-buffer');
  const v2Start=s.indexOf('    r.onresult=(ev)=>{'),v2End=s.indexOf('    r.onerror=(ev)=>{',v2Start);
  if(v2Start<0||v2End<0||s.indexOf('    r.onresult=(ev)=>{',v2Start+1)>=0)throw new Error('Android VoiceV2 handler anchor missing or ambiguous');
- s=s.slice(0,v2Start)+"    r.onresult=(ev)=>{\n      if(VoiceV2.rec!==r||VoiceV2.committed||VoiceV2.aborted)return;\n      const update=csVoiceStageRevisions(VoiceV2.pendingByIndex,VoiceV2.delivered,ev,csVoiceChooseConfirmed);\n      let interim='';\n      for(let i=0;i<ev.results.length;i++)if(!ev.results[i].isFinal){\n        const t=String(ev.results[i][0]?.transcript||'').trim();\n        if(t)interim=csMergeSpeech(interim,t);\n      }\n      VoiceV2.lastInterim=interim;\n      voiceUIV2(true,interim||update.text);\n      // Never commit until onend: a final hypothesis can still be revised by Android.\n    };\n"+s.slice(v2End);
- s=replaceOnce(s,'  async function startVoiceV2(){','  '+"function voiceV2Commit(){\n    if(VoiceV2.committed||VoiceV2.aborted)return;\n    if(VoiceV2.commitTimer){clearTimeout(VoiceV2.commitTimer);VoiceV2.commitTimer=null}\n    const final=csVoiceCommitRevisions(VoiceV2.pendingByIndex,VoiceV2.delivered);\n    const phrase=final?csVoiceCleanMicSpeech(final):'';\n    VoiceV2.committed=true;VoiceV2.lastInterim='';\n    if(phrase&&!csCoop.radioHeld){\n      const inp=document.getElementById('dieInput');if(inp)inp.value='';\n      sendMessage(phrase);try{csPlaySound('ok')}catch(e){}\n    }\n  }\n  "+'async function startVoiceV2(){','android-v2-single-commit-helper');
- s=replaceOnce(s,"VoiceV2.rec=r; VoiceV2.active=true; VoiceV2.lastInterim=''; VoiceV2.sentThisTurn=false;","VoiceV2.rec=r; VoiceV2.active=true; VoiceV2.lastInterim=''; VoiceV2.committed=false;VoiceV2.aborted=false;VoiceV2.pendingByIndex.clear();VoiceV2.delivered.clear();if(VoiceV2.commitTimer)clearTimeout(VoiceV2.commitTimer);VoiceV2.commitTimer=null;",'android-v2-turn-reset');
+ s=s.slice(0,v2Start)+"    r.onresult=(ev)=>{\n      if(VoiceV2.rec!==r||VoiceV2.committed||VoiceV2.aborted)return;\n      const update=csVoiceStageRevisions(VoiceV2.pendingByIndex,VoiceV2.delivered,ev,csVoiceChooseConfirmed);\n      csVoiceTraceEventV2(ev,update);\n      let interim='';\n      for(let i=0;i<ev.results.length;i++)if(!ev.results[i].isFinal){\n        const t=String(ev.results[i][0]?.transcript||'').trim();\n        if(t)interim=csMergeSpeech(interim,t);\n      }\n      VoiceV2.lastInterim=interim;\n      voiceUIV2(true,interim||update.text);\n      // Never commit until onend: a final hypothesis can still be revised by Android.\n    };\n"+s.slice(v2End);
+ s=replaceOnce(s,'  async function startVoiceV2(){',`  function csVoiceTraceEventV2(ev,update){
+    const trace=VoiceV2.trace;if(!trace)return;
+    const segments=[];
+    for(let i=0;i<Math.min(ev.results?.length||0,8);i++){
+      const item=ev.results[i],alternatives=[];
+      for(let n=0;n<Math.min(item?.length||1,3);n++){
+        const candidate=item?.[n];if(!candidate)continue;
+        alternatives.push({text:String(candidate.transcript||'').slice(0,240),confidence:Number(candidate.confidence)||0});
+      }
+      segments.push({index:i,isFinal:!!item?.isFinal,alternatives,selected:item?.isFinal?csVoiceChooseConfirmed(item):null});
+    }
+    trace.events.push({resultIndex:Number(ev.resultIndex)||0,segments,staged:String(update.text||'').slice(0,500)});
+    if(trace.events.length>24)trace.events.shift();
+  }
+  window.nsAtriaVoiceReport=()=>JSON.stringify({
+    version:'atria-4.8.7-qa',privacy:'Local al dispositivo; no contiene audio grabado ni se envía automáticamente',
+    sessions:VoiceV2.debugSessions.slice(-10)
+  },null,2);
+  window.nsAtriaVoiceCopyReport=()=>{
+    const report=window.nsAtriaVoiceReport();
+    const fallback=()=>{if(typeof window.prompt==='function')window.prompt('Copiá el diagnóstico de voz:',report);else toast('No disponible el portapapeles; probá Chrome.')};
+    if(navigator.clipboard?.writeText){navigator.clipboard.writeText(report).then(()=>toast('Diagnóstico de voz copiado. Pegalo en el chat de ChatGPT.')).catch(fallback)}
+    else fallback();
+  };
+`+'  async function startVoiceV2(){','android-v2-local-diagnostic');
+ s=replaceOnce(s,'  async function startVoiceV2(){','  '+"function voiceV2Commit(){\n    if(VoiceV2.committed||VoiceV2.aborted)return;\n    if(VoiceV2.commitTimer){clearTimeout(VoiceV2.commitTimer);VoiceV2.commitTimer=null}\n    const final=csVoiceCommitRevisions(VoiceV2.pendingByIndex,VoiceV2.delivered);\n    const phrase=final?csVoiceCleanMicSpeech(final):'';\n    if(VoiceV2.trace){VoiceV2.trace.rawFinal=final;VoiceV2.trace.committed=phrase;VoiceV2.trace.status=phrase?'committed':'no-final-result'}\n    VoiceV2.committed=true;VoiceV2.lastInterim='';\n    if(phrase&&!csCoop.radioHeld){\n      const inp=document.getElementById('dieInput');if(inp)inp.value='';\n      sendMessage(phrase);try{csPlaySound('ok')}catch(e){}\n    }\n  }\n  "+'async function startVoiceV2(){','android-v2-single-commit-helper');
+ s=replaceOnce(s,"VoiceV2.rec=r; VoiceV2.active=true; VoiceV2.lastInterim=''; VoiceV2.sentThisTurn=false;","VoiceV2.rec=r; VoiceV2.active=true; VoiceV2.lastInterim=''; VoiceV2.committed=false;VoiceV2.aborted=false;VoiceV2.pendingByIndex.clear();VoiceV2.delivered.clear();VoiceV2.trace={id:++VoiceV2.traceSeq,started:new Date().toISOString(),events:[],rawFinal:'',committed:'',status:'listening',error:null};VoiceV2.debugSessions.push(VoiceV2.trace);if(VoiceV2.debugSessions.length>10)VoiceV2.debugSessions.shift();if(VoiceV2.commitTimer)clearTimeout(VoiceV2.commitTimer);VoiceV2.commitTimer=null;",'android-v2-turn-reset');
  s=replaceOnce(s,"    VoiceV2.active=false;\n    try { if(r) cancel?r.abort():r.stop(); } catch(e) {}","    VoiceV2.active=false;VoiceV2.aborted=!!cancel;\n    if(cancel&&VoiceV2.commitTimer){clearTimeout(VoiceV2.commitTimer);VoiceV2.commitTimer=null}\n    try { if(r) cancel?r.abort():r.stop(); } catch(e) {}",'android-v2-cancel');
  s=replaceOnce(s,"      VoiceV2.active=false;voiceUIV2(false);\n      if(code!=='aborted')","      VoiceV2.active=false;VoiceV2.aborted=true;if(VoiceV2.commitTimer){clearTimeout(VoiceV2.commitTimer);VoiceV2.commitTimer=null}voiceUIV2(false);\n      if(code!=='aborted')",'android-v2-error');
  s=replaceOnce(s,"    r.onerror=(ev)=>{\n      const code=","    r.onerror=(ev)=>{\n      if(VoiceV2.rec!==r)return;\n      const code=",'android-v2-stale-error');
@@ -179,7 +204,7 @@ function csDrawRemote(){
 
  // Final dispatch is a single source of truth even when Android/Gboard bypasses Web Speech adapters.
  s=replaceOnce(s,"window.nsAtriaNormalizeSpeech=function(text){const raw=String(text||\"\").trim().replace(/\\s+/g,\" \");","window.nsAtriaNormalizeSpeech=function(text){const raw=String(csVoiceCleanSpeech(text)).trim().replace(/\\s+/g,\" \");",'normalize-speech-at-common-send-wrapper');
- s=replaceOnce(s,"function sendMessage(q){const text=String(q||'').trim();","function sendMessage(q){const text=String(q||'').trim().startsWith('/')?String(q||'').trim():csVoiceCleanSpeech(q);",'normalize-before-chat-history-and-dialogue');
+ s=replaceOnce(s,"function sendMessage(q){const text=String(q||'').trim();","function sendMessage(q){if(String(q||'').trim().toLowerCase()==='/vozdiag'){window.nsAtriaVoiceCopyReport?.();return}const text=String(q||'').trim().startsWith('/')?String(q||'').trim():csVoiceCleanSpeech(q);",'normalize-before-chat-history-and-dialogue');
  // The original csVoice WebSpeech engine also exists in the golden master.
  // Exclusively hand mic ownership to VoiceV2; otherwise two handlers can emit different partials.
  s=replaceOnce(s,
@@ -203,11 +228,11 @@ function csDrawRemote(){
  'v2-microphone-active-owner');
  s=replaceOnce(s,
  "r.onend=()=>{if(VoiceV2.rec!==r)return;voiceV2Commit();VoiceV2.active=false;voiceUIV2(false)};",
- "r.onend=()=>{if(VoiceV2.rec!==r)return;voiceV2Commit();VoiceV2.active=false;window.__atriaV2OwnsMic=false;voiceUIV2(false)};",
+ "r.onend=()=>{if(VoiceV2.rec!==r)return;voiceV2Commit();if(VoiceV2.trace)VoiceV2.trace.ended=new Date().toISOString();VoiceV2.active=false;window.__atriaV2OwnsMic=false;voiceUIV2(false)};",
  'v2-release-mic-on-end');
  s=replaceOnce(s,
  "      VoiceV2.active=false;VoiceV2.aborted=true;if(VoiceV2.commitTimer)",
- "      VoiceV2.active=false;window.__atriaV2OwnsMic=false;VoiceV2.aborted=true;if(VoiceV2.commitTimer)",
+ "      if(VoiceV2.trace){VoiceV2.trace.error=code;VoiceV2.trace.status='error'}\n      VoiceV2.active=false;window.__atriaV2OwnsMic=false;VoiceV2.aborted=true;if(VoiceV2.commitTimer)",
  'v2-release-mic-on-error');
 
  // The original RTC signaling adapter previously omitted Authorization entirely.
