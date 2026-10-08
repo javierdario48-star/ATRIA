@@ -33,7 +33,7 @@ for(const st of catalog){assert.ok(Number.isFinite(STUDY_TAT_MINUTES[st.id]),'mi
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='hemograma')),35);
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='gasometria')),10);
 assert.equal(studyTurnaroundMinutes(catalog.find(x=>x.id==='tc')),120);
-console.log('emergency department 52-study turnaround matrix OK');
+console.log('emergency department 73-study turnaround matrix OK');
 
 let correlated=0,incidental=0,normal=0;
 for(const c of cases){
@@ -57,7 +57,7 @@ assert.equal(incidental,2);
 assert.match(materializeStudy(catalog.find(s=>s.id==='hemograma'),cases.find(c=>c.id==='COLON-001')).result,/Anemia microcítica/);
 assert.match(materializeStudy(catalog.find(s=>s.id==='hemograma'),cases.find(c=>c.id==='CROHN-001')).result,/Anemia/);
 assert.match(materializeStudy(catalog.find(s=>s.id==='lipasa'),cases.find(c=>c.id==='CHOLE-001')).result,/menor de 3 veces/);
-console.log('13 x 52 clinically consistent fallback matrix OK',{correlated,incidental,normal});
+console.log('13 x 73 clinically consistent fallback matrix OK',{correlated,incidental,normal});
 
 assert.equal(resolveStudy('amilasa',cases.find(c=>c.id==='APP-001'),catalog)?.id,'amilasa');
 assert.equal(resolveStudy('amilasemia',cases.find(c=>c.id==='PANC-001'),catalog)?.id,'amilasa');
