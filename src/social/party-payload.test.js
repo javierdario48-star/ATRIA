@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {csPartyEncode,csPartyDecode} from './party-payload.js';
 const roomId='room-qa-test', host='host-user', client='guest-user';
 let encoded=0,fragments=0;
@@ -9,8 +10,9 @@ for(let scenario=0;scenario<120;scenario++){
   studies:['hemograma','lipasa','tomografía cerebral','resonancia'].map(x=>({name:x,result:'coherente '.repeat(25)}))},
   state:'not_arrived'
  }));
+ const entropy=Array.from({length:130},(_,i)=>createHash('sha256').update(scenario+':'+i+':clinical-qa').digest('hex')).join('');
  const original={type:'cs_room_v411',kind:scenario%2?'snapshot':'start',peerId:host,
-  room:{id:'CS_'+scenario,hostId:host,mode:scenario%2?'coop':'competitive',revision:1,queue:clinical.map(x=>x.caseId),patients:clinical}};
+  room:{id:'CS_'+scenario,hostId:host,mode:scenario%2?'coop':'competitive',revision:1,queue:clinical.map(x=>x.caseId),patients:clinical,clinicalProvenance:entropy}};
  const packets=await csPartyEncode(JSON.stringify(original),roomId,'pkt-'+scenario);
  assert(packets.length>1,'large state must be segmented');
  assert(packets.every(p=>JSON.stringify(p).length<6000),'each packet respects QA API cap');
