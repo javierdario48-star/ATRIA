@@ -140,7 +140,7 @@ function csDrawRemote(){
  s=replaceOnce(s,disabledVoice,` // Existing WebRTC audio transport is enabled; task13 handles mic permission priming.\n csRefreshVoiceButtons();`,'social-voice-enable');
  // VoiceV2 (later in the 4.8.6 document) overrides the original mic.
  // Revise the *active* Android recognizer, not only the superseded csVoice.
- s=replaceOnce(s,"const VoiceV2={active:false,rec:null,permissionChecked:false,lastInterim:''};","const VoiceV2={active:false,rec:null,permissionChecked:false,lastInterim:'',pendingByIndex:new Map(),delivered:new Set(),committed:false,aborted:false,commitTimer:null,debugSessions:[],trace:null,traceSeq:0};",'android-v2-index-buffer');
+ s=replaceOnce(s,"const VoiceV2={active:false,rec:null,permissionChecked:false,lastInterim:''};","const VoiceV2={active:false,rec:null,permissionChecked:false,lastInterim:'',pendingByIndex:new Map(),delivered:new Set(),committed:false,aborted:false,commitTimer:null,debugSessions:[],trace:null,traceSeq:0,micClicks:0,startAttempts:0,lastMicEvent:null};",'android-v2-index-buffer');
  const v2Start=s.indexOf('    r.onresult=(ev)=>{'),v2End=s.indexOf('    r.onerror=(ev)=>{',v2Start);
  if(v2Start<0||v2End<0||s.indexOf('    r.onresult=(ev)=>{',v2Start+1)>=0)throw new Error('Android VoiceV2 handler anchor missing or ambiguous');
  s=s.slice(0,v2Start)+"    r.onresult=(ev)=>{\n      if(VoiceV2.rec!==r||VoiceV2.committed||VoiceV2.aborted)return;\n      const update=csVoiceStageRevisions(VoiceV2.pendingByIndex,VoiceV2.delivered,ev,csVoiceChooseConfirmed);\n      csVoiceTraceEventV2(ev,update);\n      let interim='';\n      for(let i=0;i<ev.results.length;i++)if(!ev.results[i].isFinal){\n        const t=String(ev.results[i][0]?.transcript||'').trim();\n        if(t)interim=csMergeSpeech(interim,t);\n      }\n      VoiceV2.lastInterim=interim;\n      voiceUIV2(true,interim||update.text);\n      // Never commit until onend: a final hypothesis can still be revised by Android.\n    };\n"+s.slice(v2End);
@@ -160,6 +160,7 @@ function csDrawRemote(){
   }
   window.nsAtriaVoiceReport=()=>JSON.stringify({
     version:'atria-4.8.7-qa',privacy:'Local al dispositivo; no contiene audio grabado ni se envía automáticamente',
+    micClicks:VoiceV2.micClicks,startAttempts:VoiceV2.startAttempts,lastMicEvent:VoiceV2.lastMicEvent,
     sessions:VoiceV2.debugSessions.slice(-10)
   },null,2);
   window.nsAtriaVoiceCopyReport=()=>{
@@ -235,6 +236,12 @@ function csDrawRemote(){
  "      if(VoiceV2.trace){VoiceV2.trace.error=code;VoiceV2.trace.status='error'}\n      VoiceV2.active=false;window.__atriaV2OwnsMic=false;VoiceV2.aborted=true;if(VoiceV2.commitTimer)",
  'v2-release-mic-on-error');
 
+ // Capture only the local mic. Group radio and all other controls retain their listeners.
+ s=replaceOnce(s,
+ "  try {\n    // Replace old local-voice behavior; radio/co-op remains independent.",
+ "  // Bind at the capture phase: old chat renderers can recreate the microphone button\n  // and reassign onclick, so direct bindings alone cannot guarantee ownership.\n  if(document.addEventListener)document.addEventListener('click',function atriaLocalMicOwner(ev){\n    const button=document.getElementById('voiceLocalBtn');\n    if(!button||!(ev.target===button||button.contains(ev.target)))return;\n    ev.preventDefault();ev.stopImmediatePropagation();\n    VoiceV2.micClicks++;VoiceV2.lastMicEvent=new Date().toISOString();\n    void startVoiceV2();\n  },true);\n"+"  try {\n    // Replace old local-voice behavior; radio/co-op remains independent.",
+ 'v2-capture-real-mic-button-before-old-target-handlers');
+ s=replaceOnce(s,"async function startVoiceV2(){if(csCoop.radioHeld){","async function startVoiceV2(){VoiceV2.startAttempts++;if(csCoop.radioHeld){",'v2-count-button-and-other-start-attempts');
  // The original RTC signaling adapter previously omitted Authorization entirely.
  // Use the same credential as the already-connected social client (QA only).
  s=replaceOnce(s,

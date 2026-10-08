@@ -6,7 +6,7 @@ const html=apply487(fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'));
 const a=html.indexOf('function csVoiceWord(word){'),b=html.indexOf('function csEnsureRecognition(){',a);
 const c=html.indexOf('  const VoiceV2={'),d=html.indexOf('  try {\n    // Replace old local-voice behavior',c);
 assert.ok(a>=0&&b>a&&c>=0&&d>c,'actual Android adapter and normalizer embedded');
-const sent=[],recognizers=[],timers=new Map();let tid=0;
+const sent=[],recognizers=[],timers=new Map(),captureClicks=[];let tid=0;const realMicButton={id:'voiceLocalBtn',contains(node){return node===this}};
 class SpeechMock{
  constructor(){recognizers.push(this)}
  start(){this.onstart?.()}
@@ -14,7 +14,7 @@ class SpeechMock{
  abort(){this.onerror?.({error:'aborted'});this.onend?.()}
  result(results,index=0){this.onresult?.({results,resultIndex:index})}
 }
-const cx={window:{isSecureContext:true,SpeechRecognition:SpeechMock},location:{protocol:'https:'},navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop(){}}]})}},document:{getElementById:()=>null},csVoice:{localActive:false,recognition:null},csCoop:{radioHeld:false},csUpdateMicTrack(){},csPlaySound(){},toast(){},sendMessage:x=>sent.push(x),setTimeout(fn){const i=++tid;timers.set(i,fn);return i},clearTimeout(i){timers.delete(i)}};
+const cx={window:{isSecureContext:true,SpeechRecognition:SpeechMock},location:{protocol:'https:'},navigator:{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop(){}}]})}},document:{getElementById:id=>id==='voiceLocalBtn'?realMicButton:null,addEventListener:(type,fn,capture)=>{if(type==='click'&&capture)captureClicks.push(fn)}},csVoice:{localActive:false,recognition:null},csCoop:{radioHeld:false},csUpdateMicTrack(){},csPlaySound(){},toast(){},sendMessage:x=>sent.push(x),setTimeout(fn){const i=++tid;timers.set(i,fn);return i},clearTimeout(i){timers.delete(i)}};
 vm.createContext(cx);
 vm.runInContext(html.slice(a,b)+'\n'+html.slice(c,d)+'\nglobalThis.adapter={startVoiceV2,stopVoiceV2};',cx);
 const fin=t=>({0:{transcript:t},isFinal:true}),tmp=t=>({0:{transcript:t},isFinal:false});
@@ -89,3 +89,20 @@ assert.equal(session.rawFinal,'probando audio','report records stage output');
 assert.equal(session.committed,'probando audio','report records committed text');
 assert(report.sessions.length<=10,'diagnostics stay bounded in local memory');
 console.log('Privacy-local Android speech provenance diagnostic and alt confidence regression OK');
+
+const beforeTap=sent.length,beforeMic=recognizers.length;
+assert.equal(captureClicks.length,1,'one delegated capture handler on the real button');
+let prevented=0,stopped=0;
+captureClicks[0]({target:realMicButton,preventDefault(){prevented++},stopImmediatePropagation(){stopped++}});
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(prevented,1);
+assert.equal(stopped,1,'old target onclick prevented');
+assert.equal(recognizers.length,beforeMic+1,'real button click must start VoiceV2');
+const clicked=recognizers.at(-1);
+clicked.result([fin('probando probando audio')]);clicked.onend();
+assert.equal(sent.length,beforeTap+1,'button sends exactly one committed message');
+const clickDiag=JSON.parse(cx.window.nsAtriaVoiceReport());
+assert.equal(clickDiag.micClicks,1);
+assert(clickDiag.startAttempts>=1);
+assert(clickDiag.sessions.length>0,'click produces an observable diagnostic session');
+console.log('Real microphone button click -> VoiceV2 session -> speech dispatch OK');
