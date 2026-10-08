@@ -11,7 +11,7 @@ const normSource=between('window.nsAtriaNormalizeSpeech=function(text){',';windo
 const sent=[],patient=[];
 const ctx={
  window:{},sim:{},player:{bubble:'',bubbleUntil:0},performance:{now:()=>1000},
- pendingAddress:null,chatRole:null,document:{getElementById:()=>null},
+ pendingAddress:null,chatRole:null,strip:s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9ñ/ ]/g,' ').replace(/\s+/g,' ').trim(),document:{getElementById:()=>null},
  addGlobalChat:(role,text)=>sent.push({role,text}),
  inferRecipient:()=> 'patient',refreshChatDock(){},
  deliverPatientSpeech:text=>patient.push(text),
