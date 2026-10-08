@@ -163,3 +163,8 @@ assert.match(out,/roomTransportReady\(\{room:r,localUserId:uid\(\),connected:csC
 assert.match(out,/csCoop\.connected=opened&&live\.length>0/,'only online room peers can mark a channel connected');
 assert.match(out,/transportRetryAfter=Date\.now\(\)\+15000/,'failed room handshake must use backoff and give explicit feedback');
 console.log('cooperative room no phantom connected state integration contract OK');
+
+assert.match(out,/presenceVerified=!!state\._lastServerPollAt&&!state\._lastServerPollError/,'friends should distinguish true backend presence from cached user records');
+assert.match(out,/Amigos guardados disponibles\. No se pudo verificar quién está conectado/,'friends remain accessible with explicit presence warning');
+assert.match(out,/presencia sin verificar/,'offline/cached friend rows must not be labeled presently online without server evidence');
+console.log('friend list and backend presence truthfulness contract OK');
