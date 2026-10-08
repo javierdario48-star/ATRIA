@@ -1,5 +1,5 @@
 import assert from'node:assert/strict';
-import{csVoiceCleanSpeech,csMergeSpeech,csVoiceNovelText}from'./transcript-normalizer.js';
+import{csVoiceCleanSpeech,csVoiceCleanMicSpeech,csMergeSpeech,csVoiceNovelText}from'./transcript-normalizer.js';
 assert.equal(csVoiceCleanSpeech('algún algún hábito algún hábito algún hábito algún hábito te va algún hábito te va con cigarro'),'algún hábito te va con cigarro');
 assert.equal(csVoiceCleanSpeech('Hola Hola qué Hola qué te Hola qué te pasó Hola qué te pasó'),'Hola qué te pasó');
 assert.equal(csVoiceCleanSpeech('Hola hola'),'Hola hola');
