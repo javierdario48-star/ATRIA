@@ -103,6 +103,21 @@ function findStudy(text){const n=norm(text),catalog=csStudyCatalog(),canonical=c
  s=replaceOnce(s,rtcStart,`// RTC discovery is driven conservatively from the primary lobby scheduler; no second permanent RAF.\n  window.nsLobbyRtcPulse=function(ts){if(!window.nsLobby?.active)return;ts=Number(ts)||performance.now();if(ts-net.lastRtcSend>=220){net.lastRtcSend=ts;var p=localState();if(p)sendRtc(p)}if(ts-net.lastDiscovery>=2500){net.lastDiscovery=ts;discovery()}};`,'single-lobby-scheduler');
  const socialPulse=`if((state._lastSocial||0)+1000<t){state._lastSocial=t;nsSocial?.refresh?.().then(()=>{renderHud();if(document.getElementById('nsLobbyGuard')?.classList.contains('show')&&social().room)openWaitingRoom()}).catch(()=>{})}`;
  s=replaceOnce(s,socialPulse,`if((state._lastSocial||0)+2500<t){state._lastSocial=t;nsSocial?.refresh?.().then(()=>{renderHud();if(document.getElementById('nsLobbyGuard')?.classList.contains('show')&&social().room)openWaitingRoom()}).catch(()=>{})}window.nsLobbyRtcPulse?.(t)`,'bounded-social-rtc-pulse');
+ // The second lobby RAF was retired. Wire incoming RTC targets into the ONE surviving lobby tick;
+ // otherwise its server-only targets update every ~900 ms and remote avatars crawl or jump.
+ s=replaceOnce(s,
+  "var now=performance.now(),old=net.remotes.get(p.userId),seq=Number(p.seq)||0;",
+  "var now=performance.now(),old=net.remotes.get(p.userId),seq=Number(p.seq)||0; if(old&&old.rtc!==(source==='rtc'))old=null;",
+  'lobby-remote-transport-independent-sequences');
+ s=replaceOnce(s,
+  "window.nsLobbyRtcPulse=function(ts){if(!window.nsLobby?.active)return;ts=Number(ts)||performance.now();if(ts-net.lastRtcSend>=220){net.lastRtcSend=ts;var p=localState();if(p)sendRtc(p)}if(ts-net.lastDiscovery>=2500){net.lastDiscovery=ts;discovery()}};",
+  "window.nsLobbyRtcHasFresh=function(id){var r=net.remotes.get(id),peer=net.peers.get(id);return !!(r&&r.rtc&&peer?.open&&peer.dc?.readyState==='open'&&performance.now()-r.at<650)};\\n  window.nsLobbyRtcPulse=function(ts){if(!window.nsLobby?.active)return;ts=Number(ts)||performance.now();var map=window.nsLobby.players;net.remotes.forEach(function(r,id){if(!window.nsLobbyRtcHasFresh(id)||!(map instanceof Map))return;var q=map.get(id);if(!q)return;var age=Math.max(0,Math.min(.15,(ts-r.at)/1000));q._tx=r.tx+(r.data?.moving?r.vx*age:0);q._ty=r.ty+(r.data?.moving?r.vy*age:0);q._vx=r.data?.moving?r.vx:0;q._vy=r.data?.moving?r.vy:0;q._seen=r.at;q.dir=r.data?.dir||q.dir;q.moving=!!r.data?.moving;q.walkPhase=r.data?.walkPhase||0});if(ts-net.lastRtcSend>=100){net.lastRtcSend=ts;var p=localState();if(p)sendRtc(p)}if(ts-net.lastDiscovery>=2500){net.lastDiscovery=ts;discovery()}};",
+  'lobby-rtc-sampled-in-single-render-owner');
+ s=replaceOnce(s,
+  "for(const p of data.players||[]){if(p.userId===mine)continue;const old=state.players.get(p.userId)||{};next.set(p.userId,",
+  "for(const p of data.players||[]){if(p.userId===mine)continue;const old=state.players.get(p.userId)||{};if(window.nsLobbyRtcHasFresh?.(p.userId)&&Number.isFinite(old._tx)){next.set(p.userId,{...old,...p,x:old.x,y:old.y,_tx:old._tx,_ty:old._ty,_vx:old._vx,_vy:old._vy,_seen:old._seen,moving:old.moving,dir:old.dir,walkPhase:old.walkPhase});continue}next.set(p.userId,",
+  'lobby-server-fallback-not-override-fresh-rtc');
+
  const activationText='Activa una vez tu perfil social. El alias parte del nombre de tu personaje.';
  const activationAt=s.indexOf(activationText);if(activationAt<0)throw new Error('integration anchor missing: people-auto-presence');
  const activationStart=s.lastIndexOf("else if(!s.user){",activationAt),activationEnd=s.indexOf("}\n else{",activationAt);if(activationStart<0||activationEnd<0)throw new Error('integration anchor malformed: people-auto-presence');
