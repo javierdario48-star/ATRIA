@@ -180,5 +180,29 @@ function csDrawRemote(){
  // Final dispatch is a single source of truth even when Android/Gboard bypasses Web Speech adapters.
  s=replaceOnce(s,"window.nsAtriaNormalizeSpeech=function(text){const raw=String(text||\"\").trim().replace(/\\s+/g,\" \");","window.nsAtriaNormalizeSpeech=function(text){const raw=String(csVoiceCleanSpeech(text)).trim().replace(/\\s+/g,\" \");",'normalize-speech-at-common-send-wrapper');
  s=replaceOnce(s,"function sendMessage(q){const text=String(q||'').trim();","function sendMessage(q){const text=String(q||'').trim().startsWith('/')?String(q||'').trim():csVoiceCleanSpeech(q);",'normalize-before-chat-history-and-dialogue');
+ // The original csVoice WebSpeech engine also exists in the golden master.
+ // Exclusively hand mic ownership to VoiceV2; otherwise two handlers can emit different partials.
+ s=replaceOnce(s,
+ "    if(VoiceV2.active){ stopVoiceV2(false); return; }\n    const SR=speechCtorV2();",
+ "    if(VoiceV2.active){ stopVoiceV2(false); return; }\n    // Disable the legacy mic BEFORE aborting it; its onend must never restart or flush a stale partial.\n    csVoice.localActive=false;csVoice.restarting=false;csVoice.pendingText='';\n    if(csVoice.flushTimer){clearTimeout(csVoice.flushTimer);csVoice.flushTimer=null}\n    csVoice.pendingByIndex?.clear();csVoice.sentFinals?.clear();\n    try{csVoice.recognition?.abort?.()}catch(_){try{csVoice.recognition?.stop?.()}catch(__){}}\n    const SR=speechCtorV2();",
+ 'v2-exclusive-microphone-ownership');
+ // An old listener can deliver a late result after its abort/stop.
+ s=replaceOnce(s,
+ "r.onresult=e=>{if(!csVoice.localActive||csCoop.radioHeld)return;",
+ "r.onresult=e=>{if(!csVoice.localActive||window.__atriaV2OwnsMic||csCoop.radioHeld)return;",
+ 'legacy-mic-ignore-after-v2-ownership');
+ s=replaceOnce(s,
+ "VoiceV2.rec=r; VoiceV2.active=true; VoiceV2.lastInterim=''; VoiceV2.committed=false;",
+ "VoiceV2.rec=r; VoiceV2.active=true; window.__atriaV2OwnsMic=true; VoiceV2.lastInterim=''; VoiceV2.committed=false;",
+ 'v2-microphone-active-owner');
+ s=replaceOnce(s,
+ "r.onend=()=>{if(VoiceV2.rec!==r)return;voiceV2Commit();VoiceV2.active=false;voiceUIV2(false)};",
+ "r.onend=()=>{if(VoiceV2.rec!==r)return;voiceV2Commit();VoiceV2.active=false;window.__atriaV2OwnsMic=false;voiceUIV2(false)};",
+ 'v2-release-mic-on-end');
+ s=replaceOnce(s,
+ "      VoiceV2.active=false;VoiceV2.aborted=true;if(VoiceV2.commitTimer)",
+ "      VoiceV2.active=false;window.__atriaV2OwnsMic=false;VoiceV2.aborted=true;if(VoiceV2.commitTimer)",
+ 'v2-release-mic-on-error');
+
  return s;
 }

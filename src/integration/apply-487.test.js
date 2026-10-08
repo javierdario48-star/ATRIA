@@ -196,3 +196,9 @@ assert.match(out,/function csStudyAnatomyId\(text\)/,'brain study resolver is in
 assert.match(out,/window\.nsAtriaNormalizeSpeech=function\(text\)\{const raw=String\(csVoiceCleanSpeech\(text\)\)/,'final common dispatch normalizes multi-pass Android echo');
 assert.match(out,/function sendMessage\(q\)\{const text=String\(q\|\|''\)\.trim\(\)\.startsWith\('\/'\)/,'raw chat transcript is normalized before NPC and history');
 console.log('brain vs abdominal imaging and final speech dispatch integration OK');
+
+assert.match(out,/csVoice\.localActive=false;csVoice\.restarting=false;csVoice\.pendingText=''/,'only one local SpeechRecognition instance owns the microphone');
+assert.match(out,/csVoice\.recognition\?\.abort\?\.\(\)/,'legacy SpeechRecognition must be aborted before VoiceV2 start');
+assert.match(out,/window\.__atriaV2OwnsMic=true/,'active local voice engine owns mic');
+assert.match(out,/if\(!csVoice\.localActive\|\|window\.__atriaV2OwnsMic\|\|csCoop\.radioHeld\)return/,'stale legacy event cannot send duplicate messages');
+console.log('SpeechRecognition mic ownership exclusion integration OK');

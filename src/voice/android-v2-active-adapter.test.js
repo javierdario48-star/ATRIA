@@ -36,4 +36,23 @@ await cx.adapter.startVoiceV2();mic=recognizers.at(-1);mic.result([fin('Hola Hol
 assert.equal(sent.at(-1),'Hola cómo estás','screenshot reproduction through actual active VoiceV2 handler');
 await cx.adapter.startVoiceV2();mic=recognizers.at(-1);mic.result([fin('Hola Hola Hola probando Hola probando micrófono')]);mic.onend();
 assert.equal(sent.at(-1),'Hola probando micrófono','new physical Android screenshot echo');
-console.log('Android VoiceV2 simulated session/revision/cancel and screenshot regression OK:',sent.length,'messages');
+
+// Existing old local recognizer may still be listening after an in-game radio transition.
+let legacyAborts=0;
+cx.csVoice.localActive=true;
+cx.csVoice.restarting=true;
+cx.csVoice.pendingText='Hola duplicado';
+cx.csVoice.pendingByIndex=new Map([[0,{text:'Hola',isFinal:true}]]);
+cx.csVoice.sentFinals=new Set([0]);
+cx.csVoice.recognition={abort(){legacyAborts++}};
+const prior=sent.length;
+await cx.adapter.startVoiceV2();
+assert.equal(legacyAborts,1,'starting VoiceV2 must disable the superseded SpeechRecognition instance');
+assert.equal(cx.csVoice.localActive,false,'no legacy listening flag remains');
+assert.equal(cx.csVoice.restarting,false,'legacy onend cannot restart microphone');
+assert.equal(cx.csVoice.pendingText,'','no stale pending old mic text');
+assert.equal(cx.csVoice.pendingByIndex.size,0);
+const mic2=recognizers.at(-1);
+mic2.result([fin('Hola prueba de una sola voz')]);mic2.onend();
+assert.deepEqual(sent.slice(prior),['Hola prueba de una sola voz'],'exclusive active recognizer emits only one message');
+console.log('Android VoiceV2 simulated session/revision/cancel/legacy ownership regression OK:',sent.length,'messages');
