@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Real QA backend: independent sessions and coop lifecycle
+      - name: 'Real QA backend: independent sessions and coop lifecycle'
         env:
           QA_BASE: https://night-shift-clinical-git-atria-487-qa-javierdario4878-7324.vercel.app
         run: node scripts/qa-social-e2e.mjs
