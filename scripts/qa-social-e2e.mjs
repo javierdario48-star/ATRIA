@@ -35,10 +35,15 @@ try{
  const heartA=await heart(a,'qa-peer-'+seed+'-a',100);assert.equal(heartA.status,200,'lobby state: '+JSON.stringify(heartA.json));
  const heartB=await heart(b,'qa-peer-'+seed+'-b',180);assert.equal(heartB.status,200,'second lobby state: '+JSON.stringify(heartB.json));
  const start=performance.now();
- const lobby=await eventually(async()=>{
+ let lobby=null;
+ for(let attempt=0;attempt<12;attempt++){
   const r=await call('lobby?after=0',{token:a.token});
-  return r.status===200&&r.json.players?.some(p=>p.userId===a.user.id)&&r.json.players?.some(p=>p.userId===b.user.id)?r:null;
- },'two profiles never appeared together in live QA lobby');
+  const players=Array.isArray(r.json.players)?r.json.players:[];
+  console.log('QA roster check',JSON.stringify({attempt,status:r.status,count:players.length,self:players.some(p=>p.userId===a.user.id),remote:players.some(p=>p.userId===b.user.id),error:r.json.error||null}));
+  if(r.status===200&&players.some(p=>p.userId===a.user.id)&&players.some(p=>p.userId===b.user.id)){lobby=r;break}
+  await sleeps(600);
+ }
+ if(!lobby)throw Error('two profiles never appeared together in live QA lobby');
  const s=await call('search?q='+names[1].toLowerCase(),{token:a.token});
  assert.equal(s.status,200);assert(s.json.users.some(p=>p.id===b.user.id));
  assert.equal((await call('friends',{method:'POST',token:a.token,body:{userId:b.user.id}})).status,200);
