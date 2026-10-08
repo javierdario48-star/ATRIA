@@ -210,6 +210,6 @@ assert.match(out,/function csRtcAuth\(\)/,'RTC signaling uses existing social be
 assert.match(out,/headers:\{\.\.\.\(body\?\{'Content-Type':'application\/json'\}:\{\}\),\.\.\.csRtcAuth\(\)\}/,'RTC request carries bearer token');
 console.log('mic-only ASR short greetings and secure RTC signaling wiring OK');
 
-assert.match(out,/statePayload\(\)\{return\{peerId:csV41Challenge\?\.selfId\|\|\(window\.__atriaQaLobbyPeerId/,'stable QA peer fallback');
+assert.match(out,/return\{peerId:pid,seq:\(state\._qaSeq=/,'stable peer ID and monotonic sequence coexist');
 assert.match(out,/seq:\(state\._qaSeq=\(state\._qaSeq\|\|0\)\+1\)/,'lobby movement is versioned to reject stale updates');
 console.log('QA lobby peer ID and monotonic sequence integration OK');

@@ -221,11 +221,12 @@ function csDrawRemote(){
   "headers:{...(body?{'Content-Type':'application/json'}:{}),...csRtcAuth()},",
   'rtc-signaling-auth-headers');
 
- // Stable per-tab identity if clinical challenge ID has not been initialized.
+ // Existing integration already creates and retains the per-tab peerId.
+ // Add sequence IDs after that patch has run; don't replace its stable identity.
  s=replaceOnce(s,
-  "function statePayload(){return{peerId:csV41Challenge?.selfId||'local',",
-  "function statePayload(){return{peerId:csV41Challenge?.selfId||(window.__atriaQaLobbyPeerId||(window.__atriaQaLobbyPeerId='L_'+Math.random().toString(36).slice(2)+Date.now().toString(36))),seq:(state._qaSeq=(state._qaSeq||0)+1),",
-  'qa-lobby-presence-peer-and-sequence');
+  "return{peerId:pid,x:player.x",
+  "return{peerId:pid,seq:(state._qaSeq=(state._qaSeq||0)+1),x:player.x",
+  'qa-lobby-monotonic-sequence');
 
  return s;
 }
