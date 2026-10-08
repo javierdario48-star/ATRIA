@@ -87,6 +87,11 @@ async function scenario(label,steps,expected,{role='patient',cancel=false,error=
  passed++;
  return mic;
 }
+// Exact Android regression: partial 'probando' is replaced by final 'probando audio'.
+await scenario('canonical-probando-button-to-history-and-vozdiag',[
+ {results:[interim('probando')]},
+ {results:[final('probando audio')]}
+],'probando audio');
 const examples=[
  ['Hola Hola','Hola'],
  ['Qué Qué tal todo bien','Qué tal todo bien'],
@@ -132,7 +137,7 @@ for(let i=0;i<12;i++){
  const text='siguiente mensaje '+i;
  await scenario('new-after-late-'+i,[{results:[final(text)]}],text);
 }
-const expectedTotal=examples.length+56+24+20+20+24;
+const expectedTotal=1+examples.length+56+24+20+20+24;
 assert(expectedTotal>=150,'at least 150 full-path click -> game history cases');
 assert.equal(passed,expectedTotal);
 assert.equal(timers.size,0,'no pending timers can commit a stale speech fragment');
