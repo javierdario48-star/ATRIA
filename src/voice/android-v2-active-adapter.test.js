@@ -183,3 +183,15 @@ assert.equal(recognizers.length,atCancel+1,'live continuation creates exactly on
 const reentered=recognizers.at(-1);reentered.result([fin('segunda sesión válida')]);reentered.onend();
 assert.equal(sent.at(-1),'segunda sesión válida');
 console.log('Cancelled pending permission cannot invalidate a later mic session');
+
+// A Web Speech 'onstart' delivered after onend or from an obsolete recognizer
+// must not reactivate the shared legacy/V2 UI state or create an additional session.
+const endedSessionCount=JSON.parse(cx.window.nsAtriaVoiceReport()).sessions.length;
+const endedMessages=sent.length;
+const obsoleteMic=recognizers.at(-2);
+obsoleteMic.onstart?.();
+reentered.onstart?.();
+assert.equal(cx.csVoice.localActive,false,'stale Android onstart cannot revive a finished mic');
+assert.equal(JSON.parse(cx.window.nsAtriaVoiceReport()).sessions.length,endedSessionCount,'stale onstart cannot add a phantom session');
+assert.equal(sent.length,endedMessages,'stale onstart cannot dispatch a message');
+console.log('Late Android onstart callbacks cannot reactivate finished sessions');
