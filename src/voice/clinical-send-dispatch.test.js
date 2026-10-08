@@ -36,4 +36,12 @@ for(const [raw,expected] of cases){
 }
 ctx.sendMessage('/estudio resonancia cerebral');
 assert.equal(sent.at(-1).text,'/estudio resonancia cerebral','slash command syntax unchanged');
+
+const diagnosticBefore=sent.length,patientBefore=patient.length;
+let exported=0;ctx.window.nsAtriaVoiceCopyReport=()=>{exported++};
+ctx.sendMessage('/vozdiag');
+assert.equal(exported,1,'QA-only diagnostic is accessible using existing chat input');
+assert.equal(sent.length,diagnosticBefore,'diagnostic control must never appear in clinical chat history');
+assert.equal(patient.length,patientBefore,'diagnostic control must never reach the patient or nurse');
+console.log('In-game /vozdiag reports local voice trace without clinical dispatch');
 console.log('Actual embedded dialogue send + late normalizer regression OK:',cases.length,'utterances');
