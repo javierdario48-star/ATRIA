@@ -17,8 +17,11 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
   const hasDrug=id=>medications.has(id);
   const consult=id=>consultations.includes(id);
   const missing=[];
+  const initialSys=Number(snapshot.initialSys||snapshot.sys||120);
   const critical=Number(snapshot.sys||120)<90||Number(snapshot.spo2||98)<90||snapshot.color==='ROJO';
-  const alteredPerfusion=Number(snapshot.sys||120)<95;
+  // A patient resuscitated from shock still needs an appropriate critical-care handoff.
+  const recentShock=initialSys<90;
+  const alteredPerfusion=Number(snapshot.sys||120)<95||initialSys<95;
   const historyOk=Number(snapshot.historyCount||0)>=1;
   const examOk=!!snapshot.examDone||Number(snapshot.examRegionsCount||0)>=2;
   const vitalsOk=!!snapshot.vitalsKnown;
@@ -45,7 +48,7 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
   if(id==='PERI-SEC-001'){
     // In extremis, peritoneal signs + history permit surgical transfer before CT.
     const imaging=done.has('peri_ct')||done.has('peri_rx');
-    const urgentClinical=critical&&examOk&&Number(snapshot.historyCount||0)>=2;
+    const urgentClinical=(critical||recentShock)&&examOk&&Number(snapshot.historyCount||0)>=2;
     if(!imaging&&!urgentClinical)missing.push('Obtener imagen orientadora o justificar urgencia por clínica grave.');
     const coverage=(hasDrug('ceftriaxone')&&hasDrug('metronidazole'))||
       (hasDrug('ceftazidime')&&hasDrug('metronidazole'))||
@@ -56,15 +59,15 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
     // A surgical referral is NOT equivalent to a source-control procedure already done.
   }
   if(id==='PERI-TER-001'){
-    const reviewed=done.has('ter_ct')||done.has('ter_culture')||(critical&&examOk&&Number(snapshot.historyCount||0)>=2);
-    if(!reviewed)missing.push('Reevaluar foco con TC/cultivo o priorizar por deterioro grave.');
+    // Cultures are obtained promptly if useful, but results are NEVER a prerequisite
+    // for empiric antimicrobial treatment or a safe ICU/OR transfer.
+    const reviewed=done.has('ter_ct')||((critical||recentShock)&&examOk&&Number(snapshot.historyCount||0)>=1);
+    if(!reviewed)missing.push('Reevaluar el foco con TC si está estable o priorizar el deterioro grave por clínica.');
     const coverage=hasDrug('piptazo')||hasDrug('imipenem')||
       (hasDrug('ampicillin')&&hasDrug('amikacin')&&(hasDrug('fluconazole')||hasDrug('amphotericin')));
     if(!coverage)missing.push('Iniciar tratamiento antimicrobiano coherente con el cuadro.');
-    // Only the actually returned Candida culture makes antifungal coverage a specific obligation.
-    if(/candida/i.test(String(snapshot.studyResults?.ter_culture||''))&&
-       !hasDrug('fluconazole')&&!hasDrug('amphotericin'))
-      missing.push('Ajustar antifúngico por Candida identificada en cultivo.');
+    // Late microbiology provides a handoff recommendation, never a closure gate.
+    // Selected high-risk patients may warrant empiric antifungal coverage BEFORE cultures.
     if(!consult('uti')&&!consult('cirugia'))missing.push('Obtener respuesta del equipo receptor (UTI o Cirugía).');
     // Source control in tertiary peritonitis is conditional on a residual focus.
   }
@@ -75,12 +78,15 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
     missing.push('Proporcionar soporte de oxígeno ante hipoxemia.');
 
   const destination=id==='PERI-PBE-001'?(critical?'uti':'sala'):
-    id==='PERI-SEC-001'?'quirofano':(critical?'uti':'sala');
+    id==='PERI-SEC-001'?'quirofano':((critical||recentShock)?'uti':'sala');
   const labels={sala:'Internar en sala',uti:'Derivar a UTI',quirofano:'Derivar a quirófano'};
   const ready=missing.length===0;
   return {caseId:id,ready,critical,diagnostic,evidenceSufficient:missing.every(x=>!(/anamnesis|signos|examen|impresi|imagen|paracentesis|foco/.test(normalize(x)))),
     action:ready?destination:null,label:ready?labels[destination]:null,
     missing,allowedDestinations:ready?[destination]:[],
+    followUp:(id==='PERI-TER-001'&&/candida/i.test(String(snapshot.studyResults?.ter_culture||''))&&
+      !hasDrug('fluconazole')&&!hasDrug('amphotericin'))?
+      'Resultado tardío con Candida: comunicar al equipo receptor y revisar antifúngico según riesgo, especie y sensibilidad.':null,
     // The evaluator only authorizes a safe handoff. No surgery is silently performed.
     procedurePerformed:!!snapshot.sourceControlled
   };
@@ -99,6 +105,7 @@ export function csPeritonitisSnapshot487(s,c) {
     studyResults:Object.fromEntries([...(s.orders?.entries?.()||[])].filter(([,o])=>o?.status==='done').map(([id,o])=>[id,String(o.result||'').slice(0,700)])),
     administered:(s.administrationLog||[]).filter(x=>x&&typeof x.id==='string').map(x=>x.id),
     consultsDone:consultations,sys:Number(s.liveVitals?.sys||0)||120,
+    initialSys:Number(s.nsCareBaseline?.sys)||Number(String(c.vitals?.bp||'').split('/')[0])||Number(s.liveVitals?.sys)||120,
     spo2:Number(s.liveVitals?.spo2||0)||98,
     patientDied:!!s.patientDied,caseEnded:!!s.caseEnded,
     sourceControlled:!!s.phys?.sourceControlled
