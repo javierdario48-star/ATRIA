@@ -45,14 +45,16 @@ const context={C,sim,window,careEpoch:0,
  antibioticCoverageStatus:()=>({score:0,ramp:0}),vitalsNow:()=>sim.liveVitals,
  captureMonitorVitals:()=>{},therapyStartedAt:()=>null};
 vm.runInNewContext(source.slice(helperA,helperB)+'\n'+source.slice(tickA,tickB),context,{timeout:3000});
-assert.deepEqual(Array.from(context.csVegaPriorityStudies487()),['peri_cbc','peri_gas'],
- 'shocked peritonitis must not wait for culture OR CT before handoff');
+
 for(let n=1;n<=5;n++){
  context.tick();assert.equal(physical.length,n,'exactly one exam action per tick: '+n);
  assert.equal(studies.length,0,'workup does not flood during exam');
  time+=1100;
 }
-context.tick();assert.equal(job.phase,'workup487','examination advances to next step');time+=700;
+context.tick();assert.equal(job.phase,'workup487','examination advances to next step');
+assert.deepEqual(Array.from(context.csVegaPriorityStudies487()),['peri_cbc','peri_gas'],
+ 'shocked peritonitis with examined abdomen must not wait for culture OR CT');
+time+=700;
 context.tick();assert.equal(studies.length,0,'Vega first offers learner the study');
 assert(messages.some(x=>x.includes('¿Lo pedís vos o lo pido yo?')));
 time+=2400;context.tick();assert.deepEqual(studies,['peri_cbc'],'first study requested only after a decision window');
