@@ -9,7 +9,11 @@ export function applyNurseVoice487(html){
  const addressed=t=>/^(?:enfermera|enfermero|enfermeria)\\b/.test(norm(String(t||'')));
  function feedback(t){nurseSay(t);sim?.events?.push({m:sim.gameMinute,t:'Enfermería: '+t})}
  nurseNatural=function(text){
-  if(!addressed(text))return baseNurse.apply(this,arguments);
+  const bare=norm(String(text||'')).trim();
+  const direct=/^(?:(?:dos|2) )?(?:vias?|accesos? venosos?|monitor|monitorizar|oxigeno|o2|ringer|hemograma|signos vitales)$/;
+  // A brief command addressed to a nearby nurse also works without saying
+  // "enfermera" every time. Patient questions still use the native routing.
+  if(!addressed(text)&&!direct.test(bare))return baseNurse.apply(this,arguments);
   if(!C||!sim||sim.caseEnded||window.nsMayExamine?.()===false){
    feedback('No hay una atención activa con permiso para ejecutar estas indicaciones.');return false;
   }
