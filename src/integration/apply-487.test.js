@@ -605,6 +605,9 @@ assert.equal(clinicalPatient.administrationLog.length,0,'receiving antibiotic is
 assert.equal(clinicalPatient.orders.get('hemograma').status,'pending','lab request not a result');
 assert.equal(sounds.length,1,'newly started oxygen gets one completion sound');
 const originalMessages=spoken.length;
+fakeNurse.nurseNatural('Enfermera vías, ceftriaxona, oxígeno y hemograma');
+assert.equal(clinicalPatient.csNurse487History.length,2,'repeated command may get its own status receipt');
+assert.equal(sounds.length,1,'repeated request must not replay oxygen sound');
 fakeNurse.updateSimulation(1);fakeNurse.updateSimulation(1);
 assert.equal(sounds.length,1,'re-render or simulation ticks do not replay sound');
 clinicalPatient.venousAccessCount=1;
@@ -612,6 +615,7 @@ fakeNurse.updateSimulation(1);
 assert.equal(clinicalPatient.administrationLog[0].id,'ceftriaxone');
 assert.equal(sounds.length,2,'IV placement and antibiotic administration are batched in a single event');
 assert.ok(spoken.some(t=>t.includes('ceftriaxone')||t.includes('ceftriaxona')),'administration gets an event message');
+assert.equal(spoken.filter(t=>t.includes('ceftriaxone — ejecutado')).length,1,'one real antibiotic administration produces one confirmation even with two receipts');
 clinicalPatient.orders.get('hemograma').status='done';
 fakeNurse.updateSimulation(1);fakeNurse.updateSimulation(1);
 assert.equal(sounds.length,3,'available lab triggers separate once-only notification');

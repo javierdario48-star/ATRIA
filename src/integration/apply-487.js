@@ -545,6 +545,12 @@ function csDrawRemote(){
      item.notified=true;
      // Completed before receipt creation is not a newly executed action.
      if(item.preExisting)continue;
+     const seen=patient.csNurse487SeenEvents||(patient.csNurse487SeenEvents=new Set());
+     const version=item.kind==='therapy'?(patient.administrationLog||[]).filter(r=>r.id===item.id).length:
+       item.kind==='iv'?Number(patient.venousAccessCount||0):1;
+     const eventKey=item.kind+':'+(item.id||item.text)+':'+next.status+':'+version;
+     if(seen.has(eventKey))continue;
+     seen.add(eventKey);
      complete.push({name:item.label,status:next.status,uid:receipt.uid,bed:receipt.bed});
     }
    }
