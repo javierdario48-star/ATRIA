@@ -108,6 +108,18 @@ function finish(bot,label,destination){
  const outcome= recovered.check('recent severe shock still needs ICU after temporary pressure recovery',true);
  assert.equal(outcome.action,'uti');
 }
+// The shared, case-independent autocompleter may classify a clinically equivalent
+// description that the legacy fixed seed string did not list.
+{
+ const b=patient('PERI-SEC-001',{sys:110});
+ b.dx('abdomen agudo perforativo').talk().vitals().exam()
+  .order('peri_ct','done').administer('ceftriaxone').administer('metronidazole').consult('cirugia','done');
+ const snapshot=csPeritonitisSnapshot487(b.s,b.c);
+ assert.equal(csPeritonitisEvaluate487(snapshot).ready,false,'legacy matcher lacks alternate description');
+ assert.equal(csPeritonitisEvaluate487({...snapshot,diagnosticCompatible:true}).ready,true,
+  'referral accepts shared-matcher verified clinical equivalent');
+ assert.equal(csPeritonitisEvaluate487({...snapshot,diagnosticCompatible:false}).ready,false);
+}
 for(const id of ['PERI-PBE-001','PERI-SEC-001','PERI-TER-001']){
  const g=patient(id);
  g.dx(id==='PERI-PBE-001'?'pbe':id==='PERI-SEC-001'?'peritonitis secundaria':'peritonitis terciaria');
