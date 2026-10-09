@@ -11,7 +11,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  };
  const defs=[
   ['monitor','monitor',['monitor','monitorizar','monitorear','monitorizacion','monitoreo','conectar monitor']],
-  ['iv','iv',['vias','via','dos vias','2 vias','accesos venosos','acceso venoso','canalizar','canalizacion','venoclisis']],
+  ['iv','iv',['vias','via','dos vias','2 vias','accesos venosos','acceso venoso','vias periféricas','via periferica','cateter venoso','cateter periferico','canalizar','canalizacion','venoclisis']],
   ['vitals','vitals',['signos vitales','tomar signos','tomar presion','presion arterial','control de signos','controlar signos','saturacion','constantes vitales']],
   ['surgery','cirugia',['cirugia','cirujano','cirujana','quirofano','operar','laparotomia','control del foco','control de foco']],
  ];
@@ -52,7 +52,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  let previous=0;
  for(const x of chosen){segments.push(input.slice(previous,x.start));previous=x.end;}
  segments.push(input.slice(previous));
- const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|pero|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|litros|litro|min|por|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
+ const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|pero|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|pongas|poneme|ponga|canaliza|canalicen|canalizame|conecta|conectame|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|litros|litro|min|por|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
  const unknown=segments.map(x=>x.replace(neutral,' ').replace(/\b\d+(?:\s*\d+)?\b/g,' ').replace(/\s+/g,' ').trim()).filter(x=>x.length>=4);
  return {addressed:/^(?:enfermera|enfermero|enfermeria)\b/.test(s),items:result,unknown,
   active:!/\?/.test(String(text))&&!/^(?:no|nunca|sin|evitar)\b/.test(input)};
