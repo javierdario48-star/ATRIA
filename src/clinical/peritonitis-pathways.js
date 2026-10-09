@@ -85,7 +85,7 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
 // Reads EXISTING runtime data; no new clinical state is manufactured.
 export function csPeritonitisSnapshot487(s,c) {
   if(!s||!c)return null;
-  const consultations=s.consults instanceof Map?[...s.consults.entries()].filter(([,x])=>x?.status==='done').map(([id])=>id):[];
+  const consultations=typeof s.consults?.entries==='function'?[...s.consults.entries()].filter(([,x])=>x?.status==='done').map(([id])=>id):[];
   return {
     caseId:c.id,diagnosis:s.diagnosis||'',
     historyCount:(s.intentHistory||[]).filter(x=>x&&typeof x.id==='string').length,
