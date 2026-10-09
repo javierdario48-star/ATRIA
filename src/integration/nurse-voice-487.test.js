@@ -55,8 +55,9 @@ assert.equal(consults.length,1,'consult requested rather than operation');
 ctx.sendMessage('enfermera no cirugia');
 assert.equal(consults.length,1,'negated request cannot execute');
 assert(nurse.some(x=>x.includes('no ejecuté')),'nurse explains no action on negated instruction');
+const beforeSpectator=tasks.length;
 window.nsMayExamine=()=>false;ctx.sendMessage('enfermera dos vias');
-assert(!tasks.includes('iv:2'),'spectator cannot alter care');
+assert.equal(tasks.length,beforeSpectator,'spectator cannot introduce new orders');
 assert(nurse.some(x=>x.includes('No hay una atención activa')),'spectator gets explicit colored refusal');
 console.log('NURSE VOICE RUNTIME BOTS PASS',JSON.stringify({multipleOrders:true,oxygenByNurse:true,
  caseStudy:true,surgicalConsult:true,negationSafe:true,permissions:true,receipts:true,physicalDevice:false}));
