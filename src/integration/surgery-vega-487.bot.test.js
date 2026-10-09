@@ -44,6 +44,11 @@ const context={
  setTimeout:fn=>{timeout.push(fn);return timeout.length}
 };
 vm.runInNewContext(code,context,{timeout:3500});
+context.nurseNatural('Enfermera, no cirugía');
+assert.equal(timeout.length,0,'explicit negation must not trigger surgical treatment');
+context.nurseNatural('Enfermera, ¿cirugía?');
+assert.equal(timeout.length,0,'a question must not execute surgery or request consultation');
+assert.equal(oldTreat.length,0,'negated/question surgery must never fall through to medication');
 context.nurseNatural('Enfermera cirugía');
 assert.equal(timeout.length,1,'request creates one real response timer');
 assert.equal(sim.consults.get('cirugia').status,'pending');
