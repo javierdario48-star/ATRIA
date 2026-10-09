@@ -15,6 +15,11 @@ const ids=t=>scan(t).items.filter(x=>!x.negated).map(x=>x.id);
 assert.deepEqual(ids('enfermera monitor vías hemograma y honograma'),['monitor','iv','peri_cbc']);
 assert(scan('enfermera monitor vias hemograma y honograma').unknown.some(x=>x.includes('honograma')));
 assert.deepEqual(ids('Enfermera, dos vías, Ringer y oxígeno'),['iv','fluid','oxygen']);
+assert.deepEqual(ids('enfermera vías y oxígeno'),['iv','oxygen'],'vias followed by therapy keeps both actions');
+assert.deepEqual(ids('enfermera necesito que le pongas vías, monitor y oxígeno'),
+ ['iv','monitor','oxygen'],'colloquial request still includes access');
+assert.deepEqual(ids('enfermera poné dos vías periféricas y Ringer'),['iv','fluid']);
+assert.deepEqual(ids('enfermera canalizar acceso venoso y hemograma'),['iv','peri_cbc']);
 assert.equal(scan('enfermera dos vias ringer').items[0].count,2);
 assert.deepEqual(ids('enfermera oxigeno 4 litros ceftriaxona 1 g metronidazol 500 mg'),['oxygen','ceftriaxone','metronidazole']);
 assert.deepEqual(ids('enfermera signos vitales'),['vitals']);
