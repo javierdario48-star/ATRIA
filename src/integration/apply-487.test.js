@@ -531,7 +531,8 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
  tickCtx.learnerTick(tickJob);
  assert.equal(normalTakeovers,1,'persistently critical patient may trigger emergency rescue');
  // Clinical closure eligibility from Phase 5 is the tutor's closure transition.
- const targetA=out.indexOf(' function learnerTarget(){',observedA);
+ const targetA=out.indexOf(' function csVegaPriorityStudies487(){',observedA);
+ assert.ok(targetA>0,'Vega priority workup and learner target helpers are integrated together');
  const targetB=out.indexOf(' function learnerPrompt(step){',targetA);
  const targetCtx={C:{keyStudies:[],dx:['peritonitis'],keyInterventions:[]},
   sim:{orders:new Map(),diagnosis:'Peritonitis',pendingTherapies:new Map(),disposition:{id:'uti'}},
