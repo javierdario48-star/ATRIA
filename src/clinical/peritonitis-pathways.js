@@ -61,6 +61,10 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
     const coverage=hasDrug('piptazo')||hasDrug('imipenem')||
       (hasDrug('ampicillin')&&hasDrug('amikacin')&&(hasDrug('fluconazole')||hasDrug('amphotericin')));
     if(!coverage)missing.push('Iniciar tratamiento antimicrobiano coherente con el cuadro.');
+    // Only the actually returned Candida culture makes antifungal coverage a specific obligation.
+    if(/candida/i.test(String(snapshot.studyResults?.ter_culture||''))&&
+       !hasDrug('fluconazole')&&!hasDrug('amphotericin'))
+      missing.push('Ajustar antifúngico por Candida identificada en cultivo.');
     if(!consult('uti')&&!consult('cirugia'))missing.push('Obtener respuesta del equipo receptor (UTI o Cirugía).');
     // Source control in tertiary peritonitis is conditional on a residual focus.
   }
@@ -92,6 +96,7 @@ export function csPeritonitisSnapshot487(s,c) {
     examDone:!!s.examDone,examRegionsCount:s.examRegions?.size||0,
     vitalsKnown:!!s.lastVitalsKnown,
     studiesDone:[...(s.orders?.entries?.()||[])].filter(([,o])=>o?.status==='done').map(([id])=>id),
+    studyResults:Object.fromEntries([...(s.orders?.entries?.()||[])].filter(([,o])=>o?.status==='done').map(([id,o])=>[id,String(o.result||'').slice(0,700)])),
     administered:(s.administrationLog||[]).filter(x=>x&&typeof x.id==='string').map(x=>x.id),
     consultsDone:consultations,sys:Number(s.liveVitals?.sys||0)||120,
     spo2:Number(s.liveVitals?.spo2||0)||98,
