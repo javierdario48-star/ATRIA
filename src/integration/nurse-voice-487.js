@@ -40,7 +40,9 @@ export function applyNurseVoice487(html){
     const newAdministration=(sim.administrationLog||[]).filter(x=>x.id==='oxygen').length>before;
     if(actuallyActive&&newAdministration){
       // Same model, history and view used by manual monitor administration.
-      renderMonitorTherapies?.();renderAdministrationHistory?.();updateMonitorDOM?.();
+      if(typeof renderMonitorTherapies==='function')renderMonitorTherapies();
+      if(typeof renderAdministrationHistory==='function')renderAdministrationHistory();
+      if(typeof updateMonitorDOM==='function')updateMonitorDOM();
       feedback('Oxígeno administrado: figura ACTIVO en el monitor y quedó en el historial.');
     }else if(actuallyActive)feedback('Oxígeno ya figura activo en el monitor; no se confirmó una nueva administración.');
     else feedback('Oxígeno NO administrado. La orden no produjo un cambio en el monitor.');
