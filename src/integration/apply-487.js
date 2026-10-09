@@ -7,6 +7,7 @@ import {csVoiceStageRevisions,csVoiceCommitRevisions,csVoiceChooseConfirmed} fro
 import {csAnamnesisClassify,csAnamnesisFact} from '../clinical/anamnesis-intents.js';
 import {applyPeritonitis487} from './peritonitis-487.js';
 import {applyDiagnosticImpression487} from './diagnostic-autocomplete-487.js';
+import {applySurgicalNursing487} from './surgical-nursing-487.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
 export function apply487(html){
  let s=html;
@@ -643,5 +644,6 @@ function csDrawRemote(){
  s=replaceOnce(s,'</body>',phase7Script+'</body>','phase7-nurse-audiovisual-receipts');
  s=applyPeritonitis487(s);
  s=applyDiagnosticImpression487(s);
+ s=applySurgicalNursing487(s);
  return s;
 }
