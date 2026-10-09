@@ -36,8 +36,9 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  chosen.sort((a,b)=>a.start-b.start);
  const result=[];
  const relevantNegation=/\b(?:no|sin|evitar|evita|nunca|suspender|suspende|cancelar)\b/;
- for(const item of chosen){
-  const before=input.slice(Math.max(0,item.start-28),item.start).replace(/\s+/g,' ');
+ for(let index=0;index<chosen.length;index++){
+  const item=chosen[index];
+  const before=input.slice(index?chosen[index-1].end:0,item.start).replace(/\s+/g,' ');
   const scoped=before.split(/\b(?:y|pero|luego|despues|ademas|,)\b/).pop();
   const negated=relevantNegation.test(scoped||'');
   const phrase=input.slice(item.start,chosen.find(x=>x.start>item.start)?.start??input.length)
@@ -51,7 +52,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  let previous=0;
  for(const x of chosen){segments.push(input.slice(previous,x.start));previous=x.end;}
  segments.push(input.slice(previous));
- const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|litros|litro|min|por|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
+ const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|pero|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|litros|litro|min|por|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
  const unknown=segments.map(x=>x.replace(neutral,' ').replace(/\b\d+(?:\s*\d+)?\b/g,' ').replace(/\s+/g,' ').trim()).filter(x=>x.length>=4);
  return {addressed:/^(?:enfermera|enfermero|enfermeria)\b/.test(s),items:result,unknown,
   active:!/\?/.test(String(text))&&!/^(?:no|nunca|sin|evitar)\b/.test(input)};
