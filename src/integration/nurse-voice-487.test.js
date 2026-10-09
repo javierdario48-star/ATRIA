@@ -44,7 +44,7 @@ ctx.sendMessage('enfermera cirugia');
 assert.equal(consults.length,1,'consult requested rather than operation');
 ctx.sendMessage('enfermera no cirugia');
 assert.equal(consults.length,1,'negated request cannot execute');
-assert(nurse.some(x=>x.includes('no ejecutó')),'nurse explains no action on negated instruction');
+assert(nurse.some(x=>x.includes('no ejecuté')),'nurse explains no action on negated instruction');
 window.nsMayExamine=()=>false;ctx.sendMessage('enfermera dos vias');
 assert(!tasks.includes('iv:2'),'spectator cannot alter care');
 assert(nurse.some(x=>x.includes('No hay una atención activa')),'spectator gets explicit colored refusal');
