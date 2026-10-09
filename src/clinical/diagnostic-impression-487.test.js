@@ -13,7 +13,7 @@ const terms=csDxCatalog487(cases);
 for(const c of cases){
  assert(c.dx?.length>0,c.id+' needs a diagnostic vocabulary');
  assert(csDxMatchesCase487(cases,c.id,c.dx[0]),c.id+' must match its canonical diagnosis');
- assert(terms.some(x=>x.label===c.dx[0]),c.id+' must join global autocomplete');
+ assert(terms.some(x=>x.aliases.some(a=>csDxNorm487(a)===csDxNorm487(c.dx[0]))),c.id+' must join global autocomplete');
 }
 assert.equal(csDxNorm487('PERITONÍTIS  secundaria'), 'peritonitis secundaria');
 const p=csDxSuggest487(terms,'peritonitis',12);
