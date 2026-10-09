@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {apply487} from './apply-487.js';
+import {applyDiagnosticImpression487} from './diagnostic-autocomplete-487.js';
 const html=apply487(fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'));
 const marker='<script id="atria-diagnostic-autocomplete-487">';
 assert.equal(html.split(marker).length,2,'diagnostic editor injected exactly once');
@@ -85,7 +86,7 @@ assert.equal(dialog.querySelector('.save').disabled,true);
 dialog.querySelector('.close').onclick();window.nsMayExamine=()=>true;
 context.sim.caseEnded=true;window.csDx487Refresh();
 assert.equal(badge.style.display,'none','case closure removes bedside badge');
-assert.throws(()=>apply487(html),/diagnostic autocomplete installed twice/,
+assert.throws(()=>applyDiagnosticImpression487(html),/diagnostic autocomplete installed twice/,
  'double-injecting generated HTML is rejected');
 console.log('DIAGNOSTIC UI BOT PASS',JSON.stringify({
  globalAutocomplete:true,perPatientEditor:true,keyboardCleanup:true,readOnlySpectator:true,
