@@ -539,3 +539,94 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
    csCaseClosureEligibilityV487:()=>({phase:'CLOSURE_ELIGIBLE'})},present:()=>true};
  vm.runInNewContext(out.slice(targetA,targetB),targetCtx);
  assert.equal(targetCtx.learnerTarget(),'closure','Vega recognizes case eligibility instead of claiming unfinished review');
+
+// Acceptance A: a fixed reception header and an independently touch-scrollable patient region.
+assert.match(out,/id="csReceptionPinned487"/,'reception modal has a dedicated fixed header');
+assert.match(out,/class="csReceptionScroll487"/,'patient list scrolls without moving close control');
+assert.match(out,/#csReceptionBoard\.csModal \.csPanel\{[^}]*display:flex;flex-direction:column/,'modal bounds a flex column viewport');
+assert.match(out,/#csReceptionBoard \.csReceptionScroll487\{[^}]*overflow-y:auto/,'list has vertical scrolling');
+assert.match(out,/#csReceptionBoard \.csReceptionPinned487\{[^}]*flex-shrink:0/,'close button remains fixed');
+
+// Acceptance B/C: augment the existing Phase 4 parser with per-patient receipts and actual transitions.
+assert.match(out,/id="atria-phase7-nursing-receipts"/,'nurse receipts integrate with phase4 instead of replacing clinical engine');
+assert.match(out,/function csNurseClinicalStatus487\(patient,item\)/,'each requested action is resolved against real patient clinical state');
+assert.match(out,/function csNurseReconcile487\(patient,active\)/,'execution notices require a real status transition');
+assert.match(out,/function csNurseDispatch487\(text\)/,'mixed treatment and lab phrases share one bounded dispatcher');
+assert.match(out,/csPlaySound\('ok'\)/,'completed tasks use existing user-configured audio');
+assert.match(out,/csNurse487History/,'per-patient receipt history is preserved');
+
+// Behavioral 4.8.7 nurse receipt QA: patient-specific completion, dependencies and audio.
+const nurseStart=out.indexOf('<script id="atria-phase7-nursing-receipts">');
+const nurseEnd=out.indexOf('</script>',nurseStart);
+assert.ok(nurseStart>0&&nurseEnd>nurseStart);
+const nurseScript=out.slice(nurseStart+'<script id="atria-phase7-nursing-receipts">'.length,nurseEnd);
+new vm.Script(nurseScript);
+const clinicalPatient={patientInstance:{uid:'p-1',bed:{label:'Box 1A'},name:'Test Uno'},orders:new Map(),
+ venousAccessCount:0,monitorTherapies:new Map(),pendingTherapies:new Map(),interventions:new Set(),
+ administrationLog:[],globalChat:[],events:[],gameMinute:3};
+const otherPatient={patientInstance:{uid:'p-2',bed:{label:'Box 2B'},name:'Test Dos'},orders:new Map(),
+ venousAccessCount:0,monitorTherapies:new Map(),pendingTherapies:new Map(),interventions:new Set(),
+ administrationLog:[],globalChat:[],events:[],gameMinute:4};
+let completions=0;const sounds=[],notices=[],spoken=[],oldOrders=[];
+const parseStub=t=>{
+ const n=String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ if(n.includes('canaliza dos vias'))return [{kind:'unknown',text:'canaliza dos vias'},{kind:'therapy',id:'oxygen',text:'oxigeno'},{kind:'study',id:'hemograma',text:'hemograma'}];
+ if(n.includes('opioides'))return [{kind:'unknown',text:'opioides'}];
+ if(n.includes('albumina'))return [{kind:'study',id:'hepatograma',text:'expandir con albumina'}];
+ if(n.includes('ceftriaxona')&&n.includes('hemograma'))return [{kind:'iv',text:'vias',count:1},{kind:'therapy',id:'ceftriaxone',text:'ceftriaxona'},{kind:'therapy',id:'oxygen',text:'oxigeno'},{kind:'study',id:'hemograma',text:'hemograma'}];
+ if(n.includes('ringer')&&n.includes('hemograma'))return [{kind:'iv',text:'vias',count:1},{kind:'therapy',id:'fluid',text:'ringer'},{kind:'therapy',id:'oxygen',text:'oxigeno'},{kind:'study',id:'hemograma',text:'hemograma'}];
+ if(n.includes('ceftriaxona'))return [{kind:'therapy',id:'ceftriaxone',text:'ceftriaxona'}];
+ return null;
+};
+const fakeNurse={
+ sim:clinicalPatient,shiftSession:{records:[{sim:clinicalPatient},{sim:otherPatient}]},
+ window:{csNursingParse487:parseStub,csQueueIV:()=>{oldOrders.push('iv');return true},csQueueMonitor:()=>true},
+ norm:t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),
+ nurseNatural:t=>{
+  const n=String(t).toLowerCase();
+  if(n.includes('oxigeno'))clinicalPatient.monitorTherapies.set('oxygen',{});
+  if(n.includes('hemograma'))clinicalPatient.orders.set('hemograma',{id:'hemograma',status:'pending'});
+  if(n.includes('ringer')){if(clinicalPatient.venousAccessCount)clinicalPatient.administrationLog.push({id:'fluid'});}
+  oldOrders.push(t);return true;
+ },inferRecipient:()=> 'patient',updateSimulation:()=>{
+  const q=clinicalPatient.csPhase4Pending487;
+  if(clinicalPatient.venousAccessCount>0&&q?.length){const it=q.shift();clinicalPatient.administrationLog.push({id:it.id});}
+  return true;
+ },mayTreat:()=>true,queueNurse:()=>true,addMonitorTherapy:t=>{clinicalPatient.administrationLog.push({id:'albumin'});return true;},
+ nurseSay:msg=>spoken.push(msg),toast:msg=>notices.push(msg),csPlaySound:id=>sounds.push(id)
+};
+vm.runInNewContext(nurseScript,fakeNurse);
+assert.equal(fakeNurse.window.csNurse487Parse('Enfermera canalizá dos vías, oxígeno y hemograma')[0].count,2,'colloquial double IV resolves to 2 lines');
+fakeNurse.nurseNatural('Enfermera vías, ceftriaxona, oxígeno y hemograma');
+assert.equal(clinicalPatient.csNurse487History.length,1);
+assert.equal(clinicalPatient.csNurse487History[0].items.length,4);
+assert.equal(clinicalPatient.csPhase4Pending487[0].id,'ceftriaxone','ceftriaxone waits without IV');
+assert.equal(clinicalPatient.administrationLog.length,0,'receiving antibiotic is not administration');
+assert.equal(clinicalPatient.orders.get('hemograma').status,'pending','lab request not a result');
+assert.equal(sounds.length,1,'newly started oxygen gets one completion sound');
+const originalMessages=spoken.length;
+fakeNurse.updateSimulation(1);fakeNurse.updateSimulation(1);
+assert.equal(sounds.length,1,'re-render or simulation ticks do not replay sound');
+clinicalPatient.venousAccessCount=1;
+fakeNurse.updateSimulation(1);
+assert.equal(clinicalPatient.administrationLog[0].id,'ceftriaxone');
+assert.equal(sounds.length,2,'IV placement and antibiotic administration are batched in a single event');
+assert.ok(spoken.some(t=>t.includes('ceftriaxone')||t.includes('ceftriaxona')),'administration gets an event message');
+clinicalPatient.orders.get('hemograma').status='done';
+fakeNurse.updateSimulation(1);fakeNurse.updateSimulation(1);
+assert.equal(sounds.length,3,'available lab triggers separate once-only notification');
+assert.ok(spoken.some(t=>t.includes('resultado disponible')),'result is distinguished from study order');
+fakeNurse.nurseNatural('Enfermera opioides');
+assert.equal(clinicalPatient.csNurse487History.at(-1).items[0].status,'NEEDS_CLARIFICATION','opioids require a specific medicine');
+assert.equal(sounds.length,3,'clarification never triggers success');
+fakeNurse.nurseNatural('Enfermera expandir con albúmina');
+assert.equal(clinicalPatient.administrationLog.at(-1).id,'albumin','albumin is a therapy, not hepatograma');
+assert.equal(sounds.length,4,'albumin actual administration emits completion');
+const backgroundReceipt={uid:'p-2',bed:'Box 2B',items:[{kind:'study',id:'hemograma',label:'Hemograma',status:'IN_PROGRESS',reason:'',notified:false}]};
+otherPatient.csNurse487History=[backgroundReceipt];otherPatient.orders.set('hemograma',{status:'done'});
+const audioBefore=sounds.length;fakeNurse.updateSimulation(1);
+assert.equal(sounds.length,audioBefore+1,'background completed study also notifies once');
+assert.ok(otherPatient.globalChat.some(m=>m[1].includes('Box 2B')),'background study is logged to the right patient');
+assert.ok(notices.at(-1).includes('Box 2B'),'background toast identifies the correct box');
+fakeNurse.updateSimulation(1);
+assert.equal(sounds.length,audioBefore+1,'background result is not re-announced');

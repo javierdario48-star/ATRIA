@@ -64,6 +64,10 @@ export function apply487(html){
  s=replaceOnce(s,"const state=window.nsPatientState();actor(()=>{window.csQueueMonitor();if(['ROJO','NARANJA'].includes(state.color))window.csQueueIV(1)});","const state=window.nsPatientState();","phase6-uncertainty-not-clinical-orders");
  // Phase 6: a single explicit action at a time; clinical confirmations use actual state changes.
  s=replaceOnce(s," function learnerMessage(text,intent){\n  const job=sim.nsVegaCare,step=learnerTarget(),n=norm(text),question=/^(como|por que|que|cual|cuando|donde|para que|sirve|puedo|debo|conviene)\\b/.test(n);\n  sim.chats.expert.push(['doctor',text]);\n  if(!question&&intent.type==='study_proposal'&&intent.study){window.nsWithClinicalActor('player',()=>orderStudy(intent.study,true,'Jugador'));say('Estudio solicitado por tu decisión. '+learnerPrompt(learnerTarget()));return;}\n  if(!question&&intent.type==='therapy_proposal'){\n   const id=intent.therapy?.id||intent.intervention?.id,t=MONITOR_THERAPY_CATALOG.find(t=>t.id===id),i=C.interventions.find(i=>i.id===id);\n   if(t||i){window.nsWithClinicalActor('player',()=>t?addMonitorTherapy(text):orderIntervention(i));say('Compruebo la ejecución de tu indicación. '+learnerPrompt(learnerTarget()));return;}\n  }\n  if(['diagnostic_answer','tentative_hypothesis'].includes(intent.type)&&intent.diagnosisMatch){window.nsWithClinicalActor('player',()=>csSetDiagnosticImpression(text,{echo:false}));say('Dejamos tu hipótesis como impresión de trabajo. '+learnerPrompt(learnerTarget()));return;}\n  if(step==='handoff'&&!question){const destination=/quirof|cirug|operar/.test(n)?'quirofano':/uti|cuidados crit|intensiv/.test(n)?'uti':/procedimiento|endoscop/.test(n)?'procedimiento':/observacion/.test(n)?'observacion':/\\bsala\\b|internacion/.test(n)?'sala':/\\balta\\b/.test(n)?'alta':null;if(destination){window.nsWithClinicalActor('player',()=>csSetDisposition(destination));say('Destino registrado por tu decisión. Comprobamos que sea seguro y cómo responde.');return;}}\n  say(learnerHint(step));\n }"," function learnerMessage(text,intent){\n  const job=sim.nsVegaCare,step=learnerTarget(),n=norm(text),teaching=csVegaTeachingIntentV487(text);\n  const question=teaching==='why'||/^(como|por que|que|cual|cuando|donde|para que|sirve|puedo|debo|conviene)\\b/.test(n);\n  sim.chats.expert.push(['doctor',text]);\n  if(teaching==='why'){say(csVegaWhy487(step));return;}\n  if(teaching==='delegate'){begin();return;}\n  if(teaching==='uncertain'||teaching==='hint'){say(learnerHint(step)+' Avancemos con una decisión a la vez; podés pedirme ayuda explícita.');return;}\n  if(teaching==='help'){\n   if(job._csVegaHelpStage===step){say('Ya ejecuté una ayuda en este paso. Confirmemos su resultado antes de hacer algo nuevo.');return;}\n   if(!window.nsMayExamine?.()){say('No puedo indicar un tratamiento para un paciente que no está bajo tu atención.');return;}\n   if(helpOne(job,step)){job._csVegaHelpStage=step;say('Se ejecutó una única ayuda. Revisá el registro de órdenes o el monitor y decidí el próximo paso.');}\n   else say('En esta etapa no hay una medida automática segura. '+learnerHint(step));\n   return;\n  }\n  if(step==='closure'&&/^(?:cerrar|cerremos|cerramos|finalizar|finalicemos|terminar|terminemos)(?: el caso| caso| la atencion)?\\b/.test(n)){\n   finishCase('completed');\n   if(!sim._careerEndProcessed)say('Comprobá el destino y el cierre en el plan; la XP solo se registra al finalizar realmente.');\n   return;\n  }\n  if(!question&&intent.type==='study_proposal'&&intent.study){\n   const before=csVegaActionSnapshot487();\n   window.nsWithClinicalActor('player',()=>orderStudy(intent.study,true,'Jugador'));\n   if(csVegaObservedActionV487(before,csVegaActionSnapshot487(),'study'))say('Pedido confirmado en el registro de estudios. '+learnerPrompt(learnerTarget()));\n   else say('No aparece un nuevo pedido. Revisá si ya estaba solicitado o si falta alguna condición.');\n   return;\n  }\n  if(!question&&intent.type==='therapy_proposal'){\n   const id=intent.therapy?.id||intent.intervention?.id,t=MONITOR_THERAPY_CATALOG.find(t=>t.id===id),i=C.interventions.find(i=>i.id===id);\n   if(t||i){\n    const before=csVegaActionSnapshot487();\n    window.nsWithClinicalActor('player',()=>t?addMonitorTherapy(text):orderIntervention(i));\n    if(csVegaObservedActionV487(before,csVegaActionSnapshot487(),'treatment'))say('Indicación registrada; confirmemos su administración y respuesta antes de avanzar. '+learnerPrompt(learnerTarget()));\n    else say('No se registró una intervención nueva. Revisá vía venosa, seguridad y tareas pendientes.');\n    return;\n   }\n  }\n  if(['diagnostic_answer','tentative_hypothesis'].includes(intent.type)&&intent.diagnosisMatch){\n   window.nsWithClinicalActor('player',()=>csSetDiagnosticImpression(text,{echo:false}));\n   say('Impresión de trabajo registrada. '+learnerPrompt(learnerTarget()));return;\n  }\n  if(step==='handoff'&&!question){\n   const destination=/quirof|cirug|operar/.test(n)?'quirofano':/uti|cuidados crit|intensiv/.test(n)?'uti':/procedimiento|endoscop/.test(n)?'procedimiento':/observacion/.test(n)?'observacion':/\\bsala\\b|internacion/.test(n)?'sala':/\\balta\\b/.test(n)?'alta':null;\n   if(destination){\n    const recorded=window.nsWithClinicalActor('player',()=>csSetDisposition(destination));\n    say(recorded!==false&&sim.disposition?.id===destination?'Destino registrado. Comprobemos elegibilidad de cierre y respuesta clínica.':'No pude registrar el destino; comprobá el contexto del paciente.');\n    return;\n   }\n  }\n  say(learnerHint(step));\n }",'phase6-sequential-learner-message-verified-execution');
+ // Phase 7A: keep reception close control visible while patient cards scroll.
+ s=replaceOnce(s,"<style id=\"cs-v40-flow-style\">","<style id=\"cs-v40-flow-style\">\n#csReceptionBoard.csModal{padding-top:max(12px,env(safe-area-inset-top,0px));padding-bottom:max(12px,env(safe-area-inset-bottom,0px));}\n#csReceptionBoard.csModal .csPanel{max-height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 24px);min-height:0;display:flex;flex-direction:column;overflow:hidden;}\n#csReceptionBoard .csReceptionPinned487{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;position:relative;z-index:1;}\n#csReceptionBoard .csReceptionPinned487 h2{margin:0;min-width:0;}\n#csReceptionBoard .csReceptionPinned487 .csClose{flex-shrink:0;touch-action:manipulation;}\n#csReceptionBoard .csReceptionScroll487{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;}\n","phase7-board-scroll-style");
+ s=replaceOnce(s,"m.innerHTML=`<div class=\"csPanel\"><button class=\"csClose\" id=\"v40BoardClose\">×</button><h2>Recepción · tablero de guardia</h2><p class=\"csReceptionHint\">","m.innerHTML=`<div class=\"csPanel\"><div class=\"csReceptionPinned487\" id=\"csReceptionPinned487\"><h2>Recepción · tablero de guardia</h2><button class=\"csClose\" id=\"v40BoardClose\" aria-label=\"Cerrar recepción\">×</button></div><div class=\"csReceptionScroll487\"><p class=\"csReceptionHint\">","phase7-board-fixed-header");
+ s=replaceOnce(s,"Los pacientes siguen evolucionando mientras atendés a otro.</div></div>`;m.classList.add","Los pacientes siguen evolucionando mientras atendés a otro.</div></div></div>`;m.classList.add","phase7-board-scroll-content");
  // Pending study timing is driven by performance.now() and updated by updateOrders().
  // Display the remaining game-hours whenever the Studies panel is rendered; collection has no readyAt yet.
  s=replaceOnce(s,"let st=o.status==='done'?'resultado':o.status==='collecting'?'extracción':o.status==='pending'?'pendiente':'solicitado',cl=","let st=o.status==='done'?'resultado':o.status==='collecting'?'extracción':o.status==='pending'?(o.readyAt?csStudyTimeLabel(o.readyAt):'pendiente de extracción'):'solicitado',cl=",'studies-pending-remaining-game-hours');
@@ -460,7 +464,7 @@ function csDrawRemote(){
    const item=queue[0];
    if(item.uid===sim.patientInstance?.uid){
     queue.shift();
-    prevNatural.call(this,item.text);
+    if(item.id==='albumin')addMonitorTherapy(item.text);else prevNatural.call(this,item.text);
    }else queue.length=0;
   }
   return out;
@@ -469,5 +473,165 @@ function csDrawRemote(){
 </script>
 `;
  s=replaceOnce(s,'</body>',phase4Script+'</body>','phase4-nursing-intent-dispatch');
+ const phase7Script=String.raw`<script id="atria-phase7-nursing-receipts">
+(function(){
+ 'use strict';
+ if(window.__atriaNursingReceipts487)return;
+ window.__atriaNursingReceipts487=true;
+ const oldNatural=nurseNatural,oldInfer=inferRecipient,oldUpdate=updateSimulation,legacyParse=window.csNursingParse487;
+ const ivMeds=new Set(['fluid','albumin','ceftriaxone','metronidazole','imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole','amphotericin','transfusion','vasopressor','morphine','ppi']);
+ const norm487=v=>norm(String(v||''));
+ let sequence=0;
+ function csNurseDispatch487(text){
+  const n=norm487(text);
+  if(!n||String(text).includes('?')||/\b(?:no administrar|no dar|no pedir|no solicitar|sin medicacion)\b/.test(n)||/^(?:no|nunca|evitar)\b/.test(n))return null;
+  let items=legacyParse(text);
+  if(!items&&/^(?:enfermera|enfermero|solicito|pido|ordenar|necesito)\b/.test(n)){
+   const raw=n.replace(/^(?:enfermera|enfermero|solicito|pido|ordenar|necesito)\s*/,'').trim();
+   if(raw)items=[{kind:'unknown',text:raw}];
+  }
+  if(!items)return null;
+  return items.map(o=>{
+   const phrase=norm487(o.text||'');
+   if(/\b(?:canaliz|coloc|pon|poner)\w*.*\b(?:dos|2)\s+vias\b/.test(phrase))return {...o,kind:'iv',count:2,text:o.text,label:'Dos vías venosas'};
+   if(/\b(?:opioides?|opiaceos?|analgesicos?|analgesia)\b/.test(phrase)&&!/\b(?:morfina|fentanilo|paracetamol|metamizol)\b/.test(phrase))
+    return {...o,kind:'clarify',text:o.text,reason:'Especificá el analgésico u opioide y la dosis; no se administró ninguno.'};
+   if(/^(?:albumina|albumin)$/.test(phrase)&&!/\b(?:expandir|administrar|infundir|pasar|necesito)\b/.test(n))return {...o,kind:'clarify',reason:'Especificá si solicitás dosaje de albúmina o administración de albúmina IV.'};
+   if(/\b(?:albumina|albumin)\b/.test(phrase)&&!/\b(?:medir|dosar|nivel|analisis|laboratorio)\b/.test(phrase))
+    return {...o,kind:'therapy',id:'albumin',text:'albúmina',label:'Albúmina'};
+   if(/\b(?:controlar signos|control de presion|tomar signos|signos vitales)\b/.test(phrase))return {...o,kind:'vitals',text:o.text,label:'Control de signos vitales'};
+   if(/\b(?:monitorizar|monitorear|conectar monitor)\b/.test(phrase))return {...o,kind:'monitor',text:o.text,label:'Monitor'};
+   return o;
+  });
+ }
+ window.csNurse487Parse=csNurseDispatch487;
+ function csNurseClinicalStatus487(patient,item){
+  if(item.kind==='clarify')return {status:'NEEDS_CLARIFICATION',reason:item.reason||'Necesito especificar la indicación.'};
+  if(item.kind==='unknown')return {status:'REJECTED',reason:'No reconocí esta indicación.'};
+  if(item.kind==='iv'){
+   const actual=Number(patient.venousAccessCount||0);
+   return actual>=item.count?{status:'COMPLETED',reason:'Vía venosa permeable'}:{status:'QUEUED',reason:'Canalización pendiente'};
+  }
+  if(item.kind==='monitor')return patient.monitorConnected?{status:'COMPLETED',reason:'Monitor conectado'}:{status:'QUEUED',reason:'Conexión pendiente'};
+  if(item.kind==='vitals')return patient.lastVitalsKnown?{status:'COMPLETED',reason:'Signos registrados'}:{status:'QUEUED',reason:'Control pendiente'};
+  if(item.kind==='study'){
+   const st=patient.orders?.get(item.id);
+   return !st?{status:'REJECTED',reason:'El estudio no fue registrado'}:st.status==='done'?{status:'RESULT_AVAILABLE',reason:'Resultado disponible en historia'}:{status:st.status==='pending'||st.status==='collecting'?'IN_PROGRESS':'QUEUED',reason:'Estudio solicitado; falta el resultado'};
+  }
+  if(item.kind==='therapy'){
+   const administered=(patient.administrationLog||[]).filter(r=>r.id===item.id).length;
+   if(administered>item.baselineAdmin)return {status:'COMPLETED',reason:'Administración registrada'};
+   if(item.initiallyActive&&administered===item.baselineAdmin)return {status:'COMPLETED',reason:'Tratamiento previamente registrado'};
+   if(item.id==='oxygen'&&patient.monitorTherapies?.has('oxygen'))return {status:'COMPLETED',reason:'Oxigenoterapia iniciada'};
+   const waiting=(patient.csPhase4Pending487||[]).some(q=>q.id===item.id&&q.uid===item.uid);
+   if(waiting)return {status:'WAITING',reason:'Falta acceso venoso permeable'};
+   if(patient.pendingTherapies?.has(item.id))return {status:'IN_PROGRESS',reason:'Preparación o administración pendiente'};
+   if(patient.monitorTherapies?.has(item.id)||patient.interventions?.has(item.id))return {status:'IN_PROGRESS',reason:'Tratamiento indicado; verificando ejecución'};
+   return {status:'REJECTED',reason:'No se registró el tratamiento; revisá las condiciones clínicas'};
+  }
+  return {status:'REJECTED',reason:'Indicación no reconocida'};
+ }
+ window.csNurse487Status=csNurseClinicalStatus487;
+ function csNurseReconcile487(patient,active){
+  if(!patient?.csNurse487History?.length)return 0;
+  const complete=[];
+  for(const receipt of patient.csNurse487History){
+   for(const item of receipt.items){
+    const next=csNurseClinicalStatus487(patient,item);
+    if(item.status===next.status)continue;
+    const was=item.status;
+    item.status=next.status;item.reason=next.reason;
+    if(['COMPLETED','RESULT_AVAILABLE'].includes(next.status)&&!item.notified){
+     item.notified=true;
+     // Completed before receipt creation is not a newly executed action.
+     if(item.preExisting)continue;
+     complete.push({name:item.label,status:next.status,uid:receipt.uid,bed:receipt.bed});
+    }
+   }
+  }
+  if(!complete.length)return 0;
+  const patientName=patient.patientInstance?.name||'Paciente';
+  const name=complete.map(v=>v.name).join(', ');
+  const msg=complete.map(v=>v.name+(v.status==='RESULT_AVAILABLE'?' — resultado disponible':' — ejecutado')).join('; ');
+  const box=complete[0].bed||patient.patientInstance?.bed?.label||'';
+  const display='Enfermería · '+(box?box+' · ':'')+name;
+  const logs=patient.globalChat||(patient.globalChat=[]);
+  if(active&&patient===sim)nurseSay('Doctor, '+msg+'.');
+  else logs.push(['nurse',patientName+(box?' · '+box:'')+': '+msg+'.']);
+  (patient.events||(patient.events=[])).push({m:patient.gameMinute||0,t:'Enfermería: '+msg});
+  toast(display);
+  csPlaySound('ok');
+  return complete.length;
+ }
+ window.csNurseReconcile487=csNurseReconcile487;
+ function receiptStatusLabel(item){
+  return item.label+': '+({
+   COMPLETED:'ejecutado',RESULT_AVAILABLE:'resultado disponible',
+   IN_PROGRESS:'en curso',WAITING:'pendiente',QUEUED:'solicitado',
+   NEEDS_CLARIFICATION:'requiere aclaración',REJECTED:'no ejecutado'
+  }[item.status]||'recibido')+(item.status==='WAITING'||item.status==='REJECTED'||item.status==='NEEDS_CLARIFICATION'?' ('+item.reason+')':'');
+ }
+ nurseNatural=function(input){
+  const pieces=csNurseDispatch487(input);
+  if(!pieces)return oldNatural.apply(this,arguments);
+  if(!mayTreat()){nurseSay('No podés ordenar tratamientos sobre este paciente. Podés consultar su historia y monitor.');return false;}
+  const patient=sim;
+  const receipt={id:'n487-'+(++sequence),uid:patient?.patientInstance?.uid,bed:patient?.patientInstance?.bed?.label||'',items:[]};
+  const seen=new Set();let accepted=false;
+  for(const entry of pieces.slice(0,5)){
+   const key=entry.kind+':'+(entry.id||entry.text);
+   if(seen.has(key))continue;seen.add(key);
+   const item={...entry,label:entry.label||entry.id||entry.text,uid:receipt.uid,count:entry.count||1,
+    baselineAdmin:(patient.administrationLog||[]).filter(x=>x.id===entry.id).length,
+    initiallyActive:entry.kind==='therapy'&&(patient.monitorTherapies?.has(entry.id)||false),
+    preExisting:entry.kind==='iv'&&Number(patient.venousAccessCount||0)>=Number(entry.count||1)||
+      entry.kind==='study'&&patient.orders?.get(entry.id)?.status==='done'||
+      entry.kind==='therapy'&&(patient.monitorTherapies?.has(entry.id)||false),
+    status:'RECEIVED',reason:''};
+   receipt.items.push(item);
+   if(entry.kind==='clarify'||entry.kind==='unknown')continue;
+   if(entry.kind==='vitals'){accepted=queueNurse({kind:'vitals',label:'Controlar signos vitales',bedside:true})!==false||accepted;continue;}
+   if(entry.kind==='monitor'){accepted=window.csQueueMonitor()!==false||accepted;continue;}
+   if(entry.kind==='therapy'&&entry.id==='albumin'&&Number(patient.venousAccessCount||0)>0){
+    accepted=addMonitorTherapy('albúmina')!==false||accepted;continue;
+   }
+   if(entry.kind==='therapy'&&ivMeds.has(entry.id)&&Number(patient.venousAccessCount||0)<=0&&entry.id!=='fluid'){
+    const queue=patient.csPhase4Pending487||(patient.csPhase4Pending487=[]);
+    if(!queue.some(v=>v.id===entry.id&&v.uid===receipt.uid)){
+     queue.push({id:entry.id,text:entry.text,uid:receipt.uid});
+    }
+    accepted=true;continue;
+   }
+   const instruction='enfermera '+entry.text;
+   accepted=oldNatural.call(this,instruction)!==false||accepted;
+  }
+  if(!receipt.items.length)return false;
+  (patient.csNurse487History||(patient.csNurse487History=[])).push(receipt);
+  patient.csNurse487History=patient.csNurse487History.slice(-32);
+  for(const item of receipt.items){
+   const state=csNurseClinicalStatus487(patient,item);
+   item.status=state.status;item.reason=state.reason;
+   if(item.preExisting&&['COMPLETED','RESULT_AVAILABLE'].includes(item.status)&&!(item.kind==='therapy'&&(patient.administrationLog||[]).filter(x=>x.id===item.id).length>item.baselineAdmin))item.notified=true;
+   if(['COMPLETED','RESULT_AVAILABLE'].includes(item.status)&&!item.notified)item.initialCompletion=true;
+  }
+  nurseSay('Doctor, recibí '+receipt.items.length+' indicación'+(receipt.items.length===1?'':'es')+'. '+receipt.items.map(receiptStatusLabel).join('; ')+'.');
+  for(const item of receipt.items)if(item.initialCompletion){item.status='RECEIVED';delete item.initialCompletion;}
+  csNurseReconcile487(patient,true);
+  return accepted;
+ };
+ inferRecipient=function(text){
+  if(/^(?:enfermera|enfermero|solicito|pido|necesito|ordenar)\b/.test(norm487(text))&&csNurseDispatch487(text))return 'nurse';
+  return oldInfer.apply(this,arguments);
+ };
+ updateSimulation=function(dt){
+  const out=oldUpdate.apply(this,arguments);
+  csNurseReconcile487(sim,true);
+  for(const rec of shiftSession?.records||[])if(rec?.sim&&rec.sim!==sim&&!rec.remoteOwned)
+   csNurseReconcile487(rec.sim,false);
+  return out;
+ };
+})();
+</script>`;
+ s=replaceOnce(s,'</body>',phase7Script+'</body>','phase7-nurse-audiovisual-receipts');
  return s;
 }
