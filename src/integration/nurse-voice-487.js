@@ -33,6 +33,11 @@ export function applyNurseVoice487(html){
     ok=true;continue;
    }
    if(item.kind==='surgery'){ok=window.csSurgery487Request?.()!==false||ok;continue}
+   if(item.kind==='therapy'&&!C.interventions.some(x=>x.id===item.id)&&item.id==='oxygen'){
+    const done=addMonitorTherapy(item.text);
+    feedback(done!==false&&sim.monitorTherapies?.has('oxygen')?'Oxígeno iniciado; verificaré la saturación.':'Oxígeno no ejecutado; revisar el monitor.');
+    ok=done!==false||ok;continue;
+   }
    const phrase=item.kind==='vitals'?'signos vitales':
     item.kind==='study'?C.studies.find(x=>x.id===item.id)?.label:item.text.replace(/\\s+(?:y|e|ademas)\\s+.*$/,'');
    const before=sim.csNurse487History?.length||0;
@@ -55,5 +60,16 @@ export function applyNurseVoice487(html){
  window.csNurseVoice487={parse:t=>csNurseScan487(t,C.studies,MONITOR_THERAPY_CATALOG,C.interventions)};
 })();
 </script>`;
+ const oldFlush="if(item.id==='albumin')addMonitorTherapy(item.text);else prevNatural.call(this,item.text);";
+ const newFlush="if(item.id==='albumin'||!C.interventions?.some(x=>x.id===item.id))addMonitorTherapy(item.text);else prevNatural.call(this,item.text);";
+ if(html.split(oldFlush).length!==2)throw Error('unresolved pending-IV therapy anchor');
+ html=html.replace(oldFlush,newFlush);
+ const oldGeneric="   const instruction='enfermera '+entry.text;";
+ const newGeneric="   if(entry.kind==='therapy'&&!C.interventions?.some(x=>x.id===entry.id)){accepted=addMonitorTherapy(entry.text)!==false||accepted;continue;}\\n"+oldGeneric;
+ if(html.split(oldGeneric).length!==2)throw Error('nursing generic therapy anchor');
+ html=html.replace(oldGeneric,newGeneric.replace('\\n','\n'));
+ const oldWarning="nurseSay('Doctor, el cuadro infeccioso sigue activo y los signos no se estabilizan.')";
+ const newWarning="nurseSay('Doctor, hay signos de infección grave: Ringer y oxígeno no sustituyen los antibióticos. Verificá que se hayan administrado mientras gestionamos el foco.')";
+ if(html.includes(oldWarning))html=html.replace(oldWarning,newWarning);
  return html.replace('</body>',runtime+'</body>');
 }
