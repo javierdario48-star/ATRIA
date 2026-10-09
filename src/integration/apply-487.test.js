@@ -285,3 +285,54 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
  vm.runInNewContext(out.slice(csSelectStart,csSelectStop),csSelect);
  csSelect.select(b4,false);
  assert.deepEqual(csOpen,[['patient','exam']],'current patient opens examination without resetting the case');
+
+ // Phase 3: competitors may READ all shared clinical information, but cannot order
+ // studies / interventions for an opponent. The host enforces the latter, not just UI.
+ assert.match(out,/function csObservationSnapshot\(s,p\)/,'owner must export patient conversation, investigations and medicines');
+ assert.match(out,/function csSafeObservation\(o\)/,'host must validate observation payloads');
+ assert.match(out,/function csOpenObserver\(index\)/,'read-only spectator view must exist');
+ assert.match(out,/window\.csObservePatientV487=csOpenObserver/,'reader should be addressable from patient controls');
+ assert.match(out,/observation:csObservationSnapshot\(s,p\)/,'owner progress must include read data');
+ assert.match(out,/const observation=csSafeObservation\(m\.progress\?\.observation\)/,'host must validate relayed view');
+ assert.match(out,/challenge\.mode==='competitive'\)return csOpenObserver\(index\)/,'competitive opponent opens viewer instead of action helper');
+ assert.match(out,/challenge\.mode==='competitive'\)return false;const p=/,'competitive help actions are blocked at originating client');
+ assert.match(out,/m\.kind==='assist'&&challenge\.mode!=='competitive'/,'host rejects opponent assist packets in competitive');
+ assert.match(out,/csObserverRefreshIfOpen\(\)/,'observation view refreshes on updates');
+ assert.match(out,/conversation:\(s\.globalChat\|\|\[\]\)/,'conversation should be included');
+ assert.match(out,/orders:\[\.\.\.\(s\.orders\?\.values/,'real study statuses and results should be included');
+ assert.match(out,/csOpenObserver\(index\)[\s\S]*p\.vitals/,'monitor data from player must be shown, not guessed');
+
+ // Model-level two-identity QA: shared facts remain viewable, competing interventions denied.
+ const observationA=out.indexOf(' function csObservationSnapshot(s,p){');
+ const observationB=out.indexOf(' function csOpenObserver(index){',observationA);
+ assert.ok(observationA>0&&observationB>observationA,'observation projection and validation must be accessible');
+ const observationContext={Map,Set,EXAM_SEGMENTS:{peritonitis:{abdomen:['Abdomen','Defensa abdominal']}}};
+ vm.runInNewContext(out.slice(observationA,observationB),observationContext);
+ const owner={uid:'room1:P3',caseId:'peritonitis'};
+ const ownSim={
+  diagnosis:'Peritonitis',disposition:{id:'uti'},intentHistory:[{reveal:'Dolor desde ayer'}],
+  examRegions:new Set(['abdomen']),orders:new Map([['hemograma',{label:'Hemograma',status:'done',result:'Leucocitos 16000',requestedBy:'Rival'}]]),
+  interventions:new Set(['antibiotico']),administrationLog:[{label:'Ceftriaxona',doseDisplay:'2 g',status:'administrado'}],
+  globalChat:[['doctor','¿Desde cuándo te duele?'],['patient','Desde ayer, doctor.']]
+ };
+ const copied=vm.runInNewContext('csObservationSnapshot',observationContext)(ownSim,owner);
+ const accepted=vm.runInNewContext('csSafeObservation',observationContext)(copied);
+ assert.ok(accepted&&accepted.uid===owner.uid,'client 2 may read validated client 1 clinical state');
+ assert.equal(accepted.orders[0].result,'Leucocitos 16000');
+ assert.equal(accepted.conversation[0][1],'¿Desde cuándo te duele?');
+ assert.equal(accepted.conversation[1][1],'Desde ayer, doctor.');
+ assert.equal(accepted.medications[0].dose,'2 g');
+ assert.equal(accepted.exam[0],'Abdomen: Defensa abdominal','viewer sees documented physical findings, not just region IDs');
+ assert.equal(vm.runInNewContext('csSafeObservation',observationContext)({...copied,conversation:[['doctor','x'.repeat(501)]]}),null,'oversized remote speech must be rejected');
+ assert.equal(vm.runInNewContext('csSafeObservation',observationContext)({...copied,orders:[{label:'fake',status:'wrong',result:'',requestedBy:'x'}]}),null,'unknown remote study status must be rejected');
+ const requestAt=out.indexOf(' function requestAssist(index,a){');
+ const requestEnd=out.indexOf(' function openAssistPanel(index){',requestAt);
+ assert.ok(requestAt>0&&requestEnd>requestAt,'existing coop assist request authority located');
+ for(const viewerId of ['guest','host']){
+  const accessContext={challenge:{mode:'competitive'},selfId:viewerId};
+  vm.runInNewContext(out.slice(requestAt,requestEnd),accessContext);
+  assert.equal(vm.runInNewContext('requestAssist',accessContext)(3,{kind:'study',id:'hemograma'}),false,'rival '+viewerId+' must not order tests');
+  assert.equal(vm.runInNewContext('requestAssist',accessContext)(3,{kind:'intervention',id:'antibiotico'}),false,'rival '+viewerId+' must not order medicines');
+ }
+ assert.match(out,/m\.kind==='assist_apply'&&challenge\.mode!=='competitive'/,'owner client must ignore forged competitive intervention delivery');
+ assert.match(out,/const observation=csSafeObservation\(m\.progress\?\.observation\);if\(m\.progress\?\.observation&&/,'host must reject bad remote observation before committing state');
