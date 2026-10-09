@@ -61,11 +61,11 @@ export function applyNurseVoice487(html){
 })();
 </script>`;
  const oldFlush="if(item.id==='albumin')addMonitorTherapy(item.text);else prevNatural.call(this,item.text);";
- const newFlush="if((item.id==='albumin'||!C.interventions?.some(x=>x.id===item.id))&&typeof addMonitorTherapy==='function')addMonitorTherapy(item.text);else prevNatural.call(this,item.text);";
+ const newFlush="if((item.id==='albumin'||(typeof C!=='undefined'&&C?.interventions&&!C.interventions.some(x=>x.id===item.id)))&&typeof addMonitorTherapy==='function')addMonitorTherapy(item.text);else prevNatural.call(this,item.text);";
  if(html.split(oldFlush).length!==2)throw Error('unresolved pending-IV therapy anchor');
  html=html.replace(oldFlush,newFlush);
  const oldGeneric="   const instruction='enfermera '+entry.text;";
- const newGeneric="   if(entry.kind==='therapy'&&!C.interventions?.some(x=>x.id===entry.id)&&typeof addMonitorTherapy==='function'){accepted=addMonitorTherapy(entry.text)!==false||accepted;continue;}\\n"+oldGeneric;
+ const newGeneric="   if(entry.kind==='therapy'&&typeof C!=='undefined'&&C?.interventions&&!C.interventions.some(x=>x.id===entry.id)&&typeof addMonitorTherapy==='function'){accepted=addMonitorTherapy(entry.text)!==false||accepted;continue;}\\n"+oldGeneric;
  if(html.split(oldGeneric).length!==2)throw Error('nursing generic therapy anchor');
  html=html.replace(oldGeneric,newGeneric.replace('\\n','\n'));
  const oldWarning="nurseSay('Doctor, el cuadro infeccioso sigue activo y los signos no se estabilizan.')";
