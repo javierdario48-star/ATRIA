@@ -34,9 +34,17 @@ export function applyNurseVoice487(html){
    }
    if(item.kind==='surgery'){ok=window.csSurgery487Request?.()!==false||ok;continue}
    if(item.kind==='therapy'&&!C.interventions.some(x=>x.id===item.id)&&item.id==='oxygen'){
+    const before=(sim.administrationLog||[]).filter(x=>x.id==='oxygen').length;
     const done=addMonitorTherapy(item.text);
-    feedback(done!==false&&sim.monitorTherapies?.has('oxygen')?'Oxígeno iniciado; verificaré la saturación.':'Oxígeno no ejecutado; revisar el monitor.');
-    ok=done!==false||ok;continue;
+    const actuallyActive=sim.monitorTherapies?.has('oxygen')===true;
+    const newAdministration=(sim.administrationLog||[]).filter(x=>x.id==='oxygen').length>before;
+    if(actuallyActive&&newAdministration){
+      // Same model, history and view used by manual monitor administration.
+      renderMonitorTherapies?.();renderAdministrationHistory?.();updateMonitorDOM?.();
+      feedback('Oxígeno administrado: figura ACTIVO en el monitor y quedó en el historial.');
+    }else if(actuallyActive)feedback('Oxígeno ya figura activo en el monitor; no se confirmó una nueva administración.');
+    else feedback('Oxígeno NO administrado. La orden no produjo un cambio en el monitor.');
+    ok=actuallyActive&&done!==false||ok;continue;
    }
    const phrase=item.kind==='vitals'?'signos vitales':
     item.kind==='study'?C.studies.find(x=>x.id===item.id)?.label:item.text.replace(/\\s+(?:y|e|ademas)\\s+.*$/,'');
