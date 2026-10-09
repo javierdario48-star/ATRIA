@@ -336,3 +336,59 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
  }
  assert.match(out,/m\.kind==='assist_apply'&&challenge\.mode!=='competitive'/,'owner client must ignore forged competitive intervention delivery');
  assert.match(out,/const observation=csSafeObservation\(m\.progress\?\.observation\);if\(m\.progress\?\.observation&&/,'host must reject bad remote observation before committing state');
+
+ // Phase 4: the original golden master lacks the multi-intent dispatcher.
+ assert.doesNotMatch(src,/id="atria-phase4-composite-orders"/);
+ assert.match(out,/id="atria-phase4-composite-orders"/,'new clinical dispatcher ships in generated artifact');
+ const phase4Start=out.indexOf('<script id="atria-phase4-composite-orders">');
+ const phase4End=out.indexOf('</script>',phase4Start);
+ assert.ok(phase4Start>0&&phase4End>phase4Start,'phase4 script is uniquely bounded');
+ const nursingJS=out.slice(phase4Start+'<script id="atria-phase4-composite-orders">'.length,phase4End);
+ new vm.Script(nursingJS);
+ const drugs={fluid:{id:'fluid'},oxygen:{id:'oxygen'},ceftriaxone:{id:'ceftriaxone'}};
+ const studies={hemograma:{id:'hemograma',label:'Hemograma'},lipasa:{id:'lipasa',label:'Lipasa'},tac:{id:'tac',label:'Tomografía cerebral'}};
+ const events=[];
+ const sharedSim={orders:new Map(),venousAccessCount:0,monitorTherapies:new Map(),patientInstance:{uid:'case-1'},csPhase4Pending487:[]};
+ let permission=true;
+ const normalize487=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9\s,;?]/g,' ').replace(/\s+/g,' ').trim();
+ const sampleCtx={window:{csQueueIV:count=>{events.push(['iv',count]);return true;}},C:{studies:Object.values(studies)},
+  sim:sharedSim,norm:normalize487,mayTreat:()=>permission,findStudy:t=>Object.values(studies).find(s=>normalize487(t).includes(normalize487(s.label))||normalize487(t).includes(s.id))||null,
+  findMonitorTherapy:t=>/ringer|cristalo|expandir/.test(normalize487(t))?drugs.fluid:/oxigen/.test(normalize487(t))?drugs.oxygen:/ceftria/.test(normalize487(t))?drugs.ceftriaxone:null,
+  findIntervention:t=>null,
+  nurseNatural:t=>{events.push(['old-nurse',t]);return true;},
+  inferRecipient:t=>'patient',processCommand:t=>events.push(['old-slash',t]),
+  updateSimulation:t=>{events.push(['update',t]);return true;},
+  orderStudy:st=>{events.push(['study',st.id]);sharedSim.orders.set(st.id,{status:'queued'});return true;},
+  nurseSay:t=>events.push(['reply',t])};
+ vm.runInNewContext(nursingJS,sampleCtx);
+ const parse=sampleCtx.window.csNursingParse487;
+ assert.deepEqual(Array.from(parse('Enfermera, vías, Ringer y oxígeno'),x=>x.kind),['iv','therapy','therapy']);
+ assert.deepEqual(Array.from(parse('Enfermera vías Ringer y oxígeno'),x=>x.kind),['iv','therapy','therapy'],'no comma between access and fluid is accepted');
+ assert.equal(parse('Enfermera, ¿podemos administrar ceftriaxona?'),null,'questions directed to nurse do not administer medication');
+ assert.equal(parse('Enfermera no administrar ceftriaxona'),null,'negated orders are not dispatched');
+ assert.deepEqual(Array.from(parse('Solicito hemograma y lipasa'),x=>x.kind),['study','study']);
+ assert.equal(sampleCtx.inferRecipient('Solicito hemograma'),'nurse','explicit nurse order must reach dispatcher even when nobody nearby');
+ sampleCtx.nurseNatural('Enfermera, vías, Ringer y oxígeno');
+ assert.deepEqual(events.filter(e=>e[0]==='iv'),[['iv',1]],'IV requested once');
+ assert.equal(events.some(e=>e[0]==='old-nurse'&&/ringer/.test(e[1])),false,'Ringer must NOT be administered before IV');
+ assert.equal(events.some(e=>e[0]==='old-nurse'&&/oxigen/.test(normalize487(e[1]))),true,'oxygen independently dispatched');
+ assert.equal(sharedSim.csPhase4Pending487.length,1,'fluid must be pending for placed IV');
+ sharedSim.venousAccessCount=1;
+ sampleCtx.updateSimulation(1);
+ assert.equal(sharedSim.csPhase4Pending487.length,0,'IV-complete pending order consumed');
+ assert.equal(events.some(e=>e[0]==='old-nurse'&&/ringer/.test(e[1])),true,'fluid dispatched only once IV present');
+ events.length=0;
+ sampleCtx.nurseNatural('Solicito hemograma y lipasa');
+ assert.deepEqual(events.filter(e=>e[0]==='study').map(e=>e[1]),['hemograma','lipasa']);
+ events.length=0;sampleCtx.nurseNatural('Solicito hemograma y lipasa');
+ assert.equal(events.some(e=>e[0]==='study'),false,'repeat study requests must not duplicate');
+ events.length=0;sampleCtx.nurseNatural('Solicito estudios de laboratorio');
+ assert.ok(events.some(e=>e[0]==='reply'&&/específico/.test(e[1])),'underspecified panel asks for clarification');
+ events.length=0;permission=false;sampleCtx.nurseNatural('Enfermera Ringer y oxígeno');
+ assert.deepEqual(events.map(e=>e[0]),['reply'],'competitive opponent cannot issue treatments');
+ assert.equal(parse('No dar Ringer'),null,'negated order must not enter automatic dispatch');
+ assert.equal(parse('¿Podemos dar ceftriaxona?'),null,'questions must not trigger medication');
+ permission=true;events.length=0;sampleCtx.processCommand('/enfermera hemograma y lipasa');
+ assert.equal(events.some(e=>e[0]==='old-slash'),false,'slash composite routed to nurse dispatcher');
+ const five=parse('enfermera vias, ringer, oxigeno, ceftriaxona y hemograma');
+ assert.equal(five?.length,5,'five independent intents supported');

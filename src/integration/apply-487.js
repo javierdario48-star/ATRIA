@@ -363,5 +363,99 @@ function csDrawRemote(){
   "return{peerId:pid,seq:(state._qaSeq=(state._qaSeq||0)+1),x:player.x",
   'qa-lobby-monotonic-sequence');
 
+ const phase4Script=String.raw`<script id="atria-phase4-composite-orders">
+(function(){
+ 'use strict';
+ if(window.__atriaPhase4Orders)return;
+ window.__atriaPhase4Orders=true;
+ const prevNatural=nurseNatural,prevInfer=inferRecipient,prevCommand=processCommand,prevUpdate=updateSimulation;
+ const normalized=t=>norm(String(t||'').trim());
+ const introduction=/^(?:(?:enfermera|enfermero|enfermeria|por favor|solicito|solicitamos|pido|pedimos|quiero pedir|necesito|indico|indicamos|ordenar|orden|solicito estudios? de|solicito estudios?)\s*[,.:]?\s*)+/;
+ const explicit=/^(?:enfermera|enfermero|enfermeria|solicito|solicitamos|pido|pedimos|necesito|quiero pedir|indico|indicamos|orden|pedir|ordenar)\b/;
+ const ambiguous=/^(?:estudios?|laboratorio|estudios? (?:de )?laboratorio|analisis(?: de sangre)?|antibioticos?|atb|medicamentos?|tratamientos?)$/;
+ const ivText=/^(?:(?:dos|2)\s+)?(?:vias?|canaliz(?:a|ar|amos|o)\s+(?:una?\s+)?vias?|acceso\s+venoso|venoclisis|colocar\s+(?:una?\s+)?via)\b/;
+ function parse(text){
+  const raw=normalized(text);
+  if(!raw||String(text).includes('?')||/^(?:no|nunca|evitar|sin)\b/.test(raw)||/\b(?:no administrar|no dar|no pedir|no solicitar|sin medicacion|sin antibioticos)\b/.test(raw))return null;
+  const declared=explicit.test(raw),source=raw.replace(introduction,'').replace(/^(?:estudio|estudios de|orden de|ordenar|solicitar|administrar)\s+/,'').replace(/\b(vias?|accesos? venosos?)\s+(ringer|cristaloides|oxigeno)\b/g,'$1, $2').replace(/\b(ringer|cristaloides)\s+(oxigeno)\b/g,'$1, $2');
+  if(!declared&&source===raw&&!/[,;]|\s+y\s+/.test(source))return null;
+  const parts=source.split(/\s*(?:,|;|\s+y\s+|\s+e\s+|\s+mas\s+)\s*/).map(s=>s.trim()).filter(Boolean);
+  if(!parts.length||parts.length>5)return null;
+  const result=[];
+  for(let phrase of parts){
+   phrase=phrase.replace(/^(?:solicito|estudio|estudios de|orden|administrar|poner|dar|canalizar)\s+/,'').trim();
+   if(!phrase)continue;
+   if(ambiguous.test(phrase)){result.push({kind:'clarify',text:phrase});continue;}
+   const via=ivText.test(phrase)&&!/\b(?:via oral|por boca|via intramuscular)\b/.test(phrase);
+   if(via){result.push({kind:'iv',count:/^(?:dos|2)\b/.test(phrase)?2:1,text:phrase});continue;}
+   const study=typeof findStudy==='function'&&C?.studies?findStudy(phrase):null;
+   const therapy=typeof findMonitorTherapy==='function'&&C?findMonitorTherapy(phrase):null;
+   const intervention=typeof findIntervention==='function'&&C?findIntervention(phrase):null;
+   if(study){result.push({kind:'study',id:study.id,text:phrase});continue;}
+   if(therapy||intervention){result.push({kind:'therapy',id:(intervention||therapy).id,text:phrase});continue;}
+   result.push({kind:'unknown',text:phrase});
+  }
+  return declared||result.length>1?result:null;
+ }
+ window.csNursingParse487=parse;
+ function run(text){
+  const parts=parse(text);
+  if(!parts)return prevNatural.apply(this,arguments);
+  if(!mayTreat()){nurseSay('No tenés permiso para ordenar estudios o tratamientos en este paciente. Podés consultar su información.');return false;}
+  let accepted=false;const seen=new Set();
+  for(const item of parts){
+   const key=item.kind+':'+(item.id||item.text);
+   if(seen.has(key))continue;seen.add(key);
+   if(item.kind==='clarify'){nurseSay('Necesito el nombre del estudio o medicamento específico; no pedí un panel inespecífico.');continue;}
+   if(item.kind==='unknown'){nurseSay('No reconocí «'+item.text+'». Los demás pedidos se evalúan por separado.');continue;}
+   if(item.kind==='iv'){const done=window.csQueueIV(item.count);accepted=done===true||accepted;continue;}
+   if(item.kind==='study'){
+    const st=findStudy(item.text);
+    if(!st){nurseSay('El estudio solicitado no está disponible para este caso.');continue;}
+    const already=sim?.orders?.has(st.id);
+    if(already){nurseSay(st.label+' ya fue solicitado; no duplico el pedido.');accepted=true;continue;}
+    const done=orderStudy(st);
+    accepted=done!==false||accepted;continue;
+   }
+   if(item.kind==='therapy'){
+    // Fluid therapy is a specific IV intervention; a requested access is not a placed access.
+    if(item.id==='fluid'&&Number(sim?.venousAccessCount||0)<=0){
+     const pending=sim.csPhase4Pending487||(sim.csPhase4Pending487=[]);
+     if(!pending.some(x=>x.id==='fluid')){
+      pending.push({id:'fluid',text:item.text,uid:sim?.patientInstance?.uid});
+      nurseSay('Ringer/cristaloides: pendiente de canalizar la vía. No se administró todavía.');
+     }else nurseSay('Ringer ya está pendiente de acceso venoso; no duplico el pedido.');
+     accepted=true;continue;
+    }
+    const t=findMonitorTherapy(item.text),i=findIntervention(item.text);
+    if(!t&&!i){nurseSay('La indicación no figura en las opciones clínicas actuales.');continue;}
+    const done=prevNatural.call(this,item.text);
+    accepted=done!==false||accepted;
+   }
+  }
+  return accepted;
+ }
+ nurseNatural=function(q){return run.call(this,q)};
+ inferRecipient=function(q){const n=normalized(q);if(explicit.test(n)&&parse(q))return 'nurse';return prevInfer.apply(this,arguments)};
+ processCommand=function(q){
+  const raw=String(q||'').replace(/^\//,'').trim(),n=normalized(raw);
+  if(/^(?:enfermera|enfermeria|solicito|solicitamos|pido|ordenar)\b/.test(n)||(/^(?:estudio|orden)\b/.test(n)&&/[,;]|\s+y\s+/.test(n)))return nurseNatural(raw);
+  return prevCommand.apply(this,arguments);
+ };
+ updateSimulation=function(dt){
+  const out=prevUpdate.apply(this,arguments),queue=sim?.csPhase4Pending487;
+  if(queue?.length&&Number(sim?.venousAccessCount||0)>0&&mayTreat()&&!sim?.caseEnded){
+   const item=queue[0];
+   if(item.uid===sim.patientInstance?.uid){
+    queue.shift();
+    prevNatural.call(this,item.text);
+   }else queue.length=0;
+  }
+  return out;
+ };
+})();
+</script>
+`;
+ s=replaceOnce(s,'</body>',phase4Script+'</body>','phase4-nursing-intent-dispatch');
  return s;
 }
