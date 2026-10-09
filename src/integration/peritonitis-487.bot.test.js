@@ -79,10 +79,16 @@ for(const [id,dx,study,drugs,consult,dest,sys] of scenarios){
 {
  const C={id:'PANC-001'},sim=specimen(C.id);
  const c={C,sim,window:{nsExperienceEligible:()=>true},csBreakdown:()=>({score:43,safe:false}),
+   CASES:[{id:'PERI-SEC-001',physiology:{coverageSets:[['ceftriaxone','metronidazole']]}},
+     {id:'PERI-TER-001',physiology:{coverageSets:[['ampicillin','amikacin','fluconazole']]}},
+     {id:'PERI-PBE-001',physiology:{coverageSets:[['ceftriaxone']]}}],
    updateSimulation:()=>{},document:{body:{classList:{contains:()=>false}}},
    performance:{now:()=>1}};
  vm.runInNewContext(source,c,{timeout:4000});
  assert.equal(c.csBreakdown().score,43,'non-peritonitis scorer untouched');assertions++;
  assert.equal(c.window.nsExperienceEligible(),true,'non-peritonitis XP policy untouched');assertions++;
+ assert(c.CASES[0].physiology.coverageSets.some(a=>a.length===1&&a[0]==='piptazo'),'secondary piptazo must affect physiology');assertions++;
+ assert(c.CASES[1].physiology.coverageSets.some(a=>a.includes('imipenem')&&a.includes('fluconazole')),'tertiary matched regimen must affect physiology');assertions++;
+ assert(c.CASES[2].physiology.coverageSets.some(a=>a.length===1&&a[0]==='piptazo'),'SBP broader regimen must affect physiology');assertions++;
 }
 console.log('PERITONITIS INTEGRATION BOT PASS',JSON.stringify({cases:3,assertions,scope:'compiled HTML script + fake DOM + actual path evaluator and reward transition',physicalDevice:false}));
