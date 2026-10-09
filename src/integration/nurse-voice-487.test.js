@@ -46,6 +46,10 @@ assert(sim.administrationLog.some(x=>x.id==='oxygen'),'oxygen actually recorded 
 assert.deepEqual(renders,['therapy','history','monitor'],'monitor active list, history and numeric metrics refresh');
 assert(operations.some(x=>x.includes('ceftriaxona')));
 assert(operations.some(x=>x.includes('metronidazol')));
+ctx.nurseNatural('vías');
+assert(tasks.includes('iv:1'),'nearby nurse understands bare vías without manual action');
+ctx.nurseNatural('dos vías');
+assert(tasks.includes('iv:2'),'bare two venous lines are understood');
 ctx.sendMessage('enfermera cirugia');
 assert.equal(consults.length,1,'consult requested rather than operation');
 ctx.sendMessage('enfermera no cirugia');
