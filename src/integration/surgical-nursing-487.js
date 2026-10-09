@@ -10,7 +10,7 @@ export function applySurgicalNursing487(html){
  const priorNurse=nurseNatural,priorMonitor=addMonitorTherapy,priorCommand=processCommand,priorMessage=sendMessage;
  const clean=x=>norm(String(x||''));
  const surgeryWord=/\b(?:cirug(?:ia|ico|ica)|cirujan[oa]|quirofano|laparotomia|operar|operacion|control de foco)\b/;
- const notAnOrder=/\b(?:no (?:solicites?|avis(?:es|ar)|llames?|operes?|quiero)|sin cirugia|evitar cirugia|no hace falta cirugia)\b/;
+ const notAnOrder=/\b(?:no (?:solicites?|avis(?:es|ar)|llames?|operes?|quiero)|no cirugia|sin cirugia|evitar cirugia|no hace falta cirugia)\b/;
  const surgicalRequest=text=>{
    const n=clean(text);
    if(!surgeryWord.test(n)||notAnOrder.test(n)||/\?/.test(text))return false;
