@@ -40,7 +40,8 @@ function finish(bot,label,destination){
  b.result('pbe_paracentesis').check('no medications actually administered',false);
  b.administer('ceftriaxone').check('missing albumin',false);
  b.administer('albumin');
- finish(b,'SBP confirmed and treated; renal study optional for handoff', 'sala');
+ b.order('pbe_culture'); // Cultures may remain pending after handoff.
+ finish(b,'SBP confirmed and treated with ascitic culture pending', 'sala');
  assert.equal(b.s.phys.sourceControlled,false,'SBP is medical, not surgical');
  const u=patient('PERI-PBE-001',{sys:82});
  u.dx('PBE').talk().exam().vitals().order('pbe_paracentesis','done')
@@ -55,7 +56,8 @@ function finish(bot,label,destination){
  b.result('peri_ct').administer('ceftriaxone').administer('metronidazole').consult('cirugia');
  b.check('surgical consultation pending is not accepted',false);
  b.answered('cirugia');
- finish(b,'secondary peritonitis safe surgical handoff without simulated surgery','quirofano');
+ b.order('peri_fluid'); // Surgical/intra-abdominal microbiology is not a prerequisite.
+ finish(b,'secondary peritonitis safe surgical handoff with culture pending','quirofano');
  assert.equal(b.s.phys.sourceControlled,false,'referral must not impersonate surgery');
  const alternate=patient('PERI-SEC-001',{sys:105});
  alternate.dx('diverticulitis perforada').talk().vitals().exam()
@@ -81,17 +83,30 @@ function finish(bot,label,destination){
  finish(b,'persistent infection treated, no gratuitous repeat surgery','sala');
  const alternative=patient('PERI-TER-001',{sys:92});
  alternative.dx('peritonitis terciaria').talk().exam().vitals()
- .order('ter_culture','done').administer('imipenem').consult('uti','done');
- alternative.s.orders.get('ter_culture').result='Desarrollo de Enterococcus y Candida en líquido peritoneal';
- alternative.check('culture-proven Candida needs antifungal adjustment',false);
+ .order('ter_ct','done').order('ter_culture','pending')
+ .administer('imipenem').consult('uti','done');
+ alternative.check('mild hypotension requires resuscitation, not pending culture',false);
  alternative.administer('fluid');
- alternative.check('resuscitation alone does not correct Candida coverage',false);
+ finish(alternative,'culture pending but stable hospital handoff after adequate empiric therapy','sala');
+ // Culture returns while treatment is already underway: useful for adjustment,
+ // not a retrospective reason to deny XP or cancel the handoff.
+ alternative.s.orders.get('ter_culture').status='done';
+ alternative.s.orders.get('ter_culture').result='Desarrollo de Enterococcus y Candida en líquido peritoneal';
+ const followUp=alternative.check('positive culture does not block safe initial disposition',true);
+ assert.match(followUp.followUp,/Candida/,'late microbiology recommends a review without blocking closure');
  alternative.administer('fluconazole');
- finish(alternative,'culture-directed antifungal plus broad antibiotics and fluids','sala');
+ assert.equal(alternative.check('appropriate follow-up eliminates the pending suggestion',true).followUp,null);
  const severe=patient('PERI-TER-001',{sys:78,spo2:86});
  severe.dx('peritonitis terciaria').talk(2).exam().vitals()
  .administer('fluid').administer('oxygen').administer('imipenem').consult('uti','done');
- finish(severe,'urgent ICU transfer before CT or culture','uti');
+ severe.order('ter_culture'); // still pending after transfer
+ finish(severe,'urgent ICU transfer without CT or pending culture result','uti');
+ const recovered=patient('PERI-TER-001',{sys:108,spo2:96});
+ recovered.c.vitals={bp:'82/48'};
+ recovered.dx('peritonitis terciaria').talk(2).exam().vitals()
+   .administer('fluid').administer('imipenem').consult('uti','done');
+ const outcome= recovered.check('recent severe shock still needs ICU after temporary pressure recovery',true);
+ assert.equal(outcome.action,'uti');
 }
 for(const id of ['PERI-PBE-001','PERI-SEC-001','PERI-TER-001']){
  const g=patient(id);
@@ -100,4 +115,4 @@ for(const id of ['PERI-PBE-001','PERI-SEC-001','PERI-TER-001']){
  g.s.patientDied=true;g.check('death cannot grant ready state',false);
 }
 assert.equal(csPeritonitisEvaluate487({caseId:'PANC-001'}),null,'non-peritonitis cases untouched');
-console.log('PERITONITIS PATHWAY BOTS PASS '+JSON.stringify({positive:results.length,negative:14,results}));
+console.log('PERITONITIS PATHWAY BOTS PASS '+JSON.stringify({positive:results.length,negative:15,results}));
