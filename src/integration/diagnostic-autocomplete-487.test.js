@@ -49,6 +49,10 @@ const context={window,document,performance:{now:()=>now},sim,C,CASES:[
  requestAnimationFrame:cb=>cb()};
 vm.runInNewContext(source,context,{timeout:4000});
 window.csDx487Refresh();
+assert.equal(window.csDx487.matchesCase('PERI-SEC-001','abdomen agudo perforativo'),true,
+ 'shared matching available to specialist/handoff evaluator');
+assert.equal(window.csDx487.matchesCase('PERI-SEC-001','peritonitis'),false,
+ 'generic peritonitis cannot satisfy a specialty referral');
 const badge=elements.get('csDxBadge487');
 assert(badge,'visible patient badge exists');
 assert.match(badge.textContent,/Impresión diagnóstica/);
