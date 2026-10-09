@@ -449,3 +449,93 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
  assert.equal(closeEvents.includes('wrong-target-finish'),false,'background patient closure must not mutate another bed');
  assert.match(out,/if\(shared\(\)\)\{if\(!guard\(\)\|\|!ownsCurrent\(\)\)return;/,'shared-room closure keeps owner authorization');
  assert.match(out,/if\(!p\|\|p\.ownerId!==id\|\|p\.result\|\|p\.state==='done'\)return false/,'host remains idempotent on duplicate closure receipts');
+
+ // Phase 6: learner tutoring must not turn inactivity or uncertainty into treatment.
+ assert.match(out,/function csVegaTeachingIntentV487\(text\)/,'tutor must expose one auditable help/why/hint/delegate classifier');
+ assert.match(out,/function csVegaObservedActionV487\(before,after,kind\)/,'verify proposed clinical actions before saying they executed');
+ assert.match(out,/csVegaTeachingIntentV487\(text\)/,'learner must route explicit help, hints, why, and delegation');
+ assert.match(out,/csCaseClosureEligibilityV487\?\.\(\)\.phase==='CLOSURE_ELIGIBLE'/,'sequential tutor consults phase 5 closure eligibility');
+ assert.doesNotMatch(out,/if\(idle>=24000&&!turn\.helped\)\{turn\.helped=true;helpOne\(job,step\);\}/,'time alone cannot execute orders');
+ assert.doesNotMatch(out,/if\(delegation\|\|sim\.nsVegaStruggles>=2\)return begin\(\);/,'repeated uncertainty cannot delegate patient automatically');
+ assert.doesNotMatch(out,/const state=window\.nsPatientState\(\);actor\(\(\)=>\{window\.csQueueMonitor\(\);if\(\['ROJO','NARANJA'\]\.includes\(state\.color\)\)window\.csQueueIV\(1\)\}\);/,'mere uncertainty does not initiate IV');
+ assert.match(out,/if\(immediateDanger\(state\)\)\{takeOver\(job,'Se descompensa\.'\);return;\}/,'emergency takeover remains active');
+ assert.match(out,/if\(!trusted\(\)\|\|lifeThreat\|\|!hasRescue&&now-sim\.nsUrgentSince>=6000\)return begin\(true,lifeThreat\);/,'critical untrusted rescue preserved');
+ const stagePos=out.indexOf(' function csVegaTeachingIntentV487(text){');
+ const stageEnd=out.indexOf(' function csVegaObservedActionV487(',stagePos);
+ assert.ok(stagePos>0&&stageEnd>stagePos,'tutor classifier is bounded within rescue scope');
+ const stageCtx={norm:t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim()};
+ vm.runInNewContext(out.slice(stagePos,stageEnd),stageCtx);
+ const kind=vm.runInNewContext('csVegaTeachingIntentV487',stageCtx);
+ for(const [phrase,expected] of [['No sé','uncertain'],['No sé qué hacer','uncertain'],['No entiendo','uncertain'],['Dame una pista','hint'],['Ayúdame con el siguiente paso','help'],['¿Por qué pedimos hemograma?','why'],['Hazlo tú','delegate'],['No lo hagas','none']])assert.equal(kind(phrase),expected,'Vega intent: '+phrase);
+ const observedA=out.indexOf(' function csVegaObservedActionV487(');
+ const observedB=out.indexOf(' function learnerMessage(text,intent){',observedA);
+ assert.ok(observedB>observedA);
+ vm.runInNewContext(out.slice(observedA,observedB).split(' function learnerTick(job){')[0],stageCtx);
+ const observed=vm.runInNewContext('csVegaObservedActionV487',stageCtx);
+ assert.equal(observed({orderCount:1,drugCount:0,interventionCount:0,pendingCount:0},{orderCount:1,drugCount:0,interventionCount:0,pendingCount:0},'study'),false,'no phantom study success');
+ assert.equal(observed({orderCount:1},{orderCount:2},'study'),true,'only a real study addition is acknowledged');
+ assert.equal(observed({drugCount:0,interventionCount:0,pendingCount:0},{drugCount:0,interventionCount:0,pendingCount:1},'treatment'),true,'pending therapy is a queued action');
+
+ // Behavioral Phase 6: mere uncertainty, why and hints never issue orders.
+ const learnerBegin=out.indexOf(' function learnerMessage(text,intent){');
+ const learnerEnd=out.indexOf(' const oldBegin=mentorBegin;',learnerBegin);
+ assert.ok(learnerBegin>0&&learnerEnd>learnerBegin);
+ const convo=[],orders=[],task={_csVegaHelpStage:null};
+ const tutorSim={nsVegaCare:task,chats:{expert:[]},orders:new Map(),administrationLog:[],interventions:new Set(),pendingTherapies:new Map(),disposition:null};
+ let delegated=0,helped=0;
+ const simTutor={
+  sim:tutorSim,C:{interventions:[]},MONITOR_THERAPY_CATALOG:[],
+  norm:stageCtx.norm,csVegaTeachingIntentV487:kind,
+  csVegaActionSnapshot487:()=>({orderCount:tutorSim.orders.size,drugCount:tutorSim.administrationLog.length,interventionCount:tutorSim.interventions.size,pendingCount:tutorSim.pendingTherapies.size}),
+  csVegaObservedActionV487:observed,csVegaWhy487:step=>'Why '+step,
+  learnerTarget:()=> 'workup',learnerHint:step=>'Hint '+step,learnerPrompt:step=>'Next '+step,
+  say:text=>convo.push(text),begin:()=>{delegated++;},helpOne:(job,step)=>{helped++;tutorSim.orders.set('assisted',{status:'pending'});return true;},
+  window:{nsMayExamine:()=>true,nsWithClinicalActor:(actor,fn)=>fn()},
+  orderStudy:st=>{if(!tutorSim.orders.has(st.id)){tutorSim.orders.set(st.id,{status:'pending'});orders.push(st.id);}return true;},
+  finishCase:()=>{},csSetDiagnosticImpression:()=>{},csSetDisposition:()=>{},
+  addMonitorTherapy:()=>false,orderIntervention:()=>false
+ };
+ vm.runInNewContext(out.slice(learnerBegin,learnerEnd),simTutor);
+ const talk=(t,i={type:'uncertainty'})=>simTutor.learnerMessage(t,i);
+ talk('No sé');talk('No entiendo');talk('Dame una pista');talk('¿Por qué pedimos hemograma?');
+ assert.equal(delegated,0,'repeated uncertainty never delegates');
+ assert.equal(helped,0,'questions and hints never execute actions');
+ assert.equal(tutorSim.orders.size,0,'no actions without explicit player direction');
+ talk('Ayúdame con el siguiente paso');
+ talk('Ayúdame con el siguiente paso');
+ assert.equal(helped,1,'explicit help performs at most one step until clinical progress');
+ talk('Hemograma',{type:'study_proposal',study:{id:'assisted'}});
+ assert.ok(convo.at(-1).includes('No aparece un nuevo pedido'),'preexisting study is not announced as newly requested');
+ talk('Hazlo tú');
+ assert.equal(delegated,1,'explicit delegation gives Vega the full takeover');
+ assert.equal(convo.some(x=>x.startsWith('Why workup')),true,'why answered without ordering');
+ // A stable learner cannot be automatically taken over for a missing chat reply.
+
+ // Idle handoff is a safety path only for actual critical patients.
+ const learnerTickA=out.indexOf(' function learnerTick(job){');
+ const learnerTickB=out.indexOf(' function learnerMessage(text,intent){',learnerTickA);
+ assert.ok(learnerTickA>0&&learnerTickB>learnerTickA);
+ let normalTakeovers=0,implicitTreatments=0;const signs={color:'VERDE'};
+ const tickTurn={started:0,absentSince:0,arrived:true,lastProgress:0,signature:'same',step:'workup',hinted:false,helped:false};
+ const tickJob={turn:tickTurn,participatory:true,phase:'learner'};
+ const tickCtx={performance:{now:()=>55000},window:{nsPatientState:()=>signs},immediateDanger:()=>false,
+  sim:{patientInstance:{bed:{patient:[200,200]}}},patient:{ix:200,iy:200},
+  player:{x:200,y:200},playerProgress:()=> 'same',learnerTarget:()=> 'workup',
+  learnerPrompt:()=> 'Only next study',learnerHint:()=> 'Review one lab',
+  status:()=>{},say:()=>{},takeOver:()=>normalTakeovers++,helpOne:()=>implicitTreatments++};
+ vm.runInNewContext(out.slice(learnerTickA,learnerTickB),tickCtx);
+ tickCtx.learnerTick(tickJob);
+ assert.equal(normalTakeovers,0,'stable 55-second pause must not trigger doctor takeover');
+ assert.equal(implicitTreatments,0,'stable 55-second pause must not start treatment');
+ signs.color='ROJO';
+ tickCtx.learnerTick(tickJob);
+ assert.equal(normalTakeovers,1,'persistently critical patient may trigger emergency rescue');
+ // Clinical closure eligibility from Phase 5 is the tutor's closure transition.
+ const targetA=out.indexOf(' function learnerTarget(){',observedA);
+ const targetB=out.indexOf(' function learnerPrompt(step){',targetA);
+ const targetCtx={C:{keyStudies:[],dx:['peritonitis'],keyInterventions:[]},
+  sim:{orders:new Map(),diagnosis:'Peritonitis',pendingTherapies:new Map(),disposition:{id:'uti'}},
+  norm:stageCtx.norm,window:{nsPatientState:()=>({treatment:{checks:[{id:'handoff',done:true}]}}),
+   csCaseClosureEligibilityV487:()=>({phase:'CLOSURE_ELIGIBLE'})},present:()=>true};
+ vm.runInNewContext(out.slice(targetA,targetB),targetCtx);
+ assert.equal(targetCtx.learnerTarget(),'closure','Vega recognizes case eligibility instead of claiming unfinished review');
