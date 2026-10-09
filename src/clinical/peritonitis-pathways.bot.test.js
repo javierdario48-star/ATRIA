@@ -82,7 +82,9 @@ function finish(bot,label,destination){
  const alternative=patient('PERI-TER-001',{sys:92});
  alternative.dx('peritonitis terciaria').talk().exam().vitals()
  .order('ter_culture','done').administer('imipenem').consult('uti','done');
- finish(alternative,'alternative broad-spectrum treatment and a culture','sala');
+ alternative.check('mild hypoperfusion needs support despite broad antibiotic',false);
+ alternative.administer('fluid');
+ finish(alternative,'alternative broad-spectrum treatment and a culture plus fluid','sala');
  const severe=patient('PERI-TER-001',{sys:78,spo2:86});
  severe.dx('peritonitis terciaria').talk(2).exam().vitals()
  .administer('fluid').administer('oxygen').administer('imipenem').consult('uti','done');
