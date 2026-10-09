@@ -240,3 +240,48 @@ assert.match(out,/VoiceV2\.starting=true;const startEpoch=\+\+VoiceV2\.startEpoc
 assert.match(out,/if\(!VoiceV2\.permissionChecked\)await requestMicPermissionV2\(\)/,'repeated taps avoid extra getUserMedia');
 assert.match(out,/if\(VoiceV2\.starting\)return/,'overlapping click ignored');
 assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response rejected');
+
+
+ // Regression Phase 2: B4 patient sprite must win over overlapping B4 monitor target.
+ const cs413Start=out.indexOf(' function cs413PatientAtTap(');
+ const cs413Stop=out.indexOf(' openBedsideMonitor=function(anchor){',cs413Start);
+ assert.ok(cs413Start>0&&cs413Stop>cs413Start,'effective 4.13 scene must expose patient-specific hit routing');
+ const cs413Calls=[];
+ const b4={index:3,instance:{uid:'case-B4',bedId:'B4',bed:{patient:[947,424]}}};
+ const b3={index:2,instance:{uid:'case-B3',bedId:'B3',bed:{patient:[827,424]}}};
+ const cs413={C:{},editorOpen:false,scale:1,handleGameTap:null,pending:null,monitorIntent:null,
+   patients:()=>[b3,b4],worldToScreen:(x,y)=>[x,y],
+   scene:()=>[{bedId:'B4',x:978,y:391,width:30,height:25},{bedId:'B3',x:830,y:394,width:30,height:25}],
+   hit:(x,y,m)=>Math.abs(x-m.x)<=22&&Math.abs(y-m.y)<=22,
+   select:(p,monitor)=>cs413Calls.push([p.instance.bedId,monitor]),
+   toast:(message)=>cs413Calls.push(['toast',message]),base:{tap:()=>cs413Calls.push(['base'])}};
+ vm.runInNewContext(out.slice(cs413Start,cs413Stop),cs413);
+ cs413.handleGameTap({clientX:965,clientY:412});
+ assert.deepEqual(cs413Calls,[['B4',false]],'overlapping B4 patient sprite must select patient and never open monitor');
+ cs413Calls.length=0;cs413.handleGameTap({clientX:978,clientY:391});
+ assert.deepEqual(cs413Calls,[['B4',true]],'tapping the real B4 monitor must still open monitor');
+ cs413Calls.length=0;cs413.handleGameTap({clientX:827,clientY:424});
+ assert.deepEqual(cs413Calls,[['B3',false]],'B3 patient touch must not select the neighboring B4');
+ cs413Calls.length=0;cs413.handleGameTap({clientX:830,clientY:394});
+ assert.deepEqual(cs413Calls,[['B3',true]],'B3 monitor functionality must be preserved');
+ // Every bed's visible patient center resolves to its own entity, not its monitor or neighbor.
+ const bedPositions={B1:[97,409],B2:[224,423],B3:[827,424],B4:[947,424],B5:[96,611],B6:[96,794],B7:[946,611],B8:[946,794]};
+ const allBeds=Object.entries(bedPositions).map(([id,pos],i)=>({index:i,instance:{uid:'case-'+id,bedId:id,bed:{patient:pos}}}));
+ cs413.patients=()=>allBeds;
+ for(const patientRecord of allBeds){
+   const [x,y]=patientRecord.instance.bed.patient;cs413Calls.length=0;
+   cs413.handleGameTap({clientX:x,clientY:y});
+   assert.deepEqual(cs413Calls,[[patientRecord.instance.bedId,false]],'patient sprite resolves correct bed '+patientRecord.instance.bedId);
+ }
+ cs413Calls.length=0;cs413.handleGameTap({clientX:505,clientY:510});
+ assert.deepEqual(cs413Calls,[['base']],'tapping an empty region preserves movement/navigation');
+ // A current, nearby patient tap opens the existing examination sheet as a read-only view.
+ const csSelectStart=out.indexOf(' function select(p,wantMonitor=true){',out.indexOf('// Screen centres measured'));
+ const csSelectStop=out.indexOf(' function checkMonitorIntent(){',csSelectStart);
+ assert.ok(csSelectStop>csSelectStart,'effective patient selection function must be identifiable');
+ const csOpen=[];const csSelect={normalizeRoom(){},normalizeApproach(){},shared:()=>false,nearby:()=>true,
+   sim:{patientInstance:{uid:'case-B4'}},shiftSession:{active:true},openEntity:(entity,tab)=>csOpen.push([entity,tab]),
+   window:{csLoadShiftRecordV40:()=>csOpen.push(['reload'])},openBedsideMonitor:()=>csOpen.push(['monitor'])};
+ vm.runInNewContext(out.slice(csSelectStart,csSelectStop),csSelect);
+ csSelect.select(b4,false);
+ assert.deepEqual(csOpen,[['patient','exam']],'current patient opens examination without resetting the case');
