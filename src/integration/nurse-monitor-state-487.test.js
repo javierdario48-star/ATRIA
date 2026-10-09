@@ -20,7 +20,9 @@ const context={sim,C,
  norm:t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),
  MONITOR_THERAPY_CATALOG:[
   {id:'oxygen',label:'Oxígeno suplementario',aliases:['oxigeno','o2'],effects:{spo2:6}},
-  {id:'fluid',label:'Cristaloides',aliases:['ringer','suero'],effects:{sys:14}}
+  {id:'fluid',label:'Cristaloides',aliases:['ringer','suero'],effects:{sys:14}},
+  {id:'ceftriaxone',label:'Ceftriaxona IV',aliases:['ceftriaxona'],effects:{}},
+  {id:'metronidazole',label:'Metronidazol IV',aliases:['metronidazol'],effects:{}}
  ],
  findIntervention:()=>null,
  parseTherapyOrder:(str,t)=>({amount:4,unit:'L/min',display:'4 L/min',defaultApplied:false}),
@@ -45,6 +47,14 @@ assert.equal(sim.monitorTherapies.get('fluid').id,'fluid','actual clinical fluid
 assert.equal(sim.administrationLog.at(-1).id,'fluid');
 assert.equal(sim.therapyExposure.get('oxygen').count,1);
 assert.equal(sim.therapyExposure.get('fluid').count,1);
+assert.equal(context.addMonitorTherapy('ceftriaxona'),true);
+assert.equal(context.addMonitorTherapy('metronidazol'),true);
+assert.equal(sim.monitorTherapies.has('ceftriaxone'),true);
+assert.equal(sim.monitorTherapies.has('metronidazole'),true);
+assert.equal(sim.administrationLog.at(-2).id,'ceftriaxone');
+assert.equal(sim.administrationLog.at(-1).id,'metronidazole');
+assert.match(out,/MONITOR_THERAPY_CATALOG\.some\(x=>x\.id===entry\.id\)/,
+ 'nursing therapies now use actual monitor therapy catalogue rather than indicated-only legacy route');
 assert.equal(context.addMonitorTherapy('unrecognized fantasy medicine'),false);
 console.log('NATIVE MONITOR THERAPY BOT PASS',JSON.stringify({
  actualNativeFunctions:true,oxygenActive:true,fluidActive:true,historyRecords:true,uiRefresh:true
