@@ -93,6 +93,12 @@ assert.match(out,/function csStudyTimeLabel\(readyAt,now=performance.now\(\)\)/,
 assert.match(out,/id="atria-chat-bottom-anchor"/,'ward transcript positioning override must ship in the artifact');
 assert.match(out,/body:not\(\.keyboardOpen\) #chatDock:not\(\.nsLobbyChat\) \.chatRecent\{position:absolute!important;top:auto!important;bottom:calc/,'ward transcript must anchor to composer instead of expanded dock top');
 assert.match(out,/body:not\(\.keyboardOpen\) #chatDock\.historyExpanded:not\(\.nsLobbyChat\) \.chatRecent\{top:auto!important/,'expanded history must stay bottom-anchored');
+// Ward transcript must remain touch-readable both with and without the virtual keyboard.
+const wardRule=out.match(/body:not\(\.keyboardOpen\) #chatDock:not\(\.nsLobbyChat\) \.chatRecent\{display:block!important;max-height:112px!important;[^}]+\}/)?.[0]||'';
+assert.ok(wardRule.includes('pointer-events:auto!important'),'ward scroll cannot disable pointer events');
+assert.ok(wardRule.includes('touch-action:pan-y!important'),'ward scroll must accept vertical gestures');
+assert.ok(out.includes('body.keyboardOpen #chatDock:not(.nsLobbyChat) .chatRecent{display:block!important}'),'keyboard must not hide the ward transcript');
+assert.ok(out.includes('#chatDock:not(.nsLobbyChat) .chatRecentLine span{white-space:normal!important;overflow-wrap:anywhere!important}'),'long lines must wrap on phones');
 assert.match(out,/function csMergeSpeech\(previous,incoming\)/,'speech must reconcile cumulative finalized fragments');
 assert.match(out,/csVoiceStageRevisions\(csVoice.pendingByIndex,csVoice.sentFinals,e\)/,'WebSpeech must replace revisions by result index');
 assert.match(out,/if\(update.finalCount\)csVoiceReschedule\(\)/,'final revisions only become chat messages after debounce');
