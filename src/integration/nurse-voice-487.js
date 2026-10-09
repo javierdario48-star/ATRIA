@@ -52,8 +52,16 @@ export function applyNurseVoice487(html){
     item.kind==='study'?C.studies.find(x=>x.id===item.id)?.label:item.text.replace(/\\s+(?:y|e|ademas)\\s+.*$/,'');
    const before=sim.csNurse487History?.length||0;
    const response=baseNurse.call(this,'enfermera '+phrase);
-   if((sim.csNurse487History?.length||0)===before)
-    feedback(phrase+': '+(response===false?'no se pudo ejecutar.':'pedido recibido; revisá su estado.'));
+   if((sim.csNurse487History?.length||0)===before){
+     const active=item.kind==='therapy'&&(sim.monitorTherapies?.has(item.id)||sim.interventions?.has(item.id));
+     const pending=item.kind==='therapy'&&(sim.pendingTherapies?.has(item.id)||
+       (sim.csPhase4Pending487||[]).some(x=>x.id===item.id));
+     const study=item.kind==='study'&&sim.orders?.has(item.id);
+     const vitals=item.kind==='vitals'&&(nurse.task?.kind==='vitals'||nurse.queue?.some(t=>t.kind==='vitals'));
+     if(active)feedback(phrase+': consta como tratamiento ACTIVO. Confirmá administración en el monitor.');
+     else if(pending||study||vitals)feedback(phrase+': solicitado; ejecución o resultado pendiente.');
+     else feedback(phrase+': NO quedó registrado como ejecutado. Volvé a indicar la acción o revisá el monitor.');
+   }
    ok=response!==false||ok;
   }
   for(const unknown of parsed.unknown.slice(0,6))feedback('No reconocí '+unknown+'. No ejecuté esa parte.');
