@@ -32,7 +32,7 @@ const window={
  nsPatientState:()=>state,
  csSurgery487Request:()=>{consulted++;sim.consults.set('cirugia',{status:'done'});return true}
 };
-const context={C,sim,window,careEpoch:0,
+const context={C,sim,window,careEpoch:0,destinations:{'PERI-SEC-001':'quirofano'},
  performance:{now:()=>time},token:()=>null,player:{x:0,y:0},
  patient:{ix:0,iy:0},expert:{x:0,y:0},present:id=>sim.interventions.has(id),
  support:()=>{},urgentEmpiric:()=>{},actor:fn=>fn(),say:t=>messages.push(t),
