@@ -14,8 +14,8 @@ const seed={id:'PERI-SEC-001',interventions:[
  {id:'source_control',label:'Cirugía',aliases:['cirugia','quirofano']}],
  studies:[{id:'peri_cbc',label:'Hemograma',aliases:['hemograma']}]};
 let C=seed,sim={caseEnded:false,venousAccessCount:0,monitorConnected:false,
- gameMinute:0,events:[],monitorTherapies:new Map(),orders:new Map()};
-const sent=[],nurse=[],tasks=[],operations=[],consults=[];
+ gameMinute:0,events:[],monitorTherapies:new Map(),orders:new Map(),administrationLog:[]};
+const sent=[],nurse=[],tasks=[],operations=[],consults=[],renders=[];
 const window={nsMayExamine:()=>true,csQueueMonitor:()=>{tasks.push('monitor');return true},
  csQueueIV:n=>{tasks.push('iv:'+n);return true},
  csSurgery487Request:()=>{consults.push('cirugia');nurse.push('Cirugía: solicitud en curso');return true}};
@@ -25,7 +25,11 @@ const ctx={window,sim,C,MONITOR_THERAPY_CATALOG:[
  norm:s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').trim(),
  nurseNatural:q=>{operations.push(q);nurse.push('Recibido: '+q);(sim.csNurse487History??=[]).push({text:q});return true},
  sendMessage:q=>sent.push('old '+q),
- nurseSay:t=>nurse.push(t),addMonitorTherapy:txt=>{sim.monitorTherapies.set('oxygen',true);nurse.push('Oxígeno iniciado');return true},
+ nurseSay:t=>nurse.push(t),
+ addMonitorTherapy:txt=>{sim.monitorTherapies.set('oxygen',{id:'oxygen',label:'Oxígeno suplementario'});
+   sim.administrationLog.push({id:'oxygen',label:'Oxígeno suplementario'});nurse.push('Oxígeno iniciado');return true},
+ renderMonitorTherapies:()=>renders.push('therapy'),renderAdministrationHistory:()=>renders.push('history'),
+ updateMonitorDOM:()=>renders.push('monitor'),
  addGlobalChat:(role,t)=>sent.push(role+': '+t),
  player:{bubble:'',bubbleUntil:0},performance:{now:()=>100},pendingAddress:null,chatRole:'patient',
  document:{getElementById:()=>null},refreshChatDock:()=>{}};
@@ -38,6 +42,8 @@ assert(nurse.some(x=>x.includes('recib')||x.includes('Recib')),'instant acknowle
 assert.equal(sent.filter(x=>x.startsWith('doctor: ')).length,1,'player message logged exactly once');
 ctx.sendMessage('enfermera oxigeno 4 litros, ceftriaxona y metronidazol');
 assert(sim.monitorTherapies.has('oxygen'),'oxygen started through nurse, no manual monitor');
+assert(sim.administrationLog.some(x=>x.id==='oxygen'),'oxygen actually recorded in administration log');
+assert.deepEqual(renders,['therapy','history','monitor'],'monitor active list, history and numeric metrics refresh');
 assert(operations.some(x=>x.includes('ceftriaxona')));
 assert(operations.some(x=>x.includes('metronidazol')));
 ctx.sendMessage('enfermera cirugia');
