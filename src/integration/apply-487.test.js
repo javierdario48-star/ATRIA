@@ -392,3 +392,60 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
  assert.equal(events.some(e=>e[0]==='old-slash'),false,'slash composite routed to nurse dispatcher');
  const five=parse('enfermera vias, ringer, oxigeno, ceftriaxona y hemograma');
  assert.equal(five?.length,5,'five independent intents supported');
+
+ // Phase 5 regression: an auto-resolved case cannot repeatedly reopen destination
+ // and must commit closure/XP once when the user chooses the disposition.
+ const closureStart=out.indexOf('  function csCaseClosureEligibilityV487(');
+ const closureEnd=out.indexOf('  // ============================================================\n  // 9)',closureStart);
+ assert.ok(closureStart>0&&closureEnd>closureStart,'same closure contract must power disposition and finalization');
+ const v487ClosureSource=out.slice(closureStart,closureEnd);
+ const closeEvents=[],localCase={id:'PERITONITIS'},simClose={patientDied:false,disposition:null,_careerEndProcessed:false},recClose={caseId:localCase.id,state:'active'};
+ let onDisposition=null;
+ const closeContext={sim:simClose,C:localCase,window:{},shiftSession:{active:true,records:[recClose],index:0,clock:10},
+  finishCase:()=>{closeEvents.push('core-finish');simClose._careerEndProcessed=true;},
+  csOpenDisposition:cb=>{closeEvents.push('dialog');onDisposition=cb;},
+  nurseSay:t=>closeEvents.push('nurse'),
+  csBreakdown:()=>({score:87})};
+ vm.runInNewContext(v487ClosureSource,closeContext);
+ const eligible=closeContext.window.csCaseClosureEligibilityV487;
+ assert.equal(eligible().eligible,false,'missing destination is an explicit closure blocker');
+ assert.equal(eligible().phase,'OPEN');
+ closeContext.finishCase('auto');closeContext.finishCase('auto');closeContext.finishCase('auto');
+ assert.deepEqual(closeEvents,['dialog','nurse'],'auto ticks must open destination prompt only once');
+ assert.equal(simClose._careerEndProcessed,false,'no score or XP without the selected destination');
+ simClose.disposition={id:'uti',label:'UTI'};onDisposition();
+ assert.deepEqual(closeEvents,['dialog','nurse','core-finish'],'the disposition callback must commit closure');
+ assert.equal(recClose.state,'done','bed and reception record must move to done');
+ assert.equal(eligible().phase,'CLOSED','one shared eligibility contract confirms closed status');
+ closeContext.finishCase('completed');closeContext.finishCase('auto');
+ assert.equal(closeEvents.filter(e=>e==='core-finish').length,1,'double taps cannot duplicate credits');
+ const died={patientDied:true,disposition:null,_careerEndProcessed:false};
+ const deathCtx={...closeContext,sim:died,shiftSession:{active:false,records:[],index:0}};
+ deathCtx.finishCase=()=>{died._careerEndProcessed=true;closeEvents.push('death-finish')};
+ vm.runInNewContext(v487ClosureSource,deathCtx);
+ deathCtx.finishCase('death');
+ assert.equal(died._careerEndProcessed,true,'death must not require assigning discharge destination');
+
+ // A second manual attempt after dismissing a modal must re-open the destination chooser;
+ // the first automated alert must not create a permanently stuck state.
+ const retrySim={patientDied:false,disposition:null,_careerEndProcessed:false};
+ const retryEvents=[];
+ let retryChoice=null;
+ const retryCtx={...closeContext,sim:retrySim,shiftSession:{active:false,records:[],index:0},csOpenDisposition:cb=>{retryEvents.push('dialog');retryChoice=cb;},
+  nurseSay:()=>retryEvents.push('nurse')};
+ retryCtx.finishCase=()=>{retryEvents.push('finish');retrySim._careerEndProcessed=true};
+ vm.runInNewContext(v487ClosureSource,retryCtx);
+ retryCtx.finishCase('auto');retryCtx.finishCase('completed');
+ assert.deepEqual(retryEvents,['dialog','nurse','dialog'],'manual retry after auto modal must still work');
+ retrySim.disposition={id:'alta'};retryChoice();
+ assert.deepEqual(retryEvents,['dialog','nurse','dialog','finish'],'manual selection finishes after retry');
+ const wrongPatient={patientDied:false,disposition:{id:'sala'},patientInstance:{uid:'patient-2'}};
+ const wrongRecord={instance:{uid:'patient-1'},caseId:localCase.id,state:'active'};
+ const wrongCtx={...closeContext,sim:wrongPatient,shiftSession:{active:true,records:[wrongRecord],index:0}};
+ wrongCtx.finishCase=()=>closeEvents.push('wrong-target-finish');
+ vm.runInNewContext(v487ClosureSource,wrongCtx);
+ assert.equal(wrongCtx.window.csCaseClosureEligibilityV487().eligible,false,'unselected background patient cannot close as active');
+ wrongCtx.finishCase('auto');
+ assert.equal(closeEvents.includes('wrong-target-finish'),false,'background patient closure must not mutate another bed');
+ assert.match(out,/if\(shared\(\)\)\{if\(!guard\(\)\|\|!ownsCurrent\(\)\)return;/,'shared-room closure keeps owner authorization');
+ assert.match(out,/if\(!p\|\|p\.ownerId!==id\|\|p\.result\|\|p\.state==='done'\)return false/,'host remains idempotent on duplicate closure receipts');
