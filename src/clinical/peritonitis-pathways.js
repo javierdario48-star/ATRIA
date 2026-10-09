@@ -36,7 +36,7 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
     'PERI-SEC-001':/(peritonitis.*secundaria|peritonitis.*perforacion|perforacion.*diverticular|diverticulitis.*perforada)/.test(dx),
     'PERI-TER-001':/(peritonitis.*terciaria|peritonitis.*persistente)/.test(dx)
   }[id];
-  if(!diagnostic)missing.push('Registrar una impresión diagnóstica etiológica, no solo el síndrome.');
+  if(!diagnostic&&snapshot.diagnosticCompatible!==true)missing.push('Registrar una impresión diagnóstica etiológica, no solo el síndrome.');
 
   if(id==='PERI-PBE-001'){
     // Ascitic cell count matters, not merely guessing the word "PBE".
@@ -98,6 +98,10 @@ export function csPeritonitisSnapshot487(s,c) {
   const consultations=typeof s.consults?.entries==='function'?[...s.consults.entries()].filter(([,x])=>x?.status==='done').map(([id])=>id):[];
   return {
     caseId:c.id,diagnosis:s.diagnosis||'',
+    // Shared autocomplete recognizer; no different private diagnosis field.
+    // Absent in pure Node bots or older runtimes: legacy safe matcher remains.
+    diagnosticCompatible:typeof window!=='undefined'&&typeof window.csDx487?.matchesCase==='function'?
+      window.csDx487.matchesCase(c.id,s.diagnosis||''):undefined,
     historyCount:(s.intentHistory||[]).filter(x=>x&&typeof x.id==='string').length,
     examDone:!!s.examDone,examRegionsCount:s.examRegions?.size||0,
     vitalsKnown:!!s.lastVitalsKnown,
