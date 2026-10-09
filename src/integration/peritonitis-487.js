@@ -12,6 +12,18 @@ export function applyPeritonitis487(html) {
  window.__csPeritonitisDisposition487=true;
  ${csPeritonitisEvaluate487.toString()}
  ${csPeritonitisSnapshot487.toString()}
+ // The native sepsis physiology also needs to recognize clinically plausible
+ // alternatives. Otherwise a safe decision earns XP but the patient never responds.
+ if(typeof CASES!=='undefined')for(const c of CASES){
+   if(!c?.physiology?.coverageSets)continue;
+   const alternatives=c.id==='PERI-PBE-001'?[['piptazo']]:
+     c.id==='PERI-SEC-001'?[['piptazo'],['imipenem']]:
+     c.id==='PERI-TER-001'?[['piptazo','fluconazole'],['piptazo','amphotericin'],
+       ['imipenem','fluconazole'],['imipenem','amphotericin']]:[];
+   for(const group of alternatives)if(!c.physiology.coverageSets.some(existing=>
+       existing.length===group.length&&group.every(id=>existing.includes(id))))
+       c.physiology.coverageSets.push(group);
+ }
  const current=()=>csPeritonitisEvaluate487(csPeritonitisSnapshot487(sim,C));
  window.csPeritonitisAssessment487=current;
 
