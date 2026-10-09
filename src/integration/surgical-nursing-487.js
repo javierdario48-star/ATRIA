@@ -53,6 +53,9 @@ export function applySurgicalNursing487(html){
  }
  window.csSurgery487Request=request;
  nurseNatural=function(text){
+   if(surgeryWord.test(clean(text))&&(/\?/.test(String(text))||notAnOrder.test(clean(text)))){
+     nurseSay('La cirugía no fue solicitada: la frase es una pregunta o una negación.');return false;
+   }
    if(!surgicalRequest(text))return priorNurse.apply(this,arguments);
    const normal=clean(text).replace(/^(?:enfermera|enfermero|enfermeria|solicito|pido|necesito|ordenar?)\s*/,'').trim();
    const pieces=normal.split(/\s*(?:,|;|\s+y\s+|\s+e\s+)\s*/).filter(Boolean);
@@ -66,6 +69,7 @@ export function applySurgicalNursing487(html){
    return accepted;
  };
  addMonitorTherapy=function(text){
+   if(surgeryWord.test(clean(text))&&(/\?/.test(String(text))||notAnOrder.test(clean(text))))return false;
    if(surgicalRequest(text))return request();
    return priorMonitor.apply(this,arguments);
  };
