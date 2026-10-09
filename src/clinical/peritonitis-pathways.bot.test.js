@@ -82,9 +82,12 @@ function finish(bot,label,destination){
  const alternative=patient('PERI-TER-001',{sys:92});
  alternative.dx('peritonitis terciaria').talk().exam().vitals()
  .order('ter_culture','done').administer('imipenem').consult('uti','done');
- alternative.check('mild hypoperfusion needs support despite broad antibiotic',false);
+ alternative.s.orders.get('ter_culture').result='Desarrollo de Enterococcus y Candida en líquido peritoneal';
+ alternative.check('culture-proven Candida needs antifungal adjustment',false);
  alternative.administer('fluid');
- finish(alternative,'alternative broad-spectrum treatment and a culture plus fluid','sala');
+ alternative.check('resuscitation alone does not correct Candida coverage',false);
+ alternative.administer('fluconazole');
+ finish(alternative,'culture-directed antifungal plus broad antibiotics and fluids','sala');
  const severe=patient('PERI-TER-001',{sys:78,spo2:86});
  severe.dx('peritonitis terciaria').talk(2).exam().vitals()
  .administer('fluid').administer('oxygen').administer('imipenem').consult('uti','done');
@@ -97,4 +100,4 @@ for(const id of ['PERI-PBE-001','PERI-SEC-001','PERI-TER-001']){
  g.s.patientDied=true;g.check('death cannot grant ready state',false);
 }
 assert.equal(csPeritonitisEvaluate487({caseId:'PANC-001'}),null,'non-peritonitis cases untouched');
-console.log('PERITONITIS PATHWAY BOTS PASS '+JSON.stringify({positive:results.length,negative:13,results}));
+console.log('PERITONITIS PATHWAY BOTS PASS '+JSON.stringify({positive:results.length,negative:14,results}));
