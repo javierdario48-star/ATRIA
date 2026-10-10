@@ -13,7 +13,16 @@ export function applyNurseVoice487(html){
   const direct=/^(?:(?:dos|2) )?(?:vias?|accesos? venosos?|monitor|monitorizar|oxigeno|o2|ringer|hemograma|signos vitales)$/;
   // A brief command addressed to a nearby nurse also works without saying
   // "enfermera" every time. Patient questions still use the native routing.
-  if(!addressed(text)&&!direct.test(bare))return baseNurse.apply(this,arguments);
+  // sendMessage can route a composite sentence while the doctor is speaking
+  // directly with a nurse. Do not drop that SAME sentence here just because
+  // it does not begin with "enfermera" or consist of a single-word alias.
+  const activeNurse=(chatRole==='nurse'||pendingAddress==='nurse');
+  const listed=activeNurse?csNurseScan487(text,C?.studies||[],
+   typeof MONITOR_THERAPY_CATALOG!=='undefined'?MONITOR_THERAPY_CATALOG:[],
+   C?.interventions||[]):null;
+  if(!addressed(text)&&!direct.test(bare)&&
+     !(activeNurse&&listed?.active&&listed.items.some(x=>!x.negated)))
+   return baseNurse.apply(this,arguments);
   if(!C||!sim||sim.caseEnded||window.nsMayExamine?.()===false){
    feedback('No hay una atención activa con permiso para ejecutar estas indicaciones.');return false;
   }
