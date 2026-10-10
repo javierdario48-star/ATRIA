@@ -1,5 +1,6 @@
 // Integrated browserless DOM+clinical closure bot against the generated ATRIA HTML.
 import assert from 'node:assert/strict';
+import './peritonitis-xp-native-487.test.js';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {apply487} from './apply-487.js';
