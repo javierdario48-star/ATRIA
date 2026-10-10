@@ -6,7 +6,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  const input=withoutPrefix;
  const aliases=[];
  const add=(kind,id,term,priority=1)=>{
-  const phrase=norm(term);if(phrase.length<3)return;
+  const phrase=norm(term);if(phrase.length<3&&phrase!=='o2')return;
   aliases.push({kind,id,phrase,priority});
  };
  const defs=[
