@@ -1,7 +1,13 @@
 // Shared lexical scanner: every new case contributes its studies/interventions.
 // Pure, no case answers, diagnosis inference, or hidden medical management.
 export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
- const norm=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+ // Keep fractional dosages intact (notably 0,05 µg/kg/min in Android voice).
+ // Punctuation outside numeric fractions is still stripped exactly as before.
+ const norm=t=>String(t||'').toLowerCase().normalize('NFD')
+  .replace(/[\u0300-\u036f]/g,'')
+  .replace(/(\d+)\s*[,\.]\s*(\d+)/g,'$1csdecimal487$2')
+  .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()
+  .replace(/(\d+)csdecimal487(\d+)/g,'$1.$2');
  const s=norm(text),withoutPrefix=s.replace(/^(?:(?:enfermera|enfermero|enfermeria|por favor|solicito|necesito|pido|quiero|orden|indico)\s+)+/,'');
  const input=withoutPrefix;
  const aliases=[];
