@@ -91,6 +91,9 @@ assert.equal(ctx.window.csPharm487.preview(novel.id,'CIRR-001',patient('cirr'),1
 assert.equal(ctx.window.csPharm487.preview(novel.id,'FUTURE-001',patient('future'),100).offsets.sys,4);
 assert.equal(ctx.window.csPharm487.preview(novel.id,'PERI-SEC-001',patient('sepsis'),100).offsets.sys,4);
 ctx.C=newCase;ctx.sim=patient('future');
+assert.equal(ctx.addMonitorTherapy('experimental agent'),false,'new IV medication must be rejected without established access');
+assert.equal(ctx.sim.administrationLog.length,0,'no false completed dose without an IV');
+ctx.sim.venousAccessCount=1;
 assert(ctx.addMonitorTherapy('experimental agent'));
 assert.equal(ctx.sim.administrationLog[0].id,novel.id);
 assert.equal(ctx.sim.administrationLog[0].doseDisplay,'5 mg');
