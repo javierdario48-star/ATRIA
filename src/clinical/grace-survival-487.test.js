@@ -27,7 +27,7 @@ assert.equal(csMissingAdminRescue487(delivered,C,{spo2:75},40),false,
 delivered.gameMinute=13;
 assert.equal(csMissingAdminRescue487(delivered,C,{spo2:86},40),true,
  'source control remains relevant in unresolved late shock');
-const checkpoints=[0,60,179,180,240,299,300,320];
+const checkpoints=[0,60,179,180,240,299,300,320,350,479,480,485];
 const untreated=patient(),pending=patient(),partial=patient(),adequate=patient();
 pending.csPhase4Pending487=[{id:'ceftriaxone'},{id:'metronidazole'},{id:'fluid'}];
 partial.monitorConnected=true;partial.venousAccessCount=2;
@@ -43,8 +43,11 @@ for(const t of checkpoints){
  if(t===180){assert.equal(u.protected,false,'untreated exposure starts progressively at 180');
   assert(p.protected);assert(a.protected);assert.equal(q.protected,false,'pending therapies earn no clinical credit');}
  if(t===240){assert.equal(u.protected,false);assert.equal(p.protected,true);assert(a.protected);}
- if(t===299){assert.equal(a.protected,true);assert.equal(p.protected,false);}
- if(t>=300){assert.equal(a.protected,false);assert.equal(p.protected,false);}
+ if(t===299){assert.equal(a.protected,true);assert.equal(p.protected,true);}
+ if(t===320){assert.equal(a.protected,true);assert.equal(p.protected,true);}
+ if(t===350){assert.equal(a.protected,true);assert.equal(p.protected,false);}
+ if(t===479)assert.equal(a.protected,true);
+ if(t>=480){assert.equal(a.protected,false);assert.equal(p.protected,false);}
 }
 for(const mode of ['apprentice','solo','coop','competitive']){
  const untreatedMode=patient(mode);
@@ -66,7 +69,7 @@ banked.monitorConnected=false;banked.monitorTherapies.clear();
 const duringInstability=csGraceState487(banked,C,210);
 assert(duringInstability.protected,'reversal of monitor status cannot retract banked response time');
 assert.equal(duringInstability.credit,observed.observedCredit,'banked credit is monotonic');
-assert.equal(csGraceState487(banked,C,250).protected,false,'earned time is finite, never infinite');
+assert.equal(csGraceState487(banked,C,400).protected,false,'earned time is finite, never infinite');
 
 assert(csGraceState487(partial,C,180).credit>csGraceState487(pending,C,180).credit);
 const fatalFixture='if((sim._fatalExposure||0)>=1.35&&!sim._deathTriggered){sim.patientDied=true}';
@@ -96,8 +99,10 @@ ctx.document.visibilityState='hidden';advance(20);
 assert(Math.abs(sim.csGrace487.activeSeconds-179)<0.01,'background time not counted as bedside attention');
 ctx.document.visibilityState='visible';advance(120);
 assert.equal(sim.patientDied,false,'adequately treated remains alive through second 299');
-advance(1);assert.equal(sim.patientDied,false,'no automatic fatal event at exactly 300');
-advance(12);assert.equal(sim.patientDied,true,'if fatal predicate remains true native exposure eventually resumes');
+advance(1);assert.equal(sim.patientDied,false,'no fatal event at 300 despite stabilization');
+advance(179);assert.equal(sim.patientDied,false,'full rescue buys time for examination until 480 seconds');
+advance(1);assert.equal(sim.patientDied,false,'no death cliff at end of earned time');
+advance(12);assert.equal(sim.patientDied,true,'native lethal exposure resumes if critically untreated after 480 seconds');
 // A different patient has a separate clock; duplicate requests cannot reset an existing one.
 const first=patient(),second=patient();ctx.sim=first;ctx.updateSimulation(.25);
 ctx.sim=second;ctx.updateSimulation(.25);
