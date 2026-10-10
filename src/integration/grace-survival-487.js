@@ -4,7 +4,7 @@ export function applyGraceSurvival487(html){
  const source=String.raw`<script id="atria-grace-survival-487">
 (function(){
  if(window.__atriaGrace487)return;window.__atriaGrace487=true;
- `+ '${csGraceState487.toString()}' +`
+ ${csGraceState487.toString()}
  // Wrap the native fatal-rescue predicate, not physiology, nursing or the death UI.
  const nativeDeathPredicate=csDeathRescueMissing;
  csDeathRescueMissing=function(v,map){
