@@ -6,7 +6,8 @@ export function applyGraceSurvival487(html){
  if(window.__atriaGrace487)return;window.__atriaGrace487=true;
  ${csGraceState487.toString()}
  ${csMissingAdminRescue487.toString()}
- // Wrap the native fatal-rescue predicate, not physiology, nursing or the death UI.
+ // All four modes get the same per-patient minimum active observation time.
+ // Wrap only the native fatal-rescue predicate, not the treatment engine or death UI.
  const nativeDeathPredicate=csDeathRescueMissing;
  csDeathRescueMissing=function(v,map){
   const state=sim?.csGrace487;
@@ -16,7 +17,7 @@ export function applyGraceSurvival487(html){
  };
  const nativeUpdate=updateSimulation;
  updateSimulation=function(dt){
-  if(sim&&sim.playMode==='apprentice'&&!sim.caseEnded){
+  if(sim&&['apprentice','solo','coop','competitive'].includes(sim.playMode)&&!sim.caseEnded&&!sim.patientDied){
    const state=sim.csGrace487||(sim.csGrace487={enabled:true,activeSeconds:0});
    // dt is the real 1/60-second fixed-frame step; gameMinute accelerates independently.
    // The frame loop stops when play stops; hidden/background time earns no protection.
