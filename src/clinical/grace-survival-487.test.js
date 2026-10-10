@@ -50,7 +50,11 @@ for(const mode of ['apprentice','solo','coop','competitive']){
 }
 assert.equal(csGraceState487(adequate,C,250).credit,1);
 assert(csGraceState487(partial,C,180).credit>csGraceState487(pending,C,180).credit);
-const script=applyGraceSurvival487('<body></body>').split('<script id="atria-grace-survival-487">')[1].split('</script>')[0];
+const fatalFixture='if((sim._fatalExposure||0)>=1.35&&!sim._deathTriggered){sim.patientDied=true}';
+const guardedHtml=applyGraceSurvival487('<body><script>'+fatalFixture+'</script></body>');
+assert(guardedHtml.includes('!window.csEarlyCriticalDeathGuard487?.(sim,C)'),
+ 'actual native fatal boundary has a direct final safety gate');
+const script=guardedHtml.split('<script id="atria-grace-survival-487">')[1].split('</script>')[0];
 new vm.Script(script,{filename:'grace-survival-487-runtime.js'});
 let sim=patient(),calls=0;
 const ctx={window:{},document:{visibilityState:'visible'},sim,C,
