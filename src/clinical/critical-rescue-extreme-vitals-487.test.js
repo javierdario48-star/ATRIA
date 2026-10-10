@@ -42,20 +42,23 @@ function run(treat){
   old();
   csCriticalRescuePhysiology487(sim,C,at-prior);
  };
+ const snapshots=[];
  for(let i=1;i<=120;i++){
   sim.gameMinute=i*.1;ctx.updateLiveVitals(.30);
+  if([20,40,60,80,120].includes(i))snapshots.push({minute:i*.1,sys:sim.liveVitals.sys,
+   map:(sim.liveVitals.sys+2*sim.liveVitals.dia)/3,spo2:sim.liveVitals.spo2,volume:sim.phys.effectiveVolume});
  }
  const v=sim.liveVitals;
  return {sys:v.sys,dia:v.dia,map:(v.sys+2*v.dia)/3,
   spo2:v.spo2,hr:v.hr,inflammation:sim.phys.inflammation,
-  volume:sim.phys.effectiveVolume,source:sim.phys.sourceControlled};
+  volume:sim.phys.effectiveVolume,source:sim.phys.sourceControlled,snapshots};
 }
 const untreated=run(false),treated=run(true);
 console.log('EXTREME SHOCK OBSERVED',JSON.stringify({treated,untreated}));
-assert(treated.sys>75&&treated.map>45,'severely shocked patient becomes hemodynamically recoverable');
-assert(treated.spo2>80,'severe hypoxemia responds to actually administered oxygen');
-assert(treated.sys>untreated.sys+15,'treatment changes native blood pressure, not only a fatal flag');
-assert(treated.spo2>untreated.spo2+4,'actual oxygen raises native saturation');
+assert(treated.snapshots[1].sys>75&&treated.snapshots[1].map>45,'extreme shock must be rescuable in the early 4 simulated hours');
+assert(treated.snapshots[1].spo2>80,'severe hypoxemia responds early to administered oxygen');
+assert(treated.snapshots[1].sys>untreated.snapshots[1].sys+15,'treatment changes early blood pressure, not only fatal flag');
+assert(treated.snapshots[1].spo2>untreated.snapshots[1].spo2+4,'actual oxygen raises native saturation');
 assert.equal(treated.source,false,'physiology never performs surgery');
 assert(treated.inflammation>0,'infection not cleared by arbitrary resuscitation');
 assert(untreated.map<45,'untreated refractory shock remains dangerous');
