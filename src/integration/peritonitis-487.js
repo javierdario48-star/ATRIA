@@ -90,30 +90,34 @@ export function applyPeritonitis487(html) {
  function renderAction(){
    const eligible=!!C&&!!sim&&!sim.caseEnded&&!sim.patientDied&&window.nsMayExamine?.()!==false;
    const v=eligible?current():null;
-   const canShow=!!v?.ready&&!sim.disposition&&!document.body.classList.contains('keyboardOpen');
+   const surgeryAccepted=C?.id==='PERI-SEC-001'&&sim.consults?.get('cirugia')?.status==='done';
+   const canShow=!sim.disposition&&(v?.ready||surgeryAccepted)&&!document.body.classList.contains('keyboardOpen');
    if(!canShow){if(actionButton)actionButton.style.display='none';return;}
    if(!actionButton){
      actionButton=document.createElement('button');
      actionButton.type='button';actionButton.id='csPeri487BedsideAction';
-     actionButton.style.cssText='position:fixed;z-index:1205;transform:translate(-50%,-100%);max-width:210px;padding:9px 12px;border:1px solid #8ac7b3;border-radius:12px;background:#103f45;color:#edfff7;font-weight:700;box-shadow:0 4px 13px #0008;touch-action:manipulation;cursor:pointer';
+     // Fixed mobile-visible CTA, not a world coordinate that can scroll offscreen.
+     actionButton.style.cssText='position:fixed;z-index:1205;left:50%;bottom:calc(160px + env(safe-area-inset-bottom));transform:translateX(-50%);width:max-content;max-width:min(92vw,380px);padding:12px 15px;border:1px solid #8ac7b3;border-radius:12px;background:#103f45;color:#edfff7;font-weight:700;box-shadow:0 4px 13px #0008;touch-action:manipulation;cursor:pointer';
      document.body.appendChild(actionButton);
      actionButton.onclick=()=>{
        const choice=current();
-       if(!choice?.ready||sim?.caseEnded||sim?.patientDied||window.nsMayExamine?.()===false)return;
+       if(sim?.caseEnded||sim?.patientDied||window.nsMayExamine?.()===false)return;
+       if(!choice?.ready){
+         nurseSay('Cirugía aceptó la evaluación. Para completar el traslado falta: '+(choice?.missing||['reevaluar datos clínicos']).join('; ')+'.');
+         return;
+       }
        if(window.csSetDisposition?.(choice.action)!==true||sim?.disposition?.id!==choice.action)return;
        actionButton.style.display='none';
        finishCase('completed');
      };
    }
-   actionButton.textContent=v.label;
-   const point=worldToScreen(patient.x,patient.y);
-   if(!point||!Number.isFinite(point[0])||!Number.isFinite(point[1])||
-      point[0]<-20||point[0]>window.innerWidth+20||point[1]<0||point[1]>window.innerHeight+20){
-      actionButton.style.display='none';return;
-   }
+   actionButton.textContent=v?.ready?v.label:'Cirugía aceptó · Ver pendientes';
+   actionButton.style.background=v?.ready?'#103f45':'#594016';
    actionButton.style.display='block';
-   actionButton.style.left=Math.max(95,Math.min(window.innerWidth-95,point[0]))+'px';
-   actionButton.style.top=Math.max(110,Math.min(window.innerHeight-130,point[1]-31))+'px';
+   if(surgeryAccepted&&!v?.ready&&!sim._csPeriPendingNotified487){
+     sim._csPeriPendingNotified487=true;
+     nurseSay('Cirugía aceptó. El traslado todavía necesita: '+(v?.missing||[]).join('; ')+'. Pulsá «Ver pendientes» para revisarlo.');
+   }
    if(!sim._csPeriReadyNotified487){
      sim._csPeriReadyNotified487=true;
      nurseSay(v.action==='quirofano'?
