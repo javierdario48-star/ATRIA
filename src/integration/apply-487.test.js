@@ -585,7 +585,7 @@ const fakeNurse={
  norm:t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),
  nurseNatural:t=>{
   const n=String(t).toLowerCase();
-  if(n.includes('oxigeno'))clinicalPatient.monitorTherapies.set('oxygen',{});
+  if(n.includes('oxigeno')&&!clinicalPatient.monitorTherapies.has('oxygen')){clinicalPatient.monitorTherapies.set('oxygen',{});clinicalPatient.administrationLog.push({id:'oxygen'});}
   if(n.includes('hemograma'))clinicalPatient.orders.set('hemograma',{id:'hemograma',status:'pending'});
   if(n.includes('ringer')){if(clinicalPatient.venousAccessCount)clinicalPatient.administrationLog.push({id:'fluid'});}
   oldOrders.push(t);return true;
@@ -602,7 +602,7 @@ fakeNurse.nurseNatural('Enfermera vías, ceftriaxona, oxígeno y hemograma');
 assert.equal(clinicalPatient.csNurse487History.length,1);
 assert.equal(clinicalPatient.csNurse487History[0].items.length,4);
 assert.equal(clinicalPatient.csPhase4Pending487[0].id,'ceftriaxone','ceftriaxone waits without IV');
-assert.equal(clinicalPatient.administrationLog.length,0,'receiving antibiotic is not administration');
+assert.equal(clinicalPatient.administrationLog.filter(x=>x.id==='ceftriaxone').length,0,'receiving antibiotic is not administration');
 assert.equal(clinicalPatient.orders.get('hemograma').status,'pending','lab request not a result');
 assert.equal(sounds.length,1,'newly started oxygen gets one completion sound');
 const originalMessages=spoken.length;
@@ -613,7 +613,7 @@ fakeNurse.updateSimulation(1);fakeNurse.updateSimulation(1);
 assert.equal(sounds.length,1,'re-render or simulation ticks do not replay sound');
 clinicalPatient.venousAccessCount=1;
 fakeNurse.updateSimulation(1);
-assert.equal(clinicalPatient.administrationLog[0].id,'ceftriaxone');
+assert.equal(clinicalPatient.administrationLog.at(-1).id,'ceftriaxone');
 assert.equal(sounds.length,2,'IV placement and antibiotic administration are batched in a single event');
 assert.ok(spoken.some(t=>t.includes('ceftriaxone')||t.includes('ceftriaxona')),'administration gets an event message');
 assert.equal(spoken.filter(t=>t.includes('ceftriaxone — ejecutado')).length,1,'one real antibiotic administration produces one confirmation even with two receipts');
