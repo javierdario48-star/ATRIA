@@ -24,13 +24,23 @@ export function applySurgicalNursing487(html){
     sys:Number(sim.liveVitals?.sys||120),initialShock:Number(String(C.vitals?.bp||'120/80').split('/')[0])<90,
     imagingDone:[...(sim.orders?.entries?.()||[])].some(([id,o])=>o?.status==='done'&&/^(peri_ct|peri_rx|ter_ct)|ct|rx|imagen|radiografia|tomografia/i.test(id))};
  }
+ function actualSurgeryBlockers(){
+   if(typeof window.csPeritonitisAssessment487!=='function')return [];
+   const status=window.csPeritonitisAssessment487();
+   return (status?.missing||[]).filter(x=>!/(respuesta de interconsulta|respuesta del equipo receptor)/i.test(String(x)));
+ }
+ function adviseExact(){
+   const remaining=actualSurgeryBlockers();
+   return remaining.length?'Para derivar todavía falta: '+remaining.join('; ')+'.':
+     'Se cumplen los criterios de derivación: pulsá «Derivar a quirófano» sobre el paciente.';
+ }
  function request(){
    if(!C||!sim||sim.caseEnded||sim.patientDied){nurseSay('No hay una atención activa para gestionar Cirugía.');return false;}
    if(window.nsMayExamine?.()===false){nurseSay('Podés consultar el paciente, pero no indicar cirugía sobre un caso ajeno.');return false;}
    sim.consults??=new Map();
    const old=sim.consults.get('cirugia');
    if(old?.status==='pending'){nurseSay('Doctor, Cirugía ya fue avisada; la respuesta sigue pendiente.');return true}
-   if(old?.status==='done'){nurseSay('Doctor, Cirugía ya aceptó la evaluación. El traslado queda condicionado al manejo inicial seguro.');return true}
+   if(old?.status==='done'){nurseSay('Doctor, Cirugía ya aceptó la evaluación. '+adviseExact());return true}
    sim.consults.set('cirugia',{status:'pending',requestedAt:sim.gameMinute,name:'Cirugía',origin:'nurse487'});
    sim.events?.push({m:sim.gameMinute,t:'Interconsulta a Cirugía solicitada'});
    nurseSay('Doctor, recibí la indicación de Cirugía. Voy a solicitar evaluación; le confirmo la respuesta.');
@@ -44,6 +54,13 @@ export function applySurgicalNursing487(html){
        consult.accepted=evaluation.accepted;consult.advice=evaluation.reason;
        target.events?.push({m:target.gameMinute,t:'Respuesta de Cirugía: '+evaluation.status});
        nurseSay('Doctor, Cirugía respondió: '+evaluation.reason);
+       // Report ACTUAL unfulfilled state from the native administration log,
+       // physical examination and disposition evaluator, not generic guesses.
+       if(evaluation.accepted)nurseSay(adviseExact());
+       else{
+        const blockers=actualSurgeryBlockers();
+        if(blockers.length)nurseSay('Requisitos pendientes documentados: '+blockers.join('; ')+'.');
+       }
        window.csPeritonitisRefresh487?.();
      };
      if(typeof window.csWithPatientStateV203==='function')window.csWithPatientStateV203(target,caseId,apply);
