@@ -115,7 +115,7 @@ for(const [id,dx,study,drugs,consult,dest,sys] of scenarios){
  ctx.window.csPeritonitisRefresh487();
  assert.equal(buttons.length,1,'accepted, treated emergency must show a prominent disposition control');assertions++;
  assert.equal(buttons[0].textContent,'Derivar a quirófano');assertions++;
- assert.equal(buttons[0].style.bottom.includes('160px'),true,'handoff fixed on screen rather than off-camera box point');assertions++;
+ assert.equal(buttons[0].style.cssText.includes('160px'),true,'handoff fixed on screen rather than off-camera box point');assertions++;
  buttons[0].onclick();
  assert.equal(sim.disposition.id,'quirofano');assertions++;
  assert.equal(sim.phys.sourceControlled,false,'handoff cannot invent a completed operation');assertions++;
