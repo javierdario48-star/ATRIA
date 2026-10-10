@@ -183,6 +183,24 @@ function finishScreenshotTasks(){
  assert.equal(nurse.task,null);
  assert.equal(p.venousAccessCount,2);
 }
+// New Android shorthand: bare singular "enfermera vía" produces precisely
+// ONE real bedside access; a later plural order adds the second, not two new.
+{
+ const p=nextScreenshot('screenshot-singular-then-plural');
+ ctx.sendMessage('Enfermera vía');
+ assert.equal(nurse.task?.kind,'iv_access');
+ assert.equal(nurse.task?.count,1,'bare singular means exactly one peripheral IV');
+ assert.equal(p.venousAccessCount,0,'no phantom IV until bedside completion');
+ finishScreenshotTasks();
+ assert.equal(p.venousAccessCount,1);
+ ctx.sendMessage('Enfermera vías');
+ assert.equal(nurse.task?.count,1,'plural target two with one already present');
+ finishScreenshotTasks();
+ assert.equal(p.venousAccessCount,2);
+ assert.equal(p.venousAccessTypes.length,2);
+ ctx.sendMessage('Enfermera vía');
+ assert.equal(nurse.task,null,'singular after two cannot add another access');
+}
 // The actual, unmodified native dosage parser must receive the fractional
 // vasopressor number through nurseNatural. No mock medication parser here.
 {
