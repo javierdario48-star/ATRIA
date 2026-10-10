@@ -40,7 +40,7 @@ assert.equal(screens.length,0,'legitimate pending message remains pending');
 give('metronidazole','Metronidazol IV','500 mg');
 give('vasopressor','Noradrenalina','0.05 µg/kg/min');
 ctx.updateSimulation(1/60);
-assert(log.some(x=>x[0]==='clinical-ok'&&x[1].includes('Ceftriaxona y metronidazol aplicados')),
+assert(log.some(x=>x[0]==='clinical-ok'&&x[1].includes('Cobertura antibiótica completa: ceftriaxona + metronidazol')),
  'both true administrations create a visible combined green receipt');
 assert(log.some(x=>/Noradrenalina aplicado/.test(x[1])),'pressor truthfully confirmed');
 assert.deepEqual(screens.at(-1),['Metronidazol: administrado y registrado en el historial.','good'],
