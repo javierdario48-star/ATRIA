@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {csShadowCreate487,csShadowAdminister487,csShadowStop487,
- csShadowAdvance487,csShadowSnapshot487,SHADOW_PILOT_DRUGS_487} from './pharmacology-shadow-487.js';
+ csShadowAdvance487,csShadowSnapshot487,SHADOW_PILOT_DRUGS_487,csShadowRegisterDrug487} from './pharmacology-shadow-487.js';
 import {BASE_CASE_PHARMACOLOGY_487} from './pharmacology-registry-487.js';
 
 const raw=fs.readFileSync('vendor/atria-4.8.6/index.html','utf8');
@@ -33,10 +33,11 @@ for(const c of cases){
 const hdaNone=run(acid,60);
 const hdaFluid=run(acid,60,[['fluid',500]]);
 assert(hdaFluid.vitals.map>hdaNone.vitals.map,'fluids must support hypovolemic pressure');
+const hdaNone120=run(acid,120);
 const hdaDiuretic=run(acid,120,[['furosemide',40]]);
-assert(hdaDiuretic.vitals.map<hdaNone.vitals.map,
+assert(hdaDiuretic.vitals.map<hdaNone120.vitals.map,
  'a diuretic in hemorrhagic shock must lower perfusion relative to untreated');
-assert(hdaDiuretic.state.renalReserve<hdaNone.state.renalReserve,
+assert(hdaDiuretic.state.renalReserve<hdaNone120.state.renalReserve,
  'diuretic underfilling must aggravate renal perfusion');
 const hdaSmall=run(acid,45,[['fluid',250]]),hdaLarge=run(acid,45,[['fluid',500]]);
 assert(hdaLarge.vitals.map>hdaSmall.vitals.map,
@@ -88,6 +89,33 @@ csShadowAdvance487(p1,120);
 for(let i=0;i<120;i++)csShadowAdvance487(p2,1);
 assert.deepEqual(csShadowSnapshot487(p1),csShadowSnapshot487(p2),
  'simulation must be bitwise reproducible across rendering cadence');
+// New disease inherits previous medicines without editing any case-specific rule.
+const futureCase={id:'QA-SHOCK-NEW',vitals:{bp:'80/46',hr:130,rr:25,spo2:90},
+ pharmacology:{traits:['shock','hypovolemia','pain']}};
+const futureUnmanaged=run(futureCase,50),futureResuscitated=run(futureCase,50,[['fluid',500]]);
+assert(futureResuscitated.vitals.map>futureUnmanaged.vitals.map,
+ 'new disease inherits existing volume mechanism from traits');
+assert(run(futureCase,25,[['oxygen',4]]).vitals.spo2>futureCase.vitals.spo2,
+ 'new disease inherits existing oxygen mechanism');
+// New molecule with a previously validated MECHANISM acts in every case
+// using the same state rules. No med × disease implementation matrix.
+const analogue={id:'qa_vascular_analogue',mechanism:'vascularTone',
+ route:'iv',reference:.08,max:.32,infusion:true};
+const extended=csShadowRegisterDrug487(SHADOW_PILOT_DRUGS_487,analogue);
+for(const c of [septic,acid,cirr,futureCase]){
+ const p=csShadowCreate487(c,{drugs:extended});
+ const control=csShadowCreate487(c);
+ csShadowAdminister487(p,analogue.id,.08);
+ csShadowAdvance487(p,25);
+ csShadowAdvance487(control,25);
+ assert(p.vitals.map>control.vitals.map,
+  'new drug with established mechanism works without case-specific code '+c.id);
+}
+assert.equal(SHADOW_PILOT_DRUGS_487[analogue.id],undefined,
+ 'registering a candidate must not mutate the native/global catalog');
+assert.throws(()=>csShadowRegisterDrug487(extended,{
+ id:'unreviewed',mechanism:'coagulation',route:'iv',reference:1,max:1,infusion:false
+}),/unknown or incomplete/,'new physiological axis cannot be silently simulated');
 assert.throws(()=>csShadowAdminister487(csShadowCreate487(septic),'anticoagulation',10),
  /unvalidated/,'heparin cannot silently acquire made-up pharmacodynamics');
 assert.throws(()=>csShadowAdminister487(csShadowCreate487(septic),'fluid',-1),/invalid/);
@@ -96,5 +124,6 @@ console.log('ATRIA SHADOW CLINICAL PILOT PASS',JSON.stringify({
  seededCases:cases.length,mechanisms:Object.keys(SHADOW_PILOT_DRUGS_487).length,
  seedScenarios:cases.length*5,threeClinicalPilots:true,
  doseGradient:true,repeatedMorphineHarm:true,renalDamage:true,cessation:true,
- deterministicCadence:true,heparinBlocked:true,liveRuntimeUntouched:true,physicalAndroid:false
+ deterministicCadence:true,newCaseInheritsMechanisms:true,newMoleculeAllCases:true,
+ noUnknownMechanism:true,heparinBlocked:true,liveRuntimeUntouched:true,physicalAndroid:false
 }));
