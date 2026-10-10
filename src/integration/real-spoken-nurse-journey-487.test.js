@@ -183,6 +183,21 @@ function finishScreenshotTasks(){
  assert.equal(nurse.task,null);
  assert.equal(p.venousAccessCount,2);
 }
+// The actual, unmodified native dosage parser must receive the fractional
+// vasopressor number through nurseNatural. No mock medication parser here.
+{
+ vm.runInContext(native('const DEFAULT_THERAPY_DOSES={',
+  'function activeTherapyLabel('),ctx,{timeout:5000});
+ catalog.push({id:'vasopressor',label:'Noradrenalina / vasopresor',
+  aliases:['noradrenalina','norepinefrina']});
+ const p=nextScreenshot('screenshot-fractional-pressor',1);
+ ctx.sendMessage('Enfermera noradrenalina 0,05 µg/kg/min');
+ assert.equal(p.administrationLog.length,1,'single pressor order is administered once');
+ assert.equal(p.administrationLog[0].id,'vasopressor');
+ assert.equal(p.administrationLog[0].doseDisplay,'0.05 µg/kg/min',
+  'actual native parser receives exactly the stated fraction, not zero or five');
+ assert.equal(p.monitorTherapies.get('vasopressor')?.dose?.amount,.05);
+}
 console.log('ANDROID NURSE MULTI-ORDER NATIVE REGRESSION PASS',
  JSON.stringify({unpunctuatedFour:true,commaFour:true,plural2:true,existing1and2:true,
   separateAntibiotics:true,actualNativeFinish:true,physicalAndroid:false}));
