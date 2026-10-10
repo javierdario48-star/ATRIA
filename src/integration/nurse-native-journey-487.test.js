@@ -99,7 +99,7 @@ ctx.sendMessage('enfermera monitor dos vías');
 assert.equal(nurse.queue.length,beforeNurseTask,'repeat completed procedures cannot queue duplicates');
 ctx.sim=patientB;
 nurse.task=null;nurse.queue=[];nurse.state='idle';
-ctx.sendMessage('enfermera dos vías');
+ctx.sendMessage('enfermera vías');
 assert.equal(patientB.venousAccessCount,0,'patient B cannot inherit patient A access');
 assert.equal(patientA.venousAccessCount,2,'patient A keeps original access');
 assert.equal(nurse.task?.kind,'iv_access','patient B separately queues IV');
