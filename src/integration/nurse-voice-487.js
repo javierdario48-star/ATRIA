@@ -74,7 +74,8 @@ export function applyNurseVoice487(html){
  };
  sendMessage=function(text){
   const raw=String(text||'').trim();
-  if(!raw||raw.startsWith('/')||!addressed(raw)||!sim||!C)return baseSend.apply(this,arguments);
+  const shortNurse=chatRole==='nurse'&&/^(?:(?:dos|2) )?(?:vias?|accesos? (?:venosos?|perifericos?)|monitor|monitorizar|oxigeno|o2|ringer|hemograma|signos vitales)$/.test(norm(raw));
+  if(!raw||raw.startsWith('/')||(!addressed(raw)&&!shortNurse)||!sim||!C)return baseSend.apply(this,arguments);
   player.bubble=raw;player.bubbleUntil=performance.now()+2200;
   addGlobalChat('doctor',raw);pendingAddress=null;chatRole='nurse';refreshChatDock();
   nurseNatural(raw);return true;
