@@ -33,3 +33,18 @@ export function csGraceState487(patient, caseDef, activeSeconds=0){
  return {enabled:true,protected:elapsed<180||(elapsed<300&&elapsed<releaseAt),
   elapsed,releaseAt,credit,covered,fluidOk};
 }
+
+/** Native rescue equivalence, but require confirmed medication administration. */
+export function csMissingAdminRescue487(patient,caseDef,v={},map=100){
+ if(!patient)return false;
+ const log=Array.isArray(patient.administrationLog)?patient.administrationLog:[];
+ const executed=id=>patient.monitorTherapies?.has?.(id)===true&&log.some(row=>row?.id===id);
+ if(Number(v.spo2)<80&&!executed('oxygen'))return true;
+ if(map<45){
+  if(caseDef?.risk==='bleed'&&!['fluid','transfusion','vasopressor'].some(executed))return true;
+  if((caseDef?.risk==='shock'||caseDef?.physiology)&&!['fluid','vasopressor'].some(executed))return true;
+ }
+ if(caseDef?.physiology?.sourceControlRequired&&Number(patient.gameMinute)>12&&
+    patient.phys?.sourceControlled!==true&&map<50)return true;
+ return false;
+}
