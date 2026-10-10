@@ -44,7 +44,12 @@ export function applyNurseExecution487(html){
     }
    }else actor.csReturnSince487=null;
   }
-  return previousUpdate.apply(this,arguments);
+  const out=previousUpdate.apply(this,arguments);
+  // Start the bounded return watchdog at the actual task transition, not
+  // one subsequent frame later (a stalled route must not delay the next IV).
+  for(const actor of actors)if(actor.state==='returning'&&!actor.task)
+   actor.csReturnSince487??=now;
+  return out;
  };
 })();
 </script>`;
