@@ -162,6 +162,10 @@ assert.match(fractional.items.find(x=>x.id==='vasopressor')?.text||'',/0\.05/,
 
 // Verify the legacy adapters independently using the ACTUAL compiled scripts.
 const integrated=apply487(original);
+assert(integrated.includes('for(const entry of pieces.slice(0,12)){'),
+ 'Phase-7 native dispatcher must not silently drop the 6th through 12th action');
+assert(!integrated.includes('for(const entry of pieces.slice(0,5)){'),
+ 'legacy five-action execution cap must not regress');
 const script=id=>{
  const marker='<script id="'+id+'">';
  assert.equal(integrated.split(marker).length,2,id+' must be injected once');
