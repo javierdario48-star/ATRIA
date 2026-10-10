@@ -42,7 +42,7 @@ const ctx={
 };
 vm.createContext(ctx);
 vm.runInContext(source,ctx,{timeout:5000});
-assert.deepEqual(ctx.window.csPharm487.summary(),{cases:13,drugs:native.length});
+assert.deepEqual(JSON.parse(JSON.stringify(ctx.window.csPharm487.summary())),{cases:13,drugs:native.length});
 assert(ctx.window.csPharm487.drugs().some(x=>x.id==='furosemide'));
 assert.equal(ctx.window.csPharm487.requiresIV('cefepime'),true);
 // The actual installed monitor wrapper, not merely a pure scientific estimate.
