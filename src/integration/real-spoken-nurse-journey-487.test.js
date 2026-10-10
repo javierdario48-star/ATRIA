@@ -75,7 +75,7 @@ assert.equal(patient.venousAccessCount,0);
 assert.deepEqual(patient.administrationLog.map(x=>x.id),['oxygen'],
  'only IV-independent oxygen can be given before access');
 assert.equal(patient.administrationLog[0].defaultApplied,true);
-assert.deepEqual(patient.csPhase4Pending487.map(x=>x.id),['fluid','ceftriaxone','metronidazole'],
+assert.deepEqual(Array.from(patient.csPhase4Pending487,x=>x.id),['fluid','ceftriaxone','metronidazole'],
  'actual spoken order keeps all three IV medications pending');
 wall+=11200;ctx.updateNurse(1/60);
 wall+=1800;ctx.updateNurse(1/60);
