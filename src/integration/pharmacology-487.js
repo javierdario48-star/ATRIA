@@ -10,7 +10,6 @@ export function applyPharmacology487(html){
 (function(){
  'use strict';
  if(window.__csPharmacology487)return;
- window.__csPharmacology487=true;
  const PHARMA_RULES_487=${JSON.stringify(PHARMA_RULES_487)};
  const REFERENCE_DOSES_487=${JSON.stringify(REFERENCE_DOSES_487)};
  const BASE_CASE_PHARMACOLOGY_487=${JSON.stringify(BASE_CASE_PHARMACOLOGY_487)};
@@ -26,25 +25,41 @@ export function applyPharmacology487(html){
  ${csPharmOutcomes487.toString()}
  const nativeIds=new Set(MONITOR_THERAPY_CATALOG.map(x=>x.id));
  let registry;
- function rebuild(){
-  const candidate=csBuildPharmRegistry487(MONITOR_THERAPY_CATALOG,CASES);
+ function prepare(nextCases=CASES){
+  const candidate=csBuildPharmRegistry487(MONITOR_THERAPY_CATALOG,nextCases);
+  const additions=[];
   for(const item of candidate.drugs)if(!MONITOR_THERAPY_CATALOG.some(x=>x.id===item.id)){
    if(!item.aliases?.length||!item.pharmacology?.defaultDose)
     throw Error('unreviewed future drug '+item.id);
-   MONITOR_THERAPY_CATALOG.push({...item,effects:{}});
+   additions.push({...item,effects:{}});
   }
-  registry=candidate;
-  return {cases:candidate.profiles.length,drugs:candidate.drugs.length};
+  return {candidate,additions};
+ }
+ function publish(prepared){
+  MONITOR_THERAPY_CATALOG.push(...prepared.additions);
+  registry=prepared.candidate;
+  return {cases:registry.profiles.length,drugs:registry.drugs.length};
+ }
+ function rebuild(){return publish(prepare());}
+ let initial;
+ try{initial=prepare();}
+ catch(error){
+  // QA fallback is not a compatible pharmacology candidate. Do not publish
+  // wrappers, catalogue additions, public API or installed flag on rejection.
+  window.csPharm487Boot=Object.freeze({status:'rejected',catalogCompatible:false,
+   cases:CASES.length,drugs:MONITOR_THERAPY_CATALOG.length,
+   error:String(error?.message||error)});
+  return;
  }
  const originalDefaultDose=defaultDoseForTherapy;
- defaultDoseForTherapy=function(t,text){
+ const nextDefaultDose=function(t,text){
   if(nativeIds.has(t?.id))return originalDefaultDose.apply(this,arguments);
   const declared=registry.drugs.find(d=>d.id===t?.id)?.pharmacology?.defaultDose;
   if(!declared)throw Error('No reviewed default drug dose '+t?.id);
   return {...declared,defaultApplied:true};
  };
  const originalEffects=therapyEffectTotals;
- therapyEffectTotals=function(){
+ const nextEffects=function(){
   const offsets=originalEffects.apply(this,arguments);
   if(!sim||!C||!sim.monitorTherapies)return offsets;
   const septic=['peritonitis','sepsis_source'].includes(C?.physiology?.engine);
@@ -79,14 +94,14 @@ export function applyPharmacology487(html){
   return offsets;
  };
  const previousUpdate=updateSimulation;
- updateSimulation=function(dt){
+ const nextUpdate=function(dt){
   const target=sim,caseDef=C,result=previousUpdate.apply(this,arguments);
   if(target&&target===sim&&caseDef===C&&!target.caseEnded&&!target.patientDied)
    target.csPharmOutcomes487=csPharmOutcomes487(caseDef,target,registry.drugs);
   return result;
  };
  const previousGive=addMonitorTherapy;
- addMonitorTherapy=function(text){
+ const nextGive=function(text){
   const patient=sim,caseDef=C,prior=Number(patient?.administrationLog?.length||0);
   // New IV molecules must not bypass completed vascular access when ordered
   // through the manual monitor. Legacy native dosing is not rewritten here.
@@ -118,7 +133,7 @@ export function applyPharmacology487(html){
   }
   return result;
  };
- window.csPharm487={
+ const api={
   summary:()=>({cases:registry.profiles.length,drugs:registry.drugs.length}),
   drugs:()=>registry.drugs.map(x=>({id:x.id,label:x.label,route:x.pharmacology.route})),
   profile:id=>registry.profiles.find(x=>x.id===id),
@@ -131,12 +146,20 @@ export function applyPharmacology487(html){
   registerCase(caseDef){
    if(sim&&!sim.caseEnded)throw Error('Cannot register case during active shift');
    if(CASES.some(x=>x.id===caseDef?.id))throw Error('duplicate case '+caseDef?.id);
-   csBuildPharmRegistry487(MONITOR_THERAPY_CATALOG,[...CASES,caseDef]);
+   const prepared=prepare([...CASES,caseDef]);
    CASES.push(caseDef);
-   return rebuild();
+   return publish(prepared);
   }
  };
- rebuild();
+ publish(initial);
+ defaultDoseForTherapy=nextDefaultDose;
+ therapyEffectTotals=nextEffects;
+ updateSimulation=nextUpdate;
+ addMonitorTherapy=nextGive;
+ window.csPharm487=api;
+ window.__csPharmacology487=true;
+ window.csPharm487Boot=Object.freeze({status:'installed',catalogCompatible:true,
+  cases:registry.profiles.length,drugs:registry.drugs.length});
 })();
 </script>`;
  return html.replace('</body>',script+'</body>');

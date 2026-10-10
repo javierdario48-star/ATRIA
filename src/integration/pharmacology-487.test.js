@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import fs from 'node:fs';
 import {apply487} from './apply-487.js';
+import './pharmacology-boot-487.test.js';
 const golden=fs.readFileSync('vendor/atria-4.8.6/index.html','utf8');
 const integrated=apply487(golden);
 const marker='<script id="atria-case-aware-pharmacology-487">';
