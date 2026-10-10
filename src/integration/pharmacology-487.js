@@ -1,4 +1,4 @@
-import {PHARMA_RULES_487,BASE_CASE_PHARMACOLOGY_487,csValidateDrug487,csCasePharmProfile487,
+import {PHARMA_RULES_487,REFERENCE_DOSES_487,BASE_CASE_PHARMACOLOGY_487,csValidateDrug487,csCasePharmProfile487,
  csBuildPharmRegistry487,csPharmContext487,csPharmResponse487} from '../clinical/pharmacology-registry-487.js';
 
 // Late, isolated bridge. Native septic physiology, source control, grace clock,
@@ -11,6 +11,7 @@ export function applyPharmacology487(html){
  if(window.__csPharmacology487)return;
  window.__csPharmacology487=true;
  const PHARMA_RULES_487=${JSON.stringify(PHARMA_RULES_487)};
+ const REFERENCE_DOSES_487=${JSON.stringify(REFERENCE_DOSES_487)};
  const BASE_CASE_PHARMACOLOGY_487=${JSON.stringify(BASE_CASE_PHARMACOLOGY_487)};
  const allowedModes=new Set(${JSON.stringify(['oxygenation','volume','albumin','pressor','opioid','analgesic','antiemetic','acid','blood','paracentesis','spironolactone','steroid','aza','antimicrobial','sourceControl','deprescribe','diuretic','betaBlocker','none','custom'])});
  const allowedRoutes=new Set(['iv','oral','inhaled','conditional','procedure','none']);
@@ -62,7 +63,7 @@ export function applyPharmacology487(html){
     }
     continue;
    }
-   const amount=Number(x.dose?.amount),std=Number(meta.pharmacology?.defaultDose?.amount);
+   const amount=Number(x.dose?.amount),std=Number(meta.pharmacology?.defaultDose?.amount??REFERENCE_DOSES_487[x.id]);
    const doseScale=Number.isFinite(amount)&&Number.isFinite(std)&&std>0?
     Math.max(.25,Math.min(1.6,amount/std)):1;
    for(const axis of Object.keys(offsets))offsets[axis]+=Number(effect.offsets[axis]||0)*doseScale;
