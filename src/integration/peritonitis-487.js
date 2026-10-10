@@ -30,10 +30,24 @@ export function applyPeritonitis487(html) {
  // The existing scoring contract counts fixed key studies. In these three
  // cases, equivalent evidence and safe early referrals count instead.
  const oldBreakdown=csBreakdown;
+ const handoffProof=()=>{
+   const proof=sim?._csPeriSafeHandoff487;
+   return !!proof&&proof.caseId===C?.id&&
+     proof.uid===(sim?.patientInstance?.uid||null)&&
+     proof.action===sim?.disposition?.id&&!sim?.patientDied;
+ };
+ // Preserve the verified handoff through finishCase() and subsequent
+ // csBreakdown calls: after caseEnded, the clinical evaluator correctly
+ // returns NOT READY, but that is not evidence that past safe care vanished.
  csBreakdown=function(){
    const b=oldBreakdown.apply(this,arguments),v=current();
    if(!v)return b;
-   const matched=v.ready&&sim?.disposition?.id===v.action&&!sim?.patientDied;
+   const matched=!sim?.patientDied&&!!sim?.disposition&&(
+      v.ready&&sim.disposition.id===v.action || handoffProof());
+   if(matched&&!sim._csPeriSafeHandoff487){
+     sim._csPeriSafeHandoff487={caseId:C.id,uid:sim?.patientInstance?.uid||null,
+       action:sim.disposition.id};
+   }
    if(matched){
      b.diagnosis=15;
      b.history=Math.max(b.history||0,10);
@@ -76,14 +90,18 @@ export function applyPeritonitis487(html) {
    }
    // XP is evaluated AFTER finishCase changes caseEnded. Remember the verified
    // pre-closure disposition to avoid an incorrect 0-XP receipt.
-   sim._csPeriCompletionForXP487=!!matched;
+   // A successful recorded handoff is immutable after clinical closure.
+   // Repeated score renders, UI navigation and shared-room recaps must never
+   // revoke XP earned at the moment of the disposition.
+   if(matched)sim._csPeriCompletionForXP487=true;
+   else if(!sim?.caseEnded)sim._csPeriCompletionForXP487=false;
    return b;
  };
  const oldXpEligible=window.nsExperienceEligible;
  window.nsExperienceEligible=function(){
    if(!['PERI-PBE-001','PERI-SEC-001','PERI-TER-001'].includes(C?.id))
      return typeof oldXpEligible==='function'?oldXpEligible.apply(this,arguments):false;
-   return !!sim?._csPeriCompletionForXP487&&!sim?.patientDied;
+   return !!sim?._csPeriCompletionForXP487&&handoffProof()&&!sim?.patientDied;
  };
 
  let actionButton=null,lastUiAt=0;
@@ -107,6 +125,11 @@ export function applyPeritonitis487(html) {
          return;
        }
        if(window.csSetDisposition?.(choice.action)!==true||sim?.disposition?.id!==choice.action)return;
+       // Captured only after genuine clinical eligibility AND native handoff.
+       // Does not simulate source control or award XP by itself.
+       sim._csPeriSafeHandoff487={caseId:C.id,uid:sim.patientInstance?.uid||null,
+         action:choice.action};
+       sim._csPeriCompletionForXP487=true;
        actionButton.style.display='none';
        finishCase('completed');
      };
