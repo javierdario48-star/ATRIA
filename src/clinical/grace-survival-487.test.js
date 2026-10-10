@@ -49,6 +49,20 @@ for(const mode of ['apprentice','solo','coop','competitive']){
   mode+' untreated exposure resumes after the initial 180 seconds, not an instantaneous death');
 }
 assert.equal(csGraceState487(adequate,C,250).credit,1);
+// A real partial resuscitation must BANK its earned seconds permanently.
+const banked=patient('solo');
+banked.csGrace487={enabled:true,activeSeconds:145,earnedCredit:0};
+banked.monitorConnected=true;banked.venousAccessCount=2;
+admin(banked,'oxygen');admin(banked,'fluid');banked.therapyTotals.fluidMl=700;
+const observed=csGraceState487(banked,C,145);
+assert(observed.observedCredit>.50,'documented nursing work grants time beyond 3 minutes');
+banked.csGrace487.earnedCredit=observed.observedCredit;
+banked.monitorConnected=false;banked.monitorTherapies.clear();
+const duringInstability=csGraceState487(banked,C,210);
+assert(duringInstability.protected,'reversal of monitor status cannot retract banked response time');
+assert.equal(duringInstability.credit,observed.observedCredit,'banked credit is monotonic');
+assert.equal(csGraceState487(banked,C,250).protected,false,'earned time is finite, never infinite');
+
 assert(csGraceState487(partial,C,180).credit>csGraceState487(pending,C,180).credit);
 const fatalFixture='if((sim._fatalExposure||0)>=1.35&&!sim._deathTriggered){sim.patientDied=true}';
 const guardedHtml=applyGraceSurvival487('<body><script>'+fatalFixture+'</script></body>');
@@ -106,6 +120,33 @@ for(const mode of ['apprentice','solo','coop','competitive']){
  assert.equal(subject._fatalExposure,0,mode+' accumulated no lethal exposure during protected nursing');
  tick(1);assert.equal(subject.patientDied,false,mode+' no boundary-triggered death');
  tick(12);assert.equal(subject.patientDied,true,mode+' native fatal exposure resumes after allotted time');
+}
+// The actual irreversible boundary has a separate guard. Simulate a future
+// adapter that BYPASSES/replaces the soft clinical predicate: pre-death guard
+// must still prevent fatal closure during active 3 real minutes.
+const terminal="if((sim._fatalExposure||0)>=1.35&&!sim._deathTriggered&&!window.csEarlyCriticalDeathGuard487?.(sim,C)){sim._deathTriggered=true;sim.patientDied=true;}";
+assert(guardedHtml.includes('!window.csEarlyCriticalDeathGuard487?.(sim,C)'));
+{
+ const severe=patient('solo'),runtime={window:{},document:{visibilityState:'visible'},
+  sim:severe,C,csDeathRescueMissing:()=>true,
+  updateSimulation(dt){
+   // Defective third-party code accumulates lethal exposure regardless of care.
+   runtime.sim.gameMinute+=dt*.12;
+   runtime.sim._fatalExposure=(runtime.sim._fatalExposure||0)+dt*.25;
+  }
+ };
+ vm.createContext(runtime);vm.runInContext(script,runtime,{timeout:5000});
+ // Override the soft predicate AFTER installation. Only the SOURCE-GUARD
+ // at the irreversible boundary can keep the patient from dying.
+ runtime.csDeathRescueMissing=()=>true;
+ const death=()=>vm.runInContext(terminal,runtime,{timeout:5000});
+ for(let i=0;i<179*4;i++){runtime.updateSimulation(.25);death();}
+ assert.equal(severe.patientDied,false,'hard native death guard protects 179 real seconds');
+ assert.equal(severe._deathTriggered,undefined,'no hidden pending fatal process');
+ runtime.updateSimulation(.25);death();
+ assert.equal(severe.patientDied,false,'no instant death at the three-minute boundary');
+ for(let i=0;i<15*4;i++){runtime.updateSimulation(.25);death();}
+ assert.equal(severe.patientDied,true,'the original terminal threshold resumes if no care given');
 }
 console.log('ALL MODES MINIMUM REAL CLOCK SURVIVAL PASS',JSON.stringify({earlyDeathBlocked:true,solo:true,coop:true,competitive:true}));
 console.log('GRACE SURVIVAL REAL CLOCK BOTS PASS',JSON.stringify({checkpoints,
