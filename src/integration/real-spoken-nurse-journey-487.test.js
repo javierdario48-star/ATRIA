@@ -101,7 +101,7 @@ assert(ui.includes('history')&&ui.includes('therapies'),'monitor history and act
 // these ALSO see every unpunctuated clinical intent, including plural IVs.
 const legacyBundle=ctx.window.csNursingParse487(
  'Enfermera ceftriaxona metronidazol Ringer y oxígeno');
-assert.deepEqual(legacyBundle.map(x=>x.id),
+assert.deepEqual(Array.from(legacyBundle,x=>x.id),
  ['ceftriaxone','metronidazole','fluid','oxygen'],
  'legacy nursing entry must not collapse the unpunctuated four-drug order');
 const legacyPlural=ctx.window.csNursingParse487('Enfermera vías');
@@ -109,7 +109,7 @@ assert.equal(legacyPlural[0].count,2,
  'legacy nursing entry must preserve plural two-IV semantics');
 const receiptBundle=ctx.window.csNurse487Parse(
  'Enfermera ceftriaxona metronidazol Ringer y oxígeno');
-assert.deepEqual(receiptBundle.map(x=>x.id),
+assert.deepEqual(Array.from(receiptBundle,x=>x.id),
  ['ceftriaxone','metronidazole','fluid','oxygen'],
  'Phase-7 receipt list must show all four actions, even on fallback route');
 
