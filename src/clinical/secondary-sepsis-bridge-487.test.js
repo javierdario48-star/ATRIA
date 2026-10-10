@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import './native-default-doses-487.test.js';
+import './secondary-sepsis-vitals-487.test.js';
 import vm from 'node:vm';
 import {csSecondaryBridgeEvidence487,csSecondaryBridgePhysiology487} from './secondary-sepsis-bridge-487.js';
 import {applySecondaryBridge487} from '../integration/secondary-sepsis-bridge-487.js';
