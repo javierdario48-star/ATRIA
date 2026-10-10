@@ -627,7 +627,7 @@ function csDrawRemote(){
   const patient=sim;
   const receipt={id:'n487-'+(++sequence),uid:patient?.patientInstance?.uid,bed:patient?.patientInstance?.bed?.label||'',items:[]};
   const seen=new Set();let accepted=false;
-  for(const entry of pieces.slice(0,5)){
+  for(const entry of pieces.slice(0,12)){
    const key=entry.kind+':'+(entry.id||entry.text);
    if(seen.has(key))continue;seen.add(key);
    const item={...entry,label:entry.label||entry.id||entry.text,uid:receipt.uid,count:entry.count||1,
@@ -654,6 +654,7 @@ function csDrawRemote(){
    const instruction='enfermera '+entry.text;
    accepted=oldNatural.call(this,instruction)!==false||accepted;
   }
+  if(pieces.length>12)nurseSay('La orden contiene más de 12 acciones: procesé las primeras 12. Dividí el resto en otro mensaje; no se ejecutó.');
   if(!receipt.items.length)return false;
   (patient.csNurse487History||(patient.csNurse487History=[])).push(receipt);
   patient.csNurse487History=patient.csNurse487History.slice(-32);
