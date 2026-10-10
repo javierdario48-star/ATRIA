@@ -44,6 +44,31 @@ export function applyPeritonitis487(html) {
      b.safe=true;b.safeReasons=[];b.missingEssential=[];
      b.notes=(b.notes||[]).filter(x=>!/(faltan conductas esenciales|fuente sin control)/i.test(x));
    }else{
+     // Post-case clinical audit: show proven administrations separately from
+     // prescriptions/pending access, so the learner can see WHY shock persisted.
+     if(C?.id==='PERI-SEC-001'){
+       const administered=sim?.administrationLog||[];
+       const awaiting=sim?.csPhase4Pending487||[];
+       const describe=(id,label)=>{
+         const record=[...administered].reverse().find(x=>x.id===id);
+         return record?
+           label+': ADMINISTRADO'+(record.doseDisplay?' ('+record.doseDisplay+')':'')+'; minuto clínico '+Number(record.m||0).toFixed(1)+'.':
+           awaiting.some(x=>x.id===id)?
+             label+': indicado, PENDIENTE de acceso venoso. No se administró.':
+             label+': SIN administración registrada.';
+       };
+       const consult=sim.consults?.get('cirugia');
+       b.notes=[...(b.notes||[]),
+         'Accesos venosos realmente colocados: '+Number(sim.venousAccessCount||0)+'.',
+         'Monitor multiparamétrico: '+(sim.monitorConnected?'conectado':'sin conectar')+'.',
+         describe('fluid','Cristaloides/Ringer'),
+         describe('ceftriaxone','Ceftriaxona'),
+         describe('metronidazole','Metronidazol'),
+         'Cirugía: '+(consult?.status==='done'?'aceptó la evaluación urgente':consult?.status==='pending'?
+          'interconsulta pendiente de respuesta':consult?.status==='rejected'?
+          'evaluación no aceptada: '+(consult.advice||'faltaron datos'):
+          'interconsulta sin respuesta registrada')+'.'];
+     }
      b.safe=false;b.score=Math.min(69,b.score||0);
      b.safeReasons=[...v.missing];
      if(v.ready&&sim?.disposition?.id!==v.action)b.safeReasons.push('El destino elegido no corresponde a la situación del paciente.');
