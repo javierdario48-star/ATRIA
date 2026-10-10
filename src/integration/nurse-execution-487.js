@@ -14,19 +14,37 @@ export function applyNurseExecution487(html){
   return result;
  };
  updateNurse=function(dt){
-  const task=nurse.task,now=performance.now();
-  if(task?.bedside){
+  // V2: earlier watchdog observed only the master sprite. The native multi-box
+  // scheduler swaps every ward nurse through a shared actor adapter *inside*
+  // previousUpdate, therefore a blocked ward nurse was never recovered.
+  const now=performance.now();
+  const actors=[nurse,...(typeof wardNurses!=='undefined'?wardNurses:[])];
+  for(const actor of actors){
+   const task=actor.task;
+   if(!task?.bedside||actor.state!=='to_patient')continue;
    if(!Number.isFinite(task.csTaskBegan487))task.csTaskBegan487=now;
-   if(nurse.state==='to_patient'&&now-task.csTaskBegan487>=11000){
-    nurse.state='working';nurse.taskEnds=now+1600;nurse.path=[];nurse.pathIndex=0;
-    nurseSay('El acceso al box sigue bloqueado. Otra enfermera del sector completa la tarea y avisara al terminar.');
-   }
+   if(now-task.csTaskBegan487<11000)continue;
+   actor.state='working';actor.taskEnds=now+1600;
+   actor.path=[];actor.pathIndex=0;
+   // No clinical state is written here: only native finishNurseTask can
+   // actually connect a monitor or establish a peripheral access.
+   const message='La ruta al box sigue bloqueada. Personal del sector completa el procedimiento; confirmaré al terminar.';
+   const target=task._targetSim;
+   if(target&&target!==sim&&typeof window.csWithPatientStateV203==='function')
+    window.csWithPatientStateV203(target,task._targetCaseId,()=>nurseSay(message));
+   else nurseSay(message);
   }
   const result=previousUpdate.apply(this,arguments);
-  if(nurse.state==='returning'&&!nurse.task){
-    nurse.csReturnSince487??=now;
-    if(now-nurse.csReturnSince487>4500){nurse.state='idle';nurse.path=[];nurse.pathIndex=0;nurse.csReturnSince487=null;startNextTask()}
-  }else nurse.csReturnSince487=null;
+  for(const actor of actors){
+   if(actor.state==='returning'&&!actor.task){
+    actor.csReturnSince487??=now;
+    if(now-actor.csReturnSince487>4500){
+     // Let the native per-actor scheduler observe an arrived return next tick.
+     // Calling startNextTask() here would dispatch into the wrong nurse.
+     actor.path=[];actor.pathIndex=0;actor.csReturnSince487=null;
+    }
+   }else actor.csReturnSince487=null;
+  }
   return result;
  };
 })();
