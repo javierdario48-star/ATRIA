@@ -32,8 +32,9 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
   if(snapshot.patientDied||snapshot.caseEnded)return {caseId:id,ready:false,action:null,missing:['Atención ya finalizada o paciente fallecido.'],critical};
   if(!historyOk&&!emergencySecondary)missing.push('Obtener anamnesis pertinente.');
   if(!vitalsOk)missing.push('Registrar signos vitales.');
-  if(!examOk && !(critical&&Number(snapshot.historyCount||0)>=2))
-    missing.push('Realizar examen abdominal dirigido.');
+  // The focused abdominal exam must be documented for a safe handoff.
+  // Severe shock allows *consultation* before full exam, not final transfer.
+  if(!examOk)missing.push('Realizar examen físico abdominal dirigido.');
 
   const diagnostic={
     'PERI-PBE-001':/(peritonitis.*espontanea|pbe\b|espontanea.*peritonitis)/.test(dx),
