@@ -42,13 +42,14 @@ assert.equal(csPharmResponse487('aza',cases.find(x=>x.id==='CROHN-001'),normal,6
 assert.equal(csPharmResponse487('ceftriaxone',septic,shockPatient,250).offsets.sys,0,
  'antibiotics cannot directly grant blood pressure');
 assert.throws(()=>csCasePharmProfile487({id:'NEW-NO-PROFILE'}),/requires explicit/);
+assert.throws(()=>csCasePharmProfile487({id:'FUTURE-INFECTION',pharmacology:{traits:['infection']}}),/requires explicit antimicrobial/);
 assert.throws(()=>csValidateDrug487('foo',{classId:'antibiotic'}),/incomplete/);
 const custom={id:'experimental_agent',label:'Experimental in-game agent',aliases:['agente experimental'],
  pharmacology:{classId:'experimental',route:'iv',onsetMin:5,peakMin:20,
   indications:['vasoplegia'],hazards:['hypotension'],mechanism:'custom',response:{sys:4,dia:2},
   defaultDose:{amount:5,unit:'mg',display:'5 mg'}}};
 const newCase={id:'QA-NEW',vitals:{bp:'110/70',spo2:97},
- pharmacology:{traits:['vasoplegia','infection'],newDrugs:[custom]}};
+ pharmacology:{traits:['vasoplegia'],newDrugs:[custom]}};
 const extended=csBuildPharmRegistry487(meds,[...cases,newCase]);
 assert.equal(extended.drugs.length,meds.length+1,'new case must register its new drug globally');
 assert.equal(extended.profiles.length,cases.length+1);
