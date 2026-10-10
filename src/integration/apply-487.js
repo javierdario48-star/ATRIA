@@ -15,6 +15,7 @@ import {applyManualMonitorIV487} from './manual-monitor-iv-487.js';
 import {applySecondaryBridge487} from './secondary-sepsis-bridge-487.js';
 import {applyCriticalRescue487} from './critical-rescue-487.js';
 import {applyClinicalConfirmations487} from './clinical-confirmations-487.js';
+import {applyPharmacology487} from './pharmacology-487.js';
 import {applyVegaStepCoach487} from './vega-step-coach-487.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
 export function apply487(html){
@@ -470,7 +471,7 @@ function csDrawRemote(){
      const needsIV=new Set(['fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime',
       'imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole',
       'amphotericin','transfusion','vasopressor','morphine','ppi']);
-     if(catalog&&needsIV.has(item.id)&&Number(sim?.venousAccessCount||0)<=0){
+     if(catalog&&(needsIV.has(item.id)||window.csPharm487?.requiresIV?.(item.id))&&Number(sim?.venousAccessCount||0)<=0){
       const pending=sim.csPhase4Pending487||(sim.csPhase4Pending487=[]);
       if(!pending.some(x=>x.uid===sim.patientInstance?.uid&&x.id===item.id))
        pending.push({id:item.id,text:item.text,uid:sim.patientInstance?.uid});
@@ -644,7 +645,7 @@ function csDrawRemote(){
    if(entry.kind==='therapy'&&entry.id==='albumin'&&Number(patient.venousAccessCount||0)>0){
     accepted=addMonitorTherapy('albúmina')!==false||accepted;continue;
    }
-   if(entry.kind==='therapy'&&ivMeds.has(entry.id)&&Number(patient.venousAccessCount||0)<=0&&entry.id!=='fluid'){
+   if(entry.kind==='therapy'&&(ivMeds.has(entry.id)||window.csPharm487?.requiresIV?.(entry.id))&&Number(patient.venousAccessCount||0)<=0&&entry.id!=='fluid'){
     const queue=patient.csPhase4Pending487||(patient.csPhase4Pending487=[]);
     if(!queue.some(v=>v.id===entry.id&&v.uid===receipt.uid)){
      queue.push({id:entry.id,text:entry.text,uid:receipt.uid});
@@ -694,5 +695,6 @@ function csDrawRemote(){
  s=applySecondaryBridge487(s);
  s=applyCriticalRescue487(s);
  s=applyClinicalConfirmations487(s);
+ s=applyPharmacology487(s);
  return s;
 }
