@@ -3,7 +3,6 @@ export function applyNurseExecution487(html){
  const runtime=String.raw`<script id="atria-nurse-execution-487">
 (function(){
  if(window.__csNurseExecution487)return;window.__csNurseExecution487=true;
- const previousStart=startNextTask,previousUpdate=updateNurse;
  const previousStart=startNextTask,previousUpdate=updateNurse,previousFinish=typeof finishNurseTask==='function'?finishNurseTask:null;
  // A previous phase drained IV medications on active-patient simulation ticks.
  // That never ran for a patient left in a different box: completed cannulation
