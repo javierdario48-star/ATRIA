@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {csCriticalRescueEvidence487,csCriticalRescuePhysiology487,csCriticalRescueWindow487} from './critical-rescue-487.js';
 import {applyCriticalRescue487} from '../integration/critical-rescue-487.js';
+import './critical-rescue-extreme-vitals-487.test.js';
 const c={id:'PERI-SEC-001',risk:'shock',physiology:{engine:'peritonitis',fluidOverloadThresholdMl:2800}};
 function patient(){
  return {caseEnded:false,patientDied:false,gameMinute:0,patientInstance:{uid:'e1'},
