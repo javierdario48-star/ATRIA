@@ -13,6 +13,11 @@ function patient(mode='apprentice'){
  gameMinute:0,_fatalExposure:0,patientDied:false};
 }
 function admin(p,id){p.monitorTherapies.set(id,{id});p.administrationLog.push({id,m:p.gameMinute});}
+const normalAdmission=patient('solo');
+normalAdmission.monitorConnected=false;normalAdmission.venousAccessCount=0;
+const normalC={risk:'general',vitals:{bp:'125/75',spo2:99},physiology:{engine:'none'}};
+assert.equal(csGraceState487(normalAdmission,normalC,0).credit,0,
+ 'normal baseline vital signs without real care never earn extra protected time');
 const indicated=patient();indicated.interventions=new Set(['fluid','oxygen']);
 assert.equal(csMissingAdminRescue487(indicated,C,{spo2:75},40),true,
  'indication alone cannot prevent terminal hypoxia and shock');
