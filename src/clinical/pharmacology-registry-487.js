@@ -35,6 +35,15 @@ export const PHARMA_RULES_487=Object.freeze({
  furosemide:D('diuretic','iv',5,30,['overload','congestion'],['hypotension','renal','electrolytes'],'diuretic'),
  beta_blocker:D('betaBlocker','conditional',5,30,['indicatedRateControl'],['hypotension','bradycardia','shock'],'betaBlocker')
 });
+// Game simulation reference exposures for bounding pharmacodynamic effects.
+// Not an instruction to administer or prescribe these doses clinically.
+export const REFERENCE_DOSES_487=Object.freeze({
+ oxygen:4,fluid:500,albumin:1.5,vasopressor:.05,morphine:4,analgesia:1000,
+ antiemetic:4,ppi:40,transfusion:1,espironolactona:100,ceftriaxone:1000,
+ metronidazole:500,imipenem:500,ceftazidime:1000,cefoperazone:1000,
+ cefepime:1000,piptazo:4500,ampicillin:2000,amikacin:500,gentamicin:80,
+ fluconazole:400,amphotericin:.7,furosemide:40,beta_blocker:40,aza:50
+});
 // Explicit baseline profiles for the actual 13 clinical seeds.
 // New CASES must supply pharmacology:{traits:[...],...} and will then
 // automatically inherit EVERY global drug rule, including new medications.
