@@ -80,6 +80,29 @@ const first=patient(),second=patient();ctx.sim=first;ctx.updateSimulation(.25);
 ctx.sim=second;ctx.updateSimulation(.25);
 assert(first.csGrace487.activeSeconds>0&&second.csGrace487.activeSeconds>0);
 assert.equal(first.csGrace487.activeSeconds,second.csGrace487.activeSeconds);
+// End-to-end native terminal-exposure behavior under all modes; not just a pure policy test.
+for(const mode of ['apprentice','solo','coop','competitive']){
+ const subject=patient(mode);
+ const runtime={window:{},document:{visibilityState:'visible'},sim:subject,C,
+  csDeathRescueMissing:()=>true,
+  updateSimulation(dt){
+   // Game hours advance separately. This native-like fatal clock is independent
+   // of whether the player typed a medication, or a nurse is walking to the bed.
+   runtime.sim.gameMinute+=dt*.12;
+   if(runtime.csDeathRescueMissing({spo2:75,sys:56,dia:30,hr:160},40))
+    runtime.sim._fatalExposure+=dt*.12;
+   else runtime.sim._fatalExposure=Math.max(0,runtime.sim._fatalExposure-dt*.084);
+   if(runtime.sim._fatalExposure>=1.35)runtime.sim.patientDied=true;
+  }
+ };
+ vm.runInNewContext(script,runtime,{timeout:4000});
+ const tick=(sec)=>{for(let i=0;i<sec*4;i++)runtime.updateSimulation(.25)};
+ tick(60);assert.equal(subject.patientDied,false,mode+' alive 60 s');
+ tick(119);assert.equal(subject.patientDied,false,mode+' alive 179 s');
+ assert.equal(subject._fatalExposure,0,mode+' accumulated no lethal exposure during protected nursing');
+ tick(1);assert.equal(subject.patientDied,false,mode+' no boundary-triggered death');
+ tick(12);assert.equal(subject.patientDied,true,mode+' native fatal exposure resumes after allotted time');
+}
 console.log('ALL MODES MINIMUM REAL CLOCK SURVIVAL PASS',JSON.stringify({earlyDeathBlocked:true,solo:true,coop:true,competitive:true}));
 console.log('GRACE SURVIVAL REAL CLOCK BOTS PASS',JSON.stringify({checkpoints,
  modes:4,scenarios:4,pendingNotCredited:true,simulatedSeconds:300,clinicalClockUnchanged:true}));
