@@ -39,7 +39,7 @@ export function csAuditDrugCase487(caseDef,drug,patient=null){
  const traits=ctx.traits,risks=[];
  const add=flag=>risks.push(flag);
  if((id==='furosemide'||id==='espironolactona'||id==='beta_blocker'||id==='morphine')&&
-    (traits.has('hypotension')||traits.has('severeShock')))
+    (traits.has('hypotension')||traits.has('severeShock')||traits.has('hypovolemia')||traits.has('bleed')))
   add('may-worsen-hypoperfusion');
  if((id==='amikacin'||id==='gentamicin'||id==='amphotericin'||id==='cefepime')&&traits.has('renalRisk'))
   add('renal-injury-or-accumulation');
