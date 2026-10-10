@@ -31,7 +31,7 @@ export function csPharmOutcomes487(c,patient,globalDrugs=[]){
   acidRiskIndex:traits.has('ulcerBleed')?1:0,
   renalInjuryIndex:0,
   anemiaHbEquivalentGain:0,
-  fluidOverloadIndex:0,
+  fluidOverloadIndex:traits.has('congestion')?1:0,
   sourceControlled:patient?.phys?.sourceControlled===true,
   coverageComplete:false,
   noActiveTherapy:!active?.size
@@ -55,9 +55,10 @@ export function csPharmOutcomes487(c,patient,globalDrugs=[]){
  const ml=Number(patient?.therapyTotals?.fluidMl||0),threshold=Number(
   c?.physiology?.fluidOverloadThresholdMl??(traits.has('ascites')?1800:2800));
  if(ml>threshold)metrics.fluidOverloadIndex=clamp((ml-threshold)/1500);
- if(traits.has('renalRisk')||Number(patient?.phys?.renalReserve??1)<.55){
-  const nephro=administrations.filter(x=>['amikacin','gentamicin','amphotericin'].includes(x?.id));
-  metrics.renalInjuryIndex=clamp(nephro.length*.16,0,1);
+ const nephro=administrations.filter(x=>['amikacin','gentamicin','amphotericin'].includes(x?.id));
+ if(nephro.length){
+  const vulnerable=traits.has('renalRisk')||Number(patient?.phys?.renalReserve??1)<.55;
+  metrics.renalInjuryIndex=clamp(nephro.length*(vulnerable?.20:.06),0,1);
  }
  // Antibiotics cannot clear a presumed infection unless the active drugs
  // satisfy a case-specific regimen. No inferred pathogen susceptibility.
