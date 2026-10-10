@@ -128,6 +128,15 @@ export function csBuildPharmRegistry487(nativeCatalog,cases){
     effects:{},pharmacology:{...drug.pharmacology}});
   }
  }
+ // A new case cannot silently introduce an unmodelled drug as a generic
+ // treatment intervention. These are the existing non-drug case procedures.
+ const knownProcedures=new Set(['sal_restriccion','npo','ngt','staging_order','surgery','iv']);
+ for(const c of cases)for(const treatment of c.interventions||[]){
+  if(!treatment?.id)throw Error('missing intervention ID '+c.id);
+  if(!registry.has(treatment.id)&&!knownProcedures.has(treatment.id))
+   throw Error('unmodelled treatment '+treatment.id+' in '+c.id+
+    ': declare reviewed pharmacology.newDrugs before introducing this case');
+ }
  // Every possible drug/case pair resolves, including newly declared drugs.
  for(const [id,item] of registry)for(const [caseId,p] of profiles){
   csValidateDrug487(id,item.pharmacology);
