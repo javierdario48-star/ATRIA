@@ -19,6 +19,13 @@ export function applyGraceSurvival487(html){
   if(!p||p.caseEnded||p.patientDied||
      !['apprentice','solo','coop','competitive'].includes(p.playMode))return null;
   const state=p.csGrace487||(p.csGrace487={enabled:true,activeSeconds:0,earnedCredit:0});
+  // Real-device guard: do not trust accumulated simulation ticks as a wall clock.
+  // Native simulation may run multiple logical updates per rendered frame.
+  if(typeof performance!=='undefined'&&typeof performance.now==='function'){
+    const now=performance.now();
+    if(!Number.isFinite(state.csWallBornAt487))state.csWallBornAt487=now;
+    state.csWallAge487=Math.max(0,(now-state.csWallBornAt487)/1000);
+  }
   state.enabled=true;
   // Earned time is monotonic. Never credit an unadministered order.
   const observed=csGraceState487(p,C,state.activeSeconds);
@@ -29,7 +36,10 @@ export function applyGraceSurvival487(html){
  // This remains authoritative even if a later adapter overwrites the predicate.
  window.csEarlyCriticalDeathGuard487=function(p,c){
   const state=ensureGracePatient487(p);
-  return !!state&&csGraceState487(p,c,state.activeSeconds).protected;
+  // Both clocks must elapse: a 120-second physical session can never be
+  // mistaken for three minutes due to accelerated game/shift scheduling.
+  const observed=Math.min(state?.activeSeconds??Infinity,state?.csWallAge487??Infinity);
+  return !!state&&csGraceState487(p,c,observed).protected;
  };
  const nativeDeathPredicate=csDeathRescueMissing;
  csDeathRescueMissing=function(v,map){
@@ -42,6 +52,12 @@ export function applyGraceSurvival487(html){
  updateSimulation=function(dt){
   const p=sim,state=ensureGracePatient487(p);
   if(state&&document.visibilityState!=='hidden'){
+   // Earn time only while visible; physical device time is an independent
+   // hard upper bound on simulated active time, never a shortcut to death.
+   if(typeof performance!=='undefined'&&typeof performance.now==='function'&&
+      Number.isFinite(state.csWallBornAt487))
+     state.activeSeconds=Math.min(state.activeSeconds,Math.max(0,
+       (performance.now()-state.csWallBornAt487)/1000));
    // dt counts ACTIVE real time, not accelerated simulation hours.
    state.activeSeconds+=Math.max(0,Math.min(0.25,Number(dt)||0));
    ensureGracePatient487(p);
