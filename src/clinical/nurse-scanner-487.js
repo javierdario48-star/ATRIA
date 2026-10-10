@@ -12,6 +12,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  const defs=[
   ['monitor','monitor',['monitor','monitorizar','monitorear','monitorizacion','monitoreo','conectar monitor','poner monitor','pone monitor']],
   ['iv','iv',['vias','via','dos vias','2 vias','accesos venosos','acceso venoso','vias perifericas','via periferica','accesos perifericos','acceso periferico','dos accesos perifericos','2 accesos perifericos','dos accesos venosos','2 accesos venosos','cateter venoso','cateter periferico','canalizar','canalizacion','venoclisis']],
+  ['therapy','fluid',['expansion','expandir','expande','expansion con cristaloides','expandir con cristaloides','reposicion','reposicion de volumen','expansor de volumen','pasar volumen']],
   ['vitals','vitals',['signos vitales','tomar signos','tomar presion','presion arterial','control de signos','controlar signos','saturacion','constantes vitales']],
   ['surgery','cirugia',['cirugia','cirujano','cirujana','quirofano','operar','laparotomia','control del foco','control de foco']],
  ];
