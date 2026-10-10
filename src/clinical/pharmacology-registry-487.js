@@ -126,7 +126,7 @@ export function csBuildPharmRegistry487(nativeCatalog,cases){
 export function csPharmContext487(c,patient,vitals={}){
  const p=csCasePharmProfile487(c);
  const set=new Set(p.traits);
- const measured=vitals||patient?.liveVitals||{};
+ const measured=Object.keys(vitals||{}).length?vitals:(patient?.liveVitals||{});
  const sys=Number(measured.sys??parseInt(String(c?.vitals?.bp||'120'),10));
  const dia=Number(measured.dia??60);
  const map=(sys+2*dia)/3;
@@ -145,8 +145,9 @@ export function csPharmContext487(c,patient,vitals={}){
 }
 // A coefficient-based response estimate in VIRTUAL units. Applies to all cases,
 // uses patient condition, and never inserts undocumented treatments.
-export function csPharmResponse487(id,c,patient,elapsedMin=0,vitals={}){
+export function csPharmResponse487(id,c,patient,elapsedMin=0,vitals={},globalDrugs=[]){
  const descriptor=PHARMA_RULES_487[id]||
+   globalDrugs.find(d=>d.id===id)?.pharmacology||
    (c?.pharmacology?.newDrugs||[]).find(d=>d.id===id)?.pharmacology;
  if(!descriptor)return {known:false,offsets:{},warnings:['missing-pharmacology']};
  const ctx=csPharmContext487(c,patient,vitals);
