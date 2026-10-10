@@ -180,11 +180,14 @@ const context={
 vm.createContext(context);
 for(const id of ['atria-phase4-composite-orders','atria-phase7-nursing-receipts',
  'atria-nurse-voice-routing-487'])vm.runInContext(script(id),context,{timeout:5000});
+// Surgical handoff has an intentional specialist dispatcher; it is already
+// exercised by the surgical integration bots, not the legacy medication parser.
+const adapterEntries=entries.filter(x=>x.kind!=='surgery');
 let adapters=0;
 for(let k=1;k<=12;k++){
  for(let j=0;j<20;j++){
-  const offset=(j*7+k)%entries.length;
-  const group=Array.from({length:k},(_,i)=>entries[(offset+i)%entries.length]);
+  const offset=(j*7+k)%adapterEntries.length;
+  const group=Array.from({length:k},(_,i)=>adapterEntries[(offset+i)%adapterEntries.length]);
   const cmd='Enfermera '+group.map(x=>x.phrase).join(' ');
   for(const name of ['csNursingParse487','csNurse487Parse']){
    const results=context.window[name](cmd);
