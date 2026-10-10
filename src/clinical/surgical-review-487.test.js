@@ -12,6 +12,13 @@ assert.equal(csSurgicalReview487({...stable,vitalsKnown:false},c).status,'missin
 const shock={...stable,sys:78,initialShock:true,imagingDone:false};
 assert.equal(csSurgicalReview487(shock,c).accepted,true,'shock with peritonism must not wait for CT');
 assert.equal(csSurgicalReview487(shock,c).status,'accepted');
+const earlyShock={...shock,examDone:false,examRegions:0};
+assert.equal(csSurgicalReview487(earlyShock,c).accepted,true,
+ 'urgent team evaluation begins in shock before the focused exam is fully completed');
+assert.match(csSurgicalReview487(earlyShock,c).reason,/no autoriza todav[ií]a el traslado/i,
+ 'team acceptance must not imply surgical handoff or completed examination');
+assert.equal(csSurgicalReview487({...earlyShock,vitalsKnown:false},c).accepted,false,
+ 'undocumented vitals still require evaluation');
 const spontaneous={id:'PERI-PBE-001',keyInterventions:['ceftriaxone','albumin']};
 assert.equal(csSurgicalReview487({...stable,diagnosis:'PBE'},spontaneous).accepted,false,'medical PBE not sent to surgery');
 const tertiary={id:'PERI-TER-001',keyInterventions:['ampicillin','amikacin','fluconazole']};
