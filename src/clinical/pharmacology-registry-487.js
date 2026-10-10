@@ -211,8 +211,8 @@ export function csPharmResponse487(id,c,patient,elapsedMin=0,vitals={},globalDru
   break;
  case 'custom':
   // Globally available does not mean universally indicated or beneficial.
-  if(beneficial)for(const [k,v] of Object.entries(descriptor.response||{}))
-   if(k in offsets)offsets[k]=v;
+  if(beneficial){for(const [k,v] of Object.entries(descriptor.response||{}))
+   if(k in offsets)offsets[k]=v;}
   else warn.push('no-proven-indication');
   break;
  // Antimicrobials: no immediate BP or SpO2 miracle. Native coverageSets and
