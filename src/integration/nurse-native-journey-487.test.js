@@ -64,6 +64,9 @@ vm.createContext(ctx);
 for(const sourceCode of [drugNative,nurseNative,procedureNative,
  script('atria-nurse-voice-routing-487'),script('atria-nurse-execution-487')])
  vm.runInContext(sourceCode,ctx,{timeout:5000});
+patientA.csPhase4Pending487=[{uid:'patient-a',id:'fluid',text:'ringer'},
+ {uid:'patient-a',id:'ceftriaxone',text:'ceftriaxona'},
+ {uid:'patient-a',id:'metronidazole',text:'metronidazol'}];
 ctx.sendMessage('Enfermera monitor dos vías oxígeno');
 assert.equal(patientA.monitorConnected,false,'monitor cannot be connected by merely interpreting a phrase');
 assert.equal(patientA.venousAccessCount,0,'two lines cannot exist before actual nurse finish task');
@@ -85,6 +88,9 @@ assert.equal(patientA.venousAccessCount,0,'IV still absent during work');
 now+=1800;ctx.updateNurse(1/60);
 assert.equal(patientA.venousAccessCount,2,'native finishNurseTask places both lines');
 assert.equal(patientA.venousAccessTypes.length,2,'venous access history stores both peripheral lines');
+assert.deepEqual(patientA.administrationLog.filter(x=>['fluid','ceftriaxone','metronidazole'].includes(x.id)).map(x=>x.id),
+ ['fluid','ceftriaxone','metronidazole'],'pending IV therapeutics run via native administration after cannulation');
+assert.equal(patientA.csPhase4Pending487.length,0,'all dependent orders consumed once');
 assert(patientA.globalChat.some(row=>/monitor conectado/i.test(row[1])),'nurse posts true monitor completion');
 assert(patientA.globalChat.some(row=>/2 vías periféricas/i.test(row[1])),'nurse posts actual IV completion');
 const beforeNurseTask=nurse.queue.length;
