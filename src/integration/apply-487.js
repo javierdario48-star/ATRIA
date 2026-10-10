@@ -405,6 +405,20 @@ function csDrawRemote(){
   const raw=normalized(text);
   if(!raw||String(text).includes('?')||/^(?:no|nunca|evitar|sin)\b/.test(raw)||/\b(?:no administrar|no dar|no pedir|no solicitar|sin medicacion|sin antibioticos)\b/.test(raw))return null;
   const declared=explicit.test(raw),source=raw.replace(introduction,'').replace(/^(?:estudio|estudios de|orden de|ordenar|solicitar|administrar)\s+/,'').replace(/\b(vias?|accesos? venosos?)\s+(ringer|cristaloides|oxigeno)\b/g,'$1, $2').replace(/\b(ringer|cristaloides)\s+(oxigeno)\b/g,'$1, $2');
+  // Phase 4/7 remain callable through voice handlers that captured an older
+  // nurseNatural reference. Use the same late shared lexical scanner here,
+  // so a punctuation-free order cannot collapse to one longest-matched drug.
+  // Scanner is only used for explicit instructions after its adapter mounts.
+  const scanned=C&&sim?window.csNurseVoice487?.parse?.(text):null;
+  if(scanned?.active&&scanned.items?.length&&
+     (declared||scanned.addressed)&&!scanned.items.some(x=>x.kind==='surgery')){
+   const all=scanned.items.filter(x=>!x.negated).map(x=>({
+    kind:x.kind,id:x.id,text:x.text,count:x.count,label:x.phrase,
+    verified487:true
+   }));
+   for(const word of scanned.unknown||[])all.push({kind:'unknown',text:word});
+   return all;
+  }
   if(!declared&&source===raw&&!/[,;]|\s+y\s+/.test(source))return null;
   const parts=source.split(/\s*(?:,|;|\s+y\s+|\s+e\s+|\s+mas\s+)\s*/).map(s=>s.trim()).filter(Boolean);
   if(!parts.length||parts.length>5)return null;
@@ -436,6 +450,8 @@ function csDrawRemote(){
    if(item.kind==='clarify'){nurseSay('Necesito el nombre del estudio o medicamento específico; no pedí un panel inespecífico.');continue;}
    if(item.kind==='unknown'){nurseSay('No reconocí «'+item.text+'». Los demás pedidos se evalúan por separado.');continue;}
    if(item.kind==='iv'){const done=window.csQueueIV(item.count);accepted=done===true||accepted;continue;}
+   if(item.verified487&&item.kind==='monitor'){accepted=window.csQueueMonitor()===true||accepted;continue;}
+   if(item.verified487&&item.kind==='vitals'){accepted=queueNurse({kind:'vitals',label:'Controlar signos vitales',bedside:true})!==false||accepted;continue;}
    if(item.kind==='study'){
     const st=findStudy(item.text);
     if(!st){nurseSay('El estudio solicitado no está disponible para este caso.');continue;}
@@ -445,6 +461,23 @@ function csDrawRemote(){
     accepted=done!==false||accepted;continue;
    }
    if(item.kind==='therapy'){
+    // Orders recognized by the shared scanner must reach native administration
+    // even when a legacy speech handler captured this original Phase-4 function.
+    // Never report a dose before actual IV access exists.
+    if(item.verified487){
+     const catalog=typeof MONITOR_THERAPY_CATALOG!=='undefined'?
+       MONITOR_THERAPY_CATALOG.find(x=>x.id===item.id):null;
+     const needsIV=new Set(['fluid','albumin','ceftriaxone','metronidazole',
+      'imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole',
+      'amphotericin','transfusion','vasopressor','morphine','ppi']);
+     if(catalog&&needsIV.has(item.id)&&Number(sim?.venousAccessCount||0)<=0){
+      const pending=sim.csPhase4Pending487||(sim.csPhase4Pending487=[]);
+      if(!pending.some(x=>x.uid===sim.patientInstance?.uid&&x.id===item.id))
+       pending.push({id:item.id,text:item.text,uid:sim.patientInstance?.uid});
+      accepted=true;continue;
+     }
+     if(catalog){accepted=addMonitorTherapy(item.text)!==false||accepted;continue;}
+    }
     // Fluid therapy is a specific IV intervention; a requested access is not a placed access.
     if(item.id==='fluid'&&Number(sim?.venousAccessCount||0)<=0){
      const pending=sim.csPhase4Pending487||(sim.csPhase4Pending487=[]);
