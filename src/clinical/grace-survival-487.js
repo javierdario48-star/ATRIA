@@ -1,8 +1,9 @@
-// Non-invasive apprentice death-exposure gate. Never mutates physiology or clinical events.
+// Non-invasive all-mode death-exposure gate. Never mutates physiology or clinical events.
 // All treatment credit is grounded in the native monitor AND its administration ledger.
 export function csGraceState487(patient, caseDef, activeSeconds=0){
  const elapsed=Math.max(0,Number(activeSeconds)||0);
- const enabled=!!patient&&patient.playMode==='apprentice'&&!patient.caseEnded;
+ const enabled=!!patient&&!patient.caseEnded&&!patient.patientDied&&
+  ['apprentice','solo','coop','competitive'].includes(patient.playMode);
  if(!enabled)return {enabled:false,protected:false,elapsed,releaseAt:0,credit:0};
  const log=Array.isArray(patient.administrationLog)?patient.administrationLog:[];
  const active=patient.monitorTherapies;
