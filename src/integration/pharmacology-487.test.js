@@ -23,6 +23,7 @@ const ctx={
  window:{},CASES:cases.slice(),MONITOR_THERAPY_CATALOG:native.slice(),
  C:cirr,sim:patient('cirr',{sys:110,dia:70,spo2:99}),
  nurseSay:t=>messages.push(t),
+ updateSimulation:()=>true,
  defaultDoseForTherapy:()=>({amount:1,unit:'dosis',display:'1 dosis',defaultApplied:true}),
  therapyEffectTotals:function(){
   const offsets={temp:0,hr:0,rr:0,sys:0,dia:0,spo2:0};
@@ -96,6 +97,8 @@ assert.equal(ctx.sim.administrationLog[0].doseDisplay,'5 mg');
 assert.equal(ctx.therapyEffectTotals().sys,4,
  'new drug acts in the live monitor on a case requiring the targeted mechanism');
 assert(!ctx.sim.patientDied,'no new mortality path');
+ctx.updateSimulation(1/60);
+assert(ctx.sim.csPharmOutcomes487,'live simulation must update outcomes without fake administrations');
 console.log('DYNAMIC PHARMACOLOGY MONITOR INTEGRATION PASS',JSON.stringify({
  injected:true,nativeCatalog:native.length,nativeCases:cases.length,
  existingShockResponse:true,normalOxygenNoFakeGain:true,transfusionNoFakeSpo2:true,
