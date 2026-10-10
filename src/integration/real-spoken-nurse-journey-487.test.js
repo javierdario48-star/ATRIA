@@ -216,6 +216,43 @@ function finishScreenshotTasks(){
   'actual native parser receives exactly the stated fraction, not zero or five');
  assert.equal(p.monitorTherapies.get('vasopressor')?.dose?.amount,.05);
 }
+// Synthetic order-limit stress: all TWELVE independently recognized catalog
+// treatments must reach the REAL IV-dependency queue and native administration.
+// Drugs coexist only inside this isolated test fixture; no case treatment advice.
+{
+ const extras=[
+  ['ampicillin','Ampicilina IV','ampicilina'],
+  ['amikacin','Amikacina IV','amikacina'],
+  ['gentamicin','Gentamicina IV','gentamicina'],
+  ['fluconazole','Fluconazol IV','fluconazol'],
+  ['imipenem','Imipenem IV','imipenem'],
+  ['piptazo','Piperacilina/tazobactam','piperacilina tazobactam'],
+  ['cefepime','Cefepime IV','cefepime']
+ ];
+ for(const [id,label,alias]of extras)catalog.push({id,label,aliases:[alias]});
+ const requested=[
+  ['oxygen','oxígeno'],['fluid','Ringer'],['ceftriaxone','ceftriaxona'],
+  ['metronidazole','metronidazol'],['vasopressor','noradrenalina'],
+  ...extras.map(x=>[x[0],x[2]])
+ ];
+ assert.equal(requested.length,12);
+ const p=nextScreenshot('screenshot-twelve-mixed-drugs',0);
+ ctx.sendMessage('Enfermera '+requested.map(x=>x[1]).join(' '));
+ assert.deepEqual(p.administrationLog.map(x=>x.id),['oxygen'],
+  'before IV, only independent oxygen is truly administered');
+ assert.equal(p.csPhase4Pending487.length,11,
+  'all other eleven IV drugs must remain queued, never silently truncated');
+ ctx.sendMessage('Enfermera vías');
+ assert.equal(nurse.task?.count,2);
+ finishScreenshotTasks();
+ assert.equal(p.venousAccessCount,2);
+ assert.equal(p.csPhase4Pending487.length,0);
+ assert.deepEqual(p.administrationLog.map(x=>x.id),requested.map(x=>x[0]),
+  'twelve distinct recognized drugs actually reach native dose history');
+ assert.equal(p.monitorTherapies.size,12);
+ assert.equal(new Set(p.administrationLog.map(x=>x.id)).size,12,
+  'a composite order may not create duplicate or inferred medications');
+}
 console.log('ANDROID NURSE MULTI-ORDER NATIVE REGRESSION PASS',
  JSON.stringify({unpunctuatedFour:true,commaFour:true,plural2:true,existing1and2:true,
   separateAntibiotics:true,actualNativeFinish:true,physicalAndroid:false}));
