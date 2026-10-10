@@ -48,11 +48,16 @@ for(const [id,dx,study,drugs,consult,dest,sys] of scenarios){
   sim.orders.set(study,{id:study,status:'pending'});
   for(const drug of drugs)sim.administrationLog.push({id:drug});
   if(consult)sim.consults.set(consult,{status:'done'});
-  show();assert.equal(buttons.length,0,id+' pending study must not trigger bedside action');assertions++;
+  show();assert.equal(buttons.length,id==='PERI-SEC-001'?1:0,id+' should expose accepted-surgery blockers but not an unsafe transfer');assertions++;
+  if(id==='PERI-SEC-001'){
+   assert.equal(buttons[0].textContent,'Cirugía aceptó · Ver pendientes');
+   buttons[0].onclick();
+   assert.equal(sim.disposition,null,'pending investigation cannot finalize handoff');
+  }
   sim.orders.get(study).status='done';show();
   assert.equal(buttons.length,1,id+' verified pathway must show only one button');assertions++;
   assert.equal(buttons[0].textContent, {sala:'Internar en sala',uti:'Derivar a UTI',quirofano:'Derivar a quirófano'}[dest]);assertions++;
-  show();assert.equal(notifications.length,1,id+' nurse must speak once');assertions++;
+  show();assert.equal(notifications.filter(x=>x.includes('El manejo inicial está listo')||x.includes('completamos lo necesario')).length,1,id+' nurse must announce actual readiness once');assertions++;
   buttons[0].onclick();
   assert.equal(sim.disposition.id,dest);assertions++;
   assert.equal(sim.phys.sourceControlled,false,id+' bedside handoff must not pretend surgery finished');assertions++;
@@ -90,5 +95,29 @@ for(const [id,dx,study,drugs,consult,dest,sys] of scenarios){
  assert(c.CASES[0].physiology.coverageSets.some(a=>a.length===1&&a[0]==='piptazo'),'secondary piptazo must affect physiology');assertions++;
  assert(c.CASES[1].physiology.coverageSets.some(a=>a.includes('imipenem')&&a.includes('fluconazole')),'tertiary matched regimen must affect physiology');assertions++;
  assert(c.CASES[2].physiology.coverageSets.some(a=>a.length===1&&a[0]==='piptazo'),'SBP broader regimen must affect physiology');assertions++;
+}
+{
+ // Screenshot reconstruction: shock, diagnosed abdomen, no interview/CT,
+ // manual native medication receipts present, Surgery accepted.
+ const C={id:'PERI-SEC-001'},sim=specimen(C.id,{sys:84,spo2:92}),buttons=[],spoke=[];
+ C.vitals={bp:'86/50'};
+ Object.assign(sim,{diagnosis:'peritonitis secundaria',lastVitalsKnown:true,examDone:true,nsCareBaseline:{sys:86}});
+ for(const id of ['oxygen','fluid','ceftriaxone','metronidazole'])sim.administrationLog.push({id,m:3});
+ sim.consults.set('cirugia',{status:'done',accepted:true});
+ const ctx={C,sim,window:{nsMayExamine:()=>true,nsExperienceEligible:()=>false,
+  csSetDisposition:id=>(sim.disposition={id},true)},
+ document:{body:{classList:{contains:()=>false},appendChild:b=>buttons.push(b)},
+  createElement:()=>({style:{},onclick:null,textContent:''})},
+ performance:{now:()=>1000},nurseSay:x=>spoke.push(x),
+ csBreakdown:()=>({notes:[],safeReasons:[],score:20,safe:false,diagnosis:15,history:0,safety:20,studies:0,treatment:8,efficiency:5}),
+ finishCase:()=>{sim.caseEnded=true},updateSimulation:()=>{}};
+ vm.runInNewContext(source,ctx,{timeout:4000});
+ ctx.window.csPeritonitisRefresh487();
+ assert.equal(buttons.length,1,'accepted, treated emergency must show a prominent disposition control');assertions++;
+ assert.equal(buttons[0].textContent,'Derivar a quirófano');assertions++;
+ assert.equal(buttons[0].style.bottom.includes('160px'),true,'handoff fixed on screen rather than off-camera box point');assertions++;
+ buttons[0].onclick();
+ assert.equal(sim.disposition.id,'quirofano');assertions++;
+ assert.equal(sim.phys.sourceControlled,false,'handoff cannot invent a completed operation');assertions++;
 }
 console.log('PERITONITIS INTEGRATION BOT PASS',JSON.stringify({cases:3,assertions,scope:'compiled HTML script + fake DOM + actual path evaluator and reward transition',physicalDevice:false}));
