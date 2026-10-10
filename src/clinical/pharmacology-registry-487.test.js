@@ -61,7 +61,7 @@ for(const c of [...cases,newCase]){
 }
 assert.throws(()=>csBuildPharmRegistry487(meds,[...cases,
  {id:'QA-UNDECLARED',interventions:[{id:'new_iv_drug',label:'Unreviewed IV drug'}],
-  pharmacology:{traits:['infection']}}]),/unmodelled treatment/,
+  pharmacology:{traits:['pain']}}]),/unmodelled treatment/,
  'new cases must not smuggle an inert unknown drug through interventions');
 assert.throws(()=>csBuildPharmRegistry487(meds,[...cases,
  {id:'QA-BAD',pharmacology:{traits:['shock'],newDrugs:[{id:'unreviewed',label:'Bad',aliases:['bad']}]}}]),
