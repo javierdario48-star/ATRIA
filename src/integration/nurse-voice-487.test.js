@@ -72,6 +72,17 @@ assert.deepEqual(tasks.slice(beforeCombined),['monitor','iv:2'],
  'exact reported mixed nursing phrase queues monitor PLUS two peripheral lines');
 ctx.nurseNatural('enfermera una vía');
 assert.equal(tasks.at(-1),'iv:1','explicit singular requests exactly one access');
+const wherever=tasks.length;
+ctx.chatRole='patient';
+ctx.sendMessage('monitor y vías, enfermera');
+assert.deepEqual(tasks.slice(wherever),['monitor','iv:2'],
+ 'nurse address at END of sentence still queues monitor and two real IVs');
+ctx.chatRole='nurse';
+const nursingMiddle=tasks.length;
+ctx.sendMessage('por favor conectá monitor y poné las vías');
+assert.deepEqual(tasks.slice(nursingMiddle),['monitor','iv:2'],
+ 'active nurse understands procedures in arbitrary positions');
+ctx.chatRole='patient';
 ctx.sendMessage('enfermera cirugia');
 assert.equal(consults.length,1,'consult requested rather than operation');
 ctx.sendMessage('enfermera no cirugia');
