@@ -120,7 +120,9 @@ long+=2;
 let studies=0,caseActions=0;
 for(const c of cases){
  for(const st of c.studies||[]){
-  const alias=st.aliases?.[0]||st.label;
+  // A bare 'TC', 'RX' or similarly underspecified abbreviation cannot
+  // safely identify an exact case-specific study; use the full study label.
+  const alias=st.label;
   const result=csNurseScan487('Enfermera monitor '+alias+' y vía',
    c.studies,nativeCatalogue,c.interventions);
   assert(result.items.some(x=>x.id===st.id&&x.kind==='study'),
