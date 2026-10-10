@@ -116,7 +116,8 @@ export function applyNurseVoice487(html){
  const newGeneric="   if(entry.kind==='therapy'&&typeof addMonitorTherapy==='function'&&typeof MONITOR_THERAPY_CATALOG!=='undefined'&&MONITOR_THERAPY_CATALOG.some(x=>x.id===entry.id)){accepted=addMonitorTherapy(entry.text)!==false||accepted;continue;}\\n"+oldGeneric;
  if(html.split(oldGeneric).length!==2)throw Error('nursing generic therapy anchor');
  html=html.replace(oldGeneric,newGeneric.replace('\\n','\n'));
- const oldIVRule="if(entry.kind==='therapy'&&ivMeds.has(entry.id)&&Number(patient.venousAccessCount||0)<=0&&entry.id!=='fluid'){";
+ const oldIVRule="if(entry.kind==='therapy'&&(ivMeds.has(entry.id)||window.csPharm487?.requiresIV?.(entry.id))&&Number(patient.venousAccessCount||0)<=0&&entry.id!=='fluid'){";
+
  const newIVRule="if(entry.kind==='therapy'&&ivMeds.has(entry.id)&&Number(patient.venousAccessCount||0)<=0){";
  if(html.split(oldIVRule).length!==2)throw Error('nurse IV safety rule anchor');
  html=html.replace(oldIVRule,newIVRule);
