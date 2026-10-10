@@ -59,6 +59,10 @@ for(const c of [...cases,newCase]){
   'new drug indication depends on patient case rather than granting universal benefit '+c.id);
 }
 assert.throws(()=>csBuildPharmRegistry487(meds,[...cases,
+ {id:'QA-UNDECLARED',interventions:[{id:'new_iv_drug',label:'Unreviewed IV drug'}],
+  pharmacology:{traits:['infection']}}]),/unmodelled treatment/,
+ 'new cases must not smuggle an inert unknown drug through interventions');
+assert.throws(()=>csBuildPharmRegistry487(meds,[...cases,
  {id:'QA-BAD',pharmacology:{traits:['shock'],newDrugs:[{id:'unreviewed',label:'Bad',aliases:['bad']}]}}]),
  /incomplete/,'new drug cannot be added without rules');
 console.log('CASE-AWARE GLOBAL PHARMACOLOGY REGISTRY PASS',JSON.stringify({
