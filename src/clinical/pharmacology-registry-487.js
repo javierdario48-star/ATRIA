@@ -105,6 +105,10 @@ export function csBuildPharmRegistry487(nativeCatalog,cases){
    if(!drug||!nonBlank(drug.id)||!nonBlank(drug.label)||!Array.isArray(drug.aliases)||
       !drug.aliases.some(nonBlank))throw Error('new case drug needs ID, label and aliases '+c.id);
    csValidateDrug487(drug.id,drug.pharmacology);
+   const dose=drug.pharmacology.defaultDose;
+   if(drug.pharmacology.route!=='none'&&drug.pharmacology.route!=='procedure'&&
+      (!Number.isFinite(dose?.amount)||dose.amount<=0||!nonBlank(dose?.unit)||!nonBlank(dose?.display)))
+    throw Error('new drug must declare a safe reviewed default dose and units '+drug.id);
    if(registry.has(drug.id)){
     const x=registry.get(drug.id);
     if(JSON.stringify(x.pharmacology)!==JSON.stringify(drug.pharmacology))
@@ -206,7 +210,10 @@ export function csPharmResponse487(id,c,patient,elapsedMin=0,vitals={},globalDru
   if(lowPressure)warn.push('beta-blocker-in-shock');
   break;
  case 'custom':
-  for(const [k,v] of Object.entries(descriptor.response||{}))if(k in offsets)offsets[k]=v;
+  // Globally available does not mean universally indicated or beneficial.
+  if(beneficial)for(const [k,v] of Object.entries(descriptor.response||{}))
+   if(k in offsets)offsets[k]=v;
+  else warn.push('no-proven-indication');
   break;
  // Antimicrobials: no immediate BP or SpO2 miracle. Native coverageSets and
  // susceptibility must drive inflammation with delayed time to benefit.
