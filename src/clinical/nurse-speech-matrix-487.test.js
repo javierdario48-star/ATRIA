@@ -4,7 +4,8 @@ const therapies=[
  {id:'oxygen',label:'Oxígeno',aliases:['oxigeno','o2','oxigeno por canula']},
  {id:'fluid',label:'Ringer',aliases:['ringer','suero']},
  {id:'ceftriaxone',label:'Ceftriaxona',aliases:['ceftriaxona']},
- {id:'metronidazole',label:'Metronidazol',aliases:['metronidazol']}
+ {id:'metronidazole',label:'Metronidazol',aliases:['metronidazol']},
+ {id:'vasopressor',label:'Noradrenalina',aliases:['noradrenalina']}
 ];
 const studies=[{id:'cbc',label:'Hemograma',aliases:['hemograma']}];
 const scan=t=>csNurseScan487(t,studies,therapies,[]);
@@ -67,4 +68,11 @@ assert.equal(scan('Enfermera oxígeno cuatro litros').unknown.length,0,'oxygen d
 assert.equal(scan('Enfermera accesos periféricos').unknown.length,0);
 assert.equal(scan('Enfermera, ¿monitor?').active,false);
 assert.equal(scan('Enfermera, no oxígeno').active,false);
+const pressor=scan('Enfermera noradrenalina 0,05 µg/kg/min');
+assert.equal(pressor.items.filter(x=>x.id==='vasopressor').length,1,
+ 'a single fractional vasopressor dose must dispatch once');
+assert.match(pressor.items.find(x=>x.id==='vasopressor').text,/0[.]05/,
+ 'a real decimal-comma dose must survive scanner normalization as 0.05, never 0 or 5');
+assert.equal(scan('Enfermera metronidazol').items.filter(x=>x.kind==='therapy').length,1,
+ 'one specific antibiotic never implies a second one');
 console.log('NURSE SPEECH MATRIX PASS',JSON.stringify({spokenPhrases:m.length,variants:validated,fullCombinations:7,punctuationIndependent:true}));
