@@ -25,14 +25,17 @@ export function csGraceState487(patient, caseDef, activeSeconds=0){
   (!hypoxic||administered('oxygen')?0.17:0)+
   (!hypotensive||fluidOk?0.15:0)+
   (covered?0.25:0)+
-  (!needsSource||patient.phys?.sourceControlled===true?0.12:0)+
+  (!needsSource||patient.phys?.sourceControlled===true||administered('vasopressor')?0.12:0)+
   ((Number(vitals.sys)>=90&&Number(vitals.spo2)>=90&&Number(vitals.hr)<=125)?0.09:0)
  );
- const releaseAt=180+120*credit;
- // Exactly 300s restores the native death predicate. Exposure itself is accrued
- // subsequently by the unmodified engine, so neither boundary causes instant death.
+ // Confirmed care permanently earns its added response time; a temporary
+ // monitor fluctuation or switching beds must not retract previously earned time.
+ // Do not mutate in this pure evaluator; the frame adapter banks maxObservedCredit.
+ const creditEarned=Math.min(1,Math.max(credit,Number(patient.csGrace487?.earnedCredit)||0));
+ const releaseAt=180+120*creditEarned;
+ // The native fatal-exposure clock resumes gradually after releaseAt; no cliff.
  return {enabled:true,protected:elapsed<180||(elapsed<300&&elapsed<releaseAt),
-  elapsed,releaseAt,credit,covered,fluidOk};
+  elapsed,releaseAt,credit:creditEarned,observedCredit:credit,covered,fluidOk};
 }
 
 /** Native rescue equivalence, but require confirmed medication administration. */
