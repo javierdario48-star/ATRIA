@@ -18,15 +18,19 @@ export function csGraceState487(patient, caseDef, activeSeconds=0){
  const covered=!coverageSets.length||coverageSets.some(set=>Array.isArray(set)&&set.length>0&&set.every(administered));
  const needsSource=!!caseDef?.physiology?.sourceControlRequired;
  const fluidOk=administered('fluid')&&Number(patient.therapyTotals?.fluidMl||0)>=250;
- // A completed clinical intervention counts once. Reissuing an order gives no extra credit.
+ // Only confirmed active procedures/administrations and measurable treatment
+ // response earn time. Normal admission vitals alone grant no bonus. Reissuing
+ // an order gives no extra credit.
  const credit=Math.min(1,
   (patient.monitorConnected?0.10:0)+
   (Number(patient.venousAccessCount||0)>0?0.12:0)+
-  (!hypoxic||administered('oxygen')?0.17:0)+
-  (!hypotensive||fluidOk?0.15:0)+
-  (covered?0.25:0)+
-  (!needsSource||patient.phys?.sourceControlled===true||administered('vasopressor')?0.12:0)+
-  ((Number(vitals.sys)>=90&&Number(vitals.spo2)>=90&&Number(vitals.hr)<=125)?0.09:0)
+  (administered('oxygen')?0.17:0)+
+  (fluidOk?0.15:0)+
+  (coverageSets.length>0&&covered?0.25:0)+
+  (needsSource&&(patient.phys?.sourceControlled===true||administered('vasopressor'))?0.12:0)+
+  ((fluidOk||administered('vasopressor'))&&Number(vitals.sys)>=90&&
+    Number(vitals.spo2)>=90&&Number(vitals.hr)<=125&&
+    (Number(vitals.sys)>=initialSys+5||Number(vitals.spo2)>=initialSpo2+3)?0.09:0)
  );
  // Confirmed care permanently earns its added response time; a temporary
  // monitor fluctuation or switching beds must not retract previously earned time.
