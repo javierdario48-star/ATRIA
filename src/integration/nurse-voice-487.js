@@ -53,7 +53,12 @@ export function applyNurseVoice487(html){
     ok=actuallyActive&&done!==false||ok;continue;
    }
    const phrase=item.kind==='vitals'?'signos vitales':
-    item.kind==='study'?C.studies.find(x=>x.id===item.id)?.label:item.text.replace(/\\s+(?:y|e|ademas)\\s+.*$/,'');
+    item.kind==='study'?C.studies.find(x=>x.id===item.id)?.label:
+    // 'expansión' is a recognized fluid request, not a native drug alias.
+    // Use the real catalog alias so the Phase-4 IV dependency queue remains authoritative.
+    item.kind==='therapy'&&item.id==='fluid'&&!/\\b(?:ringer|suero|cristaloides|volumen)\\b/.test(norm(item.text))?
+      'ringer'+(norm(item.text).match(/\\b(\\d+)\\s*ml\\b/)?.[0]?' '+norm(item.text).match(/\\b(\\d+)\\s*ml\\b/)[0]:''):
+      item.text.replace(/\\s+(?:y|e|ademas)\\s+.*$/,'');
    const before=sim.csNurse487History?.length||0;
    const response=baseNurse.call(this,'enfermera '+phrase);
    if((sim.csNurse487History?.length||0)===before){
