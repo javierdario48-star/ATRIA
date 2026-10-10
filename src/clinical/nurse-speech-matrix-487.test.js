@@ -14,6 +14,10 @@ const m=[
  ['Enfermera conectar monitor',['monitor']],
  ['Enfermera poné el monitor',['monitor']],
  ['Enfermera monitor y signos vitales',['monitor','vitals']],
+ ['Enfermera monitor y vías',['monitor','iv']],
+ ['Enfermera monitor y accesos periféricos',['monitor','iv']],
+ ['Enfermera vías y monitor',['iv','monitor']],
+ ['Enfermera monitor y una vía',['monitor','iv']],
  ['Enfermera vías',['iv']],
  ['Enfermera una vía',['iv']],
  ['Enfermera dos vías',['iv']],
@@ -49,7 +53,13 @@ for(const [phrase,expected] of m){
   assert.equal(result.active,true,phrase+' must be an actionable indication');
   const got=result.items.filter(x=>!x.negated).map(x=>x.id);
   assert.deepEqual(got,expected,phrase+' :: '+t+' should dispatch every distinct action');
-  if(/dos (?:v[ií]as|accesos)/i.test(t))assert.equal(result.items.find(x=>x.id==='iv')?.count,2,'two access intent');
+  const iv=result.items.find(x=>x.id==='iv');
+  if(iv){
+   const explicitOne=/\b(?:una?|1)\s+(?:v[ií]a|acceso)\b/i.test(t);
+   const plural=/\b(?:v[ií]as|accesos)\b/i.test(t);
+   assert.equal(iv.count,plural&&!explicitOne||/\b(?:dos|2)\s+(?:v[ií]as?|accesos?)\b/i.test(t)?2:1,
+    'plural venous accesses must mean two, unless one is explicitly requested: '+t);
+  }
   validated++;
  }
 }
