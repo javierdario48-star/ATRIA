@@ -63,6 +63,14 @@ for(const [id,dx,study,drugs,consult,dest,sys] of scenarios){
   assert.equal(sim.phys.sourceControlled,false,id+' bedside handoff must not pretend surgery finished');assertions++;
   assert.equal(game.receipt.safe,true,id+' must reward safe handoff');assertions++;
   assert.equal(game.receipt.xp,100,id+' XP must survive caseEnded transition');assertions++;
+  // Continuous-shift UI requests a fresh breakdown after the case has ended.
+  // A later re-render must not cancel a real surgical referral or its XP.
+  const postClosure=context.csBreakdown();
+  assert.equal(postClosure.safe,true,id+' success preserved after caseEnded');assertions++;
+  assert.equal(context.window.nsExperienceEligible(),true,
+    id+' completed referral stays eligible for experience');assertions++;
+  assert.equal(sim._csPeriSafeHandoff487.action,dest,
+    id+' case-specific surgical proof remains bound to correct destination');assertions++;
   assert.equal(buttons[0].style.display,'none',id+' remove bedside CTA after closure');assertions++;
 }
 {
@@ -78,6 +86,9 @@ for(const [id,dx,study,drugs,consult,dest,sys] of scenarios){
  const b=c.csBreakdown();
  assert.equal(b.safe,false,'unsafe discharge must not get a safe score');assertions++;
  assert.equal(c.window.nsExperienceEligible(),false,'unsafe discharge must not earn XP');assertions++;
+ c.sim.caseEnded=true;
+ assert.equal(c.csBreakdown().safe,false,'unsafe discharge stays unsafe after caseEnded');assertions++;
+ assert.equal(c.window.nsExperienceEligible(),false,'post-case unsafe discharge never earns XP');assertions++;
  c.window.csPeritonitisRefresh487();
  assert.equal(ui.length,0,'wrong existing destination does not spawn bedside action');assertions++;
 }
