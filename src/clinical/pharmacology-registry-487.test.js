@@ -45,7 +45,8 @@ assert.throws(()=>csCasePharmProfile487({id:'NEW-NO-PROFILE'}),/requires explici
 assert.throws(()=>csValidateDrug487('foo',{classId:'antibiotic'}),/incomplete/);
 const custom={id:'experimental_agent',label:'Experimental in-game agent',aliases:['agente experimental'],
  pharmacology:{classId:'experimental',route:'iv',onsetMin:5,peakMin:20,
-  indications:['vasoplegia'],hazards:['hypotension'],mechanism:'custom',response:{sys:4,dia:2}}};
+  indications:['vasoplegia'],hazards:['hypotension'],mechanism:'custom',response:{sys:4,dia:2},
+  defaultDose:{amount:5,unit:'mg',display:'5 mg'}}};
 const newCase={id:'QA-NEW',vitals:{bp:'110/70',spo2:97},
  pharmacology:{traits:['vasoplegia','infection'],newDrugs:[custom]}};
 const extended=csBuildPharmRegistry487(meds,[...cases,newCase]);
@@ -54,7 +55,8 @@ assert.equal(extended.profiles.length,cases.length+1);
 for(const c of [...cases,newCase]){
  const x=csPharmResponse487(custom.id,c,normal,45,{},extended.drugs);
  assert(x.known,'new drug missing for existing/new case '+c.id);
- assert.equal(x.offsets.sys,4,'new drug needs same globally defined rules '+c.id);
+ assert.equal(x.offsets.sys,c.id==='QA-NEW'||c.id==='PERI-SEC-001'||c.id==='PERI-TER-001'||c.id==='CHOLANG-001'?4:0,
+  'new drug indication depends on patient case rather than granting universal benefit '+c.id);
 }
 assert.throws(()=>csBuildPharmRegistry487(meds,[...cases,
  {id:'QA-BAD',pharmacology:{traits:['shock'],newDrugs:[{id:'unreviewed',label:'Bad',aliases:['bad']}]}}]),
