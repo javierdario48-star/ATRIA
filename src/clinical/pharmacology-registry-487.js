@@ -89,6 +89,11 @@ export function csCasePharmProfile487(c){
   throw Error('case '+String(c?.id)+' requires explicit pharmacology.traits');
  const unique=[...new Set(traits)];
  const cfg=c?.pharmacology||{};
+ if(!BASE_CASE_PHARMACOLOGY_487[c?.id]&&unique.includes('infection')&&
+    !((Array.isArray(cfg.coverageSets)&&cfg.coverageSets.length)||
+      (Array.isArray(c?.physiology?.coverageSets)&&c.physiology.coverageSets.length)))
+  throw Error('new infectious case '+c.id+' requires explicit antimicrobial coverageSets');
+
  if(cfg.newDrugs&&!Array.isArray(cfg.newDrugs))throw Error('newDrugs must be an array in '+c.id);
  if(cfg.susceptibility&&typeof cfg.susceptibility!=='object')throw Error('invalid susceptibility '+c.id);
  return {id:c.id,traits:unique,susceptibility:cfg.susceptibility||{},
@@ -136,6 +141,18 @@ export function csBuildPharmRegistry487(nativeCatalog,cases){
   if(!registry.has(treatment.id)&&!knownProcedures.has(treatment.id))
    throw Error('unmodelled treatment '+treatment.id+' in '+c.id+
     ': declare reviewed pharmacology.newDrugs before introducing this case');
+ }
+ for(const c of cases){
+  const sets=c.pharmacology?.coverageSets||c.physiology?.coverageSets||[];
+  if(!Array.isArray(sets))throw Error('invalid coverageSets in '+c.id);
+  for(const combination of sets){
+   if(!Array.isArray(combination)||!combination.length)throw Error('empty antimicrobial regimen in '+c.id);
+   for(const id of combination){
+    const rule=registry.get(id)?.pharmacology;
+    if(!rule||!['antibiotic','aminoglycoside','antifungal'].includes(rule.classId))
+     throw Error('invalid antimicrobial '+id+' in '+c.id+' coverageSets');
+   }
+  }
  }
  // Every possible drug/case pair resolves, including newly declared drugs.
  for(const [id,item] of registry)for(const [caseId,p] of profiles){
