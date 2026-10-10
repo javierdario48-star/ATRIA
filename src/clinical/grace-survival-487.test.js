@@ -41,9 +41,13 @@ for(const t of checkpoints){
  if(t===299){assert.equal(a.protected,true);assert.equal(p.protected,false);}
  if(t>=300){assert.equal(a.protected,false);assert.equal(p.protected,false);}
 }
-assert.equal(csGraceState487(patient('solo'),C,60).enabled,false);
-assert.equal(csGraceState487(patient('coop'),C,60).protected,false);
-assert.equal(csGraceState487(patient('competitive'),C,60).protected,false);
+for(const mode of ['apprentice','solo','coop','competitive']){
+ const untreatedMode=patient(mode);
+ for(const second of [0,30,59,60,119,120,179])assert(csGraceState487(untreatedMode,C,second).protected,
+  mode+' must survive its first three active real minutes regardless of how fast game hours pass');
+ assert.equal(csGraceState487(untreatedMode,C,180).protected,false,
+  mode+' untreated exposure resumes after the initial 180 seconds, not an instantaneous death');
+}
 assert.equal(csGraceState487(adequate,C,250).credit,1);
 assert(csGraceState487(partial,C,180).credit>csGraceState487(pending,C,180).credit);
 const script=applyGraceSurvival487('<body></body>').split('<script id="atria-grace-survival-487">')[1].split('</script>')[0];
@@ -76,5 +80,6 @@ const first=patient(),second=patient();ctx.sim=first;ctx.updateSimulation(.25);
 ctx.sim=second;ctx.updateSimulation(.25);
 assert(first.csGrace487.activeSeconds>0&&second.csGrace487.activeSeconds>0);
 assert.equal(first.csGrace487.activeSeconds,second.csGrace487.activeSeconds);
+console.log('ALL MODES MINIMUM REAL CLOCK SURVIVAL PASS',JSON.stringify({earlyDeathBlocked:true,solo:true,coop:true,competitive:true}));
 console.log('GRACE SURVIVAL REAL CLOCK BOTS PASS',JSON.stringify({checkpoints,
  modes:4,scenarios:4,pendingNotCredited:true,simulatedSeconds:300,clinicalClockUnchanged:true}));
