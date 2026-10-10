@@ -119,5 +119,14 @@ for(const [id,dx,study,drugs,consult,dest,sys] of scenarios){
  buttons[0].onclick();
  assert.equal(sim.disposition.id,'quirofano');assertions++;
  assert.equal(sim.phys.sourceControlled,false,'handoff cannot invent a completed operation');assertions++;
+ // A later critical outcome must not erase actual administrations from debrief.
+ sim.patientDied=true;sim.caseEnded=true;
+ const debrief=ctx.csBreakdown();
+ for(const med of ['Cristaloides/Ringer','Ceftriaxona','Metronidazol']){
+   assert(debrief.notes.some(x=>x.includes(med)&&x.includes('ADMINISTRADO')),med+' retained in outcome audit');
+   assertions++;
+ }
+ assert(debrief.notes.some(x=>x.includes('Cirugía')&&x.includes('aceptó')), 'accepted consult retained even after death');
+ assertions++;
 }
 console.log('PERITONITIS INTEGRATION BOT PASS',JSON.stringify({cases:3,assertions,scope:'compiled HTML script + fake DOM + actual path evaluator and reward transition',physicalDevice:false}));
