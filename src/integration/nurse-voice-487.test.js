@@ -35,7 +35,7 @@ const ctx={window,sim,C,MONITOR_THERAPY_CATALOG:[
  document:{getElementById:()=>null},refreshChatDock:()=>{}};
 vm.runInNewContext(source,ctx,{timeout:4000});
 ctx.sendMessage('enfermera monitor vias hemograma y honograma');
-assert.deepEqual(tasks,['monitor','iv:1'],'independent real nurse procedures');
+assert.deepEqual(tasks,['monitor','iv:2'],'plural nurse request queues two peripheral accesses');
 assert(operations.some(x=>x.includes('Hemograma')),'hemograma actually dispatched');
 assert(nurse.some(x=>x.includes('honograma')),'unknown study gets explicit nurse rejection');
 assert(nurse.some(x=>x.includes('recib')||x.includes('Recib')),'instant acknowledgment');
@@ -47,7 +47,7 @@ assert.deepEqual(renders,['therapy','history','monitor'],'monitor active list, h
 assert(operations.some(x=>x.includes('ceftriaxona')));
 assert(operations.some(x=>x.includes('metronidazol')));
 ctx.nurseNatural('vías');
-assert(tasks.includes('iv:1'),'nearby nurse understands bare vías without manual action');
+assert(tasks.includes('iv:2'),'nearby nurse understands bare vías as two real accesses');
 ctx.nurseNatural('dos vías');
 assert(tasks.includes('iv:2'),'bare two venous lines are understood');
 const speechBefore=tasks.length;
@@ -62,10 +62,16 @@ assert.equal(tasks.length,patientBefore,'bare word cannot become a nurse command
 assert(sent.some(x=>x==='old vías'),'non-nursing input is handled by original dispatcher');
 const beforeMixed=tasks.length, beforeOps=operations.length;
 ctx.sendMessage('enfermera vías oxígeno expansión');
-assert(tasks.slice(beforeMixed).includes('iv:1'),'IV task queued');
+assert(tasks.slice(beforeMixed).includes('iv:2'),'both peripheral lines queued');
 assert(operations.slice(beforeOps).includes('enfermera ringer'),'native fluid dispatch');
 ctx.sendMessage('enfermera monitor');
 assert.equal(tasks.at(-1),'monitor','monitor task queued');
+const beforeCombined=tasks.length;
+ctx.sendMessage('enfermera monitor y vías');
+assert.deepEqual(tasks.slice(beforeCombined),['monitor','iv:2'],
+ 'exact reported mixed nursing phrase queues monitor PLUS two peripheral lines');
+ctx.nurseNatural('enfermera una vía');
+assert.equal(tasks.at(-1),'iv:1','explicit singular requests exactly one access');
 ctx.sendMessage('enfermera cirugia');
 assert.equal(consults.length,1,'consult requested rather than operation');
 ctx.sendMessage('enfermera no cirugia');
