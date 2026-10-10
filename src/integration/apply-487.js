@@ -14,6 +14,7 @@ import {applyGraceSurvival487} from './grace-survival-487.js';
 import {applyManualMonitorIV487} from './manual-monitor-iv-487.js';
 import {applySecondaryBridge487} from './secondary-sepsis-bridge-487.js';
 import {applyCriticalRescue487} from './critical-rescue-487.js';
+import {applyClinicalConfirmations487} from './clinical-confirmations-487.js';
 import {applyVegaStepCoach487} from './vega-step-coach-487.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
 export function apply487(html){
@@ -658,5 +659,6 @@ function csDrawRemote(){
  s=applyGraceSurvival487(s);
  s=applySecondaryBridge487(s);
  s=applyCriticalRescue487(s);
+ s=applyClinicalConfirmations487(s);
  return s;
 }
