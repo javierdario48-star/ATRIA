@@ -10,6 +10,7 @@ import {applyDiagnosticImpression487} from './diagnostic-autocomplete-487.js';
 import {applySurgicalNursing487} from './surgical-nursing-487.js';
 import {applyNurseVoice487} from './nurse-voice-487.js';
 import {applyNurseExecution487} from './nurse-execution-487.js';
+import {applyGraceSurvival487} from './grace-survival-487.js';
 import {applyVegaStepCoach487} from './vega-step-coach-487.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
 export function apply487(html){
@@ -651,5 +652,6 @@ function csDrawRemote(){
  s=applySurgicalNursing487(s);
  s=applyNurseVoice487(s);
  s=applyNurseExecution487(s);
+ s=applyGraceSurvival487(s);
  return s;
 }
