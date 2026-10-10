@@ -44,7 +44,13 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
   const negated=relevantNegation.test(scoped||'');
   const phrase=input.slice(item.start,chosen.find(x=>x.start>item.start)?.start??input.length)
    .replace(/\s+(?:y|e|ademas|mas)\s*$/,'').trim();
-  const count=item.kind==='iv'&&/\b(?:dos|2)\s+(?:vias|accesos)/.test(input.slice(Math.max(0,item.start-5),item.end+9))?2:1;
+  // Standard bedside shorthand: plural "vías" / "accesos" requests TWO.
+  // Explicit "una vía"/"un acceso" keeps ONE; singular "vía" defaults to ONE.
+  const local=input.slice(Math.max(0,item.start-12),Math.min(input.length,item.end+10));
+  const explicitOne=/\b(?:una?|1)\s+(?:via|acceso)\b/.test(local);
+  const plural=/\b(?:vias|accesos)\b/.test(local);
+  const explicitTwo=/\b(?:dos|2)\s+(?:vias?|accesos?)\b/.test(local);
+  const count=item.kind==='iv'&&(explicitTwo||plural&&!explicitOne)?2:1;
   const duplicate=result.some(x=>x.id===item.id&&x.kind===item.kind&&!x.negated);
   if(!duplicate)result.push({...item,text:phrase,count,negated});
  }
