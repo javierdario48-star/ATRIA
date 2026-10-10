@@ -67,6 +67,20 @@ function finish(bot,label,destination){
  urgent.dx('peritonitis secundaria').talk(2).vitals().exam()
  .administer('fluid').administer('ceftriaxone').administer('metronidazole').consult('cirugia','done');
  finish(urgent,'emergency surgical transfer before CT','quirofano');
+ const actualFailure=patient('PERI-SEC-001',{sys:82,spo2:92});
+ actualFailure.c.vitals={bp:'86/50'};
+ actualFailure.dx('peritonitis secundaria').vitals().exam()
+ .administer('oxygen').administer('fluid')
+ .administer('ceftriaxone').administer('metronidazole').consult('cirugia','done');
+ const handoff=actualFailure.check('accepted surgery plus completed native therapies must allow emergency transfer without full interview or CT',true);
+ assert.equal(handoff.action,'quirofano');
+ assert.equal(handoff.historyDeferredForEmergency,true);
+ assert.equal(actualFailure.s.phys.sourceControlled,false,'accepted OR handoff is not automatic surgery');
+ const pendingCase=patient('PERI-SEC-001',{sys:82});
+ pendingCase.c.vitals={bp:'86/50'};
+ pendingCase.dx('peritonitis secundaria').vitals().exam().consult('cirugia','done');
+ pendingCase.prescribe('fluid').prescribe('ceftriaxone').prescribe('metronidazole');
+ pendingCase.check('ordered-only interventions still cannot qualify for handoff',false);
  const wrong=patient('PERI-SEC-001');
  wrong.dx('peritonitis secundaria').talk().vitals().exam().order('peri_ct','done').consult('cirugia','done');
  wrong.administer('ceftriaxone');
