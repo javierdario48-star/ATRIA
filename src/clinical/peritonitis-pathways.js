@@ -25,8 +25,12 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
   const historyOk=Number(snapshot.historyCount||0)>=1;
   const examOk=!!snapshot.examDone||Number(snapshot.examRegionsCount||0)>=2;
   const vitalsOk=!!snapshot.vitalsKnown;
+  // In documented secondary-peritonitis shock, delaying a surgical handoff
+  // solely for elective history questions is unsafe; hand off that history as
+  // incomplete instead, while preserving all therapy/consultation gates.
+  const emergencySecondary=id==='PERI-SEC-001'&&(initialSys<90||critical)&&vitalsOk&&examOk;
   if(snapshot.patientDied||snapshot.caseEnded)return {caseId:id,ready:false,action:null,missing:['Atención ya finalizada o paciente fallecido.'],critical};
-  if(!historyOk)missing.push('Obtener anamnesis pertinente.');
+  if(!historyOk&&!emergencySecondary)missing.push('Obtener anamnesis pertinente.');
   if(!vitalsOk)missing.push('Registrar signos vitales.');
   if(!examOk && !(critical&&Number(snapshot.historyCount||0)>=2))
     missing.push('Realizar examen abdominal dirigido.');
@@ -48,7 +52,7 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
   if(id==='PERI-SEC-001'){
     // In extremis, peritoneal signs + history permit surgical transfer before CT.
     const imaging=done.has('peri_ct')||done.has('peri_rx');
-    const urgentClinical=(critical||recentShock)&&examOk&&Number(snapshot.historyCount||0)>=2;
+    const urgentClinical=(critical||recentShock)&&vitalsOk&&examOk;
     if(!imaging&&!urgentClinical)missing.push('Obtener imagen orientadora o justificar urgencia por clínica grave.');
     const coverage=(hasDrug('ceftriaxone')&&hasDrug('metronidazole'))||
       (hasDrug('ceftazidime')&&hasDrug('metronidazole'))||
@@ -81,7 +85,7 @@ export function csPeritonitisEvaluate487(snapshot = {}) {
     id==='PERI-SEC-001'?'quirofano':((critical||recentShock)?'uti':'sala');
   const labels={sala:'Internar en sala',uti:'Derivar a UTI',quirofano:'Derivar a quirófano'};
   const ready=missing.length===0;
-  return {caseId:id,ready,critical,diagnostic,evidenceSufficient:missing.every(x=>!(/anamnesis|signos|examen|impresi|imagen|paracentesis|foco/.test(normalize(x)))),
+  return {caseId:id,ready,critical,historyDeferredForEmergency:emergencySecondary&&!historyOk,diagnostic,evidenceSufficient:missing.every(x=>!(/anamnesis|signos|examen|impresi|imagen|paracentesis|foco/.test(normalize(x)))),
     action:ready?destination:null,label:ready?labels[destination]:null,
     missing,allowedDestinations:ready?[destination]:[],
     followUp:(id==='PERI-TER-001'&&/candida/i.test(String(snapshot.studyResults?.ter_culture||''))&&
