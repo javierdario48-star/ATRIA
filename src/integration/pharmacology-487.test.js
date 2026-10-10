@@ -80,7 +80,7 @@ ctx.sim=null;
 assert.throws(()=>ctx.window.csPharm487.registerCase({id:'BAD-NO-PHARMACOLOGY'}),
  /requires explicit/);
 const newCase={id:'FUTURE-001',vitals:{bp:'105/70',spo2:97},
- pharmacology:{traits:['vasoplegia','infection'],newDrugs:[novel]}};
+ pharmacology:{traits:['vasoplegia'],newDrugs:[novel]}};
 const updated=ctx.window.csPharm487.registerCase(newCase);
 assert.equal(updated.cases,14);assert.equal(updated.drugs,native.length+1);
 assert.equal(ctx.MONITOR_THERAPY_CATALOG.filter(x=>x.id===novel.id).length,1);
