@@ -88,6 +88,20 @@ export function applyPharmacology487(html){
  const previousGive=addMonitorTherapy;
  addMonitorTherapy=function(text){
   const patient=sim,caseDef=C,prior=Number(patient?.administrationLog?.length||0);
+  // New IV molecules must not bypass completed vascular access when ordered
+  // through the manual monitor. Legacy native dosing is not rewritten here.
+  const normalized=String(text||'').toLowerCase().normalize('NFD')
+   .replace(/[\u0300-\u036f]/g,'');
+  const newIV=registry.drugs.find(drug=>!nativeIds.has(drug.id)&&
+   drug.pharmacology.route==='iv'&&drug.aliases.some(alias=>{
+    const word=String(alias).toLowerCase().normalize('NFD')
+     .replace(/[\u0300-\u036f]/g,'');
+    return word.length>=3&&normalized.includes(word);
+   }));
+  if(newIV&&Number(patient?.venousAccessCount||0)<=0){
+   if(patient)nurseSay('Falta vía venosa para '+newIV.label+'. No se administró.');
+   return false;
+  }
   const result=previousGive.apply(this,arguments);
   if(result===false||!patient||sim!==patient||!caseDef||!Array.isArray(patient.administrationLog)||
      patient.administrationLog.length<=prior)return result;
