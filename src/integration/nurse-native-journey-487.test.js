@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import './real-spoken-nurse-journey-487.test.js';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {apply487} from './apply-487.js';
