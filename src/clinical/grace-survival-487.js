@@ -36,9 +36,12 @@ export function csGraceState487(patient, caseDef, activeSeconds=0){
  // monitor fluctuation or switching beds must not retract previously earned time.
  // Do not mutate in this pure evaluator; the frame adapter banks maxObservedCredit.
  const creditEarned=Math.min(1,Math.max(credit,Number(patient.csGrace487?.earnedCredit)||0));
- const releaseAt=180+120*creditEarned;
+ // 3 active real minutes unconditional; up to 5 additional minutes from
+ // verified interventions. This gives an unfamiliar learner time to complete
+ // abdominal examination and surgical handoff AFTER stabilizing shock.
+ const releaseAt=180+300*creditEarned;
  // The native fatal-exposure clock resumes gradually after releaseAt; no cliff.
- return {enabled:true,protected:elapsed<180||(elapsed<300&&elapsed<releaseAt),
+ return {enabled:true,protected:elapsed<180||(elapsed<480&&elapsed<releaseAt),
   elapsed,releaseAt,credit:creditEarned,observedCredit:credit,covered,fluidOk};
 }
 
