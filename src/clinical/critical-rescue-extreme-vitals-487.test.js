@@ -51,6 +51,7 @@ function run(treat){
   volume:sim.phys.effectiveVolume,source:sim.phys.sourceControlled};
 }
 const untreated=run(false),treated=run(true);
+console.log('EXTREME SHOCK OBSERVED',JSON.stringify({treated,untreated}));
 assert(treated.sys>75&&treated.map>45,'severely shocked patient becomes hemodynamically recoverable');
 assert(treated.spo2>80,'severe hypoxemia responds to actually administered oxygen');
 assert(treated.sys>untreated.sys+15,'treatment changes native blood pressure, not only a fatal flag');
