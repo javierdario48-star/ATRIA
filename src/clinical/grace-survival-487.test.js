@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import {csGraceState487} from './grace-survival-487.js';
+import {csGraceState487,csMissingAdminRescue487} from './grace-survival-487.js';
 import {applyGraceSurvival487} from '../integration/grace-survival-487.js';
 
 const C={risk:'shock',vitals:{bp:'72/42',spo2:83},
@@ -13,6 +13,15 @@ function patient(mode='apprentice'){
  gameMinute:0,_fatalExposure:0,patientDied:false};
 }
 function admin(p,id){p.monitorTherapies.set(id,{id});p.administrationLog.push({id,m:p.gameMinute});}
+const indicated=patient();indicated.interventions=new Set(['fluid','oxygen']);
+assert.equal(csMissingAdminRescue487(indicated,C,{spo2:75},40),true,
+ 'indication alone cannot prevent terminal hypoxia and shock');
+const delivered=patient();admin(delivered,'oxygen');admin(delivered,'fluid');
+assert.equal(csMissingAdminRescue487(delivered,C,{spo2:75},40),false,
+ 'native administration log and active monitor confirm genuine rescue before late source-control risk');
+delivered.gameMinute=13;
+assert.equal(csMissingAdminRescue487(delivered,C,{spo2:86},40),true,
+ 'source control remains relevant in unresolved late shock');
 const checkpoints=[0,60,179,180,240,299,300,320];
 const untreated=patient(),pending=patient(),partial=patient(),adequate=patient();
 pending.csPhase4Pending487=[{id:'ceftriaxone'},{id:'metronidazole'},{id:'fluid'}];
