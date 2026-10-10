@@ -6,7 +6,7 @@ export function applyNurseVoice487(html){
  if(window.__atriaNurseVoiceRouter487)return;window.__atriaNurseVoiceRouter487=true;
  ${csNurseScan487.toString()}
  const baseNurse=nurseNatural,baseSend=sendMessage;
- const addressed=t=>/^(?:enfermera|enfermero|enfermeria)\\b/.test(norm(String(t||'')));
+ const addressed=t=>/\\b(?:enfermera|enfermero|enfermeria)\\b/.test(norm(String(t||'')));
  function feedback(t){nurseSay(t);sim?.events?.push({m:sim.gameMinute,t:'Enfermería: '+t})}
  nurseNatural=function(text){
   const bare=norm(String(text||'')).trim();
@@ -79,7 +79,18 @@ export function applyNurseVoice487(html){
  };
  sendMessage=function(text){
   const raw=String(text||'').trim();
-  const shortNurse=chatRole==='nurse'&&/^(?:(?:dos|2) )?(?:vias?|accesos? (?:venosos?|perifericos?)|monitor|monitorizar|oxigeno|o2|ringer|hemograma|signos vitales)$/.test(norm(raw));
+  const clean=norm(raw);
+  // If the nurse is the current recipient, interpret actionable composite
+  // orders wherever the procedure words appear, not only as the first token.
+  // Questions and explicit negations remain non-executable.
+  const nurseContext=chatRole==='nurse'||pendingAddress==='nurse';
+  const parsed=nurseContext?csNurseScan487(raw,C?.studies||[],MONITOR_THERAPY_CATALOG,C?.interventions||[]):null;
+  const shortNurse=nurseContext&&!!parsed?.active&&
+   parsed.items.some(x=>!x.negated)&&
+   !/^(?:que|cuando|como|cuantas|por que|me dijeron|el paciente dice)\\b/.test(clean);
+  // A message explicitly addressed to nursing works even when "enfermera"
+  // occurs at the end ("monitor y vías, enfermera").
+
   if(!raw||raw.startsWith('/')||(!addressed(raw)&&!shortNurse)||!sim||!C)return baseSend.apply(this,arguments);
   player.bubble=raw;player.bubbleUntil=performance.now()+2200;
   addGlobalChat('doctor',raw);pendingAddress=null;chatRole='nurse';refreshChatDock();
