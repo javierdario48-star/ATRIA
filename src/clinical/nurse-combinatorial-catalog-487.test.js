@@ -150,8 +150,10 @@ assert.equal(scan('Enfermera metronidazol').items.length,1,
 assert(scan('Enfermera no ceftriaxona').items.every(x=>x.negated),
  'negative commands cannot be executable');
 assert.equal(scan('Enfermera ¿monitor?').active,false);
-assert(scan('Enfermera suspender beta bloqueante').items.every(x=>x.negated),
- 'suspension must not turn into administration');
+assert(scan('Enfermera suspender beta bloqueante').items.some(x=>x.id==='stop_beta_blocker'),
+ 'explicit suspension must target the stop-beta-blocker intervention');
+assert(!scan('Enfermera suspender beta bloqueante').items.some(x=>x.id==='beta_blocker'&&!x.negated),
+ 'suspension must never trigger administering a beta blocker');
 assert(scan('Enfermera cirugía').items.some(x=>x.kind==='surgery'),
  'surgery is a referral, not a medication');
 const fractional=scan('Enfermera noradrenalina 0,05 µg/kg/min');
