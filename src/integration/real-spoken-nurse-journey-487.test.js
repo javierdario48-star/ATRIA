@@ -95,6 +95,81 @@ assert(patient.therapyTotals.fluidMl>=500,'fluid restores the native physiologic
 assert(patient.monitorTherapies.has('fluid'));
 assert(patient.monitorTherapies.has('ceftriaxone')&&patient.monitorTherapies.has('metronidazole'));
 assert(ui.includes('history')&&ui.includes('therapies'),'monitor history and active therapies updated');
+
+function screenshotPatient(uid,existing=0){
+ return {...patient,patientInstance:{uid,bed:{approach:[24,17]}},venousAccessCount:existing,
+  venousAccessTypes:Array(existing).fill('periférica'),monitorConnected:false,lastVitalsKnown:false,
+  events:[],globalChat:[],chats:{nurse:[]},orders:new Map(),consults:new Map(),
+  administrationLog:[],monitorTherapies:new Map(),therapyExposure:new Map(),
+  therapyTotals:{fluidMl:0},interventions:new Set(),interventionTimes:new Map(),
+  adverseEvents:[],csNurse487History:[],csPhase4Pending487:[],mentor:{enabled:false}};
+}
+function nextScreenshot(uid,access=0){
+ const p=screenshotPatient(uid,access);
+ ctx.sim=p;nurse.task=null;nurse.queue.length=0;nurse.path=[];nurse.state='idle';
+ nurse.csReturnSince487=null;nurse.csTaskBegan487=null;
+ return p;
+}
+function finishScreenshotTasks(){
+ for(let i=0;i<12&&(nurse.task||nurse.queue.length);i++){
+  wall+=11200;ctx.updateNurse(1/60);
+  wall+=1800;ctx.updateNurse(1/60);
+  wall+=5500;ctx.updateNurse(1/60);
+ }
+ assert.equal(nurse.task,null,'all bedside screenshot tasks must finish');
+ assert.equal(nurse.queue.length,0,'no nursing task remains forgotten');
+}
+// Exact Android report: punctuation-free four-drug message must preserve all
+// four intents, with independent oxygen and three IV-dependent administrations.
+{
+ const p=nextScreenshot('screenshot-composite-no-commas');
+ ctx.sendMessage('Enfermera ceftriaxona metronidazol Ringer y oxígeno');
+ assert.deepEqual(p.administrationLog.map(x=>x.id),['oxygen'],
+   'oxygen executes immediately; three IV treatments must remain ordered');
+ assert.deepEqual(Array.from(p.csPhase4Pending487,x=>x.id),
+   ['ceftriaxone','metronidazole','fluid'],
+   'unpunctuated nurse utterance cannot collapse to one matched antibiotic');
+ ctx.sendMessage('Enfermera vías');
+ assert.equal(nurse.task?.kind,'iv_access');
+ assert.equal(nurse.task?.count,2,'plural vias must request TWO venous lines');
+ finishScreenshotTasks();
+ assert.equal(p.venousAccessCount,2,'two accesses completed by native finish function');
+ assert.deepEqual(p.administrationLog.map(x=>x.id),
+  ['oxygen','ceftriaxone','metronidazole','fluid'],
+  'each pending medicine must be administered exactly once after real access');
+}
+// Both punctuated command and existing peripheral access must work.
+{
+ const p=nextScreenshot('screenshot-composite-commas',1);
+ ctx.sendMessage('Enfermera ceftriaxona, metronidazol, Ringer y oxígeno');
+ assert.deepEqual(p.administrationLog.map(x=>x.id),
+  ['ceftriaxone','metronidazole','fluid','oxygen']);
+ assert.equal(p.csPhase4Pending487.length,0);
+ ctx.sendMessage('Enfermera vías');
+ assert.equal(nurse.task?.count,1,'plural should request only missing second IV');
+ finishScreenshotTasks();
+ assert.equal(p.venousAccessCount,2);
+ ctx.sendMessage('Enfermera vías');
+ assert.equal(nurse.task,null,'repeated plural request does not place a third IV');
+}
+// A specific antibiotic request never silently administers another antibiotic.
+{
+ const p=nextScreenshot('screenshot-specific-drug',1);
+ ctx.sendMessage('Enfermera metronidazol');
+ assert.deepEqual(p.administrationLog.map(x=>x.id),['metronidazole']);
+ ctx.sendMessage('Enfermera ceftriaxona');
+ assert.deepEqual(p.administrationLog.map(x=>x.id),['metronidazole','ceftriaxone']);
+}
+{
+ const p=nextScreenshot('screenshot-two-existing',2);
+ ctx.sendMessage('Enfermera vías');
+ assert.equal(nurse.task,null);
+ assert.equal(p.venousAccessCount,2);
+}
+console.log('ANDROID NURSE MULTI-ORDER NATIVE REGRESSION PASS',
+ JSON.stringify({unpunctuatedFour:true,commaFour:true,plural2:true,existing1and2:true,
+  separateAntibiotics:true,actualNativeFinish:true,physicalAndroid:false}));
+
 console.log('FULL SPOKEN NURSE TO ACTUAL ADMINISTRATION BOT PASS',
  JSON.stringify({spokenOrders:6,realIVCount:2,nativeAdmin:4,defaults:true,monitorVisible:true,
   physicalAndroid:false}));
