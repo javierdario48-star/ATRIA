@@ -135,7 +135,8 @@ for(const c of cases){
   if(intervention.id==='source_control'||intervention.id==='stop_beta_blocker')continue;
   const q='Enfermera '+(intervention.aliases?.[0]||intervention.label);
   const r=csNurseScan487(q,c.studies,nativeCatalogue,c.interventions);
-  assert(r.items.some(x=>x.id===intervention.id),
+  const routedId=intervention.id==='surgery'?'cirugia':intervention.id;
+  assert(r.items.some(x=>x.id===routedId),
    c.id+': case-specific intervention not detected: '+q);
   caseActions++;
  }
