@@ -34,18 +34,17 @@ export function applyNurseExecution487(html){
     window.csWithPatientStateV203(target,task._targetCaseId,()=>nurseSay(message));
    else nurseSay(message);
   }
-  const result=previousUpdate.apply(this,arguments);
   for(const actor of actors){
    if(actor.state==='returning'&&!actor.task){
     actor.csReturnSince487??=now;
     if(now-actor.csReturnSince487>4500){
-     // Let the native per-actor scheduler observe an arrived return next tick.
-     // Calling startNextTask() here would dispatch into the wrong nurse.
+     // The existing per-actor native update finishes the return and starts
+     // that SAME nurse's next task; never use global startNextTask here.
      actor.path=[];actor.pathIndex=0;actor.csReturnSince487=null;
     }
    }else actor.csReturnSince487=null;
   }
-  return result;
+  return previousUpdate.apply(this,arguments);
  };
 })();
 </script>`;
