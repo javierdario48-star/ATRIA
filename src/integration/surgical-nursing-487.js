@@ -32,7 +32,7 @@ export function applySurgicalNursing487(html){
  function adviseExact(){
    const remaining=actualSurgeryBlockers();
    return remaining.length?'Para derivar todavía falta: '+remaining.join('; ')+'.':
-     'Se cumplen los criterios de derivación: pulsá «Derivar a quirófano» sobre el paciente.';
+     'Aceptamos el traslado. Se cumplen los criterios de derivación: pulsá «Derivar a quirófano» sobre el paciente.';
  }
  function request(){
    if(!C||!sim||sim.caseEnded||sim.patientDied){nurseSay('No hay una atención activa para gestionar Cirugía.');return false;}
