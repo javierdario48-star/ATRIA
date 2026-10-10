@@ -1,7 +1,7 @@
 name: ATRIA Architecture QA
 on:
   push:
-    branches: [main, atria-4.8.7-qa]
+    branches: [main, atria-4.8.7-qa, atria-4.8.7-grace-nursing-qa]
   workflow_dispatch:
 permissions:
   contents: read
