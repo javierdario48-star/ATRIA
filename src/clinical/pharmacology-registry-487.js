@@ -90,7 +90,7 @@ export function csBuildPharmRegistry487(nativeCatalog,cases){
  const registry=new Map();
  for(const item of nativeCatalog){
   if(!item?.id||registry.has(item.id))throw Error('duplicate native drug '+item?.id);
-  const definition=PHARMA_RULES_487[item.id];
+  const definition=PHARMA_RULES_487[item.id]||item.pharmacology;
   csValidateDrug487(item.id,definition);
   registry.set(item.id,{...item,pharmacology:{...definition}});
  }
