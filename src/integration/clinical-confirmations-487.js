@@ -43,7 +43,7 @@ export function applyClinicalConfirmations487(html){
   }
   state.admin=log.length;
   if(!state.group&&log.some(x=>x.id==='ceftriaxone')&&log.some(x=>x.id==='metronidazole')){
-   state.group=true;emit(p,'Ceftriaxona y metronidazol aplicados');
+   state.group=true;emit(p,'Cobertura antibiótica completa: ceftriaxona + metronidazol');
   }
   // An earlier pending message is NOT an accurate active monitor status
   // after native administration. Never mark a non-logged dose as given.
