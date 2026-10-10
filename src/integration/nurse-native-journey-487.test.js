@@ -48,7 +48,7 @@ const ctx={
  nurseSay:t=>{spoken.push(t);ctx.sim.globalChat.push(['nurse',t]);},
  addGlobalChat:(role,t)=>ctx.sim.globalChat.push([role,t]),
  pathTo:(actor,x,y)=>{routes.push([x,y]);return false},
- advanceActor:()=>false,
+ advanceActor:actor=>actor.path.length===0,
  findIntervention:()=>null,
  parseTherapyOrder:()=>({amount:4,unit:'L/min',display:'4 L/min'}),
  applyImmediatePhysiology:()=>{},
