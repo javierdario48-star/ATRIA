@@ -1,0 +1,76 @@
+# ATRIA 4.8.7 — Existing-case pharmacology baseline and scaling gates
+
+## 0. Decision and safety boundary
+
+Use a SINGLE shared physiology state per patient and mechanisms per medication, NOT separate code for every drug/disease pair. Case-specific features declare phenotype, pathophysiology, microbes and exceptional contraindications. Every clinical effect MUST be traceable to actual `administrationLog` or confirmed procedure and the patient's evolving state. This plan does not claim that current numerical coefficients have undergone medical calibration.
+
+Do not replace the native sepsis engines, 180–480 s real-time death protection, surgical handoff, nursing execution, XP or multiplayer while integrating this design. Work only on `atria-4.8.7-grace-nursing-qa`; protect `main`, original QA, `vendor/atria-4.8.6`, Supabase and production.
+
+## 1. Exact inventory and first executable audit
+
+Native literal catalog: **29** entries, some procedures rather than pharmaceutical compounds. The existing `cs-safe-v0190` bootstrap adds **`anticoagulation` (heparina IV)** for `MESI-001`, making **30 runtime entries**. The source currently has 13 seed cases. `src/clinical/pharmacology-coverage-487.js` projects all **390 pairs**, using the existing drug registry, case phenotype and physiological inputs. This is a **NON-MUTATING** audit: it cannot prescribe, mark a treatment administered, improve a lab, or affect death. It labels each pair as `conditional-target`, `target-with-risks`, `risk-without-benefit`, `no-demonstrated-target` or `blocked-unmodelled`.
+
+A clinically necessary negative outcome is explicit: an irrelevant treatment must not magically help. A risk classification is not an assertion that an adverse event is guaranteed. The audit highlights missing mechanisms, drug-state interactions and the need for calibration; it does **not** certify the clinical correctness of 390 numerical trajectories.
+
+**P0 hard blocker:** heparin's V19 catalog entry lacks a globally reviewed rule, proper IV dose/unit parsing, coagulation/thrombosis/bleeding state and monitoring. The already-committed transactional wrapper safely REJECTS installation rather than installing half the global engine; `node src/integration/pharmacology-boot-487.test.js --require-compatible` remains a failing **release-readiness** gate. Do not add fake heparin dose or constant BP offsets to force success. Model unfractionated heparin separately with documented anticoagulant mechanism, administration units/rate, coagulation monitoring, HIT and bleeding cautions; integrate only after independent medical review and a dedicated red/green test.
+
+## 2. Common patient physiology — one state, explicit coupling
+
+Evolve only the minimal state demanded by current cases:
+
+- **Circulation:** effective circulating volume, vascular resistance, cardiac pumping/perfusion, active bleeding, fluid balance.
+- **Respiration:** underlying untreated gas-exchange impairment and supplemental oxygen support; separate oxygen *saturation* from blood oxygen *content* and Hb.
+- **Kidney/liver:** filtration and clearance modifiers; renal toxicity and overload; support delayed time course for ascites.
+- **Infection:** pathogen spectrum/coverage, inflammation, source status, culture; antibiotic administration alone cannot silently count as source control.
+- **Coagulation:** thrombotic burden, anticoagulation intensity, bleeding hazard/platelet abnormality (must be introduced before heparin is declared clinically compatible).
+- **Symptoms:** pain, nausea, bowel motility, ascites and clinical progression, distinct from monitor vital signs.
+
+No arbitrary additive effects when a mechanistic link exists. Derived observables are outputs; they are not fed back as their own uncorrected cause. Calibrate thresholds against independent clinical acceptance envelopes rather than copying the outputs of the current model.
+
+## 3. Existing 13 cases: onboarding order
+
+| Phase | Cases | Clinical mechanism |
+| --- | --- | --- |
+| B1 | PERI-SEC-001, HDA-001, CIRR-001 | Sepsis/vasoplegia, hemorrhagic volume depletion, cirrhosis/ascites; compare 5 key interventions |
+| B2 | PERI-PBE-001, PERI-TER-001, CHOLANG-001, APP-001, CHOLE-001 | Organ infection + susceptibility + documented source control |
+| B3 | PANC-001, ILEO-001, MESI-001 | Pancreatic third spacing, mechanical obstruction/decompression, mesenteric vascular ischemia and anticoagulation |
+| B4 | CROHN-001, COLON-001 | Delayed immunomodulation, anemia, oncologic follow-up; no fictional acute cancer shrinkage |
+
+All 13 receive a case profile and must pass the compatibility audit in every phase. Migrate clinically meaningful mechanisms independently, never all cases simultaneously.
+
+## 4. Existing 30 catalog entries: onboarding order
+
+| Phase | Treatments and mechanism family | Release condition |
+| --- | --- | --- |
+| M1 | oxygen; fluid (crystalloids); vasopressor; morphine; furosemide | Demonstrate dynamic physiological state, benefit/harm, onset, duration and no circular oxygen target |
+| M2 | albumin; transfusion; beta_blocker; espironolactona; paracentesis_ter; stop_beta_blocker | Volume/Hb/renal/tachycardia distinctions, no fake blood oxygen saturation |
+| M3 | analgesia; antiemetic; ppi; steroid; aza | Symptom, ulcer-bleed and delayed immunomodulation domains; separate active molecules and routes |
+| M4 | ceftriaxone; metronidazole; imipenem; ceftazidime; cefoperazone; cefepime; piptazo; ampicillin; amikacin; gentamicin; fluconazole; amphotericin | Verified antimicrobial coverage and resistance context, source control, renal clearance and adverse effects |
+| M5 | source_control; anticoagulation (heparin IV) | Verified performed procedure vs ordered consult; coagulation/bleeding/HIT model and explicit dose + monitoring |
+
+Source control and stopping a beta blocker are **not drug molecules**; they share the *treatment catalog* but require different executors. Generic `analgesia` and `antiemetic` are orders for drug classes, not safe substitutes for molecule-specific kinetics.
+
+## 5. Computational strategy for scale
+
+1. **Registry at load:** validate all records once and build `Map<drugId, DrugDefinition>`, `Map<caseId, CaseDefinition>`, alias registry for nursing and `Map<mechanism, affected state axes>`. Freeze immutable definitions.
+2. **Patient state:** store current organ/phenotype variables, administered treatment events, dosing/exposure and timestamp; never mark an order as an administered drug.
+3. **Tick:** update only active treatments, active mechanisms and observed organ axes. Target complexity `O(patients * (activeDrugs + activeMechanisms))`, not `O(allDiseases * allDrugs)`. Use an independently timed fixed simulation step; UI updates can be throttled.
+4. **PK/PD:** start with a small, explicit per-drug onset/peak/decay model and optional clearance modifiers. Do not assume all pharmacologic classes share a single half-life or route. Add a solver or compartment model ONLY when a tested mechanism needs it.
+5. **Multiplayer:** only one authority advances physiological state; other clients render synchronized snapshots. Deterministic replay from an ordered event log is an acceptance requirement.
+6. **CI:** run schema/contract tests and changed-mechanism dependent scenarios in quick checks; run complete 13x30 catalog matrix plus trajectories and targeted high-risk drug interactions in full regression. Avoid exponential all-subset testing for drug *efficacy*; broad spoken-order lexical fuzzing is a separate concern.
+7. **New case:** validated phenotype/organ baseline, studies, evolution and closure; automatically inherits every registered medication mechanism, with no implied indication. New mechanism declarations require tests.
+8. **New drug:** validated identity, aliases, route, numeric unit-aware dosing, mechanisms, toxicity, onset/decay, organ clearance, contraindications, evidence and monitoring. Register once globally, revalidate affected states/cases. No unreviewed default dose.
+9. **Versioning:** immutable case/drug schema versions, explicit migration at shift boundaries only, schema compatibility checks before activating a new release.
+
+## 6. Hard acceptance gates for future work
+
+- **A — boot:** actual 30-entry post-V19 catalog compatible, zero partial wrappers, heparin honestly modelled or explicitly unavailable; CI/build/artifact checks green.
+- **B — shadow pilot:** same three cases with 5 interventions; no-treatment, indicated, harmful, cumulative and delayed scenarios; compare against native on per-tick trace. New motor CANNOT write clinical state.
+- **C — clinical envelopes:** clinician-reviewed expected directions/timing, organ-risk thresholds and no double counting, validated independently from implementation.
+- **D — feature flagged** case-by-case runtime: preserve ledger, vitals, death clock, nursing, surgery/XP, mobile CPU/memory and two-client determinism; rollback via single flag.
+- **E — scale rehearsal:** add a real new case and real new medication, require no handwritten drug × disease pair rules and no silent disabled side-effects; measure incremental CPU and build validation cost.
+- **F — device:** exact HEAD preview READY, physical Android/iPhone patient+nursing end-to-end, real two-account scenario. GitHub CI or Node VM is not physical acceptance.
+
+## 7. Current status
+
+The cross-product audit is implemented and can expose incomplete pharmacology. The known heparin incompatibility is **deliberately unresolved** pending clinical mechanism/dose support. The existing global pharmacology adapter therefore must not be described as activated for the actual full catalog until the stricter `--require-compatible` gate passes. No production deployment or medical-accuracy claim.
