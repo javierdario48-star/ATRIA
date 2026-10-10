@@ -14,6 +14,18 @@ const PK=Object.freeze({
  furosemide:{mechanism:'diuresis',route:'iv',reference:40,max:200,infusion:false}
 });
 export const SHADOW_PILOT_DRUGS_487=PK;
+const supportedMechanisms=new Set(['oxygenation','volume','vascularTone','opioid','diuresis']);
+// A new molecule referencing an already modelled mechanism requires no edits
+// to any case. Potency remains an explicit, separately-reviewed parameter.
+export function csShadowRegisterDrug487(catalog,item){
+ if(!item||typeof item.id!=='string'||!/^[a-z][a-z0-9_]*$/.test(item.id)||
+  catalog[item.id]||!supportedMechanisms.has(item.mechanism)||
+  !['iv','inhaled'].includes(item.route)||!Number.isFinite(item.reference)||
+  item.reference<=0||!Number.isFinite(item.max)||item.max<item.reference||
+  typeof item.infusion!=='boolean')
+  throw Error('unknown or incomplete shadow mechanism registration');
+ return Object.freeze({...catalog,[item.id]:Object.freeze({...item})});
+}
 const normalizedVitals=c=>{
  const [sys,dia]=String(c?.vitals?.bp||'120/80').split('/').map(Number);
  return {sys:Number(c?.vitals?.sys??sys),dia:Number(c?.vitals?.dia??dia),
@@ -35,39 +47,39 @@ function stateFromTraits(traits){
   ischemiaRisk:0
  };
 }
-export function csShadowCreate487(c){
+export function csShadowCreate487(c,{drugs=PK}={}){
  const profile=csCasePharmProfile487(c);
  const base=normalizedVitals(c);
  if(Object.values(base).some(x=>!Number.isFinite(x)))throw Error('case initial vitals invalid');
  const state=stateFromTraits(profile.traits);
  const initial={...state};
  return {
-  caseId:c.id,traits:[...profile.traits],base,initial,state,
+  caseId:c.id,traits:[...profile.traits],drugs,base,initial,state,
   minute:0,remainder:0,
-  infusions:{oxygen:0,vasopressor:0},
+  infusions:{},
   exposure:{pressor:0,oxygen:0,morphine:0,furosemide:0},
   events:[],drugTotals:{},vitals:{...base},adverse:[]
  };
 }
 export function csShadowAdminister487(patient,id,dose){
- const def=PK[id];
+ const def=patient.drugs[id];
  if(!def)throw Error('shadow mechanism unvalidated for '+id);
  if(!Number.isFinite(dose)||dose<=0||dose>def.max)throw Error('invalid shadow dose '+id);
  const z=patient.state;
- if(id==='fluid'){
+ if(def.mechanism==='volume'){
   const m=dose/500;
   const response=clamp((1.13-z.volume)/.60,.10,1);
   z.volume=clamp(z.volume+.115*m*response,.20,1.3);
   if(z.volume>.99)z.congestion=clamp(z.congestion+.055*m,0,1.3);
- }else if(id==='morphine')patient.exposure.morphine+=dose/def.reference;
- else if(id==='furosemide')patient.exposure.furosemide+=dose/def.reference;
+ }else if(def.mechanism==='opioid')patient.exposure.morphine+=dose/def.reference;
+ else if(def.mechanism==='diuresis')patient.exposure.furosemide+=dose/def.reference;
  else patient.infusions[id]=dose;
  patient.drugTotals[id]=(patient.drugTotals[id]||0)+dose;
  patient.events.push({minute:patient.minute,id,dose,action:'administer'});
  return patient;
 }
 export function csShadowStop487(patient,id){
- if(!PK[id]?.infusion)throw Error('only an active infusion/support can be stopped '+id);
+ if(!patient.drugs[id]?.infusion)throw Error('only an active infusion/support can be stopped '+id);
  patient.infusions[id]=0;
  patient.events.push({minute:patient.minute,id,action:'stop'});
  return patient;
@@ -95,10 +107,15 @@ function oneMinute(p){
  const t=new Set(p.traits),x=p.state,e=p.exposure;
  p.minute++;
  // Active inhaled oxygen and continuously infused vasopressor wash in/out.
- const oxTarget=p.infusions.oxygen>0?
-  clamp(p.infusions.oxygen/PK.oxygen.reference,0,1.15):0;
- const pressorTarget=p.infusions.vasopressor>0?
-  clamp(p.infusions.vasopressor/PK.vasopressor.reference,0,2):0;
+ let oxTarget=0,pressorTarget=0;
+ for(const [id,dose] of Object.entries(p.infusions)){
+  const rule=p.drugs[id];
+  if(!rule||!(dose>0))continue;
+  if(rule.mechanism==='oxygenation')oxTarget+=dose/rule.reference;
+  if(rule.mechanism==='vascularTone')pressorTarget+=dose/rule.reference;
+ }
+ oxTarget=clamp(oxTarget,0,1.15);
+ pressorTarget=clamp(pressorTarget,0,2);
  e.oxygen+=(oxTarget-e.oxygen)*.40;
  e.pressor+=(pressorTarget-e.pressor)*.20;
  // Repeated boluses accumulate; they are not permanent status flags.
