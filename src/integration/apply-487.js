@@ -528,8 +528,7 @@ function csDrawRemote(){
   if(item.kind==='therapy'){
    const administered=(patient.administrationLog||[]).filter(r=>r.id===item.id).length;
    if(administered>item.baselineAdmin)return {status:'COMPLETED',reason:'Administración registrada'};
-   if(item.initiallyActive&&administered===item.baselineAdmin)return {status:'COMPLETED',reason:'Tratamiento previamente registrado'};
-   if(item.id==='oxygen'&&patient.monitorTherapies?.has('oxygen'))return {status:'COMPLETED',reason:'Oxigenoterapia iniciada'};
+   if(item.initiallyActive&&administered>0&&administered===item.baselineAdmin)return {status:'COMPLETED',reason:'Administración previamente documentada'};
    const waiting=(patient.csPhase4Pending487||[]).some(q=>q.id===item.id&&q.uid===item.uid);
    if(waiting)return {status:'WAITING',reason:'Falta acceso venoso permeable'};
    if(patient.pendingTherapies?.has(item.id))return {status:'IN_PROGRESS',reason:'Preparación o administración pendiente'};
