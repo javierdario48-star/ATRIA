@@ -4,6 +4,36 @@ export function applyNurseExecution487(html){
 (function(){
  if(window.__csNurseExecution487)return;window.__csNurseExecution487=true;
  const previousStart=startNextTask,previousUpdate=updateNurse;
+ const previousStart=startNextTask,previousUpdate=updateNurse,previousFinish=finishNurseTask;
+ // A previous phase drained IV medications on active-patient simulation ticks.
+ // That never ran for a patient left in a different box: completed cannulation
+ // must resume that patient's retained orders at the actual native completion.
+ finishNurseTask=function(){
+  const task=nurse.task,target=task?._targetSim||sim;
+  const oldCount=Number(target?.venousAccessCount||0);
+  const result=previousFinish.apply(this,arguments);
+  if(task?.kind!=='iv_access'||!target||target.caseEnded||Number(target.venousAccessCount||0)<=oldCount)return result;
+  const drain=()=>{
+   const pending=target.csPhase4Pending487;
+   if(!Array.isArray(pending)||!pending.length)return;
+   const uid=target.patientInstance?.uid;
+   for(const item of pending.slice(0,12)){
+    if(item.uid!==uid)continue;
+    const index=pending.indexOf(item);if(index<0)continue;
+    pending.splice(index,1);
+    const isCatalog=typeof MONITOR_THERAPY_CATALOG!=='undefined'&&MONITOR_THERAPY_CATALOG.some(x=>x.id===item.id);
+    const ok=isCatalog?addMonitorTherapy(item.text):nurseNatural('enfermera '+item.text);
+    if(ok===false){
+     pending.push(item);
+     nurseSay('No pude comenzar '+item.text+' después de canalizar la vía; la indicación continúa pendiente.');
+    }
+   }
+  };
+  if(target!==sim&&typeof window.csWithPatientStateV203==='function')
+   window.csWithPatientStateV203(target,task._targetCaseId,drain);
+  else if(target===sim)drain();
+  return result;
+ };
  startNextTask=function(){
   const prior=nurse.task,result=previousStart.apply(this,arguments),task=nurse.task;
   if(task&&!prior&&task.bedside){
