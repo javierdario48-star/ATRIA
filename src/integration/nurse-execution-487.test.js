@@ -10,10 +10,12 @@ new vm.Script(source,{filename:'nurse-bedside-runtime.js'});
 let now=1000;
 const sim={monitorConnected:false,venousAccessCount:0,
  patientInstance:{bed:{approach:[24,17]}}};
-const nurse={task:null,queue:[],path:[],state:'idle'};
+const nurse={task:null,queue:[],path:[],pathIndex:0,state:'idle'};
+const wardPatient={monitorConnected:false,venousAccessCount:0,patientInstance:{bed:{approach:[19,27]}}};
+const ward={task:null,queue:[],path:[],pathIndex:0,state:'idle'};
 const routes=[],spoken=[],completed=[];
 const context={
- window:{},sim,nurse,performance:{now:()=>now},
+ window:{},sim,nurse,wardNurses:[ward],performance:{now:()=>now},
  nurseSay:msg=>spoken.push(msg),
  pathTo:(actor,c,r)=>{routes.push([c,r]);return false},
  startNextTask:()=>{
@@ -22,11 +24,16 @@ const context={
    nurse.path=[[5,14]];nurse.pathIndex=1;
  },
  updateNurse:()=>{
-   if(nurse.state==='working'&&now>=nurse.taskEnds){
-     const task=nurse.task;
-     if(task.kind==='monitor'){sim.monitorConnected=true;completed.push('monitor')}
-     if(task.kind==='iv_access'){sim.venousAccessCount+=task.count;completed.push('iv:'+task.count)}
-     nurse.task=null;nurse.state='returning';
+   for(const actor of [nurse,ward]){
+     if(actor.state==='working'&&now>=actor.taskEnds){
+       const task=actor.task,target=task._targetSim;
+       if(task.kind==='monitor'){target.monitorConnected=true;completed.push('monitor')}
+       if(task.kind==='iv_access'){target.venousAccessCount+=task.count;completed.push('iv:'+task.count)}
+       actor.task=null;actor.state='returning';actor.path=[[8,14]];actor.pathIndex=1;
+     }else if(actor.state==='returning'&&actor.path.length===0){
+       actor.state='idle';
+       if(actor===nurse)context.startNextTask();
+     }
    }
  }
 };
@@ -47,7 +54,15 @@ assert.equal(sim.venousAccessCount,0,'pending cannulation never confirmed premat
 now+=1700;context.updateNurse();
 assert.equal(sim.venousAccessCount,2,'stuck IV task eventually completes and changes clinical access count');
 assert.deepEqual(completed,['monitor','iv:2']);
-assert(spoken.some(x=>x.includes('acceso al box')),'routing blockage communicated');
+assert(spoken.some(x=>x.includes('ruta al box')),'routing blockage communicated');
+ward.task={kind:'iv_access',count:2,bedside:true,_targetSim:wardPatient,csTaskBegan487:now-15000};
+ward.state='to_patient';ward.path=[[8,14]];ward.pathIndex=1;
+context.updateNurse();
+assert.equal(wardPatient.venousAccessCount,0,'ward nurse never marks access completed when still working');
+assert.equal(ward.state,'working','watchdog recovers SECONDARY ward nurse, not only master');
+now+=1700;context.updateNurse();
+assert.equal(wardPatient.venousAccessCount,2,'native ward-nurse task actually completes after watchdog');
+assert.equal(sim.venousAccessCount,2,'ward nurse cannot modify another patient');
 console.log('NURSE BEDSIDE TASK BOT PASS',JSON.stringify({
  realBoxTarget:true,blockedRouteRecovery:true,monitorState:true,twoVenousLines:true,earlySuccessPrevented:true
 }));
