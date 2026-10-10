@@ -68,7 +68,7 @@ const sources=[
  injected('atria-nurse-execution-487')
 ];
 for(const s of sources)vm.runInContext(s,ctx,{timeout:5000});
-ctx.sendMessage('enfermera monitor dos vias oxigeno ringer ceftriaxona metronidazol');
+ctx.sendMessage('enfermera monitor y vías oxígeno Ringer ceftriaxona metronidazol');
 assert.equal(nurse.task?.kind,'monitor');
 assert.equal(patient.monitorConnected,false);
 assert.equal(patient.venousAccessCount,0);
