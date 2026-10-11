@@ -1,6 +1,6 @@
 # ATRIA 4.8.7 — Checkpoint 1: flujo clínico observado
 
-Base remota verificada: `9f6256e8bedfff0183a058313f34b3da1d24c5c3`, árbol `f2c50b67411415c44150dfc97fa3d4d9627e2c1a`, CI [38109160838](https://github.com/javierdario48-star/ATRIA/actions/runs/38109160838) SUCCESS. Sin commits posteriores al recuperar. Se leyeron los cinco documentos de continuidad. Estado de esta entrega: **observador QA implementado, OFF por defecto, sin activación clínica**. La publicación y el CI exactos se registran en el cierre posterior.
+Base remota verificada: `9f6256e8bedfff0183a058313f34b3da1d24c5c3`, árbol `f2c50b67411415c44150dfc97fa3d4d9627e2c1a`, CI [38109160838](https://github.com/javierdario48-star/ATRIA/actions/runs/38109160838) SUCCESS. Sin commits posteriores al recuperar. Se leyeron los cinco documentos de continuidad. Estado de esta entrega: **observador QA publicado con CI verde, OFF por defecto, sin activación clínica**. Commit funcional `00e68d1955cfa390d8144ce8c08cd1efe7df2918`, árbol `19ed6ebe1138514fc4f30aca33b2cc7a965eab03`, CI [38130360942](https://github.com/javierdario48-star/ATRIA/actions/runs/38130360942) SUCCESS. El commit posterior sólo cierra documentación/resultados y su propio CI se comprueba al entregar el HEAD final.
 
 ## Cambio mínimo y propiedad de los efectos
 
@@ -22,6 +22,17 @@ flowchart TD
 ```
 
 ## Uso y rollback
+
+Archivos afectados por el checkpoint (incluido el cierre documental):
+
+| Área | Rutas |
+|---|---|
+| Observación/arranque | `src/integration/physiology-qa-observer-487.js`, `src/integration/physiology-qa-bootstrap-487.js` |
+| Pruebas | `src/integration/physiology-qa-observer-487.test.js`, `src/integration/physiology-qa-bootstrap-487.test.js` |
+| Única conexión HTML/build | `src/integration/apply-487.js`, `build.js` |
+| Ejecución QA | `qa/physiology-live/native-journey-487.mjs`, `qa/physiology-live/run-observer-487.mjs`, `qa/physiology-pilot/verify-artifact-487.mjs` |
+| Comandos/CI | `package.json`, `.github/workflows/qa.yml` |
+| Evidencia/continuidad | `qa/ATRIA_487_PHYSIOLOGY_LIVE_OBSERVER_RESULTS.md`, `qa/ATRIA_487_PHYSIOLOGY_LIVE_COMPARISON.md`, `qa/physiology-live/observer-487.json`, `qa/ATRIA_487_STABILIZATION_CHECKPOINTS.md`, `qa/ATRIA_487_PHARMACOLOGY_SCALING_PLAN.md` |
 
 El build añade una sola entrada inline que define `window.csPhysiologyQA487`. No importa B1 ni instala envolturas hasta la llamada explícita. No hay parámetros de URL, almacenamiento persistente, activación automática, render extra, intervalos ni servicios nuevos.
 
@@ -45,12 +56,22 @@ Rollback de código: revertir el commit funcional elimina la única entrada y el
 
 - `physiology-qa-observer-487.test.js`: **22 checks**, incluyendo 15 administraciones reales de funciones de enfermería (cinco por caso), pendientes sin efecto, colocación efectiva de vías/monitor, orden combinada, repetición, titulación, typing, truncamiento nativo a 80 filas, aislamiento/rollback, suspensión incompleta, bypass de ledger y vías conflictivas. La trayectoria completa de cada tratamiento coincide con replay del B1 aprobado.
 - `physiology-qa-bootstrap-487.test.js`: **6 checks**; OFF conserva callbacks/no importa módulos, enable concurrente instala una vez, disable durante import cancela, fallo de carga/reinicio conserva diagnóstico y el HTML previo no cambia.
-- `qa:physiology-live`: 24 trayectorias actuales de enfermería, 216 puntos con igualdad exacta del estado nativo ON/OFF, 9 tiempos hasta 125 minutos clínicos/125 segundos activos, individuales/combinadas/sin tratamiento. El informe legible y el JSON se guardan en el commit de resultados, sin reemplazar los snapshots aprobados.
+- `qa:physiology-live`: 24 trayectorias actuales de enfermería, 216 puntos con igualdad exacta del estado nativo ON/OFF, incluidas las colecciones Map/Set, 9 tiempos hasta 125 minutos clínicos/125 segundos activos, individuales/combinadas/sin tratamiento. La ejecución guardada se repitió sobre el commit funcional publicado; el informe legible `ATRIA_487_PHYSIOLOGY_LIVE_COMPARISON.md` y `physiology-live/observer-487.json` conservan15 huellas de fuentes/HTML generado. No reemplazan snapshots aprobados ni reutilizan trayectorias de otra ejecución.
 - Suite completa `npm test` exit0: mantiene snapshots nativos (4.537 valores), B1 (30.351 comparaciones), expectativas clínicas independientes, reutilización sintética de molécula/caso, rechazo de mecanismos incompletos, bots existentes, enfermería, voz, supervivencia/rescate, Cirugía, XP/producto y multijugador. No se rehízo la investigación de 1.005 definiciones; su bot sigue como regresión.
 - Build y `qa:physiology-artifact` exit0. HTML nuevo SHA-256 `92cf3df698f60714c9056562be489cd421e44f49788473bcd3b31522935081c3`; al quitar **únicamente** la entrada QA conserva `dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7`. 71 scripts inline válidos, 11 externos idénticos al golden master, 10 módulos locales comprobados byte a byte y dependencias resueltas sin CDN. El CI verifica este artefacto además del build.
 - Revisión independiente encontró dos brechas: vías abreviadas/desconocidas aceptadas como IV, y una administración observada que podía esconder una escritura anterior externa en el ledger. Se corrigieron con regresiones y segunda revisión verde. Se corrigió además el diagnóstico obsoleto al fallar un reinicio de bootstrap; no se cambiaron coeficientes clínicos para aprobar.
 
 Alcance real: VM de funciones generadas **del HEAD actual**, con timers deterministas y cola/completado de enfermería nativos. DOM/pathfinding/transporte/voz son fixtures; no prueba de navegador completo, dispositivo físico, guardia entera, reconocimiento de micrófono ni autoridad multijugador. El horizonte termina dentro de protección temprana: no certifica mortalidad posterior.
+
+El CI del código completó cada paso, incluido `Confirmed nursing shadow journeys`, build/verificación, sintaxis y upload. Artefacto remoto `11698573964`, 1.114.706 bytes, vinculado a `00e68d1955cfa390d8144ce8c08cd1efe7df2918`, digest ZIP `sha256:b3d62c07d1f02bf1a7cfa03e85d7bd24d4c42e2c371838c9a8586787bb45e6ba`. Se verificaron sus metadatos y el contenido local completo; no se descargó/verificó independientemente el ZIP remoto.
+
+### Coste observado y protección
+
+Medición sobre ese commit: Node v24.19.0/Linux/x64, un paciente/cinco intervenciones activas, 100 ticks de calentamiento y600 muestras intercaladas ON/OFF a60Hz. Incluye actualización nativa y enfermería; la sombra integra a4Hz. P50/p95 OFF:0,074/0,117ms; ON:0,078/0,141ms. Máximo ON:0,432ms. No prueba renderizado/FPS ni Android/iOS; son resultados de este host, no presupuestos móviles satisfechos.
+
+Reporte representativo:69.538 bytes JSON; máximo de estas trayectorias:339.179 bytes, con256 muestras acotadas. Heap total del proceso trasGC:26.553.144 bytes; incluye VM/resultados y no equivale al heap incremental del observador. Estos reportes grandes no deben enviarse cada frame ni por multijugador. La API sólo copia el reporte cuando QA lo solicita; no se añadió render automático. JSON guardado SHA-256 `7f24343d671f1ad1a2f0a7cb2ac1f18365620f70dceb7a962523d28bb6f7cfaf`.
+
+Refs protegidas verificadas sin cambios: `main=08fa4565a3415888c9eae30860693d0f5040afbb`, `atria-4.8.7-qa=7b571a37ded0d3c1ed53923cb95c525ed977fcb4`; árbol vendor `6619ab6dc565bb1b3485434cbd750ccd64f24e8a`. Diffs de código clínico/nativo, voz, social, enfermería, gracia, rescate y pase quirúrgico vacíos respecto al HEAD inicial, salvo las dos nuevas interfaces de observación declaradas. No producción, Supabase, autenticación/credenciales, XP ni deployment.
 
 ## Cobertura real de las 30 entradas
 
