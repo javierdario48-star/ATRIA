@@ -11,7 +11,11 @@ import {applyCriticalRescue487,CRITICAL_FINAL_OLD_487,CRITICAL_FINAL_NEW_487,CRI
 import {applySecondaryBridge487} from '../../src/integration/secondary-sepsis-bridge-487.js';
 import {apply487} from '../../src/integration/apply-487.js';
 import {NURSE_STOP_FINISH_OLD_487,NURSE_STOP_FINISH_NEW_487,NURSE_STOP_STATUS_OLD_487,
- NURSE_STOP_STATUS_NEW_487,NURSE_STOP_VERSION_OLD_487,NURSE_STOP_VERSION_NEW_487} from '../../src/integration/nurse-execution-487.js';
+ NURSE_STOP_STATUS_NEW_487,NURSE_STOP_VERSION_OLD_487,NURSE_STOP_VERSION_NEW_487,
+ NORA_RECEIPT_OLD_487,NORA_RECEIPT_NEW_487,NORA_DEDUPE_OLD_487,NORA_DEDUPE_NEW_487,
+ NORA_PENDING_OLD_487,NORA_PENDING_NEW_487,NORA_CANCEL_OLD_487,NORA_CANCEL_NEW_487,
+ NORA_DELIVERY_OLD_487,NORA_DELIVERY_NEW_487,NORA_BIND_RECEIPT_OLD_487,NORA_BIND_RECEIPT_NEW_487,
+ NORA_FLUSH_OLD_487,NORA_FLUSH_NEW_487} from '../../src/integration/nurse-execution-487.js';
 const html=fs.readFileSync('out/index.html','utf8');
 const hash=createHash('sha256').update(html).digest('hex');
 assert.equal(html,apply487(fs.readFileSync('vendor/atria-4.8.6/index.html','utf8')),'artifact equals current source-integrated build');
@@ -22,15 +26,24 @@ let beforeStop=html;
 for(const [id,name,digest] of [
  ['atria-nurse-execution-487','nurse-execution','94d1e61a4b46b9975578100825bf0977c7c431ea70b4fff54986c9df4bb0c85d'],
  ['atria-nurse-voice-routing-487','nurse-voice','1977da69627bbadd57fb995c0d908d9fd65f5e6595b64142f63f7cced5348ea3'],
- ['atria-verified-clinical-chat-487','clinical-confirmations','b2efcb61d5f374b76263b717cff6ee79f544aba98484c599a2b07d48ba2fd0b0']]){
+ ['atria-verified-clinical-chat-487','clinical-confirmations','b2efcb61d5f374b76263b717cff6ee79f544aba98484c599a2b07d48ba2fd0b0'],
+ ['atria-manual-monitor-iv-487','manual-monitor','752ef207aeef3ce19ec60f31b9446fea131e4ec3d336db9718ff3cac96e0f7e4']]){
  const scripts=[...beforeStop.matchAll(new RegExp('<script id="'+id+'">[\\s\\S]*?<\\/script>','g'))];
  assert.equal(scripts.length,1);
- const frozen=fs.readFileSync(new URL('../physiology-live/'+name+'-pre-stop-487.txt',import.meta.url),'utf8');
+ const frozen=fs.readFileSync(new URL('../physiology-live/'+name+(name==='manual-monitor'?'-pre-noradrenaline-487.txt':'-pre-stop-487.txt'),import.meta.url),'utf8');
  assert.equal(createHash('sha256').update(frozen).digest('hex'),digest,'verified pre-stop script '+name);
  beforeStop=beforeStop.replace(scripts[0][0],frozen);
 }
-for(const [current,prior] of [[NURSE_STOP_FINISH_NEW_487,NURSE_STOP_FINISH_OLD_487],
- [NURSE_STOP_STATUS_NEW_487,NURSE_STOP_STATUS_OLD_487],[NURSE_STOP_VERSION_NEW_487,NURSE_STOP_VERSION_OLD_487]]){
+for(const [rawCurrent,rawPrior] of [[NURSE_STOP_FINISH_NEW_487,NURSE_STOP_FINISH_OLD_487],
+ [NURSE_STOP_STATUS_NEW_487,NURSE_STOP_STATUS_OLD_487],[NURSE_STOP_VERSION_NEW_487,NURSE_STOP_VERSION_OLD_487],
+ [NORA_RECEIPT_NEW_487,NORA_RECEIPT_OLD_487],[NORA_DEDUPE_NEW_487,NORA_DEDUPE_OLD_487],
+ [NORA_PENDING_NEW_487,NORA_PENDING_OLD_487],[NORA_CANCEL_NEW_487,NORA_CANCEL_OLD_487],
+ [NORA_DELIVERY_NEW_487,NORA_DELIVERY_OLD_487],[NORA_BIND_RECEIPT_NEW_487,NORA_BIND_RECEIPT_OLD_487],
+ [NORA_FLUSH_NEW_487,NORA_FLUSH_OLD_487]]){
+ // The already-approved Ringer completion guard wraps the same native
+ // cancellation condition later in apply487; preserve it on BOTH sides.
+ const current=rawCurrent.replace(RINGER_COMPLETION_OLD_487,RINGER_COMPLETION_NEW_487);
+ const prior=rawPrior.replace(RINGER_COMPLETION_OLD_487,RINGER_COMPLETION_NEW_487);
  assert.equal(beforeStop.split(current).length,2,'one authorized native stop boundary');beforeStop=beforeStop.replace(current,prior);
 }
 const entries=[...html.matchAll(/<script id="atria-physiology-qa-487">[\s\S]*?<\/script>/g)];

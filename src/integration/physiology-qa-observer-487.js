@@ -82,7 +82,7 @@ export function installPhysiologyQAObserver487(port) {
       const stopping=entry.action==='stop',continuous=['support','infusion'].includes(d.kinetics.kind);
       if (entry.count !== (counts.get(entry.id) || 0) + (stopping?0:1)) throw Error('missing native administration count for ' + entry.id);
       if (pharmacologyRouteConflict487(entry.raw, d.route)) throw Error('native order route cannot be verified as ' + d.route + ' for ' + entry.id);
-      if (d.route === 'iv' && entry.confirmedIV <= 0) throw Error('native IV execution lacks confirmed access for ' + entry.id);
+      if (!stopping && d.route === 'iv' && entry.confirmedIV <= 0) throw Error('native IV execution lacks confirmed access for ' + entry.id);
       if (entry.id === 'vasopressor' && !/nora|norepinefr/.test(normalize(entry.raw)))
         throw Error('generic vasopressor does not establish norepinephrine identity');
       const match = entry.doseDisplay.match(/^(\d+(?:\.\d+)?)\s*(L\/min|ml|mg|(?:mcg|µg|μg|ug)\/kg\/min)$/);

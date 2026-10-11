@@ -9,7 +9,7 @@
 | 1 | `oxygen` | Soporte respiratorio | N parcial: inicio/cambio de flujo y suspensión confirmada QA local; flujo aún no modifica la respuesta. B1-S; transferencia BLOQUEADA |
 | 2 | `fluid` | Cristaloides / Ringer identificado | B1-R exclusivamente en QA limitado; N por defecto |
 | 3 | `albumin` | Coloide / volumen | N |
-| 4 | `vasopressor` | Vasopresores; identidad noradrenalina requerida | B1-S; N por defecto |
+| 4 | `vasopressor` | Vasopresores; identidad noradrenalina requerida | N parcial: tasa IV verificada, titulación y suspensión confirmadas QA local; dos aportes nativos conservados. B1-S sin transferencia |
 | 5 | `morphine` | Opioide | B1-S; N por defecto |
 | 6 | `analgesia` | Orden genérica analgésica | N; no identificar automáticamente molécula sin evidencia |
 | 7 | `antiemetic` | Orden genérica antiemética | N; no identificar automáticamente molécula |
@@ -43,6 +43,8 @@
 
 **Checkpoint C (histórico):** [frontera y bloqueo](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_C_OXYGEN_OWNER_BOUNDARY.md) comprobó la carencia de ejecución. [Checkpoint D](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_D_OXYGEN_STOP.md) añade suspensión realmente ejecutada con el mismo propietario nativo, evidencia conservada y sin sumar un efecto B1. La farmacología de flujo sigue parcial.
 
+**Checkpoint E:** [noradrenalina](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_E_NORADRENALINE.md) cierra errores de identidad/unidades/vía y evidencia de titulación, añade suspensión real y prueba el ejecutor en13 casos. No certifica farmacología contextual en los13: cuatro tienen fisiología explícita y nueve conservan ajustes más fijos. Eliminación, isquemia/perfusión y transferencia de sus dos aportes nativos siguen pendientes.
+
 **Ejecuciones presentes:** [Ringer A](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_A.md), [oxígeno B](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_B_OXYGEN_PREFLIGHT.md) y [auditoría independiente](ATRIA_487_RINGER_INDEPENDENT_CLINICAL_AUDIT.md).
 
-**Secuencia próxima eficiente:** no exigir migración B1 para mejorar funcionalidad. Cerrar contratos de noradrenalina y comprobar titulación/suspensión; después morfina/furosemida y grupos prioritarios como antibióticos/foco. Oxígeno se conserva nativo hasta que su respuesta dependiente del flujo tenga una corrección acotada y demostrable. No reconstruir otro motor.
+**Secuencia próxima eficiente:** no exigir migración B1 para mejorar funcionalidad. Tras verificar publicación/CI de E, morfina (identidad/dosis repetidas/duración/daño respiratorio), después furosemida y grupos prioritarios como antibióticos/foco. Oxígeno se conserva nativo hasta que su respuesta dependiente del flujo tenga una corrección acotada y demostrable. No reconstruir otro motor.

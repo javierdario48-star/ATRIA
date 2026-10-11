@@ -5,6 +5,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  // Punctuation outside numeric fractions is still stripped exactly as before.
  const norm=t=>String(t||'').toLowerCase().normalize('NFD')
   .replace(/[\u0300-\u036f]/g,'')
+  .replace(/[µμ]/g,'u')
   .replace(/(\d+)\s*[,\.]\s*(\d+)/g,'$1csdecimal487$2')
   .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()
   .replace(/(\d+)csdecimal487(\d+)/g,'$1.$2');
@@ -42,11 +43,11 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  const chosen=[];
  for(const x of offers)if(!chosen.some(y=>x.start<y.end&&y.start<x.end))chosen.push(x);
  chosen.sort((a,b)=>a.start-b.start);
- // Stop commands are deliberately narrower than ordinary nursing orders.
+ // Stops and pressor commands require explicit whole-message intent.
  // Every preamble and tail must consist of explicit actions/connectors/dose qualifiers.
  // This preserves intent BEFORE earlier recognized nouns: an unknown question
  // or condition cannot disappear when the next clause names oxygen.
- const stopContextSafe=!stopLanguage||[...chosen.map((x,i)=>
+ const stopContextSafe=!(stopLanguage||chosen.some(x=>x.kind==='therapy'&&x.id==='vasopressor'))||[...chosen.map((x,i)=>
   input.slice(i?chosen[i-1].end:0,x.start)),input.slice(chosen.at(-1)?.end??0)].every(piece=>
   /^(?:(?:\d+(?:\.\d+)?|ml|cc|l|litro|litros|mg|g|mcg|ug|kg|min|minuto|minutos|iv|ev|endovenoso|intravenoso|y|e|ademas|mas|pero|el|la|los|las|un|una|dos|suspender|suspende|suspenda|retirar|retira|retire|detener|detene|conectar|conecta|poner|pone|colocar|coloca|canalizar|canaliza|tomar|toma|controlar|controla|administrar|administra|dar|da|pasar|pasa)\s*)*$/.test(
    piece.trim()));
@@ -60,9 +61,9 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
    .replace(/\s+(?:y|e|ademas|mas)\s*$/,'').trim();
   // A specific stop is an executable action, not a positive drug order.
   // Negations, questions and conditional/qualified stops remain non-executable.
-  // Only oxygen has a native confirmed stop executor at this checkpoint.
+  // Only oxygen and explicitly identified norepinephrine have confirmed stops.
   const stopRequested=/^\s*(?:suspender|suspende|suspenda|retirar|retira|retire|detener|detene)(?:\s+(?:el|la))?\s*$/.test(scoped||'');
-  const stop=item.kind==='therapy'&&item.id==='oxygen'&&stopContextSafe&&stopRequested&&phrase===item.phrase&&
+  const stop=item.kind==='therapy'&&(item.id==='oxygen'||item.id==='vasopressor'&&/^(?:noradrenalina|norepinefrina|nora)$/.test(item.phrase))&&stopContextSafe&&stopRequested&&phrase===item.phrase&&
    !/\b(?:no|sin|evitar|evita|nunca|si|cuando)\b/.test(scoped||'');
   const negated=relevantNegation.test(scoped||'')&&!stop;
   // Standard bedside shorthand: plural "vías" / "accesos" requests TWO.
@@ -73,16 +74,26 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
   const explicitTwo=/\b(?:dos|2)\s+(?:vias?|accesos?)\b/.test(local);
   const count=item.kind==='iv'&&(explicitTwo||plural&&!explicitOne)?2:1;
   const duplicate=result.some(x=>x.id===item.id&&x.kind===item.kind&&!x.negated);
-  if(!duplicate)result.push({...item,text:stop?'suspender '+phrase:phrase,count,negated,...(stop?{action:'stop'}:{})});
+  // Whole-message intent was checked above. Preserve this pressor's own dose
+  // clause without importing other explicitly recognized drugs in a composite
+  // order. The original input is still checked for signs before dispatch.
+  const newAction=before.match(/\b(?:administrar|administra|dar|da|pasar|pasa|iniciar|inicia|infundir)\b.*$/)?.[0];
+  const prefix=index&&chosen[index-1].kind==='therapy'&&!/\b(?:y|e|ademas|mas|pero)\b/.test(before)?newAction||'':scoped;
+  const next=chosen[index+1];
+  const routeTail=next?.kind==='iv'&&next.phrase==='via'&&!/\b(?:y|e|ademas|mas|pero)\b/.test(phrase)?
+   input.slice(next.start,chosen[index+2]?.start??input.length):'';
+  const contractText=(prefix+' '+phrase+' '+routeTail).trim();
+  if(!duplicate)result.push({...item,text:stop?'suspender '+phrase:item.id==='vasopressor'?contractText:phrase,count,negated,
+   ...(item.id==='vasopressor'&&!stop?{contractText}:{}),...(stop?{action:'stop'}:{})});
  }
  // Unknown trailing clauses should be explicitly rejected, not silently lost.
  const segments=[];
  let previous=0;
  for(const x of chosen){segments.push(input.slice(previous,x.start));previous=x.end;}
  segments.push(input.slice(previous));
- const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|pero|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|pongas|poneme|ponga|canaliza|canalicen|canalizame|conecta|conectame|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|litros|litro|cuatro|tres|cinco|seis|canula|nasal|mascara|lpm|min|por|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
+ const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|pero|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|pongas|poneme|ponga|canaliza|canalicen|canalizame|conecta|conectame|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|mcg|ug|kg|litros|litro|cuatro|tres|cinco|seis|canula|nasal|mascara|lpm|min|por|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
  const unknown=segments.map(x=>x.replace(/\b(?:suspender|suspende|suspenda|retirar|retira|retire|detener|detene)\b/g,' ')
-  .replace(neutral,' ').replace(/\b\d+(?:\s*\d+)?\b/g,' ').replace(/\s+/g,' ').trim()).filter(x=>x.length>=4);
+  .replace(neutral,' ').replace(/\b\d+(?:\.\d+)?\b/g,' ').replace(/\s+/g,' ').trim()).filter(x=>x.length>=4);
  return {addressed:/^(?:enfermera|enfermero|enfermeria)\b/.test(s),items:result,unknown,
   active:stopContextSafe&&!/\?/.test(String(text))&&!/^(?:no|nunca|sin|evitar)\b/.test(input)};
 }

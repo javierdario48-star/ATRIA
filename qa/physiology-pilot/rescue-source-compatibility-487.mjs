@@ -2,6 +2,9 @@
  * Frozen clinical numbers/catalogue are retained, never regenerated. */
 import assert from 'node:assert/strict';
 const revisions={
+ 'atria-manual-monitor-iv-487':[
+  'da62e23013fbc6b02165a32bad4ec00581b3ef662bc1bcde4d6c8d38d101512f',
+  '6d5da4467d14ab0c02eb351b209dc1e184d195a1412fcd222f7b5dbbb6dda16a'],
  'atria-verified-clinical-chat-487':[
   'bb83cd9e80a7bca71ce20421b3d93a88034e95ba0538602d140d47c83fb3f275',
   '9e2a822db648c4df1e869e17686830e3c8121758544e74e52eb028753d8ff095'],
@@ -10,7 +13,7 @@ const revisions={
   '2cdc142f1f01e4fbd12104809b362295abf79fd8cefb7ee0f450798d18d15fd7'],
  'cs-safe-v0190-clinical':[
   '2a422d156aa3d1ad8b11566fab30fbafc19b5cadd5abe7fd8be891550c3b88c4',
-  '17a54d0294bbe4f8b16a3e479501b95b3cba0b6ada7a3e3244c3824b28a26c42'],
+  '4cb02bdd1bb43c0c9ec405b547ef2674c23f5c292dac901bbb38ef93844c0c6c'],
  'atria-secondary-sepsis-bridge-487':[
   'c526cd450bff277cb54280fe015befec93ec7ffd7843464fb94b8ae342bf5ff5',
   'c64b8ff301f891d0bd987d18c3b3e28139185db3b5eb2a0822df517782ca6f2f'],

@@ -3,7 +3,21 @@
 export const NURSE_STOP_FINISH_OLD_487="nurse.task=null;nurse.state='returning';pathTo(nurse,...nurse.returnTile)}\nfunction updateNurse(dt){";
 export const NURSE_STOP_FINISH_NEW_487="if(t.kind==='therapy_stop')window.csCompleteTherapyStop487?.(t);"+NURSE_STOP_FINISH_OLD_487;
 export const NURSE_STOP_STATUS_OLD_487="  if(item.kind==='clarify')return";
-export const NURSE_STOP_STATUS_NEW_487=`  if(item.kind==='therapy_stop'){
+export const NURSE_STOP_STATUS_NEW_487=`  if(item.kind==='therapy'&&item.id==='vasopressor'&&item.expectedNora){
+   if(item.confirmedRate?.patientId===item.uid)return {status:'COMPLETED',reason:'Nueva tasa confirmada por administración real'};
+   if(item.status==='REJECTED')return {status:'REJECTED',reason:item.reason};
+   const execution=item.noraExecution487||item.noraWaiting487?.noraExecution487;
+   const actual=execution?.confirmedNora487,expected=item.expectedNora;
+   if(actual?.patientId===item.uid&&actual.count===expected.count&&actual.dose.amount===expected.amount){
+    item.confirmedRate={patientId:item.uid,count:actual.count,m:actual.m,amount:actual.dose.amount};
+    return {status:'COMPLETED',reason:'Nueva tasa confirmada por administración real'};
+   }
+   if(!execution&&(patient.csPhase4Pending487||[]).includes(item.noraWaiting487))return {status:'WAITING',reason:'Falta acceso venoso permeable'};
+   if(execution&&execution===patient.pendingTherapies?.get(item.id)&&!execution.rejectedNora487&&execution.noraAmount487===expected.amount)
+    return {status:'IN_PROGRESS',reason:'Cambio de tasa pendiente; no es la administración anterior'};
+   return {status:'REJECTED',reason:'La nueva tasa no se administró'};
+  }
+  if(item.kind==='therapy_stop'){
    const row=(patient.administrationLog||[]).find(x=>x.eventId===item.executionId&&x.action==='stop'&&x.status==='administered');
    const confirmed=item.confirmedStop;
    if(row||confirmed?.eventId===item.executionId&&confirmed.patientId===item.uid&&confirmed.status==='administered')
@@ -14,16 +28,83 @@ export const NURSE_STOP_STATUS_NEW_487=`  if(item.kind==='therapy_stop'){
 `+NURSE_STOP_STATUS_OLD_487;
 export const NURSE_STOP_VERSION_OLD_487="const version=item.kind==='therapy'?";
 export const NURSE_STOP_VERSION_NEW_487="const version=item.kind==='therapy_stop'?item.executionId:item.kind==='therapy'?";
+export const NORA_RECEIPT_OLD_487="   receipt.items.push(item);\n   if(entry.kind==='clarify'";
+export const NORA_RECEIPT_NEW_487=`   if(entry.kind==='therapy'&&entry.id==='vasopressor'){
+    item.expectedNora={count:Number(patient.therapyExposure?.get(entry.id)?.count||0)+1,
+     amount:parseTherapyOrder(entry.text,findMonitorTherapy(entry.text)).amount};
+    item.preExisting=patient.pendingTherapies?.has(entry.id)===true;
+   }
+`+NORA_RECEIPT_OLD_487;
+export const NORA_DEDUPE_OLD_487="     seen.add(eventKey);\n     complete.push";
+export const NORA_DEDUPE_NEW_487="     if(!item.expectedNora)seen.add(eventKey);\n     complete.push";
+// Bind evidence to the existing native pending object, not a matching future
+// rate/count. The native scheduler, permissions and 800ms delay stay intact.
+export const NORA_PENDING_OLD_487="    const sameSim=sim,sameCaseId=C?.id,treatmentContext=window.nsTreatmentContext();";
+export const NORA_PENDING_NEW_487=NORA_PENDING_OLD_487+`
+    const noraExecution487=t.id==='vasopressor'?sameSim.pendingTherapies.get(t.id):null;
+    if(noraExecution487)noraExecution487.noraAmount487=parseTherapyOrder(text,t).amount;`;
+export const NORA_CANCEL_OLD_487="if(!window.nsMayContinueTreatment(sameSim,treatmentContext)){sameSim.pendingTherapies.delete(t.id);return;}";
+export const NORA_CANCEL_NEW_487=`if(!window.nsMayContinueTreatment(sameSim,treatmentContext)){
+        sameSim.pendingTherapies.delete(t.id);
+        if(noraExecution487){noraExecution487.rejectedNora487=true;window.csNurseReconcile487?.(sameSim,sameSim===sim);}
+        return;
+      }`;
+export const NORA_DELIVERY_OLD_487="          if(ok)csLogAction(procedural?'procedure':'admin',t.id,t.label,actor);";
+export const NORA_DELIVERY_NEW_487=`          if(noraExecution487){
+            noraExecution487.confirmedNora487=ok?sameSim.therapyExposure?.get(t.id)?.lastConfirmedAdministration487:null;
+            noraExecution487.rejectedNora487=!noraExecution487.confirmedNora487;
+          }
+`+NORA_DELIVERY_OLD_487;
+export const NORA_BIND_RECEIPT_OLD_487="  for(const item of receipt.items){\n   const state=csNurseClinicalStatus487(patient,item);";
+export const NORA_BIND_RECEIPT_NEW_487=`  for(const item of receipt.items){
+   if(item.expectedNora){
+    item.noraExecution487=patient.pendingTherapies?.get(item.id);
+    item.noraWaiting487=(patient.csPhase4Pending487||[]).find(x=>x.id===item.id&&x.uid===item.uid);
+   }
+   const state=csNurseClinicalStatus487(patient,item);`;
+export const NORA_FLUSH_OLD_487="if(typeof addMonitorTherapy==='function'&&typeof MONITOR_THERAPY_CATALOG!=='undefined'&&MONITOR_THERAPY_CATALOG.some(x=>x.id===item.id))addMonitorTherapy(item.text);else prevNatural.call(this,item.text);";
+export const NORA_FLUSH_NEW_487=NORA_FLUSH_OLD_487+"\n    if(item.id==='vasopressor')item.noraExecution487=sim.pendingTherapies?.get(item.id);";
+// This is a contract for the existing norepinephrine entry, not another drug
+// registry. No conversion from mg, volume/hour or an unidentified class.
+export function noradrenalineOrderIssue487(raw,original=raw,unfiltered=original){
+ const normalize=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/[µμ]/g,'u').replace(/,/g,'.').replace(/\b([ievs])\.\s*([vomc])\.?/g,'$1$2');
+ const given=normalize(original);
+ const name=/\b(?:noradrenalina|norepinefrina|nora)\b/;
+ if((given.match(/\b(?:noradrenalina|norepinefrina|nora)\b/g)||[]).length!==1||
+   (normalize(unfiltered).match(/\b(?:noradrenalina|norepinefrina|nora)\b/g)||[]).length!==1)
+  return 'Especificá una única molécula y tasa de noradrenalina por ejecución.';
+ const source=given.replace(/\//g,' ').replace(/\s+/g,' ').trim(),identity=source.match(name);
+ if(/\bvia\b(?!\s+(?:iv|ev|intravenos[oa]|endovenos[oa])\b)/.test(source))return 'Especificá una vía IV completa; una vía incompleta no confirma administración.';
+ const numbers=source.match(/\d+(?:\.\d+)?/g)||[];
+ const rate=source.match(/(?:^|\s)(\d+(?:\.\d+)?)\s+(?:mcg|ug)\s+kg\s+min(?:\s|$)/);
+ if(numbers.length&&(!rate||numbers.length!==1||!Number.isFinite(Number(rate[1]))||Number(rate[1])<=0||rate.index<identity.index))
+  return 'Indicá después del nombre una tasa positiva en mcg/kg/min IV, con cero inicial para fracciones.';
+ // Only an explicit supported command/default or one absolute IV rate is
+ // accepted. Unknown route, bolus, spelled/negative dose or modal context cannot
+ // silently fall back to the default infusion. Preserve the WHOLE raw clause.
+ const rest=source.replace(rate?.[0]||'__no_rate__',' ').replace(name,' ').replace(/\s+/g,' ').trim();
+ if(!/^(?:(?:enfermera|enfermero|enfermeria|por|favor|indico|solicito|necesito|pido|quiero|administrar|administra|dar|da|pasar|pasa|iniciar|inicia|infundir|infusion|iv|ev|via|intravenoso|intravenosa|endovenoso|endovenosa|vasopresor)\s*)*$/.test(rest))
+  return 'Indicación ambigua o incompatible: especificá noradrenalina en infusión IV y su tasa en mcg/kg/min.';
+ if(/[+−–—-]\s*\d|(?:^|\s)[.,]\d/.test(normalize(unfiltered)))return 'Usá una tasa positiva explícita con cero inicial; no se convierten signos ambiguos.';
+ return null;
+}
 export function applyNurseExecution487(html){
  if(html.includes('id="atria-nurse-execution-487"'))throw Error('duplicate nurse task adapter');
  for(const [from,to] of [[NURSE_STOP_FINISH_OLD_487,NURSE_STOP_FINISH_NEW_487],
-  [NURSE_STOP_STATUS_OLD_487,NURSE_STOP_STATUS_NEW_487],[NURSE_STOP_VERSION_OLD_487,NURSE_STOP_VERSION_NEW_487]]){
+  [NURSE_STOP_STATUS_OLD_487,NURSE_STOP_STATUS_NEW_487],[NURSE_STOP_VERSION_OLD_487,NURSE_STOP_VERSION_NEW_487],
+  [NORA_RECEIPT_OLD_487,NORA_RECEIPT_NEW_487],[NORA_DEDUPE_OLD_487,NORA_DEDUPE_NEW_487],
+  [NORA_PENDING_OLD_487,NORA_PENDING_NEW_487],[NORA_CANCEL_OLD_487,NORA_CANCEL_NEW_487],
+  [NORA_DELIVERY_OLD_487,NORA_DELIVERY_NEW_487],[NORA_BIND_RECEIPT_OLD_487,NORA_BIND_RECEIPT_NEW_487],
+  [NORA_FLUSH_OLD_487,NORA_FLUSH_NEW_487]]){
   if(html.split(from).length!==2)throw Error('native therapy stop boundary missing/ambiguous');
   html=html.replace(from,to);
  }
  const runtime=String.raw`<script id="atria-nurse-execution-487">
 (function(){
  if(window.__csNurseExecution487)return;window.__csNurseExecution487=true;
+ ${noradrenalineOrderIssue487.toString()}
+ window.csNoradrenalineOrderIssue487=noradrenalineOrderIssue487;
  const previousStart=startNextTask,previousUpdate=updateNurse,previousFinish=typeof finishNurseTask==='function'?finishNurseTask:null;
  // Use the existing bedside queue and its authorized native finish, including
  // patient binding. Pending stop never changes active support or dose counts.
@@ -35,8 +116,9 @@ export function applyNurseExecution487(html){
    // One compact verified start on the existing exposure entry survives the
    // 80-row display window. It is captured at delivery, never from a chat or
    // reconstructed from an arbitrary active marker.
-   if(t?.id==='oxygen'&&out&&row&&row!==before&&row.id===t.id&&row.count===out.count)
-    out.lastConfirmedAdministration487={id:t.id,patientId:sim.patientInstance?.uid,m:row.m,count:row.count,dose:{...t.dose}};
+   if((t?.id==='oxygen'||t?.id==='vasopressor'&&!noradrenalineOrderIssue487(t.raw))&&out&&row&&row!==before&&row.id===t.id&&row.count===out.count)
+    out.lastConfirmedAdministration487={id:t.id,patientId:sim.patientInstance?.uid,m:row.m,count:row.count,dose:{...t.dose},
+     ...(t.id==='vasopressor'?{moleculeId:'norepinephrine',route:'iv'}:{route:'inhaled'})};
    return out;
   }
   const task=completingStop;
@@ -44,7 +126,7 @@ export function applyNurseExecution487(html){
   const previous=sim.therapyExposure.get(t.id);
   const row={m:sim.gameMinute,id:t.id,label:task.activeTherapy.label,raw:task.raw,
    count:previous.count,doseDisplay:'Suspensión confirmada',action:'stop',eventType:'suspension',
-   status:'administered',eventId:task.executionId,patientId:task.uid,route:'inhaled',
+   status:'administered',eventId:task.executionId,patientId:task.uid,route:task.route,
    previousDose:{...task.activeTherapy.dose}};
   sim.administrationLog.push(row);if(sim.administrationLog.length>80)sim.administrationLog.shift();
   return previous;
@@ -67,8 +149,9 @@ export function applyNurseExecution487(html){
   sim.monitorTherapies.delete(task.id);sim.pendingTherapies.delete(task.id);
   // Historical interventions/administrations are intentionally retained. The
   // existing rescue/grace consumers require active support as well as history.
-  sim.events.push({m:sim.gameMinute,t:'Oxígeno suspendido por enfermería; administración previa conservada.'});
-  setMonitorFeedback('Oxígeno suspendido y registrado. Reevaluá la saturación.','good');
+  sim.events.push({m:sim.gameMinute,t:task.stopLabel+' por enfermería; administración previa conservada.'});
+  setMonitorFeedback(task.id==='oxygen'?'Oxígeno suspendido y registrado. Reevaluá la saturación.':
+   'Noradrenalina suspendida y registrada. Reevaluá presión y perfusión; la retirada puede agravar la hipotensión.','good');
   renderMonitorTherapies();renderAdministrationHistory();updateMonitorDOM();
   window.csNurseReconcile487?.(sim,true);window.csClinicalConfirm487?.reconcile(sim);
   // Its bounded receipt is terminal/notified. A permanent unique stop key
@@ -77,19 +160,20 @@ export function applyNurseExecution487(html){
   return true;
  };
  window.csQueueTherapyStop487=function(id,raw){
-  if(id!=='oxygen'||!previousRecord||!['solo','apprentice'].includes(selectedPlayMode)||
+  if(!['oxygen','vasopressor'].includes(id)||!previousRecord||!['solo','apprentice'].includes(selectedPlayMode)||
     !sim||!C||sim.caseEnded||sim.patientDied||window.nsMayExamine?.()===false)return false;
   const active=sim.monitorTherapies.get(id),exposure=sim.therapyExposure.get(id);
   const confirmed=exposure?.lastConfirmedAdministration487;
-  if(!active||!confirmed||confirmed.patientId!==sim.patientInstance?.uid||confirmed.count!==exposure.count||
+  const label=id==='oxygen'?'Oxígeno':'Noradrenalina',stopLabel=id==='oxygen'?'Oxígeno suspendido':'Noradrenalina suspendida';
+  if(!active||!confirmed||id==='vasopressor'&&confirmed.moleculeId!=='norepinephrine'||confirmed.patientId!==sim.patientInstance?.uid||confirmed.count!==exposure.count||
     confirmed.m!==active.lastGivenAt){
-   nurseSay('No hay oxígeno administrado y activo para suspender.');return false;
+   nurseSay('No hay '+label+' administrado y activo para suspender.');return false;
   }
-  if(sim.pendingTherapies.has(id)){nurseSay('Oxígeno tiene una ejecución pendiente; esperá su confirmación.');return false;}
+  if(sim.pendingTherapies.has(id)){nurseSay(label+' tiene una ejecución pendiente; esperá su confirmación.');return false;}
   const uid=sim.patientInstance?.uid,executionId=uid+':native-stop:'+ ++stopSequence;
-  const pending={label:'Suspender oxígeno',action:'stop',startedAt:performance.now()};
-  const item={kind:'therapy_stop',id,label:'Oxígeno suspendido',uid,executionId,status:'RECEIVED',reason:''};
-  const task={kind:'therapy_stop',id,label:'Suspender oxígeno',bedside:true,raw:String(raw),
+  const pending={label:'Suspender '+label,action:'stop',startedAt:performance.now()};
+  const item={kind:'therapy_stop',id,label:stopLabel,uid,executionId,status:'RECEIVED',reason:''};
+  const task={kind:'therapy_stop',id,label:'Suspender '+label,stopLabel,route:confirmed.route,bedside:true,raw:String(raw),
    _targetSim:sim,_targetCaseId:C.id,
    uid,caseId:C.id,mode:selectedPlayMode,context:window.nsTreatmentContext?.(),activeTherapy:active,executionId,receiptItem:item,pending};
   sim.pendingTherapies.set(id,pending);
@@ -119,6 +203,7 @@ export function applyNurseExecution487(html){
     pending.splice(index,1);
     const isCatalog=typeof MONITOR_THERAPY_CATALOG!=='undefined'&&MONITOR_THERAPY_CATALOG.some(x=>x.id===item.id);
     const ok=isCatalog?addMonitorTherapy(item.text):nurseNatural('enfermera '+item.text);
+    if(item.id==='vasopressor')item.noraExecution487=target.pendingTherapies?.get(item.id);
     if(ok===false){
      pending.push(item);
      nurseSay('No pude comenzar '+item.text+' después de canalizar la vía; la indicación continúa pendiente.');

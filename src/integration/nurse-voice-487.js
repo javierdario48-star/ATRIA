@@ -29,6 +29,9 @@ export function applyNurseVoice487(html){
   const parsed=csNurseScan487(text,C.studies,MONITOR_THERAPY_CATALOG,C.interventions);
   if(!parsed.active){feedback('Es una pregunta o una negación; no ejecuté procedimientos.');return false}
   if(!parsed.items.length){feedback('No reconocí acciones en el pedido. Reformulalo.');return false}
+  const pressor=parsed.items.find(x=>x.id==='vasopressor'&&!x.negated&&x.action!=='stop');
+  const issue=pressor?window.csNoradrenalineOrderIssue487?.(pressor.text,pressor.contractText,text):null;
+  if(issue){feedback('Noradrenalina NO administrada: '+issue);return false;}
   feedback('Recibí '+parsed.items.length+' indicaciones; informaré por separado su estado.');
   let ok=false;
   for(const item of parsed.items.slice(0,12)){

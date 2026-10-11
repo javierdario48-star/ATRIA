@@ -11,6 +11,8 @@ export function applyManualMonitorIV487(html){
   'piptazo','ampicillin','amikacin','gentamicin','fluconazole','amphotericin']);
  addMonitorTherapy=function(text){
   const t=typeof findMonitorTherapy==='function'?findMonitorTherapy(text):null;
+  const issue=t?.id==='vasopressor'?window.csNoradrenalineOrderIssue487?.(text):null;
+  if(issue){setMonitorFeedback('Noradrenalina NO administrada: '+issue,'warn');nurseSay(issue);return false;}
   if(!t||!ivIds.has(t.id)||!sim||sim.caseEnded||
      Number(sim.venousAccessCount||0)>0||window.nsMayExamine?.()===false)
    return nativeAdministration.apply(this,arguments);
