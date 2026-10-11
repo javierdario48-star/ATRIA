@@ -44,6 +44,7 @@ function safeObservations(s,where){
  assert(s.interstitialFluidMl>=0,where+': negative interstitial volume');
  return o;
 }
+const observedKeys=new Set();
 const stats={pilotCases:3,syntheticProfiles:0,catalogueSizes:[],trajectories:0,
   uniqueTrajectories:0,observedSnapshots:0,metamorphicChecks:0,receiptsCapacity:0,
   zeroGhostTreatments:true,noSourceControlInPilot:true,relativeRuntime:{},physicalAndroid:false};
@@ -70,12 +71,16 @@ for(let ci=0;ci<profiles.length;ci++){
    assert.equal(a.sourceControlled,original.sourceControlled,id+': synthetic medicines controlled source');
    assert.equal(a.infectionBurden>=0,true);
    safeObservations(a,id);
+   observedKeys.add(JSON.stringify(observePhysiology487(a)));
    const expectedAdmin=events.filter(x=>x.status==='administered').length;
    assert.equal(Object.keys(a.seenEvents).length,expectedAdmin,id+': ghost/duplicate treatment');
    stats.trajectories++;stats.observedSnapshots++;
   }
  }
 }
+
+stats.uniqueTrajectories=observedKeys.size;
+assert(stats.uniqueTrajectories>30,'pilot bot must sample meaningfully distinct physiological outcomes');
 
 // 100 different synthetic cases are generated from validated B1 profile shapes,
 // NOT real cases introduced into ATRIA's CASES, studies or pharmacy.
