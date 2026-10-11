@@ -27,7 +27,7 @@ export function installRingerPhysiologyQA487(port){
   const fn=port['get'+key]?.();if(typeof fn!=='function'||typeof port['set'+key]!=='function')throw Error('missing Ringer port '+key);
   originals[key]=fn;
  }
- const profile=createPilotProfile487(caseDef,patient),capsule={schemaVersion:1,owner:'b1-volume-v1',patientId,caseId:caseDef.id,
+ const profile=createPilotProfile487(caseDef,patient),capsule={schemaVersion:1,owner:'b1-volume-v2',patientId,caseId:caseDef.id,
   definitionFingerprint:definition.fingerprint,formulationVersion:definition.definitionVersion,
   state:{circulatingVolumeMl:profile.circulatingVolumeMl,interstitialFluidMl:profile.interstitialFluidMl,
    administeredFluidMl:0,fluidOverloadRisk:0,profile},applications:0,seen:{},status:'active'};
@@ -55,12 +55,30 @@ export function installRingerPhysiologyQA487(port){
   if(!Number.isFinite(delta)||delta<-1e-8)clockFault='Ringer clinical clock discontinuity; no new doses without replay';
   if(delta>1e-10&&!clockFault){
    const rate=port.read().nativeRate;
-   try{clock=advanceClinicalClock487(clock,{deltaRealSeconds:delta/rate,nativeMinutesPerRealSecond:rate});lastNative=now;}
-   catch(error){clockFault='Ringer clinical clock: '+String(error.message||error);}
+   try{
+    clock=advanceClinicalClock487(clock,{deltaRealSeconds:delta/rate,nativeMinutesPerRealSecond:rate});
+    // Reduced educational model: post-bolus attributable tissue-fluid load
+    // dissipates; it is NOT urine output or a calibrated tissue compartment.
+    // Disease losses and circulating response remain with native physiology.
+    const renal=Math.max(0,Math.min(1,Number(patient.phys.renalReserve??profile.renalFunction)));
+    const halfLifeMinutes=36+84*(1-renal);
+    const baseline=profile.interstitialFluidMl;
+    capsule.state.interstitialFluidMl=baseline+
+     Math.max(0,capsule.state.interstitialFluidMl-baseline)*Math.exp(-Math.LN2*delta/halfLifeMinutes);
+    lastNative=now;
+   }catch(error){clockFault='Ringer clinical clock: '+String(error.message||error);}
   }
   if(clockFault)blockedReason=clockFault;
   capsule.state.circulatingVolumeMl=patient.phys.effectiveVolume*profile.euvolemicVolumeMl;
-  capsule.state.fluidOverloadRisk=capsule.state.administeredFluidMl?pilotFluidOverloadRisk487(capsule.state):0;
+  // An administered-volume ledger is NOT a pulmonary-edema diagnosis.
+  // Demand actual effective-volume congestion before linking the retained
+  // fluid burden to a respiratory penalty. A septic fluid deficit alone
+  // cannot create edema merely because one B1 bolus was recorded.
+  const renal=Math.max(0,Math.min(1,Number(patient.phys.renalReserve??profile.renalFunction)));
+  const relativeVolume=patient.phys.effectiveVolume;
+  const congestion=Math.max(0,Math.min(1,(relativeVolume-.85)/.22));
+  capsule.state.fluidOverloadRisk=capsule.state.administeredFluidMl?
+   Math.max(0,Math.min(1,pilotFluidOverloadRisk487(capsule.state)*congestion*(1+.25*(1-renal)))):0;
  }
  function qualificationError(t){
   // This fixed formulation is an execution policy, not an inference from an
