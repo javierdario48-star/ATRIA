@@ -1,5 +1,6 @@
 import {PILOT_DEFINITIONS_487,PHYSIOLOGY_MODEL_487} from './physiology-pilot-definitions-487.js';
 import {evaluateMechanism487,runMechanismPhase487} from './pharmacology-mechanisms-487.js';
+import {pharmacologyExecutionKey487,validatePharmacologyEpisodes487} from './pharmacology-content-487.js';
 
 const MINUTE_US=60000000,QUANTUM_US=15000000,LN2=Math.log(2),MAX_EVENTS=2048;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -60,8 +61,11 @@ function receiptProvenance(p,action){
   if(t?.authorityId!==p.clockAuthorityId||!['clinical-minute','native-minute'].includes(t.unit))throw Error('invalid provenance clock');
   finite(t.value,'provenance time',0,1e6);return {authorityId:t.authorityId,unit:t.unit,value:t.value};
  };
+ if(p.executionKey!==undefined&&(typeof p.executionKey!=='string'||!p.executionKey||p.executionKey.length>2000))
+  throw Error('invalid execution contract provenance');
  return freeze({schemaVersion:1,source:p.source,receiptId:p.receiptId,clockAuthorityId:p.clockAuthorityId,eventType:p.eventType,
-  eventTimestamp:stamp(p.eventTimestamp),confirmationTimestamp:stamp(p.confirmationTimestamp)});
+  eventTimestamp:stamp(p.eventTimestamp),confirmationTimestamp:stamp(p.confirmationTimestamp),
+  ...(p.executionKey!==undefined?{executionKey:p.executionKey}:{})});
 }
 const receiptSignature=(state,e,d)=>JSON.stringify([state.patientId,e.drugId,e.action,e.amount,e.atUs,e.sequence,d.unit,d.route,d.fingerprint,
  receiptProvenance(e.provenance,e.action)??null]);
@@ -81,6 +85,9 @@ function normalizeEvent(raw,state,definitions){
  }
  const e={eventId:raw.eventId,drugId:raw.drugId,action:raw.action,amount,atUs,sequence,definitionKey:d.signature};
  if(raw.provenance!==undefined)e.provenance=receiptProvenance(raw.provenance,raw.action);
+ if(e.provenance?.executionKey!==undefined&&pharmacologyExecutionKey487({
+  ...JSON.parse(e.provenance.executionKey),eventId:e.eventId},d)!==e.provenance.executionKey)
+  throw Error('invalid canonical execution contract');
  e.signature=receiptSignature(state,e,d);return Object.freeze(e);
 }
 function receipt(s,e,definitions){
@@ -198,7 +205,7 @@ export function stepPhysiology487(state,administeredEvents=[],deltaClinicalMinut
  finite(state.requestedRemainderUs,'clock remainder',-.5,.5);
  if(!Array.isArray(state.pendingEvents)||!Array.isArray(state.adverseEvents)||state.pendingEvents.length>MAX_EVENTS)
   throw Error('invalid state event queue');
- if(![null,'legacy-b1','typed-v1'].includes(state.receiptProtocol)||!state.typedSequenceIndex||typeof state.typedSequenceIndex!=='object'||Array.isArray(state.typedSequenceIndex))
+ if(![null,'legacy-b1','typed-v1','typed-v2'].includes(state.receiptProtocol)||!state.typedSequenceIndex||typeof state.typedSequenceIndex!=='object'||Array.isArray(state.typedSequenceIndex))
   throw Error('invalid administration protocol state; versioned replay required');
  const validTime=(x,name)=>{if(!Number.isSafeInteger(x)||x<state.integratedUs)throw Error('invalid '+name+' clock');};
  for(const e of state.pendingEvents){
@@ -238,7 +245,7 @@ export function stepPhysiology487(state,administeredEvents=[],deltaClinicalMinut
   if(Object.hasOwn(s.seenEvents,e.eventId)){
    if(s.seenEvents[e.eventId]!==e.signature)throw Error('conflicting administration receipt '+e.eventId);continue;
   }
-  const protocol=e.provenance?'typed-v1':'legacy-b1';
+  const protocol=e.provenance?(e.provenance.executionKey?'typed-v2':'typed-v1'):'legacy-b1';
   if(s.receiptProtocol&&s.receiptProtocol!==protocol)throw Error('mixed receipt adapters/protocol requires explicit replay');
   s.receiptProtocol=protocol;
   if(e.provenance){
@@ -255,6 +262,13 @@ export function stepPhysiology487(state,administeredEvents=[],deltaClinicalMinut
   Object.defineProperty(s.seenEvents,e.eventId,{value:e.signature,enumerable:true,writable:false});
   s.pendingEvents.push(e);
  }
+ // On NEW strict receipts only, validate against the existing bounded index,
+ // not just a polling batch. No second ledger or per-tick history traversal.
+ if(indexCopied&&s.receiptProtocol==='typed-v2')validatePharmacologyEpisodes487(
+  Object.entries(s.seenEvents).map(([eventId,signature])=>{
+   const [,drugId,action,,atUs,sequence,,,,provenance]=JSON.parse(signature);
+   return {eventId,drugId,action,sequence,atClinicalMinute:atUs/MINUTE_US,executionKey:provenance?.executionKey};
+  }));
  s.pendingEvents.sort((a,b)=>a.atUs-b.atUs||a.sequence-b.sequence||
   (a.eventId<b.eventId?-1:a.eventId>b.eventId?1:0));
  // Carry fractional microseconds: rounding EVERY delta separately can lose a

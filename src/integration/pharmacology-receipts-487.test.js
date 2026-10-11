@@ -97,4 +97,104 @@ check('future timestamps, cross-patient events and late new receipt are rejected
  const [late,cl]=pair('late',{time:1});const advanced=stepPhysiology487(fresh(),[],5);
  assert.throws(()=>stepPhysiology487(advanced,adapt([late],ctx([cl])).events,1),/late.*replay/);
 });
+function strictPair(id,options={}){
+ const rows=pair(id,options),d=PILOT_DEFINITIONS_487.drugs.get(options.treatmentId||'morphine');
+ for(const row of rows)Object.assign(row,{schemaVersion:2,
+  formulation:{id:d.id,moleculeId:d.moleculeId,definitionVersion:d.definitionVersion,fingerprint:d.fingerprint},
+  episodeId:options.episodeId||'course-a',previousEventId:options.previousEventId??null});
+ return rows;
+}
+check('v2 binds an explicit formulation without changing B1 numerical behavior',()=>{
+ const [e,c]=strictPair('strict-dose'),before=JSON.stringify([e,c]);
+ const r=adapt([e],ctx([c])),[old,oc]=pair('strict-dose');
+ assert.equal(r.events.length,1);assert(r.events[0].provenance.executionKey.includes('course-a'));
+ assert.equal(JSON.stringify([e,c]),before);
+ assert.deepEqual(observePhysiology487(stepPhysiology487(fresh(),r.events,20)),
+  observePhysiology487(stepPhysiology487(fresh(),adapt([old],ctx([oc])).events,20)));
+ assert.deepEqual(stepPhysiology487(fresh(),[...r.events,...r.events],20),stepPhysiology487(fresh(),r.events,20));
+});
+check('v2 rejects missing, contradictory or stale formulation identities',()=>{
+ for(const mutate of [e=>{delete e.formulation;},e=>{e.formulation.id='oxygen';},
+  e=>{e.formulation.moleculeId='fentanyl';},e=>{e.formulation.definitionVersion++;},
+  e=>{e.formulation.fingerprint='old';},e=>{delete e.episodeId;},e=>{delete e.previousEventId;}]){
+  const [e,c]=strictPair('bad-form');mutate(e);mutate(c);assert.throws(()=>adapt([e],ctx([c])),/formulation|episode|predecessor/);
+ }
+ const [e,c]=strictPair('independent-form');c.episodeId='other';assert.throws(()=>adapt([e],ctx([c])),/confirm|mismatch/);
+});
+check('v2 confirms a complete infusion episode across polling batches',()=>{
+ const a={treatmentId:'vasopressor',amount:.05,unit:'mcg/kg/min',action:'start',sequence:1};
+ const [e,c]=strictPair('a',a),[t,ct]=strictPair('b',{...a,action:'setRate',kind:'dose-change',amount:.1,time:5,sequence:2,previousEventId:'a'}),
+  [s,cs]=strictPair('c',{...a,action:'stop',kind:'suspension',time:10,sequence:3,previousEventId:'b'});
+ const first=adapt([e],ctx([c])).events,second=adapt([t],ctx([c,ct])).events,third=adapt([s],ctx([c,ct,cs])).events;
+ assert.deepEqual([...first,...second,...third].map(x=>x.action),['start','setRate','stop']);
+ const given=stepPhysiology487(stepPhysiology487(stepPhysiology487(fresh(),first,5),second,5),third,0),
+  after=stepPhysiology487(given,[],5);
+ assert.deepEqual(given,stepPhysiology487(fresh(),[...first,...second,...third],10));
+ assert.equal(given.exposures.vasopressor.infusionRate,0);assert(after.exposures.vasopressor.effect<given.exposures.vasopressor.effect*.05);
+});
+check('v2 cannot titrate or stop an unknown, closed or different episode',()=>{
+ const a={treatmentId:'vasopressor',amount:.05,unit:'mcg/kg/min',action:'start',sequence:1},[e,c]=strictPair('a',a);
+ for(const patch of [{previousEventId:'missing'},{episodeId:'course-b',previousEventId:'a'},{previousEventId:null}]){
+  const [t,ct]=strictPair('b',{...a,action:'setRate',kind:'dose-change',time:5,sequence:2,...patch});
+  assert.throws(()=>adapt([t],ctx([c,ct])),/episode|predecessor|start/);
+ }
+ const [t,ct]=strictPair('b',{...a,action:'setRate',kind:'dose-change',time:5,sequence:2,previousEventId:'a'});
+ assert.throws(()=>adapt([t],ctx([ct])),/episode|predecessor|start/,'truncated native history cannot establish initiation');
+ const [s,cs]=strictPair('stop',{...a,action:'stop',kind:'suspension',time:6,sequence:3,previousEventId:'b'}),
+  [again,cagain]=strictPair('again',{...a,action:'setRate',kind:'dose-change',time:7,sequence:4,previousEventId:'stop'});
+ assert.throws(()=>adapt([again],ctx([c,ct,cs,cagain])),/closed|episode/);
+});
+check('v2 rejects zero rates, sequence collisions and concurrent duplicate starts',()=>{
+ const a={treatmentId:'vasopressor',amount:.05,unit:'mcg/kg/min',action:'start',sequence:1},[e,c]=strictPair('a',a);
+ const [zero,cz]=strictPair('zero',{...a,action:'setRate',kind:'dose-change',amount:0,time:1,sequence:2,previousEventId:'a'});
+ assert.throws(()=>adapt([zero],ctx([c,cz])),/dose|stop/);
+ const [again,ca]=strictPair('again',{...a,time:1,sequence:2,episodeId:'other'});
+ assert.throws(()=>adapt([again],ctx([c,ca])),/active|episode|start/);
+ ca.sequence=again.sequence=1;assert.throws(()=>adapt([again],ctx([c,ca])),/sequence/);
+});
+check('v2 repeated boluses accumulate; stopping the course preserves prior exposure',()=>{
+ const [a,ca]=strictPair('bolus-a',{sequence:1}),[b,cb]=strictPair('bolus-b',{sequence:2,time:1,previousEventId:'bolus-a'}),
+  [s,cs]=strictPair('bolus-stop',{sequence:3,time:2,action:'stop',kind:'suspension',previousEventId:'bolus-b'});
+ const r=adapt([a,b,s],ctx([ca,cb,cs])),given=stepPhysiology487(fresh(),r.events,10);
+ assert(given.respiratoryDepression>stepPhysiology487(fresh(),adapt([a],ctx([ca])).events,10).respiratoryDepression);
+ assert(given.exposures.morphine.central>0);
+ const altered={...r.events[0],provenance:{...r.events[0].provenance,
+  executionKey:r.events[0].provenance.executionKey.replace('course-a','course-b')}};
+ assert.throws(()=>stepPhysiology487(stepPhysiology487(fresh(),r.events,10),[altered],0),/conflict/,
+  'execution identity must survive adaptation into the existing core receipt index');
+});
+check('v2 session rejects a second hidden infusion episode and a legacy downgrade between batches',()=>{
+ const a={treatmentId:'vasopressor',amount:.05,unit:'mcg/kg/min',action:'start',sequence:1},[e,c]=strictPair('initial',a),
+  given=stepPhysiology487(fresh(),adapt([e],ctx([c])).events,0);
+ const [second,cs]=strictPair('hidden-course',{...a,amount:.1,time:1,sequence:2,episodeId:'course-b'}),
+  [old,co]=pair('legacy-downgrade',{...a,amount:.1,time:1,sequence:2});
+ const rejected=[[[second],[cs]],[[old],[co]]].map(([events,confirmations])=>{
+  try{stepPhysiology487(given,adapt(events,ctx(confirmations)).events,2);return false;}catch{return true;}
+ });
+ assert.deepEqual(rejected,[true,true],'neither omitted earlier history nor legacy downgrade can bypass a strict session');
+});
+check('a confirmed stop permits a later distinct infusion episode with the existing receipt index',()=>{
+ const a={treatmentId:'vasopressor',amount:.05,unit:'mcg/kg/min',action:'start',sequence:1},[first,cfirst]=strictPair('first',a),
+  [stop,cstop]=strictPair('stop',{...a,action:'stop',kind:'suspension',time:1,sequence:2,previousEventId:'first'}),
+  [restart,crestart]=strictPair('restart',{...a,time:2,sequence:3,episodeId:'course-b'});
+ const initial=stepPhysiology487(fresh(),adapt([first,stop],ctx([cfirst,cstop])).events,1),
+  continued=stepPhysiology487(initial,adapt([restart],ctx([cfirst,cstop,crestart])).events,2);
+ assert.equal(continued.receiptProtocol,'typed-v2');assert.equal(continued.exposures.vasopressor.infusionRate,1);
+});
+check('separate completed boluses do not become permanently active infusion episodes',()=>{
+ const [a,ca]=strictPair('ringer-a',{treatmentId:'fluid',amount:500,unit:'ml',sequence:1,episodeId:'bolus-one'}),
+  [b,cb]=strictPair('ringer-b',{treatmentId:'fluid',amount:250,unit:'ml',time:1,sequence:2,episodeId:'bolus-two'});
+ const given=stepPhysiology487(fresh(),adapt([a,b],ctx([ca,cb])).events,1);
+ assert.equal(given.administeredFluidMl,750);
+ const [m,cm]=strictPair('morphine-new-course',{time:2,sequence:3,episodeId:'analgesia-other'});
+ assert.equal(adapt([m],ctx([ca,cb,cm])).events.length,1);
+});
+check('legacy and strict protocols cannot silently mix; pending stops earn no history',()=>{
+ const [e,c]=strictPair('strict',{sequence:1}),[legacy,cl]=pair('legacy',{sequence:2,time:1});
+ assert.throws(()=>adapt([e,legacy],ctx([c,cl])),/mix|version|protocol/);
+ const [request,cr]=strictPair('request',{action:'stop',kind:'suspension',time:1,sequence:2,status:'requested',previousEventId:'strict'});
+ const r=adapt([e,request],ctx([c,cr]));assert.equal(r.events.length,1);assert.equal(r.ignored.length,1);
+ const [other,co]=strictPair('other',{time:2,sequence:3,previousEventId:'request'});
+ assert.throws(()=>adapt([other],ctx([c,cr,co])),/predecessor|episode/);
+});
 console.log('PHARMACOLOGY TYPED RECEIPTS PASS',JSON.stringify({checks,nativeWrites:0,realExecutorInstalled:false,heparinActivated:false}));

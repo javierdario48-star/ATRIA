@@ -16,6 +16,41 @@ function sortValue(x){
  if(Array.isArray(x))return x.map(sortValue);
  if(x&&typeof x==='object')return Object.fromEntries(Object.keys(x).sort().map(k=>[k,sortValue(x[k])]));return x;
 }
+// Execution identity belongs to the existing content contract. Both the QA
+// receipt boundary and the persistent receipt index use this ONE validator.
+export function pharmacologyExecutionKey487(raw,definition){
+ const formulation={id:definition.id,moleculeId:definition.moleculeId,
+  definitionVersion:definition.definitionVersion,fingerprint:definition.fingerprint};
+ if(raw.schemaVersion!==2||canonical(raw.formulation)!==canonical(formulation))throw Error('explicit formulation/revision mismatch');
+ const identity=(value,label)=>{if(typeof value!=='string'||!value.trim()||value.length>200)throw Error('invalid '+label+' identity');};
+ identity(raw.episodeId,'episode');
+ if(raw.previousEventId!==null)identity(raw.previousEventId,'predecessor');
+ if(raw.previousEventId===raw.eventId)throw Error('self-referencing predecessor');
+ return canonical({schemaVersion:2,formulation,episodeId:raw.episodeId,previousEventId:raw.previousEventId});
+}
+export function validatePharmacologyEpisodes487(events){
+ const episodes=new Map(),active=new Map();
+ const ordered=events.slice().sort((a,b)=>a.atClinicalMinute-b.atClinicalMinute||a.sequence-b.sequence);
+ for(const e of ordered){
+  const {schemaVersion,episodeId,previousEventId}=JSON.parse(e.executionKey);
+  if(schemaVersion!==2)throw Error('invalid execution episode version');
+  const course=episodes.get(episodeId);
+  if(!course){
+   if(!['start','bolus'].includes(e.action)||previousEventId!==null)throw Error('episode requires a confirmed start/first bolus with no predecessor');
+   if(e.action==='start'&&active.has(e.drugId))throw Error('another episode is already active for '+e.drugId);
+   episodes.set(episodeId,{drugId:e.drugId,last:e,closed:false});
+   // A completed bolus is not an ongoing infusion: separate boluses can
+   // accumulate without a fictitious fluid stop or erasing previous exposure.
+   if(e.action==='start')active.set(e.drugId,episodeId);
+  }else{
+   if(course.closed||course.drugId!==e.drugId)throw Error('closed or different formulation episode '+episodeId);
+   if(e.action==='start'||previousEventId!==course.last.eventId||e.sequence<=course.last.sequence)
+    throw Error('episode predecessor/start mismatch '+episodeId);
+   course.last=e;
+   if(e.action==='stop'){course.closed=true;if(active.get(e.drugId)===episodeId)active.delete(e.drugId);}
+  }
+ }
+}
 function kinetics(form,axes){
  const k=structuredClone(form.pharmacokinetics),mode=form.administration.mode;
  if(!k||k.kind!==mode||!['support','physical-volume','bolus','infusion'].includes(mode))throw Error('unsupported kinetics/administration '+form.id);
