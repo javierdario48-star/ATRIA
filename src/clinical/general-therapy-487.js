@@ -29,6 +29,8 @@ export function csAssessGeneralTreatment487(id,c,patient){
    indicated=req.includes(id)||inCoverage;
  if(typeof override.indicated==='boolean')indicated=override.indicated;
  const allergy=(f.drugAllergies||[]).includes(id)||(f.drugAllergies||[]).includes(rule.classId);
+ const severeAllergy=(f.severeAllergies||[]).includes(id)||
+   (f.severeAllergies||[]).includes(rule.classId);
  const bleeding=traits.has('bleed')||c?.risk==='bleed'||f.activeBleeding===true||
    f.majorBleeding===true||p.activeBleeding===true;
  const hypovolemia=traits.has('hypovolemia')||Number(p.effectiveVolume??1)<.5;
@@ -36,11 +38,29 @@ export function csAssessGeneralTreatment487(id,c,patient){
  const renal=traits.has('renalRisk')||f.renalImpairment===true||Number(p.renalReserve??1)<.55;
  const risk=[];
  if(allergy)risk.push('knownAllergy');
+ if(severeAllergy)risk.push('knownSevereAllergy');
+ // Every registered hazard is automatically inherited by future cases.
+ // Risk flags are data, not drug-specific code: e.g. riskFlags:['qt'].
+ const declaredRisk=[...(cfg.riskFlags||[]),...(f.riskFlags||[])];
+ const aliases={qt:['prolongedQT','qtProlongation'],
+   hyperkalemia:['hyperkalemia'],hypotension:['hypotension'],
+   respiratoryDepression:['respiratoryFailure'],ileus:['ileus'],
+   hepatic:['hepaticImpairment'],neurotoxicity:['seizureDisorder'],
+   hyperglycemia:['hyperglycemia'],coagulopathy:['coagulopathy'],
+   bradycardia:['bradycardia'],electrolytes:['electrolyteDisorder'],
+   ototoxicity:['hearingImpairment'],overload:['fluidOverload','pulmonaryEdema'],
+   arrhythmia:['arrhythmia'],ischemia:['peripheralIschemia'],
+   hypercapnia:['hypercapnia']};
+ for(const hazard of rule.hazards||[]){
+   if(declaredRisk.includes(hazard)||f[hazard]===true||
+     (aliases[hazard]||[]).some(k=>f[k]===true))
+     risk.push('context:'+hazard);
+ }
  if(bleeding&&id==='anticoagulation')risk.push('activeBleeding');
  if(f.knownHIT&&id==='anticoagulation')risk.push('knownHIT');
  if(hypovolemia&&['furosemide','beta_blocker'].includes(id))risk.push('hypoperfusion');
  if(shock&&id==='beta_blocker')risk.push('shock');
- if(renal&&['amikacin','gentamicin','amphotericin','cefepime','imipenem','piptazo'].includes(id))
+ if(renal&&(rule.hazards||[]).includes('renal'))
    risk.push('renalExposure');
  if(traits.has('congestion')&&['fluid','albumin','transfusion'].includes(id))
    risk.push('volumeOverload');
@@ -53,10 +73,11 @@ export function csAssessGeneralTreatment487(id,c,patient){
    administered&&patient?.monitorTherapies?.has?.(id)===true:
    id==='source_control'?patient?.phys?.sourceControlled===true||
      administered&&patient?.interventions?.has?.(id)===true:administered;
- const contraindicated=risk.some(x=>['knownAllergy','activeBleeding','knownHIT',
+ const contraindicated=risk.some(x=>['knownAllergy','knownSevereAllergy','activeBleeding','knownHIT',
    'hypoperfusion','shock','explicitContraindication'].includes(x));
  return {id,known:true,role:DYNAMIC_THERAPIES_487.includes(id)?'dynamic':'requirement',
   indicated,required:req.includes(id),contraindicated,risk:[...new Set(risk)],
+  hazardTypes:[...(rule.hazards||[])],
   administered:exposed,appropriate:exposed&&indicated&&!contraindicated,
   overridesUsed:Object.keys(override).length>0,caseId:c?.id||null};
 }
