@@ -6,7 +6,8 @@ export function morphineOrderIssue487(raw) {
  const name=text.match(/\bmorfina\b/);
  if(!name)return 'Identificá morfina antes de indicar una dosis.';
  if((text.match(/\bmorfina\b/g)||[]).length!==1)return 'Indicá una sola orden de morfina por administración.';
- if(/\b(?:oral|vo|v\.o\.|im|i\.m\.|sc|subcutane[ao]|inhalad[ao]|nasal)\b/.test(text))
+ if(/\b(?:oral|vo|po|im|sc|intramuscular|intranasal|sublingual|subcutane[ao]|inhalad[ao]|nasal)\b|\bi\.?\s*m\.?(?=\s|$)|\bs\.?\s*c\.?(?=\s|$)/.test(text)||
+    /\bvia\b/.test(text)&&!/\bvia\s+(?:iv|ev|intravenos[oa]|endovenos[oa])\b/.test(text))
   return 'Morfina: esta entrada de ATRIA solamente admite administración IV.';
  if(/(?:^|[\s(])[+−–—-]\s*\d/.test(text))return 'Morfina: indicá una dosis positiva sin signos ambiguos.';
  const numbers=[...text.matchAll(/\d+(?:\.\d+)?/g)];
