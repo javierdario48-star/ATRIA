@@ -79,19 +79,22 @@ export function installPhysiologyQAObserver487(port) {
         if (!issues.some(x => x.treatmentId === entry.id)) issues.push({code: 'unsupported-by-pilot', treatmentId: entry.id});
         continue;
       }
-      if (entry.count !== (counts.get(entry.id) || 0) + 1) throw Error('missing native administration count for ' + entry.id);
+      const stopping=entry.action==='stop',continuous=['support','infusion'].includes(d.kinetics.kind);
+      if (entry.count !== (counts.get(entry.id) || 0) + (stopping?0:1)) throw Error('missing native administration count for ' + entry.id);
       if (pharmacologyRouteConflict487(entry.raw, d.route)) throw Error('native order route cannot be verified as ' + d.route + ' for ' + entry.id);
       if (d.route === 'iv' && entry.confirmedIV <= 0) throw Error('native IV execution lacks confirmed access for ' + entry.id);
       if (entry.id === 'vasopressor' && !/nora|norepinefr/.test(normalize(entry.raw)))
         throw Error('generic vasopressor does not establish norepinephrine identity');
       const match = entry.doseDisplay.match(/^(\d+(?:\.\d+)?)\s*(L\/min|ml|mg|(?:mcg|µg|μg|ug)\/kg\/min)$/);
-      if (!match || cleanUnit(match[2]) !== d.unit || Number(match[1]) !== entry.amount || cleanUnit(entry.unit) !== d.unit)
+      if (!stopping&&(!match || cleanUnit(match[2]) !== d.unit || Number(match[1]) !== entry.amount || cleanUnit(entry.unit) !== d.unit))
         throw Error('native historical dose/unit mismatch for ' + entry.id);
       const active = patient.monitorTherapies?.get(entry.id);
-      if (!active || Number(active.lastGivenAt) + EPS_NATIVE < entry.nativeMinute)
+      if (!stopping&&(!active || Number(active.lastGivenAt) + EPS_NATIVE < entry.nativeMinute))
         throw Error('recorded administration is not present in native active therapy for ' + entry.id);
-      const continuous = ['support', 'infusion'].includes(d.kinetics.kind);
-      const action = continuous ? (counts.has(entry.id) ? 'setRate' : 'start') : 'bolus';
+      if(stopping&&(!continuous||!continuingDoses.has(entry.id)||entry.executionStatus!=='administered'||
+        entry.eventType!=='suspension'||entry.patientId!==uid||entry.route!==d.route||!entry.nativeEventId))
+        throw Error('suspension lacks a confirmed native completion for '+entry.id);
+      const action = stopping?'stop':continuous ? (continuingDoses.has(entry.id) ? 'setRate' : 'start') : 'bolus';
       const eventId = uid + ':native-qa:' + entry.sequence;
       // Canonical microsecond clock endpoint tolerates only floating point
       // rounding, never an unobserved span of native time.
@@ -99,15 +102,16 @@ export function installPhysiologyQAObserver487(port) {
       const timestamp = {authorityId: clock.authorityId, unit: 'native-minute',
         value: Math.min(entry.nativeMinute, clock.nativeMinute)};
       const event = {schemaVersion: 1, eventId, patientId: uid, treatmentId: entry.id,
-        eventType: action === 'setRate' ? 'dose-change' : 'administration', status: 'administered',
-        action, route: d.route, sequence: entry.sequence, dose: {amount: entry.amount, unit: d.unit}, timestamp,
+        eventType: stopping?'suspension':action === 'setRate' ? 'dose-change' : 'administration', status: 'administered',
+        action, route: d.route, sequence: entry.sequence,...(stopping?{}:{dose: {amount: entry.amount, unit: d.unit}}), timestamp,
         verification: {source: 'native-administration-log', receiptId: eventId + ':ledger'}};
       const confirmation = {...event, source: event.verification.source, receiptId: event.verification.receiptId};
       delete confirmation.verification;
       events.push(event); confirmations.push(confirmation);
       newlyAccepted.push({...event, nativeEvidence: {...entry, routeSource: 'pilot-definition-with-native-dose-and-access'}});
       counts.set(entry.id, entry.count);
-      if (continuous) continuingDoses.set(entry.id, event.dose);
+      if(stopping)continuingDoses.delete(entry.id);
+      else if (continuous) continuingDoses.set(entry.id, event.dose);
     }
     for (const [id, dose] of continuingDoses) {
       const active = patient.monitorTherapies?.get(id);
@@ -140,7 +144,9 @@ export function installPhysiologyQAObserver487(port) {
       captured.push({id: row.id, count: row.count, sequence: ++sequence, nativeMinute: row.m,
         doseDisplay: String(row.doseDisplay || ''), amount: Number(t.dose?.amount), unit: cleanUnit(t.dose?.unit),
         raw: String(row.raw || ''), defaultApplied: !!row.defaultApplied,
-        confirmedIV: Number(patient.venousAccessCount || 0)});
+        confirmedIV: Number(patient.venousAccessCount || 0),...(row.action==='stop'?{
+          action:row.action,eventType:row.eventType,executionStatus:row.status,patientId:row.patientId,
+          route:row.route,nativeEventId:row.eventId}: {})});
     } catch (error) { fail(error); }
     return out;
   }

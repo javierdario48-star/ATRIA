@@ -51,8 +51,8 @@ console.log('OXYGEN OWNER PREFLIGHT',JSON.stringify({
  clinicalOwner:'native',safeToSwitchOwner:false,
  blockingDependencies:[
   'native direct vital-sign effect and critical rescue oxygenation share treatment evidence',
-  'validated native continuous oxygen stop/titration execution receipts are not yet proven',
-  'Ringer experimental ownership endpoint compatibility must be assessed before combined activation'
+  'native stop is verified by the separate functional bot; flow-dependent response and target saturation remain incomplete',
+  'native/Ringer compatibility is tested separately; combined B1 oxygen ownership is not enabled'
  ],
  physicalBrowser:false,physicalAndroid:false
 }));

@@ -2,6 +2,9 @@
  * Frozen clinical numbers/catalogue are retained, never regenerated. */
 import assert from 'node:assert/strict';
 const revisions={
+ 'atria-verified-clinical-chat-487':[
+  'bb83cd9e80a7bca71ce20421b3d93a88034e95ba0538602d140d47c83fb3f275',
+  '9e2a822db648c4df1e869e17686830e3c8121758544e74e52eb028753d8ff095'],
  'native-therapy':[
   'daaedf87c4da9baddf3e7549dbeaf4a44a0201cae77594fd8ef6b561b9a6ab6a',
   '2cdc142f1f01e4fbd12104809b362295abf79fd8cefb7ee0f450798d18d15fd7'],

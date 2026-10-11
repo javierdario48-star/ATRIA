@@ -10,7 +10,7 @@ new vm.Script(source);
 const log=[],screens=[],nurse=[];
 let p={caseEnded:false,patientDied:false,patientInstance:{uid:'elena-1'},
  monitorConnected:false,venousAccessCount:0,administrationLog:[],monitorFeedback:'',
- csPhase4Pending487:[]};
+ csPhase4Pending487:[],monitorTherapies:new Map()};
 const c={id:'PERI-SEC-001'};
 const box={innerHTML:''};
 const ctx={window:{},sim:p,C:c,
@@ -29,7 +29,7 @@ ctx.updateSimulation(1/60);
 assert.deepEqual(log.map(x=>x[1]),['✓ Monitor puesto y conectado','✓ Dos vías periféricas colocadas']);
 ctx.updateSimulation(1/60);
 assert.equal(log.length,2,'idempotent: no duplicate nurse completion');
-const give=(id,label,dose)=>p.administrationLog.push({id,label,doseDisplay:dose,m:2});
+const give=(id,label,dose)=>{p.monitorTherapies.set(id,{id});p.administrationLog.push({id,label,doseDisplay:dose,m:2});};
 give('oxygen','Oxígeno','4 L/min');give('fluid','Cristaloides','500 ml');
 give('ceftriaxone','Ceftriaxona','1 g');
 p.monitorFeedback='Metronidazol IV: indicado, todavía no administrado.';
@@ -48,10 +48,22 @@ assert.deepEqual(screens.at(-1),['Metronidazol: administrado y registrado en el 
 assert(box.innerHTML.includes('✓')&&box.innerHTML.includes('vías'),'receipts present in live chat box');
 const count=log.length;ctx.updateSimulation(1/60);
 assert.equal(log.length,count,'polling never floods the transcript with duplicate green messages');
+// The real executor keeps prior administrations and appends an explicit stop.
+p.monitorTherapies.delete('oxygen');p.administrationLog.push({id:'oxygen',action:'stop',doseDisplay:'Suspensión confirmada'});
+ctx.updateSimulation(1/60);
+assert.equal(log.at(-1)[1],'✓ Oxígeno suspendido · Suspensión confirmada','stop must not be reported as a new applied dose');
+assert.equal(log.filter(x=>/Oxígeno aplicado/.test(x[1])).length,1,'original administration remains visible exactly once');
+const afterStop=log.length;ctx.updateSimulation(1/60);assert.equal(log.length,afterStop,'stop notification is idempotent');
+for(let i=0;i<80;i++){give('analgesia','Paracetamol','1000 mg');if(p.administrationLog.length>80)p.administrationLog.shift();ctx.updateSimulation(1/60);}
+give('oxygen','Oxígeno','2 L/min');p.administrationLog.shift();ctx.updateSimulation(1/60);
+p.monitorTherapies.delete('oxygen');p.administrationLog.push({id:'oxygen',action:'stop',doseDisplay:'Suspensión confirmada'});
+p.administrationLog.shift();ctx.updateSimulation(1/60);
+assert.equal(log.at(-1)[1],'✓ Oxígeno suspendido · Suspensión confirmada','a rolling 80-row ledger cannot silence confirmed stops');
+const afterRollingStop=log.length;
 const other={caseEnded:false,patientDied:false,patientInstance:{uid:'other'},monitorConnected:false,
  venousAccessCount:0,administrationLog:[],monitorFeedback:''};
 ctx.sim=other;ctx.updateSimulation(1/60);
-assert.equal(log.length,count,'another patient cannot inherit treatments or their receipts');
+assert.equal(log.length,afterRollingStop,'another patient cannot inherit treatments or their receipts');
 console.log('GREEN CLINICAL EXECUTION RECEIPTS PASS',JSON.stringify({
  actualMonitor:true,twoNativeAccesses:true,drugReceipts:5,dualAntibiotics:true,
  pendingNotCompleted:true,noDuplicates:true,patientIsolation:true,greenCSS:true}));

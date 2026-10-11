@@ -9,8 +9,30 @@ import {spawnSync} from 'node:child_process';
 import {applyPhysiologyQABootstrap487,PHYSIOLOGY_QA_FILES_487,RINGER_SAFETY_OLD_487,RINGER_SAFETY_NEW_487,RINGER_COMPLETION_OLD_487,RINGER_COMPLETION_NEW_487} from '../../src/integration/physiology-qa-bootstrap-487.js';
 import {applyCriticalRescue487,CRITICAL_FINAL_OLD_487,CRITICAL_FINAL_NEW_487,CRITICAL_CLOCK_OLD_487,CRITICAL_CLOCK_NEW_487} from '../../src/integration/critical-rescue-487.js';
 import {applySecondaryBridge487} from '../../src/integration/secondary-sepsis-bridge-487.js';
+import {apply487} from '../../src/integration/apply-487.js';
+import {NURSE_STOP_FINISH_OLD_487,NURSE_STOP_FINISH_NEW_487,NURSE_STOP_STATUS_OLD_487,
+ NURSE_STOP_STATUS_NEW_487,NURSE_STOP_VERSION_OLD_487,NURSE_STOP_VERSION_NEW_487} from '../../src/integration/nurse-execution-487.js';
 const html=fs.readFileSync('out/index.html','utf8');
 const hash=createHash('sha256').update(html).digest('hex');
+assert.equal(html,apply487(fs.readFileSync('vendor/atria-4.8.6/index.html','utf8')),'artifact equals current source-integrated build');
+// Restore only the authorized stop executor/dispatch/confirmation additions.
+// Frozen pre-stop scripts are the exact 7606e14 checkpoint, not a replacement
+// development base. The original protected hash below is never regenerated.
+let beforeStop=html;
+for(const [id,name,digest] of [
+ ['atria-nurse-execution-487','nurse-execution','94d1e61a4b46b9975578100825bf0977c7c431ea70b4fff54986c9df4bb0c85d'],
+ ['atria-nurse-voice-routing-487','nurse-voice','1977da69627bbadd57fb995c0d908d9fd65f5e6595b64142f63f7cced5348ea3'],
+ ['atria-verified-clinical-chat-487','clinical-confirmations','b2efcb61d5f374b76263b717cff6ee79f544aba98484c599a2b07d48ba2fd0b0']]){
+ const scripts=[...beforeStop.matchAll(new RegExp('<script id="'+id+'">[\\s\\S]*?<\\/script>','g'))];
+ assert.equal(scripts.length,1);
+ const frozen=fs.readFileSync(new URL('../physiology-live/'+name+'-pre-stop-487.txt',import.meta.url),'utf8');
+ assert.equal(createHash('sha256').update(frozen).digest('hex'),digest,'verified pre-stop script '+name);
+ beforeStop=beforeStop.replace(scripts[0][0],frozen);
+}
+for(const [current,prior] of [[NURSE_STOP_FINISH_NEW_487,NURSE_STOP_FINISH_OLD_487],
+ [NURSE_STOP_STATUS_NEW_487,NURSE_STOP_STATUS_OLD_487],[NURSE_STOP_VERSION_NEW_487,NURSE_STOP_VERSION_OLD_487]]){
+ assert.equal(beforeStop.split(current).length,2,'one authorized native stop boundary');beforeStop=beforeStop.replace(current,prior);
+}
 const entries=[...html.matchAll(/<script id="atria-physiology-qa-487">[\s\S]*?<\/script>/g)];
 assert.equal(entries.length,1,'exactly one explicit OFF-by-default observer entry');
 const expectedEntry=applyPhysiologyQABootstrap487('<body></body>').replace('<body>','').replace('</body>','');
@@ -33,7 +55,7 @@ const oldBridge=fs.readFileSync(new URL('./secondary-bridge-pre-owner-487.txt',i
 assert.equal(createHash('sha256').update(oldBridge).digest('hex'),'ff570d3d2ee468d0d24d0492a876d85a61d7e3d242e311681bd5e72fdef4a045');
 assert.equal(html.split(RINGER_SAFETY_NEW_487).length,2,'one native fluid toxicity ownership gate');
 assert.equal(html.split(RINGER_COMPLETION_NEW_487).length,2,'one scoped fluid completion qualifier');
-const restored=html.replace(entries[0][0],'').replace(criticalScripts[0][0],oldCritical)
+const restored=beforeStop.replace(entries[0][0],'').replace(criticalScripts[0][0],oldCritical)
  .replace(bridgeScripts[0][0],oldBridge).replace(RINGER_SAFETY_NEW_487,RINGER_SAFETY_OLD_487)
  .replace(RINGER_COMPLETION_NEW_487,RINGER_COMPLETION_OLD_487)
  .replace(CRITICAL_FINAL_NEW_487,CRITICAL_FINAL_OLD_487).replace(CRITICAL_CLOCK_NEW_487,CRITICAL_CLOCK_OLD_487);

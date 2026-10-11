@@ -45,10 +45,10 @@ assert(treated.ctx.sim.phys.oxygenation>before,
   'critical-rescue pathway independently changes physiologic oxygenation');
 assert.equal(report.effectOwner,'native','two native writers forbid B1 activation');
 
-// The scanner treats negation/suspension wording as non-executable. In
-// particular, "suspender" must NOT become a fabricated stop receipt.
+// Explicit negation is still non-executable. A specific positive stop now
+// executes through nursing; that separate path is covered by oxygen-functional.
 const preStopRows=delivered(treated,'oxygen').length;
-order(treated,'suspender oxigeno');
+order(treated,'no suspender oxigeno');
 advance(treated,1);
 assert.equal(delivered(treated,'oxygen').length,preStopRows,
   'negative wording does not prove execution of an oxygen stop');
@@ -109,7 +109,7 @@ console.log('OXYGEN OWNERSHIP BOUNDARY',JSON.stringify({
  scope:'generated nurse and physiology Node VM only',
  initialAndPendingWithoutEvidence:true,
  confirmedStarts:1,directSpO2Writer:direct,independentRescueOxygenationWriter:true,
- stopInstructionExecuted:false,stopReceiptEmitted:false,
+ negatedStopInstructionExecuted:false,negatedStopReceiptEmitted:false,
  repeatedFlowOrderProducesNativeReceipt:after>prior,observedSetRateReceipts:changes.length,
  combinedRingerApplications:ringerAPI.reportRinger().applications,
  activeRollbackBlocked:true,impairedModelSpO2:impaired.ctx.sim.liveVitals.spo2,

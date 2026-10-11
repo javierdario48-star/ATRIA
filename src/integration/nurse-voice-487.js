@@ -33,6 +33,9 @@ export function applyNurseVoice487(html){
   let ok=false;
   for(const item of parsed.items.slice(0,12)){
    if(item.negated){feedback('No ejecuté '+item.phrase+' (indicación negada).');continue}
+   if(item.action==='stop'){
+    ok=window.csQueueTherapyStop487?.(item.id,item.text)===true||ok;continue;
+   }
    if(item.kind==='monitor'){
     const started=window.csQueueMonitor?.()===true;
     feedback(started?'Monitor solicitado; avisaré cuando esté conectado.':

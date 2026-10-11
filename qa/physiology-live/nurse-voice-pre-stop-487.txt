@@ -1,0 +1,176 @@
+<script id="atria-nurse-voice-routing-487">
+(function(){
+ if(window.__atriaNurseVoiceRouter487)return;window.__atriaNurseVoiceRouter487=true;
+ function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
+ // Keep fractional dosages intact (notably 0,05 µg/kg/min in Android voice).
+ // Punctuation outside numeric fractions is still stripped exactly as before.
+ const norm=t=>String(t||'').toLowerCase().normalize('NFD')
+  .replace(/[\u0300-\u036f]/g,'')
+  .replace(/(\d+)\s*[,\.]\s*(\d+)/g,'$1csdecimal487$2')
+  .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()
+  .replace(/(\d+)csdecimal487(\d+)/g,'$1.$2');
+ const s=norm(text),withoutPrefix=s.replace(/^(?:(?:enfermera|enfermero|enfermeria|por favor|solicito|necesito|pido|quiero|orden|indico)\s+)+/,'');
+ const input=withoutPrefix;
+ const aliases=[];
+ const add=(kind,id,term,priority=1)=>{
+  const phrase=norm(term);if(phrase.length<3&&phrase!=='o2')return;
+  aliases.push({kind,id,phrase,priority});
+ };
+ const defs=[
+  ['monitor','monitor',['monitor','monitorizar','monitorear','monitorizacion','monitoreo','conectar monitor','poner monitor','pone monitor']],
+  ['iv','iv',['vias','via','dos vias','2 vias','accesos venosos','acceso venoso','vias perifericas','via periferica','accesos perifericos','acceso periferico','dos accesos perifericos','2 accesos perifericos','dos accesos venosos','2 accesos venosos','cateter venoso','cateter periferico','canalizar','canalizacion','venoclisis']],
+  ['therapy','fluid',['expansion','expandir','expande','expansion con cristaloides','expandir con cristaloides','reposicion','reposicion de volumen','expansor de volumen','pasar volumen']],
+  ['vitals','vitals',['signos vitales','tomar signos','tomar presion','presion arterial','control de signos','controlar signos','saturacion','constantes vitales']],
+  ['surgery','cirugia',['cirugia','cirujano','cirujana','quirofano','operar','laparotomia','control del foco','control de foco']],
+ ];
+ for(const [kind,id,list] of defs)for(const alias of list)add(kind,id,alias,4);
+ for(const item of studies||[])for(const alias of [item.label,...(item.aliases||[])])add('study',item.id,alias,3);
+ for(const item of therapies||[])for(const alias of [item.label,...(item.aliases||[])])add('therapy',item.id,alias,2);
+ for(const item of interventions||[])for(const alias of [item.label,...(item.aliases||[])])
+  add(item.id==='source_control'||item.id==='surgery'?'surgery':'therapy',item.id==='source_control'||item.id==='surgery'?'cirugia':item.id,alias,2);
+ // Scan distinct word boundaries; longer clinical phrases take precedence.
+ const offers=[];
+ for(const a of aliases){
+  let from=0,i;
+  while((i=input.indexOf(a.phrase,from))>=0){
+   from=i+1;
+   if((i===0||input[i-1]===' ')&&(i+a.phrase.length===input.length||input[i+a.phrase.length]===' '))
+    offers.push({...a,start:i,end:i+a.phrase.length});
+  }
+ }
+ offers.sort((a,b)=>(b.end-b.start)-(a.end-a.start)||b.priority-a.priority||a.start-b.start);
+ const chosen=[];
+ for(const x of offers)if(!chosen.some(y=>x.start<y.end&&y.start<x.end))chosen.push(x);
+ chosen.sort((a,b)=>a.start-b.start);
+ const result=[];
+ const relevantNegation=/\b(?:no|sin|evitar|evita|nunca|suspender|suspende|cancelar)\b/;
+ for(let index=0;index<chosen.length;index++){
+  const item=chosen[index];
+  const before=input.slice(index?chosen[index-1].end:0,item.start).replace(/\s+/g,' ');
+  const scoped=before.split(/\b(?:y|pero|luego|despues|ademas|,)\b/).pop();
+  const negated=relevantNegation.test(scoped||'');
+  const phrase=input.slice(item.start,chosen.find(x=>x.start>item.start)?.start??input.length)
+   .replace(/\s+(?:y|e|ademas|mas)\s*$/,'').trim();
+  // Standard bedside shorthand: plural "vías" / "accesos" requests TWO.
+  // Explicit "una vía"/"un acceso" keeps ONE; singular "vía" defaults to ONE.
+  const local=input.slice(Math.max(0,item.start-12),Math.min(input.length,item.end+10));
+  const explicitOne=/\b(?:una?|1)\s+(?:via|acceso)\b/.test(local);
+  const plural=/\b(?:vias|accesos)\b/.test(local);
+  const explicitTwo=/\b(?:dos|2)\s+(?:vias?|accesos?)\b/.test(local);
+  const count=item.kind==='iv'&&(explicitTwo||plural&&!explicitOne)?2:1;
+  const duplicate=result.some(x=>x.id===item.id&&x.kind===item.kind&&!x.negated);
+  if(!duplicate)result.push({...item,text:phrase,count,negated});
+ }
+ // Unknown trailing clauses should be explicitly rejected, not silently lost.
+ const segments=[];
+ let previous=0;
+ for(const x of chosen){segments.push(input.slice(previous,x.start));previous=x.end;}
+ segments.push(input.slice(previous));
+ const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|pero|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|pongas|poneme|ponga|canaliza|canalicen|canalizame|conecta|conectame|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|litros|litro|cuatro|tres|cinco|seis|canula|nasal|mascara|lpm|min|por|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
+ const unknown=segments.map(x=>x.replace(neutral,' ').replace(/\b\d+(?:\s*\d+)?\b/g,' ').replace(/\s+/g,' ').trim()).filter(x=>x.length>=4);
+ return {addressed:/^(?:enfermera|enfermero|enfermeria)\b/.test(s),items:result,unknown,
+  active:!/\?/.test(String(text))&&!/^(?:no|nunca|sin|evitar)\b/.test(input)};
+}
+ const baseNurse=nurseNatural,baseSend=sendMessage;
+ const addressed=t=>/\b(?:enfermera|enfermero|enfermeria)\b/.test(norm(String(t||'')));
+ function feedback(t){nurseSay(t);sim?.events?.push({m:sim.gameMinute,t:'Enfermería: '+t})}
+ nurseNatural=function(text){
+  const bare=norm(String(text||'')).trim();
+  const direct=/^(?:(?:dos|2) )?(?:vias?|accesos? venosos?|monitor|monitorizar|oxigeno|o2|ringer|hemograma|signos vitales)$/;
+  // A brief command addressed to a nearby nurse also works without saying
+  // "enfermera" every time. Patient questions still use the native routing.
+  // sendMessage can route a composite sentence while the doctor is speaking
+  // directly with a nurse. Do not drop that SAME sentence here just because
+  // it does not begin with "enfermera" or consist of a single-word alias.
+  const activeNurse=(chatRole==='nurse'||pendingAddress==='nurse');
+  const listed=activeNurse?csNurseScan487(text,C?.studies||[],
+   typeof MONITOR_THERAPY_CATALOG!=='undefined'?MONITOR_THERAPY_CATALOG:[],
+   C?.interventions||[]):null;
+  if(!addressed(text)&&!direct.test(bare)&&
+     !(activeNurse&&listed?.active&&listed.items.some(x=>!x.negated)))
+   return baseNurse.apply(this,arguments);
+  if(!C||!sim||sim.caseEnded||window.nsMayExamine?.()===false){
+   feedback('No hay una atención activa con permiso para ejecutar estas indicaciones.');return false;
+  }
+  const parsed=csNurseScan487(text,C.studies,MONITOR_THERAPY_CATALOG,C.interventions);
+  if(!parsed.active){feedback('Es una pregunta o una negación; no ejecuté procedimientos.');return false}
+  if(!parsed.items.length){feedback('No reconocí acciones en el pedido. Reformulalo.');return false}
+  feedback('Recibí '+parsed.items.length+' indicaciones; informaré por separado su estado.');
+  let ok=false;
+  for(const item of parsed.items.slice(0,12)){
+   if(item.negated){feedback('No ejecuté '+item.phrase+' (indicación negada).');continue}
+   if(item.kind==='monitor'){
+    const started=window.csQueueMonitor?.()===true;
+    feedback(started?'Monitor solicitado; avisaré cuando esté conectado.':
+       sim.monitorConnected?'El monitor ya está conectado.':'El monitor ya está pendiente.');
+    ok=true;continue;
+   }
+   if(item.kind==='iv'){
+    const started=window.csQueueIV?.(item.count)===true;
+    feedback(started?'Vía venosa solicitada; avisaré cuando esté colocada.':
+       sim.venousAccessCount>=item.count?'Vía ya colocada.':'Vía ya solicitada.');
+    ok=true;continue;
+   }
+   if(item.kind==='surgery'){ok=window.csSurgery487Request?.()!==false||ok;continue}
+   if(item.kind==='therapy'&&!C.interventions.some(x=>x.id===item.id)&&item.id==='oxygen'){
+    const before=(sim.administrationLog||[]).filter(x=>x.id==='oxygen').length;
+    const done=addMonitorTherapy(item.text);
+    const actuallyActive=sim.monitorTherapies?.has('oxygen')===true;
+    const newAdministration=(sim.administrationLog||[]).filter(x=>x.id==='oxygen').length>before;
+    if(actuallyActive&&newAdministration){
+      // Same model, history and view used by manual monitor administration.
+      if(typeof renderMonitorTherapies==='function')renderMonitorTherapies();
+      if(typeof renderAdministrationHistory==='function')renderAdministrationHistory();
+      if(typeof updateMonitorDOM==='function')updateMonitorDOM();
+      feedback('Oxígeno administrado: figura ACTIVO en el monitor y quedó en el historial.');
+    }else if(actuallyActive)feedback('Oxígeno ya figura activo en el monitor; no se confirmó una nueva administración.');
+    else feedback('Oxígeno NO administrado. La orden no produjo un cambio en el monitor.');
+    ok=actuallyActive&&done!==false||ok;continue;
+   }
+   const phrase=item.kind==='vitals'?'signos vitales':
+    item.kind==='study'?C.studies.find(x=>x.id===item.id)?.label:
+    // 'expansión' is a recognized fluid request, not a native drug alias.
+    // Use the real catalog alias so the Phase-4 IV dependency queue remains authoritative.
+    item.kind==='therapy'&&item.id==='fluid'&&!/\b(?:ringer|suero|cristaloides|volumen)\b/.test(norm(item.text))?
+      'ringer'+(norm(item.text).match(/\b(\d+)\s*ml\b/)?.[0]?' '+norm(item.text).match(/\b(\d+)\s*ml\b/)[0]:''):
+      item.text.replace(/\s+(?:y|e|ademas)\s+.*$/,'');
+   const before=sim.csNurse487History?.length||0;
+   const response=baseNurse.call(this,'enfermera '+phrase);
+   if((sim.csNurse487History?.length||0)===before){
+     const active=item.kind==='therapy'&&(sim.monitorTherapies?.has(item.id)||sim.interventions?.has(item.id));
+     const pending=item.kind==='therapy'&&(sim.pendingTherapies?.has(item.id)||
+       (sim.csPhase4Pending487||[]).some(x=>x.id===item.id));
+     const study=item.kind==='study'&&sim.orders?.has(item.id);
+     const vitals=item.kind==='vitals'&&(nurse.task?.kind==='vitals'||nurse.queue?.some(t=>t.kind==='vitals'));
+     if(active)feedback(phrase+': consta como tratamiento ACTIVO. Confirmá administración en el monitor.');
+     else if(pending||study||vitals)feedback(phrase+': solicitado; ejecución o resultado pendiente.');
+     else feedback(phrase+': NO quedó registrado como ejecutado. Volvé a indicar la acción o revisá el monitor.');
+   }
+   ok=response!==false||ok;
+  }
+  for(const unknown of parsed.unknown.slice(0,6))feedback('No reconocí '+unknown+'. No ejecuté esa parte.');
+  if(parsed.items.length>12)feedback('El pedido excede 12 acciones; dividilo en dos mensajes.');
+  return ok;
+ };
+ sendMessage=function(text){
+  const raw=String(text||'').trim();
+  const clean=norm(raw);
+  // If the nurse is the current recipient, interpret actionable composite
+  // orders wherever the procedure words appear, not only as the first token.
+  // Questions and explicit negations remain non-executable.
+  const nurseContext=chatRole==='nurse'||pendingAddress==='nurse';
+  const parsed=nurseContext?csNurseScan487(raw,C?.studies||[],MONITOR_THERAPY_CATALOG,C?.interventions||[]):null;
+  const shortNurse=nurseContext&&!!parsed?.active&&
+   parsed.items.some(x=>!x.negated)&&
+   !/^(?:que|cuando|como|cuantas|por que|me dijeron|el paciente dice)\b/.test(clean);
+  // A message explicitly addressed to nursing works even when "enfermera"
+  // occurs at the end ("monitor y vías, enfermera").
+
+  if(!raw||raw.startsWith('/')||(!addressed(raw)&&!shortNurse)||!sim||!C)return baseSend.apply(this,arguments);
+  player.bubble=raw;player.bubbleUntil=performance.now()+2200;
+  addGlobalChat('doctor',raw);pendingAddress=null;chatRole='nurse';refreshChatDock();
+  nurseNatural(raw);return true;
+ };
+ window.csNurseVoice487={parse:t=>csNurseScan487(t,C.studies,MONITOR_THERAPY_CATALOG,C.interventions)};
+})();
+</script>

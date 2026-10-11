@@ -36,12 +36,18 @@ export function applyClinicalConfirmations487(html){
   const labels={oxygen:'Oxígeno',fluid:'Ringer/cristaloides',ceftriaxone:'Ceftriaxona',
    metronidazole:'Metronidazol',vasopressor:'Noradrenalina',piptazo:'Piperacilina/tazobactam',
    imipenem:'Imipenem',albumin:'Albúmina',transfusion:'Transfusión'};
-  for(let i=state.admin;i<log.length;i++){
+  // The display ledger rolls at80. Its length is not an event cursor.
+  // Keep its last row identity, including when older rows are evicted.
+  const priorIndex=state.lastAdministration===log.at(-1)?log.length-1:
+   state.lastAdministration?log.indexOf(state.lastAdministration):-1;
+  const from=state.lastAdministration?priorIndex+1:Math.min(state.admin,log.length);
+  for(let i=from;i<log.length;i++){
    const a=log[i];if(!a?.id)continue;
    emit(p,(labels[a.id]||String(a.label||a.id)).slice(0,90)+
-    ' aplicado'+(a.doseDisplay?' · '+String(a.doseDisplay).slice(0,45):''));
+    (a.action==='stop'?' suspendido':' aplicado')+(a.doseDisplay?' · '+String(a.doseDisplay).slice(0,45):''));
   }
   state.admin=log.length;
+  state.lastAdministration=log.at(-1)||null;
   if(!state.group&&log.some(x=>x.id==='ceftriaxone')&&log.some(x=>x.id==='metronidazole')){
    state.group=true;emit(p,'Cobertura antibiótica completa: ceftriaxona + metronidazol');
   }
@@ -51,7 +57,7 @@ export function applyClinicalConfirmations487(html){
    const m=String(p.monitorFeedback).toLowerCase();
    const id=Object.keys(labels).find(id=>
     (m.includes(id==='fluid'?'ringer':id==='vasopressor'?'noradrenalina':id)||
-     m.includes((labels[id]||'').toLowerCase()))&&log.some(x=>x.id===id));
+     m.includes((labels[id]||'').toLowerCase()))&&p.monitorTherapies?.has(id)&&log.some(x=>x.id===id&&x.action!=='stop'));
    if(id&&p===sim&&typeof setMonitorFeedback==='function')
     setMonitorFeedback(labels[id]+': administrado y registrado en el historial.','good');
   }

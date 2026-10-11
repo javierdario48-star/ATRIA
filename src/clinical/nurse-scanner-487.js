@@ -10,6 +10,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
   .replace(/(\d+)csdecimal487(\d+)/g,'$1.$2');
  const s=norm(text),withoutPrefix=s.replace(/^(?:(?:enfermera|enfermero|enfermeria|por favor|solicito|necesito|pido|quiero|orden|indico)\s+)+/,'');
  const input=withoutPrefix;
+ const stopLanguage=/\b(?:suspender|suspende|suspenda|retirar|retira|retire|detener|detene)\b/.test(input);
  const aliases=[];
  const add=(kind,id,term,priority=1)=>{
   const phrase=norm(term);if(phrase.length<3&&phrase!=='o2')return;
@@ -41,15 +42,29 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  const chosen=[];
  for(const x of offers)if(!chosen.some(y=>x.start<y.end&&y.start<x.end))chosen.push(x);
  chosen.sort((a,b)=>a.start-b.start);
+ // Stop commands are deliberately narrower than ordinary nursing orders.
+ // Every preamble and tail must consist of explicit actions/connectors/dose qualifiers.
+ // This preserves intent BEFORE earlier recognized nouns: an unknown question
+ // or condition cannot disappear when the next clause names oxygen.
+ const stopContextSafe=!stopLanguage||[...chosen.map((x,i)=>
+  input.slice(i?chosen[i-1].end:0,x.start)),input.slice(chosen.at(-1)?.end??0)].every(piece=>
+  /^(?:(?:\d+(?:\.\d+)?|ml|cc|l|litro|litros|mg|g|mcg|ug|kg|min|minuto|minutos|iv|ev|endovenoso|intravenoso|y|e|ademas|mas|pero|el|la|los|las|un|una|dos|suspender|suspende|suspenda|retirar|retira|retire|detener|detene|conectar|conecta|poner|pone|colocar|coloca|canalizar|canaliza|tomar|toma|controlar|controla|administrar|administra|dar|da|pasar|pasa)\s*)*$/.test(
+   piece.trim()));
  const result=[];
- const relevantNegation=/\b(?:no|sin|evitar|evita|nunca|suspender|suspende|cancelar)\b/;
+ const relevantNegation=/\b(?:no|sin|evitar|evita|nunca|suspender|suspende|suspenda|retirar|retira|retire|detener|detene|cancelar)\b/;
  for(let index=0;index<chosen.length;index++){
   const item=chosen[index];
   const before=input.slice(index?chosen[index-1].end:0,item.start).replace(/\s+/g,' ');
   const scoped=before.split(/\b(?:y|pero|luego|despues|ademas|,)\b/).pop();
-  const negated=relevantNegation.test(scoped||'');
   const phrase=input.slice(item.start,chosen.find(x=>x.start>item.start)?.start??input.length)
    .replace(/\s+(?:y|e|ademas|mas)\s*$/,'').trim();
+  // A specific stop is an executable action, not a positive drug order.
+  // Negations, questions and conditional/qualified stops remain non-executable.
+  // Only oxygen has a native confirmed stop executor at this checkpoint.
+  const stopRequested=/^\s*(?:suspender|suspende|suspenda|retirar|retira|retire|detener|detene)(?:\s+(?:el|la))?\s*$/.test(scoped||'');
+  const stop=item.kind==='therapy'&&item.id==='oxygen'&&stopContextSafe&&stopRequested&&phrase===item.phrase&&
+   !/\b(?:no|sin|evitar|evita|nunca|si|cuando)\b/.test(scoped||'');
+  const negated=relevantNegation.test(scoped||'')&&!stop;
   // Standard bedside shorthand: plural "vías" / "accesos" requests TWO.
   // Explicit "una vía"/"un acceso" keeps ONE; singular "vía" defaults to ONE.
   const local=input.slice(Math.max(0,item.start-12),Math.min(input.length,item.end+10));
@@ -58,7 +73,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
   const explicitTwo=/\b(?:dos|2)\s+(?:vias?|accesos?)\b/.test(local);
   const count=item.kind==='iv'&&(explicitTwo||plural&&!explicitOne)?2:1;
   const duplicate=result.some(x=>x.id===item.id&&x.kind===item.kind&&!x.negated);
-  if(!duplicate)result.push({...item,text:phrase,count,negated});
+  if(!duplicate)result.push({...item,text:stop?'suspender '+phrase:phrase,count,negated,...(stop?{action:'stop'}:{})});
  }
  // Unknown trailing clauses should be explicitly rejected, not silently lost.
  const segments=[];
@@ -66,7 +81,8 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  for(const x of chosen){segments.push(input.slice(previous,x.start));previous=x.end;}
  segments.push(input.slice(previous));
  const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|pero|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|pongas|poneme|ponga|canaliza|canalicen|canalizame|conecta|conectame|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|litros|litro|cuatro|tres|cinco|seis|canula|nasal|mascara|lpm|min|por|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
- const unknown=segments.map(x=>x.replace(neutral,' ').replace(/\b\d+(?:\s*\d+)?\b/g,' ').replace(/\s+/g,' ').trim()).filter(x=>x.length>=4);
+ const unknown=segments.map(x=>x.replace(/\b(?:suspender|suspende|suspenda|retirar|retira|retire|detener|detene)\b/g,' ')
+  .replace(neutral,' ').replace(/\b\d+(?:\s*\d+)?\b/g,' ').replace(/\s+/g,' ').trim()).filter(x=>x.length>=4);
  return {addressed:/^(?:enfermera|enfermero|enfermeria)\b/.test(s),items:result,unknown,
-  active:!/\?/.test(String(text))&&!/^(?:no|nunca|sin|evitar)\b/.test(input)};
+  active:stopContextSafe&&!/\?/.test(String(text))&&!/^(?:no|nunca|sin|evitar)\b/.test(input)};
 }

@@ -6,7 +6,7 @@
 
 | # | Entrada nativa | Categoría / mecanismo | Estado real |
 |---:|---|---|---|
-| 1 | `oxygen` | Soporte respiratorio | B1-S; nativo activo, checkpoint C confirma doble ruta y ausencia de stop ejecutado; migración BLOQUEADA |
+| 1 | `oxygen` | Soporte respiratorio | N parcial: inicio/cambio de flujo y suspensión confirmada QA local; flujo aún no modifica la respuesta. B1-S; transferencia BLOQUEADA |
 | 2 | `fluid` | Cristaloides / Ringer identificado | B1-R exclusivamente en QA limitado; N por defecto |
 | 3 | `albumin` | Coloide / volumen | N |
 | 4 | `vasopressor` | Vasopresores; identidad noradrenalina requerida | B1-S; N por defecto |
@@ -41,8 +41,8 @@
 
 **Casos:** B1 dispone de perfiles experimentales `PERI-SEC-001`, `HDA-001` y `CIRR-001` (3/13). Los 10 restantes no cuentan con perfil B1 integrado. Ringer propietaria experimental se restringe a `PERI-SEC-001`. No hay pruebas completas de combinaciones B1 en el navegador.
 
-**Checkpoint C (oxígeno):** [frontera y bloqueo](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_C_OXYGEN_OWNER_BOUNDARY.md). La verificación de la suspensión textual demuestra ausencia de ejecución, no un stop confirmado. Aún no hay nuevo propietario terapéutico.
+**Checkpoint C (histórico):** [frontera y bloqueo](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_C_OXYGEN_OWNER_BOUNDARY.md) comprobó la carencia de ejecución. [Checkpoint D](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_D_OXYGEN_STOP.md) añade suspensión realmente ejecutada con el mismo propietario nativo, evidencia conservada y sin sumar un efecto B1. La farmacología de flujo sigue parcial.
 
 **Ejecuciones presentes:** [Ringer A](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_A.md), [oxígeno B](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_B_OXYGEN_PREFLIGHT.md) y [auditoría independiente](ATRIA_487_RINGER_INDEPENDENT_CLINICAL_AUDIT.md).
 
-**Secuencia próxima eficiente:** aislar responsabilidad de oxígeno (vital directo + rescate) y comprobar inicio/cambio/suspensión antes de activarlo. Luego considerar noradrenalina, morfina y furosemida reutilizando mecanismos existentes; finalmente grupos clínicos prioritarios como antibióticos y foco quirúrgico. No reconstruir otro motor.
+**Secuencia próxima eficiente:** no exigir migración B1 para mejorar funcionalidad. Cerrar contratos de noradrenalina y comprobar titulación/suspensión; después morfina/furosemida y grupos prioritarios como antibióticos/foco. Oxígeno se conserva nativo hasta que su respuesta dependiente del flujo tenga una corrección acotada y demostrable. No reconstruir otro motor.
