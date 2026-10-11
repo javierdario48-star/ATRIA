@@ -1,4 +1,5 @@
 import {csPartyEncode,csPartyDecode,b64toBytes} from '../social/party-payload.js';
+import {applyPhysiologyQABootstrap487} from './physiology-qa-bootstrap-487.js';
 import {STUDY_TAT_MINUTES,EXTRA_EMERGENCY_STUDIES} from '../clinical/study-registry.js';
 import {CASE_STUDY_CORRELATIONS,CASE_INCIDENTAL_FINDINGS,csCaseStudyFallback} from '../clinical/contextual-study-results.js';
 import {roomTransportReady} from '../social/party-transport.js';
@@ -696,5 +697,5 @@ function csDrawRemote(){
  s=applyCriticalRescue487(s);
  s=applyClinicalConfirmations487(s);
  s=applyPharmacology487(s);
- return s;
+ return applyPhysiologyQABootstrap487(s);
 }

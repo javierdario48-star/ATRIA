@@ -16,8 +16,10 @@ jobs:
           node-version: '22'
       - name: Architecture and historical regression tests
         run: npm test
+      - name: Confirmed nursing shadow journeys
+        run: npm run qa:physiology-live
       - name: Offline golden-master build
-        run: npm run build
+        run: npm run build && npm run qa:physiology-artifact
       - name: Validate output safety
         run: |
           test -s out/index.html

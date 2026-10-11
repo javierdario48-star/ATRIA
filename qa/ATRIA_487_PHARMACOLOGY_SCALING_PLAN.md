@@ -151,3 +151,11 @@ The implementation plan/report are `ATRIA_487_EXTENSIBLE_PHARMACOLOGY_PLAN.md` a
 - No global indication by availability, no numerical medical approval by passing tests, and no fictitious heparin compatibility. Its missing coagulation/thrombosis/bleeding/platelet/aPTT mechanisms still block activation. Survival/rescue, Surgery/disposition, nursing, XP, multiplayer and production remain untouched.
 
 Commands: `npm run qa:pharmacology-infrastructure` prints inventory totals; explicit `node qa/pharmacology-infrastructure/coverage-487.mjs --write` refreshes the reviewed report when content/source changes. Tests never rewrite it or the B1 approved snapshots.
+
+## 2026-10-11 — Runtime observation checkpoint (supersedes the pending observer item)
+
+`ATRIA_487_PHYSIOLOGY_LIVE_OBSERVER_RESULTS.md` records the new opt-in QA connection to actual native administration and time. It reuses the existing B1 kernel, registry, receipts and clock; no numerical model or content refactor. Default OFF loads no B1 modules; explicit enable on a fresh visible local pilot patient installs two call-through hooks and writes only separate shadow state. The old native HTML stays byte-identical after removing that sole QA entry.
+
+The real nursing journey comparison now tests all five B1 interventions in three pilot cases, with pending/confirmed boundaries, exact native-state equality, repeated boluses and delivered rate changes. Missing route/formulation and confirmed suspension are still executor gaps; an unrecorded stop or dose edit disables comparison rather than fabricating an event. Heparin/global activation is not bypassed.
+
+Checkpoint 2 is stopped because native vital/physiology ownership remains shared with critical-rescue effects and grace/death/surgical consumers. A clinical writer cannot be enabled safely by adding B1 output or redirecting the monitor. Complete verifiable execution evidence and establish one effect owner plus an unchanged contract for protected consumers first. All25 remaining entries and10 additional profiles remain pending; this gate must precede active families/case integration. No production promotion or physical-device validation.
