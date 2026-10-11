@@ -10,7 +10,7 @@
 - Work only on `atria-4.8.7-grace-nursing-qa`, initial SHA `7d761ee69ebd05bd8a403babae104e5ca78b26d6`.
 - Never change vendor, production, main/original QA, Supabase/auth, death protection, rescue, surgery, disposition, XP, nursing, voice or multiplayer.
 - Heparin compatibility stays blocked. Experimental definitions contain exactly five supported entries, separate from the global catalogue.
-- B1 shadow means a runnable QA observer/replay of native patient snapshots, NOT automatic activation on patient ticks. This keeps old clinical functions and generated game artifact unchanged. A runtime observer and physical-device acceptance belong to B1b.
+- B1 shadow means a runnable QA observer/replay of native patient snapshots, NOT automatic activation on patient ticks. This keeps old clinical functions and generated game artifact unchanged. A runtime observer and physical-device acceptance belong to the next B1 runtime checkpoint.
 - Clinical clock: 1 clinical minute = 1 real second under the displayed 24min→24h guard. The native no-typing clinical engine uses 0.12 native `gameMinute` per real second. Comparison explicitly converts native minutes; neither original clock is changed. Typing requires explicit piecewise conversion and cannot be silently replayed with the no-typing mapping.
 - Numerical gains, physiological indices, inferred volumes, pressure anchors and effect-compartment parameters are estimates for the simulator, not dosing advice or validated medical measurements. Primary references and pending clinical calibration are recorded separately.
 - Disease IDs may select initial profiles; the kernel and five drug mechanisms may not branch on disease IDs.
@@ -34,12 +34,12 @@ Files: `qa/physiology-pilot/native-reference-487.mjs`, `qa/physiology-pilot/nati
 
 ## Task 2 — pure pilot kernel and definitions
 
-- [ ] Write behavioral tests first: deterministic partitions, state-dependent fluid benefit/harm, oxygen bounded/refractory/stop, infusion response/stop/high exposure, opioid pain/toxicity/clearance/repetition, diuretic congestion/hypovolemia/renal response; malformed/pending/zero/duplicate events.
-- [ ] Observe failure because the expected exports are absent.
-- [ ] Implement `createPhysiologyState487(profile, patientId)`, `stepPhysiology487(state, events, deltaClinicalMinutes, definitions)`, `observePhysiology487(state)`.
-- [ ] Implement indexed immutable definitions and analytical central/effect exposure, with mechanism requirements validation; only administered active drugs are stepped.
-- [ ] Implement `createPilotProfile487(caseDef, initialPatient)` for the three existing IDs; no ID-specific drug rules.
-- [ ] Run targeted tests and full suite; record limits and commit.
+- [x] Write behavioral tests first: deterministic partitions, state-dependent fluid benefit/harm, oxygen bounded/refractory/stop, infusion response/stop/high exposure, opioid pain/toxicity/clearance/repetition, diuretic congestion/hypovolemia/renal response; malformed/pending/zero/duplicate events.
+- [x] Observe failure because the expected exports are absent.
+- [x] Implement `createPhysiologyState487(profile, patientId)`, `stepPhysiology487(state, events, deltaClinicalMinutes, definitions)`, `observePhysiology487(state)`.
+- [x] Implement indexed immutable definitions and analytical central/effect exposure, with mechanism requirements validation; only administered active drugs are stepped.
+- [x] Implement `createPilotProfile487(caseDef, initialPatient)` for the three existing IDs; no ID-specific drug rules.
+- [x] Run targeted tests and full suite; record limits and commit.
 
 Files: `src/clinical/physiology-pilot-definitions-487.js`, `physiology-pilot-cases-487.js`, `physiology-pilot-487.js`, `physiology-pilot-487.test.js`; QA evidence document.
 
