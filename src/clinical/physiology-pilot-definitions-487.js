@@ -1,10 +1,14 @@
 // Experimental B1 definitions, deliberately separate from the active catalogue.
 // Reference exposures are normalization constants, NEVER automatic prescriptions.
+import {compileMechanismRegistry487} from './pharmacology-mechanisms-487.js';
+import {B1_MECHANISMS_487} from './pharmacology-mechanisms-b1-487.js';
+import {createB1PharmacologyContent487,compilePharmacologyContent487} from './pharmacology-content-487.js';
 export const PHYSIOLOGY_MODEL_487='b1-shadow-1';
 export const PHYSIOLOGY_AXES_487=Object.freeze(['circulatingVolumeMl','interstitialFluidMl',
  'vascularTone','pumpFunction','perfusion','gasExchangeImpairment','oxygenSupport',
  'fluidOverloadRisk','pain','respiratoryDepression','sedation','renalFunction',
- 'hepaticFunction','inflammation','infectionBurden','sourceControlled','ischemiaRisk']);
+ 'hepaticFunction','inflammation','infectionBurden','sourceControlled','ischemiaRisk',
+ 'oxygenFlowLpm','oxygenResponseHalfLifeMin','drugDiuresisMlPerMin','cumulativeUrineMl','cumulativeBloodLossMl','administeredFluidMl']);
 const label={pressor:'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=6363e9b4-29df-4553-904d-a563e5adda6e',
  opioid:'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=6023606c-150c-40c5-9175-598efe2a56c3',
  diuretic:'https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=c5db2be1-088f-1110-e053-2a95a90acac8'};
@@ -64,7 +68,8 @@ export function compilePhysiologyDefinitions487(drugs=PILOT_DRUGS_487){
   index.set(item.id,freeze(structuredClone(item)));
  }
  // Frozen Map alone is mutable. Expose a read-only indexed facade, not its setter.
- return Object.freeze({modelVersion:PHYSIOLOGY_MODEL_487,schemaVersion:1,
-  drugs:Object.freeze({get:id=>index.get(id),has:id=>index.has(id),size:index.size,values:()=>index.values()})});
+ const mechanisms=compileMechanismRegistry487(B1_MECHANISMS_487,PHYSIOLOGY_AXES_487);
+ return compilePharmacologyContent487(createB1PharmacologyContent487([...index.values()]),
+  {mechanisms,axes:PHYSIOLOGY_AXES_487,modelVersion:PHYSIOLOGY_MODEL_487});
 }
 export const PILOT_DEFINITIONS_487=compilePhysiologyDefinitions487();

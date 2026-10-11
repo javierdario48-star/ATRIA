@@ -1,4 +1,5 @@
 import {PILOT_DEFINITIONS_487,PHYSIOLOGY_MODEL_487} from './physiology-pilot-definitions-487.js';
+import {evaluateMechanism487,runMechanismPhase487} from './pharmacology-mechanisms-487.js';
 
 const MINUTE_US=60000000,QUANTUM_US=15000000,LN2=Math.log(2),MAX_EVENTS=2048;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -41,14 +42,14 @@ export function createPhysiologyState487(profile,patientId){
   oxygenSupport:0,oxygenFlowLpm:0,oxygenResponseHalfLifeMin:.25,pain:p.painDrive,respiratoryDepression:0,sedation:0,
   perfusion:0,fluidOverloadRisk:0,ischemiaRisk:0,drugDiuresisMlPerMin:0,
   cumulativeUrineMl:0,cumulativeBloodLossMl:0,administeredFluidMl:0,
-  exposures:Object.create(null),pendingEvents:[],seenEvents:{},adverseEvents:[]};
+  exposures:Object.create(null),continuingMechanisms:Object.create(null),pendingEvents:[],seenEvents:{},adverseEvents:[]};
  s.anchor=freeze({map:(p.baselineVitals.sys+2*p.baselineVitals.dia)/3,
   pulse:p.baselineVitals.sys-p.baselineVitals.dia,flow:flow(s),tone:s.vascularTone});
  refresh(s);return s;
 }
 
 function canonicalUnit(unit){return String(unit||'').replace(/[µμ]/g,'mc').replace(/^ug/,'mcg');}
-const receiptSignature=(state,e,d)=>JSON.stringify([state.patientId,e.drugId,e.action,e.amount,e.atUs,e.sequence,d.unit,d.route]);
+const receiptSignature=(state,e,d)=>JSON.stringify([state.patientId,e.drugId,e.action,e.amount,e.atUs,e.sequence,d.unit,d.route,d.fingerprint]);
 function normalizeEvent(raw,state,definitions){
  if(raw?.status!=='administered')return null; // plans cannot become exposures
  if(raw.patientId!==state.patientId)throw Error('administration patient mismatch');
@@ -63,24 +64,29 @@ function normalizeEvent(raw,state,definitions){
   if(canonicalUnit(raw.dose?.unit)!==canonicalUnit(d.unit))throw Error('dose unit mismatch '+raw.drugId);
   amount=finite(raw.dose?.amount,'dose',0,1000000);
  }
- const e={eventId:raw.eventId,drugId:raw.drugId,action:raw.action,amount,atUs,sequence};
+ const e={eventId:raw.eventId,drugId:raw.drugId,action:raw.action,amount,atUs,sequence,definitionKey:d.signature};
  e.signature=receiptSignature(state,e,d);return Object.freeze(e);
 }
 function receipt(s,e,definitions){
  const d=definitions.drugs.get(e.drugId),k=d.kinetics;
- if(k.kind==='support'){
-  s.oxygenFlowLpm=e.action==='stop'?0:e.amount;s.oxygenResponseHalfLifeMin=k.responseHalfLifeMin;return;
- }
- if(k.kind==='physical-volume'){
-  if(e.amount===0)return;
-  s.circulatingVolumeMl+=e.amount*k.intravascularFraction;
-  s.interstitialFluidMl+=e.amount*(1-k.intravascularFraction);s.administeredFluidMl+=e.amount;
+ if(k.kind==='support'||k.kind==='physical-volume'){
+  if(k.kind==='physical-volume'&&e.amount===0)return;
+  for(const b of d.bindings){
+   const m=definitions.mechanisms.get(b.mechanismId);
+   if(m.input==='support'){
+    const previous=s.continuingMechanisms[m.id];
+    if(previous&&!previous.stopped&&previous.drugId!==e.drugId)throw Error('support channel requires explicit prior suspension '+m.id);
+    s.continuingMechanisms[m.id]=Object.freeze({drugId:e.drugId,definitionKey:d.signature,stopped:e.action==='stop'||e.amount===0});
+   }
+   evaluateMechanism487(s,m,'receipt',0,{action:e.action,amount:e.amount,parameters:b.parameters,kinetics:k,
+    note:code=>note(s,code,e.atUs)});
+  }
   refresh(s);return;
  }
  let x=s.exposures[e.drugId];
  if(e.action==='stop'){if(x)x.infusionRate=0;return;} // never erase a given bolus
  if(e.amount===0){if(x&&k.kind==='infusion')x.infusionRate=0;return;}
- x??=(s.exposures[e.drugId]={central:0,responseCentral:0,effect:0,infusionRate:0,delayed:[]});
+ x??=(s.exposures[e.drugId]={central:0,responseCentral:0,effect:0,infusionRate:0,delayed:[],definitionKey:d.signature});
  if(k.kind==='infusion')x.infusionRate=e.amount/d.referenceDose;
  else if(k.onsetMin>0)x.delayed.push(Object.freeze({atUs:e.atUs+timeUs(k.onsetMin),amount:e.amount/d.referenceDose}));
  else{x.central+=e.amount/d.referenceDose;x.responseCentral+=e.amount/d.referenceDose;}
@@ -106,35 +112,25 @@ function note(s,code,atUs){if(!s.adverseEvents.some(x=>x.code===code))
  s.adverseEvents.push(Object.freeze({code,clinicalMinute:atUs/MINUTE_US}));}
 function segment(s,dt,definitions,atUs){
  if(dt<=0)return;
- let opioid=0,pressor=0,diuretic=0;
+ const signals=new Map();
  for(const [id,x]of Object.entries(s.exposures)){
   kinetics(s,id,x,dt,definitions);
-  const mechanism=definitions.drugs.get(id).mechanism;
-  if(mechanism==='opioid')opioid+=x.effect;
-  else if(mechanism==='pressor')pressor+=x.effect;
-  else if(mechanism==='diuretic')diuretic+=x.effect;
+  for(const b of definitions.drugs.get(id).bindings){
+   const m=definitions.mechanisms.get(b.mechanismId),signal=m.accumulate(signals.get(m.id)??0,x.effect,b.parameters);
+   finite(signal,'active mechanism signal '+m.id);signals.set(m.id,signal);
+  }
  }
- const opioidStrength=opioid/(.4+opioid),pressorStrength=pressor**2/(1+pressor**2);
- s.respiratoryDepression=clamp(.12*opioid+.08*opioid**2/(1+opioid),0,.98);
- s.sedation=.6*opioid/(1+opioid);s.pain=s.profile.painDrive*(1-.8*opioidStrength);
+ for(const id of Object.keys(s.continuingMechanisms))signals.set(id,0);
  // Disease progression modifies internal tone/pump; the same mechanisms act on
  // that CURRENT state. No static hypovolemia label or disease-ID switches.
  const inflammationChange=s.inflammation-s.profile.inflammation;
  const toneBase=Math.max(.25,s.profile.vascularTone-.12*inflammationChange);
  const pumpBase=Math.max(.2,s.profile.pumpFunction-.04*Math.max(0,inflammationChange));
- s.vascularTone=toneBase*(1+pressorStrength)*(1-.16*opioidStrength);
- s.pumpFunction=pumpBase*(1-.05*opioidStrength);
- s.ischemiaRisk=clamp(Math.max(0,pressor-3)/5,0,1);
- refresh(s);
- if(s.ischemiaRisk>.05)note(s,'pressor-excess',atUs);
- if(s.respiratoryDepression>.3)note(s,'opioid-respiratory-depression',atUs);
- const support=s.oxygenFlowLpm/(s.oxygenFlowLpm+2);
- const half=s.oxygenResponseHalfLifeMin;
- if(s.oxygenSupport||s.oxygenFlowLpm)s.oxygenSupport=support+(s.oxygenSupport-support)*Math.exp(-LN2*dt/half);
- const renal=s.renalFunction,pressureFactor=clamp(s.perfusion/.8,0,1);
- s.drugDiuresisMlPerMin=8*diuretic**2/(.35**2+diuretic**2)*renal**1.5*pressureFactor;
- const urine=Math.min(Math.max(0,s.circulatingVolumeMl-500),s.drugDiuresisMlPerMin*dt);
- s.circulatingVolumeMl-=urine;s.cumulativeUrineMl+=urine;
+ s.vascularTone=toneBase;s.pumpFunction=pumpBase;s.ischemiaRisk=0;
+ s.pain=s.profile.painDrive;s.respiratoryDepression=0;s.sedation=0;s.drugDiuresisMlPerMin=0;
+ const context={dt,atUs,note:code=>note(s,code,atUs)};
+ runMechanismPhase487(s,'preCirculation',signals,context,definitions.mechanisms);
+ refresh(s);runMechanismPhase487(s,'postCirculation',signals,context,definitions.mechanisms);
  const refill=Math.min(s.interstitialFluidMl,Math.max(0,s.profile.circulatingVolumeMl-s.circulatingVolumeMl),
   s.profile.natural.refillMlPerMin*dt);
  s.circulatingVolumeMl+=refill;s.interstitialFluidMl-=refill;
@@ -153,7 +149,7 @@ function segment(s,dt,definitions,atUs){
  refresh(s);
  if(s.perfusion<.4)s.renalFunction=Math.max(0,s.renalFunction-dt*.0003*(.4-s.perfusion));
  if(s.fluidOverloadRisk>.4)note(s,'fluid-overload',atUs);
- if(diuretic>.05&&s.perfusion<.6)note(s,'diuretic-hypoperfusion',atUs);
+ runMechanismPhase487(s,'postNatural',signals,context,definitions.mechanisms);
  for(const [id,x]of Object.entries(s.exposures))
   if(x.infusionRate===0&&x.delayed.length===0&&Math.max(x.central,x.responseCentral,x.effect)<1e-9)delete s.exposures[id];
 }
@@ -191,7 +187,7 @@ export function stepPhysiology487(state,administeredEvents=[],deltaClinicalMinut
   validTime(e.atUs,'queued event');finite(e.amount,'queued event dose');
   finite(e.sequence,'queued event sequence');
   const d=definitions.drugs.get(e.drugId);
-  if(!d?.actions.includes(e.action)||!Object.hasOwn(state.seenEvents,e.eventId)||state.seenEvents[e.eventId]!==e.signature||
+  if(!d?.actions.includes(e.action)||e.definitionKey!==d.signature||!Object.hasOwn(state.seenEvents,e.eventId)||state.seenEvents[e.eventId]!==e.signature||
    receiptSignature(state,e,d)!==e.signature)
    throw Error('invalid state queued administration');
  }
@@ -199,9 +195,16 @@ export function stepPhysiology487(state,administeredEvents=[],deltaClinicalMinut
  if(!Array.isArray(administeredEvents))throw Error('administration events must be an array');
  // Copy only active mutable state; immutable profile/anchor/receipt index share
  // safely across pure snapshots. No catalogue-wide traversal in the hot path.
- const s={...state,exposures:Object.create(null),pendingEvents:state.pendingEvents.slice(),adverseEvents:state.adverseEvents.slice()};
+ const s={...state,exposures:Object.create(null),continuingMechanisms:Object.assign(Object.create(null),state.continuingMechanisms),
+  pendingEvents:state.pendingEvents.slice(),adverseEvents:state.adverseEvents.slice()};
+ for(const [id,active]of Object.entries(s.continuingMechanisms)){
+  const d=definitions.drugs.get(active.drugId);
+  if(!d||d.signature!==active.definitionKey||!d.bindings.some(b=>b.mechanismId===id)||definitions.mechanisms.get(id)?.input!=='support')
+   throw Error('active support definition revision requires replay '+id);
+ }
  for(const [id,x]of Object.entries(state.exposures)){
   if(!definitions.drugs.has(id))throw Error('missing active medication definition '+id);
+  if(x.definitionKey!==definitions.drugs.get(id).signature)throw Error('active medication definition revision requires replay '+id);
   for(const key of ['central','responseCentral','effect','infusionRate'])finite(x[key],'state exposure '+key);
   if(!Array.isArray(x.delayed)||x.delayed.length>MAX_EVENTS)throw Error('invalid state delayed release queue');
   let previous=state.integratedUs;
