@@ -69,6 +69,30 @@ check('case overrides specialize generic drug indication and risk without new co
  assert(a.risk.includes('severeHypotension'));
  assert.equal(csAssessCaseRequirements487(c,p).treatmentRequirementsMet,false);
 });
+check('generic risks apply to every matching medicine without case-drug hardcoding',()=>{
+ const qt={id:'NEW-QT-001',pharmacology:{traits:['nausea','infection'],
+  riskFlags:['qt'],requiredTreatments:['fluconazole'],
+  coverageSets:[['fluconazole']]}};
+ const p=patient();
+ const f=csAssessGeneralTreatment487('fluconazole',qt,p);
+ assert(f.hazardTypes.includes('qt'));
+ assert(f.risk.includes('context:qt'));
+ assert.equal(f.required,true);
+ const nausea=csAssessGeneralTreatment487('antiemetic',qt,p);
+ assert(nausea.risk.includes('context:qt'));
+ const noQT=csAssessGeneralTreatment487('ampicillin',qt,p);
+ assert(!noQT.risk.includes('context:qt'));
+ const potassium={id:'NEW-HYPERK-001',pharmacology:{traits:['ascites'],
+  riskFlags:['hyperkalemia'],requiredTreatments:['espironolactona']}};
+ assert(csAssessGeneralTreatment487('espironolactona',potassium,p)
+  .risk.includes('context:hyperkalemia'));
+ p.clinicalFlags={severeAllergies:['ampicillin']};
+ const penicillin=csAssessGeneralTreatment487('ampicillin',
+  {...qt,pharmacology:{...qt.pharmacology,
+    coverageSets:[['ampicillin']]}},p);
+ assert(penicillin.contraindicated);
+ assert(penicillin.risk.includes('knownSevereAllergy'));
+});
 check('current oxygen and pressor requirements cannot be met by stopped exposure',()=>{
  const c={id:'NEW-SHOCK-001',pharmacology:{traits:['shock','hypoxemia'],
   requiredTreatments:['oxygen','vasopressor']}};
