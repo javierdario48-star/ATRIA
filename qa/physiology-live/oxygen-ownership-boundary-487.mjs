@@ -91,7 +91,7 @@ assert.equal(ringerAPI.reportRinger().applications,1);
 assert.equal(ringerAPI.ownsRinger(combined.ctx.sim,combined.ctx.C),true);
 assert(combined.ctx.therapyEffectTotals().spo2>0,'oxygen stays with native vital-sign pathway');
 assert.equal(combined.ctx.sim.phys.sourceControlled,false);
-assert.equal(ringerAPI.rollbackRinger().status,'blocked',
+assert.equal(ringerAPI.rollbackRinger().status,'blocked-active-patient',
   'active admission may not swap owner on rollback');
 assert.equal(ringerAPI.ownsRinger(combined.ctx.sim,combined.ctx.C),true);
 assert.equal(combined.ctx.window.csGraceSurvival487.get().releaseAt>=180,true,
