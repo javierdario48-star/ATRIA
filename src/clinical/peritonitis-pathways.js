@@ -112,7 +112,23 @@ export function csPeritonitisSnapshot487(s,c) {
     vitalsKnown:!!s.lastVitalsKnown,
     studiesDone:[...(s.orders?.entries?.()||[])].filter(([,o])=>o?.status==='done').map(([id])=>id),
     studyResults:Object.fromEntries([...(s.orders?.entries?.()||[])].filter(([,o])=>o?.status==='done').map(([id,o])=>[id,String(o.result||'').slice(0,700)])),
-    administered:(s.administrationLog||[]).filter(x=>x&&typeof x.id==='string').map(x=>x.id),
+    // Medication completion is historical, but respiratory/pressor support must
+    // remain ACTIVE for a hypoxic/hypoperfused handoff. Work's real nurse stop
+    // preserves start history and appends a stop receipt: do not count that stop
+    // as a dose or use past support after its confirmed withdrawal.
+    administered:(()=>{
+      const delivered=new Set((s.administrationLog||[]).filter(x=>
+        x&&typeof x.id==='string'&&x.action!=='stop'&&x.status!=='pending').map(x=>x.id));
+      if(typeof s.monitorTherapies?.has==='function')for(const id of ['oxygen','vasopressor']){
+        if(!s.monitorTherapies.has(id)){delivered.delete(id);continue;}
+        // Work retains one confirmed start in the existing exposure ledger
+        // when the visible 80-row log rolls over; require the same patient.
+        const receipt=s.therapyExposure?.get?.(id)?.lastConfirmedAdministration487;
+        if(receipt?.id===id&&(!s.patientInstance?.uid||receipt.patientId===s.patientInstance.uid))
+          delivered.add(id);
+      }
+      return [...delivered];
+    })(),
     consultsDone:consultations,sys:Number(s.liveVitals?.sys||0)||120,
     initialSys:Number(s.nsCareBaseline?.sys)||Number(String(c.vitals?.bp||'').split('/')[0])||Number(s.liveVitals?.sys)||120,
     spo2:Number(s.liveVitals?.spo2||0)||98,
