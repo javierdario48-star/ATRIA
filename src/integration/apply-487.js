@@ -471,7 +471,7 @@ function csDrawRemote(){
     if(item.verified487){
      const catalog=typeof MONITOR_THERAPY_CATALOG!=='undefined'?
        MONITOR_THERAPY_CATALOG.find(x=>x.id===item.id):null;
-     const needsIV=new Set(['anticoagulation','fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime',
+     const needsIV=new Set(['fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime',
       'imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole',
       'amphotericin','transfusion','vasopressor','morphine','ppi']);
      if(catalog&&(needsIV.has(item.id)||window.csPharm487?.requiresIV?.(item.id))&&Number(sim?.venousAccessCount||0)<=0){
@@ -527,7 +527,7 @@ function csDrawRemote(){
  if(window.__atriaNursingReceipts487)return;
  window.__atriaNursingReceipts487=true;
  const oldNatural=nurseNatural,oldInfer=inferRecipient,oldUpdate=updateSimulation,legacyParse=window.csNursingParse487;
- const ivMeds=new Set(['anticoagulation','fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime','imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole','amphotericin','transfusion','vasopressor','morphine','ppi']);
+ const ivMeds=new Set(['fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime','imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole','amphotericin','transfusion','vasopressor','morphine','ppi']);
  const norm487=v=>norm(String(v||''));
  let sequence=0;
  function csNurseDispatch487(text){

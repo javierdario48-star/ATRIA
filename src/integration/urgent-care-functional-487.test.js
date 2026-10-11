@@ -120,10 +120,19 @@ check('renal toxicity is contextual WARNING, not an invented immediate kidney in
  assert.equal(p.phys.renalReserve,before,
   'read-only requirement evaluator must never decrement renal reserve');
 });
+check('confirmed antimicrobial history survives bounded native ledger rollover',()=>{
+ const r=create('PERI-SEC-001'),s=r.ctx.sim;
+ s.administrationLog=[];
+ s.therapyExposure.set('ceftriaxone',{count:1,lastMinute:1});
+ s.therapyExposure.set('metronidazole',{count:1,lastMinute:1});
+ assert.equal(r.ctx.window.csCare487.report().coverageComplete,true);
+});
 check('source control cannot be spoofed by a drug order or accepted consult',()=>{
  const r=create('PERI-SEC-001');const p=r.ctx.sim;
  p.administrationLog.push({id:'source_control',m:1});
  assert.equal(r.ctx.window.csCare487.report().delivered.includes('source_control'),false);
+ p.interventions.add('source_control');
+ assert.equal(r.ctx.window.csCare487.report().delivered.includes('source_control'),true,'confirmed procedure on non-septic patient');
  p.phys={...(p.phys||{}),sourceControlled:true};
  assert.equal(r.ctx.window.csCare487.report().delivered.includes('source_control'),true);
 });

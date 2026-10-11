@@ -59,9 +59,13 @@ export function csCareCompliance487(c,patient,catalogue=[]){
  const ex=patient?.therapyExposure;
  const patientId=patient?.patientInstance?.uid;
  const delivered=id=>{
-  if(id==='source_control')return patient?.phys?.sourceControlled===true;
+  if(id==='source_control')return patient?.phys?.sourceControlled===true||
+   !!(patient?.interventions?.has?.('source_control')&&
+      rows.some(x=>x?.id==='source_control'&&x.action!=='stop'));
   if(id==='stop_beta_blocker')return rows.some(x=>x?.id===id&&x.action!=='stop');
   if(rows.some(x=>x?.id===id&&x.action!=='stop'&&x.status!=='pending'))return true;
+  // Existing native exposure ledger survives the bounded 80-row visible history.
+  if(Number(ex?.get?.(id)?.count||0)>0)return true;
   // Only nurse-sealed bounded receipts can restore oxygen/pressor evidence.
   // An active chip alone cannot certify therapy after the log rolls over.
   if(['oxygen','vasopressor'].includes(id)){
