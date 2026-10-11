@@ -44,15 +44,20 @@ export function csHeparinIssue487(raw,c,patient){
 export function csHeparinClinicalRisk487(c,patient){
  const f=patient?.clinicalFlags||{},p=patient?.phys||{};
  const indicated=c?.id==='MESI-001'||c?.keyInterventions?.includes?.('anticoagulation')||
+   c?.pharmacology?.requiredTreatments?.includes?.('anticoagulation')||
    c?.pharmacology?.anticoagulationIndicated===true;
  const activeBleeding=c?.id==='HDA-001'||c?.risk==='bleed'||
+   c?.pharmacology?.traits?.includes?.('bleed')||
    f.majorBleeding===true||f.activeBleeding===true||
    p.majorBleeding===true||p.activeBleeding===true;
- const vulnerability=f.bleedingRisk===true||f.recentSurgery===true||
+ const vulnerability=c?.pharmacology?.overrides?.anticoagulation?.bleedingRisk===true||
+   c?.pharmacology?.traits?.includes?.('bleedingRisk')||
+   f.bleedingRisk===true||f.recentSurgery===true||
    f.thrombocytopenia===true||f.coagulopathy===true||
    c?.pharmacology?.bleedingRisk===true;
  const hit=f.knownHIT===true;
- const explicit=f.heparinContraindicated===true||
+ const explicit=c?.pharmacology?.overrides?.anticoagulation?.contraindicated===true||
+   f.heparinContraindicated===true||
    c?.pharmacology?.contraindications?.includes?.('anticoagulation');
  const contraindicated=activeBleeding||hit||explicit;
  return {indicated,contraindicated,activeBleeding,hit,explicit,
