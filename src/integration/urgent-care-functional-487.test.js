@@ -73,18 +73,71 @@ check('invalid heparin molecule, explicit dose, and route must not become admini
   assert.equal(r.ctx.window.csCare487.report().heparinComplete,false,raw);
  }
 });
-check('HDA, major bleeding, HIT and no indication block both entry paths',()=>{
+check('clinical contraindications are consequential, not order-validation errors',()=>{
  for(const [id,mutate] of [
-  ['HDA-001',()=>{}],['MESI-001',s=>{s.phys={...(s.phys||{}),activeBleeding:true};}],
-  ['MESI-001',s=>{s.clinicalFlags={knownHIT:true};}],
+  ['HDA-001',()=>{}],['MESI-001',p=>{p.phys={...(p.phys||{}),activeBleeding:true};}],
+  ['MESI-001',p=>{p.clinicalFlags={knownHIT:true};}],
   ['COLON-001',()=>{}]]){
-  const r=create(id);mutate(r.ctx.sim);
-  assert.equal(r.ctx.addMonitorTherapy('heparina IV'),false,id);
-  r.ctx.nurseNatural('enfermera heparina IV');advance(r,2.2);
-  assert.equal(admin(r).length,0,id);
-  assert.equal(r.ctx.window.csCare487.report().heparinComplete,false,id);
+  for(const route of ['monitor','nurse']){
+   const r=create(id);mutate(r.ctx.sim);
+   if(route==='monitor')assert.equal(r.ctx.addMonitorTherapy('heparina IV'),true,id);
+   else r.ctx.nurseNatural('enfermera heparina IV');
+   assert.equal(admin(r).length,0,'pending order cannot hurt '+id+' '+route);
+   assert.equal(r.ctx.window.csCare487.heparinHarm().active,false);
+   advance(r,2.2);
+   assert.equal(admin(r).length,1,'unsafe but valid order executed '+id+' '+route);
+   const report=r.ctx.window.csCare487.report();
+   assert.equal(report.heparinGiven,true);
+   assert.equal(report.heparinComplete,false,
+    'iatrogenic anticoagulation must not count as appropriate compliance '+id);
+   assert(report.exposureRisks.some(x=>x.id==='anticoagulation'));
+  }
  }
 });
+check('active GI bleeding worsens gradually after heparin, not instantly or inevitably',()=>{
+ const harm=create('HDA-001'),control=create('HDA-001');
+ assert.equal(harm.ctx.addMonitorTherapy('heparina IV'),true);
+ assert.equal(harm.ctx.window.csCare487.heparinHarm().active,false);
+ advance(harm,2.2);
+ assert.equal(admin(harm).length,1);
+ const early=harm.ctx.window.csCare487.heparinHarm();
+ assert.equal(early.active,true);
+ assert.equal(early.bleedingSeverity,0,'confirmed administration is not immediate exsanguination');
+ assert.equal(early.offsets.sys,0);
+ advance(harm,25);advance(control,27.2);
+ const late=harm.ctx.window.csCare487.heparinHarm();
+ assert(late.bleedingSeverity>.3,'clinically dangerous exposure becomes an actual bleeding consequence');
+ assert(late.offsets.sys<0&&late.offsets.hr>0&&late.offsets.dia<0);
+ assert.equal(late.offsets.spo2,0,'blood loss affects oxygen CONTENT not pulse-ox saturation directly');
+ assert(harm.ctx.sim.liveVitals.sys<control.ctx.sim.liveVitals.sys-2,
+  'native BP must actually deteriorate compared with identical untreated trajectory');
+ assert(harm.ctx.sim.liveVitals.hr>control.ctx.sim.liveVitals.hr+2,
+  'native HR should respond to worsening haemorrhage');
+ assert(harm.ctx.sim.events.some(e=>/Sangrado agravado|Hemorragia importante/.test(e.t)),
+  'nursing/clinical event appears only after actual injury');
+ assert.equal(!!harm.ctx.sim.caseEnded,false);
+});
+check('heparin with a valid indication does not invent bleeding or haemodynamic benefit',()=>{
+ const r=create('MESI-001');
+ r.ctx.addMonitorTherapy('heparina IV');advance(r,2.2);
+ advance(r,25);
+ const harm=r.ctx.window.csCare487.heparinHarm();
+ assert.equal(harm.bleedingSeverity,0,'low-risk appropriate dose has no compulsory bleeding');
+ assert(Object.values(harm.offsets).every(v=>Math.abs(v)<1e-9));
+ assert.equal(r.ctx.window.csCare487.report().heparinComplete,true);
+});
+check('confirmed heparin in mesenteric ischemia with active hemorrhage worsens pressure and fails requirement',()=>{
+ const r=create('MESI-001');
+ r.ctx.sim.phys={...(r.ctx.sim.phys||{}),activeBleeding:true};
+ r.ctx.nurseNatural('enfermera heparina IV');
+ advance(r,2.2);
+ assert.equal(admin(r).length,1);
+ assert.equal(r.ctx.window.csCare487.report().heparinComplete,false);
+ assert(r.ctx.window.csCare487.report().missing.includes('anticoagulation'));
+ advance(r,25);
+ assert(r.ctx.window.csCare487.heparinHarm().offsets.sys<0);
+});
+
 check('future case with reviewed indication inherits heparin condition, not fake hemodynamics',()=>{
  const c={id:'FUTURE-VTE-001',keyInterventions:['anticoagulation'],
   pharmacology:{anticoagulationIndicated:true}};
@@ -95,7 +148,8 @@ check('future case with reviewed indication inherits heparin condition, not fake
  patient.administrationLog.push({id:'anticoagulation',m:1,doseDisplay:'protocolo'});
  assert.equal(csCareCompliance487(c,patient,ids.map(id=>({id}))).heparinComplete,true);
  patient.clinicalFlags.majorBleeding=true;
- assert.match(csHeparinIssue487('heparina IV',c,patient),/hemorragia/i);
+ assert.equal(csHeparinIssue487('heparina IV',c,patient),null,
+  'clinical harm is not an input-validation error');
 });
 check('antibiotic coverage is initial confirmed-care, not a clock or vital writer',()=>{
  const r=create('PERI-SEC-001'),c=r.ctx;
