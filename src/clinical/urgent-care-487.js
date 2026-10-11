@@ -38,16 +38,54 @@ export function csHeparinIssue487(raw,c,patient){
   return 'La entrada actual solo representa heparina no fraccionada IV, no otra vía o fármaco.';
  if(/\d/.test(s)||/\b(?:ui|u\/kg|unidades|mg|ml|bolo|infusion\s+\d)\b/.test(s))
   return 'La dosis/tasa de heparina no puede deducirse: usá «heparina IV» (protocolo inicial simulado).';
- const requested=c?.id==='MESI-001'||c?.keyInterventions?.includes?.('anticoagulation')||
-   c?.pharmacology?.anticoagulationIndicated===true;
- if(!requested)return 'No hay indicación de anticoagulación terapéutica documentada en este caso.';
- if(c?.id==='HDA-001'||patient?.phys?.activeBleeding===true||
-   patient?.phys?.majorBleeding===true||patient?.clinicalFlags?.majorBleeding===true||
-   patient?.clinicalFlags?.activeBleeding===true||
-   patient?.clinicalFlags?.knownHIT===true||patient?.clinicalFlags?.heparinContraindicated===true||
-   c?.pharmacology?.contraindications?.includes?.('anticoagulation'))
-  return 'Heparina no administrada: hemorragia mayor activa, HIT u otra contraindicación documentada.';
+ // Medical contraindications are decision consequences, NOT input syntax errors.
  return null;
+}
+export function csHeparinClinicalRisk487(c,patient){
+ const f=patient?.clinicalFlags||{},p=patient?.phys||{};
+ const indicated=c?.id==='MESI-001'||c?.keyInterventions?.includes?.('anticoagulation')||
+   c?.pharmacology?.anticoagulationIndicated===true;
+ const activeBleeding=c?.id==='HDA-001'||c?.risk==='bleed'||
+   f.majorBleeding===true||f.activeBleeding===true||
+   p.majorBleeding===true||p.activeBleeding===true;
+ const vulnerability=f.bleedingRisk===true||f.recentSurgery===true||
+   f.thrombocytopenia===true||f.coagulopathy===true||
+   c?.pharmacology?.bleedingRisk===true;
+ const hit=f.knownHIT===true;
+ const explicit=f.heparinContraindicated===true||
+   c?.pharmacology?.contraindications?.includes?.('anticoagulation');
+ const contraindicated=activeBleeding||hit||explicit;
+ return {indicated,contraindicated,activeBleeding,hit,explicit,
+   level:activeBleeding?'high':vulnerability||explicit?'moderate':'low',
+   caution:activeBleeding?'Hemorragia activa: heparina puede agravar la pérdida sanguínea.':
+     hit?'HIT conocida: riesgo trombótico por heparina, no es seguro administrarla.':
+     explicit?'Anticoagulación contraindicada en este paciente.':
+     !indicated?'Sin indicación terapéutica: riesgo hemorrágico innecesario.':
+     vulnerability?'Riesgo hemorrágico aumentado.':null};
+}
+// Educational risk, intentionally not a clinical bleeding probability model.
+// Reads only CONFIRMED native exposure; no native drug effect is replaced here.
+export function csHeparinHarm487(c,patient){
+ const x=patient?.csHeparinHarm487,uid=patient?.patientInstance?.uid;
+ const ex=patient?.therapyExposure?.get?.('anticoagulation');
+ const zero={active:false,bleedingSeverity:0,warning:null,
+   offsets:{temp:0,hr:0,rr:0,sys:0,dia:0,spo2:0}};
+ if(!x||!ex||!Number(ex.count||0)||x.patientId!==uid)return zero;
+ const risk=csHeparinClinicalRisk487(c,patient);
+ const elapsed=Math.max(0,Number(patient?.gameMinute||0)-Number(x.firstMinute||0));
+ const repeats=Math.max(1,Math.min(3,Number(ex.count||1)));
+ let severity=0;
+ if(risk.level==='high')
+   severity=Math.min(1,Math.max(0,(elapsed-.45)/3.8)*(.88+.12*repeats));
+ else if(risk.level==='moderate')
+   severity=Math.min(.65,Math.max(0,(elapsed-1.25)/7)*(.7+.15*repeats));
+ else if(repeats>=3)
+   severity=Math.min(.28,Math.max(0,(elapsed-3)/12)*.7);
+ return {active:true,bleedingSeverity:severity,riskLevel:risk.level,
+   warning:risk.caution,elapsed,patientId:uid,
+   offsets:{temp:0,hr:Math.min(29,29*severity),
+     rr:Math.min(7,7*severity),sys:-Math.min(39,39*severity),
+     dia:-Math.min(24,24*severity),spo2:0}};
 }
 
 export function csCareCompliance487(c,patient,catalogue=[]){
@@ -74,11 +112,14 @@ export function csCareCompliance487(c,patient,catalogue=[]){
   }
   return false;
  };
+ const heparinRisk=csHeparinClinicalRisk487(c,patient);
+ const completed=id=>id==='anticoagulation'?
+   delivered(id)&&heparinRisk.indicated&&!heparinRisk.contraindicated:delivered(id);
  const required=(c?.keyInterventions||[]).filter(id=>role(id)==='requirement');
  const coverageSets=c?.pharmacology?.coverageSets||c?.physiology?.coverageSets||
   CARE_COVERAGE_FALLBACK_487[c?.id]||[];
  const cover=coverageSets.map(set=>({ids:[...set],met:set.every(delivered)}));
- const missing=required.filter(id=>!delivered(id));
+ const missing=required.filter(id=>!completed(id));
  const coverageComplete=cover.length?cover.some(x=>x.met):null;
  const renal=Number(patient?.phys?.renalReserve??1);
  const exposureRisks=[];
@@ -86,16 +127,17 @@ export function csCareCompliance487(c,patient,catalogue=[]){
   if(!delivered(id))continue;
   if(['gentamicin','amikacin','amphotericin'].includes(id)&&renal<.55)
    exposureRisks.push({id,warning:'Reserva renal baja: revisar adecuación y toxicidad; NO implica lesión renal instantánea.'});
-  if(id==='anticoagulation'){
-   const bad=csHeparinIssue487('heparina IV',c,patient);
-   if(bad)exposureRisks.push({id,warning:'Reevaluar anticoagulación: '+bad});
-  }
+  if(id==='anticoagulation'&&heparinRisk.caution)
+   exposureRisks.push({id,warning:heparinRisk.caution});
  }
  return {caseId:c?.id||null,catalogueSize:native.size,knownRoles:declared.length,
   missingFromCatalogue:declared.filter(id=>!native.has(id)),roles:{
    dynamic:[...DYNAMIC_THERAPIES_487],requirement:[...COMPLIANCE_THERAPIES_487]},
   required,missing,coverageComplete,coverageSets:cover,delivered:declared.filter(delivered),
-  exposureRisks,heparinComplete:delivered('anticoagulation'),
+  exposureRisks,heparinGiven:delivered('anticoagulation'),
+  heparinComplete:completed('anticoagulation'),
+  heparinContraindicated:heparinRisk.contraindicated,
+  heparinBleedingSeverity:csHeparinHarm487(c,patient).bleedingSeverity,
   // A fulfilled requirement is NEVER proof of clinical stabilization or discharge.
   safeForDischarge:null,patientId};
 }
