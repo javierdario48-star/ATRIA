@@ -1,5 +1,13 @@
 # ATRIA 4.8.7 — Stabilization checkpoints
 
+## 2026-10-11 — R1: finite critical rescue after the final ns423 assignment
+
+- Verified source parent `c04b81481b9a385cf3f812c5147677360cad00f7`, complete CI38142968171 SUCCESS, no later commit. User now explicitly authorizes the narrow rescue-predicate repair and subsequent numerical fluid ownership separation; previous scope stop is historical.
+- Real generated-HTML/nursing RED proves ns423 disabled the65-second critical window. The existing adapter now supplies the final finite predicate: confirmed support + fatal physiology opens one nonrenewable65s window; fallback is true, preserving lethal deterioration after expiry and avoiding the old permanent active-treatment immunity.
+- Early irreversible grace gate,180–480s policy/credits/clocks, rescue physiology, disease parameters and surgical evidence/conditions remain unchanged. The same critical clock advances at the native fatal entry, including V19 cached background updates; the selected patient is counted once. A second RED→GREEN bot caught the background freeze exposed by the repair. Six integrated policy bots include pending/actual support, repeat, overlap, late death, recurrence and patient isolation. Refractory observed vitals and closure UI are explicit fixture boundaries; no device/full-browser claim.
+- Frozen native/B1 trajectories are retained. Only three exact source revisions and four formerly accrued0.002 damage ticks are explicitly qualified. Artifact gate reverses only the authorised repair to the pinned prior bytes, then requires the unchanged protected hash;11 golden files intact. Full tests/24 trajectories/216 ON-OFF state comparisons/build/artifact and fresh review precede publication; exact SHA/CI are recorded after verification before R2.
+- Details and rollback: `ATRIA_487_RESCUE_OWNERSHIP_RESULTS.md`. Ringer remains natively owned at R1; no clinical B1 activation or new drugs. No production/main/originalQA/vendor/Supabase/XP/Surgery/multiplayer change.
+
 - Starting HEAD: `892c302160fce2af477e272b7f3cbd38401fb384`
 - Last fully green HEAD: `f6a244a82d0d4a65e13115f8bccef28d195c83ec` (both GitHub Architecture QA and Read-only Backend Probe succeeded; exact Vercel QA preview READY).
 - Phases completed: Phases 1–6 implemented in `atria-4.8.7-qa` with source/integration regressions, build, artifact syntax and both GitHub workflows green. Phase 4 user-tested and reported working. Other phases require explicit physical iOS/Android/real two-client acceptance; this checkpoint is NOT production release authorization.

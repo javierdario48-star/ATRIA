@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {assertRescueSourceRevisions487} from '../../qa/physiology-pilot/rescue-source-compatibility-487.mjs';
 import {createNativeReferenceRuntime487} from '../../qa/physiology-pilot/native-reference-487.mjs';
 import {PILOT_DEFINITIONS_487,PILOT_DRUGS_487,PHYSIOLOGY_AXES_487,PHYSIOLOGY_MODEL_487} from './physiology-pilot-definitions-487.js';
 import {compilePharmacologyContent487,createB1PharmacologyContent487} from './pharmacology-content-487.js';
@@ -64,6 +65,10 @@ check('committed report pins the real catalogue, thirteen cases and rejected sta
  const stored=JSON.parse(fs.readFileSync(new URL('../../qa/pharmacology-infrastructure/coverage-487.json',import.meta.url)));
  assert.deepEqual(stored.rows,report.rows);assert.equal(stored.caseIds.length,13);assert.equal(stored.nativeBoot.status,'rejected');
  assert.equal(stored.contentSchemaVersion,2);assert(stored.sourceEvidence.every(x=>x.hash.length===64));
- assert.deepEqual(stored,api.currentPharmacologyCoverage487(),'full inventory and source evidence remain pinned');
+ const current=api.currentPharmacologyCoverage487();
+ assertRescueSourceRevisions487(Object.fromEntries(current.sourceEvidence.map(x=>[x.id,x.hash])),
+  Object.fromEntries(stored.sourceEvidence.map(x=>[x.id,x.hash])));
+ current.sourceEvidence=stored.sourceEvidence;
+ assert.deepEqual(stored,current,'full inventory unchanged; only two explicitly checked rescue source revisions');
 });
 console.log('PHARMACOLOGY INFRASTRUCTURE COVERAGE PASS',JSON.stringify({checks,entries:report.entries,executable:5,unimplemented:25,clinicalReady:false}));

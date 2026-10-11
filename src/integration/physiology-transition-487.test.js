@@ -102,12 +102,12 @@ check('Ringer overload still has an old direct vital-sign safety contribution',(
 check('later convalescence and fatal-predicate overrides are present in the effective source order',()=>{
  const sources=loadNativeReferenceSources487(),evolution=sources.compiled.find(x=>x.id==='ns423-evolution').code;
  assert(evolution.includes('p.effectiveVolume+=dm*.12*(.86-p.effectiveVolume)'));
- assert(evolution.includes('csDeathRescueMissing=function(){return true;}'));
+ assert(evolution.includes('csDeathRescueMissing=window.csCriticalRescue487.fatalMissing;'));
  const r=runtime();assert.equal(r.ctx.csDeathRescueMissing({spo2:98,sys:120,dia:80},100),true);
  assert.equal(typeof r.ctx.window.csEarlyCriticalDeathGuard487,'function');
  assert.equal(r.ctx.window.csEarlyCriticalDeathGuard487(r.ctx.sim,r.ctx.C),true,
   'the separate irreversible-boundary grace guard remains authoritative');
- evidence.laterPredicateOverride='ns423: always true; separate irreversible grace guard remains';
+ evidence.laterPredicateOverride='ns423: finite critical window, then true; separate irreversible grace guard remains';
 });
 check('actual CP1 receipts lack the explicit v2 formulation and episode evidence',()=>{
  const r=runtime(),o=installPhysiologyQAObserver487(nativeObserverPort487(r));order(r,'Ringer 500 ml');advanceLiveNativeJourney487(r,1);

@@ -7,13 +7,27 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {applyPhysiologyQABootstrap487,PHYSIOLOGY_QA_FILES_487} from '../../src/integration/physiology-qa-bootstrap-487.js';
+import {applyCriticalRescue487,CRITICAL_FINAL_OLD_487,CRITICAL_FINAL_NEW_487,CRITICAL_CLOCK_OLD_487,CRITICAL_CLOCK_NEW_487} from '../../src/integration/critical-rescue-487.js';
 const html=fs.readFileSync('out/index.html','utf8');
 const hash=createHash('sha256').update(html).digest('hex');
 const entries=[...html.matchAll(/<script id="atria-physiology-qa-487">[\s\S]*?<\/script>/g)];
 assert.equal(entries.length,1,'exactly one explicit OFF-by-default observer entry');
 const expectedEntry=applyPhysiologyQABootstrap487('<body></body>').replace('<body>','').replace('</body>','');
 assert.equal(entries[0][0],expectedEntry,'QA bootstrap bytes match tested source');
-const originalHash=createHash('sha256').update(html.replace(entries[0][0],'')).digest('hex');
+// Reverse exactly the authorised critical-predicate repair and replacement
+// script before checking the old protected hash. All unrelated bytes stay fixed.
+const criticalMarker='<script id="atria-critical-rescue-487">';
+const criticalScripts=[...html.matchAll(/<script id="atria-critical-rescue-487">[\s\S]*?<\/script>/g)];
+assert.equal(criticalScripts.length,1);
+assert.equal(criticalScripts[0][0],applyCriticalRescue487('<body></body>').replace('<body>','').replace('</body>',''));
+const oldCritical=fs.readFileSync(new URL('./critical-rescue-pre-repair-487.txt',import.meta.url),'utf8');
+assert(oldCritical.startsWith(criticalMarker)&&oldCritical.endsWith('</script>'),'frozen prior critical adapter');
+assert.equal(createHash('sha256').update(oldCritical).digest('hex'),'b622fb06c590a0f2d1813dcc2914a7a0e03fa1975ba418a7b0e3a37e1e4a478e');
+assert.equal(html.split(CRITICAL_FINAL_NEW_487).length,2,'one final repair');
+assert.equal(html.split(CRITICAL_CLOCK_NEW_487).length,2,'one native per-patient clock hook');
+const restored=html.replace(entries[0][0],'').replace(criticalScripts[0][0],oldCritical)
+ .replace(CRITICAL_FINAL_NEW_487,CRITICAL_FINAL_OLD_487).replace(CRITICAL_CLOCK_NEW_487,CRITICAL_CLOCK_OLD_487);
+const originalHash=createHash('sha256').update(restored).digest('hex');
 assert.equal(originalHash,'dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7','all prior HTML bytes remain identical after removing sole QA entry');
 assert(!html.includes('physiology-pilot-487')&&!html.includes('physiology-shadow-487'),'no eager B1 import or effect writer');
 assert(/4\.8\.6/.test(html)&&/Estudios solicitados/i.test(html),'existing QA output contract');
