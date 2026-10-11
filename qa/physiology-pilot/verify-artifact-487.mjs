@@ -10,6 +10,7 @@ import {applyPhysiologyQABootstrap487,PHYSIOLOGY_QA_FILES_487,RINGER_SAFETY_OLD_
 import {applyCriticalRescue487,CRITICAL_FINAL_OLD_487,CRITICAL_FINAL_NEW_487,CRITICAL_CLOCK_OLD_487,CRITICAL_CLOCK_NEW_487} from '../../src/integration/critical-rescue-487.js';
 import {applySecondaryBridge487} from '../../src/integration/secondary-sepsis-bridge-487.js';
 import {apply487} from '../../src/integration/apply-487.js';
+import {csPeritonitisSnapshot487} from '../../src/clinical/peritonitis-pathways.js';
 import {NURSE_STOP_FINISH_OLD_487,NURSE_STOP_FINISH_NEW_487,NURSE_STOP_STATUS_OLD_487,
  NURSE_STOP_STATUS_NEW_487,NURSE_STOP_VERSION_OLD_487,NURSE_STOP_VERSION_NEW_487,
  NORA_RECEIPT_OLD_487,NORA_RECEIPT_NEW_487,NORA_DEDUPE_OLD_487,NORA_DEDUPE_NEW_487,
@@ -68,6 +69,14 @@ const oldBridge=fs.readFileSync(new URL('./secondary-bridge-pre-owner-487.txt',i
 assert.equal(createHash('sha256').update(oldBridge).digest('hex'),'ff570d3d2ee468d0d24d0492a876d85a61d7e3d242e311681bd5e72fdef4a045');
 assert.equal(html.split(RINGER_SAFETY_NEW_487).length,2,'one native fluid toxicity ownership gate');
 assert.equal(html.split(RINGER_COMPLETION_NEW_487).length,2,'one scoped fluid completion qualifier');
+// Recover exactly the pre-change snapshot projection BEFORE validating the
+// immutable protected HTML hash. All old fixture bytes are retained; the
+// protected sha256 below is NOT regenerated or relaxed.
+const currentSnapshot=csPeritonitisSnapshot487.toString();
+const originalSnapshot=fs.readFileSync(new URL('./peritonitis-snapshot-pre-evidence-487.txt',import.meta.url),'utf8');
+assert.equal(beforeStop.split(currentSnapshot).length,2,'single audited snapshot projection in compiled HTML');
+assert(/^function csPeritonitisSnapshot487\(s,c\)/.test(originalSnapshot),'frozen pre-change snapshot function');
+beforeStop=beforeStop.replace(currentSnapshot,originalSnapshot);
 const restored=beforeStop.replace(entries[0][0],'').replace(criticalScripts[0][0],oldCritical)
  .replace(bridgeScripts[0][0],oldBridge).replace(RINGER_SAFETY_NEW_487,RINGER_SAFETY_OLD_487)
  .replace(RINGER_COMPLETION_NEW_487,RINGER_COMPLETION_OLD_487)
