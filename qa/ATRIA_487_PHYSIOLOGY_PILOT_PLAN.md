@@ -57,9 +57,9 @@ Files: `src/integration/physiology-shadow-487.js`, corresponding `.test.js`; `qa
 
 - [x] Wire specific tests into existing npm test; add independent pilot/report/benchmark commands, without adding runtime hooks or dependencies.
 - [x] Measure deterministic scenarios for 1/16/64 patients, active treatments vs registry padding, steady-state heap and per-step p50/p95; clearly label Node CPU and no physical Android.
-- [ ] Run full npm test/build/workflow artifact checks. Verify generated HTML remains byte-identical to initial build and all protected files unchanged.
+- [x] Run full npm test/build/workflow artifact checks. Verify generated HTML remains byte-identical to initial build and all protected files unchanged.
 - [x] Independent whole-change review, address important findings with red→green tests.
-- [ ] Publish small commits with expected-parent/ref guards. Verify remote exact HEAD and successful GitHub CI before closing final checkpoint. No manual deploy or production promotion.
+- [x] Publish small commits with expected-parent/ref guards. Verify remote exact implementation HEAD and successful GitHub CI before closing final checkpoint. No manual deploy or production promotion.
 - [x] Extend existing scaling plan with schema/version/extension gates and B2/B3/B4 order; retain clinical/Android/heparin blockers.
 
 ## Acceptance boundary
