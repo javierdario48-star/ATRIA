@@ -53,7 +53,7 @@ Interfaces: `createClinicalClock487({authorityId})`, `advanceClinicalClock487(cl
 - [x] Implement pure bounded explicit-time mapping with fractional carry, authority and version validation.
 - [x] Implement confirmation matching, units/actions/formulation validation, deterministic ordering, duplicate/conflicting receipts and typed administration/rate/stop conversion.
 - [x] Demonstrate genuine start/titration/stop trajectory and request-without-confirmation controls; preserve patient/native input immutability.
-- [ ] Run targeted/full tests/build/artifact; commit/publish and verify exact CI.
+- [x] Run targeted/full tests/build/artifact; commit/publish and verify exact CI.
 
 ## Task3 — actual30-entry dependency coverage and closure
 
@@ -61,10 +61,10 @@ Files: new `qa/pharmacology-infrastructure/coverage-487.mjs`, JSON report, `qa/A
 
 Interface: `auditPharmacologyInfrastructure487(catalogue, definitions)` emits one readiness/dependency row per actual post-V19 entry. Inventory is read from the actual current native initialization, including heparin, and all13 case IDs are preserved.
 
-- [ ] Test exact catalogue identity/count, molecule vs generic class/procedure/stop distinctions, missing-axis reports and honest heparin blockage.
-- [ ] Generate the30-entry mechanism/axis/ownership coverage report, identifying reusable components and unsolved physiology without drug–disease matrices.
-- [ ] Record next safe isolated content group; safety means readiness to develop/test in shadow, not permission to activate clinically.
-- [ ] Independent whole-change review; address material findings with red→green regressions, then full suite/build/artifact and protected-path/ref audit.
+- [x] Test exact catalogue identity/count, molecule vs generic class/procedure/stop distinctions, missing-axis reports and honest heparin blockage.
+- [x] Generate the30-entry mechanism/axis/ownership coverage report, identifying reusable components and unsolved physiology without drug–disease matrices.
+- [x] Record next safe isolated content group; safety means readiness to develop/test in shadow, not permission to activate clinically.
+- [x] Independent whole-change review; address material findings with red→green regressions, then full suite/build/artifact and protected-path/ref audit.
 - [ ] Publish reversible checkpoint(s), verify exact remote HEAD/CI/artifact metadata, close documentation and deliver links/evidence/limitations. No deploy.
 
 ## Execution ledger
@@ -83,3 +83,5 @@ Acceptance: this delivery proves infrastructure extensibility and B1 software eq
 - Task2 review: five contract defects independently reproduced and corrected with red→green tests.19 extensibility checks retain30,351 approved numeric comparisons;7 clock and12 receipt checks plus full npm suite pass. Duplicate confirmation/property ordering and active mechanism-version drift have regression coverage. Publication and exact remote CI verification follow.
 
 - Independent final review: all five validation findings resolved; no remaining medium/critical blocker within isolated scope.19 extensibility checks/30,351 numeric comparisons independently pass. Supplied confirmations represent absolute delivered rates; a complete live infusion lifecycle/episode history is explicitly not proven.
+
+- Task2 complete: published `2be6bde4c84510c0c5af0dc3067e21791584a877`, CI `38108607875` SUCCESS; tree `edcb164909c0b9a99df22d4225a647fa083a1a26` exactly matches the final locally tested version. All workflow steps and the SHA-bound artifact metadata verified.

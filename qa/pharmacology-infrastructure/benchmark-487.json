@@ -1,0 +1,113 @@
+{
+  "schema": "atria-physiology-benchmark/v1",
+  "runtime": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "physicalAndroid": false,
+  "physicalIOS": false,
+  "seed": "no stochastic terms",
+  "scope": "pure kernel only; no render, native engine, shadow sample history, network or device throttling",
+  "measurements": [
+    {
+      "patientCount": 1,
+      "treatmentCount": 2,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.02457699999999363,
+      "batchP95Ms": 0.07044399999998063,
+      "batchP99Ms": 0.13352700000001505,
+      "maxMs": 0.5968599999999924,
+      "perPatientP95Ms": 0.07044399999998063
+    },
+    {
+      "patientCount": 1,
+      "treatmentCount": 5,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.021360999999984642,
+      "batchP95Ms": 0.06004899999999225,
+      "batchP99Ms": 0.14357200000000603,
+      "maxMs": 0.2761469999999804,
+      "perPatientP95Ms": 0.06004899999999225
+    },
+    {
+      "patientCount": 16,
+      "treatmentCount": 2,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.14857000000000653,
+      "batchP95Ms": 0.2886270000000195,
+      "batchP99Ms": 0.46378500000002987,
+      "maxMs": 0.5797159999999622,
+      "perPatientP95Ms": 0.01803918750000122
+    },
+    {
+      "patientCount": 16,
+      "treatmentCount": 5,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.21549799999996821,
+      "batchP95Ms": 0.3875620000000026,
+      "batchP99Ms": 0.5456660000000397,
+      "maxMs": 0.8648969999999849,
+      "perPatientP95Ms": 0.024222625000000164
+    },
+    {
+      "patientCount": 64,
+      "treatmentCount": 2,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.5300230000000283,
+      "batchP95Ms": 0.8426639999998997,
+      "batchP99Ms": 1.1746939999999313,
+      "maxMs": 2.4472339999999804,
+      "perPatientP95Ms": 0.013166624999998433
+    },
+    {
+      "patientCount": 64,
+      "treatmentCount": 5,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.8668909999998959,
+      "batchP95Ms": 1.353319000000056,
+      "batchP99Ms": 1.5401650000001155,
+      "maxMs": 1.9154089999999542,
+      "perPatientP95Ms": 0.021145609375000873
+    },
+    {
+      "patientCount": 64,
+      "treatmentCount": 2,
+      "registrySize": 305,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.5234229999998661,
+      "batchP95Ms": 0.8254389999999603,
+      "batchP99Ms": 0.9754209999998693,
+      "maxMs": 2.4178710000001047,
+      "perPatientP95Ms": 0.01289748437499938
+    }
+  ],
+  "memory": {
+    "measured": true,
+    "patients": 2000,
+    "retainedHeapBytes": 8419296,
+    "estimatedHeapBytesPerPatient": 4209.648,
+    "serializedStateBytes": 12466,
+    "serializedStateBytesAt2048Receipts": 232917
+  },
+  "measuredImplementationHead": "2be6bde4c84510c0c5af0dc3067e21791584a877",
+  "sourceHashes": {
+    "src/clinical/physiology-pilot-487.js": "b16e621b767480e2fc994b16bfd0a804c611a4b65a6ee0db905e9c099ae689fe",
+    "src/clinical/physiology-pilot-definitions-487.js": "93fe72e0460bd58e973aaa2fecb3c75e08549394519ea3f3d5bbbf7d895ba47c",
+    "src/clinical/pharmacology-mechanisms-487.js": "8692e3ec3aef70d0bf712035bf7f3695f10dfc42c6327338daabfc7ea95eddca",
+    "src/clinical/pharmacology-mechanisms-b1-487.js": "e1b31b75a56e5d1286df72d245a167746c1416c6be742c7caf1c4cdc49b7d811",
+    "src/clinical/pharmacology-content-487.js": "0d4bd8a509ae38c32263006b36bb0bb70d70e16a89b9946e18d825d50a0a9070"
+  }
+}
