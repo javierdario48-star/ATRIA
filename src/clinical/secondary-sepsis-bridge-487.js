@@ -21,7 +21,7 @@ export function csSecondaryBridgeEvidence487(s,c){
 // Lower the untreated third-space-loss slope while BOTH appropriate antimicrobials
 // and fluid therapy have been administered and urgent surgery has accepted the case.
 // Preserve ongoing infection and some capillary leakage until actual source control.
-export function csSecondaryBridgePhysiology487(patient,caseDef,previous,minutes){
+export function csSecondaryBridgePhysiology487(patient,caseDef,previous,minutes,fluidOwned=false){
  const evidence=csSecondaryBridgeEvidence487(patient,caseDef);
  if(!evidence.ready||evidence.sourceControlled||!patient?.phys||!(minutes>0))return {applied:false,evidence};
  const p=patient.phys,dm=Math.max(0,Math.min(1.5,Number(minutes)||0));
@@ -29,7 +29,7 @@ export function csSecondaryBridgePhysiology487(patient,caseDef,previous,minutes)
  if(Number.isFinite(before.inflammation))
   p.inflammation=Math.max(before.inflammation,
    before.inflammation+Math.max(0,p.inflammation-before.inflammation)*.40);
- if(Number.isFinite(before.effectiveVolume)){
+ if(Number.isFinite(before.effectiveVolume)&&!fluidOwned){
   const loss=Math.max(0,before.effectiveVolume-p.effectiveVolume);
   const balance=Math.min(.011, .006+Math.min(.005,Math.max(0,Number(patient.therapyTotals?.fluidMl||0)-250)/150000));
   p.effectiveVolume=Math.min(1.12,Math.max(p.effectiveVolume,before.effectiveVolume-loss*.40+dm*balance));

@@ -2,6 +2,8 @@
 
 Fecha: 2026-10-11. Rama exclusiva: `atria-4.8.7-grace-nursing-qa`.
 
+**Continuidad:** este documento conserva el preflight histórico. La autorización posterior permite separar únicamente los aportes numéricos de Ringer. El rescate fue reparado en `01a43d49452119cc19566e008656485429bf2534`, CI [38145326302](https://github.com/javierdario48-star/ATRIA/actions/runs/38145326302) SUCCESS. El estado posterior, la activación limitada y sus límites se documentan en [ATRIA_487_RINGER_OWNERSHIP_RESULTS.md](ATRIA_487_RINGER_OWNERSHIP_RESULTS.md); las conclusiones de bloqueo de esta auditoría no describen por sí solas el HEAD nuevo.
+
 **Resultado: contratos de ejecución completados en QA; activación clínica bloqueada.** El nuevo motor no controla todavía Ringer ni otro tratamiento en pacientes reales. CP1 sigue intacto, OFF por defecto. No se ha creado otro motor, modificado una ecuación B1, ampliado el catálogo ni intervenido en rescate, supervivencia, Cirugía, XP o multijugador.
 
 ## 1. Recuperación verificada y checkpoint de código

@@ -13,7 +13,8 @@ export function applySecondaryBridge487(html){
     effectiveVolume:target.phys.effectiveVolume}:null;
   const output=oldPhys.apply(this,arguments);
   if(target===sim&&caseDef===C&&previous)
-   csSecondaryBridgePhysiology487(target,caseDef,previous,Number(target.gameMinute||0)-initial);
+   csSecondaryBridgePhysiology487(target,caseDef,previous,Number(target.gameMinute||0)-initial,
+    window.csPhysiologyQA487?.ownsRinger?.(target,caseDef)===true);
   return output;
  };
  const oldUpdate=updateSimulation;

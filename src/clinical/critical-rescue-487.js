@@ -22,7 +22,7 @@ export function csCriticalRescueEvidence487(patient,caseDef,vitals={}){
 
 // Add modest, short-lived volume/vascular/oxygenation response for severe sepsis.
 // The native engine still handles dose, toxicity, inflammation and fluid losses.
-export function csCriticalRescuePhysiology487(patient,caseDef,minutes){
+export function csCriticalRescuePhysiology487(patient,caseDef,minutes,fluidOwned=false){
  const ph=caseDef?.physiology,p=patient?.phys;
  if(!patient||!p||!['peritonitis','sepsis_source'].includes(ph?.engine))return false;
  const dm=Math.max(0,Math.min(1.5,Number(minutes)||0));
@@ -36,7 +36,7 @@ export function csCriticalRescuePhysiology487(patient,caseDef,minutes){
  let changed=false;
  const ml=Number(patient.therapyTotals?.fluidMl||0);
  const overload=Number(ph?.fluidOverloadThresholdMl||2800);
- if(fluid&&ml<=overload){
+ if(fluid&&ml<=overload&&!fluidOwned){
   // Max 4 simulated hours after an observed bolus; no permanent volume creation.
   const factor=Math.min(1.5,ml/650);
   p.effectiveVolume=Math.min(1.07,Number(p.effectiveVolume||.4)+dm*.019*factor);

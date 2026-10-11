@@ -1,0 +1,98 @@
+<script id="atria-secondary-sepsis-bridge-487">
+(function(){
+ if(window.__csSecondaryBridge487)return;window.__csSecondaryBridge487=true;
+ function csSecondaryBridgeEvidence487(s,c){
+ if(!s||c?.id!=='PERI-SEC-001'||s.caseEnded||s.patientDied)return {ready:false};
+ const rows=Array.isArray(s.administrationLog)?s.administrationLog:[];
+ const active=id=>s.monitorTherapies?.has?.(id)===true&&rows.some(x=>x?.id===id);
+ const fluid=active('fluid')&&Number(s.therapyTotals?.fluidMl||0)>=250;
+ const antibiotics=active('ceftriaxone')&&active('metronidazole')||
+   active('piptazo')||active('imipenem')||
+   active('ceftazidime')&&active('metronidazole')||
+   active('cefoperazone')&&active('metronidazole');
+ const hypoxic=Number(c?.vitals?.spo2??98)<90;
+ const oxygen=!hypoxic||active('oxygen');
+ const surgery=s.consults?.get?.('cirugia');
+ const accepted=surgery?.status==='done'&&surgery?.accepted!==false;
+ const access=Number(s.venousAccessCount||0)>0;
+ return {ready:fluid&&antibiotics&&oxygen&&accepted&&access,
+  fluid,antibiotics,oxygen,accepted,access,sourceControlled:s.phys?.sourceControlled===true,
+  realTreatmentCount:rows.filter(x=>['fluid','ceftriaxone','metronidazole','piptazo','imipenem'].includes(x?.id)).length};
+}
+ function csSecondaryBridgePhysiology487(patient,caseDef,previous,minutes){
+ const evidence=csSecondaryBridgeEvidence487(patient,caseDef);
+ if(!evidence.ready||evidence.sourceControlled||!patient?.phys||!(minutes>0))return {applied:false,evidence};
+ const p=patient.phys,dm=Math.max(0,Math.min(1.5,Number(minutes)||0));
+ const before=previous||{};
+ if(Number.isFinite(before.inflammation))
+  p.inflammation=Math.max(before.inflammation,
+   before.inflammation+Math.max(0,p.inflammation-before.inflammation)*.40);
+ if(Number.isFinite(before.effectiveVolume)){
+  const loss=Math.max(0,before.effectiveVolume-p.effectiveVolume);
+  const balance=Math.min(.011, .006+Math.min(.005,Math.max(0,Number(patient.therapyTotals?.fluidMl||0)-250)/150000));
+  p.effectiveVolume=Math.min(1.12,Math.max(p.effectiveVolume,before.effectiveVolume-loss*.40+dm*balance));
+ }
+ if(Number.isFinite(p.svr))p.svr=Math.min(1.07,p.svr+dm*.007);
+ if(Number.isFinite(p.contractility))p.contractility=Math.min(1.04,p.contractility+dm*.003);
+ return {applied:true,evidence};
+}
+ const oldPhys=updatePhysiologyState;
+ updatePhysiologyState=function(){
+  const target=sim,caseDef=C,initial=Number(target?.physLastMinute??target?.gameMinute??0);
+  const previous=target?.phys?{inflammation:target.phys.inflammation,
+    effectiveVolume:target.phys.effectiveVolume}:null;
+  const output=oldPhys.apply(this,arguments);
+  if(target===sim&&caseDef===C&&previous)
+   csSecondaryBridgePhysiology487(target,caseDef,previous,Number(target.gameMinute||0)-initial);
+  return output;
+ };
+ const oldUpdate=updateSimulation;
+ updateSimulation=function(dt){
+  const output=oldUpdate.apply(this,arguments);
+  if(!sim||!C||sim.caseEnded||sim.patientDied||C.id!=='PERI-SEC-001')return output;
+  const mode=sim.playMode||selectedPlayMode;
+  if(mode!=='solo'&&mode!=='apprentice')return output;
+  const care=csSecondaryBridgeEvidence487(sim,C);
+  const consult=sim.consults?.get?.('cirugia');
+  if(consult?.status==='done'&&care.fluid&&care.antibiotics&&!sim._csBridgeAdvice487){
+   sim._csBridgeAdvice487=true;
+   const v=sim.liveVitals||{},map=(Number(v.sys||0)+2*Number(v.dia||0))/3;
+   nurseSay('Cirugía aceptó. Ringer y antibióticos constan administrados. '+
+    (map<65?'La perfusión aún es insuficiente: reevaluá la PAM, la respuesta a volumen y si necesita vasopresores mientras preparamos quirófano.':
+      'Continuá vigilando perfusión y oxigenación hasta el traslado.'));
+  }
+  if(!care.ready||sim.disposition||sim._csORTransferTimer487)return output;
+  const decision=window.csPeritonitisAssessment487?.();
+  if(!decision?.ready||decision.action!=='quirofano')return output;
+  const target=sim,targetCaseId=C.id;
+  target._csORTransferTimer487=true;
+  nurseSay('Doctor, el equipo quirúrgico aceptó y ya está coordinado. Preparando traslado a quirófano.');
+  // Scheduling the handoff is NOT source control. The patient's physiology
+  // evolves normally during this short transfer preparation interval.
+  setTimeout(()=>{
+   const complete=()=>{
+    if(target.caseEnded||target.patientDied||target.disposition)return;
+    const now=window.csPeritonitisAssessment487?.();
+    if(!now?.ready||now.action!=='quirofano'){
+     target._csORTransferTimer487=false;
+     nurseSay('El traslado sigue condicionado: '+(now?.missing||[]).join('; ')+'.');
+     return;
+    }
+    if(window.csSetDisposition?.('quirofano')!==true||target.disposition?.id!=='quirofano'){
+     target._csORTransferTimer487=false;
+     nurseSay('El sistema no confirmó el destino a quirófano; el caso sigue abierto.');
+     return;
+    }
+    target.events?.push?.({m:target.gameMinute,t:'Entrega formal al equipo quirúrgico / quirófano'});
+    nurseSay('El equipo de Cirugía recibió al paciente en quirófano. Finalizamos el pase; el control del foco se realizará allí.');
+    finishCase('completed');
+   };
+   if(typeof window.csWithPatientStateV203==='function')
+    window.csWithPatientStateV203(target,targetCaseId,complete);
+   else if(sim===target&&C?.id===targetCaseId)complete();
+  },3200);
+  return output;
+ };
+ window.csSecondaryBridge487={evidence:(s=sim,c=C)=>csSecondaryBridgeEvidence487(s,c)};
+})();
+</script>

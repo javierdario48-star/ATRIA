@@ -1,5 +1,5 @@
-/** CP2 preflight. Unsafe substitutions exist ONLY in this isolated QA VM.
- * No runtime adapter, clinical flag, nursing edit or protected policy change. */
+/** Historical CP2 preflight. Unsafe substitutions exist ONLY in this QA VM;
+ * the separately tested Ringer opt-in is never installed by this audit. */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createLiveNativeJourney487,advanceLiveNativeJourney487,nativeObserverPort487,serializeNativePatient487}
@@ -13,9 +13,10 @@ import {PILOT_DEFINITIONS_487} from '../clinical/physiology-pilot-definitions-48
 import {csCriticalRescueEvidence487} from '../clinical/critical-rescue-487.js';
 import {csSecondaryBridgeEvidence487,csSecondaryBridgePhysiology487} from '../clinical/secondary-sepsis-bridge-487.js';
 import {csGraceState487} from '../clinical/grace-survival-487.js';
+import {installPhysiologyQABootstrap487} from './physiology-qa-bootstrap-487.js';
 
 let checks=0;
-const evidence={activation:'blocked',clinicalOwner:'native',unsafeExperiments:'isolated-node-vm-only'};
+const evidence={activation:'native-by-default; Ringer opt-in tested separately',clinicalOwner:'native in this preflight',unsafeExperiments:'isolated-node-vm-only'};
 function check(name,fn){fn();checks++;console.log('TRANSITION PREFLIGHT PASS',name);}
 const runtime=()=>createLiveNativeJourney487('PERI-SEC-001');
 const order=(r,text)=>r.ctx.nurseNatural('Enfermera '+text);
@@ -148,9 +149,14 @@ check('switching a bolus function back cannot undo its prior physiological diver
  assert.notEqual(a.ctx.sim.phys.effectiveVolume,b.ctx.sim.phys.effectiveVolume);
  evidence.midPatientClinicalRollbackRequiresVersionedReplay=true;
 });
-check('experimental preflight has no published clinical effect writer or heparin activation',()=>{
+check('default entry installs no clinical writer or heparin activation',()=>{
  const r=runtime();assert.equal(r.ctx.window.csPharm487Boot.status,'rejected');assert.equal(r.ctx.window.csPharm487,undefined);
  const bootstrap=fs.readFileSync(new URL('./physiology-qa-bootstrap-487.js',import.meta.url),'utf8');
- assert(!bootstrap.includes('setPhysiology')&&!bootstrap.includes('enableClinical'));
+ assert(!bootstrap.includes('enableClinical'),'no general clinical activation');
+ const keys=['recordAdministration','nurseNatural','addMonitorTherapy','applyImmediatePhysiology','updatePhysiologyState','progressionOffsets'];
+ const endpoints=keys.map(k=>r.ctx[k]);let loads=0;
+ const api=installPhysiologyQABootstrap487(r.ctx.window,nativeObserverPort487(r),async()=>{loads++;throw Error('not requested');});
+ assert.equal(api.reportRinger().status,'disabled');assert.equal(api.ownsRinger(r.ctx.sim,r.ctx.C),false);
+ assert.equal(loads,0);keys.forEach((k,i)=>assert.equal(r.ctx[k],endpoints[i]));
 });
 console.log('PHYSIOLOGY TRANSITION PREFLIGHT PASS',JSON.stringify({checks,...evidence}));

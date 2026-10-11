@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "checkpointParent": "01a43d49452119cc19566e008656485429bf2534",
+  "scope": "PERI-SEC named Ringer IV bolus; native evolution and protected policies retained",
+  "sources": {
+    "src/integration/physiology-ringer-owner-487.js": "5ca0728de1cb21a10194f215b387ca85ac8ad7e703ab1d631f222fb47b3244d5",
+    "src/integration/physiology-qa-bootstrap-487.js": "a0c7c4bec7be4cc4c6f89bdc266f8641fb48bbb20e0d33ab65f37207bdae95d5",
+    "src/integration/physiology-qa-observer-487.js": "0a5082f75456f433963e11e53e8a81f4dc1e15eabc138400d055d91685afa8b8",
+    "src/clinical/physiology-pilot-487.js": "7ee23c9a313952fb70151367ae92f17c2ae9fcdf76b694deb2495f6fbb4013fa",
+    "src/clinical/critical-rescue-487.js": "11185265d33b9bfdfc26c0542a3e795bce17113961a79f22bbc63a544d78b949",
+    "src/clinical/secondary-sepsis-bridge-487.js": "be707ad20186d8b35782172c0e024d6adb40dcb857101135e70ed820ec351a39",
+    "qa/physiology-live/native-journey-487.mjs": "e112ec74c73989b3afd948b99517bd985ee2184b9db40dc3e8b47d2f9f9f2596",
+    "qa/physiology-live/ringer-journey-487.mjs": "a38c67a9d11306a31a4e77c411c3af18450b209118183d1b15197a13779fd14c",
+    "src/integration/critical-rescue-487.js": "14551e7619289ffd49a50d4e7b5fd8957a525071513afc9d936e06b0c1a5f61e",
+    "src/integration/secondary-sepsis-bridge-487.js": "ff4e91fb334b2d989f451a29df68a2b665a7400fbb3f9c1561b1c89b5ae8f1fb",
+    "src/integration/physiology-ringer-owner-487.test.js": "2cb8536207799500211f89af96554411927bf768552a3037cc1877ab870357cd",
+    "src/integration/physiology-ringer-live-487.test.js": "73ae4ae46af4e41aad3ad59bcff360b67a2b30cc80737f8dc3045f443be48c0b"
+  },
+  "bots": {
+    "checks": 17,
+    "evidence": {
+      "hypovolemia": {
+        "untreated": [
+          {
+            "realSeconds": 1,
+            "volume": 0.44727696924000004,
+            "sys": 82.03038515585557,
+            "hr": 131.03235622121983,
+            "rr": 30.017958725395044,
+            "spo2": 91.99562835541705,
+            "sourceControlled": false
+          },
+          {
+            "realSeconds": 10,
+            "volume": 0.4218994284000003,
+            "sys": 70.82087435984091,
+            "hr": 140.80924214992226,
+            "rr": 30.78218153488981,
+            "spo2": 91.80624520733787,
+            "sourceControlled": false
+          },
+          {
+            "realSeconds": 30,
+            "volume": 0.3598965252000056,
+            "sys": 61.481393291410335,
+            "hr": 151.31714818507194,
+            "rr": 32.89003785315168,
+            "spo2": 91.25230861216937,
+            "sourceControlled": false
+          },
+          {
+            "realSeconds": 60,
+            "volume": 0.28,
+            "sys": 55.000787351167766,
+            "hr": 166.67066868950232,
+            "rr": 36.09502700174386,
+            "spo2": 90.3211070147999,
+            "sourceControlled": false
+          }
+        ],
+        "low": [
+          {
+            "realSeconds": 1,
+            "volume": 0.44977696924000005,
+            "sys": 82.04543374797159,
+            "hr": 131.02097780020628,
+            "rr": 30.021733981953762,
+            "spo2": 91.9880778422996,
+            "sourceControlled": false
+          },
+          {
+            "realSeconds": 10,
+            "volume": 0.4243994284000003,
+            "sys": 71.01972780124986,
+            "hr": 140.6587096336194,
+            "rr": 30.83206811252551,
+            "spo2": 91.70647205206642,
+            "sourceControlled": false
+          },
+          {
+            "realSeconds": 30,
+            "volume": 0.3623965252000056,
+            "sys": 61.686390288809484,
+            "hr": 151.16143265692855,
+            "rr": 32.94146567131451,
+            "spo2": 91.14945297584363,
+            "sourceControlled": false
+          },
+          {
+            "realSeconds": 60,
+            "volume": 0.28,
+            "sys": 55.0009196133191,
+            "hr": 166.6582062076414,
+            "rr": 36.146455573164296,
+            "spo2": 90.21824987195899,
+            "sourceControlled": false
+          }
+        ],
+        "given": [
+          {
+            "realSeconds": 1,
+            "volume": 0.47227696924000007,
+            "sys": 82.18087107701584,
+            "hr": 130.91857201108428,
+            "rr": 30.055711290982284,
+            "spo2": 91.92012322424256,
+            "sourceControlled": false
+          },
+          {
+            "realSeconds": 10,
+            "volume": 0.4468994284000003,
+            "sys": 72.8094087739308,
+            "hr": 139.3039169868915,
+            "rr": 31.281047311246862,
+            "spo2": 90.80851365462382,
+            "sourceControlled": false
+          },
+          {
+            "realSeconds": 30,
+            "volume": 0.3848965252000056,
+            "sys": 63.531363265401914,
+            "hr": 149.75999290363845,
+            "rr": 33.40431603478021,
+            "spo2": 90.22375224891228,
+            "sourceControlled": false
+          },
+          {
+            "realSeconds": 60,
+            "volume": 0.28,
+            "sys": 55.00367219416101,
+            "hr": 166.21600295009517,
+            "rr": 36.609312715948256,
+            "spo2": 89.29253558639112,
+            "sourceControlled": false
+          }
+        ]
+      },
+      "overload": {
+        "small": {
+          "volume": 0.9848965252000059,
+          "sys": 112.7308320587973,
+          "hr": 112.47588774853675,
+          "rr": 33.42671402163014,
+          "spo2": 90.1789562752123,
+          "sourceControlled": false
+        },
+        "large": {
+          "volume": 1.0321188859000052,
+          "sys": 116.60300892023736,
+          "hr": 109.5481442679357,
+          "rr": 36.625248456404094,
+          "spo2": 83.78188740566445,
+          "sourceControlled": false
+        },
+        "risk": 0.5999360766857283
+      },
+      "critical": {
+        "windowSeconds": 65,
+        "renewed": false,
+        "lateDeath": true
+      },
+      "earlyGrace": {
+        "releaseAt": 312,
+        "lateDeath": true
+      }
+    },
+    "environment": "generated HTML Node VM; admission UI stub; no physical Android",
+    "clinicalValidation": false
+  },
+  "performance": {
+    "runtime": "v24.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "native": {
+      "samples": 1200,
+      "patients": 1,
+      "activeTreatments": 1,
+      "medianMs": 0.13631599999996524,
+      "p95Ms": 0.24563000000000557,
+      "p99Ms": 0.40156600000000253,
+      "maxMs": 0.5275250000000824,
+      "ownershipDataSerializedBytes": 0,
+      "clockSegments": 0,
+      "receiptCount": 1
+    },
+    "ringer": {
+      "samples": 1200,
+      "patients": 1,
+      "activeTreatments": 1,
+      "medianMs": 0.14300600000001396,
+      "p95Ms": 0.2340830000000551,
+      "p99Ms": 0.3738130000001547,
+      "maxMs": 0.8596760000000359,
+      "ownershipDataSerializedBytes": 1549,
+      "clockSegments": 1,
+      "receiptCount": 1
+    },
+    "totalProcessMemory": {
+      "rss": 195923968,
+      "heapTotal": 157007872,
+      "heapUsed": 19582472,
+      "external": 3969606,
+      "arrayBuffers": 212095
+    },
+    "physicalAndroid": false,
+    "includesRendering": false,
+    "scope": "actual generated update + nursing/timer loop; fixed V3 variant; whole-process memory is not incremental per-patient RAM"
+  },
+  "artifactHtmlSha256": "92902694a148f8a52fcdb1837e9558651a9f17c037d07887090927d9293aa9fd",
+  "ownerChecks": 13,
+  "artifact": {
+    "sha256": "92902694a148f8a52fcdb1837e9558651a9f17c037d07887090927d9293aa9fd",
+    "protectedHtmlSha256": "dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7",
+    "inline": 71,
+    "external": 11,
+    "modules": 11,
+    "moduleBytes": 95839,
+    "defaultEnabled": false,
+    "activeLiveWritersByDefault": 0,
+    "experimentalScope": "fresh local PERI-SEC/named Ringer IV bolus"
+  },
+  "verification": {
+    "fullLocalSuiteExitCode": 0,
+    "shadowComparisons": 216,
+    "shadowTrajectories": 24,
+    "B1FrozenComparisons": 30351,
+    "defaultActiveWriters": 0,
+    "review": "four native integration reproductions fixed; final read-only review clear",
+    "clinicalValidation": false,
+    "physicalAndroid": false,
+    "fullBrowser": false
+  },
+  "rollbackRecovery": {
+    "checkpoint": "01a43d49452119cc19566e008656485429bf2534",
+    "exactFileInventory": 213,
+    "reversePatchMatchedAllSourceSha256": true,
+    "criticalRescueChecks": 6,
+    "buildExitCode": 0,
+    "artifactExitCode": 0,
+    "htmlSha256": "08b6d905f3d3b49a7905d28ce57cc53fce13b2576d71c173f8ca8864959ab0d7",
+    "midPatientMigration": false
+  }
+}

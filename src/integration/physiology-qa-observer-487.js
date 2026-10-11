@@ -17,7 +17,7 @@ const routeAliases = new Map([
     'subcutaneo', 'rectal', 'intranasal', 'sublingual', 'transdermica', 'transdermico',
     'epidural', 'intratecal', 'intraperitoneal', 'intraosea', 'intraarterial'].map(x => [x, 'unsupported']),
 ]);
-function routeConflict(raw, expected) {
+export function pharmacologyRouteConflict487(raw, expected) {
   const text = normalize(raw).replace(/\b([iesvp])\.\s*([vmoqc])\.?/g, '$1$2');
   const tokens = text.match(/[a-z]+/g) || [];
   for (let i = 0; i < tokens.length; i++) {
@@ -80,7 +80,7 @@ export function installPhysiologyQAObserver487(port) {
         continue;
       }
       if (entry.count !== (counts.get(entry.id) || 0) + 1) throw Error('missing native administration count for ' + entry.id);
-      if (routeConflict(entry.raw, d.route)) throw Error('native order route cannot be verified as ' + d.route + ' for ' + entry.id);
+      if (pharmacologyRouteConflict487(entry.raw, d.route)) throw Error('native order route cannot be verified as ' + d.route + ' for ' + entry.id);
       if (d.route === 'iv' && entry.confirmedIV <= 0) throw Error('native IV execution lacks confirmed access for ' + entry.id);
       if (entry.id === 'vasopressor' && !/nora|norepinefr/.test(normalize(entry.raw)))
         throw Error('generic vasopressor does not establish norepinephrine identity');

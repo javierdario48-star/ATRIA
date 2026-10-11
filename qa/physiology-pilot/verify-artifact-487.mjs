@@ -6,8 +6,9 @@ import os from 'node:os';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
-import {applyPhysiologyQABootstrap487,PHYSIOLOGY_QA_FILES_487} from '../../src/integration/physiology-qa-bootstrap-487.js';
+import {applyPhysiologyQABootstrap487,PHYSIOLOGY_QA_FILES_487,RINGER_SAFETY_OLD_487,RINGER_SAFETY_NEW_487,RINGER_COMPLETION_OLD_487,RINGER_COMPLETION_NEW_487} from '../../src/integration/physiology-qa-bootstrap-487.js';
 import {applyCriticalRescue487,CRITICAL_FINAL_OLD_487,CRITICAL_FINAL_NEW_487,CRITICAL_CLOCK_OLD_487,CRITICAL_CLOCK_NEW_487} from '../../src/integration/critical-rescue-487.js';
+import {applySecondaryBridge487} from '../../src/integration/secondary-sepsis-bridge-487.js';
 const html=fs.readFileSync('out/index.html','utf8');
 const hash=createHash('sha256').update(html).digest('hex');
 const entries=[...html.matchAll(/<script id="atria-physiology-qa-487">[\s\S]*?<\/script>/g)];
@@ -25,7 +26,16 @@ assert(oldCritical.startsWith(criticalMarker)&&oldCritical.endsWith('</script>')
 assert.equal(createHash('sha256').update(oldCritical).digest('hex'),'b622fb06c590a0f2d1813dcc2914a7a0e03fa1975ba418a7b0e3a37e1e4a478e');
 assert.equal(html.split(CRITICAL_FINAL_NEW_487).length,2,'one final repair');
 assert.equal(html.split(CRITICAL_CLOCK_NEW_487).length,2,'one native per-patient clock hook');
+const bridgeScripts=[...html.matchAll(/<script id="atria-secondary-sepsis-bridge-487">[\s\S]*?<\/script>/g)];
+assert.equal(bridgeScripts.length,1);
+assert.equal(bridgeScripts[0][0],applySecondaryBridge487('<body></body>').replace('<body>','').replace('</body>',''));
+const oldBridge=fs.readFileSync(new URL('./secondary-bridge-pre-owner-487.txt',import.meta.url),'utf8');
+assert.equal(createHash('sha256').update(oldBridge).digest('hex'),'ff570d3d2ee468d0d24d0492a876d85a61d7e3d242e311681bd5e72fdef4a045');
+assert.equal(html.split(RINGER_SAFETY_NEW_487).length,2,'one native fluid toxicity ownership gate');
+assert.equal(html.split(RINGER_COMPLETION_NEW_487).length,2,'one scoped fluid completion qualifier');
 const restored=html.replace(entries[0][0],'').replace(criticalScripts[0][0],oldCritical)
+ .replace(bridgeScripts[0][0],oldBridge).replace(RINGER_SAFETY_NEW_487,RINGER_SAFETY_OLD_487)
+ .replace(RINGER_COMPLETION_NEW_487,RINGER_COMPLETION_OLD_487)
  .replace(CRITICAL_FINAL_NEW_487,CRITICAL_FINAL_OLD_487).replace(CRITICAL_CLOCK_NEW_487,CRITICAL_CLOCK_OLD_487);
 const originalHash=createHash('sha256').update(restored).digest('hex');
 assert.equal(originalHash,'dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7','all prior HTML bytes remain identical after removing sole QA entry');
@@ -60,4 +70,5 @@ try{
  }
 }finally{fs.rmSync(dir,{recursive:true,force:true});}
 console.log('B1 PROTECTED / LAZY QA ARTIFACT PASS',JSON.stringify({sha256:hash,protectedHtmlSha256:originalHash,
- inline,external,modules:PHYSIOLOGY_QA_FILES_487.length,moduleBytes,defaultEnabled:false,liveWriters:0}));
+ inline,external,modules:PHYSIOLOGY_QA_FILES_487.length,moduleBytes,defaultEnabled:false,activeLiveWritersByDefault:0,
+ experimentalScope:'fresh local PERI-SEC/named Ringer IV bolus'}));

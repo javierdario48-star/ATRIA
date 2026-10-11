@@ -25,7 +25,8 @@ export function applyCriticalRescue487(html){
   const lastMinute=Number(target?.physLastMinute??target?.gameMinute??0);
   const result=priorPhysiology.apply(this,arguments);
   if(target===sim&&caseDef===C)
-   csCriticalRescuePhysiology487(target,caseDef,Number(target?.gameMinute||0)-lastMinute);
+   csCriticalRescuePhysiology487(target,caseDef,Number(target?.gameMinute||0)-lastMinute,
+    window.csPhysiologyQA487?.ownsRinger?.(target,caseDef)===true);
   return result;
  };
  const priorFatal=csDeathRescueMissing;

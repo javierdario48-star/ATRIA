@@ -11,11 +11,17 @@ const freeze=x=>{if(x&&typeof x==='object'){Object.values(x).forEach(freeze);Obj
 function timeUs(x){finite(x,'clinical time',0,1e6);return Math.round(x*MINUTE_US);}
 function flow(s){return s.pumpFunction*clamp(s.circulatingVolumeMl/s.profile.euvolemicVolumeMl,.05,1.05)/
  (1+.45*Math.max(0,s.vascularTone-1.3));}
+export function pilotFluidOverloadRisk487(s){
+ return clamp(Math.max(0,s.circulatingVolumeMl-s.profile.euvolemicVolumeMl)/1500+
+  Math.max(0,s.interstitialFluidMl-s.profile.interstitialFluidMl)/3500,0,1)*s.profile.pulmonarySusceptibility;
+}
+export function pilotFluidRespiratorySigns487(risk){
+ finite(risk,'fluid overload risk',0,1);return {spo2:-12*risk,rr:6*risk};
+}
 function refresh(s){
  const f=flow(s),map=s.anchor.map*f/s.anchor.flow*s.vascularTone/s.anchor.tone;
  s.perfusion=clamp(f*Math.min(1,map/65)*(1-.25*s.ischemiaRisk),0,1.2);
- s.fluidOverloadRisk=clamp(Math.max(0,s.circulatingVolumeMl-s.profile.euvolemicVolumeMl)/1500+
-  Math.max(0,s.interstitialFluidMl-s.profile.interstitialFluidMl)/3500,0,1)*s.profile.pulmonarySusceptibility;
+ s.fluidOverloadRisk=pilotFluidOverloadRisk487(s);
 }
 export function createPhysiologyState487(profile,patientId){
  if(profile?.schemaVersion!==1||profile.modelVersion!==PHYSIOLOGY_MODEL_487)throw Error('incompatible physiology version');
@@ -292,14 +298,15 @@ export function stepPhysiology487(state,administeredEvents=[],deltaClinicalMinut
 export function observePhysiology487(s){
  const f=flow(s),map=s.anchor.map*f/s.anchor.flow*s.vascularTone/s.anchor.tone;
  const pulse=s.anchor.pulse*f/s.anchor.flow;
- const roomAir=clamp(98-35*s.gasExchangeImpairment-12*s.fluidOverloadRisk-18*s.respiratoryDepression,40,99);
+ const fluid=pilotFluidRespiratorySigns487(s.fluidOverloadRisk);
+ const roomAir=clamp(98-35*s.gasExchangeImpairment+fluid.spo2-18*s.respiratoryDepression,40,99);
  const target=(s.profile.oxygenTarget.min+s.profile.oxygenTarget.max)/2;
  const spo2=roomAir+Math.max(0,target-roomAir)*s.oxygenSupport*s.profile.oxygenResponsiveness;
  const baseline=s.profile.baselineVitals;
  return {clinicalMinute:s.clinicalMinute,sys:map+2*pulse/3,dia:Math.max(1,map-pulse/3),map,
   hr:clamp(baseline.hr+Math.max(-20,Math.min(60,(s.anchor.map-map)*.6))+
    (s.pain-s.profile.painDrive)*10+(s.inflammation-s.profile.inflammation)*15,25,230),
-  rr:clamp(baseline.rr+(s.inflammation-s.profile.inflammation)*4+s.fluidOverloadRisk*6-s.respiratoryDepression*18,3,60),
+  rr:clamp(baseline.rr+(s.inflammation-s.profile.inflammation)*4+fluid.rr-s.respiratoryDepression*18,3,60),
   spo2:clamp(spo2,40,99),temp:clamp(baseline.temp+(s.inflammation-s.profile.inflammation)*1.45,33,43),
   circulatingVolumeMl:s.circulatingVolumeMl,interstitialFluidMl:s.interstitialFluidMl,perfusion:s.perfusion,
   fluidOverloadRisk:s.fluidOverloadRisk,pain:s.pain,respiratoryDepression:s.respiratoryDepression,

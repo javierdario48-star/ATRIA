@@ -23,9 +23,16 @@ const nativeNursing = ['qa-native-nursing',
   generated.match(/^function nurseNatural\(q\)\{.*\}$/m)[0] + '\n' +
   between('function queueNurse(task,quiet=false){', 'function updateWardNurses(dt){')];
 const procedures = between('function csQueueMonitor(){', '// Natural language to nurse.');
+// Actual V19 disposition writer in its own lexical scope. Rewards, career and
+// closure UI remain excluded; no replacement clinical handoff is fabricated.
+const handoff=between('  const DESTS={','  function csOpenDisposition(');
 const compiled = [nativeNursing, ...baseline.compiled.map(x => {
   // Keep procedural functions inside their real V18 lexical scope. The
   // approved physiology reference deliberately excluded that procedure block.
+  if(x.id==='cs-safe-v0190-clinical'){
+    assert(x.code.endsWith('\n})();'),'verified V19 clinical closing boundary');
+    return [x.id,x.code.slice(0,-7)+handoff+'\n})();'];
+  }
   if (x.id !== 'cs-safe-v0180-clinical') return [x.id, x.code];
   assert(x.code.endsWith('\n})();'), 'verified V18 clinical closing boundary');
   return [x.id, x.code.slice(0, -7) + procedures + '\n})();'];
@@ -64,6 +71,8 @@ export function createLiveNativeJourney487(caseId = 'HDA-001', {confirmedIV = 1}
     pathTo: () => false, advanceActor: () => true, toast: noop, csPlaySound: noop,
     formatVitalsInline: () => '', recordVitals: noop});
   ctx.window.nsMayExamine = () => true;
+  ctx.document.createElement=()=>({style:{},onclick:null,textContent:''});
+  ctx.document.body.appendChild=noop;
   ctx.sim.patientInstance.bed = {approach: [24, 17], label: 'QA box'};
   ctx.sim.venousAccessCount = confirmedIV;
   ctx.sim.venousAccessTypes = Array(confirmedIV).fill('confirmed fixture peripheral IV');
