@@ -19,6 +19,7 @@ check('shared executor rejects wrong route, units, ambiguous numbers and extreme
  const r=make('PERI-SEC-001');
  for(const q of ['morfina 4 mg oral','morfina 4 mg VO','morfina 4 mcg IV',
    'morfina 4 g IV','morfina 4 ml IV','morfina 4','morfina -4 mg IV',
+   'morfina 4 mg IM','morfina 4 mg I.M.','morfina 4 mg intranasal','morfina 4 mg vía desconocida',
    'morfina 0 mg IV','morfina 40 mg IV','morfina 4 mg y 8 mg']){
   assert.equal(r.ctx.addMonitorTherapy(q),false,q);
   assert.equal(med(r).length,0,'invalid order must not create native dose '+q);
