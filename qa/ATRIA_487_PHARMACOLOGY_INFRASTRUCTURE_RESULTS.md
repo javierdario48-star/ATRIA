@@ -1,6 +1,6 @@
-# ATRIA4.8.7 — Infraestructura farmacológica extensible
+# ATRIA 4.8.7 — Infraestructura farmacológica extensible
 
-Estado: **sólo simulación aislada**. HEAD inicial remoto `67b6a78196c09ae568b8d7208f4e4d734a5bb47b`, CI inicial `38104457917` SUCCESS. El piloto B1 y sus snapshots aprobados se conservan. Esta entrega registra siete mecanismos para las cinco intervenciones B1; no implementa los otros25 tratamientos, no instala un ejecutor real y no otorga validación clínica.
+Estado: **sólo simulación aislada**. HEAD inicial remoto `67b6a78196c09ae568b8d7208f4e4d734a5bb47b`, CI inicial `38104457917` SUCCESS. El piloto B1 y sus snapshots aprobados se conservan. Esta entrega registra siete mecanismos para las cinco intervenciones B1; no implementa los otros 25 tratamientos, no instala un ejecutor real y no otorga validación clínica.
 
 ## Qué cambió y quién calcula
 
@@ -77,15 +77,15 @@ const receipt = {
 
 El estado fija protocolo de recibos y autoridad. Recibos antiguos y tipados no se mezclan en una trayectoria; secuencias conflictivas entre lotes y cambios de procedencia se rechazan. Repetir un recibo idéntico no vuelve a aplicar su efecto; el orden de propiedades JSON no modifica su identidad. Suspender un bolo no borra lo ya administrado. Una modificación de tasa confirmada representa una tasa entregada absoluta; este contrato no prueba una historia completa start→titrate→stop. El adaptador vivo necesitará historia íntegra e identidad de episodio antes de aceptar esas acciones.
 
-`createClinicalClock487`, `advanceClinicalClock487` y `nativeToClinicalTime487` registran explícitamente segmentos normal/typing: ritmo nativo0.12/0.03 minutos por segundo real, convención de guardia1 minuto clínico por segundo real activo. No modifican ninguno de los relojes del juego. Pausas, autoridad, historial, unidades y fracciones se verifican sin Date.now ni azar; conversión por segmentos, no división fija cuando hubo typing.
+`createClinicalClock487`, `advanceClinicalClock487` y `nativeToClinicalTime487` registran explícitamente segmentos normal/typing: ritmo nativo 0.12/0.03 minutos por segundo real, convención de guardia 1 minuto clínico por segundo real activo. No modifican ninguno de los relojes del juego. Pausas, autoridad, historial, unidades y fracciones se verifican sin Date.now ni azar; conversión por segmentos, no división fija cuando hubo typing.
 
-Compatibilidad: se conservan API B1 y resultados numéricos, no se promete reanudación directa de snapshots antiguos que carecen de protocolo/secuencias. Deben recrearse y reproducirse los eventos con el mismo manifiesto. Siguen vigentes el límite de2048 recibos y128 segmentos del reloj; al excederlos se exige checkpoint/replay, sin eliminación silenciosa de historia. La historia nativa de80 filas y la ausencia de suspensiones completas siguen bloqueando un observador vivo fiable. No se instala autoridad multijugador.
+Compatibilidad: se conservan API B1 y resultados numéricos, no se promete reanudación directa de snapshots antiguos que carecen de protocolo/secuencias. Deben recrearse y reproducirse los eventos con el mismo manifiesto. Siguen vigentes el límite de 2048 recibos y 128 segmentos del reloj; al excederlos se exige checkpoint/replay, sin eliminación silenciosa de historia. La historia nativa de 80 filas y la ausencia de suspensiones completas siguen bloqueando un observador vivo fiable. No se instala autoridad multijugador.
 
 La PK sigue reducida y normalizada. Oral/IM admiten una formulación con inicio diferido; no hay absorción/biodisponibilidad validada ni composición de varios principios activos. Una combinación fija con PK por componente no equivale a varios mecanismos compartiendo una sola exposición. Un inicio distinto de cero en infusión se rechaza hasta modelarlo expresamente.
 
-## Cobertura actual de las30 entradas
+## Cobertura actual de las 30 entradas
 
-Inventario obtenido del arranque nativo actual post-V19, con13 casos:5 definiciones ejecutables exclusivamente en sombra y25 no implementadas. El adaptador global anterior conserva su rechazo por `anticoagulation`: sus29 reglas antiguas no equivalen a30 tratamientos validados ni a25 mecanismos nuevos. La cobertura JSON incluye aliases, mecanismos/ejes reutilizables, dependencias faltantes, identidad, eventos y responsable de efectos por entrada.
+Inventario obtenido del arranque nativo actual post-V19, con 13 casos: 5 definiciones ejecutables exclusivamente en sombra y 25 no implementadas. El adaptador global anterior conserva su rechazo por `anticoagulation`: sus 29 reglas antiguas no equivalen a 30 tratamientos validados ni a 25 mecanismos nuevos. La cobertura JSON incluye aliases, mecanismos/ejes reutilizables, dependencias faltantes, identidad, eventos y responsable de efectos por entrada.
 
 | Entrada | Tipo de contenido | Reutilización o requisito principal | Estado sombra |
 |---|---|---|---|
@@ -126,12 +126,12 @@ La propuesta de estados nuevos se basa en dependencias fisiológicas y límites 
 
 ## Validación y coste observado
 
--19 controles de extensibilidad y30.351 comparaciones numéricas contra las trayectorias B1 aprobadas, sin regenerar los fixtures. Tolerancia absoluta1e-8+relativa1e-10. Incluyen riesgos y exposición, no sólo signos finales.
--7 controles de reloj,12 de recibos y8 de cobertura; pruebas de definición activa/versiones, ejes/PK/fases incompletos, riesgos fuera de contrato y escritura inválida fallan explícitamente.
+- 19 controles de extensibilidad y 30.351 comparaciones numéricas contra las trayectorias B1 aprobadas, sin regenerar los fixtures. Tolerancia absoluta1e-8+relativa1e-10. Incluyen riesgos y exposición, no sólo signos finales.
+- 7 controles de reloj, 12 de recibos y 8 de cobertura; pruebas de definición activa/versiones, ejes/PK/fases incompletos, riesgos fuera de contrato y escritura inválida fallan explícitamente.
 - Suite completa existente, incluido el bot B1 ya aprobado, snapshots nativos, supervivencia/rescate y Cirugía; build y verificación del artefacto se ejecutan en cada checkpoint de código. Revisar el cierre exacto de SHA/CI abajo antes de considerar publicado.
-- Revisión independiente identificó cinco defectos de contrato: callback de riesgos accesible, vida media de oxígeno cero, inicio de infusión ignorado handlers en fases no ejecutadas y contenedores de parches mal tipados. Se añadieron regresiones red→green y correcciones mínimas; no se calibraron números para aprobar. También se corrigieron igualdad JSON y dependencias transitivas de cobertura.
+- Revisión independiente identificó cinco defectos de contrato: callback de riesgos accesible, vida media de oxígeno cero, inicio de infusión ignorado, handlers en fases no ejecutadas y contenedores de parches mal tipados. Se añadieron regresiones red→green y correcciones mínimas; no se calibraron números para aprobar. También se corrigieron igualdad JSON y dependencias transitivas de cobertura.
 
-El benchmark existente se ejecutó sobre el checkpoint publicado `2be6bde4c84510c0c5af0dc3067e21791584a877`, con hashes del núcleo guardados, para medir el coste de esta refactorización; no se rehízo la investigación de escalabilidad B1. `qa/pharmacology-infrastructure/benchmark-487.json` conserva esta medición separada del benchmark aprobado. Node/Linux/x64,100 ticks de calentamiento+600 muestras, núcleo únicamente:
+El benchmark existente se ejecutó sobre el checkpoint publicado `2be6bde4c84510c0c5af0dc3067e21791584a877`, con hashes del núcleo guardados, para medir el coste de esta refactorización; no se rehízo la investigación de escalabilidad B1. `qa/pharmacology-infrastructure/benchmark-487.json` conserva esta medición separada del benchmark aprobado. Node/Linux/x64, 100 ticks de calentamiento + 600 muestras, núcleo únicamente:
 
 | Pacientes | Tratamientos activos | Definiciones | p50 lote ms | p95 lote ms |
 |---:|---:|---:|---:|---:|
@@ -139,9 +139,9 @@ El benchmark existente se ejecutó sobre el checkpoint publicado `2be6bde4c84510
 |64|5|5|0.867|1.353|
 |64|2|305|0.523|0.825|
 
-Heap retenido estimado:≈4210bytes/paciente,2000 estados; estado serializado representativo12466bytes y232917bytes con2048 recibos. Las cadenas de firma de definición se comparten en memoria, pero JSON vuelve a escribirlas; un futuro envelope de checkpoint debería deduplicar el manifiesto antes de transferir estados.
+Heap retenido estimado: ≈4.210 bytes/paciente, 2.000 estados; estado serializado representativo 12.466 bytes y 232.917 bytes con 2.048 recibos. Las cadenas de firma de definición se comparten en memoria, pero JSON vuelve a escribirlas; un futuro envelope de checkpoint debería deduplicar el manifiesto antes de transferir estados.
 
-El contrato añade coste de objetos/validación respecto al B1 original: el p95 antiguo64×5 fue≈0.429ms y esta ejecución≈1.353ms. Son ejecuciones distintas, con jitter/carga del host, no un ensayo controlado ni evidencia de FPS móvil. La complejidad continúa proporcional a pacientes/exposiciones/vínculos activos, con ordenamiento O(M log M) de los M mecanismos activos, más lotes de recibos e historial acotado; compilación/inventario se pagan aparte. No se afirma coste cero al instalar más definiciones. No hubo prueba física Android/iOS, renderizado, red o autoridad multijugador.
+El contrato añade coste de objetos/validación respecto al B1 original: el p95 antiguo 64×5 fue≈0.429ms y esta ejecución≈1.353ms. Son ejecuciones distintas, con jitter/carga del host, no un ensayo controlado ni evidencia de FPS móvil. La complejidad continúa proporcional a pacientes/exposiciones/vínculos activos, con ordenamiento O(M log M) de los M mecanismos activos, más lotes de recibos e historial acotado; compilación/inventario se pagan aparte. No se afirma coste cero al instalar más definiciones. No hubo prueba física Android/iOS, renderizado, red o autoridad multijugador.
 
 Antes de conectar un escritor real: benchmark A/B en dispositivos representativos, presupuesto de CPU/memoria por paciente/guardia, límites de historial, calibración clínica, ownership único y recibos completos del ejecutor. Optimizar selectores/parches sólo si esa medición justifica el cambio; volver a exigir equivalencia de trayectorias.
 
@@ -149,13 +149,17 @@ Antes de conectar un escritor real: benchmark A/B en dispositivos representativo
 
 **Primer grupo para desarrollo seguro en sombra:** rama opioide con identidad explícita de `analgesia`, comenzando por fentanilo si se obtiene ficha por vía/dosis y expectativas independientes. Reutiliza los tres mecanismos existentes sin ejes nuevos para los endpoints B1; deben validarse su PK propia y tiempos distintos de analgesia/SNC. Paracetamol se separa y permanece bloqueado hasta disponer de su mecanismo no opioide. Esto autoriza desarrollo/tests aislados, no activación clínica ni uso de aliases genéricos como una molécula.
 
-**Siguiente B2 clínico:** ceftriaxona+metronidazol después de un contrato común de foco/patógeno/susceptibilidad y exposición-respuesta. Después otros antibacterianos/antifúngicos por dependencias y toxicidad. Albumina, transfusión, procedimientos, inmunomodulación, beta bloqueo y heparina no se desbloquean con una firma o una bonificación.
+**Siguiente B2 clínico:** ceftriaxona+metronidazol después de un contrato común de foco/patógeno/susceptibilidad y exposición-respuesta. Después otros antibacterianos/antifúngicos por dependencias y toxicidad. Albúmina, transfusión, procedimientos, inmunomodulación, beta bloqueo y heparina no se desbloquean con una firma o una bonificación.
 
 Rollback: revertir el commit de recibos/reloj devuelve el checkpoint modular anterior; revertir el de registro devuelve B1. El commit de cobertura sólo añade QA/docs. No pacientes reales que migrar, despliegue que revertir ni base de datos que tocar. La activación futura necesitará feature flag reversible, manifiesto fijado por paciente y un solo responsable por efecto; estas garantías de runtime todavía no se implementan.
 
 ## Evidencia de publicación
 
-- Registro modular: `8197b2ab477548216b9ce0a1c30c68583eff6d69`, [CI38107362076](https://github.com/javierdario48-star/ATRIA/actions/runs/38107362076) SUCCESS.
-- Recibos/reloj y hardening: `2be6bde4c84510c0c5af0dc3067e21791584a877`, [CI38108607875](https://github.com/javierdario48-star/ATRIA/actions/runs/38108607875) SUCCESS.
-- Cobertura/cierre: pendiente de cierre exacto tras CI.
-- Artefacto local conserva SHA-256 `dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7`,70 scripts inline y11 copias externas del golden master. No se modifica HTML ni se crea preview/despliegue.
+- Registro modular: `8197b2ab477548216b9ce0a1c30c68583eff6d69`, [CI 38107362076](https://github.com/javierdario48-star/ATRIA/actions/runs/38107362076) SUCCESS.
+- Recibos/reloj y hardening: `2be6bde4c84510c0c5af0dc3067e21791584a877`, [CI 38108607875](https://github.com/javierdario48-star/ATRIA/actions/runs/38108607875) SUCCESS.
+- Cobertura: `63ae521a79c51abb261c1d4e3da3605e01b72956`, [CI 38108896216](https://github.com/javierdario48-star/ATRIA/actions/runs/38108896216) SUCCESS. Árbol `98c4407074506d5945e7234a57c5ec11c0c040bd`, idéntico al verificado localmente.
+- Artefacto local conserva SHA-256 `dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7`, 70 scripts inline y 11 copias externas del golden master. No se modifica HTML ni se crea preview/despliegue.
+
+El artefacto remoto de ese CI (`11691145894`, 1.085.419 bytes) está vinculado al SHA anterior; digest ZIP `sha256:fb13df51b56fe6f6fc8eaf20f2532b5196eb7f015bc5997c4a467be7b86c7446`. Se verificaron metadatos y los contenidos locales; no se afirma descarga independiente del ZIP. El commit posterior de cierre sólo actualiza documentación y su propio CI se verifica al entregar el HEAD final.
+
+Resultado arquitectónico: **sí se demuestra reutilización informática** de una nueva molécula sobre mecanismos existentes, con trayectoria B1 equivalente en tres estados de enfermedad, sin editar el integrador por identidad o enfermedad. La equivalencia sintética no valida una molécula clínica nueva ni los 30 tratamientos.

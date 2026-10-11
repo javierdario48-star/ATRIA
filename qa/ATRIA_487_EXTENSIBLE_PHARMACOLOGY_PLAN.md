@@ -65,7 +65,7 @@ Interface: `auditPharmacologyInfrastructure487(catalogue, definitions)` emits on
 - [x] Generate the30-entry mechanism/axis/ownership coverage report, identifying reusable components and unsolved physiology without drug–disease matrices.
 - [x] Record next safe isolated content group; safety means readiness to develop/test in shadow, not permission to activate clinically.
 - [x] Independent whole-change review; address material findings with red→green regressions, then full suite/build/artifact and protected-path/ref audit.
-- [ ] Publish reversible checkpoint(s), verify exact remote HEAD/CI/artifact metadata, close documentation and deliver links/evidence/limitations. No deploy.
+- [x] Publish reversible checkpoint(s), verify exact remote HEAD/CI/artifact metadata, close documentation and deliver links/evidence/limitations. No deploy.
 
 ## Execution ledger
 
@@ -85,3 +85,6 @@ Acceptance: this delivery proves infrastructure extensibility and B1 software eq
 - Independent final review: all five validation findings resolved; no remaining medium/critical blocker within isolated scope.19 extensibility checks/30,351 numeric comparisons independently pass. Supplied confirmations represent absolute delivered rates; a complete live infusion lifecycle/episode history is explicitly not proven.
 
 - Task2 complete: published `2be6bde4c84510c0c5af0dc3067e21791584a877`, CI `38108607875` SUCCESS; tree `edcb164909c0b9a99df22d4225a647fa083a1a26` exactly matches the final locally tested version. All workflow steps and the SHA-bound artifact metadata verified.
+
+- Task3 complete: published `63ae521a79c51abb261c1d4e3da3605e01b72956`, CI `38108896216` SUCCESS, exact local tree `98c4407074506d5945e7234a57c5ec11c0c040bd`. Full npm/build/artifact passed; eight coverage checks pin all report fields and current source hashes.19 changed paths all within the explicit allowed scope; approved B1 fixtures and golden tree unchanged.
+- Closure is documentation only. Its exact final remote SHA/CI are verified when delivered; no local full-suite rerun is needed for prose alone, and remote workflow still executes the complete suite/build.
