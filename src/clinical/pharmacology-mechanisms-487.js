@@ -28,6 +28,8 @@ export function compileMechanismRegistry487(modules,axes){
   if(!raw.handlers||!Object.keys(raw.handlers).length)throw Error('incomplete mechanism handlers '+raw.id);
   for(const [phase,handler]of Object.entries(raw.handlers))
    if(!MECHANISM_PHASES_487.includes(phase)||typeof handler!=='function')throw Error('invalid mechanism handler '+raw.id+'/'+phase);
+  if((raw.input==='receipt'&&Object.keys(raw.handlers).some(phase=>phase!=='receipt'))||
+   (raw.input==='exposure'&&raw.handlers.receipt))throw Error('unsupported mechanism phase for input '+raw.id);
   if((raw.input==='receipt'&&!raw.handlers.receipt)||(raw.input==='support'&&(!raw.handlers.receipt||!raw.handlers.postCirculation)))
    throw Error('incomplete mechanism delivery handlers '+raw.id);
   if(raw.input==='exposure'&&!['preCirculation','postCirculation','postNatural'].some(p=>raw.handlers[p]))throw Error('incomplete exposure handler '+raw.id);
@@ -67,12 +69,12 @@ export function compileMechanismBinding487(raw,registry){
 }
 const normalized=new Set(['renalFunction','hepaticFunction','gasExchangeImpairment','oxygenSupport','respiratoryDepression','sedation','ischemiaRisk','fluidOverloadRisk']);
 function applyEvaluation(state,module,result,context){
- if(!result||typeof result!=='object'||!result.updates||Array.isArray(result.updates))throw Error('invalid mechanism result '+module.id);
+ if(!result||typeof result!=='object'||!result.updates||typeof result.updates!=='object'||Array.isArray(result.updates))throw Error('invalid mechanism result '+module.id);
  for(const [axis,value]of Object.entries(result.updates)){
   if(!module.writes.includes(axis))throw Error('undeclared mechanism write '+module.id+'/'+axis);
   if(axis==='sourceControlled'){
    if(typeof value!=='boolean')throw Error('invalid mechanism boolean '+axis);
-  }else if(typeof value!=='number'||!Number.isFinite(value)||value<0||value>(normalized.has(axis)?1:1e9))
+  }else if(typeof value!=='number'||!Number.isFinite(value)||value<(axis==='oxygenResponseHalfLifeMin'?1e-9:0)||value>(normalized.has(axis)?1:1e9))
    throw Error('invalid mechanism state value '+module.id+'/'+axis);
  }
  const risks=result.risks??[];if(!Array.isArray(risks)||risks.some(code=>!module.riskCodes.includes(code)))throw Error('undeclared mechanism risk '+module.id);
@@ -81,7 +83,9 @@ function applyEvaluation(state,module,result,context){
 export function evaluateMechanism487(state,module,phase,signal,context){
  const handler=module.handlers[phase];if(!handler)return;
  const inputs=Object.freeze(Object.fromEntries(module.reads.map(axis=>[axis,state[axis]])));
- applyEvaluation(state,module,handler(inputs,signal,Object.freeze({...context})),context);
+ // Recording risks is a private kernel capability; modules return checked risks.
+ const {note,...publicContext}=context;
+ applyEvaluation(state,module,handler(inputs,signal,Object.freeze(publicContext)),context);
 }
 export function runMechanismPhase487(state,phase,activeSignals,context,registry){
  const active=[...activeSignals.keys()].sort((a,b)=>registry.rank(a)-registry.rank(b));

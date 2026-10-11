@@ -25,6 +25,7 @@ function kinetics(form,axes){
  if(['bolus','infusion'].includes(mode)){
   for(const key of ['halfLifeMin','responseHalfLifeMin'])number(k[key],key,1e-9);
   for(const key of ['effectSiteHalfLifeMin','onsetMin','renalWeight','hepaticWeight'])number(k[key],key);
+  if(mode==='infusion'&&k.onsetMin!==0)throw Error('unsupported infusion onset '+form.id);
   if(k.renalWeight+k.hepaticWeight>1)throw Error('invalid clearance '+form.id);
   if(k.renalWeight&&!axes.has('renalFunction'))throw Error('missing physiology variable renalFunction');
   if(k.hepaticWeight&&!axes.has('hepaticFunction'))throw Error('missing physiology variable hepaticFunction');

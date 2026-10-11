@@ -59,6 +59,11 @@ check('module references reject missing axes and duplicate/cyclic dependencies',
  assert.throws(()=>compileMechanismRegistry487([a,b],PHYSIOLOGY_AXES_487),/cycle|cyclic/i);
  assert.throws(()=>compileMechanismRegistry487([{...a,dependencies:['absent']}],PHYSIOLOGY_AXES_487),/dependency|absent/i);
 });
+check('handler phases unsupported by an input kind fail compilation',()=>{
+ const volume=B1_MECHANISMS_487.find(m=>m.id==='volume'),opioid=mutableModule('qa-wrong-phase');
+ assert.throws(()=>compileMechanismRegistry487([{...volume,handlers:{...volume.handlers,postNatural:()=>({updates:{}})}}],PHYSIOLOGY_AXES_487),/unsupported mechanism phase/);
+ assert.throws(()=>compileMechanismRegistry487([{...opioid,handlers:{...opioid.handlers,receipt:()=>({updates:{}})}}],PHYSIOLOGY_AXES_487),/unsupported mechanism phase/);
+});
 check('content validation rejects identity, PK, axis and parameter gaps',()=>{
  for(const mutate of [
   c=>c.molecules.push(structuredClone(c.molecules[0])),
@@ -122,6 +127,36 @@ check('active formulation revisions require explicit replay/migration',()=>{
  const c=content(),a=compile(c),s=stepPhysiology487(fresh(),[event('given','morphine')],1,a);
  const changed=content();changed.formulations.find(x=>x.id==='morphine').pharmacokinetics.halfLifeMin=240;
  assert.throws(()=>stepPhysiology487(s,[],1,compile(changed)),/definition|version|revision|manifest/i);
+ const modules=B1_MECHANISMS_487.map(m=>m.id==='opioid-analgesia'?{...m,version:m.version+1}:m);
+ assert.throws(()=>stepPhysiology487(s,[],1,compile(content(),modules)),/definition|version|revision|manifest/i);
+});
+check('evaluators cannot bypass risk validation through a kernel callback',()=>{
+ const m={...mutableModule('qa-risk-bypass'),handlers:{postNatural:(_,__,ctx)=>{
+  assert.equal(ctx.note,undefined,'risk recording remains private to the integrator');return {updates:{},risks:['undeclared-risk']};
+ }}};
+ const d=compile(syntheticContent({effects:[{mechanismId:m.id,parameters:{gain:1}}]}),[...B1_MECHANISMS_487,m]);
+ const s=fresh(),before=JSON.stringify(s);
+ assert.throws(()=>stepPhysiology487(s,[event('risk','qa-reused-opioid-iv')],1,d),/undeclared mechanism risk/);
+ assert.equal(JSON.stringify(s),before);
+});
+check('invalid positive-only axis writes fail in the first step',()=>{
+ const m={...mutableModule('qa-invalid-half-life'),requires:['oxygenResponseHalfLifeMin'],reads:[],writes:['oxygenResponseHalfLifeMin'],
+  handlers:{postNatural:()=>({updates:{oxygenResponseHalfLifeMin:0}})}};
+ const d=compile(syntheticContent({effects:[{mechanismId:m.id,parameters:{gain:1}}]}),[...B1_MECHANISMS_487,m]);
+ const s=fresh(),before=JSON.stringify(s);
+ assert.throws(()=>stepPhysiology487(s,[event('invalid','qa-reused-opioid-iv')],1,d),/invalid mechanism state value/);
+ assert.equal(JSON.stringify(s),before);
+});
+check('malformed patch containers cannot silently become an empty effect',()=>{
+ for(const updates of [true,1,'invalid']){
+  const m={...mutableModule('qa-malformed-patch'),handlers:{postNatural:()=>({updates})}};
+  const d=compile(syntheticContent({effects:[{mechanismId:m.id,parameters:{gain:1}}]}),[...B1_MECHANISMS_487,m]);
+  assert.throws(()=>stepPhysiology487(fresh(),[event('malformed','qa-reused-opioid-iv')],1,d),/invalid mechanism result/);
+ }
+});
+check('unsupported infusion onset is rejected rather than silently ignored',()=>{
+ const c=content();c.formulations.find(x=>x.id==='vasopressor').pharmacokinetics.onsetMin=60;
+ assert.throws(()=>compile(c),/unsupported infusion onset/);
 });
 check('receipt deduplication stores compact keys, not a whole content record per dose',()=>{
  const s=stepPhysiology487(fresh(),[event('given','morphine')],1,PILOT_DEFINITIONS_487);

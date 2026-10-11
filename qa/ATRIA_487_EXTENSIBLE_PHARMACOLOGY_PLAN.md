@@ -41,7 +41,7 @@ Interfaces: `compileMechanismRegistry487(modules, axes)`; `compilePharmacologyCo
 - [x] Extract the exact B1 effects into registered evaluators and replace drug-mechanism switches with active binding dispatch.
 - [x] Add synthetic molecule/new formulation and synthetic mechanism tests, no user-facing additions.
 - [x] Compare all approved B1 machine trajectory points/exposures/risks against the committed fixture with absolute1e-8/relative1e-10 tolerance; never rewrite the fixture.
-- [ ] Run targeted tests, full npm suite, build/artifact; commit/publish checkpoint and verify exact remote CI.
+- [x] Run targeted tests, full npm suite, build/artifact; commit/publish checkpoint and verify exact remote CI.
 
 ## Task2 — typed confirmations and clock
 
@@ -49,10 +49,10 @@ Files: new `src/clinical/clinical-clock-487.js`/`.test.js`; `src/integration/pha
 
 Interfaces: `createClinicalClock487({authorityId})`, `advanceClinicalClock487(clock, {deltaRealSeconds, nativeMinutesPerRealSecond, paused})`, `nativeToClinicalTime487(clock, nativeMinute)`; `adaptConfirmedPharmacologyEvents487(events, {patientId, definitions, confirmations, clock})` returns kernel-compatible receipts and explicit ignored requests.
 
-- [ ] Write/run failing clock/receipt tests for partition determinism, piecewise typing, pauses, provenance and boundaries.
-- [ ] Implement pure bounded explicit-time mapping with fractional carry, authority and version validation.
-- [ ] Implement confirmation matching, units/actions/formulation validation, deterministic ordering, duplicate/conflicting receipts and typed administration/rate/stop conversion.
-- [ ] Demonstrate genuine start/titration/stop trajectory and request-without-confirmation controls; preserve patient/native input immutability.
+- [x] Write/run failing clock/receipt tests for partition determinism, piecewise typing, pauses, provenance and boundaries.
+- [x] Implement pure bounded explicit-time mapping with fractional carry, authority and version validation.
+- [x] Implement confirmation matching, units/actions/formulation validation, deterministic ordering, duplicate/conflicting receipts and typed administration/rate/stop conversion.
+- [x] Demonstrate genuine start/titration/stop trajectory and request-without-confirmation controls; preserve patient/native input immutability.
 - [ ] Run targeted/full tests/build/artifact; commit/publish and verify exact CI.
 
 ## Task3 — actual30-entry dependency coverage and closure
@@ -76,3 +76,10 @@ Interface: `auditPharmacologyInfrastructure487(catalogue, definitions)` emits on
 Acceptance: this delivery proves infrastructure extensibility and B1 software equivalence. It does not implement25 treatments, solve heparin or confer clinical/mobile release readiness.
 
 - Task1 targeted:14 extensibility checks and30,351 frozen B1 numeric comparisons pass. Legacy facade requirements/physical-volume metadata and support suspension switching have explicit regressions. Receipt fingerprints are compact non-security keys; queued/active definitions additionally compare exact canonical content. Full-suite/publication verification follows.
+
+- Task1 complete: published `8197b2ab477548216b9ce0a1c30c68583eff6d69`, CI `38107362076` SUCCESS; exact tested Git tree verified before guarded ref update.
+- Task2 targeted:7 clock and11 confirmation/receipt checks pass, including cross-poll sequence ownership, changed-provenance conflicts and mixed-protocol rejection. The clinical clock maps normal/typing segments without modifying native rates.
+
+- Task2 review: five contract defects independently reproduced and corrected with red→green tests.19 extensibility checks retain30,351 approved numeric comparisons;7 clock and12 receipt checks plus full npm suite pass. Duplicate confirmation/property ordering and active mechanism-version drift have regression coverage. Publication and exact remote CI verification follow.
+
+- Independent final review: all five validation findings resolved; no remaining medium/critical blocker within isolated scope.19 extensibility checks/30,351 numeric comparisons independently pass. Supplied confirmations represent absolute delivered rates; a complete live infusion lifecycle/episode history is explicitly not proven.

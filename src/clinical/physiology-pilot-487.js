@@ -42,14 +42,29 @@ export function createPhysiologyState487(profile,patientId){
   oxygenSupport:0,oxygenFlowLpm:0,oxygenResponseHalfLifeMin:.25,pain:p.painDrive,respiratoryDepression:0,sedation:0,
   perfusion:0,fluidOverloadRisk:0,ischemiaRisk:0,drugDiuresisMlPerMin:0,
   cumulativeUrineMl:0,cumulativeBloodLossMl:0,administeredFluidMl:0,
-  exposures:Object.create(null),continuingMechanisms:Object.create(null),pendingEvents:[],seenEvents:{},adverseEvents:[]};
+  exposures:Object.create(null),continuingMechanisms:Object.create(null),pendingEvents:[],seenEvents:{},adverseEvents:[],
+  receiptProtocol:null,clinicalAuthorityId:null,typedSequenceIndex:Object.create(null)};
  s.anchor=freeze({map:(p.baselineVitals.sys+2*p.baselineVitals.dia)/3,
   pulse:p.baselineVitals.sys-p.baselineVitals.dia,flow:flow(s),tone:s.vascularTone});
  refresh(s);return s;
 }
 
 function canonicalUnit(unit){return String(unit||'').replace(/[µμ]/g,'mc').replace(/^ug/,'mcg');}
-const receiptSignature=(state,e,d)=>JSON.stringify([state.patientId,e.drugId,e.action,e.amount,e.atUs,e.sequence,d.unit,d.route,d.fingerprint]);
+function receiptProvenance(p,action){
+ if(p===undefined)return undefined;
+ const kinds={bolus:'administration',start:'administration',setRate:'dose-change',stop:'suspension'};
+ if(p?.schemaVersion!==1||!['qa-confirmed-ledger','native-administration-log'].includes(p.source)||p.eventType!==kinds[action]||
+  typeof p.receiptId!=='string'||!p.receiptId||p.receiptId.length>200||
+  typeof p.clockAuthorityId!=='string'||!p.clockAuthorityId||p.clockAuthorityId.length>160)throw Error('invalid administration provenance');
+ const stamp=t=>{
+  if(t?.authorityId!==p.clockAuthorityId||!['clinical-minute','native-minute'].includes(t.unit))throw Error('invalid provenance clock');
+  finite(t.value,'provenance time',0,1e6);return {authorityId:t.authorityId,unit:t.unit,value:t.value};
+ };
+ return freeze({schemaVersion:1,source:p.source,receiptId:p.receiptId,clockAuthorityId:p.clockAuthorityId,eventType:p.eventType,
+  eventTimestamp:stamp(p.eventTimestamp),confirmationTimestamp:stamp(p.confirmationTimestamp)});
+}
+const receiptSignature=(state,e,d)=>JSON.stringify([state.patientId,e.drugId,e.action,e.amount,e.atUs,e.sequence,d.unit,d.route,d.fingerprint,
+ receiptProvenance(e.provenance,e.action)??null]);
 function normalizeEvent(raw,state,definitions){
  if(raw?.status!=='administered')return null; // plans cannot become exposures
  if(raw.patientId!==state.patientId)throw Error('administration patient mismatch');
@@ -65,6 +80,7 @@ function normalizeEvent(raw,state,definitions){
   amount=finite(raw.dose?.amount,'dose',0,1000000);
  }
  const e={eventId:raw.eventId,drugId:raw.drugId,action:raw.action,amount,atUs,sequence,definitionKey:d.signature};
+ if(raw.provenance!==undefined)e.provenance=receiptProvenance(raw.provenance,raw.action);
  e.signature=receiptSignature(state,e,d);return Object.freeze(e);
 }
 function receipt(s,e,definitions){
@@ -182,6 +198,8 @@ export function stepPhysiology487(state,administeredEvents=[],deltaClinicalMinut
  finite(state.requestedRemainderUs,'clock remainder',-.5,.5);
  if(!Array.isArray(state.pendingEvents)||!Array.isArray(state.adverseEvents)||state.pendingEvents.length>MAX_EVENTS)
   throw Error('invalid state event queue');
+ if(![null,'legacy-b1','typed-v1'].includes(state.receiptProtocol)||!state.typedSequenceIndex||typeof state.typedSequenceIndex!=='object'||Array.isArray(state.typedSequenceIndex))
+  throw Error('invalid administration protocol state; versioned replay required');
  const validTime=(x,name)=>{if(!Number.isSafeInteger(x)||x<state.integratedUs)throw Error('invalid '+name+' clock');};
  for(const e of state.pendingEvents){
   validTime(e.atUs,'queued event');finite(e.amount,'queued event dose');
@@ -214,11 +232,22 @@ export function stepPhysiology487(state,administeredEvents=[],deltaClinicalMinut
   }
   s.exposures[id]={...x,delayed:x.delayed.slice()};
  }
- let indexCopied=false,receiptCount=0;
+ let indexCopied=false,sequenceIndexCopied=false,receiptCount=0;
  for(const raw of administeredEvents){
   const e=normalizeEvent(raw,state,definitions);if(!e)continue;
   if(Object.hasOwn(s.seenEvents,e.eventId)){
    if(s.seenEvents[e.eventId]!==e.signature)throw Error('conflicting administration receipt '+e.eventId);continue;
+  }
+  const protocol=e.provenance?'typed-v1':'legacy-b1';
+  if(s.receiptProtocol&&s.receiptProtocol!==protocol)throw Error('mixed receipt adapters/protocol requires explicit replay');
+  s.receiptProtocol=protocol;
+  if(e.provenance){
+   const authority=e.provenance.clockAuthorityId;
+   if(s.clinicalAuthorityId&&s.clinicalAuthorityId!==authority)throw Error('clinical clock authority change requires replay');
+   s.clinicalAuthorityId=authority;
+   if(Object.hasOwn(s.typedSequenceIndex,e.sequence)&&s.typedSequenceIndex[e.sequence]!==e.eventId)throw Error('conflicting authoritative receipt sequence '+e.sequence);
+   if(!sequenceIndexCopied){s.typedSequenceIndex={...state.typedSequenceIndex};sequenceIndexCopied=true;}
+   Object.defineProperty(s.typedSequenceIndex,e.sequence,{value:e.eventId,enumerable:true,writable:false});
   }
   if(e.atUs<state.integratedUs)throw Error('late administration requires replay '+e.eventId);
   if(!indexCopied){s.seenEvents={...state.seenEvents};receiptCount=Object.keys(s.seenEvents).length;indexCopied=true;}
