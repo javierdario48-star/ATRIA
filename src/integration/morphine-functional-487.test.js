@@ -60,7 +60,7 @@ check('repetition increases respiratory cost; risk fades instead of remaining a 
  r.ctx.addMonitorTherapy('morfina 4 mg IV');advance(r,1);
  const one=score(r),early={...r.ctx.therapyEffectTotals()};
  assert(one.analgesia>0&&one.offsets.rr<0);
- assert.equal(one.offsets.spo2,0);
+ assert(Math.abs(one.offsets.spo2)<1e-12,'one low exposure has no clinically material saturation change');
  advance(r,1);
  r.ctx.addMonitorTherapy('morfina 4 mg IV');advance(r,1);
  const two=score(r);
