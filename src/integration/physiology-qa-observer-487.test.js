@@ -273,7 +273,7 @@ check('explicit non-IV and unknown routes never become an IV shadow receipt', ()
     assert.equal(r.ctx.sim.administrationLog.length,0,'invalid route cannot be delivered: '+route);
     assert.equal(report.status,'observing','invalid order never reaches the observer: '+route);
     assert.equal(report.receipts.length,0,route);
-    assert.equal(report.comparisonComplete, false);
+    assert.equal(report.comparisonComplete,true,'observer remains healthy when unsafe orders are prevented');
   }
   for (const route of ['IV', 'EV', 'vía intravenosa', 'endovenosa', 'I.V.']) {
     const r = createLiveNativeJourney487(), o = installPhysiologyQAObserver487(nativeObserverPort487(r));
@@ -285,10 +285,16 @@ check('explicit non-IV and unknown routes never become an IV shadow receipt', ()
 });
 check('observer failure and diagnostic mutation never propagate into native execution or patient state', () => {
   const r = createLiveNativeJourney487(), o = installPhysiologyQAObserver487(nativeObserverPort487(r));
-  r.ctx.addMonitorTherapy('morfina 4 mg vía oral'); advanceLiveNativeJourney487(r, 1);
+  // QA injects a malformed low-level legacy delivery directly into the
+  // authoritative native record boundary. Public nurse/monitor entry points
+  // must reject it earlier, but the observer still detects dishonest evidence.
+  r.ctx.recordAdministration({id:'morphine',label:'Morfina',
+    raw:'morfina 4 mg vía oral',dose:{amount:4,unit:'mg',display:'4 mg'}});
+  advanceLiveNativeJourney487(r, 1);
   const report = o.report();
-  assert.equal(report.status, 'error'); assert.match(report.reason, /route/);
-  assert.equal(r.ctx.sim.administrationLog.length, 1, 'native behavior is preserved even when shadow rejects it');
+  assert.equal(report.status,'error');assert.match(report.reason,/route/);
+  assert.equal(r.ctx.sim.administrationLog.length,1,
+    'malformed injected evidence is preserved for audit; observer rejects it');
   const before = JSON.stringify(r.ctx.sim);
   report.last.state.circulatingVolumeMl = 1; report.samples.length = 0;
   assert.equal(JSON.stringify(r.ctx.sim), before);
