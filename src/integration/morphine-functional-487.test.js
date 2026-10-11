@@ -30,6 +30,8 @@ check('monitor lookup and actual nurse prescription share validated 4mg delivery
  const a=make('PERI-SEC-001'),b=make('PERI-SEC-001');
  assert.equal(a.ctx.findMonitorTherapy('morfina 4 mg IV')?.id,'morphine');
  assert.equal(a.ctx.addMonitorTherapy('morfina 4 mg IV'),true);
+ assert.equal(med(a).length,0,'monitor IV is pending until native completion');
+ advance(a,1);
  assert.equal(med(a).length,1);
  assert.equal(a.ctx.sim.therapyExposure.get('morphine').count,1);
  b.ctx.nurseNatural('enfermera morfina 4 mg IV');
@@ -55,12 +57,12 @@ check('pending nurse IV and pending manual monitor IV are not pharmacologic effe
 });
 check('repetition increases respiratory cost; risk fades instead of remaining a permanent toxicity flag',()=>{
  const r=make('PANC-001');
- r.ctx.addMonitorTherapy('morfina 4 mg IV');
+ r.ctx.addMonitorTherapy('morfina 4 mg IV');advance(r,1);
  const one=score(r),early={...r.ctx.therapyEffectTotals()};
  assert(one.analgesia>0&&one.offsets.rr<0);
  assert.equal(one.offsets.spo2,0);
  advance(r,1);
- r.ctx.addMonitorTherapy('morfina 4 mg IV');
+ r.ctx.addMonitorTherapy('morfina 4 mg IV');advance(r,1);
  const two=score(r);
  assert.equal(med(r).length,2);
  assert(two.load>one.load&&two.offsets.rr<one.offsets.rr,
@@ -81,7 +83,7 @@ check('repetition increases respiratory cost; risk fades instead of remaining a 
 });
 check('unindicated morphine can harm without fictitious analgesic benefit',()=>{
  const r=make('COLON-001');
- r.ctx.addMonitorTherapy('morfina 12 mg IV');
+ r.ctx.addMonitorTherapy('morfina 12 mg IV');advance(r,1);
  const e=score(r);
  assert.equal(e.analgesia,0,'case without pain does not gain analgesic benefit');
  assert(e.offsets.rr<-3&&e.offsets.spo2<0);
@@ -92,6 +94,7 @@ check('dose risk depends on current hemodynamic and respiratory vulnerability',(
  a.ctx.sim.liveVitals.sys=75;a.ctx.sim.liveVitals.spo2=82;
  b.ctx.sim.liveVitals.sys=125;b.ctx.sim.liveVitals.spo2=98;
  a.ctx.addMonitorTherapy('morfina 10 mg IV');b.ctx.addMonitorTherapy('morfina 10 mg IV');
+ advance(a,1);advance(b,1);
  const low=score(a),normal=score(b);
  assert(low.offsets.sys<normal.offsets.sys);
  assert(low.offsets.spo2<normal.offsets.spo2);
@@ -99,7 +102,7 @@ check('dose risk depends on current hemodynamic and respiratory vulnerability',(
 check('native non-morphine medication retains its existing writer',()=>{
  const a=make('PERI-SEC-001');
  const before=a.ctx.therapyEffectTotals();
- a.ctx.addMonitorTherapy('oxigeno 4 L/min');
+ a.ctx.addMonitorTherapy('oxigeno 4 L/min');advance(a,1);
  const after=a.ctx.therapyEffectTotals();
  assert(after.spo2>before.spo2);
  assert.equal(score(a),null,'oxygen must not create ghost morphine exposure');
@@ -110,7 +113,7 @@ check('all thirteen clinical seeds admit a finite, independent morphine response
  'ILEO-001','MESI-001','CHOLANG-001'];
  for(const id of ids){
   const r=make(id);
-  r.ctx.addMonitorTherapy('morfina 4 mg IV');
+  r.ctx.addMonitorTherapy('morfina 4 mg IV');advance(r,1);
   assert.equal(med(r).length,1,id);
   const x=score(r),o=r.ctx.therapyEffectTotals();
   assert(x&&Number.isFinite(x.load)&&Object.values(x.offsets).every(Number.isFinite),id);
@@ -120,7 +123,10 @@ check('all thirteen clinical seeds admit a finite, independent morphine response
 });
 check('bounded recent-dose subrecord preserves cumulative historical native count',()=>{
  const r=make('COLON-001');
- for(let i=0;i<30;i++)assert.equal(r.ctx.addMonitorTherapy('morfina 4 mg IV'),true);
+ for(let i=0;i<30;i++){
+  assert.equal(r.ctx.addMonitorTherapy('morfina 4 mg IV'),true);
+  advance(r,1);
+ }
  const exposure=r.ctx.sim.therapyExposure.get('morphine');
  assert.equal(exposure.count,30);
  assert.equal(med(r).length,30);
