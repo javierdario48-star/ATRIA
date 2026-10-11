@@ -103,7 +103,7 @@ check('active GI bleeding worsens gradually after heparin, not instantly or inev
  const early=harm.ctx.window.csCare487.heparinHarm();
  assert.equal(early.active,true);
  assert.equal(early.bleedingSeverity,0,'confirmed administration is not immediate exsanguination');
- assert.equal(early.offsets.sys,0);
+ assert(Math.abs(early.offsets.sys)<1e-9,'no immediate heparin-induced pressure drop');
  advance(harm,25);advance(control,27.2);
  const late=harm.ctx.window.csCare487.heparinHarm();
  assert(late.bleedingSeverity>.3,'clinically dangerous exposure becomes an actual bleeding consequence');
