@@ -84,3 +84,20 @@ export function csAssessCaseRequirements487(c,patient){
    // Clinical disposition needs separate diagnosis, stability, tests and source control.
    safeForDischarge:null,assessments};
 }
+
+/** A severe hypersensitivity flag is a case exception, not a universal drug risk.
+ * Called by the existing native toxicity writer after verified administration.
+ * Game coefficients are illustrative, not clinical predictions. */
+export function csSevereDrugReaction487(patient){
+ const x=patient?.csSevereDrugReaction487,uid=patient?.patientInstance?.uid;
+ const zero={active:false,drug:null,severity:0,
+  offsets:{temp:0,hr:0,rr:0,sys:0,dia:0,spo2:0}};
+ if(!x||x.patientId!==uid)return zero;
+ const delta=Math.max(0,Number(patient?.gameMinute||0)-Number(x.minute||0));
+ const up=Math.min(1,Math.max(0,(delta-.15)/2.5));
+ const down=Math.min(1,Math.max(0,(18-delta)/8));
+ const severity=up*down;
+ return {active:true,drug:x.drug,severity,
+  offsets:{temp:0,hr:22*severity,rr:7*severity,
+   sys:-30*severity,dia:-16*severity,spo2:-9*severity}};
+}
