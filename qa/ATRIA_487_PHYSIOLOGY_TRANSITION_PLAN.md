@@ -31,10 +31,10 @@
 
 **Interfaces:** `adaptConfirmedPharmacologyEvents487(events, context)` conserva v1. V2 exige `formulation`, `episodeId`, `previousEventId` y un historial completo de confirmaciones del episodio. Devuelve los mismos eventos numéricos con procedencia de contrato verificable.
 
-- [ ] Escribir pruebas de identidad/revisión, inicio/titulación/suspensión entre lotes, historia incompleta, repetición e inmutabilidad.
-- [ ] Verificar RED por rechazo de schema v2.
-- [ ] Implementar el cambio mínimo en el adaptador y preservar la clave de ejecución en la procedencia del núcleo, sin cambiar ecuaciones.
-- [ ] Ejecutar pruebas específicas, equivalencia B1, suite completa, build/artefacto y commit.
+- [x] Escribir pruebas de identidad/revisión, inicio/titulación/suspensión entre lotes, historia incompleta, repetición e inmutabilidad.
+- [x] Verificar RED por rechazo de schema v2.
+- [x] Implementar el cambio mínimo en el adaptador y preservar la clave de ejecución en la procedencia del núcleo, sin cambiar ecuaciones.
+- [x] Ejecutar pruebas específicas, equivalencia B1, suite completa, build/artefacto y commit (`3d278b6`, CI38142424357 SUCCESS).
 
 ## Task 2 — Prueba de transición y bloqueo
 
@@ -42,10 +42,18 @@
 
 **Interfaces:** Reutilizar `createLiveNativeJourney487`, el observador CP1 y las políticas clínicas existentes. Ningún nuevo endpoint clínico.
 
-- [ ] Inventariar escritores y consumidores con rutas, condiciones y orden efectivo.
-- [ ] Probar desde enfermería que cambiar sólo el bolo conserva el aporte antiguo de rescate.
-- [ ] Probar que ocultar Ringer del ledger cambia evidencia de rescate/supervivencia/puente.
-- [ ] Comparar estado completo ON/OFF y rollback de sombra, incluyendo Maps/Sets y relojes protegidos.
+- [x] Inventariar escritores y consumidores con rutas, condiciones y orden efectivo.
+- [x] Probar desde enfermería que cambiar sólo el bolo conserva el aporte antiguo de rescate.
+- [x] Probar que ocultar Ringer del ledger cambia evidencia de rescate/supervivencia/puente.
+- [x] Comparar estado completo ON/OFF y rollback de sombra, incluyendo Maps/Sets y relojes protegidos.
 - [ ] Registrar el bloqueo concreto, ejecutar suite/build/artefacto y publicar con CI verde.
 
 La sustitución real sólo continúa si estas pruebas demuestran aislamiento. No autoriza copiar ganancias de rescate al mecanismo B1, fabricar recibos de suspensión, ni modificar procedimientos protegidos.
+
+## Registro de decisiones y revisión
+
+- Task1 complete:22 controles de recibos,30.351 comparaciones B1, suite/build/artefacto y CI exacto verde; no cambios numéricos. Revisión fresca con skill requesting-code-review detectó dos fallos importantes entre lotes. Ambos fueron reproducidos RED→GREEN y corregidos: protocolo v2 persistente e historia verificada contra el índice existente. Se añadió también el contraejemplo de bolos independientes; se limita exclusividad a soporte/infusión.
+- Ruling: mantener el observador v1 y no fabricar metadatos de ejecución v2 — el ledger nativo no los demuestra — coste de error: una formulación/vía o suspensión falsa podría habilitar un efecto real incorrecto.
+- Ruling: detener activación Ringer — la traza demuestra una segunda contribución de rescate protegido y el puente comparte su evidencia — coste de error: duplicar efecto o alterar rescate/pase. Los experimentos de sustitución quedan sólo en la VM de test.
+- Ruling: rollback sólo de sombra; no prometer revertir un paciente modificado restaurando una referencia — el estado evoluciona y no hay replay clínico aceptado — coste de error: discontinuidad y riesgo vital oculto.
+- Minor de revisión resuelto: preflight añadido a `npm test` en checkpoint2b. Ningún minor diferido. Último gate de publicación/CI2b se verifica al entregar, sin presumir un SHA o un CI propio dentro de este documento.
