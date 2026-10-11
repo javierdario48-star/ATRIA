@@ -75,7 +75,7 @@ check('invalid heparin molecule, explicit dose, and route must not become admini
 });
 check('HDA, major bleeding, HIT and no indication block both entry paths',()=>{
  for(const [id,mutate] of [
-  ['HDA-001',()=>{}],['MESI-001',s=>{s.phys.activeBleeding=true;}],
+  ['HDA-001',()=>{}],['MESI-001',s=>{s.phys={...(s.phys||{}),activeBleeding:true};}],
   ['MESI-001',s=>{s.clinicalFlags={knownHIT:true};}],
   ['COLON-001',()=>{}]]){
   const r=create(id);mutate(r.ctx.sim);
@@ -112,7 +112,7 @@ check('antibiotic coverage is initial confirmed-care, not a clock or vital write
 });
 check('renal toxicity is contextual WARNING, not an invented immediate kidney injury',()=>{
  const r=create('PERI-TER-001');const p=r.ctx.sim;
- p.phys.renalReserve=.43;
+ p.phys={...(p.phys||{}),renalReserve:.43};
  const before=p.phys.renalReserve;
  p.administrationLog.push({id:'gentamicin',m:1,count:1,doseDisplay:'80 mg'});
  const status=r.ctx.window.csCare487.report();
@@ -124,7 +124,7 @@ check('source control cannot be spoofed by a drug order or accepted consult',()=
  const r=create('PERI-SEC-001');const p=r.ctx.sim;
  p.administrationLog.push({id:'source_control',m:1});
  assert.equal(r.ctx.window.csCare487.report().delivered.includes('source_control'),false);
- p.phys.sourceControlled=true;
+ p.phys={...(p.phys||{}),sourceControlled:true};
  assert.equal(r.ctx.window.csCare487.report().delivered.includes('source_control'),true);
 });
 console.log('EMERGENCY CARE FUNCTIONAL COMPLETE',JSON.stringify({
