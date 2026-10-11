@@ -35,7 +35,7 @@ check('one actual nurse dose invokes B1 once and suppresses legacy fluid writers
  const {r,owner}=experiment(),trace=writes(r);
  order(r,500);advance(r,1);
  const report=owner.report();assert.equal(report.applications,1);
- assert.equal(report.state.administeredFluidMl,500);assert.equal(report.state.interstitialFluidMl,375);
+ assert.equal(report.state.administeredFluidMl,500);assert(report.state.interstitialFluidMl>360&&report.state.interstitialFluidMl<375,'attributed fluid load begins decaying without a second effect writer');
  const bolus=trace.filter(x=>x.stack.includes('applyRingerReceipt487'));
  assert.equal(bolus.length,1);assert(Math.abs(bolus[0].after-bolus[0].before-.025)<1e-12);
  assert(!trace.some(x=>x.after>x.before&&x.stack.includes('csCriticalRescuePhysiology487')));
@@ -49,7 +49,7 @@ check('one actual nurse dose invokes B1 once and suppresses legacy fluid writers
 });
 check('repeat doses use current circulation and retain individual native evidence',()=>{
  const {r,owner}=experiment();order(r,500);advance(r,30);order(r,500);advance(r,1);
- assert.equal(owner.report().applications,2);assert.equal(owner.report().state.interstitialFluidMl,750);
+ assert.equal(owner.report().applications,2);assert(owner.report().state.interstitialFluidMl>375&&owner.report().state.interstitialFluidMl<750,'older bolus load fades; repeated bolus adds only its new share');
  assert.equal(r.ctx.sim.administrationLog.length,2);assert.equal(r.ctx.sim.therapyTotals.fluidMl,1000);
 });
 check('native fluid toxicity is replaced by physiology-derived B1 overload once',()=>{
@@ -57,6 +57,17 @@ check('native fluid toxicity is replaced by physiology-derived B1 overload once'
  assert(owner.report().state.fluidOverloadRisk>0.5);
  const tox=r.ctx.medicationSafetyOffsets();assert.equal(tox.spo2,0);assert.equal(tox.rr,0);assert.equal(tox.sys,0);
  const o=r.ctx.progressionOffsets();assert(o.spo2<0);assert(o.rr>0);
+});
+check('pulmonary complications require actual congestion, not just recorded bolus volume',()=>{
+ const deficit=experiment({volume:.45}),replete=experiment({volume:1.05});
+ order(deficit.r,3000);order(replete.r,3000);advance(deficit.r,10);advance(replete.r,10);
+ assert.equal(deficit.owner.report().state.fluidOverloadRisk,0,'deep deficit is not pulmonary edema by counting historic tissue fluid');
+ assert(replete.owner.report().state.fluidOverloadRisk>.5,'large fluid load in a replete patient retains a relevant complication risk');
+ assert(replete.r.ctx.progressionOffsets().spo2<deficit.r.ctx.progressionOffsets().spo2);
+ const first=replete.owner.report().state.interstitialFluidMl;
+ advance(replete.r,50);
+ assert(replete.owner.report().state.interstitialFluidMl<first,'retained dose load has deterministic time-dependent turnover');
+ assert.equal(replete.r.ctx.sim.phys.sourceControlled,false,'bolus never controls the infection source');
 });
 check('unmigrated disease and zero-dose trajectory retain exact native behavior',()=>{
  const a=createLiveNativeJourney487('PERI-SEC-001'),{r:b,owner}=experiment();advance(a,30);advance(b,30);
@@ -69,7 +80,7 @@ check('rollback is allowed before admission runs and refused during an active pa
  assert.equal(r.ctx.sim.csRinger487,undefined);
  const second=experiment();order(second.r,500);advance(second.r,1);
  assert.equal(second.owner.rollback().status,'blocked-active-patient');
- assert.equal(second.r.ctx.sim.csRinger487.owner,'b1-volume-v1');
+ assert.equal(second.r.ctx.sim.csRinger487.owner,'b1-volume-v2');
 });
 check('incompatible fluid, route, rate and stop orders are rejected before preparation',()=>{
  for(const raw of ['Ringer 500 ml oral','Ringer 500 ml IM','suero fisiológico 500 ml IV','cristaloides 500 ml',
