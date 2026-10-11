@@ -239,5 +239,21 @@
     "artifactExitCode": 0,
     "htmlSha256": "08b6d905f3d3b49a7905d28ce57cc53fce13b2576d71c173f8ca8864959ab0d7",
     "midPatientMigration": false
+  },
+  "publication": {
+    "sourceCommit": "57d2cbbe25455bd095c628640c4f9082a07cbba9",
+    "sourceTree": "520335fcf3790236302f8d0fffb5e1e9057467d7",
+    "sourceParent": "01a43d49452119cc19566e008656485429bf2534",
+    "ciRun": 38151320102,
+    "ciJob": 114505204409,
+    "ciConclusion": "success",
+    "ciAllStepsSuccessful": true,
+    "ciHtmlSha256": "92902694a148f8a52fcdb1837e9558651a9f17c037d07887090927d9293aa9fd",
+    "artifactId": 11706418477,
+    "artifactBytes": 1122541,
+    "artifactExpired": false,
+    "artifactMetadataDigest": "sha256:f21ae5cde46901cda91a27a59a3d24d94fe7c32299c35765c0ee0c2697a7130d",
+    "remoteZipDownloaded": false,
+    "productionDeployed": false
   }
 }

@@ -36,3 +36,9 @@ Ringer sigue siendo nativo: bolo/V3, aporte crítico, balance del puente y segur
 Heparina continúa sin modelar y bloquea el arranque farmacológico global. Ningún otro medicamento se incorpora. Producción, ramas protegidas, vendor, Supabase, XP, cirugía y multijugador no se modifican.
 
 Rollback R1: revertir el commit entero restaura los bytes previos y su comportamiento conocido; no es una recomendación de volver a desactivar el rescate. No modificar el dueño de un paciente activo ni restituir su fisiología por un toggle. La fase R2 debe definir primero la admisión/versiones por paciente y un rollback seguro de futuras admisiones.
+
+## Cierre R1 verificado
+
+Publicado `01a43d49452119cc19566e008656485429bf2534`, árbol `4a9be6e72545650bb01252c5bde2e56bc1a14094`, parent único c04b814. Architecture CI [38145326302](https://github.com/javierdario48-star/ATRIA/actions/runs/38145326302) SUCCESS, todas las etapas del job 114487350246 completadas; artefacto 11704491773 vinculado al SHA, 1.116.393 bytes. No se descargó su ZIP remoto. R2 comenzó únicamente después de verificar ese CI.
+
+La sección de responsabilidades anterior describe el estado histórico al cerrar R1. La transferencia experimental posterior, su propietario por paciente y sus límites están en [ATRIA_487_RINGER_OWNERSHIP_RESULTS.md](ATRIA_487_RINGER_OWNERSHIP_RESULTS.md). R1 continúa siendo el checkpoint de rollback que conserva el rescate reparado.

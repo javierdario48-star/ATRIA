@@ -10,7 +10,9 @@ HEAD inicial remoto: `c04b81481b9a385cf3f812c5147677360cad00f7`; no commits post
 
 R1 conserva la ventana de **65 segundos activos**, inicio único, sin renovación por readministrar ni por recuperación/recaída. El predicado final de `ns423` usa la ventana finita y luego permite el deterioro fatal. La gracia sigue siendo 180–480 s según su política original. El mismo reloj también avanza en el paciente en espera, sin contar doble el seleccionado. Véase [ATRIA_487_RESCUE_OWNERSHIP_RESULTS.md](ATRIA_487_RESCUE_OWNERSHIP_RESULTS.md).
 
-R2 parte exclusivamente de R1. Su publicación debe comparar el árbol remoto con el árbol probado y comprobar el CI del SHA resultante. El CI de un padre no se presenta como CI del commit nuevo; el cierre registra ambos por separado.
+**R2 publicado y verificado:** `57d2cbbe25455bd095c628640c4f9082a07cbba9`, árbol `520335fcf3790236302f8d0fffb5e1e9057467d7`, parent único R1. Architecture CI [38151320102](https://github.com/javierdario48-star/ATRIA/actions/runs/38151320102) SUCCESS, todas las etapas del job 114505204409. El árbol remoto coincide exactamente con el probado. Los logs del CI confirman 13 controles de propietario, 17 bots integrados, 24 trayectorias/216 comparaciones de sombra y HTML SHA-256 `92902694a148f8a52fcdb1837e9558651a9f17c037d07887090927d9293aa9fd`.
+
+Artefacto remoto 11706418477, 1.122.541 bytes, no expirado, ligado a ese SHA; digest del ZIP en metadata `sha256:f21ae5cde46901cda91a27a59a3d24d94fe7c32299c35765c0ee0c2697a7130d`. Se verificaron metadata y logs de contenido del CI, sin descargar su ZIP. El siguiente commit sólo documenta este cierre; su propio SHA/CI se verifican al entregar. No existe un despliegue o promoción de producción.
 
 ## Implementación mínima
 
@@ -115,6 +117,8 @@ Referencias independientes consultadas:
 - [Ficha regulatoria Ringer lactato, DailyMed, sección 5.7](https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=d3d29c8f-c326-4097-814a-7f4e08c67068): sobrecarga/edema pulmonar y mayor precaución en disfunción renal. No proporciona una ecuación de SpO₂ ni una fracción fija de retención para el simulador.
 
 La circulación se lee del estado nativo dinámico, pero el compartimento intersticial es **contabilidad parcial de las dosis**, sin migrar todavía redistribución/eliminación renal B1. El riesgo puede persistir y penalizar oxigenación incluso con bolos pequeños en hipovolemia; está visible en las trayectorias. No es balance hídrico clínicamente validado. Volumen euvolémico, reparto25%, límites y coeficientes respiratorios siguen pendientes de calibración externa. Electrolitos, compatibilidad ceftriaxona/calcio en una misma línea, balance ácido-base y otras toxicidades no están modelados. No se activan otros fármacos para ocultar estas limitaciones.
+
+El límite de dosis de 1.000.000 ml proviene del contrato informático B1 existente y sólo limita magnitudes finitas; no representa un máximo clínico aceptable ni un rango validado de administración. Falta calibrar límites de pauta contextual antes de ampliar la activación. Las pruebas de exceso muestran perjuicio y no autorizan dosis extremas.
 
 ## Protección y siguiente frontera
 
