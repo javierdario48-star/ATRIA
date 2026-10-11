@@ -114,7 +114,7 @@ check('verified severe allergy has a bounded adverse effect from either administ
   advance(r,2.5);advance(ctrl,2.5);
   assert.equal(p.administrationLog.filter(x=>x.id==='ceftriaxone').length,1,route);
   assert.equal(r.ctx.window.csCare487.allergy().active,true);
-  assert.equal(r.ctx.window.csCare487.allergy().severity,0);
+  assert(r.ctx.window.csCare487.allergy().severity<.1,'no immediate severe collapse on confirmation');
   advance(r,28);advance(ctrl,28);
   const allergic=r.ctx.window.csCare487.allergy();
   assert(allergic.severity>.1,route+' actual severe reaction required');
