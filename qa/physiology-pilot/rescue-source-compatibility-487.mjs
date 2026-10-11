@@ -2,6 +2,11 @@
  * Frozen clinical numbers/catalogue are retained, never regenerated. */
 import assert from 'node:assert/strict';
 const revisions={
+ // Explicit QA-only revision: same peritonitis policy and physiology; evidence
+ // projection now excludes confirmed continuous support after its real stop.
+ 'atria-peritonitis-487-disposition':[
+  '50044e49ef134df90090a3cf4a22ac48ab745d0c98130f570c50bda0932921ef',
+  '818a4cdafbc39ce1a90418a38feca570e9ae427bc8c18f2dcd16ebc7d7fa8e03'],
  'atria-manual-monitor-iv-487':[
   'da62e23013fbc6b02165a32bad4ec00581b3ef662bc1bcde4d6c8d38d101512f',
   '6d5da4467d14ab0c02eb351b209dc1e184d195a1412fcd222f7b5dbbb6dda16a'],
