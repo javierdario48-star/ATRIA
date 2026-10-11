@@ -23,7 +23,7 @@ check('13 native case seeds and catalogue have reviewed care rules',()=>{
  for(const id of seeds){
   const r=create(id),report=r.ctx.window.csCare487.report();
   assert.equal(report.caseId,id);assert.equal(report.catalogueSize,30);
-  assert.equal(report.knownRoles,30);assert.deepEqual(report.missingFromCatalogue,[]);
+  assert.equal(report.knownRoles,30);assert.equal(report.missingFromCatalogue.length,0);
   assert.equal(report.safeForDischarge,null,'requirements must not give automatic discharge');
  }
 });
