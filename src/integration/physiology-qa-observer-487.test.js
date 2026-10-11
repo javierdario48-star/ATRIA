@@ -263,13 +263,16 @@ check('an observed administration cannot hide a preceding ledger write outside i
 check('explicit non-IV and unknown routes never become an IV shadow receipt', () => {
   for (const route of ['IM', 'SC', 'VO', 'PO', 'intranasal', 'vía desconocida', 'vía IM', 'I.M.', 'sublingual']) {
     const r = createLiveNativeJourney487(), o = installPhysiologyQAObserver487(nativeObserverPort487(r));
-    r.ctx.addMonitorTherapy('morfina 4 mg ' + route);
+    // The reviewed morphine order now rejects unsupported routes at the shared
+    // nurse/monitor execution gate, BEFORE any administration can reach the
+    // observer. Earlier native behavior accepted these unsafe orders, forcing
+    // the observer to flag an error only after the fact.
+    assert.equal(r.ctx.addMonitorTherapy('morfina 4 mg ' + route),false,route);
     advanceLiveNativeJourney487(r, 1);
     const report = o.report();
-    assert.equal(r.ctx.sim.administrationLog.length, 1, 'native behavior must be preserved: ' + route);
-    assert.equal(report.status, 'error', route);
-    assert.match(report.reason, /route/);
-    assert.equal(report.receipts.length, 0, route);
+    assert.equal(r.ctx.sim.administrationLog.length,0,'invalid route cannot be delivered: '+route);
+    assert.equal(report.status,'observing','invalid order never reaches the observer: '+route);
+    assert.equal(report.receipts.length,0,route);
     assert.equal(report.comparisonComplete, false);
   }
   for (const route of ['IV', 'EV', 'vía intravenosa', 'endovenosa', 'I.V.']) {
