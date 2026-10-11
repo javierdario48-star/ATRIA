@@ -6,7 +6,7 @@
 
 | # | Entrada nativa | Categoría / mecanismo | Estado real |
 |---:|---|---|---|
-| 1 | `oxygen` | Soporte respiratorio | B1-S; escritor nativo activo, preflight confirma conflicto de propiedad |
+| 1 | `oxygen` | Soporte respiratorio | B1-S; nativo activo, checkpoint C confirma doble ruta y ausencia de stop ejecutado; migración BLOQUEADA |
 | 2 | `fluid` | Cristaloides / Ringer identificado | B1-R exclusivamente en QA limitado; N por defecto |
 | 3 | `albumin` | Coloide / volumen | N |
 | 4 | `vasopressor` | Vasopresores; identidad noradrenalina requerida | B1-S; N por defecto |
@@ -40,6 +40,8 @@
 **Resumen de cobertura**: 5/30 entradas con mecanismos B1 experimentales, pero solo una (`fluid` = Ringer IV explícitamente identificado) tiene propietaria fisiológica clínica **opt-in** probada en VM, apagada por defecto; las otras cuatro siguen modeladas sólo en sombra. 25/30 sin migración B1. **No** declarar 5/30 integradas clínicamente. La presencia de las restantes entradas en el juego nativo no certifica que dispongan de farmacología funcional conforme a esta arquitectura.
 
 **Casos:** B1 dispone de perfiles experimentales `PERI-SEC-001`, `HDA-001` y `CIRR-001` (3/13). Los 10 restantes no cuentan con perfil B1 integrado. Ringer propietaria experimental se restringe a `PERI-SEC-001`. No hay pruebas completas de combinaciones B1 en el navegador.
+
+**Checkpoint C (oxígeno):** [frontera y bloqueo](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_C_OXYGEN_OWNER_BOUNDARY.md). La verificación de la suspensión textual demuestra ausencia de ejecución, no un stop confirmado. Aún no hay nuevo propietario terapéutico.
 
 **Ejecuciones presentes:** [Ringer A](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_A.md), [oxígeno B](ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_B_OXYGEN_PREFLIGHT.md) y [auditoría independiente](ATRIA_487_RINGER_INDEPENDENT_CLINICAL_AUDIT.md).
 
