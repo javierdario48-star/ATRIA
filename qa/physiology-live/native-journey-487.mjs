@@ -48,6 +48,9 @@ for (const id of ids) {
 const morphineMarker='<script id="atria-morphine-487">';
 assert.equal(generated.split(morphineMarker).length,2,'single integrated morphine owner');
 compiled.push(['atria-morphine-487',generated.split(morphineMarker)[1].split('</script>')[0]]);
+const careMarker='<script id="atria-urgent-care-487">';
+assert.equal(generated.split(careMarker).length,2,'single native urgent-care guard');
+compiled.push(['atria-urgent-care-487',generated.split(careMarker)[1].split('</script>')[0]]);
 const sources = {...baseline, compiled: compiled.map(([id, code]) => ({id, code,
   compiled: new vm.Script(code, {filename: 'generated-live-qa/' + id + '.js'})}))};
 

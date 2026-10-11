@@ -18,6 +18,7 @@ import {applyCriticalRescue487} from './critical-rescue-487.js';
 import {applyClinicalConfirmations487} from './clinical-confirmations-487.js';
 import {applyPharmacology487} from './pharmacology-487.js';
 import {applyMorphine487} from './morphine-487.js';
+import {applyUrgentCare487} from './urgent-care-487.js';
 import {applyVegaStepCoach487} from './vega-step-coach-487.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
 export function apply487(html){
@@ -470,7 +471,7 @@ function csDrawRemote(){
     if(item.verified487){
      const catalog=typeof MONITOR_THERAPY_CATALOG!=='undefined'?
        MONITOR_THERAPY_CATALOG.find(x=>x.id===item.id):null;
-     const needsIV=new Set(['fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime',
+     const needsIV=new Set(['anticoagulation','fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime',
       'imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole',
       'amphotericin','transfusion','vasopressor','morphine','ppi']);
      if(catalog&&(needsIV.has(item.id)||window.csPharm487?.requiresIV?.(item.id))&&Number(sim?.venousAccessCount||0)<=0){
@@ -526,7 +527,7 @@ function csDrawRemote(){
  if(window.__atriaNursingReceipts487)return;
  window.__atriaNursingReceipts487=true;
  const oldNatural=nurseNatural,oldInfer=inferRecipient,oldUpdate=updateSimulation,legacyParse=window.csNursingParse487;
- const ivMeds=new Set(['fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime','imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole','amphotericin','transfusion','vasopressor','morphine','ppi']);
+ const ivMeds=new Set(['anticoagulation','fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime','imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole','amphotericin','transfusion','vasopressor','morphine','ppi']);
  const norm487=v=>norm(String(v||''));
  let sequence=0;
  function csNurseDispatch487(text){
@@ -698,5 +699,5 @@ function csDrawRemote(){
  s=applyCriticalRescue487(s);
  s=applyClinicalConfirmations487(s);
  s=applyPharmacology487(s);
- return applyPhysiologyQABootstrap487(applyMorphine487(s));
+ return applyPhysiologyQABootstrap487(applyUrgentCare487(applyMorphine487(s)));
 }

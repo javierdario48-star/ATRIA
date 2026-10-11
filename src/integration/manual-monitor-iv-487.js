@@ -6,7 +6,7 @@ export function applyManualMonitorIV487(html){
 (function(){
  if(window.__csManualMonitorIV487)return;window.__csManualMonitorIV487=true;
  const nativeAdministration=addMonitorTherapy;
- const ivIds=new Set(['fluid','albumin','vasopressor','transfusion','morphine','ppi',
+ const ivIds=new Set(['anticoagulation','fluid','albumin','vasopressor','transfusion','morphine','ppi',
   'ceftriaxone','metronidazole','imipenem','ceftazidime','cefoperazone','cefepime',
   'piptazo','ampicillin','amikacin','gentamicin','fluconazole','amphotericin']);
  addMonitorTherapy=function(text){
