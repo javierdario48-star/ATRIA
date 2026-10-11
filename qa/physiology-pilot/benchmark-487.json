@@ -1,0 +1,105 @@
+{
+  "schema": "atria-physiology-benchmark/v1",
+  "runtime": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "physicalAndroid": false,
+  "physicalIOS": false,
+  "seed": "no stochastic terms",
+  "scope": "pure kernel only; no render, native engine, shadow sample history, network or device throttling",
+  "measurements": [
+    {
+      "patientCount": 1,
+      "treatmentCount": 2,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.009865000000004898,
+      "batchP95Ms": 0.02297500000000241,
+      "batchP99Ms": 0.04919399999999996,
+      "maxMs": 0.6938250000000039,
+      "perPatientP95Ms": 0.02297500000000241
+    },
+    {
+      "patientCount": 1,
+      "treatmentCount": 5,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.009773999999993066,
+      "batchP95Ms": 0.014091000000007625,
+      "batchP99Ms": 0.0393799999999942,
+      "maxMs": 0.21131900000000314,
+      "perPatientP95Ms": 0.014091000000007625
+    },
+    {
+      "patientCount": 16,
+      "treatmentCount": 2,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.070446000000004,
+      "batchP95Ms": 0.16593999999997777,
+      "batchP99Ms": 0.2744029999999782,
+      "maxMs": 0.869419999999991,
+      "perPatientP95Ms": 0.01037124999999861
+    },
+    {
+      "patientCount": 16,
+      "treatmentCount": 5,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.08208400000000893,
+      "batchP95Ms": 0.15672599999999193,
+      "batchP99Ms": 0.25433400000000006,
+      "maxMs": 1.0024499999999819,
+      "perPatientP95Ms": 0.009795374999999495
+    },
+    {
+      "patientCount": 64,
+      "treatmentCount": 2,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.2008730000000014,
+      "batchP95Ms": 0.35766899999998714,
+      "batchP99Ms": 0.4507990000000177,
+      "maxMs": 1.377034999999978,
+      "perPatientP95Ms": 0.005588578124999799
+    },
+    {
+      "patientCount": 64,
+      "treatmentCount": 5,
+      "registrySize": 5,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.253182000000038,
+      "batchP95Ms": 0.42865599999993265,
+      "batchP99Ms": 0.5705199999999877,
+      "maxMs": 1.0159309999999095,
+      "perPatientP95Ms": 0.006697749999998948
+    },
+    {
+      "patientCount": 64,
+      "treatmentCount": 2,
+      "registrySize": 305,
+      "iterations": 600,
+      "stepClinicalMinutes": 0.25,
+      "batchP50Ms": 0.20824400000003607,
+      "batchP95Ms": 0.46335799999997107,
+      "batchP99Ms": 0.5616469999999936,
+      "maxMs": 0.9045730000000276,
+      "perPatientP95Ms": 0.007239968749999548
+    }
+  ],
+  "memory": {
+    "measured": true,
+    "patients": 2000,
+    "retainedHeapBytes": 7119488,
+    "estimatedHeapBytesPerPatient": 3559.744,
+    "serializedStateBytes": 2706,
+    "serializedStateBytesAt2048Receipts": 163178
+  }
+}

@@ -45,22 +45,22 @@ Files: `src/clinical/physiology-pilot-definitions-487.js`, `physiology-pilot-cas
 
 ## Task 3 — shadow observer and comparative trajectories
 
-- [ ] Test deep-frozen native patient input, unchanged native function references, patient isolation, typed/legacy dose units, duplicate polling, explicit clock mapping and unsupported catalogue events.
-- [ ] Observe missing shadow exports fail before implementation.
-- [ ] Implement pure `createPhysiologyShadow487`/`samplePhysiologyShadow487` and current-ledger conversion with stable IDs. Keep all shadow state outside the real patient.
-- [ ] Implement CLI comparison with readable Markdown and machine JSON, running the same confirmed events over frozen current profiles and expanded counterfactual trajectories.
-- [ ] Tests evaluate complete trajectories/independent expected directions and timing bands rather than copying all model constants.
+- [x] Test deep-frozen native patient input, unchanged native function references, patient isolation, typed/legacy dose units, duplicate polling, explicit clock mapping and unsupported catalogue events.
+- [x] Observe missing shadow exports fail before implementation.
+- [x] Implement pure `createPhysiologyShadow487`/`samplePhysiologyShadow487` and current-ledger conversion with stable IDs. Keep all shadow state outside the real patient.
+- [x] Implement CLI comparison with readable Markdown and machine JSON, running the same confirmed events over frozen current profiles and expanded counterfactual trajectories.
+- [x] Tests evaluate complete trajectories/independent expected directions and timing bands rather than copying all model constants.
 
 Files: `src/integration/physiology-shadow-487.js`, corresponding `.test.js`; `qa/physiology-pilot/run-pilot-487.mjs`; committed comparative report and clinical expectations.
 
 ## Task 4 — verification, performance, publication
 
-- [ ] Wire specific tests into existing npm test; add independent pilot/report/benchmark commands, without adding runtime hooks or dependencies.
-- [ ] Measure deterministic scenarios for 1/16/64 patients, active treatments vs registry padding, steady-state heap and per-step p50/p95; clearly label Node CPU and no physical Android.
+- [x] Wire specific tests into existing npm test; add independent pilot/report/benchmark commands, without adding runtime hooks or dependencies.
+- [x] Measure deterministic scenarios for 1/16/64 patients, active treatments vs registry padding, steady-state heap and per-step p50/p95; clearly label Node CPU and no physical Android.
 - [ ] Run full npm test/build/workflow artifact checks. Verify generated HTML remains byte-identical to initial build and all protected files unchanged.
-- [ ] Independent whole-change review, address important findings with red→green tests.
+- [x] Independent whole-change review, address important findings with red→green tests.
 - [ ] Publish small commits with expected-parent/ref guards. Verify remote exact HEAD and successful GitHub CI before closing final checkpoint. No manual deploy or production promotion.
-- [ ] Extend existing scaling plan with schema/version/extension gates and B2/B3/B4 order; retain clinical/Android/heparin blockers.
+- [x] Extend existing scaling plan with schema/version/extension gates and B2/B3/B4 order; retain clinical/Android/heparin blockers.
 
 ## Acceptance boundary
 

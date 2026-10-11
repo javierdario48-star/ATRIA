@@ -1,0 +1,20 @@
+{
+  "schema": "atria-clinical-expectations/v1",
+  "scope": "Independent qualitative hypotheses for B1; passing these is not professional clinical validation",
+  "researchDate": "2026-10-11",
+  "expectations": [
+    {"id":"oxygen-hypoxemia", "source":"BTS S2 / SSC2026 S1", "scenario":"hypoxemia-oxygen", "control":"hypoxemia-untreated", "field":"spo2", "relation":"greater", "fromMinute":5, "toMinute":120},
+    {"id":"oxygen-refractory", "source":"BTS S2 gas exchange / inference", "scenario":"refractory-oxygen", "control":"hypoxemia-oxygen", "field":"spo2", "relation":"less", "fromMinute":5, "toMinute":120},
+    {"id":"fluids-underfilling", "source":"SSC2026 S1 / ACG S4", "scenario":"fluid-reference", "control":"untreated", "field":"map", "relation":"greater", "fromMinute":1, "toMinute":60},
+    {"id":"excess-fluid-congestion", "source":"Ringer label S5 / SSC2026 S1", "scenario":"congestion-fluid", "control":"congestion-untreated", "field":"fluidOverloadRisk", "relation":"greater", "fromMinute":1, "toMinute":120},
+    {"id":"excess-fluid-gas-exchange", "source":"Ringer label S5 / BTS S2", "scenario":"congestion-fluid", "control":"congestion-untreated", "field":"spo2", "relation":"less", "fromMinute":1, "toMinute":120},
+    {"id":"vasopressor-tone", "source":"Norepinephrine label S6", "scenario":"pressor-reference", "control":"untreated", "field":"map", "relation":"greater", "fromMinute":2, "toMinute":60},
+    {"id":"analgesia-without-cure", "source":"IV morphine labels S7/S10", "scenario":"morphine-reference", "control":"untreated", "field":"pain", "relation":"less", "fromMinute":10, "toMinute":120},
+    {"id":"opioid-repetition-risk", "source":"IV morphine labels S7/S10", "scenario":"morphine-repeat", "control":"morphine-reference", "field":"respiratoryDepression", "relation":"greater", "fromMinute":60, "toMinute":240},
+    {"id":"renal-opioid-prolongation", "source":"IV morphine label S10", "scenario":"renal-morphine", "control":"morphine-reference", "field":"respiratoryDepression", "relation":"greater", "fromMinute":120, "toMinute":360},
+    {"id":"diuresis-not-resuscitation", "source":"Furosemide label S8", "scenario":"diuretic-reference", "control":"untreated", "field":"perfusion", "relation":"less", "fromMinute":30, "toMinute":120, "cases":["PERI-SEC-001","HDA-001"]},
+    {"id":"congestion-diuresis", "source":"AASLD S3 / furosemide S8", "scenario":"congestion-diuretic", "control":"congestion-untreated", "field":"interstitialFluidMl", "relation":"less", "fromMinute":30, "toMinute":240, "cases":["CIRR-001"], "qualification":"Stable cirrhotic congestion: ongoing bleeding/capillary loss in HDA/PERI is not a post-resuscitation removal state (SSC2026 S1). Initial all-case hypothesis was rejected during review."},
+    {"id":"renal-diuretic-response", "source":"Furosemide label S8", "scenario":"renal-diuretic", "control":"diuretic-reference", "field":"drugDiuresisMlPerMin", "relation":"less", "fromMinute":10, "toMinute":60}
+  ],
+  "pendingProfessionalReview": ["absolute pressures and perfusion thresholds", "morphine separate analgesic and CNS peak", "fluid distribution and renal salt/water balance", "dose-response magnitude", "ascites response over days", "electrolytes, hemoglobin, CO2 and organ injury", "post-grace survival"]
+}

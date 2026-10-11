@@ -154,6 +154,12 @@ check('diuretic reduces congested volume but harms hypovolemia and has renal dep
  const renal=run(fresh({...congestion,renalFunction:.2}),[e],180);
  assert(renal.cumulativeUrineMl<b.cumulativeUrineMl);
 });
+check('absent renal function cannot create diuresis or spontaneously recover to a numerical floor',()=>{
+ const s=fresh(profile({renalFunction:0,circulatingVolumeMl:2000}));
+ const a=run(s,[event('anuria','furosemide',40,'mg')],360);
+ assert.equal(a.cumulativeUrineMl,0);assert.equal(a.drugDiuresisMlPerMin,0);
+ assert.equal(a.renalFunction,0);assert.equal(run(s,[],360).renalFunction,0);
+});
 check('diuresis is delayed and wanes while physical fluid loss is retained',()=>{
  const s=fresh(profile({circulatingVolumeMl:5100,interstitialFluidMl:4000})),e=event('f','furosemide',40,'mg');
  const early=run(s,[e],1),peak=run(s,[e],30),late=run(s,[e],360);

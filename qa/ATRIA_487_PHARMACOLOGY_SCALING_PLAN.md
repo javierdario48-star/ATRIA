@@ -74,3 +74,67 @@ Source control and stopping a beta blocker are **not drug molecules**; they shar
 ## 7. Current status
 
 The cross-product audit is implemented and can expose incomplete pharmacology. The known heparin incompatibility is **deliberately unresolved** pending clinical mechanism/dose support. The existing global pharmacology adapter therefore must not be described as activated for the actual full catalog until the stricter `--require-compatible` gate passes. No production deployment or medical-accuracy claim.
+
+## 8. B1 implemented boundary and next runtime gate
+
+The B1 pilot now implements five mechanism families in pure isolated files, three existing initial profiles, confirmed-event QA shadow replay, native frozen trajectories, independent qualitative expectations and reproducible performance measurements. This implements **part of gate B**, with no runtime/browser observer installed and no real-state writes. A molecule mechanism can operate on different patient states without disease-ID branches; new validated IDs can reuse a mechanism. Only the five pilot definitions are executable. The complete30-entry global adapter still rejects heparin; gate A and clinical/device gates remain blocked.
+
+Next checkpoint, **B1 runtime observer only**: expose an append-only, patient-bound confirmed administration/infusion-stop ledger through a narrow existing interface; keep actual executor/nursing unchanged. Observe one patient under an OFF-by-default QA flag, no vital/death/XP writes. Typing/shift-clock mapping must be explicitly piecewise or authority-provided; unsupported logs, missing history and version drift disable shadow with a diagnostic. Verify actual stops, patient switching, manual/nurse routes, grace, generated artifact and physical mobile memory/time before any activation. Do not promote to clinical ownership just because the standalone pilot passes.
+
+## 9. Versioned content contract (design; not a content generator)
+
+Data ingestion compiles once into indexes, checks declared read/write axes and resolves only installed mechanisms. This compilation is **not indication adjudication**. Compatibility output must distinguish `supported`, `missing-axis`, `missing-interaction`, `unknown-dose/route`, `unreviewed-evidence`, `unsupported-mechanism` and `release-blocked`. Unknown effects remain unknown; they cannot become zero risk or invented benefits.
+
+```js
+// Example future disease record for an EXISTING case, not a new disease added.
+{
+  schemaVersion: 2, id: 'CIRR-001', clinicalRuleVersion: 'cirr-b1-estimate-1',
+  mechanisms: ['arterial-underfilling', 'fluid-retention'],
+  initialState: {circulatingVolumeMl: 3900, interstitialFluidMl: 4000,
+    vascularTone: 0.82, pumpFunction: 1, renalFunction: 0.85, hepaticFunction: 0.55},
+  naturalHistory: {refillMlPerMin: 8}, // simulator estimates, no prescription
+  requiredAxes: ['circulatingVolumeMl', 'interstitialFluidMl', 'renalFunction'],
+  observations: {vitals: 'shared-observer', ascites: 'reservoir-observer'},
+  studies: [{id: 'renal-panel', requires: ['creatinine', 'sodium', 'potassium']}],
+  indicatedTargets: ['ascites-with-preserved-circulation'],
+  contraindications: [{when: 'confirmed-AKI', excludes: ['volume-removal']}],
+  resolution: {chronic: true, requires: ['explicit-specialist-disposition']},
+  evidence: ['AASLD2021'], calibration: 'pending-professional-review'
+}
+```
+
+The study axes `creatinine/sodium/potassium` do **not** exist in B1. Validation must report those missing dependencies and block those studies/mechanisms; it must not invent a renal panel from an XP score. Medications act on the state independently of `indicatedTargets`, allowing inappropriate-treatment harm. Declaring a mechanism is not proof it is implemented: each name resolves to an installed executor with a version and dependency set.
+
+```js
+// Example medication record; actual pilot normalization is not dosing guidance.
+{
+  schemaVersion: 2, id: 'norepinephrine', definitionVersion: 1, kind: 'molecule',
+  legacyIds: ['vasopressor'], names: ['noradrenalina'],
+  activeMoiety: 'norepinephrine-base', routes: ['iv'],
+  dosing: {unit: 'mcg/kg/min', administration: 'infusion', defaultDose: null,
+    clinicalDoseEnvelope: 'requires-reviewed-protocol', needs: ['patientWeightKg']},
+  mechanisms: [{id: 'pressor', reads: ['circulatingVolumeMl','pumpFunction'],
+    writes: ['vascularTone'], outputOwner: 'shared-physiology'}],
+  kinetics: {plasmaHalfLifeMin: 2.4, responseModel: 'rapid-support',
+    estimatedResponseHalfLifeMin: 0.5},
+  riskTags: ['vasoconstriction', 'hypoperfusion', 'extravasation'],
+  contraindications: [{state: 'uncorrected-hypovolemia', severity: 'contextual-risk'}],
+  monitoring: ['MAP','perfusion','infusion-site'],
+  evidence: ['DailyMed-S6'], clinicalApproval: 'pending'
+}
+```
+
+The future compiler validates identity, molecule/class/procedure/stop type, units, aliases, precise formulation/route, dose domains, dependency axes, kinetics and required monitoring. `patientWeightKg` and infusion-site injury are not implemented in B1. An alias cannot turn an unspecified vasopressor class into reviewed norepinephrine. The registration transaction updates catalog, nursing alias index and executor index **once**, after every addition has passed validation. Indications remain separate. B1 intentionally does not modify that global transaction.
+
+Each case/medicine/rule file has schema and content versions plus a deterministic manifest hash. Pin the entire manifest to a patient/shift and multiplayer session. A model-version string alone is insufficient for future hot rule changes. Change content between shifts; migrate saved state using explicit pure versioned migrations with replay equivalence and rollback. Do not reinterpret an active infusion with new coefficients. One authority owns time/events; clients display snapshots, and native vs new writer selection is per mechanism. Shadow never contributes effects.
+
+## 10. Validation and rollout after B1
+
+1. **Contract:** generated index checks duplicate IDs/aliases, exact units/route, molecule vs class/procedure, numeric domain, versions, axis references, known interaction coverage and evidence readiness. Reject a new drug requiring absent coagulation/platelets; do not hand-code every disease pair.
+2. **Physiology:** synthetic state archetypes plus real cases; untreated/control comparisons, monotonic/saturating dose response, adverse directions, finite decay/accumulation, cessation, renal/hepatic variants and trajectory/timestep metamorphisms. Keep independent primary-source expectations separate from frozen native software regression. Require a clinician to approve quantitative envelopes and uncertain states.
+3. **Interactions:** form a dependency graph from read/write/risk tags. Run explicit known pairs, shared-axis pairs and high-risk combinations (opioid+sedative, anticoagulant+bleed, renal toxicity, competing volume inputs/outputs). Changes select affected graph neighbors/archetypes; deterministic seeded pair samples supplement, never replace, known interactions. No exponential all-subset CI.
+4. **Ownership:** append stable patient/event/sequence IDs at actual administration, explicitly including titration/stops; idempotent commit once. In shadow only compare; later flag selects exactly one physiology writer per mechanism and keeps the native rescue/death/disposition interfaces. Old additive bonuses for a migrated mechanism must be disabled at the same atomic ownership boundary.
+5. **Performance gates proposed for devices:**16 patients with five pilot interventions batch p95≤4ms,64≤12ms at4Hz; render separately, no >50ms long task attributable to shadow. Typical kernel+active exposure≤32KiB/patient; bounded event checkpoint and sampling budgets separately. Maximum effect-observation lag≤250ms from grid, target UI delivery≤375ms real. These are engineering targets to measure, not current Android results. Measure exact SHA on a named midrange Android in foreground/background/throttling, CPU profiles, heap after15/60min, and two synchronized clients.
+6. **Rollback:** OFF by default; mismatch/NaN/late or missing receipt/version mismatch disables shadow, never writes correction into the live patient. Preserve raw event log/native state and previous manifest. Later stop activation if duplicate effect, altered grace/rescue/surgery, numerical divergence, missing heparin support or device budgets fail. Active patients retain their engine version until resolution; no in-place reversal of drug effects.
+
+B2/B3/B4 remain the groups in sections3–4. Add mechanisms, then dependent cases, in separate small checkpoints. Hb and bleeding control are prerequisites for credible HDA oxygen-delivery/transfusion; real performed source control/coverage for sepsis; sodium/renal circulation for ascites; CO₂/airway for precise opioid/oxygen safety. Heparin requires coagulation, thrombosis, hemorrhage, dose/route/monitoring/HIT validation before any compatibility unlock. Pancreatitis/mesenteric phases require fresh ACG/WSES research when implemented. No new case/medication or full generator in this B1 delivery.

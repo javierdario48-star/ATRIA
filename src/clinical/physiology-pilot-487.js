@@ -131,7 +131,7 @@ function segment(s,dt,definitions,atUs){
  const support=s.oxygenFlowLpm/(s.oxygenFlowLpm+2);
  const half=s.oxygenResponseHalfLifeMin;
  if(s.oxygenSupport||s.oxygenFlowLpm)s.oxygenSupport=support+(s.oxygenSupport-support)*Math.exp(-LN2*dt/half);
- const renal=Math.max(.01,s.renalFunction),pressureFactor=clamp(s.perfusion/.8,0,1);
+ const renal=s.renalFunction,pressureFactor=clamp(s.perfusion/.8,0,1);
  s.drugDiuresisMlPerMin=8*diuretic**2/(.35**2+diuretic**2)*renal**1.5*pressureFactor;
  const urine=Math.min(Math.max(0,s.circulatingVolumeMl-500),s.drugDiuresisMlPerMin*dt);
  s.circulatingVolumeMl-=urine;s.cumulativeUrineMl+=urine;
@@ -151,7 +151,7 @@ function segment(s,dt,definitions,atUs){
   s.inflammation=clamp(s.inflammation+dt*n.inflammationGrowthPerMin*(uncontrolled?1:.4),0,2);
  }
  refresh(s);
- if(s.perfusion<.4)s.renalFunction=Math.max(.01,s.renalFunction-dt*.0003*(.4-s.perfusion));
+ if(s.perfusion<.4)s.renalFunction=Math.max(0,s.renalFunction-dt*.0003*(.4-s.perfusion));
  if(s.fluidOverloadRisk>.4)note(s,'fluid-overload',atUs);
  if(diuretic>.05&&s.perfusion<.6)note(s,'diuretic-hypoperfusion',atUs);
  for(const [id,x]of Object.entries(s.exposures))
