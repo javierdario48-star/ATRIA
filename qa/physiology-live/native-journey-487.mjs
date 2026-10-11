@@ -45,6 +45,9 @@ for (const id of ids) {
   assert(before >= 0, 'nursing adapter has a verified later integration boundary');
   compiled.splice(before, 0, [id, generated.split(marker)[1].split('</script>')[0]]);
 }
+const morphineMarker='<script id="atria-morphine-487">';
+assert.equal(generated.split(morphineMarker).length,2,'single integrated morphine owner');
+compiled.push(['atria-morphine-487',generated.split(morphineMarker)[1].split('</script>')[0]]);
 const sources = {...baseline, compiled: compiled.map(([id, code]) => ({id, code,
   compiled: new vm.Script(code, {filename: 'generated-live-qa/' + id + '.js'})}))};
 
