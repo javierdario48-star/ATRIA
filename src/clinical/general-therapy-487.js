@@ -56,3 +56,27 @@ export function csAssessGeneralTreatment487(id,c,patient){
   administered:exposed,appropriate:exposed&&indicated&&!contraindicated,
   overridesUsed:Object.keys(override).length>0,caseId:c?.id||null};
 }
+
+/** Therapeutic readiness only. Never authorizes discharge/surgery by itself. */
+export function csAssessCaseRequirements487(c,patient){
+ const cfg=c?.pharmacology||{};
+ const traits=cfg.traits||CASE_TRAITS_487[c?.id];
+ if(!Array.isArray(traits)||!traits.length)
+   throw Error('New case requires pharmacology.traits: '+String(c?.id));
+ const sets=cfg.coverageSets||c?.physiology?.coverageSets||[];
+ if(traits.includes('infection')&&!sets.length&&!CASE_TRAITS_487[c?.id])
+   throw Error('Infectious new case requires explicit coverageSets: '+c.id);
+ const required=[...new Set([...(c?.keyInterventions||[]),...(cfg.requiredTreatments||[])])]
+   .filter(id=>GLOBAL_TREATMENTS_487[id]);
+ for(const id of required)if(!GLOBAL_TREATMENTS_487[id])
+   throw Error('Unregistered treatment: '+id);
+ const assessments=required.map(id=>csAssessGeneralTreatment487(id,c,patient));
+ const coverage=sets.map(set=>({ids:[...set],met:set.every(id=>
+   csAssessGeneralTreatment487(id,c,patient).appropriate)}));
+ const missing=assessments.filter(a=>!a.appropriate).map(a=>a.id);
+ const coverageComplete=coverage.length?coverage.some(s=>s.met):null;
+ return {caseId:c?.id,required,missing,coverageSets:coverage,coverageComplete,
+   treatmentRequirementsMet:missing.length===0&&coverageComplete!==false,
+   // Clinical disposition needs separate diagnosis, stability, tests and source control.
+   safeForDischarge:null,assessments};
+}
