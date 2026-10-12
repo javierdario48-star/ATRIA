@@ -17,6 +17,13 @@ for(const id of ids){
  assert(ready.ready,id+' minimum safe');
  assert(!ready.procedurePerformed,id+' no surgery');
  assert(ready.quality.score>0&&ready.quality.score<100,id+' partial XP');
+ const extraContext={...snapshot,historyAnswered:[...snapshot.historyAnswered,
+  'anamnesis:pmh','anamnesis:allergies']};
+ assert.equal(evalCase(extraContext).ready,true,id+' extra history not mandatory');
+ assert(evalCase(extraContext).quality.history>ready.quality.history,
+  id+' allergies and comorbidity history should improve XP');
+ assert.equal(evalCase({...snapshot,historyAnswered:['anamnesis:reason']}).ready,true,
+  id+' general reason for consultation meets minimum anamnesis');
  const perfect={...snapshot,historyAnswered:snapshot.historyRelevant,studiesDone:snapshot.keyStudies,
   keyInterventions:done};
  assert(evalCase(perfect).quality.score>ready.quality.score,id+' complete care more XP');
