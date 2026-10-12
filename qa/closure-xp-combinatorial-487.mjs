@@ -66,7 +66,7 @@ for(const id of Object.keys(CASE_CLOSURE_RULES_487)){
    assert.equal(p.nsOutcome,undefined,id+' no result created for unsafe/incomplete workup');
    assert.equal(ctx.csProfile.xp,before,id+' no XP for incomplete unsafe case');
   }
-  rows.push({id,variant,destination,blocked,ended,score,xp:career?.xpDelta||0});
+  rows.push({id,variant:v,destination,blocked,ended,score,xp:career?.xpDelta||0});
  }
  const pick=v=>rows.find(x=>x.id===id&&x.variant===v);
  assert(pick('complete').xp>=pick('minimum').xp,id+' thoroughness XP cannot decrease');
