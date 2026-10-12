@@ -22,6 +22,7 @@ if not m: raise RuntimeError('Original BG_SRC not found; abort rather than use w
 source = Image.open(io.BytesIO(base64.b64decode(m.group(1)))).convert('RGB')
 W, H = source.size
 assert (W,H)==(1024,1536),(W,H)
+source.save(OUT/'ATRIA_hospital_original_lossless.png',optimize=True)
 original = np.asarray(source)
 inventory = json.loads((ROOT/'plants/plants_source_manifest.json').read_text())
 assert len(inventory['instances']) >= 40
