@@ -56,6 +56,7 @@ assert.equal(generated.split(closureMarker).length,2);
 compiled.push(['atria-case-completion-487',generated.split(closureMarker)[1].split('</script>')[0]]);
 const sources = {...baseline, compiled: compiled.map(([id, code]) => ({id, code,
   compiled: new vm.Script(code, {filename: 'generated-live-qa/' + id + '.js'})}))};
+export const liveNativeJourneySources487 = sources;
 
 // JSON alone discards Map/Set contents. Tags work across VM realms, unlike
 // instanceof; preserve native insertion order and undefined/nonnumeric values.

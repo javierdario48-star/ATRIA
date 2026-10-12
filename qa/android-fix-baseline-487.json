@@ -1,0 +1,301 @@
+{
+  "source": "5c5e06ba56c8a1fdf029fc0fc9fd117a0f7355b7",
+  "historicalSuite": "npm test exit 0",
+  "orders": {
+    "scope": "generated native VM with late V412 nurse and send wrappers; local actor/DOM/path fixtures",
+    "scenarios": 26,
+    "passed": 9,
+    "physicalAndroid": false,
+    "rows": [
+      {
+        "q": "vías y monitor",
+        "pass": false,
+        "error": "actual IV count\n\n0 !== 2\n",
+        "iv": 0,
+        "monitor": true,
+        "actual": []
+      },
+      {
+        "q": "monitor y vías",
+        "pass": false,
+        "error": "actual IV count\n\n0 !== 2\n",
+        "iv": 0,
+        "monitor": true,
+        "actual": []
+      },
+      {
+        "q": "pon dos vías y monitor",
+        "pass": false,
+        "error": "actual IV count\n\n0 !== 2\n",
+        "iv": 0,
+        "monitor": true,
+        "actual": []
+      },
+      {
+        "q": "accesos periféricos y monitor",
+        "pass": false,
+        "error": "actual IV count\n\n0 !== 2\n",
+        "iv": 0,
+        "monitor": true,
+        "actual": []
+      },
+      {
+        "q": "monitor, oxígeno y vías",
+        "pass": false,
+        "error": "actual IV count\n\n0 !== 2\n",
+        "iv": 0,
+        "monitor": false,
+        "actual": [
+          "oxygen"
+        ]
+      },
+      {
+        "q": "vías, Ringer y oxígeno",
+        "pass": false,
+        "error": "actual IV count\n\n1 !== 2\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          "fluid"
+        ]
+      },
+      {
+        "q": "monitor y después dos vías periféricas",
+        "pass": false,
+        "error": "actual IV count\n\n0 !== 2\n",
+        "iv": 0,
+        "monitor": true,
+        "actual": []
+      },
+      {
+        "q": "ceftriaxona y metronidazol",
+        "pass": false,
+        "error": "one actual administration ceftriaxone\n\n0 !== 1\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          "metronidazole"
+        ]
+      },
+      {
+        "q": "metronidazol y ceftriaxona",
+        "pass": false,
+        "error": "one actual administration ceftriaxone\n\n0 !== 1\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          "metronidazole"
+        ]
+      },
+      {
+        "q": "aplica ceftriaxona, metronidazol y Ringer",
+        "pass": false,
+        "error": "one actual administration ceftriaxone\n\n0 !== 1\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          "metronidazole"
+        ]
+      },
+      {
+        "q": "vías, ceftriaxona y metronidazol",
+        "pass": false,
+        "error": "actual IV count\n\n1 !== 2\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          "metronidazole"
+        ]
+      },
+      {
+        "q": "ceftriaxona 1 g y metronidazol 500 mg",
+        "pass": false,
+        "error": "one actual administration ceftriaxone\n\n0 !== 1\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          "metronidazole"
+        ]
+      },
+      {
+        "q": "oxígeno",
+        "pass": true,
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          {
+            "id": "oxygen",
+            "dose": "4 L/min",
+            "defaultApplied": true
+          }
+        ]
+      },
+      {
+        "q": "oxígeno y noradrenalina",
+        "pass": false,
+        "error": "one actual administration oxygen\n\n0 !== 1\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": []
+      },
+      {
+        "q": "vías, oxígeno y Ringer",
+        "pass": false,
+        "error": "actual IV count\n\n1 !== 2\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          "fluid"
+        ]
+      },
+      {
+        "q": "coloca monitor y oxígeno",
+        "pass": false,
+        "error": "actual monitor connection\n\nfalse !== true\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          "oxygen"
+        ]
+      },
+      {
+        "q": "oxígeno a 4 litros",
+        "pass": true,
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          {
+            "id": "oxygen",
+            "dose": "4 L/min",
+            "defaultApplied": false
+          }
+        ]
+      },
+      {
+        "q": "oxígeno, ceftriaxona y metronidazol",
+        "pass": false,
+        "error": "one actual administration oxygen\n\n0 !== 1\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          "metronidazole"
+        ]
+      },
+      {
+        "q": "noradrenalina",
+        "pass": true,
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          {
+            "id": "vasopressor",
+            "dose": "0.05 µg/kg/min",
+            "defaultApplied": true
+          }
+        ]
+      },
+      {
+        "q": "ceftriaxona",
+        "pass": true,
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          {
+            "id": "ceftriaxone",
+            "dose": "1 g",
+            "defaultApplied": true
+          }
+        ]
+      },
+      {
+        "q": "metronidazol",
+        "pass": true,
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          {
+            "id": "metronidazole",
+            "dose": "500 mg",
+            "defaultApplied": true
+          }
+        ]
+      },
+      {
+        "q": "morfina",
+        "pass": true,
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          {
+            "id": "morphine",
+            "dose": "4 mg",
+            "defaultApplied": true
+          }
+        ]
+      },
+      {
+        "q": "furosemida",
+        "pass": true,
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          {
+            "id": "furosemide",
+            "dose": "40 mg",
+            "defaultApplied": true
+          }
+        ]
+      },
+      {
+        "q": "Ringer",
+        "pass": true,
+        "iv": 1,
+        "monitor": false,
+        "actual": [
+          {
+            "id": "fluid",
+            "dose": "500 ml",
+            "defaultApplied": true
+          }
+        ]
+      },
+      {
+        "q": "oxígeno y noradrenalina 0.05 mg IV",
+        "pass": false,
+        "error": "one actual administration oxygen\n\n0 !== 1\n",
+        "iv": 1,
+        "monitor": false,
+        "actual": []
+      },
+      {
+        "q": "vía",
+        "pass": true,
+        "iv": 1,
+        "monitor": false,
+        "actual": []
+      }
+    ]
+  },
+  "xp": {
+    "score": 87,
+    "ended": true,
+    "career": {
+      "xp": 0,
+      "xpDelta": 0,
+      "oldLevel": 1,
+      "newLevel": 1,
+      "coat": false,
+      "death": false,
+      "modeMult": 1.2,
+      "shiftMult": 1,
+      "safe": true,
+      "resolved": false,
+      "outcome": "incomplete",
+      "practiceMult": 1,
+      "complexityMult": 1,
+      "complexityLabel": "fixture-fixed"
+    },
+    "profileXP": 0,
+    "sourceControlled": false
+  }
+}
