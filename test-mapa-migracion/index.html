@@ -38,7 +38,7 @@ function screenToWorld(sx,sy){return {x:(sx-view.w/2)/view.scale+view.cx,y:(sy-v
 function worldToScreen(x,y){return {x:(x-view.cx)*view.scale+view.w/2,y:(y-view.cy)*view.scale+view.h/2};}
 function paint(){const d=view.dpr;
 ctx.setTransform(d,0,0,d,0,0);ctx.fillStyle='#12282b';ctx.fillRect(0,0,view.w,view.h);
-view.scale=Math.min(view.w/WORLD.width,view.h/WORLD.height)*zoom;view.cx=overview?512:player.x;view.cy=overview?768:player.y;
+view.scale=Math.min(view.w/WORLD.width,view.h/WORLD.height)*zoom;view.cx=overview?512:(window.ATRIA_OBJECT_EDITOR_FOCUS?.x??player.x);view.cy=overview?768:(window.ATRIA_OBJECT_EDITOR_FOCUS?.y??player.y);
 ctx.save();ctx.setTransform(d*view.scale,0,0,d*view.scale,d*(view.w/2-view.cx*view.scale),d*(view.h/2-view.cy*view.scale));
 ctx.drawImage(sceneImg,0,0,WORLD.width,WORLD.height);
 ctx.globalAlpha=.24;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(player.x,player.y-2,18,7,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
@@ -72,4 +72,4 @@ cvs.addEventListener('pointerup',()=>dragging=false);cvs.addEventListener('point
 window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key)){keys.add(e.key);e.preventDefault()}});window.addEventListener('keyup',e=>keys.delete(e.key));window.addEventListener('blur',()=>{keys.clear();pad.clear()});
 for(const b of document.querySelectorAll('[data-move]')){const dir=b.dataset.move;b.onpointerdown=e=>{b.setPointerCapture(e.pointerId);pad.add(dir);e.preventDefault()};b.onpointerup=()=>pad.delete(dir);b.onpointercancel=()=>pad.delete(dir);}
 window.addEventListener('resize',resize);resize();Promise.all([sceneImg.decode(),playerImg.decode()]).then(()=>{document.getElementById('indicator').textContent='Listo';requestAnimationFrame(frame)}).catch(e=>notify('Error al cargar las imágenes: '+e.message));
-</script></body></html>
+</script><script src="plants/object-editor.js"></script></body></html>
