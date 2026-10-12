@@ -95,7 +95,12 @@ const EXCLUDED_SCOPE_487 = Object.freeze([
 let cachedSources;
 export function loadNativeReferenceSources487({repoRoot = REPO_ROOT} = {}) {
   if (repoRoot === REPO_ROOT && cachedSources) return cachedSources;
-  const html = apply487(fs.readFileSync(path.join(repoRoot, 'vendor/atria-4.8.6/index.html'), 'utf8'));
+  const frozenHtml = fs.readFileSync(path.join(repoRoot, 'vendor/atria-4.8.6/index.html'), 'utf8');
+  const html = apply487(frozenHtml);
+  // The multiplayer adapter changes lobby/guard presentation, not native timekeeping.
+  // Audit the stable clinical build so every networking-only change need not rewrite
+  // the deterministic physiology reference fixture.
+  const baseClinicalHtml = apply487(frozenHtml,{multiplayer:false});
   const start = html.indexOf('const CASES=') + 'const CASES='.length;
   assert(start >= 'const CASES='.length, 'generated CASES literal');
   const cases = JSON.parse(html.slice(start).split('\n')[0].replace(/;\s*$/, ''));
@@ -147,7 +152,9 @@ export function loadNativeReferenceSources487({repoRoot = REPO_ROOT} = {}) {
     assert(index > prior, 'generated clinical execution order: ' + id);
     prior = index;
   }
-  const clockSource = script(html, 'cs-v410-modes');
+  const activeClockSource = script(html, 'cs-v410-modes');
+  const clockSource = script(baseClinicalHtml, 'cs-v410-modes');
+  for(const rule of ['hours=Math.min(24,Math.floor(elapsedMs()/60000))','24 minutos reales, equivalentes a 24 horas'])assert(activeClockSource.includes(rule),'active guard preserves clinical time rule: '+rule);
   assert(clockSource.includes('hours=Math.min(24,Math.floor(elapsedMs()/60000))'), 'actual displayed guard clock');
   assert(clockSource.includes('24 minutos reales, equivalentes a 24 horas'), 'actual guard time rule');
   assert(sources.find(([id]) => id === 'native-tick')[1].includes('sim.gameMinute+=dt*0.12*(typing?0.25:1)'), 'actual native clock rule');
