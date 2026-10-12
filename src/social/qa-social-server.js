@@ -41,7 +41,7 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
   const targetBuckets=new Set((raw.members||[]).map(m=>bucket(m.userId)));const parts=await Promise.all([...targetBuckets].map(i=>get('presence',i,[])));const on=new Set(parts.flat().filter(x=>x&&x.lastSeen>=now()-35000).map(x=>x.userId)),r={...raw};
   r.members=(raw.members||[]).map(m=>({...m,online:on.has(m.userId)}));
   r.role=viewer===raw.hostUserId?'host':'guest';
-  r.allAccepted=r.members.length>1&&r.members.every(m=>m.accepted);
+  r.allAccepted=r.members.length>1&&r.members.every(m=>m.accepted)&&!(raw.pending||[]).length;
   r.maxPlayers=4;
   return r;
  }
