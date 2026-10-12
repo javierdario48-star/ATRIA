@@ -20,7 +20,7 @@ export function applyUrgentCare487(html){
   csHeparinHarm487.toString()+'\n'+csCareCompliance487.toString()+'\n'+
   csAssessGeneralTreatment487.toString()+'\n'+csAssessCaseRequirements487.toString()+'\n'+
   csSevereDrugReaction487.toString()+'\n'+
-  'const priorGive=addMonitorTherapy,priorDose=defaultDoseForTherapy,priorRecord=recordAdministration,priorSafety=medicationSafetyOffsets,priorUpdate=updateSimulation;\n'+
+  'const priorGive=addMonitorTherapy,priorDose=defaultDoseForTherapy,priorRecord=recordAdministration,priorSafety=medicationSafetyOffsets,priorUpdate=updateSimulation,priorTherapy=therapyEffectTotals;\n'+
   'defaultDoseForTherapy=function(t,text){\n'+
   " if(t?.id==='anticoagulation')return {...HEPARIN_SIM_DOSE_487};\n"+
   ' return priorDose.apply(this,arguments);\n};\n'+
@@ -66,6 +66,13 @@ export function applyUrgentCare487(html){
   "  nurseSay('Heparina aplicada. ATENCIÓN: '+risk.caution+' Vigilá el sangrado y los signos vitales.');\n"+
   ' }\n'+
   ' return out;\n};\n'+
+  'therapyEffectTotals=function(){\n'+
+  ' const total=priorTherapy.apply(this,arguments);\n'+
+  " if(sim&&!['peritonitis','sepsis_source'].includes(C?.physiology?.engine)){\n"+
+  "  const blood=sim.monitorTherapies?.get?.('transfusion');\n"+
+  '  if(blood)total.spo2-=Number(blood.effects?.spo2||0);\n'+
+  ' }\n'+
+  ' return total;\n};\n'+
   'medicationSafetyOffsets=function(){\n'+
   ' const total=priorSafety.apply(this,arguments),harm=csHeparinHarm487(C,sim);\n'+
   ' if(!harm.active&&!sim?.csSevereDrugReaction487)return total;\n'+
