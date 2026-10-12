@@ -50,7 +50,7 @@ export function createRealOutcomeJourney487(caseId){
  ctx.document.createElement=()=>({style:{},appendChild:noop,classList:{add:noop}});
  ctx.document.body.appendChild=noop;ctx.window.nsMayExamine=()=>true;
  ctx.window.nsPracticeReward=()=>1;
- ctx.csLogAction=noop;ctx.addGlobalChat=noop;ctx.refreshChatDock=noop;
+ ctx.csLogAction=noop;ctx.csEnsureV19=noop;ctx.addGlobalChat=noop;ctx.refreshChatDock=noop;
  ctx.window.nsCaseComplexity=()=>({factor:1,label:'QA fixed'});
  return runtime;
 }
