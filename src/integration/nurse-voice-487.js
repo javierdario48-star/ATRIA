@@ -111,7 +111,16 @@ export function applyNurseVoice487(html){
     const accepted=addMonitorTherapy(raw);
     const given=(sim.administrationLog||[]).filter(x=>x.id===item.id&&x.action!=='stop').length>previous;
     const pending=isPending();
-    if(given)feedback(label+': COMPLETADA. Administración registrada en el monitor.');
+    if(given){
+      // Preserve the existing oxygen monitor UI refresh when its native
+      // executor confirms synchronously (the async route refreshes itself).
+      if(item.id==='oxygen'){
+       if(typeof renderMonitorTherapies==='function')renderMonitorTherapies();
+       if(typeof renderAdministrationHistory==='function')renderAdministrationHistory();
+       if(typeof updateMonitorDOM==='function')updateMonitorDOM();
+      }
+      feedback(label+': COMPLETADA. Administración registrada en el monitor.');
+    }
     else if(pending)feedback(label+': '+(iv&&Number(sim.venousAccessCount||0)<=0?
      'PENDIENTE. Se iniciará tras colocar vía periférica.':
      'EN PROGRESO. Preparación iniciada; confirmaré la dosis al registrarse.'));
