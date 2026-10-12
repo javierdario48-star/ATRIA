@@ -111,7 +111,7 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  'owner-executes-visiting-coop-command-on-original-engine');
  s=edit(s,
  "sendMessage=function(q){\n  if(shared()){",
- "sendMessage=function(q){\n  if(shared()){const remote=foreignClinical487();if(challenge.mode==='coop'&&remote){const text=String(q||'').trim();if(!text)return false;if(!/^\\/(?:equipo|chat)\\s+/i.test(text))return requestAssist(remote.index,{kind:'command',text:text.slice(0,220)});}",
+ "sendMessage=function(q){\n  if(shared()){const remote=foreignClinical487();if(challenge.mode==='competitive'&&!canAct()&&challenge.assistIndex==null){const txt=String(q||'').trim();const clinical=txt.length<=220&&(/^(?:enfermera|enfermero|paciente|doctor|\/(?:estudio|orden|tratamiento|enfermera)\b)/i.test(txt)||window.nsIsClinicalQuestion?.(txt));if(clinical){const free=challenge.patients.filter(p=>!p.ownerId&&p.state==='waiting'&&near(p));if(free.length===1){pendingAutoCommand487=txt;takePatient(free[0].index);if(canAct()){const command=pendingAutoCommand487;pendingAutoCommand487=null;return oldSend.call(this,command)}return true}}}if(challenge.mode==='coop'&&remote){const text=String(q||'').trim();if(!text)return false;if(!/^\\/(?:equipo|chat)\\s+/i.test(text))return requestAssist(remote.index,{kind:'command',text:text.slice(0,220)});}",
  'coop-visitor-all-native-text-orders-forward-to-owner');
  s=edit(s,
  "processCommand=function(q){if(shared()){if(roomCommand(q))return;if(!requirePatient())return}return oldCommand.apply(this,arguments)};",
@@ -176,6 +176,18 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "finishCase=function(reason){if(reason==='death'&&!closingDeath&&shiftSession?.records)",
  "finishCase=function(reason){if(challenge.mode==='coop'&&foreignClinical487())return requestAssist(foreignClinical487().index,{kind:'finish',reason:'completed'});if(reason==='death'&&!closingDeath&&shiftSession?.records)",
  'cooperative-visitor-closure-only-on-authoritative-owner');
+
+
+ // A clear first bedside clinical request claims the ONE nearby free patient.
+ // Never guess which patient an ambiguous order addresses.
+ s=edit(s,
+ "let pendingNav=null,pendingClaim=null,loading=false,buildingPlan=false",
+ "let pendingNav=null,pendingClaim=null,pendingAutoCommand487=null,loading=false,buildingPlan=false",
+ 'one-unambiguous-clinical-first-contact');
+ s=edit(s,
+ "if(p?.ownerId===selfId){const idx=pendingClaim;pendingClaim=null;loadPatient(idx)}else if(p?.ownerId){pendingClaim=null;toast(",
+ "if(p?.ownerId===selfId){const idx=pendingClaim;pendingClaim=null;loadPatient(idx);if(pendingAutoCommand487&&canAct()){const q=pendingAutoCommand487;pendingAutoCommand487=null;sendMessage(q)}}else if(p?.ownerId){pendingClaim=null;pendingAutoCommand487=null;toast(",
+ 'guest-claim-confirmed-before-running-queued-nurse-order');
 
  // Room message payloads include a claimed peerId; only the server envelope
  // identifies the authenticated user. Do not trust a peerId chosen by a
