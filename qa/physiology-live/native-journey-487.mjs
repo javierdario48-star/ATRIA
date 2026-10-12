@@ -126,7 +126,7 @@ export function nativeObserverPort487(runtime) {
 export function createNativeXPJourney487(caseId){
  const score=between('  function csCriticalCase(){','  function csDebriefMoments(){');
  const baseFinish=between("finishCase=function(reason='completed'){",'function csHasTherapy(id){');
- const v19Finish=between('  const _finishCaseV19=finishCase;','  // 9) REALER CONTINUOUS SHIFT:');
+ const v19Finish=between('  function csCaseClosureEligibilityV487(s=sim){','  // 9) REALER CONTINUOUS SHIFT:');
  assert(score.includes('csResultCareer=function(score,b)'),'genuine native V19 reward formula');
  assert(baseFinish.includes('sim.caseEnded=true')&&baseFinish.includes('csResultCareer(score,b)'),
   'genuine V18 closure must mark ended AND invoke career scoring');
