@@ -83,7 +83,7 @@ scenario('four-way bedside order delivers Ringer AND oxygen after IV',()=>{
  r.ctx.sendMessage('Enfermera vías, monitor, Ringer y oxígeno');
  assert.equal(p.venousAccessCount,0,'requested IV is not a completed cannulation');
  assert.equal(delivered(p,'fluid').length,0,'no fluid delivered before IV');
- assert((p.csPhase4Pending487||[]).some(x=>x.id==='fluid'),'native IV queue holds Ringer');
+ assert((p.csPhase4Pending487||[]).some(x=>x.id==='fluid'),'native IV queue holds Ringer '+JSON.stringify({pending:p.csPhase4Pending487?.map(x=>({id:x.id,text:x.text,uid:x.uid})),nativePending:[...(p.pendingTherapies?.keys?.()||[])],chat:chat(r).slice(-1600),source:r.ctx.window.csNurseVoice487?.parse('Enfermera vías, monitor, Ringer y oxígeno')?.items?.map(x=>({id:x.id,kind:x.kind,text:x.text})),access:p.venousAccessCount}));
  tick(r,2);
  assert.equal(delivered(p,'oxygen').length,1,'IV-independent oxygen actually delivered');
  tick(r,45);
