@@ -42,6 +42,26 @@ export function applyMultiplayerStabilization487(html){
  "if(m.id!==challenge.id)return;if(host()){",
  "if(m.id!==challenge.id)return;\n  if(m.kind==='team_chat'){\n   if(!challenge.active||challenge.ended||typeof m.text!=='string'||m.text.length>180||!person(m.peerId)||m.peerId===selfId)return;\n   const marker=String(m.messageId||'').slice(0,90);\n   if(!marker||!marker.startsWith(m.peerId+':'))return;\n   const seen=challenge._teamMessages||(challenge._teamMessages=new Set());\n   if(seen.has(marker))return;seen.add(marker);if(seen.size>160)seen.delete(seen.values().next().value);\n   addGlobalChat('system',(person(m.peerId)?.name||'Compañero')+' · equipo: '+m.text.replace(/[<>]/g,''));\n   refreshChatDock();return;\n  }\n  if(host()){",
  'room-messages-are-distinct-from-clinical-orders');
+
+ // The cooperative helper executes on the native patient's OWNER; the
+ // competitive opponent retains read-only access.
+ s=replaceOnce(s,
+ "function assistActionAllowed(p,a){const c=CASES.find(x=>x.id===p?.caseId);if(!c||!a||typeof a.kind!=='string')return false;",
+ "function assistActionAllowed(p,a){const c=CASES.find(x=>x.id===p?.caseId);if(challenge.mode==='competitive')return false;if(!c||!a||typeof a.kind!=='string')return false;if(a.kind==='exam')return ['general','abdomen','target'].includes(a.id);if(a.kind==='speech')return typeof a.text==='string'&&a.text.trim().length>0&&a.text.length<=180;if(a.kind==='therapy')return typeof a.text==='string'&&a.text.length<=180&&!!findMonitorTherapy(a.text);",
+ 'cooperative-exam-anamnesis-therapy-validated');
+ s=replaceOnce(s,
+ "else if(a.kind==='intervention'){const it=c.interventions.find(x=>x.id===a.id);if(it)orderIntervention(it)}};",
+ "else if(a.kind==='intervention'){const it=c.interventions.find(x=>x.id===a.id);if(it)orderIntervention(it)}else if(a.kind==='exam'){performExamRegion(a.id)}else if(a.kind==='speech'){sim.chats.patient.push(['doctor',a.text]);const answer=patientReply(a.text);sim.chats.patient.push(['patient',answer]);addGlobalChat('patient',answer)}else if(a.kind==='therapy'){addMonitorTherapy(a.text)}};",
+ 'cooperative-owner-executes-authorized-actions-once');
+ s=replaceOnce(s,
+ "m.classList.add('show');m.querySelector('[data-assist-close]')",
+ "if(challenge.mode==='coop'){const actions=document.createElement('section');actions.className='csRuleBox';actions.innerHTML='<b>Colaboración clínica</b><p>Anamnesis, examen y fármacos ejecutados sobre el paciente del responsable.</p><div><input id=\"csAssistQuestion487\" maxlength=\"180\" placeholder=\"Preguntarle al paciente…\"><button type=\"button\" data-cs-ask>Preguntar</button></div><div><button type=\"button\" data-cs-exam=\"general\">General</button><button type=\"button\" data-cs-exam=\"abdomen\">Abdomen</button><button type=\"button\" data-cs-exam=\"target\">Dirigido</button></div><div><input id=\"csAssistTherapy487\" maxlength=\"180\" placeholder=\"Tratamiento del monitor…\"><button type=\"button\" data-cs-therapy>Indicar</button></div>';m.querySelector('.csPanel')?.appendChild(actions);actions.querySelector('[data-cs-ask]').onclick=()=>{const el=actions.querySelector('#csAssistQuestion487');if(requestAssist(index,{kind:'speech',text:el.value.trim()}))el.value=''};actions.querySelectorAll('[data-cs-exam]').forEach(b=>b.onclick=()=>requestAssist(index,{kind:'exam',id:b.dataset.csExam}));actions.querySelector('[data-cs-therapy]').onclick=()=>{const el=actions.querySelector('#csAssistTherapy487');if(requestAssist(index,{kind:'therapy',text:el.value.trim()}))el.value=''}}m.classList.add('show');m.querySelector('[data-assist-close]')",
+ 'cooperative-helper-panel-exam-anamnesis-therapy');
+ s=replaceOnce(s,
+ "if(team||!canAct()){\n    const text=String(team?team[1]:msg).trim().slice(0,180);",
+ "if(team||!canAct()){\n    if(!team&&challenge.mode==='coop'&&challenge.assistIndex!=null){const p=challenge.patients[challenge.assistIndex];if(p?.ownerId&&p.ownerId!==selfId&&p.state==='in_care'&&near(p))return requestAssist(p.index,{kind:'speech',text:msg.slice(0,180)})}\n    const text=String(team?team[1]:msg).trim().slice(0,180);",
+ 'helper-free-text-is-patient-question-when-patient-selected');
+
  s=replaceOnce(s,'</head>',
  '<style id="atria-multiplayer-overlay-lifecycle-487">body.nsLobbyMode #csDxBadge487,body.nsLobbyMode #csDxDialog487,body.nsLobbyMode #csActionsModal,body.nsLobbyMode #csReceptionBoard,body.nsLobbyMode #csShiftBoard,body.nsLobbyMode #csAssistModal,body.nsLobbyMode #csObserverModal,body.nsLobbyMode #csChallengeHud{display:none!important;pointer-events:none!important}</style></head>',
  'hide-guard-only-overlays-in-lobby');
