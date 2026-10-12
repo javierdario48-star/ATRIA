@@ -11,7 +11,7 @@ for(const [label,fragment] of [
  ['expired room',"if((e.status===404||e.status===410)&&!closed&&room?.id===r.id)"],
  ['ignore stale poll',"if(closed||!room||room.id!==r.id)return;lastOK="],
  ['old ACK reset',"state.groupPlan=null;state.guardDraft=null;state.partyHandshake=null;state.startPromise=null;"],
- ['guest exam', "if(a.kind==='exam')return ['general','abdomen','target'].includes(a.id)"],
+ ['guest exam', "if(a.kind==='exam')return ['general','abdomen','target','inspection','auscultation','percussion','palpation','ns:inspection'"],
  ['guest medication',"else if(a.kind==='therapy'){addMonitorTherapy(a.text)}"],
  ['guest anamnesis',"return requestAssist(p.index,{kind:'speech',text:msg.slice(0,180)})"],
  ['remove lobby badge',"body.nsLobbyMode #csDxBadge487"]
