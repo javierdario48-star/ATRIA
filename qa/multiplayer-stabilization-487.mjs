@@ -83,6 +83,34 @@ vm.createContext(ownerCtx);
 new vm.Script(html.slice(actionStart,actionEnd)).runInContext(ownerCtx);
 assert.equal(ownerCtx.applyAssistAction(visitor,{kind:'command',text:'enfermera ceftriaxona y metronidazol'},'GUEST'),true);
 assert.deepEqual(calls,[['native-command','enfermera ceftriaxona y metronidazol']],'owner alone routes to native medication parser');
+
+// Guest closure is requested once on the owner, never closed locally.
+ownerCtx.shiftSession={index:2};
+ownerCtx.finishCase=reason=>{calls.push(['finish',reason,ownerCtx.shiftSession.index]);return true;};
+assert.equal(ownerCtx.applyAssistAction(visitor,{kind:'finish',reason:'completed'},'GUEST'),true);
+assert.equal(ownerCtx.shiftSession.index,2,'owner resumes original current patient');
+assert.deepEqual(calls.at(-1),['finish','completed',0],'native shared completion targets correct patient once');
+// The competitive first-contact rule also works for unambiguous bedside
+// speech/nursing commands — without inventing a patient for ambiguous orders.
+const inputAt=html.indexOf("sendMessage=function(q){\n  if(shared()){const remote=foreignClinical487()");
+const inputEnd=html.indexOf(" // Guard both direct APIs",inputAt);
+assert(inputAt>0&&inputEnd>inputAt,'actual clinical send hook');
+const autoCalls=[],singleFree={index:0,ownerId:null,state:'waiting'};
+const inputCtx={challenge:{mode:'competitive',active:true,ended:false,assistIndex:null,patients:[singleFree]},
+ shared:()=>true,foreignClinical487:()=>null,roomCommand:()=>false,canAct:()=>inputCtx.claimed===true,
+ claimed:false,near:()=>true,pendingAutoCommand487:null,window:{nsIsClinicalQuestion:()=>false},
+ takePatient:index=>{autoCalls.push(['claim',index]);inputCtx.claimed=true;return true;},
+ oldSend:text=>{autoCalls.push(['native',text]);return true;},send:()=>true,addGlobalChat:()=>{},
+ refreshChatDock:()=>{},player:{},selfId:'GUEST',performance:{now:()=>0}};
+vm.createContext(inputCtx);
+new vm.Script(html.slice(inputAt,inputEnd)).runInContext(inputCtx);
+inputCtx.sendMessage('enfermera Ringer');
+assert.deepEqual(autoCalls,[['claim',0],['native','enfermera Ringer']],
+ 'first unambiguous clinical request acquires patient then invokes native nursing once');
+autoCalls.length=0;inputCtx.claimed=false;inputCtx.pendingAutoCommand487=null;
+inputCtx.challenge.patients=[singleFree,{index:1,ownerId:null,state:'waiting'}];
+inputCtx.sendMessage('enfermera Ringer');
+assert.equal(autoCalls.some(x=>x[0]==='claim'),false,'ambiguous proximity never steals patient');
 const db=new Map(),storage={get:async k=>db.get(k)??null,set:async(k,v)=>{db.set(k,v)},delete:async k=>db.delete(k)};
 let nonce=0;
 const server=createQaSocialServer(storage,{now:()=>2000000,
