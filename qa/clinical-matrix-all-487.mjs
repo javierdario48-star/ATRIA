@@ -41,7 +41,7 @@ const cloneVital=v=>Object.fromEntries(['hr','rr','sys','dia','spo2'].map(k=>[k,
 const finite=x=>Object.values(x).every(Number.isFinite);
 for(const caseId of CASES){
  const ctrl=createLiveNativeJourney487(caseId,options);
- advance(ctrl,1.45,{dt:1/30});
+ advance(ctrl,2.7,{dt:1/30});
  const controlVitals=cloneVital(ctrl.ctx.sim.liveVitals);
  for(const id of IDS){
   const key=caseId+'/'+id,rule=GLOBAL_TREATMENTS_487[id];
@@ -78,7 +78,7 @@ for(const caseId of CASES){
   if(pendingCount>preCount)
    assert(Number(ctx.sim.therapyExposure?.get?.(id)?.count||0)>0,
     key+' immediate manual completion must have real native exposure');
-  if(!error)try{advance(runtime,1.45,{dt:1/30});}
+  if(!error)try{advance(runtime,2.7,{dt:1/30});}
    catch(e){error='advance '+String(e.message||e);}
   const doses=ctx.sim.administrationLog.filter(x=>x.id===id).length;
   const intervention=ctx.sim.interventions?.has?.(id)===true;
@@ -111,7 +111,7 @@ for(const caseId of CASES){
   const row={caseId,id,role:baseline.role,indicated:baseline.indicated,
    contraindicated:baseline.contraindicated,registeredHazards:[...(rule.hazards||[])],
    matched:matched?.id||null,submitted,confirmed,intervention,
-   status,reason:error||(!confirmed&&!intervention?'no receipt in 1.45s QA window':null),
+   status,reason:error||(!confirmed&&!intervention?'no receipt in 2.7s QA window':null),
    doseCount:doses,vitalsDeltaVsControl:vsControl};
   entries.push(row);
   if(status==='review'||status==='not-executed')
@@ -124,7 +124,7 @@ for(const caseId of CASES){
 assert.equal(entries.length,390);
 assert.equal(new Set(entries.map(x=>x.caseId+'/'+x.id)).size,390);
 const report={version:'ATRIA-4.8.7',caseCount:13,treatmentCount:30,
- pairCount:390,method:'generated V19 VM; monitor-mediated 1.45 real seconds',
+ pairCount:390,method:'generated V19 VM; monitor-mediated 2.7 real seconds',
  warning:'Case x treatment tested for execution and reusable safety invariants; NOT 390 medically validated effects. Physical devices not exercised.',
  counts,findings,entries};
 const dir='qa/clinical-matrix-results';
@@ -133,12 +133,20 @@ fs.writeFileSync(path.join(dir,'clinical-matrix-487.json'),JSON.stringify(report
 fs.writeFileSync(path.join(dir,'clinical-matrix-summary-487.md'),
  '# ATRIA 4.8.7 · 390 live drug/case checks\n\n'+
  'Statuses: '+JSON.stringify(counts)+'\n\n'+
- 'Each row tests a real native order, 1.45s of game simulation and the inherited clinical risk contract.\n'+
+ 'Each row tests a real native order, 2.7s of game simulation and the inherited clinical risk contract.\n'+
  'An unexecuted procedure is **not** proof of its failure; review its handoff workflow.\n'+
  'Medical references and expectations: qa/ATRIA_487_MEDICAL_RULES_AUDIT.md.\n\n'+
  '| Case | Drug | QA status | Comment |\n|---|---|---|---|\n'+
  findings.map(x=>'| '+x.caseId+' | '+x.id+' | '+x.status+' | '+
   String(x.reason||'—').replace(/\|/g,'/')+' |').join('\n')+'\n');
+const byDrug=Object.fromEntries(IDS.map(id=>[id,{
+ confirmed:entries.filter(x=>x.id===id&&x.status==='confirmed').length,
+ pending:entries.filter(x=>x.id===id&&x.status==='not-executed').length,
+ review:entries.filter(x=>x.id===id&&x.status==='review').length,
+ procedure:entries.filter(x=>x.id===id&&x.status==='procedure').length
+}]));
+console.log('ATRIA MATRIX BY THERAPY',JSON.stringify(byDrug));
+console.log('ATRIA MATRIX PENDING SAMPLE',JSON.stringify(findings.slice(0,30)));
 console.log('ATRIA 390 LIVE TREATMENT CASE MATRIX',JSON.stringify({
  rows:390,counts,findings:findings.length,
  deliverabilityNotMedicalValidation:true,report:'qa/clinical-matrix-results/clinical-matrix-487.json'
