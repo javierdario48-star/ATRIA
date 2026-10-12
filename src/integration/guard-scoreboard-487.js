@@ -104,9 +104,9 @@ export function applyGuardScoreboard487(html){
  if(typeof html!=='string'||html.split('</head>').length!==2||html.split('</body>').length!==2)
   throw Error('ATRIA guard scoreboard: HTML close tags are not unique');
  const css=[
- '#atriaGuardScore487{position:fixed;z-index:85;top:calc(64px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 18px);pointer-events:none;display:none;box-sizing:border-box;font-family:inherit;color:#e8f6f3;font-variant-numeric:tabular-nums;}',
+ '#atriaGuardScore487{position:fixed;z-index:85;top:calc(112px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 18px);pointer-events:none;display:none;box-sizing:border-box;font-family:inherit;color:#e8f6f3;font-variant-numeric:tabular-nums;}',
  '#atriaGuardScore487[data-visible="1"]{display:block;}',
- '#atriaGuardScore487[data-mode="coop"],#atriaGuardScore487[data-mode="competitive"]{top:calc(92px + env(safe-area-inset-top));}',
+ '#atriaGuardScore487[data-mode="coop"],#atriaGuardScore487[data-mode="competitive"]{top:calc(116px + env(safe-area-inset-top));}',
  '#atriaGuardScore487 .ags-shell{background:rgba(6,27,33,.79);border:1px solid rgba(132,205,189,.25);border-radius:15px;box-shadow:0 9px 25px rgba(0,0,0,.22);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:7px 12px 9px;}',
  '#atriaGuardScore487 .ags-eyebrow{font-size:8px;letter-spacing:1.6px;text-align:center;color:#a4cabe;font-weight:750;margin-bottom:5px;white-space:nowrap;}',
  '#atriaGuardScore487 .ags-metrics{display:flex;align-items:center;justify-content:center;gap:13px;}',
