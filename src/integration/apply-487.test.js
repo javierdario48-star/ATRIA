@@ -295,8 +295,9 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
  assert.match(out,/observation:csObservationSnapshot\(s,p\)/,'owner progress must include read data');
  assert.match(out,/const observation=csSafeObservation\(m\.progress\?\.observation\)/,'host must validate relayed view');
  assert.match(out,/challenge\.mode==='competitive'\)return csOpenObserver\(index\)/,'competitive opponent opens viewer instead of action helper');
- assert.match(out,/challenge\.mode==='competitive'\)return false;const p=/,'competitive help actions are blocked at originating client');
- assert.match(out,/m\.kind==='assist'&&challenge\.mode!=='competitive'/,'host rejects opponent assist packets in competitive');
+ assert.match(out,/challenge\.mode==='competitive'&&!\['exam','speech','vitals','monitor'\]\.includes\(a\?\.kind\)\)return false/,'competitive visitor can examine and talk while other actions are blocked');
+ assert.match(out,/challenge\.mode==='competitive'&&\['therapy','study','intervention'\]\.includes\(a\.kind\)\)return false/,'competitive owner-only medications and studies still blocked');
+ assert.match(out,/else if\(m\.kind==='assist'\)\{/,'host forwards only guest actions admitted by assistActionAllowed');
  assert.match(out,/csObserverRefreshIfOpen\(\)/,'observation view refreshes on updates');
  assert.match(out,/conversation:\(s\.globalChat\|\|\[\]\)/,'conversation should be included');
  assert.match(out,/orders:\[\.\.\.\(s\.orders\?\.values/,'real study statuses and results should be included');
@@ -334,7 +335,8 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
   assert.equal(vm.runInNewContext('requestAssist',accessContext)(3,{kind:'study',id:'hemograma'}),false,'rival '+viewerId+' must not order tests');
   assert.equal(vm.runInNewContext('requestAssist',accessContext)(3,{kind:'intervention',id:'antibiotico'}),false,'rival '+viewerId+' must not order medicines');
  }
- assert.match(out,/m\.kind==='assist_apply'&&challenge\.mode!=='competitive'/,'owner client must ignore forged competitive intervention delivery');
+ assert.match(out,/m\.kind==='assist_apply'&&m\.peerId===challenge\.hostId/,'owner accepts only host-authorized bedside assistance');
+ assert.match(out,/if\(challenge\.mode==='competitive'&&\['therapy','study','intervention'\]\.includes\(a\.kind\)\)return false/,'no medication or new study can pass via competitive assist');
  assert.match(out,/const observation=csSafeObservation\(m\.progress\?\.observation\);if\(m\.progress\?\.observation&&/,'host must reject bad remote observation before committing state');
 
  // Phase 4: the original golden master lacks the multi-intent dispatcher.

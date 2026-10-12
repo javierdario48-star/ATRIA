@@ -22,7 +22,7 @@ const ctx={challenge:{mode:'coop'},CASES:[{id:'CASE',studies:[{id:'blood'}],inte
  findMonitorTherapy:t=>t==='ceftriaxona 1 g'?{id:'ceftriaxone'}:null};
 vm.createContext(ctx);new vm.Script(html.slice(start,end)).runInContext(ctx);
 const patient={caseId:'CASE'};
-for(const action of [{kind:'exam',id:'general'},{kind:'speech',text:'Dónde le duele?'},{kind:'therapy',text:'ceftriaxona 1 g'},{kind:'monitor'},{kind:'study',id:'blood'}])
+for(const action of [{kind:'exam',id:'general'},{kind:'exam',id:'ns:inspection'},{kind:'exam',id:'ns:auscultation'},{kind:'exam',id:'ns:percussion'},{kind:'exam',id:'ns:palpation'},{kind:'speech',text:'Dónde le duele?'},{kind:'therapy',text:'ceftriaxona 1 g'},{kind:'monitor'},{kind:'study',id:'blood'}])
  assert.equal(ctx.assistActionAllowed(patient,action),true,'cooperative '+action.kind);
 for(const action of [{kind:'exam',id:'inventado'},{kind:'speech',text:''},{kind:'therapy',text:'fármaco inexistente'},{kind:'study',id:'fake'}])
  assert.equal(ctx.assistActionAllowed(patient,action),false,'invalid '+action.kind);
@@ -46,6 +46,43 @@ assert.equal(claimCtx.claim(0,'B',0,0),true,'guest first interaction claims pati
 assert.equal(claimCtx.claim(0,'A',0,0),false,'host cannot steal already claimed patient');
 assert.equal(p0.ownerId,'B');
 assert.equal(claimed.revision,2,'one authoritative ownership transition');
+
+// Check the real shared UI loader and relay, not just text markers.
+assert(html.includes("function loadSharedPatient487(index,monitor=false)"),'guest must use native V40 full patient UI');
+assert(html.includes("sim.__csRemoteMirror487=true"),'visiting clinical copy must be marked non-authoritative');
+assert(html.includes("sim?.__csRemoteMirror487?undefined:base.update.call(this,dt)"),
+ 'visiting peer must never integrate a second independent physiology');
+const foreignAt=html.indexOf("function foreignClinical487(){"),takeAt=html.indexOf("function takePatient(index,monitor=false)",foreignAt);
+assert(foreignAt>0&&takeAt>foreignAt,'real shared patient navigator');
+const visitor={index:0,ownerId:'OWNER',uid:'same-patient-uid',caseId:'CASE',state:'in_care',
+ instance:{bed:{label:'B1'}}};
+const mirrorCtx={challenge:{mode:'coop',patients:[visitor],assistIndex:null},selfId:'GUEST',
+ shiftSession:{index:-1,records:[{sim:null}]},sim:null,loading:false,guard:()=>true,
+ near:()=>true,modeLabel:()=>{},refreshChatDock:()=>{}};
+let nativeLoads=0;
+mirrorCtx.base={load:(_i,opts)=>{nativeLoads++;mirrorCtx.sim={
+ patientInstance:{uid:'temporary'},mentor:{enabled:true},playMode:'solo',
+ __csRoomSpectator:true};return true;}};
+vm.createContext(mirrorCtx);
+new vm.Script(html.slice(foreignAt,takeAt)).runInContext(mirrorCtx);
+assert.equal(mirrorCtx.loadSharedPatient487(0,true),true);
+assert.equal(nativeLoads,1,'guest uses the original solo record loader');
+assert.equal(mirrorCtx.sim.patientInstance.uid,visitor.uid);
+assert.equal(mirrorCtx.sim.__csRemoteMirror487,true);
+assert.equal(mirrorCtx.sim.playMode,'coop');
+assert.equal(mirrorCtx.challenge.assistIndex,0);
+const actionStart=html.indexOf('function applyAssistAction(p,a,helper){'),actionEnd=html.indexOf('function requestAssist(index,a){',actionStart);
+assert(actionStart>0&&actionEnd>actionStart,'actual native patient-owner relay');
+const calls=[],ownerSim={patientInstance:{uid:visitor.uid}};
+const ownerCtx={challenge:{mode:'coop'},selfId:'OWNER',
+ assistTargetSim:()=>ownerSim,assistActionAllowed:()=>true,
+ CASES:[{id:'CASE'}],window:{csWithPatientStateV203:(_s,_c,fn)=>fn()},
+ sendMessage:(text)=>{calls.push(['native-command',text]);return true;},
+ addGlobalChat:()=>{},refreshChatDock:()=>{}};
+vm.createContext(ownerCtx);
+new vm.Script(html.slice(actionStart,actionEnd)).runInContext(ownerCtx);
+assert.equal(ownerCtx.applyAssistAction(visitor,{kind:'command',text:'enfermera ceftriaxona y metronidazol'},'GUEST'),true);
+assert.deepEqual(calls,[['native-command','enfermera ceftriaxona y metronidazol']],'owner alone routes to native medication parser');
 const db=new Map(),storage={get:async k=>db.get(k)??null,set:async(k,v)=>{db.set(k,v)},delete:async k=>db.delete(k)};
 let nonce=0;
 const server=createQaSocialServer(storage,{now:()=>2000000,
