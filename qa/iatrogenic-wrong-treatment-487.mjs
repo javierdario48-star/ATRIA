@@ -56,8 +56,8 @@ for(const c of ids){
  assert(allergy.delivered&&allergy.signature,c+' actual severe allergy must worsen BP and oxygenation');
 }
 for(const c of ['PANC-001','HDA-001','PERI-SEC-001','CHOLANG-001','MESI-001']){
- run(c,'hypovolemicDiuretic','furosemida 40 mg',{hypovolemia:true},8);
- run(c,'shockBetaBlocker','propranolol 40 mg',{hypovolemia:true},8);
+ run(c,'hypovolemicDiuretic','furosemida 40 mg',{hypovolemia:true},32);
+ run(c,'shockBetaBlocker','propranolol 40 mg',{hypovolemia:true},20);
 }
 for(const c of ['CIRR-001','PERI-PBE-001','COLON-001']){
  const patient=createLiveNativeJourney487(c),control=createLiveNativeJourney487(c);
@@ -66,7 +66,8 @@ for(const c of ['CIRR-001','PERI-PBE-001','COLON-001']){
   patient.ctx.addMonitorTherapy('ringer 500 ml');
   advance(patient,2.7,{dt:1/30});
  }
- advance(control,13.5,{dt:1/30});
+ advance(patient,24,{dt:1/30});
+ advance(control,37.5,{dt:1/30});
  const a=vitals(patient.ctx.sim),b=vitals(control.ctx.sim);
  const observed=a.spo2<b.spo2-.8||a.rr>b.rr+1;
  rows.push({caseId:c,kind:'fluidOverload',drug:'fluid',delivered:patient.ctx.sim.therapyTotals.fluidMl>before,
