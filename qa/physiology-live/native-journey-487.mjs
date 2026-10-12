@@ -115,3 +115,59 @@ export function nativeObserverPort487(runtime) {
     getAdministration: () => ctx.recordAdministration, setAdministration: fn => {ctx.recordAdministration = fn;},
     getUpdate: () => ctx.updateSimulation, setUpdate: fn => {ctx.updateSimulation = fn;}};
 }
+
+
+/**
+ * QA only: the very same generated V18 finishCase and V19 scoring/career
+ * functions, restored ahead of the existing peritonitis and general handoff
+ * wrappers. This is NOT a fake "caseEnded=true" closure or mock XP formula.
+ * DOM, audio and profile persistence are replaced by in-memory sinks ONLY.
+ */
+export function createNativeXPJourney487(caseId){
+ const score=between('  function csCriticalCase(){','  function csDebriefMoments(){');
+ const baseFinish=between("finishCase=function(reason='completed'){",'function csHasTherapy(id){');
+ const v19Finish=between('  const _finishCaseV19=finishCase;','  // 9) REALER CONTINUOUS SHIFT:');
+ assert(score.includes('csResultCareer=function(score,b)'),'genuine native V19 reward formula');
+ assert(baseFinish.includes('sim.caseEnded=true')&&baseFinish.includes('csResultCareer(score,b)'),
+  'genuine V18 closure must mark ended AND invoke career scoring');
+ const closureSources=[];
+ for(const source of compiled){
+  if(source[0]==='cs-safe-v0180-clinical')closureSources.push(source,
+    ['qa-real-v18-finish',baseFinish]);
+  else if(source[0]==='cs-safe-v0190-clinical')closureSources.push(source,
+    ['qa-real-v19-score',score],
+    ['qa-real-v19-finish',v19Finish]);
+  else closureSources.push(source);
+ }
+ const tailored={...sources,compiled:closureSources.map(([id,code])=>({
+  id,code,compiled:new vm.Script(code,{filename:'generated-full-closing-qa/'+id+'.js'})
+ }))};
+ // Context variables used by the genuine source, initialized by the fixture.
+ // They do NOT supply a scoring formula or directly set caseEnded/XP.
+ const fixture='var CS_XP_PER_LEVEL=200;'+
+  'var csProfile={xp:0,reputation:50,totalPatients:0,safePatients:0,'+
+  'criticalSafePatients:0,soloPatients:0,apprenticePatients:0,shiftPatients:0,'+
+  'streak:0,bestStreak:0,deathsAttributable:0,bestScore:0,recentScores:[]};'+
+  'function csLevel(xp=csProfile?.xp||0){return 1+Math.floor(Math.max(0,xp)/CS_XP_PER_LEVEL)}'+
+  'function csSaveProfile(){} function csCheckCoatUnlock(){return false}'+
+  'function csPlaySound(){} function csRefreshProfileSurfaces(){}'+
+  'function csShowOutcome(){} function csCloseOutcome(){}'+
+  'function csFinishHTML(){return "<div>QA: result screen disabled</div>"}';
+ tailored.compiled.unshift({id:'qa-in-memory-profile-ui',code:fixture,
+  compiled:new vm.Script(fixture,{filename:'qa-in-memory-profile-ui.js'})});
+ const rt=createNativeReferenceRuntime487({caseId,sources:tailored}),{ctx}=rt;
+ const noop=()=>{};
+ Object.assign(ctx,{nurse:{task:null,queue:[],path:[],pathIndex:0,state:'idle',returnTile:[8,14]},
+  wardNurses:[],player:{bubble:'',bubbleUntil:0},chatRole:'nurse',pendingAddress:null,
+  pathTo:()=>false,advanceActor:()=>true,toast:noop,csPlaySound:noop,
+  formatVitalsInline:()=>'',recordVitals:noop,csRefreshProfileSurfaces:noop,
+  csShowOutcome:noop,csCloseOutcome:noop});
+ ctx.window.nsMayExamine=()=>true;
+ ctx.document.createElement=()=>({style:{},textContent:'',appendChild:noop,
+  classList:{add:noop,remove:noop}});
+ ctx.document.body.appendChild=noop;
+ ctx.sim.patientInstance.bed={approach:[24,17],label:'QA box'};
+ ctx.sim.venousAccessCount=1;ctx.sim.venousAccessTypes=['QA confirmed IV'];
+ ctx.sim.chats||={nurse:[]};
+ return rt;
+}
