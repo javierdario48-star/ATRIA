@@ -69,7 +69,7 @@ for(const caseId of cases){
   assert.equal(p._careerEndProcessed,undefined,caseId+' no fabricated XP');
  }
  // The dynamics must actually be harmful, not just label an adverse effect.
- if(!(delta.sys< -2&&delta.hr>1))gaps.push({caseId,type:'vital-worsening',
+ if(!(delta.sys< -2&&delta.spo2< -.5))gaps.push({caseId,type:'vital-worsening',
   deltas:delta,heparinSeverity:heparin.bleedingSeverity,allergySeverity:allergy.severity});
  if(confirmed.some(x=>!x.administered))gaps.push({caseId,type:'unconfirmed-orders'});
  trajectories.push({caseId,initial:pre,untreated:control,after,
@@ -88,6 +88,6 @@ const report={schema:'atria-487-malpractice/v1',clinicalRules:policyPairs,
 fs.writeFileSync('qa/adversarial-results/malpractice-487.json',JSON.stringify(report,null,2)+'\n');
 console.log('BOT MEDICATION MALPRACTICE SUMMARY',JSON.stringify({
  rules:390,cases:13,medicines:65,confirmed:trajectories.reduce((a,b)=>a+b.confirmed.filter(x=>x.administered).length,0),
- harmed:trajectories.filter(x=>x.delta.sys< -2&&x.delta.hr>1).length,
+ harmed:trajectories.filter(x=>x.delta.sys< -2&&x.delta.spo2< -.5).length,
  actualGaps:gaps.length,gapKinds:gaps.reduce((a,x)=>(a[x.type]=(a[x.type]||0)+1,a),{})}));
 assert.equal(gaps.length,0,'All intentionally unsafe 13-case scenarios must worsen real hemodynamics; see emitted report');
