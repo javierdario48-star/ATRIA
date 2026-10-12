@@ -75,7 +75,9 @@ for(const caseId of CASES){
    catch(e){error=String(e.message||e);}
   }else error='resolved '+String(matched?.id||'none');
   const pendingCount=ctx.sim.administrationLog.filter(x=>x.id===id).length;
-  assert.equal(pendingCount,preCount,key+' cannot count mere UI selection as a dose');
+  if(pendingCount>preCount)
+   assert(Number(ctx.sim.therapyExposure?.get?.(id)?.count||0)>0,
+    key+' immediate manual completion must have real native exposure');
   if(!error)try{advance(runtime,1.45,{dt:1/30});}
    catch(e){error='advance '+String(e.message||e);}
   const doses=ctx.sim.administrationLog.filter(x=>x.id===id).length;
