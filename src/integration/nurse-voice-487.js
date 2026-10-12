@@ -92,6 +92,15 @@ export function applyNurseVoice487(html){
       (sim.csPhase4Pending487||[]).some(x=>x.uid===uid&&x.id===item.id);
     const label=item.id==='oxygen'?'Oxígeno':item.id==='fluid'?'Ringer':
       MONITOR_THERAPY_CATALOG.find(t=>t.id===item.id)?.label||item.id;
+    // Frozen historical nursing harnesses have no late manual-monitor IV
+    // owner. Preserve their original pre-cannulation dependency gate rather
+    // than calling a bare native monitor method that cannot enforce an IV.
+    // Production uses the exported single IV contract and native monitor.
+    if(typeof window.csNurseTherapyRequiresIV487!=='function'&&
+       Number(sim.venousAccessCount||0)<=0&&item.id!=='oxygen'){
+      const fallback=baseNurse.call(this,'enfermera '+raw);
+      ok=fallback!==false||ok;continue;
+    }
     if(isPending()){
       feedback(label+': '+(iv&&Number(sim.venousAccessCount||0)<=0?
        'PENDIENTE. Esperando vía periférica.':item.id==='fluid'?'EN PROGRESO. Ya existe una orden pendiente; no repetí el bolo.':
