@@ -10,8 +10,8 @@ const ids=Object.keys(CARE_JOURNEYS_487),rows=[],issues=[];
 function vitals(s){return Object.fromEntries(['sys','dia','hr','rr','spo2'].map(x=>[x,Number(s.liveVitals?.[x]||0)]))}
 function run(caseId,kind,order,flags,seconds=22){
  const patient=createLiveNativeJourney487(caseId),control=createLiveNativeJourney487(caseId);
- Object.assign(patient.ctx.sim.clinicalFlags,flags);
- Object.assign(control.ctx.sim.clinicalFlags,flags);
+ patient.ctx.sim.clinicalFlags={...(patient.ctx.sim.clinicalFlags||{}),...flags};
+ control.ctx.sim.clinicalFlags={...(control.ctx.sim.clinicalFlags||{}),...flags};
  if(flags.activeBleeding){patient.ctx.sim.phys.activeBleeding=true;control.ctx.sim.phys.activeBleeding=true}
  if(flags.hypovolemia){patient.ctx.sim.phys.effectiveVolume=.30;control.ctx.sim.phys.effectiveVolume=.30}
  if(flags.congestion){patient.ctx.sim.phys.congestion=.95;control.ctx.sim.phys.congestion=.95}
