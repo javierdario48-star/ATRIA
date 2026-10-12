@@ -61,5 +61,7 @@ jobs:
             out/
             qa/clinical-matrix-results/
             qa/care-journey-results/
+            qa/adversarial-results/
+            qa/closure-combinations-results/
           retention-days: 14
           if-no-files-found: error
