@@ -90,10 +90,12 @@ export function applyNurseVoice487(html){
     const iv=window.csNurseTherapyRequiresIV487?.(item.id)===true;
     const isPending=()=>sim.pendingTherapies?.has(item.id)===true||
       (sim.csPhase4Pending487||[]).some(x=>x.uid===uid&&x.id===item.id);
-    const label=MONITOR_THERAPY_CATALOG.find(t=>t.id===item.id)?.label||item.id;
+    const label=item.id==='oxygen'?'Oxígeno':item.id==='fluid'?'Ringer':
+      MONITOR_THERAPY_CATALOG.find(t=>t.id===item.id)?.label||item.id;
     if(isPending()){
       feedback(label+': '+(iv&&Number(sim.venousAccessCount||0)<=0?
-       'PENDIENTE. Esperando vía periférica.':'EN PROGRESO. Ya se está preparando; no repetí la dosis.'));
+       'PENDIENTE. Esperando vía periférica.':item.id==='fluid'?'EN PROGRESO. Ya existe una orden pendiente; no repetí el bolo.':
+       'EN PROGRESO. Ya se está preparando; no repetí la dosis.'));
       ok=true;continue;
     }
     const previous=(sim.administrationLog||[]).filter(x=>x.id===item.id&&x.action!=='stop').length;
