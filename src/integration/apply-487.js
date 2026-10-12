@@ -1,6 +1,7 @@
 import {csPartyEncode,csPartyDecode,b64toBytes} from '../social/party-payload.js';
 import {applyPhysiologyQABootstrap487} from './physiology-qa-bootstrap-487.js';
 import {applyMultiplayerStabilization487} from './multiplayer-stabilization-487.js';
+import {applyGuardScoreboard487} from './guard-scoreboard-487.js';
 import {STUDY_TAT_MINUTES,EXTRA_EMERGENCY_STUDIES} from '../clinical/study-registry.js';
 import {CASE_STUDY_CORRELATIONS,CASE_INCIDENTAL_FINDINGS,csCaseStudyFallback} from '../clinical/contextual-study-results.js';
 import {roomTransportReady} from '../social/party-transport.js';
@@ -701,5 +702,6 @@ function csDrawRemote(){
  s=applyCriticalRescue487(s);
  s=applyClinicalConfirmations487(s);
  s=applyPharmacology487(s);
- return applyPhysiologyQABootstrap487(applyCaseCompletion487(applyUrgentCare487(applyMorphine487(multiplayer?applyMultiplayerStabilization487(s):s))));
+ const built=applyPhysiologyQABootstrap487(applyCaseCompletion487(applyUrgentCare487(applyMorphine487(multiplayer?applyMultiplayerStabilization487(s):s))));
+ return multiplayer?applyGuardScoreboard487(built):built;
 }
