@@ -62,6 +62,14 @@ export function applyMultiplayerStabilization487(html){
  "if(team||!canAct()){\n    if(!team&&challenge.mode==='coop'&&challenge.assistIndex!=null){const p=challenge.patients[challenge.assistIndex];if(p?.ownerId&&p.ownerId!==selfId&&p.state==='in_care'&&near(p))return requestAssist(p.index,{kind:'speech',text:msg.slice(0,180)})}\n    const text=String(team?team[1]:msg).trim().slice(0,180);",
  'helper-free-text-is-patient-question-when-patient-selected');
 
+
+ // Room message payloads include a claimed peerId; only the server envelope
+ // identifies the authenticated user. Do not trust a peerId chosen by a
+ // competing browser to send forged claims, orders, progress or team chat.
+ s=replaceOnce(s,
+ "for(const m of data.messages){const packet=m.data;if(packet?.type==='atria_party_prepare'",
+ "for(const m of data.messages){const packet=m.data;if(packet?.type==='cs_room_v411'){const member=room.members?.find(x=>x.userId===m.userId);if(!member||packet.peerId!==member.peerId)continue}if(packet?.type==='atria_party_prepare'",
+ 'room-peer-identity-bound-to-server-envelope');
  s=replaceOnce(s,'</head>',
  '<style id="atria-multiplayer-overlay-lifecycle-487">body.nsLobbyMode #csDxBadge487,body.nsLobbyMode #csDxDialog487,body.nsLobbyMode #csActionsModal,body.nsLobbyMode #csReceptionBoard,body.nsLobbyMode #csShiftBoard,body.nsLobbyMode #csAssistModal,body.nsLobbyMode #csObserverModal,body.nsLobbyMode #csChallengeHud{display:none!important;pointer-events:none!important}</style></head>',
  'hide-guard-only-overlays-in-lobby');
