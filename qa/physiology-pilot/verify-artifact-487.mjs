@@ -7,6 +7,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {applyMultiplayerStabilization487} from '../../src/integration/multiplayer-stabilization-487.js';
+import {applyGuardScoreboard487} from '../../src/integration/guard-scoreboard-487.js';
 import {applyPhysiologyQABootstrap487,PHYSIOLOGY_QA_FILES_487,RINGER_SAFETY_OLD_487,RINGER_SAFETY_NEW_487,RINGER_COMPLETION_OLD_487,RINGER_COMPLETION_NEW_487} from '../../src/integration/physiology-qa-bootstrap-487.js';
 import {applyCriticalRescue487,CRITICAL_FINAL_OLD_487,CRITICAL_FINAL_NEW_487,CRITICAL_CLOCK_OLD_487,CRITICAL_CLOCK_NEW_487} from '../../src/integration/critical-rescue-487.js';
 import {applySecondaryBridge487} from '../../src/integration/secondary-sepsis-bridge-487.js';
@@ -39,7 +40,15 @@ const closure=[...html.matchAll(/<script id="atria-case-completion-487">[\s\S]*?
 assert.equal(closure.length,1,'one general clinical closure and XP adapter');
 assert.equal(closure[0][0],applyCaseCompletion487('<body></body>').replace('<body>','').replace('</body>',''),
  'exact current reviewed case closure source');
-let beforeStop=html.replace(morphine[0][0],'').replace(urgent[0][0],'').replace(closure[0][0],'');
+// The new scoreboard is a verified presentation-only overlay. Remove only
+// its exact generated CSS/JS before comparing immutable historical bytes.
+const scoreProbe=applyGuardScoreboard487('<html><head></head><body></body></html>');
+const scoreStyle=scoreProbe.match(/<style id="atria-guard-scoreboard-style-487">[\s\S]*?<\/style>/)?.[0];
+const scoreScript=scoreProbe.match(/<script id="atria-guard-scoreboard-runtime-487">[\s\S]*?<\/script>/)?.[0];
+assert(scoreStyle&&scoreScript,'source-identical scorecard artifacts exist');
+assert.equal(html.split(scoreStyle).length,2,'exactly one source-certified scoreboard style');
+assert.equal(html.split(scoreScript).length,2,'exactly one source-certified scoreboard runtime');
+let beforeStop=html.replace(scoreStyle,'').replace(scoreScript,'').replace(morphine[0][0],'').replace(urgent[0][0],'').replace(closure[0][0],'');
 for(const [id,name,digest] of [
  ['atria-nurse-execution-487','nurse-execution','94d1e61a4b46b9975578100825bf0977c7c431ea70b4fff54986c9df4bb0c85d'],
  ['atria-nurse-voice-routing-487','nurse-voice','1977da69627bbadd57fb995c0d908d9fd65f5e6595b64142f63f7cced5348ea3'],
