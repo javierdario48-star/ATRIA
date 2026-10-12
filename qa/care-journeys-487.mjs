@@ -50,16 +50,24 @@ for(const id of cases)for(const variation of ['standard','alternative']){
  catch(e){errors.push('breakdown '+e.message)}
  let finishIssue=null;try{ctx.finishCase('auto')}
  catch(e){finishIssue=e.message;errors.push('finish '+e.message)}
- const closed=!!p.caseEnded&&p.disposition?.id===plan.destination;
+ const untreated=createLiveNativeJourney487(id);
+ setup(untreated);
+ advance(untreated,runtime.clock.realSeconds,{dt:1/30});
+ const untreatedVitals=vital(untreated.ctx.sim);
+ const finalVitals=vital(p);
+ const deltaVsUntreated=Object.fromEntries(Object.keys(finalVitals).map(k=>
+  [k,Number((finalVitals[k]-untreatedVitals[k]).toFixed(2))]));
+  const closed=!!p.caseEnded&&p.disposition?.id===plan.destination;
  if(['quirofano','procedimiento'].includes(plan.destination))
   assert.equal(!!p.phys?.sourceControlled,sourceControlled,id+' referral cannot simulate surgery');
  for(const v of Object.values(vital(p)))assert(Number.isFinite(v),'finite vitals '+id);
  runs.push({id,variation,orders,receipts,errors,consult,destination:plan.destination,
   chosen,closed,safe,score,peritonitis:peri?{ready:peri.ready,
   action:peri.action,missing:[...peri.missing]}:null,
-  vitalsStart:start,vitalsEnd:vital(p)});
+  vitalsStart:start,vitalsEnd:finalVitals,untreatedVitals,deltaVsUntreated});
  console.log('ATRIA CASE JOURNEY',JSON.stringify({id,variation,medications:receipts.filter(x=>x.delivered).length,
-  total:receipts.length,consult,destination:plan.destination,chosen,closed,safe,score,errors}));
+  total:receipts.length,consult,destination:plan.destination,chosen,closed,safe,score,
+  vitalDelta:deltaVsUntreated,errors}));
 }
 const summary={caseCount:cases.length,scenarios:runs.length,
  delivered:runs.reduce((n,x)=>n+x.receipts.filter(y=>y.delivered).length,0),
