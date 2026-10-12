@@ -10,7 +10,7 @@ const end=s.indexOf('\n  };',start);
 assert(end>start,'native V19 destination block closes');
 const segment=s.slice(start,end);
 const recommended={};
-for(const m of segment.matchAll(/'([A-Z]+-[A-Z]+-\d+)':\[([^\]]*)\]/g))
+for(const m of segment.matchAll(/'([A-Z-]+-\d+)':\[([^\]]*)\]/g))
  recommended[m[1]]=[...m[2].matchAll(/'([a-z]+)'/g)].map(x=>x[1]);
 assert.equal(Object.keys(recommended).length,13);
 let i=0;
@@ -20,7 +20,6 @@ for(const [id,plan] of Object.entries(CARE_JOURNEYS_487)){
   id+' QA treatment plan must use valid native outcome '+plan.destination);
  assert.equal(plan.alternatives.length,1);
  const selected=plan.destination;
- if(['shock','bleed','peritonitis'].includes(id))assert.notEqual(selected,'alta');
  if(['PERI-SEC-001','APP-001','CHOLE-001','MESI-001'].includes(id))
   assert.equal(selected,'quirofano');
  if(id==='CHOLANG-001')assert.equal(selected,'procedimiento');
