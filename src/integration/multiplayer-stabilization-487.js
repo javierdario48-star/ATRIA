@@ -49,7 +49,7 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  // competitive opponent retains read-only access.
  s=edit(s,
  "function assistActionAllowed(p,a){const c=CASES.find(x=>x.id===p?.caseId);if(!c||!a||typeof a.kind!=='string')return false;",
- "function assistActionAllowed(p,a){const c=CASES.find(x=>x.id===p?.caseId);if(!c||!a||typeof a.kind!=='string')return false;if(challenge.mode==='competitive'&&['therapy','study','intervention'].includes(a.kind))return false;if(a.kind==='exam')return ['general','abdomen','target'].includes(a.id);if(a.kind==='speech')return typeof a.text==='string'&&a.text.trim().length>0&&a.text.length<=180;if(a.kind==='therapy')return typeof a.text==='string'&&a.text.length<=180&&!!findMonitorTherapy(a.text);",
+ "function assistActionAllowed(p,a){const c=CASES.find(x=>x.id===p?.caseId);if(!c||!a||typeof a.kind!=='string')return false;if(challenge.mode==='competitive'&&['therapy','study','intervention'].includes(a.kind))return false;if(a.kind==='exam')return ['general','abdomen','target','inspection','auscultation','percussion','palpation','ns:inspection','ns:auscultation','ns:percussion','ns:palpation'].includes(a.id);if(a.kind==='speech')return typeof a.text==='string'&&a.text.trim().length>0&&a.text.length<=180;if(a.kind==='therapy')return typeof a.text==='string'&&a.text.length<=180&&!!findMonitorTherapy(a.text);",
  'cooperative-exam-anamnesis-therapy-validated');
  s=edit(s,
  "else if(a.kind==='intervention'){const it=c.interventions.find(x=>x.id===a.id);if(it)orderIntervention(it)}};",
@@ -164,6 +164,10 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "if(p?.uid===m.uid&&m.targetId===selfId){const stamp=String(m.aid||'');const ids=challenge._appliedAssist487||(challenge._appliedAssist487=new Set());if(stamp&&stamp.length<=160&&!ids.has(stamp)){ids.add(stamp);if(ids.size>200)ids.delete(ids.values().next().value);applyAssistAction(p,m.action,m.helperName)}}return",
  'deduplicate-remote-clinical-execution');
 
+ s=edit(s,
+ "m.querySelector('[data-refresh-observer]').onclick=()=>csOpenObserver(index);",
+ "m.querySelector('[data-refresh-observer]').onclick=()=>csOpenObserver(index);if(challenge.mode==='competitive'&&p.ownerId&&p.ownerId!==selfId&&p.state==='in_care'){challenge.assistIndex=index;const box=document.createElement('section');box.className='csRuleBox';box.innerHTML='<b>Entrevista y examen del paciente rival</b><div><input maxlength=\"180\" data-observer-question placeholder=\"Preguntarle al paciente…\"><button type=\"button\" data-observer-ask>Preguntar</button></div><div><button type=\"button\" data-observer-exam=\"ns:inspection\">Inspección</button><button type=\"button\" data-observer-exam=\"ns:auscultation\">Auscultación</button><button type=\"button\" data-observer-exam=\"ns:percussion\">Percusión</button><button type=\"button\" data-observer-exam=\"ns:palpation\">Palpación</button></div><small>Medicación y nuevos estudios: solo el responsable del paciente.</small>';m.querySelector('.csPanel')?.appendChild(box);box.querySelector('[data-observer-ask]').onclick=()=>{const input=box.querySelector('[data-observer-question]');const txt=input.value.trim();if(txt&&requestAssist(index,{kind:'speech',text:txt}))input.value=''};box.querySelectorAll('[data-observer-exam]').forEach(b=>b.onclick=()=>requestAssist(index,{kind:'exam',id:b.dataset.observerExam}))}",
+ 'competitive-rival-physical-exam-and-anamnesis-tools');
  // Room message payloads include a claimed peerId; only the server envelope
  // identifies the authenticated user. Do not trust a peerId chosen by a
  // competing browser to send forged claims, orders, progress or team chat.
