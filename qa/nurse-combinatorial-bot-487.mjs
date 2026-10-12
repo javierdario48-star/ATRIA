@@ -50,9 +50,16 @@ function run(label,steps,iv,caseId='PERI-SEC-001',repeat=false){
   // Native async preparation, bedside access and monitor completion.
   tick(r,48);
   const receipts=p.administrationLog.filter(x=>x.action!=='stop');
+  const pendingAccess=iv===0&&!required.has('iv');
   for(const item of A.filter(x=>drugs.has(x.id))){
    const count=receipts.filter(x=>x.id===item.id).length;
-   assert.equal(count,required.has(item.id)?1:0,'real dose count '+item.id);
+   const withheld=required.has(item.id)&&pendingAccess&&ivDrugs.has(item.id);
+   assert.equal(count,required.has(item.id)&&!withheld?1:0,'real dose count '+item.id);
+   if(withheld){
+    assert.equal(p.venousAccessCount,0,'no imaginary IV inserted');
+    assert((p.csPhase4Pending487||[]).some(x=>x.id===item.id),
+     item.id+' must stay explicitly pending for missing access');
+   }
    if(count){
     assert(p.monitorTherapies.has(item.id),'monitor missing real '+item.id);
     assert.equal(receipts.find(x=>x.id===item.id).defaultApplied,true,
@@ -60,7 +67,8 @@ function run(label,steps,iv,caseId='PERI-SEC-001',repeat=false){
    }
   }
   if(required.has('iv'))assert.equal(p.venousAccessCount,2,'plural vias must place two real IV');
-  else if([...required].some(x=>ivDrugs.has(x)))assert(p.venousAccessCount>=1,'IV drugs require access');
+  else if([...required].some(x=>ivDrugs.has(x))&&iv>0)
+   assert(p.venousAccessCount>=1,'IV drugs require access');
   if(required.has('monitor'))assert.equal(p.monitorConnected,true,'monitor must be attached');
   assert(!receipts.some(x=>!required.has(x.id)),'no unintended drug administrations');
   cases.push({label,caseId,startIV:iv,steps:steps.map(s=>s.map(x=>x.id)),passed:true,
@@ -99,6 +107,28 @@ for(let i=0;i<scenarios.length;i++){
 // A repeated *pending* composite request must not create a duplicate first dose.
 for(const iv of [0,1])run('repeat-pending-all-IV',
  [[A[2],A[4],A[5]]],iv,'PERI-SEC-001',true);
+
+// Explicit follow-up: pending drug-only IV orders must execute automatically
+// after a LATER nurse cannulation, without re-requesting the medications.
+for(const phrase of [['Ringer'],['ceftriaxona','metronidazol'],
+                     ['Ringer','ceftriaxona','metronidazol']]){
+ const items=phrase.map(x=>A.find(y=>y.text===x));
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:0}),p=r.ctx.sim;
+ const ids=items.map(x=>x.id);
+ try{
+  r.ctx.sendMessage('Enfermera '+phrase.join(' y '));tick(r,2);
+  assert.equal(p.administrationLog.length,0,'pending medications cannot appear as doses');
+  for(const id of ids)assert((p.csPhase4Pending487||[]).some(x=>x.id===id),
+   id+' must stay pending');
+  r.ctx.sendMessage('Enfermera vías');tick(r,45);
+  assert.equal(p.venousAccessCount,2,'subsequent nursing access completed');
+  for(const id of ids)assert.equal(p.administrationLog.filter(x=>x.id===id).length,1,
+    id+' pending drug is released once after later IV');
+  cases.push({label:'followup-IV-'+phrase.join('-'),passed:true,delivered:ids});
+ }catch(e){const failure={label:'followup-IV-'+phrase.join('-'),passed:false,
+  reason:e.message,access:p.venousAccessCount,pending:p.csPhase4Pending487?.map(x=>x.id)};
+  errors.push(failure);cases.push(failure);}
+}
 const result={schema:'atria-nurse-combinations-qa/v1',scope:'generated Android native VM (no physical device)',
  sixActions:A.map(x=>x.id),strategy:'all permutations up to 3; 2 representative permutations per 4/5 subset; 3 for full six; plus ordered sequences',
  subsetSequences:variants.length,total:cases.length,passed:cases.length-errors.length,failed:errors.length,
