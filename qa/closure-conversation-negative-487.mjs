@@ -47,7 +47,7 @@ for(const id of Object.keys(CASE_CLOSURE_RULES_487)){
   const missingHistory=variant==='noHistory'&&!clinicalCritical;
   const blocked=variant==='noExam'||variant==='noVitals'||variant==='wrongDestination'||
     variant==='unsafeDischarge'||(variant==='noStudy'&&!bypass)||missingHistory;
-  const beforeXP=ctx.csProfile.xp;
+  const beforeXP=ctx.csProfile.xp,sourceControlBefore=p.phys?.sourceControlled;
   ctx.window.csCaseCompletionRefresh487();
   const question=rt.uiCalls.some(x=>x.includes('¿Qué destino indicamos ahora?'));
   assert.equal(question,!blocked||variant==='wrongDestination',
@@ -66,8 +66,8 @@ for(const id of Object.keys(CASE_CLOSURE_RULES_487)){
    const xp=ctx.csProfile.xp;
    ctx.nurseNatural(speak[chosen]);
    assert.equal(ctx.csProfile.xp,xp,id+' duplicated spoken closure must not award XP again');
-   assert.equal(p.phys?.sourceControlled===true&&chosen==='quirofano',false,
-     id+' surgery handoff must not masquerade as source control');
+   assert.equal(p.phys?.sourceControlled,sourceControlBefore,
+     id+' surgery handoff must not change whether source control has actually happened');
   }
   rows.push({id,variant,question,chosen,blocked,ended:!!p.caseEnded,
    xp:ctx.csProfile.xp-beforeXP,career:!!p._careerEndProcessed,
