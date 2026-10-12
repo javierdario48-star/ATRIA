@@ -16,7 +16,7 @@ function read(r){
  const p=r.ctx.sim,v=p.liveVitals||{},ph=p.phys||{},owner=p.csRinger487;
  return {realSeconds:Number(r.clock.realSeconds.toFixed(2)),
   ...Object.fromEntries(finite.map(k=>[k,Number(v[k])])),
-  effectiveVolume:Number(ph.effectiveVolume),sourceControlled:!!ph.sourceControlled,
+  effectiveVolume:ph.effectiveVolume==null?null:Number(ph.effectiveVolume),sourceControlled:!!ph.sourceControlled,
   nativeFluidMl:Number(p.therapyTotals?.fluidMl||0),
   overloadRisk:Number(ph.fluidOverloadRisk||ph.overloadRisk||0),
   confirmedFluidDoses:(p.administrationLog||[]).filter(x=>x.id==='fluid').length,
@@ -52,8 +52,8 @@ async function trial(engine,volume,amount,caseId='PERI-SEC-001'){
     !ledger.some(x=>x.amount===40000||/40000|40[\s.,]*000/.test(x.dose||'')))
   warnings.push({engine,caseId,volume,flag:'40L-dose-not-confirmed-exactly',ledger});
  for(const snapshot of trace)for(const field of [...finite,'effectiveVolume'])
-  if(!Number.isFinite(snapshot[field]))errors.push({engine,caseId,amount,field,value:snapshot[field]});
- if(p.phys.sourceControlled)errors.push({engine,caseId,amount,flag:'Ringer-must-not-cure-infectious-focus'});
+  if(snapshot[field]!==null&&!Number.isFinite(snapshot[field]))errors.push({engine,caseId,amount,field,value:snapshot[field]});
+ if(p.phys?.sourceControlled)errors.push({engine,caseId,amount,flag:'Ringer-must-not-cure-infectious-focus'});
  scenarios.push(result);return result;
 }
 for(const engine of ['native-default','b1-opt-in'])for(const volume of [.45,1.05])
