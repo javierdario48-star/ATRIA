@@ -72,6 +72,13 @@ for(const caseId of cases)for(const variant of ['standard','alternative']){
  ctx.window.csFinalizeCase487(plan.destination);
  assert.equal(ctx.csProfile.xp,preXP+xp,caseId+'/'+variant+' duplicate XP on repeated closure');
 }
+
+for(const id of ['APP-001','CHOLE-001','CHOLANG-001']){
+ const standard=rows.find(x=>x.caseId===id&&x.variant==='standard');
+ const alternative=rows.find(x=>x.caseId===id&&x.variant==='alternative');
+ assert.equal(alternative.score,standard.score,id+' clinically equivalent native antibiotic delivery must earn equal quality');
+ assert.equal(alternative.xp,standard.xp,id+' clinically equivalent native antibiotic delivery must earn equal XP');
+}
 const result={cases:cases.length,scenarios:rows.length,
  ended:rows.filter(x=>x.caseEnded).length,paid:rows.filter(x=>x.xp>0).length,
  realNativeDrugReceipts:true,originalNativeFinishAndCareer:true,

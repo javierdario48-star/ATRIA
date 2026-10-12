@@ -127,7 +127,16 @@ export function csClosureQuality487(a,rule,done,studies){
  // Surgery and source control occur AFTER ED handoff, so only the successful
  // transfer earns their treatment credit, not a fake surgical procedure.
  const relevant=(a.keyInterventions||[]).filter(id=>!['source_control','surgery'].includes(id));
- const completed=relevant.filter(id=>done.has(id)).length;
+
+ // A confirmed, accepted broad-spectrum alternative must count as equivalent
+ // antibiotic coverage; literal case keyInterventions list only the reference
+ // ceftriaxone + metronidazole regimen. This is scoring, not a drug-effect writer.
+ const antimicrobial=new Set(['ceftriaxone','metronidazole','piptazo','imipenem',
+  'cefepime','ceftazidime','cefoperazone','ampicillin']);
+ const validCoverage=rule.treatment?.some(group=>
+  group.every(id=>done.has(id))&&group.some(id=>antimicrobial.has(id)))||false;
+ const completed=relevant.filter(id=>done.has(id)||
+  (validCoverage&&antimicrobial.has(id))).length;
  const referralBonus=(a.keyInterventions||[]).some(id=>['source_control','surgery'].includes(id))?
   Number(rule.destinations.includes(a.disposition)&&
    (a.consultsDone||[]).length>0):0;

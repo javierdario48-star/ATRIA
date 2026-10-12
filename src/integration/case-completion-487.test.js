@@ -49,3 +49,27 @@ const urgent={caseId:'MESI-001',diagnosis:'isquemia',acceptedDiagnoses:['isquemi
  clinicalFlags:{activeBleeding:true},keyInterventions:['fluid','source_control'],keyStudies:['mesi_cta']};
 assert(csEvaluateClosure487(urgent).ready,'urgent surgery is not blocked by CT or risky heparin');
 console.log('13 CASE MINIMUM HANDOFF & XP TEST PASS',JSON.stringify({cases:passed,peritonitisPreserved:3}));
+
+/* Regression: executed equivalent antibiotic regimens must earn the same
+ * treatment-quality credit without claiming an unadministered named drug.
+ * Partial regimens remain unable to authorize closing the case. */
+for(const id of ['APP-001','CHOLE-001','CHOLANG-001']){
+ const rule=CASE_CLOSURE_RULES_487[id];
+ const groupA=rule.treatment[0],groupB=rule.treatment[1];
+ const base={caseId:id,diagnosis:'diagnóstico',acceptedDiagnoses:['diagnóstico'],
+  historyRelevant:['reason'],historyAnswered:['reason'],examDone:true,vitalsKnown:true,reassessments:1,
+  studiesDone:[rule.study[0][0]],keyStudies:rule.study[0],
+  keyInterventions:[...groupA,'source_control'],extraStudies:[],
+  consultsDone:rule.consult?.[rule.destinations[0]]?.slice(0,1)||[],
+  disposition:rule.destinations[0],sys:115,initialSys:115,spo2:98,hr:84,rr:18,
+  dead:false,ended:false,adverseCount:0};
+ const standard=csEvaluateClosure487({...base,delivered:[...groupA]});
+ const alternative=csEvaluateClosure487({...base,delivered:[...groupB]});
+ assert(standard.ready&&alternative.ready,id+' both executed clinical pathways accepted');
+ assert.equal(alternative.quality.treatment,standard.quality.treatment,
+  id+' equivalent administered regimen must not lose antibiotic XP');
+ const partial=csEvaluateClosure487({...base,delivered:groupB.filter(
+  x=>x!=='piptazo'&&x!=='imipenem')});
+ assert.equal(partial.ready,false,id+' incomplete alternative cannot close');
+}
+console.log('ATRIA EQUIVALENT ANTIBIOTIC XP REGRESSION PASS');
