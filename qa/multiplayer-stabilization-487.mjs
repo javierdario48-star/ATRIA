@@ -139,6 +139,11 @@ autoCalls.length=0;inputCtx.claimed=false;inputCtx.pendingAutoCommand487=null;
 inputCtx.challenge.patients=[singleFree,{index:1,ownerId:null,state:'waiting'}];
 inputCtx.sendMessage('enfermera Ringer');
 assert.equal(autoCalls.some(x=>x[0]==='claim'),false,'ambiguous proximity never steals patient');
+autoCalls.length=0;inputCtx.claimed=false;inputCtx.pendingAutoCommand487=null;
+inputCtx.challenge.patients=[singleFree,{index:1,ownerId:'RIVAL',state:'in_care'}];
+inputCtx.sendMessage('enfermera Ringer');
+assert.equal(autoCalls.some(x=>x[0]==='claim'),false,
+ 'a free and an occupied bedside patient are ambiguous; do not guess an owner');
 const db=new Map(),storage={get:async k=>db.get(k)??null,set:async(k,v)=>{db.set(k,v)},delete:async k=>db.delete(k)};
 let nonce=0;
 const server=createQaSocialServer(storage,{now:()=>2000000,
