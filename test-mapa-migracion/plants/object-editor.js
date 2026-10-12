@@ -225,7 +225,7 @@ const encodeMask=b=>{let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharC
 const decodeMask=(s,n)=>{const raw=atob(s);if(raw.length!==n)throw Error('Máscara con tamaño incorrecto');return Uint8Array.from(raw,c=>c.charCodeAt(0))};
 function pack(){
  return {schema:'atria-objects-editor-v1',source:'vendor/atria-4.8.6/index.html:BG_SRC',world:[1024,1536],inventory:DATA.map(p=>({id:p.id,center:p.center,extent:p.extent,family:p.family})),
-  objects:[...state.objects.values()].map(o=>({id:o.id,bbox:o.bbox,alpha:encodeMask(o.alpha),foliage:encodeMask(o.foliage),occlusion:encodeMask(o.occlusion),collision:o.collision,depth:o.depth,approved:o.approved,modified:o.modified})),presets:state.presets||[]};
+  objects:[...state.objects.values()].map(o=>({id:o.id,bbox:o.bbox,alpha:encodeMask(o.alpha),foliage:encodeMask(o.foliage),occlusion:encodeMask(o.occlusion),collision:{...o.collision},depth:o.depth,approved:o.approved,modified:o.modified})),presets:(state.presets||[]).map(v=>({name:v.name,source:v.source,collision:{...v.collision}}))};
 }
 function restorePack(doc){
  if(doc.schema!=='atria-objects-editor-v1'||doc.source!=='vendor/atria-4.8.6/index.html:BG_SRC'||!Array.isArray(doc.objects)||doc.objects.length>47)throw Error('Versión, fuente o cantidad no válidas');
