@@ -92,14 +92,19 @@ export function applyNurseVoice487(html){
       (sim.csPhase4Pending487||[]).some(x=>x.uid===uid&&x.id===item.id);
     const label=item.id==='oxygen'?'Oxígeno':item.id==='fluid'?'Ringer':
       MONITOR_THERAPY_CATALOG.find(t=>t.id===item.id)?.label||item.id;
-    // Frozen historical nursing harnesses have no late manual-monitor IV
-    // owner. Preserve their original pre-cannulation dependency gate rather
-    // than calling a bare native monitor method that cannot enforce an IV.
-    // Production uses the exported single IV contract and native monitor.
-    if(typeof window.csNurseTherapyRequiresIV487!=='function'&&
-       Number(sim.venousAccessCount||0)<=0&&item.id!=='oxygen'){
-      const fallback=baseNurse.call(this,'enfermera '+raw);
-      ok=fallback!==false||ok;continue;
+    // Before cannulation, preserve the existing nursing receipt owner and
+    // its native deferred-IV task (the monitor adapter still guards delivery).
+    // After cannulation, the SAME medication executes via addMonitorTherapy.
+    // Frozen V19 fixtures lacking the late IV adapter retain their safe path.
+    if(Number(sim.venousAccessCount||0)<=0&&
+       (iv||typeof window.csNurseTherapyRequiresIV487!=='function'&&item.id!=='oxygen')){
+      const acknowledged=baseNurse.call(this,'enfermera '+raw);
+      // Some legacy routes acknowledge without retaining the IV therapy.
+      // The original monitor IV adapter is the authority for that fallback.
+      if(!isPending()&&iv)addMonitorTherapy(raw);
+      if(isPending())feedback(label+': PENDIENTE. Esperando vía periférica; ejecutaré al colocarla.');
+      else feedback(label+': RECIBIDA. Verificando acceso y registro de enfermería.');
+      ok=acknowledged!==false||isPending()||ok;continue;
     }
     if(isPending()){
       feedback(label+': '+(iv&&Number(sim.venousAccessCount||0)<=0?
