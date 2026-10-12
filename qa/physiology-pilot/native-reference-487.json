@@ -87,7 +87,7 @@
       "ns422-treatment-context": "31ed6e0d9bfd1da23a88653b916a3c5e387409d2c80ee3fb7de785ce02805901",
       "ns423-evolution": "ed41fef4a518f6f7c875d0c67860855786a94c6abb89a674714c7bd1e8bfc77b"
     },
-    "guardClockSourceHash": "8a49339be703bdf6167dbb585bc72a8146f1a0f7c4ddfc3558c5672bb75b6481"
+    "guardClockSourceHash": "d363dc9056a6893e0cf74212423fce9078f0542ce73294fcb14344858d58698a"
   },
   "startup": {
     "catalogueSize": 30,
