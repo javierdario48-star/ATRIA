@@ -115,13 +115,17 @@ for(const size of [2,3,4])for(const mode of ['coop','competitive'])for(let round
     assert.equal(actual,permitted,mode+' permit '+action.kind+' case '+c.id);
     counters.clinicalPermissions++;
     const before=clinicalContext.ops.length;
+    const chatBefore=clinicalContext.sim.chats.patient.length;
     // Closure is validated by the owner-only career and destination bots;
     // executing finish on a synthetic patient would bypass its clinical proof.
     if(action.kind==='finish')continue;
     const processed=clinicalContext.applyAssistAction(clinical,action,helper.name);
     assert.equal(processed,permitted,mode+' relay '+action.kind+' case '+c.id);
     const delta=clinicalContext.ops.length-before;
-    assert.equal(delta,permitted?1:0,'exactly one native dispatch, no rival drug or study');
+    assert.equal(delta,permitted&&action.kind!=='speech'?1:0,
+     'exactly one native dispatch, no rival drug or study: '+mode+' '+c.id+' '+action.kind);
+    assert.equal(clinicalContext.sim.chats.patient.length-chatBefore,
+     permitted&&action.kind==='speech'?2:0,'interview updates only permitted patient chat');
     if(permitted)counters.nativeRelays++;
     else counters.deniedRelays++;
    }
