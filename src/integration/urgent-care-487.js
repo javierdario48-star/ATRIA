@@ -91,7 +91,11 @@ export function applyUrgentCare487(html){
   ' }\n'+
   ' return result;\n};\n'+
   'window.csCare487=Object.freeze({\n'+
-  ' report:(patient=sim,caseDef=C)=>({...csCareCompliance487(caseDef,patient,MONITOR_THERAPY_CATALOG),general:csAssessCaseRequirements487(caseDef,patient)}),\n'+
+  ' report:(patient=sim,caseDef=C)=>{\n'+
+  '  const legacy=csCareCompliance487(caseDef,patient,MONITOR_THERAPY_CATALOG);\n'+
+  '  const general=csAssessCaseRequirements487(caseDef,patient);\n'+
+  '  return {...legacy,general,coverageComplete:general.coverageComplete===null?legacy.coverageComplete:general.coverageComplete};\n'+
+  ' },\n'+
   ' assess:(id,caseDef=C,patient=sim)=>csAssessGeneralTreatment487(id,caseDef,patient),\n'+
   ' requirements:(caseDef=C,patient=sim)=>csAssessCaseRequirements487(caseDef,patient),\n'+
   ' allergy:(patient=sim)=>csSevereDrugReaction487(patient),\n'+
