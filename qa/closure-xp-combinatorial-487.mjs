@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import {CASE_CLOSURE_RULES_487} from '../src/clinical/case-completion-487.js';
 import {createRealOutcomeJourney487} from './native-xp-outcome-fixture-487.mjs';
 const rows=[];
+const ruleFor=id=>CASE_CLOSURE_RULES_487[id];
 function prep(id,variant){
  const rt=createRealOutcomeJourney487(id),{ctx}=rt,p=ctx.sim,c=ctx.C;
  const rule=CASE_CLOSURE_RULES_487[id],group=rule.treatment[0]||[];
@@ -36,20 +37,39 @@ function prep(id,variant){
   for(const t of group){p.therapyExposure.delete(t);p.interventions.delete(t);}
   if(group.includes('iv'))p.venousAccessCount=0;
  }
+ if(variant==='noExam'){p.examDone=false;p.examRegions=new Set();}
+ if(variant==='noVitals')p.lastVitalsKnown=false;
+ if(variant==='noStudy')p.orders.delete(rule.study[0][0]);
+ if(variant==='noHistory')p.intentHistory=[];
+ if(variant==='pendingConsult'&&receiver)p.consults.set(receiver,{status:'pending',accepted:false});
+ if(variant==='requestedOnly'&&group.length){
+  for(const t of group){p.therapyExposure.delete(t);p.interventions.delete(t);}
+  if(group.includes('iv'))p.venousAccessCount=0;
+  p.pendingTherapyRequests=[...group]; // Explicit requests are not administration receipts.
+ }
  if(variant==='unsafeRelease'){
   p.liveVitals.sys=78;p.liveVitals.spo2=88;
  }
  return {rt,ctx,p,c,rule};
 }
 for(const id of Object.keys(CASE_CLOSURE_RULES_487)){
- for(const v of ['minimum','complete','overtesting','missingDx','noConsult','noTreatment']){
-  const {ctx,p,rule}=prep(id,v),destination=rule.destinations[0];
+ for(const v of ['minimum','complete','overtesting','missingDx','noConsult','noTreatment',
+  'noExam','noVitals','noStudy','noHistory','pendingConsult','requestedOnly','wrongDestination',
+  ...(ruleFor(id).destinations.includes('alta')?['unsafeRelease']:[])]){
+  const {ctx,p,rule}=prep(id,v),destination=v==='wrongDestination'?
+   (rule.destinations.includes('alta')?'uti':'alta'):rule.destinations[0];
   const before=ctx.csProfile.xp;
   let err=null,result=false;
   try{result=ctx.window.csFinalizeCase487(destination)}catch(e){err=String(e.stack||e)}
   const ended=!!p.caseEnded,career=p.nsOutcome?.career,score=p.nsOutcome?.score??null;
-  const blocked=v==='missingDx'||v==='noTreatment'&&rule.treatment.length>0||
-   v==='noConsult'&&!!rule.consult?.[destination]?.length;
+  const primary=rule.destinations[0];
+  const receiver=rule.consult?.[primary]?.[0];
+  const critical=Number(p.liveVitals?.sys)<90||Number(String(ctx.C.vitals?.bp||'120/80').split('/')[0])<90;
+  const bypass=v==='noStudy'&&rule.urgentStudyBypass&&critical;
+  const blocked=['missingDx','noExam','noVitals','wrongDestination','unsafeRelease'].includes(v)||
+   (v==='noStudy'&&!bypass)||(v==='noHistory'&&!critical)||
+   (['noTreatment','requestedOnly'].includes(v)&&rule.treatment.length>0)||
+   (['noConsult','pendingConsult'].includes(v)&&!!receiver);
   if(err)throw Error(id+' '+v+' native exception '+err);
   assert.equal(ended,!blocked,id+' '+v+' genuine caseEnded');
   assert.equal(result,!blocked,id+' '+v+' actual successful finish signal');
@@ -67,7 +87,9 @@ for(const id of Object.keys(CASE_CLOSURE_RULES_487)){
    assert.equal(p.nsOutcome,undefined,id+' no result created for unsafe/incomplete workup');
    assert.equal(ctx.csProfile.xp,before,id+' no XP for incomplete unsafe case');
   }
-  rows.push({id,variant:v,destination,blocked,ended,score,xp:career?.xpDelta||0});
+  rows.push({id,variant:v,destination,blocked,ended,score,xp:career?.xpDelta||0,
+   nativeCareerProcessed:!!p._careerEndProcessed,consultPending:v==='pendingConsult',
+   effectiveStudyBypass:!!bypass,requestedNotGiven:v==='requestedOnly'});
  }
  const pick=v=>rows.find(x=>x.id===id&&x.variant===v);
  assert(pick('complete').xp>=pick('minimum').xp,id+' thoroughness XP cannot decrease');
@@ -79,6 +101,14 @@ const out={total:rows.length,closed:rows.filter(x=>x.ended).length,
  rows};
 fs.mkdirSync('qa/outcome-combinatorial-results',{recursive:true});
 fs.writeFileSync('qa/outcome-combinatorial-results/xp-matrix-487.json',JSON.stringify(out,null,2)+'\n');
+const perCase=Object.keys(CASE_CLOSURE_RULES_487).map(id=>{
+ const pick=v=>rows.find(x=>x.id===id&&x.variant===v);
+ return {id,destination:pick('minimum').destination,
+  minimum:{closed:pick('minimum').ended,score:pick('minimum').score,xp:pick('minimum').xp},
+  complete:{closed:pick('complete').ended,score:pick('complete').score,xp:pick('complete').xp},
+  overtesting:{closed:pick('overtesting').ended,score:pick('overtesting').score,xp:pick('overtesting').xp},
+  blocked:rows.filter(x=>x.id===id&&x.blocked).map(x=>x.variant)};
+});
 console.log('ATRIA REAL NATIVE END + XP MATRIX',JSON.stringify({
- total:out.total,closed:out.closed,blocked:out.blocked,recordedXP:out.recordedXP
+ total:out.total,closed:out.closed,blocked:out.blocked,recordedXP:out.recordedXP,perCase
 }));
