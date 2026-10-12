@@ -84,7 +84,7 @@ assert.equal(trajectories.length,13);
 fs.mkdirSync('qa/adversarial-results',{recursive:true});
 const report={schema:'atria-487-malpractice/v1',clinicalRules:policyPairs,
  realPatientJourneys:13,medicineAttempts:65,trajectories,gaps,
- note:'Known active hemorrhage + severe ceftriaxone allergy injected in EVERY seed. Worst-case stress variant, not each seed default. No physical browser.';
+ note:'Known active hemorrhage + severe ceftriaxone allergy injected in EVERY seed. Worst-case stress variant, not each seed default. No physical browser.'};
 fs.writeFileSync('qa/adversarial-results/malpractice-487.json',JSON.stringify(report,null,2)+'\n');
 console.log('BOT MEDICATION MALPRACTICE SUMMARY',JSON.stringify({
  rules:390,cases:13,medicines:65,confirmed:trajectories.reduce((a,b)=>a+b.confirmed.filter(x=>x.administered).length,0),
