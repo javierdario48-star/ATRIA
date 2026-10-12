@@ -10,7 +10,7 @@ OUT.mkdir(exist_ok=True)
 base=(SRC/'index.html').read_text(encoding='utf8')
 editor=(SRC/'plants/object-editor.js').read_text(encoding='utf8')
 manifest=json.loads((SRC/'plants/plants_source_manifest.json').read_text(encoding='utf8'))
-assert len(manifest['instances'])==46,'Source manifest count changed; re-audit P47'
+assert len(manifest['instances'])==47,'Source manifest count changed; re-audit inventory'
 needle='<script src="plants/object-editor.js"></script>'
 assert base.count(needle)==1,'Editor script integration not found exactly once'
 assert 'data:image/webp;base64' in base,'Original embedded map source missing'
@@ -27,8 +27,8 @@ readme.write_text(
  '3. Pulsar «Guardar JSON» o «ZIP completo» para conservar la edición.\n'
  '4. Reimportar el JSON para recuperar las correcciones.\n'
  'IMPORTANTE: P31 no está aprobada visualmente. El inventario fuente vigente\n'
- 'contiene 46 registros; el checkpoint 47 refiere una instancia P47 aún sin\n'
- 'coordenadas ni recurso fuente recuperados en GitHub. No migrar producción.\n',
+ 'contiene 47 registros; P47 se recuperó de plants_physics.json y aún\n'
+ 'necesita revisión visual de su máscara original. No migrar producción.\n',
  encoding='utf8')
 package=OUT/'ATRIA_Editor_Objetos_P31_Experimental.zip'
 with zipfile.ZipFile(package,'w',zipfile.ZIP_DEFLATED,compresslevel=7) as z:
