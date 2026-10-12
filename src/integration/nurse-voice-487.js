@@ -78,46 +78,36 @@ export function applyNurseVoice487(html){
     ok=true;continue;
    }
    if(item.kind==='surgery'){ok=window.csSurgery487Request?.()!==false||ok;continue}
-   if(item.kind==='therapy'&&!C.interventions.some(x=>x.id===item.id)&&item.id==='oxygen'){
-    // The native V19 dose is asynchronous: absence of an immediate active chip
-    // is NOT a failed administration. A confirmed ledger row, not SpO2, is
-    // the completion boundary; ongoing preparation must remain IN_PROGRESS.
-    if(sim.pendingTherapies?.has('oxygen')){
-      feedback('Oxígeno: EN PROGRESO. La administración anterior continúa pendiente.');
+   if(item.kind==='therapy'&&typeof MONITOR_THERAPY_CATALOG!=='undefined'&&
+      MONITOR_THERAPY_CATALOG.some(t=>t.id===item.id)){
+    // A nurse order and a manual monitor order MUST reach the same native
+    // administration and dose pipeline. The older baseNurse path may merely
+    // acknowledge an already-scanned drug without scheduling a real dose.
+    // Patient identity/permissions and invalid explicit doses were checked above.
+    const uid=sim.patientInstance?.uid;
+    const raw=item.id==='fluid'&&!/\\b(?:ringer|suero|cristaloides|volumen)\\b/.test(norm(item.text))?
+      'ringer'+(norm(item.text).match(/\\b(\\d+)\\s*ml\\b/)?.[0]?' '+norm(item.text).match(/\\b(\\d+)\\s*ml\\b/)[0]:''):item.text;
+    const iv=window.csNurseTherapyRequiresIV487?.(item.id)===true;
+    const isPending=()=>sim.pendingTherapies?.has(item.id)===true||
+      (sim.csPhase4Pending487||[]).some(x=>x.uid===uid&&x.id===item.id);
+    const label=MONITOR_THERAPY_CATALOG.find(t=>t.id===item.id)?.label||item.id;
+    if(isPending()){
+      feedback(label+': '+(iv&&Number(sim.venousAccessCount||0)<=0?
+       'PENDIENTE. Esperando vía periférica.':'EN PROGRESO. Ya se está preparando; no repetí la dosis.'));
       ok=true;continue;
     }
-    const before=(sim.administrationLog||[]).filter(x=>x.id==='oxygen'&&x.action!=='stop').length;
-    const accepted=addMonitorTherapy(item.text);
-    const given=(sim.administrationLog||[]).filter(x=>x.id==='oxygen'&&x.action!=='stop').length>before;
-    const pending=sim.pendingTherapies?.has('oxygen')===true;
-    if(given){
-      if(typeof renderMonitorTherapies==='function')renderMonitorTherapies();
-      if(typeof renderAdministrationHistory==='function')renderAdministrationHistory();
-      if(typeof updateMonitorDOM==='function')updateMonitorDOM();
-      feedback('Oxígeno: COMPLETADA. Administración confirmada en el historial.');
-    }else if(pending)feedback('Oxígeno: EN PROGRESO. Confirmaré la administración al registrarse.');
-    else if(sim.monitorTherapies?.has('oxygen'))feedback('Oxígeno: tratamiento ya activo; verificar el recibo previo.');
-    else if(accepted===false)feedback('Oxígeno: BLOQUEADA. El ejecutor nativo rechazó la orden; revisá el motivo en el monitor.');
-    else feedback('Oxígeno: RECIBIDA. Esperando confirmación del ejecutor nativo.');
-    ok=accepted!==false||pending||given||ok;continue;
-   }
-   if(item.kind==='therapy'&&item.id==='fluid'&&Number(sim.venousAccessCount||0)>0){
-    // With a confirmed IV, there is no bedside cannulation task to wait for:
-    // use the SAME native monitor executor and its V19 dose/pending receipt.
-    // Never create another bolus while the first one is still preparing.
-    if(sim.pendingTherapies?.has('fluid')||(sim.csPhase4Pending487||[]).some(x=>x.id==='fluid'&&x.uid===sim.patientInstance?.uid)){
-      feedback('Ringer: EN PROGRESO. Ya existe una orden pendiente; no repetí el bolo.');
-      ok=true;continue;
-    }
-    const before=(sim.administrationLog||[]).filter(x=>x.id==='fluid'&&x.action!=='stop').length;
-    const accepted=addMonitorTherapy(item.text);
-    const given=(sim.administrationLog||[]).filter(x=>x.id==='fluid'&&x.action!=='stop').length>before;
-    const pending=sim.pendingTherapies?.has('fluid')===true;
-    if(given)feedback('Ringer: COMPLETADA. Bolo confirmado en el historial.');
-    else if(pending)feedback('Ringer: EN PROGRESO. Preparación IV iniciada; confirmaré la administración.');
-    else if(accepted===false)feedback('Ringer: BLOQUEADA. El ejecutor nativo rechazó la orden; revisá el motivo en el monitor.');
-    else feedback('Ringer: RECIBIDA. Esperando confirmación del ejecutor nativo.');
-    ok=accepted!==false||pending||given||ok;continue;
+    const previous=(sim.administrationLog||[]).filter(x=>x.id===item.id&&x.action!=='stop').length;
+    const accepted=addMonitorTherapy(raw);
+    const given=(sim.administrationLog||[]).filter(x=>x.id===item.id&&x.action!=='stop').length>previous;
+    const pending=isPending();
+    if(given)feedback(label+': COMPLETADA. Administración registrada en el monitor.');
+    else if(pending)feedback(label+': '+(iv&&Number(sim.venousAccessCount||0)<=0?
+     'PENDIENTE. Se iniciará tras colocar vía periférica.':
+     'EN PROGRESO. Preparación iniciada; confirmaré la dosis al registrarse.'));
+    else if(accepted===false)feedback(label+': BLOQUEADA. El ejecutor nativo rechazó la orden; comprobá el motivo en el monitor.');
+    else feedback(label+': RECIBIDA. Esperando confirmación del ejecutor nativo.');
+    ok=accepted!==false||pending||given||ok;
+    continue;
    }
    const phrase=item.kind==='vitals'?'signos vitales':
     item.kind==='study'?C.studies.find(x=>x.id===item.id)?.label:
