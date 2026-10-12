@@ -78,7 +78,7 @@ export function applyNurseVoice487(html){
     ok=true;continue;
    }
    if(item.kind==='surgery'){ok=window.csSurgery487Request?.()!==false||ok;continue}
-   if(item.kind==='therapy'&&typeof MONITOR_THERAPY_CATALOG!=='undefined'&&
+   if(item.kind==='therapy'&&item.id!=='vasopressor'&&typeof MONITOR_THERAPY_CATALOG!=='undefined'&&
       MONITOR_THERAPY_CATALOG.some(t=>t.id===item.id)){
     // A nurse order and a manual monitor order MUST reach the same native
     // administration and dose pipeline. The older baseNurse path may merely
