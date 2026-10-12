@@ -111,7 +111,9 @@ export function applyNurseVoice487(html){
   addGlobalChat('doctor',raw);pendingAddress=null;chatRole='nurse';refreshChatDock();
   nurseNatural(raw);return true;
  };
- window.csNurseVoice487={parse:t=>csNurseScan487(t,C.studies,MONITOR_THERAPY_CATALOG,C.interventions)};
+ // Keep the one existing dispatcher accessible to the later native language
+ // wrapper. V412 retains its permission/question guards and delegates here.
+ window.csNurseVoice487={dispatch:nurseNatural,parse:t=>csNurseScan487(t,C.studies,MONITOR_THERAPY_CATALOG,C.interventions)};
 })();
 </script>`;
  const oldFlush="if(item.id==='albumin')addMonitorTherapy(item.text);else prevNatural.call(this,item.text);";
@@ -130,5 +132,8 @@ export function applyNurseVoice487(html){
  const oldWarning="nurseSay('Doctor, el cuadro infeccioso sigue activo y los signos no se estabilizan.')";
  const newWarning="nurseSay('Doctor, hay signos de infección grave: Ringer y oxígeno no sustituyen los antibióticos. Verificá que se hayan administrado mientras gestionamos el foco.')";
  if(html.includes(oldWarning))html=html.replace(oldWarning,newWarning);
+ const lateQuestion="  if(question(text)){nurseSay('Si querés indicar una conducta, decime la orden concreta. Para explicar o discutir esa decisión podés preguntarle al Dr. Vega.');return false;}";
+ if(html.split(lateQuestion).length!==2)throw Error('late V412 nurse guard missing/ambiguous');
+ html=html.replace(lateQuestion,lateQuestion+"\n  if(window.csNurseVoice487?.dispatch)return window.csNurseVoice487.dispatch(text);");
  return html.replace('</body>',runtime+'</body>');
 }

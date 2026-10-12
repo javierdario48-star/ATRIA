@@ -22,7 +22,7 @@ const scenarios=[
  {q:'oxígeno y noradrenalina 0.05 mg IV',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor']},
  {q:'vía',iv:1,meds:[]}
 ];
-for(const spec of scenarios){
+for(const spec of scenarios.filter(x=>!process.argv.includes('--checkpoint-b')||!x.absent)){
  const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:spec.confirmedIV||0}),p=r.ctx.sim;
  try{
   r.ctx.sendMessage('Enfermera '+spec.q);
