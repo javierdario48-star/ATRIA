@@ -14,6 +14,7 @@ function initialize(rt,{complete=false}={}){
  for(const id of first)if(id==='iv'){p.venousAccessCount=1;}
  else if(['npo','ngt','source_control'].includes(id))p.interventions.add(id);
  else p.therapyExposure.set(id,{count:1});
+ p.consults??=new Map();
  for(const service of r.consult?.[r.destinations[0]]||[])
   p.consults.set(service,{status:'done',accepted:true});
  return {ctx,c,p,r};
