@@ -147,22 +147,30 @@ const call=(path,method='GET',body={},token='',query={})=>server.route({path,met
 const reg=async n=>(await call('register','POST',{name:n,handle:n.toLowerCase(),clientKey:'client-very-long-unique-'+n})).body;
 const a=await reg('MedicoA'),b=await reg('MedicoB');assert(a.token&&b.token&&a.user.id!==b.user.id);
 let previous=null;
-for(let i=0;i<5;i++){
- const mode=i%2?'competitive':'coop';
- const result=await call('rooms','POST',{mode,invitees:[b.user.id],peerId:'peer-A'},a.token);
+for(const mode of ['coop','competitive'])for(let i=0;i<5;i++){
+ const creator=i%2?b:a,invited=i%2?a:b;
+ const result=await call('rooms','POST',{mode,invitees:[invited.user.id],peerId:creator===a?'peer-A':'peer-B'},creator.token);
  assert.equal(result.status,201);const id=result.body.room.id;
- assert.notEqual(id,previous);assert.equal((await call('rooms/join','POST',{roomId:id,peerId:'peer-B'},b.token)).status,200);
- assert.equal((await call('rooms/'+id+'/messages','POST',{message:{type:'cs_room_v411',kind:'team_chat',text:'hola '+i}},b.token)).status,200);
- const received=await call('rooms/'+id+'/messages','GET',{},a.token,{after:0});
- assert(received.body.messages.some(x=>x.userId===b.user.id&&x.data.text==='hola '+i));
- const first=i%2?a:b,last=i%2?b:a;
+ assert.notEqual(id,previous);
+ const joined=await call('rooms/join','POST',{roomId:id,peerId:invited===a?'peer-A':'peer-B'},invited.token);
+ assert.equal(joined.status,200);
+ assert.equal(joined.body.room.members.length,2,'two independent authenticated players');
+ assert.equal(joined.body.room.role,'guest');
+ assert.equal((await call('rooms/join','POST',{roomId:id,peerId:'repeat-'+i},invited.token)).body.room.members.length,2,
+  'repeated join must not duplicate a player');
+ assert.equal((await call('rooms/'+id+'/messages','POST',{message:{type:'cs_room_v411',kind:'team_chat',text:'hola '+mode+i}},invited.token)).status,200);
+ const received=await call('rooms/'+id+'/messages','GET',{},creator.token,{after:0});
+ assert(received.body.messages.some(x=>x.userId===invited.user.id&&x.data.text==='hola '+mode+i));
+ const first=i%2?creator:invited,last=i%2?invited:creator;
  assert.equal((await call('rooms/'+id+'/leave','POST',{},first.token)).status,200);
  assert.equal((await call('rooms/'+id+'/leave','POST',{},last.token)).status,200);
- assert.equal((await call('rooms/join','POST',{roomId:id,peerId:'peer-B'},b.token)).status,404);
+ assert.equal((await call('rooms/join','POST',{roomId:id,peerId:'stale'},invited.token)).status,404);
+ assert.equal((await call('rooms/'+id+'/messages','GET',{},creator.token,{after:0})).status,404,
+  'late poll must not reopen a closed session');
  previous=id;
 }
 console.log('ATRIA MULTIPLAYER STABILIZATION BOT PASS',JSON.stringify({
- cycles:5,independentAuthenticatedClients:2,
+ cycles:10,cyclesPerMode:5,hostRoleRotated:true,independentAuthenticatedClients:2,
  cooperative:['exam','speech','therapy','monitor','study'],
  competitiveNoForeignMedicationOrStudy:true,competitiveRivalSpeechAndExam:true,firstInteractionClaim:true,source:'integrated built source and live server contracts',
  browser:false,realNetwork:false}));
