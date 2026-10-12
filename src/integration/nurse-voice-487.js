@@ -9,6 +9,15 @@ export function applyNurseVoice487(html){
  const addressed=t=>/\\b(?:enfermera|enfermero|enfermeria)\\b/.test(norm(String(t||'')));
  function feedback(t){nurseSay(t);sim?.events?.push({m:sim.gameMinute,t:'Enfermería: '+t})}
  nurseNatural=function(text){
+  // "Both" can only refer to the last explicitly identified two-antibiotic
+  // order on this very encounter. It never selects a regimen from diagnosis.
+  const pair=sim?._csNurseAntibioticPair487;
+  if(/^(?:enfermera |enfermero |enfermeria )?(?:aplica|aplicar|administra|administrar|dar|pasa|pasar) ambos antibioticos$/.test(norm(text))){
+   if(pair?.uid!==sim?.patientInstance?.uid||pair?.texts?.length!==2){
+    feedback('Especificá los dos antibióticos; no hay una pareja identificada para este paciente.');return false;
+   }
+   text='enfermera '+pair.texts.join(' y ');
+  }
   const bare=norm(String(text||'')).trim();
   const direct=/^(?:(?:dos|2) )?(?:vias?|accesos? venosos?|monitor|monitorizar|oxigeno|o2|ringer|hemograma|signos vitales)$/;
   // A brief command addressed to a nearby nurse also works without saying
@@ -29,13 +38,18 @@ export function applyNurseVoice487(html){
   const parsed=csNurseScan487(text,C.studies,MONITOR_THERAPY_CATALOG,C.interventions);
   if(!parsed.active){feedback('Es una pregunta o una negación; no ejecuté procedimientos.');return false}
   if(!parsed.items.length){feedback('No reconocí acciones en el pedido. Reformulalo.');return false}
-  const pressor=parsed.items.find(x=>x.id==='vasopressor'&&!x.negated&&x.action!=='stop');
-  const issue=pressor?window.csNoradrenalineOrderIssue487?.(pressor.text,pressor.contractText,text):null;
-  if(issue){feedback('Noradrenalina NO administrada: '+issue);return false;}
+  const antibiotics=new Set(['ceftriaxone','metronidazole','imipenem','ceftazidime','cefoperazone',
+   'cefepime','piptazo','ampicillin','amikacin','gentamicin']);
+  const named=parsed.items.filter(x=>x.kind==='therapy'&&antibiotics.has(x.id)&&!x.negated);
+  if(named.length)sim._csNurseAntibioticPair487=named.length===2?
+   {uid:sim.patientInstance?.uid,texts:named.map(x=>x.text)}:null;
   feedback('Recibí '+parsed.items.length+' indicaciones; informaré por separado su estado.');
   let ok=false;
   for(const item of parsed.items.slice(0,12)){
    if(item.negated){feedback('No ejecuté '+item.phrase+' (indicación negada).');continue}
+   const issue=item.id==='vasopressor'&&item.action!=='stop'?
+    window.csNoradrenalineOrderIssue487?.(item.text,item.contractText,text):null;
+   if(issue){feedback('Noradrenalina NO administrada: '+issue);continue;}
    if(item.action==='stop'){
     ok=window.csQueueTherapyStop487?.(item.id,item.text)===true||ok;continue;
    }

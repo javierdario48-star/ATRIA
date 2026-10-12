@@ -49,7 +49,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  // or condition cannot disappear when the next clause names oxygen.
  const stopContextSafe=!(stopLanguage||chosen.some(x=>x.kind==='therapy'&&x.id==='vasopressor'))||[...chosen.map((x,i)=>
   input.slice(i?chosen[i-1].end:0,x.start)),input.slice(chosen.at(-1)?.end??0)].every(piece=>
-  /^(?:(?:\d+(?:\.\d+)?|ml|cc|l|litro|litros|mg|g|mcg|ug|kg|min|minuto|minutos|iv|ev|endovenoso|intravenoso|y|e|ademas|mas|pero|el|la|los|las|un|una|dos|suspender|suspende|suspenda|retirar|retira|retire|detener|detene|conectar|conecta|poner|pone|colocar|coloca|canalizar|canaliza|tomar|toma|controlar|controla|administrar|administra|dar|da|pasar|pasa)\s*)*$/.test(
+  /^(?:(?:\d+(?:\.\d+)?|ml|cc|l|litro|litros|mg|g|mcg|ug|kg|min|minuto|minutos|iv|ev|endovenoso|intravenoso|oral|po|im|intramuscular|nasal|intraarterial|intratecal|epidural|bolo|en|a|via|y|e|ademas|mas|pero|el|la|los|las|un|una|dos|suspender|suspende|suspenda|retirar|retira|retire|detener|detene|conectar|conecta|poner|pone|colocar|coloca|canalizar|canaliza|tomar|toma|controlar|controla|administrar|administra|dar|da|pasar|pasa)\s*)*$/.test(
    piece.trim()));
  const result=[];
  const relevantNegation=/\b(?:no|sin|evitar|evita|nunca|suspender|suspende|suspenda|retirar|retira|retire|detener|detene|cancelar)\b/;
@@ -57,8 +57,16 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
   const item=chosen[index];
   const before=input.slice(index?chosen[index-1].end:0,item.start).replace(/\s+/g,' ');
   const scoped=before.split(/\b(?:y|pero|luego|despues|ademas|,)\b/).pop();
-  const phrase=input.slice(item.start,chosen.find(x=>x.start>item.start)?.start??input.length)
+  let phrase=input.slice(item.start,chosen.find(x=>x.start>item.start)?.start??input.length)
    .replace(/\s+(?:y|e|ademas|mas)\s*$/,'').trim();
+  // A new action before the NEXT identified medicine belongs to that clause.
+  // Do not parse its number as the oxygen/fluid dose preceding it.
+  if(chosen[index+1]?.kind==='therapy')phrase=phrase.replace(/\s+(?:administrar|administra|dar|da|pasar|pasa|iniciar|inicia|infundir)\b.*$/,'').trim();
+  const routeQualifier=/^via\s+(?:iv|ev|oral|po|im|sc|intramuscular|intravenos[oa]|endovenos[oa]|nasal|intraarterial|intratecal|epidural)\b/;
+  // A medicine's route is not a request to cannulate. Previously the whole
+  // pressor rejection hid this duplicate intention; partial orders expose it.
+  if(item.kind==='iv'&&item.phrase==='via'&&chosen[index-1]?.kind==='therapy'&&
+    (!/\b(?:y|e|ademas|mas|pero|luego|despues)\b/.test(before)||routeQualifier.test(phrase)))continue;
   // A specific stop is an executable action, not a positive drug order.
   // Negations, questions and conditional/qualified stops remain non-executable.
   // Only oxygen and explicitly identified norepinephrine have confirmed stops.
@@ -80,7 +88,8 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
   const newAction=before.match(/\b(?:administrar|administra|dar|da|pasar|pasa|iniciar|inicia|infundir)\b.*$/)?.[0];
   const prefix=index&&chosen[index-1].kind==='therapy'&&!/\b(?:y|e|ademas|mas|pero)\b/.test(before)?newAction||'':scoped;
   const next=chosen[index+1];
-  const routeTail=next?.kind==='iv'&&next.phrase==='via'&&!/\b(?:y|e|ademas|mas|pero)\b/.test(phrase)?
+  const routeTail=next?.kind==='iv'&&next.phrase==='via'&&(!/\b(?:y|e|ademas|mas|pero)\b/.test(phrase)||
+   routeQualifier.test(input.slice(next.start)))?
    input.slice(next.start,chosen[index+2]?.start??input.length):'';
   const contractText=(prefix+' '+phrase+' '+routeTail).trim();
   if(!duplicate)result.push({...item,text:stop?'suspender '+phrase:item.id==='vasopressor'?contractText:phrase,count,negated,

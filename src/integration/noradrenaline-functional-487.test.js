@@ -34,7 +34,9 @@ await check('incompatible units/routes/identity must not be rewritten into a val
    advance(r,6);
    assert.equal(rows(r).length,0,q+' '+source);
    assert.equal(r.ctx.sim.monitorTherapies.has('vasopressor'),false,q);
-   assert.equal(r.ctx.sim.csPhase4Pending487?.length||0,0,q+' '+source+': invalid order must not wait for a real IV');
+   const independentFluid=q.startsWith('Ringer')&&source==='nurse';
+   assert.equal((r.ctx.sim.csPhase4Pending487||[]).some(x=>x.id==='vasopressor'),false,q+': invalid pressor may not wait for an IV');
+   assert.equal(r.ctx.sim.csPhase4Pending487?.length||0,independentFluid?1:0,q+' '+source+': valid independent Ringer is retained');
    assert.equal(r.ctx.sim.venousAccessCount,0,'invalid route must not request cannulation either');
   }
  }
@@ -50,7 +52,13 @@ await check('explicit mcg/ug/Greek micrograms and decimal comma preserve one exa
 await check('validation and execution preserve the same dose even when the IV route precedes it',()=>{
  for(const iv of [0,1])for(const [q,expected] of [['noradrenalina via IV 0.2 mcg/kg/min',.2],
   ['noradrenalina via EV 0.02 mcg/kg/min',.02],['noradrenalina 0.2 mcg/kg/min via IV',.2]]){
-  const r=createLiveNativeJourney487('PERI-SEC-001',{confirmedIV:iv});order(r,q);advance(r,15);
+  const r=createLiveNativeJourney487('PERI-SEC-001',{confirmedIV:iv});order(r,q);
+  if(!iv){
+   advance(r,.1);assert.equal(rows(r).length,0,'a medication route is not completed cannulation');
+   assert.equal(r.ctx.nurse.task,null,'via IV denotes the medication route, not a new access request');
+   order(r,'una via');
+  }
+  advance(r,15);
   assert.equal(rows(r).length,1,q);assert.equal(r.ctx.sim.monitorTherapies.get('vasopressor').dose.amount,expected,q);
   assert.equal(r.ctx.sim.csNurse487History.find(x=>x.items.some(y=>y.expectedNora)).items[0].status,'COMPLETED');
  }

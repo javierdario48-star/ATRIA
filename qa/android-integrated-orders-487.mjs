@@ -20,12 +20,27 @@ const scenarios=[
   ['morfina','morphine'],['furosemida','furosemide'],['Ringer','fluid']]
   .map(([q,id])=>({q,confirmedIV:1,iv:1,meds:[id],defaultDose:true})),
  {q:'oxígeno y noradrenalina 0.05 mg IV',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor']},
+ {q:'oxígeno y noradrenalina oral',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor']},
+ {q:'oxígeno y noradrenalina en bolo IV',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor']},
+ {q:'oxígeno dar 0.5 mcg/kg/min noradrenalina IV',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor'],doses:{oxygen:'4 L/min'}},
  {q:'vía',iv:1,meds:[]}
 ];
+if(!process.argv.includes('--checkpoint-b')){
+ const permute=a=>a.length===1?[a]:a.flatMap((x,i)=>permute(a.filter((_,j)=>j!==i)).map(p=>[x,...p]));
+ for(const [words,meds,monitor] of [
+  [['vías','monitor','oxígeno'],['oxygen'],true],
+  [['ceftriaxona','metronidazol','oxígeno'],['ceftriaxone','metronidazole','oxygen'],false]
+ ])for(const order of permute(words))for(const separator of [' y ',', ', ' ', ' y después '])
+  for(const confirmedIV of [0,1])for(const caseId of ['PERI-SEC-001','CIRR-001']){
+   const access=words.includes('vías')?'':'vías, ';
+   scenarios.push({q:access+order.join(separator),iv:2,confirmedIV,caseId,meds,monitor});
+  }
+}
 for(const spec of scenarios.filter(x=>!process.argv.includes('--checkpoint-b')||!x.absent)){
- const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:spec.confirmedIV||0}),p=r.ctx.sim;
+ const r=createAndroidIntegratedRuntime487(spec.caseId||'PERI-SEC-001',{confirmedIV:spec.confirmedIV||0}),p=r.ctx.sim;
  try{
   r.ctx.sendMessage('Enfermera '+spec.q);
+  assert.equal(p.administrationLog.length,0,'accepted order is not an administered dose');
   if(!spec.confirmedIV)assert.equal(p.venousAccessCount,0,'no access before native completion');
   advance(r,40,{dt:1/6});
   assert.equal(p.venousAccessCount,spec.iv,'actual IV count');
@@ -34,13 +49,46 @@ for(const spec of scenarios.filter(x=>!process.argv.includes('--checkpoint-b')||
    const receipts=p.administrationLog.filter(x=>x.id===id);
    assert.equal(receipts.length,1,'one actual administration '+id);
    assert(p.monitorTherapies.has(id),'native active treatment '+id);
+   if(spec.doses?.[id])assert.equal(receipts[0].doseDisplay,spec.doses[id],'dose belongs to its own clause');
+   const reported=(p.csNurse487History||[]).flatMap(h=>h.items).filter(x=>x.kind==='therapy'&&x.id===id);
+   assert(reported.every(x=>x.status==='COMPLETED'),'execution receipts agree with actual dose '+id);
    if(spec.defaultDose)assert.equal(receipts[0].defaultApplied,true,'native default provenance '+id);
+   if(spec.defaultDose){
+    const therapy=r.ctx.findMonitorTherapy(spec.q);
+    assert.equal(receipts[0].doseDisplay,r.ctx.defaultDoseForTherapy(therapy,spec.q).display,'exact native default dose');
+   }
   }
   for(const id of spec.absent||[])assert(!p.administrationLog.some(x=>x.id===id),'invalid clause not administered '+id);
-  rows.push({q:spec.q,pass:true,iv:p.venousAccessCount,monitor:p.monitorConnected,
+  rows.push({q:spec.q,caseId:spec.caseId||'PERI-SEC-001',pass:true,iv:p.venousAccessCount,monitor:p.monitorConnected,
    actual:p.administrationLog.map(x=>({id:x.id,dose:x.doseDisplay,defaultApplied:x.defaultApplied}))});
  }catch(e){rows.push({q:spec.q,pass:false,error:e.message,iv:p.venousAccessCount,
   monitor:p.monitorConnected,actual:p.administrationLog.map(x=>x.id)});errors.push(spec.q+': '+e.message);}
+}
+if(!process.argv.includes('--checkpoint-b')){
+ const r=createAndroidIntegratedRuntime487(),p=r.ctx.sim;
+ r.ctx.nurseNatural('Enfermera ceftriaxona y metronidazol');
+ r.ctx.nurseNatural('Enfermera ceftriaxona y metronidazol');
+ assert.equal(p.administrationLog.length,0,'no IV-dependent dose before cannulation');
+ assert.equal(p.csPhase4Pending487.length,2,'both retained once before IV');
+ r.ctx.nurseNatural('Enfermera vías');r.ctx.nurseNatural('Enfermera monitor y vías');
+ advance(r,40,{dt:1/6});
+ assert.equal(p.venousAccessCount,2,'pending/repeated access reaches two, not four');
+ assert.equal(p.monitorConnected,true);
+ for(const id of ['ceftriaxone','metronidazole'])assert.equal(p.administrationLog.filter(x=>x.id===id).length,1,'one pending dose '+id);
+ assert.equal(p.csPhase4Pending487.length,0);
+ rows.push({q:'repeated pending antibiotics + repeated IV/monitor',pass:true});
+}
+if(!process.argv.includes('--checkpoint-b'))for(const context of [false,true]){
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:1});
+ try{
+  if(context){r.ctx.sendMessage('Enfermera ceftriaxona y metronidazol');advance(r,1,{dt:1/6});}
+  const before=r.ctx.sim.administrationLog.length;
+  const accepted=r.ctx.nurseNatural('Enfermera aplica ambos antibióticos');
+  assert.equal(accepted,context,'both antibiotics requires an identified pair');
+  advance(r,1,{dt:1/6});
+  assert.equal(r.ctx.sim.administrationLog.length-before,context?2:0,'two independent actual receipts or none');
+  rows.push({q:'ambos antibióticos',context,pass:true});
+ }catch(e){errors.push('ambos/'+context+': '+e.message);rows.push({q:'ambos antibióticos',context,pass:false,error:e.message});}
 }
 fs.mkdirSync('qa/android-fix-results',{recursive:true});
 fs.writeFileSync('qa/android-fix-results/orders.json',JSON.stringify({
