@@ -22,7 +22,7 @@ const {chromium}=require('playwright');
        const before=t.pack(),hash=JSON.stringify(before);
        o.alpha[5]=129;o.occlusion[5]=55;o.collision.rearLift+=4;o.depth+=5;
        const changed=t.pack();t.restorePack(before);
-       if(JSON.stringify(t.pack())!==hash)throw new Error('roundtrip does not restore exact arrays');
+       const actual=JSON.stringify(t.pack());if(actual!==hash){let i=0;while(i<actual.length&&actual[i]===hash[i])i++;throw new Error('roundtrip differs at '+i+' BEFORE='+hash.slice(i-90,i+150)+' AFTER='+actual.slice(i-90,i+150));}
        t.restorePack(changed);
        if(o.alpha[5]!==129||o.occlusion[5]!==55||o.collision.rearLift!==10||o.depth!==1000)throw Error('changed roundtrip mismatch');
        t.restorePack(before);
