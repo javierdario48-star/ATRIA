@@ -49,6 +49,15 @@ export function applyPeritonitis487(html) {
        action:sim.disposition.id};
    }
    if(matched){
+     // Real V19 career payout consumes numeric quality fields. The native
+     // baseline breakdown can omit autonomy/efficiency; undefined previously
+     // poisoned XP (NaN) despite a genuinely completed safe handoff.
+     const originalAutonomy=Number(b.autonomy),rescues=Number(sim?.vegaRescues);
+     b.autonomy=Number.isFinite(originalAutonomy)?Math.max(0,Math.min(100,originalAutonomy)):
+       Math.max(0,Math.min(100,100-(Number.isFinite(rescues)?Math.max(0,rescues):0)*15));
+     const originalEfficiency=Number(b.efficiency),originalPenalty=Number(b.penalty);
+     b.efficiency=Number.isFinite(originalEfficiency)?Math.max(0,Math.min(5,originalEfficiency)):5;
+     b.penalty=Number.isFinite(originalPenalty)?Math.max(0,originalPenalty):0;
      b.diagnosis=15;
      b.history=Math.max(b.history||0,10);
      b.safety=Math.max(b.safety||0,20);
