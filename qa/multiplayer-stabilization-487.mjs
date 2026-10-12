@@ -98,7 +98,7 @@ assert.equal(rivalActions.at(-1).action.kind,'vitals','nursing vitals remain all
 assert.equal(rivalCtx.foreignRivalInput487('/equipo hola'),null,'explicit social chat is separate');
 rivalCtx.ownsActivePatient=true;
 assert.equal(rivalCtx.foreignRivalInput487('enfermera Ringer'),null,
- 'a previously observed rival must never hijack an owned patient's native clinical commands');
+ "a previously observed rival must never hijack an owned patient's native clinical commands");
 rivalCtx.ownsActivePatient=false;
 rivalCtx.challenge.assistIndex=null;
 assert.equal(rivalCtx.foreignRivalInput487('enfermera ceftriaxona'),null,
