@@ -1,0 +1,333 @@
+{
+  "schema": "atria-physical-map-contract-v1",
+  "status": "EXPERIMENTAL_READ_ONLY",
+  "baseline": "atria-4.8.7-qa @ 7b571a37ded0d3c1ed53923cb95c525ed977fcb4",
+  "world": {
+    "widthPx": 1024,
+    "heightPx": 1536,
+    "columns": 32,
+    "rows": 53,
+    "origin": "top-left",
+    "tileIndexBase": 0
+  },
+  "notes": [
+    "These are original clinical anchors, not estimates.",
+    "Physical shapes are provisional and must be validated before enabling runtime collision.",
+    "Legacy MAP has nine decorative bed hotspots but only eight V39 clinical beds. Ignore bed_09 for clinical registry.",
+    "Original image remains inside vendor/atria-4.8.6/index.html as BG_SRC; nothing changes in QA or production."
+  ],
+  "beds": [
+    {
+      "bedId": "B1",
+      "clinicalLabel": "Box 1 · cama A",
+      "acuity": "monitored",
+      "bed": {
+        "x": 97,
+        "y": 409,
+        "physics": {
+          "type": "static",
+          "blocksMovement": true,
+          "collider": {
+            "shape": "rectangle",
+            "widthPx": 48,
+            "heightPx": 70
+          },
+          "provisional": true
+        }
+      },
+      "monitor": {
+        "x": 48,
+        "y": 361,
+        "physics": {
+          "type": "static",
+          "blocksMovement": false,
+          "collider": {
+            "shape": "interaction_trigger",
+            "widthPx": 30,
+            "heightPx": 25
+          }
+        },
+        "pairedBedId": "B1"
+      },
+      "approach": {
+        "col": 4,
+        "row": 14,
+        "x": 144,
+        "y": 420.22641509433964
+      }
+    },
+    {
+      "bedId": "B2",
+      "clinicalLabel": "Box 1 · cama B",
+      "acuity": "monitored",
+      "bed": {
+        "x": 224,
+        "y": 423,
+        "physics": {
+          "type": "static",
+          "blocksMovement": true,
+          "collider": {
+            "shape": "rectangle",
+            "widthPx": 48,
+            "heightPx": 70
+          },
+          "provisional": true
+        }
+      },
+      "monitor": {
+        "x": 184,
+        "y": 371,
+        "physics": {
+          "type": "static",
+          "blocksMovement": false,
+          "collider": {
+            "shape": "interaction_trigger",
+            "widthPx": 30,
+            "heightPx": 25
+          }
+        },
+        "pairedBedId": "B2"
+      },
+      "approach": {
+        "col": 9,
+        "row": 15,
+        "x": 304,
+        "y": 449.20754716981133
+      }
+    },
+    {
+      "bedId": "B3",
+      "clinicalLabel": "Box 2 · cama A",
+      "acuity": "critical",
+      "bed": {
+        "x": 827,
+        "y": 424,
+        "physics": {
+          "type": "static",
+          "blocksMovement": true,
+          "collider": {
+            "shape": "rectangle",
+            "widthPx": 48,
+            "heightPx": 70
+          },
+          "provisional": true
+        }
+      },
+      "monitor": {
+        "x": 830,
+        "y": 394,
+        "physics": {
+          "type": "static",
+          "blocksMovement": false,
+          "collider": {
+            "shape": "interaction_trigger",
+            "widthPx": 30,
+            "heightPx": 25
+          }
+        },
+        "pairedBedId": "B3"
+      },
+      "approach": {
+        "col": 24,
+        "row": 15,
+        "x": 784,
+        "y": 449.20754716981133
+      }
+    },
+    {
+      "bedId": "B4",
+      "clinicalLabel": "Box 2 · cama B",
+      "acuity": "critical",
+      "bed": {
+        "x": 947,
+        "y": 424,
+        "physics": {
+          "type": "static",
+          "blocksMovement": true,
+          "collider": {
+            "shape": "rectangle",
+            "widthPx": 48,
+            "heightPx": 70
+          },
+          "provisional": true
+        }
+      },
+      "monitor": {
+        "x": 978,
+        "y": 391,
+        "physics": {
+          "type": "static",
+          "blocksMovement": false,
+          "collider": {
+            "shape": "interaction_trigger",
+            "widthPx": 30,
+            "heightPx": 25
+          }
+        },
+        "pairedBedId": "B4"
+      },
+      "approach": {
+        "col": 28,
+        "row": 15,
+        "x": 912,
+        "y": 449.20754716981133
+      }
+    },
+    {
+      "bedId": "B5",
+      "clinicalLabel": "Box 3",
+      "acuity": "standard",
+      "bed": {
+        "x": 96,
+        "y": 611,
+        "physics": {
+          "type": "static",
+          "blocksMovement": true,
+          "collider": {
+            "shape": "rectangle",
+            "widthPx": 48,
+            "heightPx": 70
+          },
+          "provisional": true
+        }
+      },
+      "monitor": {
+        "x": 48,
+        "y": 588,
+        "physics": {
+          "type": "static",
+          "blocksMovement": false,
+          "collider": {
+            "shape": "interaction_trigger",
+            "widthPx": 30,
+            "heightPx": 25
+          }
+        },
+        "pairedBedId": "B5"
+      },
+      "approach": {
+        "col": 5,
+        "row": 19,
+        "x": 176,
+        "y": 565.1320754716982
+      }
+    },
+    {
+      "bedId": "B6",
+      "clinicalLabel": "Box 4",
+      "acuity": "standard",
+      "bed": {
+        "x": 96,
+        "y": 794,
+        "physics": {
+          "type": "static",
+          "blocksMovement": true,
+          "collider": {
+            "shape": "rectangle",
+            "widthPx": 48,
+            "heightPx": 70
+          },
+          "provisional": true
+        }
+      },
+      "monitor": {
+        "x": 48,
+        "y": 766,
+        "physics": {
+          "type": "static",
+          "blocksMovement": false,
+          "collider": {
+            "shape": "interaction_trigger",
+            "widthPx": 30,
+            "heightPx": 25
+          }
+        },
+        "pairedBedId": "B6"
+      },
+      "approach": {
+        "col": 5,
+        "row": 28,
+        "x": 176,
+        "y": 825.9622641509434
+      }
+    },
+    {
+      "bedId": "B7",
+      "clinicalLabel": "Box 5",
+      "acuity": "standard",
+      "bed": {
+        "x": 946,
+        "y": 611,
+        "physics": {
+          "type": "static",
+          "blocksMovement": true,
+          "collider": {
+            "shape": "rectangle",
+            "widthPx": 48,
+            "heightPx": 70
+          },
+          "provisional": true
+        }
+      },
+      "monitor": {
+        "x": 976,
+        "y": 589,
+        "physics": {
+          "type": "static",
+          "blocksMovement": false,
+          "collider": {
+            "shape": "interaction_trigger",
+            "widthPx": 30,
+            "heightPx": 25
+          }
+        },
+        "pairedBedId": "B7"
+      },
+      "approach": {
+        "col": 27,
+        "row": 22,
+        "x": 880,
+        "y": 652.0754716981132
+      }
+    },
+    {
+      "bedId": "B8",
+      "clinicalLabel": "Box 6",
+      "acuity": "standard",
+      "bed": {
+        "x": 946,
+        "y": 794,
+        "physics": {
+          "type": "static",
+          "blocksMovement": true,
+          "collider": {
+            "shape": "rectangle",
+            "widthPx": 48,
+            "heightPx": 70
+          },
+          "provisional": true
+        }
+      },
+      "monitor": {
+        "x": 976,
+        "y": 766,
+        "physics": {
+          "type": "static",
+          "blocksMovement": false,
+          "collider": {
+            "shape": "interaction_trigger",
+            "widthPx": 30,
+            "heightPx": 25
+          }
+        },
+        "pairedBedId": "B8"
+      },
+      "approach": {
+        "col": 27,
+        "row": 28,
+        "x": 880,
+        "y": 825.9622641509434
+      }
+    }
+  ]
+}
