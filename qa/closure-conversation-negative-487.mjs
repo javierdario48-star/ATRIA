@@ -26,6 +26,7 @@ function caseReady(id,variant){
   else p.therapyExposure.set(t,{count:1,unit:'recorded QA preparation'});
  }
  const receiver=rule.consult?.[dest]?.[0];
+ p.consults??=new Map();
  if(receiver)p.consults.set(receiver,{status:'done',accepted:true});
  if(variant==='noExam'){p.examDone=false;p.examRegions=new Set();}
  if(variant==='noVitals')p.lastVitalsKnown=false;
