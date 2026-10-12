@@ -106,11 +106,17 @@ export function applyPeritonitis487(html) {
    else if(!sim?.caseEnded)sim._csPeriCompletionForXP487=false;
    return b;
  };
+ // The late native ns422 policy must use the very same verified handoff,
+ // otherwise it reintroduces a source-control requirement after transfer.
+ window.csPeritonitisExperienceEligible487=function(){
+   if(!['PERI-PBE-001','PERI-SEC-001','PERI-TER-001'].includes(C?.id))return null;
+   return !!sim?._csPeriCompletionForXP487&&handoffProof()&&!sim?.patientDied;
+ };
  const oldXpEligible=window.nsExperienceEligible;
  window.nsExperienceEligible=function(){
    if(!['PERI-PBE-001','PERI-SEC-001','PERI-TER-001'].includes(C?.id))
      return typeof oldXpEligible==='function'?oldXpEligible.apply(this,arguments):false;
-   return !!sim?._csPeriCompletionForXP487&&handoffProof()&&!sim?.patientDied;
+   return window.csPeritonitisExperienceEligible487();
  };
 
  let actionButton=null,lastUiAt=0;
@@ -166,5 +172,10 @@ export function applyPeritonitis487(html) {
  window.csPeritonitisRefresh487=renderAction;
 })();
 </script>`;
+  const latePolicy="window.nsExperienceEligible=function(){return !sim?.patientDied&&!!window.nsPatientState?.()?.treatment.complete;};";
+  const policyCopies=html.split(latePolicy).length-1;
+  if(policyCopies>1||html.includes('id="ns422-experience-policy"')&&policyCopies!==1)
+   throw Error('late ns422 XP eligibility missing/ambiguous');
+  if(policyCopies===1)html=html.replace(latePolicy,"window.nsExperienceEligible=function(){const handoff=window.csPeritonitisExperienceEligible487?.();return handoff==null?!sim?.patientDied&&!!window.nsPatientState?.()?.treatment.complete:handoff;};");
   return html.replace('</body>',code+'</body>');
 }

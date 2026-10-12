@@ -2,11 +2,11 @@
  * Frozen clinical numbers/catalogue are retained, never regenerated. */
 import assert from 'node:assert/strict';
 const revisions={
- // The sole authorized new source revision normalizes the legacy peritonitis
- // quality axes before native V19 XP; frozen trajectory numbers stay identical.
+ // Authorized XP-only handoff preservation through late ns422 policy; native
+ // physiology and all frozen numeric trajectories remain independently checked.
  'atria-peritonitis-487-disposition':[
   '818a4cdafbc39ce1a90418a38feca570e9ae427bc8c18f2dcd16ebc7d7fa8e03',
-  'a2d709c0bbaee04302009a6a2c6023dcb6def7198ab9038db91d65031e08a56a'],
+  '214a322dc763e9567161bfc490d5b4ee03ee70bc17f39873534279ca5e3f187a'],
  'atria-manual-monitor-iv-487':[
   'da62e23013fbc6b02165a32bad4ec00581b3ef662bc1bcde4d6c8d38d101512f',
   '6d5da4467d14ab0c02eb351b209dc1e184d195a1412fcd222f7b5dbbb6dda16a'],

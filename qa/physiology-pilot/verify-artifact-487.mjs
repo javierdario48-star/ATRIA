@@ -87,6 +87,24 @@ assert.equal(html.split(RINGER_COMPLETION_NEW_487).length,2,'one scoped fluid co
 // Reverse the single reviewed XP-quality fallback before comparing to the
 // original frozen baseline. This does NOT rebaseline vital/clinical numbers.
 const periCurrent=applyPeritonitis487('<body></body>').replace('<body>','').replace('</body>','');
+// Reverse ONLY the reviewed Android execution/XP deltas. The frozen original
+// hash and numeric trajectories are unchanged, so unrelated drift still fails.
+const handoffStart=periCurrent.indexOf(' // The late native ns422 policy must use');
+const handoffEnd=periCurrent.indexOf(' const oldXpEligible=window.nsExperienceEligible;',handoffStart);
+assert(handoffStart>0&&handoffEnd>handoffStart,'reviewed late XP bridge');
+const handoffBridge=periCurrent.slice(handoffStart,handoffEnd);
+for(const [current,prior] of [
+ [handoffBridge,''],
+ ['   return window.csPeritonitisExperienceEligible487();',
+  '   return !!sim?._csPeriCompletionForXP487&&handoffProof()&&!sim?.patientDied;'],
+ ['window.nsExperienceEligible=function(){const handoff=window.csPeritonitisExperienceEligible487?.();return handoff==null?!sim?.patientDied&&!!window.nsPatientState?.()?.treatment.complete:handoff;};',
+  'window.nsExperienceEligible=function(){return !sim?.patientDied&&!!window.nsPatientState?.()?.treatment.complete;};'],
+ ['\n  if(window.csNurseVoice487?.dispatch)return window.csNurseVoice487.dispatch(text);',''],
+ ['scanned.items.filter(x=>!x.negated&&!x.routeOnly)','scanned.items.filter(x=>!x.negated)']
+]){
+ assert.equal(beforeStop.split(current).length,2,'unique reviewed Android delta');
+ beforeStop=beforeStop.replace(current,prior);
+}
 const periStart=periCurrent.indexOf('     // Real V19 career payout consumes numeric quality fields.');
 const periEnd=periCurrent.indexOf('     b.diagnosis=15;',periStart);
 assert(periStart>0&&periEnd>periStart,'exact authorised finite-XP block in peritonitis source');

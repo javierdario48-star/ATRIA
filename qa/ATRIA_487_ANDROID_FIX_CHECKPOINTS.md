@@ -19,3 +19,11 @@ RED: oxygen was blocked by invalid norepinephrine (mg, oral, bolus); contextual 
 ### C follow-up — Route tokens remain visible, never cannulate
 
 The exhaustive lexical catalogue retains all noun matches; a route-only flag prevents bedside execution and is filtered by both legacy and current dispatch paths. This preserves unpunctuated independent oxygen/vía requests while rejecting nora vía nasal/oral/incomplete routes without phantom cannulation. The 72,881-subset catalogue, 18 pressor checks, 224 integrated orders and native receipt journeys pass.
+
+## D — Actual late eligibility, native payout/persistence/HUD
+
+RED at recovered HEAD: native finished, 87/100 safe, ns422 replaced eligibility and career.resolved=false, profile XP=0. Minimal correction: late native ns422 asks the already-existing peritonitis handoff proof, keeping its patient/case/destination identity checks; non-peritonitis keeps original policy and the existing ten-case adapter. No career/scoring engine replacement or manual XP writes.
+
+GREEN: 52 legitimate native closures across all 13 seeds in solo/apprentice, graded quality, pending-consult/requested-only rejection, source control unchanged, original profile save/load, original HUD, identity isolation and single payout. Score 54 earns 81 XP solo / 67 apprentice. The capture score 87 earns 195 XP with actual mode 1.2 × practice 1 × complexity 1.65. The earlier 118 diagnostic was the same scorer under the historical fixed complexity=1 fixture; it is not the final integrated expectation. A second test begins with empty clinical evidence and executes actual generated interview/exam/nursing/lab timers/Surgery acceptance; closes at 84 with 190 XP. DOM/path/storage are emulated, not browser/Android.
+
+Compatibility: 4,537 frozen native numeric comparisons pass. The existing immutable protected HTML hash dc59039a… remains unchanged after reversing only enumerated reviewed execution/XP deltas. Build and artifact pass. Peritonitis isolated/native and ten-case native-administered closure regressions pass.
