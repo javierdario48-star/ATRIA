@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createLiveNativeJourney487,advanceLiveNativeJourney487 as advance}
- from '../qa/physiology-live/native-journey-487.mjs';
+ from '../../qa/physiology-live/native-journey-487.mjs';
 function prepare(runtime){
  const {ctx}=runtime,p=ctx.sim,c=ctx.C;
  p.diagnosis=c.dx[0];p.lastVitalsKnown=true;p.examDone=true;
