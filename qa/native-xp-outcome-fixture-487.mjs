@@ -17,6 +17,8 @@ const finalizer=between("finishCase=function(reason='completed'){","\nfunction c
 const scorer=between('  function csEnsureCompetencies(p){','  function csDebriefMoments(){');
 const marker='<script id="atria-case-completion-487">';
 const adapter=between(marker,'</script>');
+const handoff=between('  const DESTS={','  function csOpenDisposition(');
+
 assert(finalizer.includes('sim.caseEnded=true')&&finalizer.includes('csResultCareer(score,b)'));
 assert(scorer.includes('resolved=!!b.safe&&!!window.nsExperienceEligible?.()'));
 const base=loadNativeReferenceSources487();
@@ -31,7 +33,7 @@ export function createRealOutcomeJourney487(caseId){
   'function csShowOutcome(){}',
   'function csCloseOutcome(){}',
   'function csReturnToCases(){}',
-  scorer,finalizer
+  scorer,finalizer,handoff
  ].join('\n');
  const code=[...base.compiled.map(x=>[x.id,x.code]),
   ['qa-native-outcome',native],
@@ -48,6 +50,7 @@ export function createRealOutcomeJourney487(caseId){
  ctx.document.createElement=()=>({style:{},appendChild:noop,classList:{add:noop}});
  ctx.document.body.appendChild=noop;ctx.window.nsMayExamine=()=>true;
  ctx.window.nsPracticeReward=()=>1;
+ ctx.csLogAction=noop;ctx.addGlobalChat=noop;ctx.refreshChatDock=noop;
  ctx.window.nsCaseComplexity=()=>({factor:1,label:'QA fixed'});
  return runtime;
 }
