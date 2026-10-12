@@ -82,7 +82,7 @@ assert.equal(scope.assistActionAllowed(null,{kind:'monitor'}),false,'no invented
 // helper; only the owner runs the native clinical command/exam/study/closure.
 const applied=between('function applyAssistAction(p,a,helper){','function requestAssist(index,a){');
 const log=[];
-const target={index:0,uid:'QA-UID',caseId:'QA'};
+const target={index:0,uid:'QA-UID',caseId:'QA',ownerId:'OWNER',state:'in_care',instance:{name:'Paciente QA'}};
 const owner={challenge:{mode:'coop'},selfId:'OWNER',
  assistTargetSim:()=>owner.sim,assistActionAllowed:()=>true,
  CASES:[{id:'QA',studies:[{id:'lab'}],interventions:[{id:'iv'}]}],
@@ -91,7 +91,7 @@ const owner={challenge:{mode:'coop'},selfId:'OWNER',
  sendMessage:t=>{log.push(['command',t]);return true},
  performExamRegion:id=>log.push(['exam',id]),
  patientReply:q=>'respondió',
- addGlobalChat:()=>{},
+ addGlobalChat:()=>{},refreshChatDock:()=>{},
  orderStudy:it=>log.push(['study',it.id]),
  orderIntervention:it=>log.push(['intervention',it.id]),
  addMonitorTherapy:t=>log.push(['therapy',t]),
