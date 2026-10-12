@@ -125,7 +125,9 @@ check('known antibiotic allergy makes coverage inappropriate but does not block 
  const e=r.ctx.window.csCare487.assess('ceftriaxone');
  assert.equal(e.contraindicated,true);
  assert.equal(e.appropriate,false);
- assert(r.ctx.window.csCare487.report().general.coverageComplete===false);
+ assert.equal(r.ctx.window.csCare487.report().general.coverageComplete,false);
+ assert.equal(r.ctx.window.csCare487.report().coverageComplete,false,
+  'shared UI/readiness must not report contraindicated antibiotic coverage as fulfilled');
 });
 check('verified severe allergy has a bounded adverse effect from either administration interface',()=>{
  for(const route of ['monitor','nurse']){
