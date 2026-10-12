@@ -1,0 +1,46 @@
+name: Test mapa P31 - extraccion supervisada
+on:
+  push:
+    branches: [test-mapa-migracion]
+    paths:
+      - test-mapa-migracion/plants/pilot_P31.py
+      - .github/workflows/test-map-P31.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  p31-extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install image tools
+        run: python -m pip install --disable-pip-version-check numpy pillow opencv-python-headless
+      - name: Extract P31 with original source RGB
+        run: python test-mapa-migracion/plants/pilot_P31.py
+      - name: Validate source pixels, alpha and dimensions
+        run: |
+          python - <<'PY'
+          import json
+          import numpy as np
+          from PIL import Image
+          from pathlib import Path
+          p=Path('test-mapa-migracion/plants/pilot_output')
+          a=np.asarray(Image.open(p/'plant_P31.png').convert('RGBA'))
+          b=np.asarray(Image.open(p/'plant_P31_original_crop.png').convert('RGB'))
+          m=json.loads((p/'plant_P31_metadata.json').read_text())
+          assert a.shape==(115,68,4)
+          assert np.array_equal(a[:,:,:3],b)
+          assert 1000 < np.count_nonzero(a[:,:,3]>120) < 3500
+          assert m['status']=='VISUAL_QA_REQUIRED_NOT_APPROVED'
+          print('PASS: original RGB, 1:1 size and non-empty alpha. VISUAL APPROVAL STILL REQUIRED.')
+          PY
+      - name: Deliver review candidate only
+        uses: actions/upload-artifact@v4
+        with:
+          name: ATRIA_P31_candidate_not_approved
+          path: test-mapa-migracion/plants/pilot_output/
+          retention-days: 30
