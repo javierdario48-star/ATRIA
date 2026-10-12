@@ -55,6 +55,7 @@ for(const id of Object.keys(CASE_CLOSURE_RULES_487)){
   if(!blocked){
    assert.equal(p._careerEndProcessed,true,id+' native career end receipt');
    assert.equal(career?.resolved,true,id+' XP reward genuinely approved');
+   if(!(career?.xpDelta>0))console.log('NATIVE XP DIAGNOSTIC',JSON.stringify({id,variant:v,career,profile:ctx.csProfile,score,proof:p._csCaseHandoff487}));
    assert(career?.xpDelta>0,id+' XP actually credited');
    assert.equal(ctx.csProfile.xp-before,career.xpDelta,id+' real XP ledger balance');
    assert(score>=0&&score<=100,id+' real bounded score');
