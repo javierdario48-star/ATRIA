@@ -13,6 +13,7 @@ import {apply487} from '../../src/integration/apply-487.js';
 import {applyMorphine487} from '../../src/integration/morphine-487.js';
 import {applyUrgentCare487} from '../../src/integration/urgent-care-487.js';
 import {applyCaseCompletion487} from '../../src/integration/case-completion-487.js';
+import {applyPeritonitis487} from '../../src/integration/peritonitis-487.js';
 import {NURSE_STOP_FINISH_OLD_487,NURSE_STOP_FINISH_NEW_487,NURSE_STOP_STATUS_OLD_487,
  NURSE_STOP_STATUS_NEW_487,NURSE_STOP_VERSION_OLD_487,NURSE_STOP_VERSION_NEW_487,
  NORA_RECEIPT_OLD_487,NORA_RECEIPT_NEW_487,NORA_DEDUPE_OLD_487,NORA_DEDUPE_NEW_487,
@@ -83,6 +84,16 @@ const oldBridge=fs.readFileSync(new URL('./secondary-bridge-pre-owner-487.txt',i
 assert.equal(createHash('sha256').update(oldBridge).digest('hex'),'ff570d3d2ee468d0d24d0492a876d85a61d7e3d242e311681bd5e72fdef4a045');
 assert.equal(html.split(RINGER_SAFETY_NEW_487).length,2,'one native fluid toxicity ownership gate');
 assert.equal(html.split(RINGER_COMPLETION_NEW_487).length,2,'one scoped fluid completion qualifier');
+// Reverse the single reviewed XP-quality fallback before comparing to the
+// original frozen baseline. This does NOT rebaseline vital/clinical numbers.
+const periCurrent=applyPeritonitis487('<body></body>').replace('<body>','').replace('</body>','');
+const periStart=periCurrent.indexOf('     // Real V19 career payout consumes numeric quality fields.');
+const periEnd=periCurrent.indexOf('     b.diagnosis=15;',periStart);
+assert(periStart>0&&periEnd>periStart,'exact authorised finite-XP block in peritonitis source');
+const xpFix=periCurrent.slice(periStart,periEnd);
+assert(xpFix.includes('b.autonomy=')&&xpFix.includes('b.efficiency='),'finite career inputs guarded');
+assert.equal(beforeStop.split(xpFix).length,2,'unique reviewed peritonitis XP revision');
+beforeStop=beforeStop.replace(xpFix,'');
 const restored=beforeStop.replace(entries[0][0],'').replace(criticalScripts[0][0],oldCritical)
  .replace(bridgeScripts[0][0],oldBridge).replace(RINGER_SAFETY_NEW_487,RINGER_SAFETY_OLD_487)
  .replace(RINGER_COMPLETION_NEW_487,RINGER_COMPLETION_OLD_487)
