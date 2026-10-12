@@ -34,8 +34,11 @@ for(const id of cases)for(const variant of variants){
  if(variant==='unstableDischarge'&&id==='COLON-001')p.liveVitals.sys=75;
  if(variant==='alreadyDied')p.patientDied=true;
  const destination=variant==='wrongDestination'?'alta':rule.destinations[0];
- const expectedBad=['noDiagnosis','noExam','noStudy','noReassessment',
+ const emergencyWithoutImaging=rule.urgentStudyBypass&&
+  Number(String(c.vitals?.bp||'120/80').split('/')[0])<90;
+ const expectedBad=['noDiagnosis','noExam','noReassessment',
   'alreadyDied'].includes(variant)||
+  variant==='noStudy'&&!emergencyWithoutImaging||
   variant==='wrongDestination'&&id!=='COLON-001'||
   variant==='noTreatment'&&rule.treatment.length>0||
   variant==='noConsult'&&!!rule.consult?.[destination]?.length||
