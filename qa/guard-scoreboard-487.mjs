@@ -120,7 +120,7 @@ state.recordGuardXP487('bad',999999);
 assert.equal(state.guardXP487,132,'reject absurd untrusted XP receipts');
 state.host=()=>false;
 state.recordGuardXP487('case:p3',-40);
-assert.deepEqual(log.at(-1),{kind:'score_xp',body:{xp:92}},
+assert.equal(JSON.stringify(log.at(-1)),JSON.stringify({kind:'score_xp',body:{xp:92}}),
  'guest reports genuine cumulative signed total to host');
 console.log('ATRIA AESTHETIC FOUR-MODE SCOREBOARD BOT PASS',JSON.stringify({
  scenarios:['solo','coop','competitive','apprentice-hidden','2–4-player','lobby-reset'],
