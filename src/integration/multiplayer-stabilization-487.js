@@ -212,8 +212,8 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  // per-player guard total into the existing host-owned room.players snapshots.
  // This does not change competitive clinical points, XP awards or score rules.
  s=edit(s,
- "let pendingNav=null,pendingClaim=null,pendingAutoCommand487=null,loading=false,buildingPlan=false",
- "let pendingNav=null,pendingClaim=null,pendingAutoCommand487=null,loading=false,buildingPlan=false,guardXP487=0,guardXPReceipts487=new Set();\n function recordGuardXP487(receipt,amount){if(!shared()||!challenge.active||guardXPReceipts487.has(receipt))return;const n=Number(amount);if(!Number.isFinite(n)||Math.abs(n)>10000)return;guardXPReceipts487.add(receipt);guardXP487=Math.max(-100000,Math.min(100000,guardXP487+Math.round(n)));if(host()){const me=challenge.players.find(p=>p.id===selfId);if(me){me.xpGuard487=guardXP487;challenge.revision++;publish()}}else send('score_xp',{xp:guardXP487});}",
+ "let pendingNav=null,pendingClaim=null,pendingAutoCommand487=null,loading=false,buildingPlan=false,lastPublish=0,lastProgress=0;const pendingCareers=new Map();",
+ "let pendingNav=null,pendingClaim=null,pendingAutoCommand487=null,loading=false,buildingPlan=false,lastPublish=0,lastProgress=0,guardXP487=0,guardXPReceipts487=new Set();\n function recordGuardXP487(receipt,amount){if(!shared()||!challenge.active||guardXPReceipts487.has(receipt))return;const n=Number(amount);if(!Number.isFinite(n)||Math.abs(n)>10000)return;guardXPReceipts487.add(receipt);guardXP487=Math.max(-100000,Math.min(100000,guardXP487+Math.round(n)));if(host()){const me=challenge.players.find(p=>p.id===selfId);if(me){me.xpGuard487=guardXP487;challenge.revision++;publish()}}else send('score_xp',{xp:guardXP487});}\n const pendingCareers=new Map();",
  'native-confirmed-xp-ledger-with-dedup');
  s=edit(s,
  "challenge.hostId=selfId;challenge.practice=",
