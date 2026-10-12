@@ -20,13 +20,15 @@ action.onclick();
 const result={ended:p.caseEnded,score:p.nsOutcome?.score,safe:p.nsOutcome?.breakdown?.safe,
  career:p.nsOutcome?.career,profileXP:ctx.csProfile.xp,persisted:r.persistedProfiles,
  proof:p._csPeriSafeHandoff487,eligibility:ctx.window.nsExperienceEligible(),
- sourceControlled:p.phys.sourceControlled,actual:p.administrationLog};
+ sourceControlled:p.phys.sourceControlled,actual:p.administrationLog,nativeOutcomeHTML:r.finalOutcomeHTML};
 fs.mkdirSync('qa/android-fix-results',{recursive:true});
 fs.writeFileSync('qa/android-fix-results/xp.json',JSON.stringify(result,null,2)+'\n');
 console.log('ANDROID INTEGRATED XP',JSON.stringify({ended:result.ended,score:result.score,career:result.career,profileXP:result.profileXP}));
 assert.equal(p.caseEnded,true,'genuine native finish');
 assert.equal(p.nsOutcome.score,87,'capture quality reproduced by native scoring');
 assert.equal(p.nsOutcome.career.safe,true,'attention safe');
+assert(r.finalOutcomeHTML.includes('87/100')&&r.finalOutcomeHTML.includes('ATENCIÓN SEGURA'),'genuine native result HTML agrees with safe score');
+assert(r.finalOutcomeHTML.includes('+195 XP')&&!r.finalOutcomeHTML.includes('0 XP · manejo incompleto'),'genuine native reward card agrees with career');
 assert(p.nsOutcome.career.xpDelta>0,'genuine V19 XP credited despite unperformed source control');
 assert.equal(ctx.csProfile.xp,p.nsOutcome.career.xpDelta);
 assert.equal(r.persistedProfiles.at(-1).xp,ctx.csProfile.xp,'native save called with earned XP');

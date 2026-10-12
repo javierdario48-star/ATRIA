@@ -43,3 +43,7 @@ The scanner retains per-medicine prefix doses, incompatible route qualifiers and
 GREEN: 233/233 integrated nursing scenarios; all 52 closures across 13 seeds, genuine 87→195 XP and empty-evidence 84→190 XP; late spoken CIRR/HDA closure and all 18 pressor checks. Native save/load/HUD and identity/single-payout checks pass. The exhaustive 72,881-subset lexical catalogue and 1,199 access variants remain green. Exact protected artifact check retains dc59039a…; source physiology, golden master and survival policy remain unchanged.
 
 CI publication strategy: preserve the small checkpoint commits, verify their remote Git tree hashes against the local trees, then advance the exclusive branch once after final local verification. This runs one full Actions workflow rather than overlapping checkpoints. No production merge or deployment requested.
+
+## Final local gate
+
+`npm test` exit 0; `npm run qa:physiology-live` exit 0 (24 trajectories, 216 points); build and protected artifact exit 0. The added actual native result HTML check independently passes all 52 closure scenarios, including 87/100 ATENCIÓN SEGURA and +195 XP. The final orders and beta audits pass again with that result renderer loaded. Updating the current manual-IV source fingerprint authorizes only the exported existing IV set, not new physiological behavior; frozen source/numeric baselines remain unchanged. CI must independently run these gates at the final published SHA.

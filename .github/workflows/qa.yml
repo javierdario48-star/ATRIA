@@ -63,5 +63,6 @@ jobs:
             qa/care-journey-results/
             qa/outcome-combinatorial-results/
             qa/closure-harm-results/
+            qa/android-fix-results/
           retention-days: 14
           if-no-files-found: error

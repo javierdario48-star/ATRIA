@@ -9,7 +9,9 @@ const revisions={
   '214a322dc763e9567161bfc490d5b4ee03ee70bc17f39873534279ca5e3f187a'],
  'atria-manual-monitor-iv-487':[
   'da62e23013fbc6b02165a32bad4ec00581b3ef662bc1bcde4d6c8d38d101512f',
-  '6d5da4467d14ab0c02eb351b209dc1e184d195a1412fcd222f7b5dbbb6dda16a'],
+  // Only exports the existing IV requirement set to composite dispatch.
+  // No administration, dose or physiological behavior changes in this adapter.
+  'f203b30c4d88d6f146ecfca6d7e625802d63541ade9500bb5436d2dc6ef86d5e'],
  'atria-verified-clinical-chat-487':[
   'bb83cd9e80a7bca71ce20421b3d93a88034e95ba0538602d140d47c83fb3f275',
   '9e2a822db648c4df1e869e17686830e3c8121758544e74e52eb028753d8ff095'],

@@ -30,10 +30,11 @@ const lateNursing=[
  '})();'
 ].join('\n');
 const v19=script('cs-safe-v0190');
-const score=between(v19,'  // ============================================================\n  // 7) SCORE V2','  function csDebriefMoments(){');
+const score='const csDispositionCorrect=window.qaDispositionCorrect;\n'+
+ between(v19,'  // ============================================================\n  // 7) SCORE V2','  const _historyHTMLV19=');
 const finish=between(html,"finishCase=function(reason='completed'){",'\nfunction csHasTherapy(id){');
 const completed=liveNativeJourneySources487.compiled.map(x=>[x.id,x.id==='cs-safe-v0190-clinical'?
- x.code.slice(0,-7)+'\nwindow.qaEnsureV19=csEnsureV19;window.qaLogAction=csLogAction;\n})();':x.id==='qa-native-nursing'?x.code.replace('function inferRecipient(){return null;}',html.split('\n').find(line=>line.startsWith('function inferRecipient(text){'))):x.code]);
+ x.code.slice(0,-7)+'\nwindow.qaEnsureV19=csEnsureV19;window.qaLogAction=csLogAction;window.qaDispositionCorrect=csDispositionCorrect;\n})();':x.id==='qa-native-nursing'?x.code.replace('function inferRecipient(){return null;}',html.split('\n').find(line=>line.startsWith('function inferRecipient(text){'))):x.code]);
 const v19Index=completed.findIndex(([id])=>id==='cs-safe-v0190-clinical');
 completed.splice(v19Index+1,0,['cs-safe-v0190-score',score]);
 // Install the genuine finalizer before the adapters that wrap finishCase.
@@ -83,7 +84,7 @@ export function createAndroidIntegratedRuntime487(caseId='PERI-SEC-001',{confirm
   wardNurses:[],player:{bubble:'',bubbleUntil:0},chatRole:'nurse',pendingAddress:null,
   pathTo:()=>false,advanceActor:()=>true,toast:noop,csPlaySound:noop,
   formatVitalsInline:()=>'',csRefreshProfileSurfaces:noop,csCheckCoatUnlock:()=>false,
-  csLevel:()=>Math.floor((ctx.csProfile.xp||0)/200)+1,csFinishHTML:()=>'',csShowOutcome:noop,
+  csLevel:()=>Math.floor((ctx.csProfile.xp||0)/200)+1,csShowOutcome:html=>{r.finalOutcomeHTML=html;},
   csCloseOutcome:noop,csReturnToCases:noop,csSaveProfile:noop,
   csEnsureV19:ctx.window.qaEnsureV19,csLogAction:ctx.window.qaLogAction});
  ctx.window.nsMayExamine=()=>true;
