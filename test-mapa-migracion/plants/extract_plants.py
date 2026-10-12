@@ -12,13 +12,10 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'plants' / 'output'
 OUT.mkdir(parents=True, exist_ok=True)
-SRC_HTML = ROOT.parents[1] / 'vendor/atria-4.8.6/index.html'
-# ROOT is <repo>/test-mapa-migracion; ROOT.parents[0] is repo
-if not SRC_HTML.exists():
-    SRC_HTML = ROOT.parent / 'vendor/atria-4.8.6/index.html'
+SRC_HTML = ROOT.parent / 'vendor/atria-4.8.6/index.html'
 html = SRC_HTML.read_text(encoding='utf8')
 m = re.search(r'const BG_SRC="data:image/webp;base64,([^"]+)"',html)
 if not m: raise RuntimeError('Original BG_SRC not found; abort rather than use wrong background')
