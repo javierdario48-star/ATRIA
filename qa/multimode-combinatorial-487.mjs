@@ -182,6 +182,15 @@ const meds=[
  {drugId:'furosemide',action:'bolus',route:'iv',dose:{amount:40,unit:'mg'}}
 ];
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
+const nativeTickGate='sim?.__csRemoteMirror487?undefined:base.update.call(this,dt)';
+assert(html.includes(nativeTickGate),'native mirror physiological update gate is present');
+const gate=new Function('sim','base','dt','return '+nativeTickGate+';');
+let nativeWrites=0;
+const baseTick={update(dt){nativeWrites++;return dt}};
+assert.equal(gate({__csRemoteMirror487:true},baseTick,0.25),undefined);
+assert.equal(nativeWrites,0,'observer must never become second clinical clock');
+assert.equal(gate({__csRemoteMirror487:false},baseTick,0.25),0.25);
+assert.equal(nativeWrites,1,'owner advances exactly once');
 for(const [caseId,vitals] of Object.entries(sampleVitals))for(const mode of ['solo','coop','competitive'])for(const players of [1,2,3,4])for(let k=0;k<meds.length;k++){
  const caseDef={id:caseId,vitals};
  const profile=createPilotProfile487(caseDef);
@@ -196,9 +205,10 @@ for(const [caseId,vitals] of Object.entries(sampleVitals))for(const mode of ['so
  const placebo=stepPhysiology487(begin(),[],12,PILOT_DEFINITIONS_487);
  const requestOnly=stepPhysiology487(begin(),[pending],12,PILOT_DEFINITIONS_487);
  assert.deepEqual(requestOnly,placebo,'pending nurse order never mutates physiology');
- const mirror=begin();const snapshot=structuredClone(mirror);
- // Observing the same patient on any other peer must not advance its clock.
- assert.deepEqual(mirror,snapshot,'observer is non-authoritative');
+ const mirror=begin();const snapshot=JSON.stringify(mirror);
+ // Passive observation does not mutate the patient's original physiology.
+ assert.equal(JSON.stringify(mirror),snapshot,'observer read keeps physiology intact');
+ assert.equal(mirror.integratedUs,0,'remote mirror clinical clock remains unadvanced');
  assert.equal(authoritative.patientId,id);
  for(const key of ['sys','dia','hr','rr','spo2','temp']){
   assert(finite(observePhysiology487(authoritative)[key]),'finite physiological observable '+key);
