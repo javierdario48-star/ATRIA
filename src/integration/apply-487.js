@@ -19,6 +19,7 @@ import {applyClinicalConfirmations487} from './clinical-confirmations-487.js';
 import {applyPharmacology487} from './pharmacology-487.js';
 import {applyMorphine487} from './morphine-487.js';
 import {applyUrgentCare487} from './urgent-care-487.js';
+import {applyCaseCompletion487} from './case-completion-487.js';
 import {applyVegaStepCoach487} from './vega-step-coach-487.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
 export function apply487(html){
@@ -699,5 +700,5 @@ function csDrawRemote(){
  s=applyCriticalRescue487(s);
  s=applyClinicalConfirmations487(s);
  s=applyPharmacology487(s);
- return applyPhysiologyQABootstrap487(applyUrgentCare487(applyMorphine487(s)));
+ return applyPhysiologyQABootstrap487(applyCaseCompletion487(applyUrgentCare487(applyMorphine487(s))));
 }
