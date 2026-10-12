@@ -52,6 +52,7 @@ for(const spec of situations){
  assert.equal(p.caseEnded,true,spec.id+' actual native finishCase');
  assert.equal(p._careerEndProcessed,true,spec.id+' original career payout');
  assert.equal(p.nsOutcome?.career?.resolved,true,spec.id+' resolved native XP');
+ if(!(p.nsOutcome?.career?.xpDelta>0))console.log('PERITONITIS XP NATIVE DIAGNOSTIC',JSON.stringify({id:spec.id,outcome:p.nsOutcome,breakdown:ctx.csBreakdown(),profile:ctx.csProfile,proof:p._csPeriSafeHandoff487,eligible:ctx.window.nsExperienceEligible(),exam:p.examDone,history:p.intentHistory,receipts:verified}));
  assert(p.nsOutcome?.career?.xpDelta>0,spec.id+' paid XP');
  assert.equal(ctx.csProfile.xp-before,p.nsOutcome.career.xpDelta,
   spec.id+' actual profile XP matches native career award');
