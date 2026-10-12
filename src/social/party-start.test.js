@@ -53,4 +53,41 @@ for(let i=0;i<24;i++){
  assert.equal(h.state.partyHandshake,null);
  rejections++;
 }
+let multiAckRuns=0,multiDenied=0;
+for(const size of [3,4])for(let round=0;round<30;round++){
+ const ids=Array.from({length:size},(_,i)=>'doctor-'+i);
+ const hostId=ids[round%size],guests=ids.filter(id=>id!==hostId);
+ const mode=round%2?'competitive':'coop',roomId='many-'+size+'-'+round;
+ const common={id:roomId,hostUserId:hostId,allAccepted:true,mode,
+  members:ids.map(userId=>({userId,online:true,accepted:true}))};
+ const broadcast=[],acks=[];
+ const h=client(hostId,{...common,role:'host'},m=>broadcast.push(JSON.parse(m)));
+ const visitors=guests.map(id=>({id,client:client(id,{...common,role:'guest'},m=>acks.push({id,message:JSON.parse(m)}))}));
+ const pending=h.start();
+ assert.equal(broadcast.length,1,'one authenticated start request');
+ const prepare=broadcast.shift();
+ for(let k=0;k<visitors.length;k++){
+  const visitor=visitors[k];
+  visitor.client.sendPacket(prepare,hostId);
+  assert.equal(acks.length,1);
+  const ack=acks.shift();
+  assert.equal(ack.id,visitor.id);
+  h.sendPacket(ack.message,visitor.id);
+  if(k<visitors.length-1)assert(h.state.partyHandshake,'all 3/4 players must acknowledge, not first guest');
+ }
+ assert.equal(await pending,true,'all genuine ACKs permit multiplayer entry');
+ assert.equal(h.state.partyHandshake,null,'completed handshake is released');
+ multiAckRuns++;
+ // A silent or disconnected final player must block start even if all
+ // earlier peers accepted: timeout returns the party to lobby.
+ const broken=client(hostId,{...common,role:'host'},()=>{});
+ const denied=broken.start();
+ for(const fn of broken.timers)fn();
+ assert.equal(await denied,false);
+ assert.equal(broken.state.partyHandshake,null);
+ multiDenied++;
+}
+console.log('ATRIA THREE-FOUR PLAYER START BOT PASS',JSON.stringify({
+ verified:multiAckRuns,blockedMissingAcknowledgement:multiDenied,
+ sizes:[3,4],modes:['coop','competitive'],browser:false,network:false}));
 console.log('ATRIA TWO-CLIENT GUARD START BOT PASS',JSON.stringify({acknowledged:successes,timedOut:rejections,ackPackets,roleReversals:60,modes:['coop','competitive'],scope:'two isolated JS clients + actual integrated event handlers; network/browser simulated'}));
