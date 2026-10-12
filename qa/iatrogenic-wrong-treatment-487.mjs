@@ -12,9 +12,9 @@ function run(caseId,kind,order,flags,seconds=22){
  const patient=createLiveNativeJourney487(caseId),control=createLiveNativeJourney487(caseId);
  patient.ctx.sim.clinicalFlags={...(patient.ctx.sim.clinicalFlags||{}),...flags};
  control.ctx.sim.clinicalFlags={...(control.ctx.sim.clinicalFlags||{}),...flags};
- if(flags.activeBleeding){patient.ctx.sim.phys.activeBleeding=true;control.ctx.sim.phys.activeBleeding=true}
- if(flags.hypovolemia){patient.ctx.sim.phys.effectiveVolume=.30;control.ctx.sim.phys.effectiveVolume=.30}
- if(flags.congestion){patient.ctx.sim.phys.congestion=.95;control.ctx.sim.phys.congestion=.95}
+ if(flags.activeBleeding)for(const r of [patient,control])r.ctx.sim.phys={...(r.ctx.sim.phys||{}),activeBleeding:true};
+ if(flags.hypovolemia)for(const r of [patient,control])r.ctx.sim.phys={...(r.ctx.sim.phys||{}),effectiveVolume:.30};
+ if(flags.congestion)for(const r of [patient,control])r.ctx.sim.phys={...(r.ctx.sim.phys||{}),congestion:.95};
  const id=patient.ctx.findMonitorTherapy(order)?.id,pre=patient.ctx.sim.administrationLog.length;
  let accepted=false,error=null;
  try{accepted=patient.ctx.addMonitorTherapy(order)!==false}catch(e){error=String(e.message||e)}
