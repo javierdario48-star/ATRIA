@@ -652,6 +652,45 @@
       "family": "large",
       "source_status": "candidate_coordinate",
       "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P47",
+      "center": [
+        989,
+        1312
+      ],
+      "extent": [
+        15,
+        26
+      ],
+      "source_bbox": [
+        961,
+        1270,
+        56,
+        90
+      ],
+      "family": "cylindrical_potted_plant",
+      "source_status": "recovered_from_user_plants_physics_json_candidate",
+      "notes": "Original P47 separately split from P44 in ATRIA plants v3; pending individual visual QA; original alpha source not yet integrated",
+      "depth_anchor_world_px": [
+        989,
+        1342
+      ],
+      "collision_mask_base": {
+        "pot_center_world_px": [
+          989,
+          1336.8
+        ],
+        "pot_radius_world_px": [
+          7.5,
+          4.7
+        ],
+        "character_radius_px": 7,
+        "rear_lift_px": 4,
+        "rear_extra_y_px": 3.3,
+        "front_extra_y_px": 0,
+        "side_extra_x_px": 7
+      }
     }
   ],
   "variants_note": "Families are approximate; do not assume pixel-identical repeated copies until tested."
