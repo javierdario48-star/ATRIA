@@ -1,0 +1,86 @@
+/**
+ * Real generated late Android nursing/physiology VM; no browser or sprites.
+ * Regression for contradictory oxygen receipts and delayed Ringer with IV.
+ */
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createAndroidIntegratedRuntime487} from './android-integrated-runtime-487.mjs';
+import {advanceLiveNativeJourney487 as advance} from './physiology-live/native-journey-487.mjs';
+
+const cases=[];
+const delivered=(p,id)=>(p.administrationLog||[]).filter(x=>x.id===id&&x.action!=='stop');
+const chat=r=>[...(r.uiCalls||[]),...(r.messages||[]).map(x=>x.text)].join('\n');
+function tick(r,seconds){advance(r,seconds,{dt:1/30});}
+function scenario(name,fn){try{cases.push({name,passed:true,...fn()});}catch(e){cases.push({name,passed:false,error:e.message});}}
+
+scenario('oxygen pending is NOT failure; native receipt completes independently of SpO2',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:1}),p=r.ctx.sim;
+ const initial=Number(p.liveVitals.spo2);
+ r.ctx.sendMessage('Enfermera oxígeno');
+ tick(r,.2);
+ assert.equal(delivered(p,'oxygen').length,0,'acceptance cannot fabricate administration');
+ assert(!/Oxígeno NO administrado/i.test(chat(r)),'no false negative while in native preparation');
+ assert(/Oxígeno: EN PROGRESO/.test(chat(r)),'patient hears a precise pending state');
+ tick(r,2.5);
+ assert.equal(delivered(p,'oxygen').length,1,'native receipt after async completion');
+ assert.equal(delivered(p,'oxygen')[0].defaultApplied,true,'catalog dose remains native');
+ assert(!/Oxígeno NO administrado/i.test(chat(r)),'no historical contradictory negative');
+ return {initialSpO2:initial,finalSpO2:Number(p.liveVitals.spo2),dose:delivered(p,'oxygen')[0].doseDisplay,
+  confirmedAtSeconds:r.clock.realSeconds};
+});
+for(const phrase of ['Enfermera expandir con Ringer','Enfermera Ringer']){
+ scenario('prompt native Ringer with existing IV: '+phrase,()=>{
+  const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:1}),p=r.ctx.sim;
+  const at=r.clock.realSeconds;
+  r.ctx.sendMessage(phrase);
+  tick(r,.2);
+  assert.equal(delivered(p,'fluid').length,0,'pending order is not a dose');
+  assert(/Recibí una indicación/.test(chat(r)),'singular acknowledgement');
+  assert(/Ringer: EN PROGRESO/.test(chat(r)),'native preparation clearly announced');
+  tick(r,2.5);
+  assert.equal(delivered(p,'fluid').length,1,'first native IV dose completed promptly');
+  assert.equal(delivered(p,'fluid')[0].defaultApplied,true,'native 500 ml catalog default');
+  assert(p.therapyTotals.fluidMl>=500,'native fluid balance updated');
+  return {request:phrase,elapsedSeconds:Number((r.clock.realSeconds-at).toFixed(2)),
+   dose:delivered(p,'fluid')[0].doseDisplay,fluidMl:p.therapyTotals.fluidMl};
+ });
+}
+scenario('repeating pending Ringer never duplicates an IV bolus',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:1}),p=r.ctx.sim;
+ r.ctx.sendMessage('Enfermera expandir con Ringer');
+ r.ctx.sendMessage('Enfermera Ringer');
+ tick(r,.2);
+ assert(/no repetí el bolo/i.test(chat(r)),'repeat is expressly acknowledged');
+ tick(r,3);
+ assert.equal(delivered(p,'fluid').length,1,'exactly one native administration');
+ return {count:delivered(p,'fluid').length};
+});
+scenario('no access leaves Ringer pending; nurse IV restores real delivery',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:0}),p=r.ctx.sim;
+ r.ctx.sendMessage('Enfermera expandir con Ringer');
+ tick(r,1.5);
+ assert.equal(delivered(p,'fluid').length,0,'never give IV without access');
+ assert((p.csPhase4Pending487||[]).some(x=>x.id==='fluid'),'original IV dependency retains fluid');
+ r.ctx.sendMessage('Enfermera vías');
+ tick(r,40);
+ assert(p.venousAccessCount>0,'native nurse placed access');
+ assert.equal(delivered(p,'fluid').length,1,'pending fluid resumed on native cannulation');
+ return {iv:p.venousAccessCount,fluid:delivered(p,'fluid').length};
+});
+scenario('permission denied: no dose and explicit clinical feedback',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:1}),p=r.ctx.sim;
+ r.ctx.window.nsMayExamine=()=>false;
+ r.ctx.sendMessage('Enfermera Ringer');
+ tick(r,2);
+ assert.equal(delivered(p,'fluid').length,0);
+ return {doses:0};
+});
+const errors=cases.filter(x=>!x.passed);
+fs.mkdirSync('qa/android-fix-results',{recursive:true});
+fs.writeFileSync('qa/android-fix-results/oxygen-ringer.json',
+ JSON.stringify({cases,passed:cases.length-errors.length,failed:errors.length,
+  method:'generated native source and late V412 integrated in deterministic Node VM',
+  physicalAndroid:false},null,2)+'\n');
+console.log('ATRIA OXYGEN RINGER NATIVE REGRESSION',JSON.stringify({
+ cases:cases.length,passed:cases.length-errors.length,failures:errors}));
+assert.equal(errors.length,0,'oxygen/Ringer request, native receipts and timing regressions');
