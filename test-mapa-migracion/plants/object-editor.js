@@ -88,10 +88,13 @@ function renderOverlay(){
 }
 const basePaint=paint,baseMove=move,baseBlocked=circleBlocked;
 paint=function(){
- const prevO=occlusion,prevShow=showMasks,prevEdit=editing;
- occlusion=false;showMasks=false;editing=false;basePaint();
- occlusion=prevO;showMasks=prevShow;editing=prevEdit;
+ const prevShow=showMasks,prevEdit=editing,prevMasks=masks;
+ // Preserve older provisional occluders except near the pixel-alpha P31 pilot.
+ masks=prevMasks.filter(m=>Math.hypot(m.x-322,m.y-957)>68);
+ showMasks=false;editing=false;
+ try{basePaint();}finally{masks=prevMasks;showMasks=prevShow;editing=prevEdit;}
  if(sceneImg.complete&&sceneImg.naturalWidth){renderOverlay();}
+ document.getElementById('indicator').textContent=(occlusion?'OCLUSIÓN ON':'OCLUSIÓN OFF')+' · P31 alfa · resto provisional';
 };
 move=function(dt){if(state.active)return;baseMove(dt);};
 circleBlocked=function(x,y,r){if(baseBlocked(x,y,r))return true;
@@ -135,7 +138,19 @@ function select(id,reset=true){
 }
 function focusObject(){const o=get(state.selected);window.ATRIA_OBJECT_EDITOR_FOCUS={x:o.collision.x,y:o.depth-12};overview=false;zoom=clamp(zoom,3,6);}
 function setActive(value){state.active=value;panel.hidden=!value;launcher.classList.toggle('active',value);launcher.textContent=value?'✎ Editando objeto':'✎ Editar objeto';window.ATRIA_OBJECT_EDITOR_EDITING=value;window.ATRIA_OBJECT_EDITOR_FOCUS=value?{x:get(state.selected).collision.x,y:get(state.selected).depth-12}:null;player.path=[];keys.clear();pad.clear();if(value){select(state.selected);focusObject();}else notify('Modo juego: controles normales');}
-launcher.onclick=()=>setActive(!state.active);$('oeClose').onclick=()=>setActive(false);$('oeTrial').onclick=()=>setActive(false);$('oePick').onchange=e=>{select(e.target.value);focusObject()};$('oeFocus').onclick=focusObject;
+launcher.onclick=()=>setActive(!state.active);$('oeClose').onclick=()=>setActive(false);$('oeTrial').onclick=()=>{
+ const o=get(state.selected),c=o.collision;let placed=false;
+ // Position avatar in a genuinely navigable tile near the selected pot.
+ for(const radius of [24,32,40,55,75,100,130]){
+   for(let a=0;a<16;a++){
+     const angle=2*Math.PI*a/16,xx=c.x+Math.cos(angle)*radius,yy=c.y+Math.sin(angle)*radius;
+     if(xx<10||xx>1014||yy<10||yy>1526||circleBlocked(xx,yy))continue;
+     player.x=xx;player.y=yy;player.path=[];player.pathIndex=0;placed=true;break;
+   }
+   if(placed)break;
+ }
+ setActive(false);notify(placed?'Prueba cerca de '+o.id+' · mover alrededor de la maceta':'No encontré paso libre cerca de '+o.id);
+};$('oePick').onchange=e=>{select(e.target.value);focusObject()};$('oeFocus').onclick=focusObject;
 for(const b of document.querySelectorAll('#oeModes button'))b.onclick=()=>{state.tool=b.dataset.mode;select(state.selected,false);};
 $('oeBg').onchange=e=>{state.bg=e.target.value;drawPreview()};$('oeCompare').onclick=()=>{state.compare=!state.compare;$('oeCompare').classList.toggle('current',state.compare);drawPreview()};
 $('oeAdd').onclick=()=>{state.paint='add';$('oeAdd').classList.add('current');$('oeErase').classList.remove('current')};
