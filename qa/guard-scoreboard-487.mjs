@@ -34,6 +34,15 @@ const tied=guardScoreModel487({mode:'competitive',players:[{id:'a',name:'A'},{id
 assert.equal(tied.players.filter(p=>p.leader).length,0,'no false leader on initial zero tie');
 const html=apply487(fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'));
 assert.equal(html.split('<style id="atria-guard-scoreboard-style-487">').length,2,'single score CSS');
+// Native #nsWardNotice starts at 64px, with at least 40px occupied height.
+// The centered score must begin strictly below it, including coop/VS layouts.
+const style=html.split('<style id="atria-guard-scoreboard-style-487">')[1].split('</style>')[0];
+assert(style.includes('top:calc(112px + env(safe-area-inset-top))'),
+ 'solo score clears bedside notice and preserves safe-area inset');
+assert(style.includes('top:calc(116px + env(safe-area-inset-top))'),
+ 'team and competitive score also clear bedside notice');
+assert(style.includes('left:50%;transform:translateX(-50%)'),
+ 'score remains centered on both desktop and mobile');
 assert.equal(html.split('<script id="atria-guard-scoreboard-runtime-487">').length,2,'single runtime');
 assert(html.includes("recordGuardXP487('case:'+p.uid,sim.__csSharedCareer?.xpDelta)"),
  'score comes from the confirmed actual native XP award');
