@@ -36,11 +36,12 @@ for(const variant of [false,true]){
 }
 for(const caseId of Object.keys(CASE_CLOSURE_RULES_487)){
  const rt=createNativeXPJourney487(caseId),{ctx,p,r}=initialize(rt);
+ const sourceBefore=p.phys?.sourceControlled===true;
  assert(ctx.window.csCaseHandoffOptions487().includes(r.destinations[0]),caseId);
  assert(ctx.window.csFinalizeCase487(r.destinations[0]),caseId+' real native case close');
  assert(p.caseEnded&&p._careerEndProcessed&&p.nsOutcome?.career?.resolved,caseId);
  assert(p.nsOutcome.career.xpDelta>0,caseId);
- assert.equal(p.phys?.sourceControlled===true,false,'referral cannot fake procedure '+caseId);
+ assert.equal(p.phys?.sourceControlled===true,sourceBefore,'referral must not alter surgical state '+caseId);
  console.log('NATIVE FINISH CASE',caseId,p.nsOutcome.score,p.nsOutcome.career.xpDelta);
 }
 console.log('ATRIA NATIVE CLOSURE SCORE XP PASS',JSON.stringify({
