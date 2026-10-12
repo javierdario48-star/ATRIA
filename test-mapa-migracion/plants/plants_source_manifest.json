@@ -1,0 +1,658 @@
+{
+  "schema": "atria-plants-source-extraction-v1",
+  "source": "vendor/atria-4.8.6/index.html:BG_SRC",
+  "source_size_px": [
+    1024,
+    1536
+  ],
+  "origin": "top-left",
+  "experimental_branch": "test-mapa-migracion",
+  "method": "Original raster sampled verbatim; alpha segmentation via constrained GrabCut; no generated imagery.",
+  "instances": [
+    {
+      "id": "P01",
+      "center": [
+        457,
+        24
+      ],
+      "extent": [
+        19,
+        31
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P02",
+      "center": [
+        572,
+        25
+      ],
+      "extent": [
+        19,
+        31
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P03",
+      "center": [
+        26,
+        147
+      ],
+      "extent": [
+        21,
+        35
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P04",
+      "center": [
+        169,
+        143
+      ],
+      "extent": [
+        21,
+        35
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P05",
+      "center": [
+        208,
+        222
+      ],
+      "extent": [
+        23,
+        32
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P06",
+      "center": [
+        379,
+        182
+      ],
+      "extent": [
+        20,
+        32
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P07",
+      "center": [
+        412,
+        209
+      ],
+      "extent": [
+        20,
+        34
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P08",
+      "center": [
+        559,
+        105
+      ],
+      "extent": [
+        19,
+        29
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P09",
+      "center": [
+        611,
+        216
+      ],
+      "extent": [
+        22,
+        32
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P10",
+      "center": [
+        842,
+        256
+      ],
+      "extent": [
+        19,
+        32
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P11",
+      "center": [
+        992,
+        146
+      ],
+      "extent": [
+        21,
+        30
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P12",
+      "center": [
+        376,
+        355
+      ],
+      "extent": [
+        25,
+        35
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P13",
+      "center": [
+        649,
+        334
+      ],
+      "extent": [
+        26,
+        37
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P14",
+      "center": [
+        803,
+        353
+      ],
+      "extent": [
+        20,
+        31
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P15",
+      "center": [
+        992,
+        358
+      ],
+      "extent": [
+        20,
+        35
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P16",
+      "center": [
+        329,
+        515
+      ],
+      "extent": [
+        27,
+        39
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P17",
+      "center": [
+        651,
+        515
+      ],
+      "extent": [
+        29,
+        39
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P18",
+      "center": [
+        723,
+        540
+      ],
+      "extent": [
+        28,
+        40
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P19",
+      "center": [
+        412,
+        621
+      ],
+      "extent": [
+        21,
+        30
+      ],
+      "family": "small",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P20",
+      "center": [
+        613,
+        625
+      ],
+      "extent": [
+        23,
+        32
+      ],
+      "family": "small",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P21",
+      "center": [
+        211,
+        635
+      ],
+      "extent": [
+        21,
+        31
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P22",
+      "center": [
+        30,
+        686
+      ],
+      "extent": [
+        21,
+        29
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P23",
+      "center": [
+        993,
+        682
+      ],
+      "extent": [
+        22,
+        31
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P24",
+      "center": [
+        815,
+        642
+      ],
+      "extent": [
+        21,
+        29
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P25",
+      "center": [
+        30,
+        835
+      ],
+      "extent": [
+        21,
+        30
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P26",
+      "center": [
+        212,
+        824
+      ],
+      "extent": [
+        20,
+        33
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P27",
+      "center": [
+        342,
+        795
+      ],
+      "extent": [
+        28,
+        39
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P28",
+      "center": [
+        697,
+        771
+      ],
+      "extent": [
+        25,
+        36
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P29",
+      "center": [
+        814,
+        828
+      ],
+      "extent": [
+        22,
+        30
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P30",
+      "center": [
+        993,
+        832
+      ],
+      "extent": [
+        20,
+        33
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P31",
+      "center": [
+        322,
+        957
+      ],
+      "extent": [
+        26,
+        39
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P32",
+      "center": [
+        696,
+        957
+      ],
+      "extent": [
+        27,
+        39
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P33",
+      "center": [
+        409,
+        1001
+      ],
+      "extent": [
+        23,
+        35
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P34",
+      "center": [
+        616,
+        1001
+      ],
+      "extent": [
+        23,
+        35
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P35",
+      "center": [
+        510,
+        1037
+      ],
+      "extent": [
+        20,
+        30
+      ],
+      "family": "small",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P36",
+      "center": [
+        45,
+        1004
+      ],
+      "extent": [
+        22,
+        35
+      ],
+      "family": "small",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P37",
+      "center": [
+        229,
+        1011
+      ],
+      "extent": [
+        24,
+        35
+      ],
+      "family": "small",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P38",
+      "center": [
+        890,
+        1083
+      ],
+      "extent": [
+        21,
+        29
+      ],
+      "family": "small",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P39",
+      "center": [
+        346,
+        1155
+      ],
+      "extent": [
+        26,
+        36
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P40",
+      "center": [
+        670,
+        1155
+      ],
+      "extent": [
+        26,
+        36
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P41",
+      "center": [
+        385,
+        1317
+      ],
+      "extent": [
+        26,
+        38
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P42",
+      "center": [
+        638,
+        1316
+      ],
+      "extent": [
+        26,
+        38
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P43",
+      "center": [
+        948,
+        1262
+      ],
+      "extent": [
+        22,
+        31
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P44",
+      "center": [
+        982,
+        1350
+      ],
+      "extent": [
+        20,
+        32
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P45",
+      "center": [
+        700,
+        1429
+      ],
+      "extent": [
+        24,
+        34
+      ],
+      "family": "foliage_pot",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    },
+    {
+      "id": "P46",
+      "center": [
+        318,
+        1435
+      ],
+      "extent": [
+        31,
+        43
+      ],
+      "family": "large",
+      "source_status": "candidate_coordinate",
+      "notes": "May need manual refinement; preserve original pixel colors and 1:1 scale"
+    }
+  ],
+  "variants_note": "Families are approximate; do not assume pixel-identical repeated copies until tested."
+}
