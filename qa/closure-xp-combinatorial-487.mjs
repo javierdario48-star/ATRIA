@@ -15,6 +15,7 @@ function prep(id,variant){
   else p.therapyExposure.set(t,{count:1,unit:'QA confirmed'});
  }
  const receiver=rule.consult?.[rule.destinations[0]]?.[0];
+ p.consults??=new Map();
  if(receiver)p.consults.set(receiver,{status:'done',accepted:true});
  if(variant==='complete'){
   p.intentHistory=c.requiredHistory.map(id=>({id})).concat(
