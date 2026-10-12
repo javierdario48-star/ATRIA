@@ -289,7 +289,7 @@ $('oePreset').onclick=()=>{const o=get(state.selected);const name=prompt('Nombre
 $('oeApplyPreset').onclick=()=>{const presets=state.presets||[];if(!presets.length){notify('Primero guardá una plantilla física');return}const idx=Number(prompt('Índice de plantilla (1 a '+presets.length+'): ',String(presets.length)));if(!(idx>=1&&idx<=presets.length))return;const pr=presets[idx-1],o=get(state.selected),base=RECORDS.get(pr.source),target=RECORDS.get(o.id);remember();
  const f=target.extent[0]/base.extent[0],g=target.extent[1]/base.extent[1];const old=o.collision;o.collision={...pr.collision,x:old.x,y:old.y,rx:pr.collision.rx*f,ry:pr.collision.ry*g,rearLift:pr.collision.rearLift*g,rearExtraY:pr.collision.rearExtraY*g,frontExtraY:pr.collision.frontExtraY*g,sideExtraX:pr.collision.sideExtraX*f};drawParams();drawPreview();notify('Solo física reutilizada; máscara individual intacta')};
 window.ATRIA_OBJECT_EDITOR_TEST={
- get(){return state},pack,restorePack,blockedPot,
+ get(){return state},getObject:get,pack,restorePack,blockedPot,
  assert(){
   const o=get('P31'),before=pack(),n=o.alpha.length;
   if(o.bbox.join(',')!=='288,905,68,115'||n!==68*115)throw Error('P31 dimensión');
