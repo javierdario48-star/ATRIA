@@ -92,6 +92,7 @@ for(const caseId of CASES){
    assert(exposed,key+' confirmed dose must have native exposure');
    assert(current.administered||id==='source_control',key+' real exposure must reach general evaluator');
   }
+  if(id==='transfusion'&&confirmed) assert(ctx.therapyEffectTotals().spo2<=1e-9,key+' no blood-product pulse-ox gain');
   // No faux oxygenation or immediate positive BP effects from antimicrobials.
   const forbidden=['antibiotic','aminoglycoside','antifungal'].includes(rule.classId);
   const vsControl=Object.fromEntries(Object.keys(after).map(k=>[k,Number((after[k]-controlVitals[k]).toFixed(3))]));
