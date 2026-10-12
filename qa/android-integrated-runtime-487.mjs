@@ -33,7 +33,7 @@ const v19=script('cs-safe-v0190');
 const score=between(v19,'  // ============================================================\n  // 7) SCORE V2','  function csDebriefMoments(){');
 const finish=between(html,"finishCase=function(reason='completed'){",'\nfunction csHasTherapy(id){');
 const completed=liveNativeJourneySources487.compiled.map(x=>[x.id,x.id==='cs-safe-v0190-clinical'?
- x.code.slice(0,-7)+'\nwindow.qaEnsureV19=csEnsureV19;window.qaLogAction=csLogAction;\n})();':x.code]);
+ x.code.slice(0,-7)+'\nwindow.qaEnsureV19=csEnsureV19;window.qaLogAction=csLogAction;\n})();':x.id==='qa-native-nursing'?x.code.replace('function inferRecipient(){return null;}',html.split('\n').find(line=>line.startsWith('function inferRecipient(text){'))):x.code]);
 const v19Index=completed.findIndex(([id])=>id==='cs-safe-v0190-clinical');
 completed.splice(v19Index+1,0,['cs-safe-v0190-score',score]);
 // Install the genuine finalizer before the adapters that wrap finishCase.
@@ -42,6 +42,22 @@ const recognition=completed.findIndex(([id])=>id==='cs-v412-monitor-recognition'
 completed.splice(recognition+1,0,['cs-v412-nurse-dispatch',lateNursing]);
 const state=completed.findIndex(([id])=>id==='ns421-clinical-state');
 completed.splice(state+1,0,['ns422-experience-policy',script('ns422-experience-policy')]);
+// Every integration follows its actual generated HTML offset, including the
+// ten-case adapter BEFORE late native V412/ns422 (not the historical VM order).
+const aliases={
+ 'qa-native-nursing':'native-nursing',
+ 'cs-safe-v0180-clinical':'cs-safe-v0180','cs-safe-v0190-clinical':'cs-safe-v0190',
+ 'cs-safe-v0190-score':'cs-safe-v0190','cs-safe-v0203-binding':'cs-safe-v0203',
+ 'cs-rebase174-v3-clinical':'cs-rebase174-v3-safe-variants',
+ 'cs-v412-monitor-recognition':'cs-v412-box-vega-audio',
+ 'cs-v412-nurse-dispatch':'cs-v412-box-vega-audio','ns422-treatment-context':'ns422-vega-rescue'};
+function generatedPosition(id,code){
+ if(id==='qa-native-nursing')return html.indexOf('function nurseNatural(q){');
+ const scriptPosition=html.indexOf('<script id="'+(aliases[id]||id)+'">');
+ if(scriptPosition>=0)return scriptPosition;
+ const codePosition=html.indexOf(code);assert(codePosition>=0,'actual generated position '+id);return codePosition;
+}
+completed.sort((a,b)=>generatedPosition(...a)-generatedPosition(...b));
 const compiled=completed.map(([id,code])=>({id,code,compiled:new vm.Script(code,{filename:'android-generated-qa/'+id+'.js'})}));
 const nativeProfileCode=[
  ...['const CS_PROFILE_KEY=','const CS_XP_PER_LEVEL=','function csSaveProfile(){',
@@ -71,6 +87,9 @@ export function createAndroidIntegratedRuntime487(caseId='PERI-SEC-001',{confirm
   csCloseOutcome:noop,csReturnToCases:noop,csSaveProfile:noop,
   csEnsureV19:ctx.window.qaEnsureV19,csLogAction:ctx.window.qaLogAction});
  ctx.window.nsMayExamine=()=>true;
+ // Nearby audible nurse is a fixture; recipient choice and V412's deferred
+ // send-to-nurse branch use their original generated implementations.
+ ctx.audibleNPCs=()=>[{id:'nurse',d:0}];
  vm.runInContext(practiceCode,ctx);vm.runInContext(complexityCode,ctx);
  ctx.sim.nsPractice=ctx.window.qaSelectPractice487(caseId);
  ctx.selectedPlayMode=mode;

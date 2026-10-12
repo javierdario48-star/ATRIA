@@ -86,7 +86,7 @@ export function noradrenalineOrderIssue487(raw,original=raw,unfiltered=original)
  const rest=source.replace(rate?.[0]||'__no_rate__',' ').replace(name,' ').replace(/\s+/g,' ').trim();
  if(!/^(?:(?:enfermera|enfermero|enfermeria|por|favor|indico|solicito|necesito|pido|quiero|administrar|administra|dar|da|pasar|pasa|iniciar|inicia|infundir|infusion|iv|ev|via|intravenoso|intravenosa|endovenoso|endovenosa|vasopresor)\s*)*$/.test(rest))
   return 'Indicación ambigua o incompatible: especificá noradrenalina en infusión IV y su tasa en mcg/kg/min.';
- if(/[+−–—-]\s*\d|(?:^|\s)[.,]\d/.test(normalize(unfiltered)))return 'Usá una tasa positiva explícita con cero inicial; no se convierten signos ambiguos.';
+ if(/[+−–—-]\s*\d|(?:^|\s)[.,]\d/.test(given))return 'Usá una tasa positiva explícita con cero inicial; no se convierten signos ambiguos.';
  return null;
 }
 export function applyNurseExecution487(html){

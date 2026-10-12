@@ -99,6 +99,13 @@ for(const id of Object.keys(CARE_JOURNEYS_487))for(const mode of ['solo','appren
 }
 assert(rows.some(x=>x.score<70&&x.xp>0),'legitimate low score earns XP');
 
+// V412 must retain the existing ten-case spoken disposition wrapper too.
+for(const [id,q] of [['CIRR-001','internar en sala'],['HDA-001','derivar a endoscopia']]){
+ const {rt,s}=prepare(id);rt.ctx.sendMessage('Enfermera '+q);advance(rt,1,{dt:1/6});
+ assert.equal(s.caseEnded,true,id+' native late voice still reaches genuine finalizer');
+ assert(rt.ctx.csProfile.xp>0,id+' spoken closure pays original career XP');
+}
+
 // One journey starts with EMPTY evidence and performs native interview,
 // all five examination techniques, nurse access/monitor/medications, actual
 // laboratory collection and native Surgery response before clicking handoff.

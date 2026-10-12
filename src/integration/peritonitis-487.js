@@ -176,6 +176,6 @@ export function applyPeritonitis487(html) {
   const policyCopies=html.split(latePolicy).length-1;
   if(policyCopies>1||html.includes('id="ns422-experience-policy"')&&policyCopies!==1)
    throw Error('late ns422 XP eligibility missing/ambiguous');
-  if(policyCopies===1)html=html.replace(latePolicy,"window.nsExperienceEligible=function(){const handoff=window.csPeritonitisExperienceEligible487?.();return handoff==null?!sim?.patientDied&&!!window.nsPatientState?.()?.treatment.complete:handoff;};");
+  if(policyCopies===1)html=html.replace(latePolicy,"window.nsExperienceEligible=function(){const handoff=window.csPeritonitisExperienceEligible487?.()??window.csCaseExperienceEligible487?.();return handoff==null?!sim?.patientDied&&!!window.nsPatientState?.()?.treatment.complete:handoff;};");
   return html.replace('</body>',code+'</body>');
 }

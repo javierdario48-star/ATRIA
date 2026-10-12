@@ -9,6 +9,8 @@ export function applyManualMonitorIV487(html){
  const ivIds=new Set(['fluid','albumin','vasopressor','transfusion','morphine','ppi',
   'ceftriaxone','metronidazole','imipenem','ceftazidime','cefoperazone','cefepime',
   'piptazo','ampicillin','amikacin','gentamicin','fluconazole','amphotericin']);
+ // Share the existing route contract with composite dispatch; no second list.
+ window.csNurseTherapyRequiresIV487=id=>ivIds.has(id);
  addMonitorTherapy=function(text){
   const t=typeof findMonitorTherapy==='function'?findMonitorTherapy(text):null;
   const issue=t?.id==='vasopressor'?window.csNoradrenalineOrderIssue487?.(text):null;

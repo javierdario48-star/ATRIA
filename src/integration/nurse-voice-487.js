@@ -48,9 +48,19 @@ export function applyNurseVoice487(html){
   for(const item of parsed.items.slice(0,12)){
    if(item.routeOnly)continue;
    if(item.negated){feedback('No ejecuté '+item.phrase+' (indicación negada).');continue}
-   const issue=item.id==='vasopressor'&&item.action!=='stop'?
+   let issue=item.id==='vasopressor'&&item.action!=='stop'?
     window.csNoradrenalineOrderIssue487?.(item.text,item.contractText,text):null;
-   if(issue){feedback('Noradrenalina NO administrada: '+issue);continue;}
+   if(item.kind==='therapy'&&item.action!=='stop'&&item.id!=='vasopressor'){
+    const therapy=typeof findMonitorTherapy==='function'?findMonitorTherapy(item.text):null;
+    const explicitRoute=/\\b(?:oral|po|im|intramuscular|sc|subcutanea|nasal|intraarterial|intratecal|epidural)\\b/.test(item.text);
+    if(explicitRoute&&window.csNurseTherapyRequiresIV487?.(item.id))
+     issue='La formulación nativa requiere vía IV; aclar\u00e1 la vía indicada.';
+    const dose=therapy&&typeof parseTherapyOrder==='function'?parseTherapyOrder(item.text,therapy):null;
+    const explicitNumber=/(?:^|\\s)[+−–—-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)/.test(item.text);
+    if(explicitNumber&&(dose&&(dose.defaultApplied||!Number.isFinite(dose.amount)||dose.amount<=0)||/[+−–—-]\\s*\\d/.test(item.text)))
+     issue='La dosis explícita no es válida para esta formulación; aclar\u00e1 esa indicación.';
+   }
+   if(issue){feedback(item.phrase+' NO administrado: '+issue);continue;}
    if(item.action==='stop'){
     ok=window.csQueueTherapyStop487?.(item.id,item.text)===true||ok;continue;
    }

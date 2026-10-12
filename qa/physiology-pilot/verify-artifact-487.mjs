@@ -97,7 +97,7 @@ for(const [current,prior] of [
  [handoffBridge,''],
  ['   return window.csPeritonitisExperienceEligible487();',
   '   return !!sim?._csPeriCompletionForXP487&&handoffProof()&&!sim?.patientDied;'],
- ['window.nsExperienceEligible=function(){const handoff=window.csPeritonitisExperienceEligible487?.();return handoff==null?!sim?.patientDied&&!!window.nsPatientState?.()?.treatment.complete:handoff;};',
+ ['window.nsExperienceEligible=function(){const handoff=window.csPeritonitisExperienceEligible487?.()??window.csCaseExperienceEligible487?.();return handoff==null?!sim?.patientDied&&!!window.nsPatientState?.()?.treatment.complete:handoff;};',
   'window.nsExperienceEligible=function(){return !sim?.patientDied&&!!window.nsPatientState?.()?.treatment.complete;};'],
  ['\n  if(window.csNurseVoice487?.dispatch)return window.csNurseVoice487.dispatch(text);',''],
  ['scanned.items.filter(x=>!x.negated&&!x.routeOnly)','scanned.items.filter(x=>!x.negated)']

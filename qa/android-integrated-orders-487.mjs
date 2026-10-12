@@ -23,6 +23,15 @@ const scenarios=[
  {q:'oxígeno y noradrenalina oral',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor']},
  {q:'oxígeno y noradrenalina en bolo IV',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor']},
  {q:'oxígeno dar 0.5 mcg/kg/min noradrenalina IV',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor'],doses:{oxygen:'4 L/min'}},
+ {q:'ceftriaxona vía oral y oxígeno',confirmedIV:1,iv:1,meds:['oxygen'],absent:['ceftriaxone']},
+ {q:'oxígeno y noradrenalina SC',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor']},
+ {q:'oxígeno y noradrenalina vía subcutánea',confirmedIV:1,iv:1,meds:['oxygen'],absent:['vasopressor']},
+ {q:'dar 2 g de ceftriaxona y 250 mg de metronidazol',confirmedIV:1,iv:1,meds:['ceftriaxone','metronidazole'],doses:{ceftriaxone:'2 g',metronidazole:'250 mg'}},
+ {q:'ceftriaxona 0 mg y oxígeno',confirmedIV:1,iv:1,meds:['oxygen'],absent:['ceftriaxone']},
+ {q:'metronidazol -500 mg y oxígeno',confirmedIV:1,iv:1,meds:['oxygen'],absent:['metronidazole']},
+ {q:'metronidazol -500 mg y oxígeno y noradrenalina',confirmedIV:1,iv:1,meds:['oxygen','vasopressor'],absent:['metronidazole']},
+ {q:'ceftriaxona I.M. y oxígeno',confirmedIV:1,iv:1,meds:['oxygen'],absent:['ceftriaxone']},
+ {q:'O2 y noradrenalina',confirmedIV:1,iv:1,meds:['oxygen','vasopressor']},
  {q:'vía',iv:1,meds:[]}
 ];
 if(!process.argv.includes('--checkpoint-b')){
@@ -49,7 +58,10 @@ for(const spec of scenarios.filter(x=>!process.argv.includes('--checkpoint-b')||
    const receipts=p.administrationLog.filter(x=>x.id===id);
    assert.equal(receipts.length,1,'one actual administration '+id);
    assert(p.monitorTherapies.has(id),'native active treatment '+id);
-   if(spec.doses?.[id])assert.equal(receipts[0].doseDisplay,spec.doses[id],'dose belongs to its own clause');
+   if(spec.doses?.[id]){
+    assert.equal(receipts[0].doseDisplay,spec.doses[id],'dose belongs to its own clause');
+    if(spec.q.startsWith('dar 2 g'))assert.equal(receipts[0].defaultApplied,false,'explicit prefix dose provenance');
+   }
    const reported=(p.csNurse487History||[]).flatMap(h=>h.items).filter(x=>x.kind==='therapy'&&x.id===id);
    assert(reported.every(x=>x.status==='COMPLETED'),'execution receipts agree with actual dose '+id);
    if(spec.defaultDose)assert.equal(receipts[0].defaultApplied,true,'native default provenance '+id);

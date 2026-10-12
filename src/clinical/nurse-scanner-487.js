@@ -6,10 +6,17 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  const norm=t=>String(t||'').toLowerCase().normalize('NFD')
   .replace(/[\u0300-\u036f]/g,'')
   .replace(/[µμ]/g,'u')
+  .replace(/\b([ievs])\.\s*([vomc])\.?/g,'$1$2')
   .replace(/(\d+)\s*[,\.]\s*(\d+)/g,'$1csdecimal487$2')
+  .replace(/[−–—-]\s*(?=\d)/g,'csminus487')
+  .replace(/\+\s*(?=\d)/g,'csplus487')
+  .replace(/(^|\s)[.,](?=\d)/g,'$1csfraction487')
+  .replace(/,/g,' y ')
   .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim()
-  .replace(/(\d+)csdecimal487(\d+)/g,'$1.$2');
- const s=norm(text),withoutPrefix=s.replace(/^(?:(?:enfermera|enfermero|enfermeria|por favor|solicito|necesito|pido|quiero|orden|indico)\s+)+/,'');
+  .replace(/(\d+)csdecimal487(\d+)/g,'$1.$2')
+  .replace(/csminus487/g,'-').replace(/csplus487/g,'+')
+  .replace(/csfraction487/g,'.');
+ const s=norm(text),withoutPrefix=s.replace(/^(?:(?:enfermera|enfermero|enfermeria|por favor|solicito|necesito|pido|quiero|orden|indico)\s+(?:y\s+)?)+/,'');
  const input=withoutPrefix;
  const stopLanguage=/\b(?:suspender|suspende|suspenda|retirar|retira|retire|detener|detene)\b/.test(input);
  const aliases=[];
@@ -61,13 +68,15 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
    .replace(/\s+(?:y|e|ademas|mas)\s*$/,'').trim();
   // A new action before the NEXT identified medicine belongs to that clause.
   // Do not parse its number as the oxygen/fluid dose preceding it.
-  if(chosen[index+1]?.kind==='therapy')phrase=phrase.replace(/\s+(?:administrar|administra|dar|da|pasar|pasa|iniciar|inicia|infundir)\b.*$/,'').trim();
-  const routeQualifier=/^via\s+(?:iv|ev|oral|po|im|sc|intramuscular|intravenos[oa]|endovenos[oa]|nasal|intraarterial|intratecal|epidural)\b/;
+  if(chosen[index+1]?.kind==='therapy')phrase=phrase
+   .replace(/\s+(?:y|e|ademas|mas|pero|luego|despues)\b.*$/,'')
+   .replace(/\s+(?:administrar|administra|dar|da|pasar|pasa|iniciar|inicia|infundir)\b.*$/,'').trim();
+  const routeQualifier=/^via\s+(?:iv|ev|oral|po|im|sc|subcutanea|intramuscular|intravenos[oa]|endovenos[oa]|nasal|intraarterial|intratecal|epidural)\b/;
   // A medicine's route is not a request to cannulate. Previously the whole
   // pressor rejection hid this duplicate intention; partial orders expose it.
-  const routeOnly=item.kind==='iv'&&item.phrase==='via'&&chosen[index-1]?.kind==='therapy'&&
-    (routeQualifier.test(phrase)||chosen[index-1]?.id==='vasopressor'&&
-     !/\b(?:y|e|ademas|mas|pero|luego|despues)\b/.test(before));
+  const routeOnly=item.kind==='iv'&&item.phrase==='via'&&
+    (routeQualifier.test(phrase)&&(chosen[index-1]?.kind==='therapy'||chosen[index+1]?.kind==='therapy')||
+     chosen[index-1]?.id==='vasopressor'&&!/\b(?:y|e|ademas|mas|pero|luego|despues)\b/.test(before));
   // A specific stop is an executable action, not a positive drug order.
   // Negations, questions and conditional/qualified stops remain non-executable.
   // Only oxygen and explicitly identified norepinephrine have confirmed stops.
@@ -91,9 +100,9 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
   const next=chosen[index+1];
   const routeTail=next?.kind==='iv'&&next.phrase==='via'&&(!/\b(?:y|e|ademas|mas|pero)\b/.test(phrase)||
    routeQualifier.test(input.slice(next.start)))?
-   input.slice(next.start,chosen[index+2]?.start??input.length):'';
+   input.slice(next.start,chosen[index+2]?.start??input.length).replace(/\s+(?:y|e|ademas|mas|pero|luego|despues)\b.*$/,'').trim():'';
   const contractText=(prefix+' '+phrase+' '+routeTail).trim();
-  if(!duplicate)result.push({...item,text:stop?'suspender '+phrase:item.id==='vasopressor'?contractText:phrase,count,negated,
+  if(!duplicate)result.push({...item,text:stop?'suspender '+phrase:item.kind==='therapy'?contractText:phrase,count,negated,
    ...(routeOnly?{routeOnly:true}:{}),
    ...(item.id==='vasopressor'&&!stop?{contractText}:{}),...(stop?{action:'stop'}:{})});
  }
@@ -106,5 +115,5 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  const unknown=segments.map(x=>x.replace(/\b(?:suspender|suspende|suspenda|retirar|retira|retire|detener|detene)\b/g,' ')
   .replace(neutral,' ').replace(/\b\d+(?:\.\d+)?\b/g,' ').replace(/\s+/g,' ').trim()).filter(x=>x.length>=4);
  return {addressed:/^(?:enfermera|enfermero|enfermeria)\b/.test(s),items:result,unknown,
-  active:stopContextSafe&&!/\?/.test(String(text))&&!/^(?:no|nunca|sin|evitar)\b/.test(input)};
+  active:(!stopLanguage||stopContextSafe)&&!/\?/.test(String(text))&&!/^(?:no|nunca|sin|evitar|si|cuando)\b/.test(input)};
 }
