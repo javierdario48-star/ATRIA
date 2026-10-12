@@ -75,7 +75,7 @@ assert.equal(mirrorCtx.challenge.assistIndex,0);
 // cannot turn a mixed nursing command into an opponent's administration/order.
 const rivalActions=[],rivalToasts=[];
 const rivalCtx={challenge:{mode:'competitive',assistIndex:0,patients:[{...visitor,index:0}]},
- selfId:'GUEST',shared:()=>true,near:()=>true,window:{nsIsClinicalQuestion:t=>/[?¿]/.test(t)},
+ selfId:'GUEST',shared:()=>true,near:()=>true,canAct:()=>rivalCtx.ownsActivePatient===true,window:{nsIsClinicalQuestion:t=>/[?¿]/.test(t)},
  requestAssist:(index,action)=>{rivalActions.push({index,action});return true},
  toast:t=>rivalToasts.push(t)};
 vm.createContext(rivalCtx);
@@ -96,6 +96,10 @@ assert.equal(rivalActions.at(-1).action.id,'ns:auscultation','bedside physical e
 assert.equal(rivalCtx.foreignRivalInput487('enfermera signos vitales'),true);
 assert.equal(rivalActions.at(-1).action.kind,'vitals','nursing vitals remain allowed');
 assert.equal(rivalCtx.foreignRivalInput487('/equipo hola'),null,'explicit social chat is separate');
+rivalCtx.ownsActivePatient=true;
+assert.equal(rivalCtx.foreignRivalInput487('enfermera Ringer'),null,
+ 'a previously observed rival must never hijack an owned patient's native clinical commands');
+rivalCtx.ownsActivePatient=false;
 rivalCtx.challenge.assistIndex=null;
 assert.equal(rivalCtx.foreignRivalInput487('enfermera ceftriaxona'),null,
  'no clinical patient guessed without an explicit bedside selection');
