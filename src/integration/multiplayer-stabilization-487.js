@@ -207,6 +207,42 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  s=edit(s,'</head>',
  '<style id="atria-multiplayer-overlay-lifecycle-487">body.nsLobbyMode #csDxBadge487,body.nsLobbyMode #csDxDialog487,body.nsLobbyMode #csActionsModal,body.nsLobbyMode #csReceptionBoard,body.nsLobbyMode #csShiftBoard,body.nsLobbyMode #csAssistModal,body.nsLobbyMode #csObserverModal,body.nsLobbyMode #csChallengeHud{display:none!important;pointer-events:none!important}</style></head>',
  'hide-guard-only-overlays-in-lobby');
+
+ // The native career receipt is the only source of XP. Persist an authenticated
+ // per-player guard total into the existing host-owned room.players snapshots.
+ // This does not change competitive clinical points, XP awards or score rules.
+ s=edit(s,
+ "let pendingNav=null,pendingClaim=null,pendingAutoCommand487=null,loading=false,buildingPlan=false",
+ "let pendingNav=null,pendingClaim=null,pendingAutoCommand487=null,loading=false,buildingPlan=false,guardXP487=0,guardXPReceipts487=new Set();\n function recordGuardXP487(receipt,amount){if(!shared()||!challenge.active||guardXPReceipts487.has(receipt))return;const n=Number(amount);if(!Number.isFinite(n)||Math.abs(n)>10000)return;guardXPReceipts487.add(receipt);guardXP487=Math.max(-100000,Math.min(100000,guardXP487+Math.round(n)));if(host()){const me=challenge.players.find(p=>p.id===selfId);if(me){me.xpGuard487=guardXP487;challenge.revision++;publish()}}else send('score_xp',{xp:guardXP487});}",
+ 'native-confirmed-xp-ledger-with-dedup');
+ s=edit(s,
+ "challenge.hostId=selfId;challenge.practice=",
+ "challenge.hostId=selfId;guardXP487=0;guardXPReceipts487.clear();challenge.practice=",
+ 'fresh-guard-xp-reset-on-host');
+ s=edit(s,
+ "challenge.assistIndex=null;pendingNav=null;pendingClaim=null;renderHud();decorateReception();",
+ "challenge.assistIndex=null;pendingNav=null;pendingClaim=null;guardXP487=0;guardXPReceipts487.clear();renderHud();decorateReception();",
+ 'clear-xp-when-returning-to-lobby');
+ s=edit(s,
+ "const same=challenge.id===r.id,oldPatients=challenge.patients;window.nsPractice",
+ "const same=challenge.id===r.id,oldPatients=challenge.patients;if(!same){guardXP487=0;guardXPReceipts487.clear()}window.nsPractice",
+ 'fresh-room-xp-reset-on-guest');
+ s=edit(s,
+ "sim.__csSharedCareer=base.career.call(this,p.result.score,b);if(csProfile){",
+ "sim.__csSharedCareer=base.career.call(this,p.result.score,b);recordGuardXP487('case:'+p.uid,sim.__csSharedCareer?.xpDelta);if(csProfile){",
+ 'real-confirmed-native-xp-credit');
+ s=edit(s,
+ "csProfile.xp=(Number(csProfile.xp)||0)+xp;csProfile.totalAssists=",
+ "csProfile.xp=(Number(csProfile.xp)||0)+xp;recordGuardXP487('assist:'+p.uid,xp);csProfile.totalAssists=",
+ 'include-real-assistance-xp-credit');
+ s=edit(s,
+ "if(!peer)return;if(m.kind==='claim'){",
+ "if(!peer)return;if(m.kind==='score_xp'){const n=Number(m.xp);if(Number.isInteger(n)&&n>=-100000&&n<=100000&&peer.xpGuard487!==n){peer.xpGuard487=n;challenge.revision++;publish()}return}if(m.kind==='claim'){",
+ 'host-accepts-only-member-xp-claims');
+ s=edit(s,
+ "challenge.players=list.map(x=>({id:x.id,name:String(x.name||'Jugador').slice(0,40)}));",
+ "challenge.players=list.map(x=>({id:x.id,name:String(x.name||'Jugador').slice(0,40),xpGuard487:challenge.players.find(p=>p.id===x.id)?.xpGuard487||0}));",
+ 'preserve-earnings-across-roster-updates');
  if(reverse)for(const {from,to,label} of undo.reverse())s=replaceOnce(s,to,from,'reverse-'+label);
  return s;
 }
