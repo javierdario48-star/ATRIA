@@ -103,11 +103,11 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  'assist-permission-marker'); // a deliberate source anchor for next permission patch
  s=edit(s,
  "if(a.kind==='therapy')return typeof a.text==='string'&&a.text.length<=180&&!!findMonitorTherapy(a.text);",
- "if(a.kind==='therapy')return typeof a.text==='string'&&a.text.length<=180&&!!findMonitorTherapy(a.text);if(a.kind==='command')return challenge.mode==='coop'&&typeof a.text==='string'&&a.text.trim().length>0&&a.text.length<=220;if(a.kind==='clinical_call')return challenge.mode==='coop'&&['csSetDiagnosticImpression','csSetDisposition','csRequestConsult','captureMonitorVitals'].includes(a.method)&&Array.isArray(a.args)&&a.args.length<=3&&a.args.every(v=>typeof v==='string'||typeof v==='number')&&JSON.stringify(a).length<500;",
+ "if(a.kind==='therapy')return typeof a.text==='string'&&a.text.length<=180&&!!findMonitorTherapy(a.text);if(a.kind==='command')return challenge.mode==='coop'&&typeof a.text==='string'&&a.text.trim().length>0&&a.text.length<=220;if(a.kind==='finish')return challenge.mode==='coop'&&a.reason==='completed';if(a.kind==='clinical_call')return challenge.mode==='coop'&&['csSetDiagnosticImpression','csSetDisposition','csRequestConsult','captureMonitorVitals'].includes(a.method)&&Array.isArray(a.args)&&a.args.length<=3&&a.args.every(v=>typeof v==='string'||typeof v==='number')&&JSON.stringify(a).length<500;",
  'safe-native-clinical-command-relay');
  s=edit(s,
  "else if(a.kind==='therapy'){addMonitorTherapy(a.text)}};",
- "else if(a.kind==='therapy'){addMonitorTherapy(a.text)}else if(a.kind==='command'){sendMessage(a.text)}else if(a.kind==='clinical_call'){window[a.method]?.(...a.args)}};",
+ "else if(a.kind==='therapy'){addMonitorTherapy(a.text)}else if(a.kind==='command'){sendMessage(a.text)}else if(a.kind==='clinical_call'){window[a.method]?.(...a.args)}else if(a.kind==='finish'){const originalIndex=shiftSession?.index;try{if(shiftSession)shiftSession.index=p.index;finishCase('completed')}finally{if(shiftSession)shiftSession.index=originalIndex}}};",
  'owner-executes-visiting-coop-command-on-original-engine');
  s=edit(s,
  "sendMessage=function(q){\n  if(shared()){",
@@ -168,6 +168,15 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "m.querySelector('[data-refresh-observer]').onclick=()=>csOpenObserver(index);",
  "m.querySelector('[data-refresh-observer]').onclick=()=>csOpenObserver(index);if(challenge.mode==='competitive'&&p.ownerId&&p.ownerId!==selfId&&p.state==='in_care'){challenge.assistIndex=index;const box=document.createElement('section');box.className='csRuleBox';box.innerHTML='<b>Entrevista y examen del paciente rival</b><div><input maxlength=\"180\" data-observer-question placeholder=\"Preguntarle al paciente…\"><button type=\"button\" data-observer-ask>Preguntar</button></div><div><button type=\"button\" data-observer-exam=\"ns:inspection\">Inspección</button><button type=\"button\" data-observer-exam=\"ns:auscultation\">Auscultación</button><button type=\"button\" data-observer-exam=\"ns:percussion\">Percusión</button><button type=\"button\" data-observer-exam=\"ns:palpation\">Palpación</button></div><small>Medicación y nuevos estudios: solo el responsable del paciente.</small>';m.querySelector('.csPanel')?.appendChild(box);box.querySelector('[data-observer-ask]').onclick=()=>{const input=box.querySelector('[data-observer-question]');const txt=input.value.trim();if(txt&&requestAssist(index,{kind:'speech',text:txt}))input.value=''};box.querySelectorAll('[data-observer-exam]').forEach(b=>b.onclick=()=>requestAssist(index,{kind:'exam',id:b.dataset.observerExam}))}",
  'competitive-rival-physical-exam-and-anamnesis-tools');
+
+ // A guest closing a cooperative patient must never invoke local XP. The
+ // existing V41 case close and verified clinical handoff execute ONCE on the
+ // authoritative owner (while temporarily targeting that owner's record).
+ s=edit(s,
+ "finishCase=function(reason){if(reason==='death'&&!closingDeath&&shiftSession?.records)",
+ "finishCase=function(reason){if(challenge.mode==='coop'&&foreignClinical487())return requestAssist(foreignClinical487().index,{kind:'finish',reason:'completed'});if(reason==='death'&&!closingDeath&&shiftSession?.records)",
+ 'cooperative-visitor-closure-only-on-authoritative-owner');
+
  // Room message payloads include a claimed peerId; only the server envelope
  // identifies the authenticated user. Do not trust a peerId chosen by a
  // competing browser to send forged claims, orders, progress or team chat.
