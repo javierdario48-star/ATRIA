@@ -61,7 +61,11 @@ export function csEvaluateClosure487(a={}){
  if(!norm(a.diagnosis)||!matched)missing.push('Registrar un diagnóstico presuntivo compatible.');
  // The minimal clinical history establishes context. All other questions give
  // partial credit; in shock, treatment and transfer cannot be delayed for them.
- const answered=(a.historyAnswered||[]).filter(x=>(a.historyRelevant||[]).includes(x)).length;
+ const relevant=(a.historyAnswered||[]).filter(x=>(a.historyRelevant||[]).includes(x)).length;
+ const contextual=['anamnesis:reason','anamnesis:pmh','anamnesis:allergies',
+   'anamnesis:meds','anamnesis:surgeries','anamnesis:familyHistory'];
+ const general=(a.historyAnswered||[]).filter(x=>contextual.includes(x)).length;
+ const answered=relevant+general;
  if(answered<1&&!critical)missing.push('Obtener al menos un dato relevante de anamnesis.');
  const evidence=(rule.study||[]).some(group=>group.some(x=>studies.has(x)));
  if(!evidence&&!(rule.urgentStudyBypass&&critical&&!!a.examDone))
@@ -111,7 +115,11 @@ export function csClosureQuality487(a,rule,done,studies){
  const take=ids=>(ids||[]).filter(id=>(a.historyAnswered||[]).includes(id)).length;
  const diagnosis=(a.acceptedDiagnoses||[]).some(x=>
   String(a.diagnosis||'').toLowerCase().includes(String(x).toLowerCase()))?15:0;
- const history=Math.round(15*take(a.historyRelevant)/Math.max(1,(a.historyRelevant||[]).length));
+ const primary=15*take(a.historyRelevant)/Math.max(1,(a.historyRelevant||[]).length);
+ const context=['anamnesis:reason','anamnesis:pmh','anamnesis:allergies',
+   'anamnesis:meds','anamnesis:surgeries','anamnesis:familyHistory']
+   .filter(id=>(a.historyAnswered||[]).includes(id)).length;
+ const history=Math.min(15,Math.round(primary+Math.min(4,context*1.25)));
  const safety=(a.vitalsKnown?6:0)+(a.examDone?7:0)+
   (a.reassessments>0?7:0)+(rule.destinations.includes(a.disposition)?5:0);
  const studiesScore=Math.round(15*(a.keyStudies||[]).filter(id=>studies.has(id)).length/
