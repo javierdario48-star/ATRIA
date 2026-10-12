@@ -71,6 +71,34 @@ assert.equal(mirrorCtx.sim.patientInstance.uid,visitor.uid);
 assert.equal(mirrorCtx.sim.__csRemoteMirror487,true);
 assert.equal(mirrorCtx.sim.playMode,'coop');
 assert.equal(mirrorCtx.challenge.assistIndex,0);
+// Competitive bedside chat uses the existing authorized relay; text and voice
+// cannot turn a mixed nursing command into an opponent's administration/order.
+const rivalActions=[],rivalToasts=[];
+const rivalCtx={challenge:{mode:'competitive',assistIndex:0,patients:[{...visitor,index:0}]},
+ selfId:'GUEST',shared:()=>true,near:()=>true,window:{nsIsClinicalQuestion:t=>/[?¿]/.test(t)},
+ requestAssist:(index,action)=>{rivalActions.push({index,action});return true},
+ toast:t=>rivalToasts.push(t)};
+vm.createContext(rivalCtx);
+new vm.Script(html.slice(foreignAt,takeAt)).runInContext(rivalCtx);
+assert.equal(rivalCtx.foreignRivalInput487('enfermera monitor, ceftriaxona y hemograma'),true);
+assert.equal(JSON.stringify(rivalActions),JSON.stringify([{index:0,action:{kind:'monitor'}}]),
+ 'mixed monitor + antibiotic + study must execute ONLY the benign portion');
+assert.equal(rivalToasts.length,1,'mixed order must explain the denied clinical actions');
+rivalActions.length=0;
+assert.equal(rivalCtx.foreignRivalInput487('enfermera hemograma'),true);
+assert.equal(rivalActions.length,0,'rival cannot request new laboratory tests');
+assert.equal(rivalCtx.foreignRivalInput487('enfermera ceftriaxona'),true);
+assert.equal(rivalActions.length,0,'rival cannot request medication');
+assert.equal(rivalCtx.foreignRivalInput487('paciente, ¿dónde le duele?'),true);
+assert.equal(rivalActions.at(-1).action.kind,'speech','main clinical chat reaches rival patient history');
+assert.equal(rivalCtx.foreignRivalInput487('examinar: auscultar'),true);
+assert.equal(rivalActions.at(-1).action.id,'ns:auscultation','bedside physical exam allowed');
+assert.equal(rivalCtx.foreignRivalInput487('enfermera signos vitales'),true);
+assert.equal(rivalActions.at(-1).action.kind,'vitals','nursing vitals remain allowed');
+assert.equal(rivalCtx.foreignRivalInput487('/equipo hola'),null,'explicit social chat is separate');
+rivalCtx.challenge.assistIndex=null;
+assert.equal(rivalCtx.foreignRivalInput487('enfermera ceftriaxona'),null,
+ 'no clinical patient guessed without an explicit bedside selection');
 const actionStart=html.indexOf('function applyAssistAction(p,a,helper){'),actionEnd=html.indexOf('function requestAssist(index,a){',actionStart);
 assert(actionStart>0&&actionEnd>actionStart,'actual native patient-owner relay');
 const calls=[],ownerSim={patientInstance:{uid:visitor.uid}};
@@ -97,7 +125,7 @@ const inputEnd=html.indexOf(" // Guard both direct APIs",inputAt);
 assert(inputAt>0&&inputEnd>inputAt,'actual clinical send hook');
 const autoCalls=[],singleFree={index:0,ownerId:null,state:'waiting'};
 const inputCtx={challenge:{mode:'competitive',active:true,ended:false,assistIndex:null,patients:[singleFree]},
- shared:()=>true,foreignClinical487:()=>null,roomCommand:()=>false,canAct:()=>inputCtx.claimed===true,
+ shared:()=>true,foreignClinical487:()=>null,foreignRivalInput487:()=>null,roomCommand:()=>false,canAct:()=>inputCtx.claimed===true,
  claimed:false,near:()=>true,pendingAutoCommand487:null,window:{nsIsClinicalQuestion:()=>false},
  takePatient:index=>{autoCalls.push(['claim',index]);inputCtx.claimed=true;return true;},
  oldSend:text=>{autoCalls.push(['native',text]);return true;},send:()=>true,addGlobalChat:()=>{},
