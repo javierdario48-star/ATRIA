@@ -74,8 +74,8 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "function foreignClinical487(){const p=challenge.patients[shiftSession?.index];return shared()&&p&&p.ownerId&&p.ownerId!==selfId&&p.state==='in_care'&&sim?.patientInstance?.uid===p.uid?p:null}\n function loadSharedPatient487(index,monitor=false){const p=challenge.patients[index],r=shiftSession?.records?.[index];if(!guard()||!p||!r||!p.ownerId||p.state!=='in_care'||!near(p))return false;if(r.sim&&!r.sim.patientInstance)r.sim=null;loading=true;try{const ok=base.load.call(this,index,{keepPosition:true,openMonitor:monitor});if(!ok)return false;sim.patientInstance.uid=p.uid;sim.__csRoomSpectator=false;sim.__csRemoteMirror487=true;sim.mentor.enabled=false;sim.playMode=challenge.mode;challenge.assistIndex=index;modeLabel();refreshChatDock();return true}finally{loading=false}}\n function takePatient(index,monitor=false){",
  'native-solo-UI-for-cooperative-visitors');
  s=edit(s,
- "if(p.ownerId&&p.ownerId!==selfId){if(!near(p)){const g=approach(p);pendingNav={index,monitor,assist:true};pathTo(player,g[0],g[1]);toast('Vamos a colaborar en '+p.instance.bed.label+'.');return false}return openAssistPanel(index)}",
- "if(p.ownerId&&p.ownerId!==selfId){if(!near(p)){const g=approach(p);pendingNav={index,monitor,assist:true};pathTo(player,g[0],g[1]);toast('Vamos a '+p.instance.bed.label+'.');return false}return challenge.mode==='coop'?loadSharedPatient487(index,monitor):openAssistPanel(index)}",
+ "return challenge.mode==='competitive'?csOpenObserver(index):openAssistPanel(index)}if(!near(p))",
+ "return challenge.mode==='competitive'?csOpenObserver(index):loadSharedPatient487(index,monitor)}if(!near(p))",
  'coop-visitors-select-patient-not-limited-helper-modal');
  s=edit(s,
  "n.assist?openAssistPanel(n.index):takePatient(n.index,n.monitor)",
@@ -126,17 +126,43 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  // Mirror owners' certified monitor, lab and therapy readouts. Never treat
  // these as a second authoritative physiological engine.
  s=edit(s,
- "const v=clone(s.liveVitals||r.vitals),progress={monitorConnected:!!s.monitorConnected,venousAccessCount:Math.max(0,Math.min(2,Number(s.venousAccessCount)||0)),careEvidence:window.nsCareEvidence?.(s,p.caseId)||null};",
- "const v=clone(s.liveVitals||r.vitals),view={history:Array.isArray(s.intentHistory)?s.intentHistory.slice(-48):[],chats:Array.isArray(s.chats?.patient)?s.chats.patient.slice(-60):[],orders:s.orders instanceof Map?[...s.orders].slice(0,40).map(([id,o])=>[id,{status:o?.status,label:o?.label,result:o?.result,readyAt:o?.readyAt}]):[],interventions:s.interventions instanceof Set?[...s.interventions].slice(0,45):[],therapies:s.monitorTherapies instanceof Map?[...s.monitorTherapies].slice(0,30):[],administrations:Array.isArray(s.administrationLog)?s.administrationLog.slice(-60):[],diagnosis:String(s.diagnosis||'').slice(0,300)};const progress={monitorConnected:!!s.monitorConnected,venousAccessCount:Math.max(0,Math.min(2,Number(s.venousAccessCount)||0)),careEvidence:window.nsCareEvidence?.(s,p.caseId)||null,sharedView:challenge.mode==='coop'?view:null};",
+ "const v=clone(s.liveVitals||r.vitals),progress={monitorConnected:!!s.monitorConnected,venousAccessCount:Math.max(0,Math.min(2,Number(s.venousAccessCount)||0)),careEvidence:window.nsCareEvidence?.(s,p.caseId)||null,observation:csObservationSnapshot(s,p)};",
+ "const v=clone(s.liveVitals||r.vitals),view={history:Array.isArray(s.intentHistory)?s.intentHistory.slice(-48):[],chats:Array.isArray(s.chats?.patient)?s.chats.patient.slice(-60):[],orders:s.orders instanceof Map?[...s.orders].slice(0,40).map(([id,o])=>[id,{status:o?.status,label:o?.label,result:o?.result,readyAt:o?.readyAt}]):[],interventions:s.interventions instanceof Set?[...s.interventions].slice(0,45):[],therapies:s.monitorTherapies instanceof Map?[...s.monitorTherapies].slice(0,30):[],administrations:Array.isArray(s.administrationLog)?s.administrationLog.slice(-60):[],diagnosis:String(s.diagnosis||'').slice(0,300)};const progress={monitorConnected:!!s.monitorConnected,venousAccessCount:Math.max(0,Math.min(2,Number(s.venousAccessCount)||0)),careEvidence:window.nsCareEvidence?.(s,p.caseId)||null,observation:csObservationSnapshot(s,p),sharedView:challenge.mode==='coop'?view:null};",
  'patient-owner-clinical-readouts-available-to-coop');
  s=edit(s,
- "p.progress={monitorConnected:!!m.progress?.monitorConnected,venousAccessCount:Math.max(0,Math.min(2,Number(m.progress?.venousAccessCount)||0)),careEvidence:care};",
- "p.progress={monitorConnected:!!m.progress?.monitorConnected,venousAccessCount:Math.max(0,Math.min(2,Number(m.progress?.venousAccessCount)||0)),careEvidence:care,sharedView:challenge.mode==='coop'&&m.progress?.sharedView&&JSON.stringify(m.progress.sharedView).length<25000?m.progress.sharedView:null};",
+ "p.progress={monitorConnected:!!m.progress?.monitorConnected,venousAccessCount:Math.max(0,Math.min(2,Number(m.progress?.venousAccessCount)||0)),careEvidence:care,observation};",
+ "p.progress={monitorConnected:!!m.progress?.monitorConnected,venousAccessCount:Math.max(0,Math.min(2,Number(m.progress?.venousAccessCount)||0)),careEvidence:care,observation,sharedView:challenge.mode==='coop'&&m.progress?.sharedView&&JSON.stringify(m.progress.sharedView).length<25000?m.progress.sharedView:null};",
  'host-forwards-small-certified-owner-coop-readouts');
  s=edit(s,
  "if(r.remoteOwned&&p.progress)r.sim={...(r.sim||{}),...clone(p.progress),caseEnded:p.state==='done'};",
  "if(r.remoteOwned&&p.progress){if(!r.sim?.patientInstance)r.sim=null;else{r.sim.monitorConnected=!!p.progress.monitorConnected;r.sim.venousAccessCount=p.progress.venousAccessCount||0;if(p.vitals&&r.sim.liveVitals)Object.assign(r.sim.liveVitals,p.vitals);const v=p.progress.sharedView;if(challenge.mode==='coop'&&v){if(Array.isArray(v.history))r.sim.intentHistory=clone(v.history);if(Array.isArray(v.chats)&&r.sim.chats)r.sim.chats.patient=clone(v.chats);if(Array.isArray(v.orders))r.sim.orders=new Map(v.orders);if(Array.isArray(v.interventions))r.sim.interventions=new Set(v.interventions);if(Array.isArray(v.therapies))r.sim.monitorTherapies=new Map(v.therapies);if(Array.isArray(v.administrations))r.sim.administrationLog=clone(v.administrations);if(typeof v.diagnosis==='string')r.sim.diagnosis=v.diagnosis}}}",
  'coop-clinical-mirror-updates-non-authoritative-ui');
+
+
+ s=edit(s,
+ "function requestAssist(index,a){if(challenge.mode==='competitive')return false;",
+ "function requestAssist(index,a){if(challenge.mode==='competitive'&&!['exam','speech','vitals','monitor'].includes(a?.kind))return false;",
+ 'competitive-safe-bedside-request');
+ s=edit(s,
+ "function applyAssistAction(p,a,helper){if(challenge.mode==='competitive')return false;",
+ "function applyAssistAction(p,a,helper){if(challenge.mode==='competitive'&&!['exam','speech','vitals','monitor'].includes(a?.kind))return false;",
+ 'competitive-owner-executes-only-benign-guest-actions');
+ s=edit(s,
+ "}else if(m.kind==='assist'&&challenge.mode!=='competitive'){",
+ "}else if(m.kind==='assist'){",
+ 'competitive-guest-exam-relay-authorized-by-host');
+ s=edit(s,
+ "if(m.kind==='assist_apply'&&challenge.mode!=='competitive'&&m.peerId===challenge.hostId)",
+ "if(m.kind==='assist_apply'&&m.peerId===challenge.hostId)",
+ 'competitive-exam-forwarded-to-patient-owner');
+ s=edit(s,
+ "return !!p&&p.ownerId===r.selfId&&p.state==='in_care'&&!sim.caseEnded;",
+ "return !!p&&p.state==='in_care'&&!sim.caseEnded&&(p.ownerId===r.selfId||!!sim.__csRemoteMirror487);",
+ 'cooperative-visitor-native-exam-gate');
+ s=edit(s,
+ "if(p?.uid===m.uid&&m.targetId===selfId)applyAssistAction(p,m.action,m.helperName);return",
+ "if(p?.uid===m.uid&&m.targetId===selfId){const stamp=String(m.aid||'');const ids=challenge._appliedAssist487||(challenge._appliedAssist487=new Set());if(stamp&&stamp.length<=160&&!ids.has(stamp)){ids.add(stamp);if(ids.size>200)ids.delete(ids.values().next().value);applyAssistAction(p,m.action,m.helperName)}}return",
+ 'deduplicate-remote-clinical-execution');
 
  // Room message payloads include a claimed peerId; only the server envelope
  // identifies the authenticated user. Do not trust a peerId chosen by a
