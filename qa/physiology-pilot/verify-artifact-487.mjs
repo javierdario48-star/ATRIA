@@ -12,6 +12,7 @@ import {applySecondaryBridge487} from '../../src/integration/secondary-sepsis-br
 import {apply487} from '../../src/integration/apply-487.js';
 import {applyMorphine487} from '../../src/integration/morphine-487.js';
 import {applyUrgentCare487} from '../../src/integration/urgent-care-487.js';
+import {applyCaseCompletion487} from '../../src/integration/case-completion-487.js';
 import {NURSE_STOP_FINISH_OLD_487,NURSE_STOP_FINISH_NEW_487,NURSE_STOP_STATUS_OLD_487,
  NURSE_STOP_STATUS_NEW_487,NURSE_STOP_VERSION_OLD_487,NURSE_STOP_VERSION_NEW_487,
  NORA_RECEIPT_OLD_487,NORA_RECEIPT_NEW_487,NORA_DEDUPE_OLD_487,NORA_DEDUPE_NEW_487,
@@ -32,7 +33,11 @@ const urgent=[...html.matchAll(/<script id="atria-urgent-care-487">[\s\S]*?<\/sc
 assert.equal(urgent.length,1,'exactly one care confirmation adapter');
 assert.equal(urgent[0][0],applyUrgentCare487('<body></body>').replace('<body>','').replace('</body>',''),
  'care adapter must match reviewed current source');
-let beforeStop=html.replace(morphine[0][0],'').replace(urgent[0][0],'');
+const closure=[...html.matchAll(/<script id="atria-case-completion-487">[\s\S]*?<\/script>/g)];
+assert.equal(closure.length,1,'one general clinical closure and XP adapter');
+assert.equal(closure[0][0],applyCaseCompletion487('<body></body>').replace('<body>','').replace('</body>',''),
+ 'exact current reviewed case closure source');
+let beforeStop=html.replace(morphine[0][0],'').replace(urgent[0][0],'').replace(closure[0][0],'');
 for(const [id,name,digest] of [
  ['atria-nurse-execution-487','nurse-execution','94d1e61a4b46b9975578100825bf0977c7c431ea70b4fff54986c9df4bb0c85d'],
  ['atria-nurse-voice-routing-487','nurse-voice','1977da69627bbadd57fb995c0d908d9fd65f5e6595b64142f63f7cced5348ea3'],
