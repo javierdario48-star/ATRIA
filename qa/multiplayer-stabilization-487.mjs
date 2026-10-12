@@ -27,8 +27,25 @@ for(const action of [{kind:'exam',id:'general'},{kind:'speech',text:'Dónde le d
 for(const action of [{kind:'exam',id:'inventado'},{kind:'speech',text:''},{kind:'therapy',text:'fármaco inexistente'},{kind:'study',id:'fake'}])
  assert.equal(ctx.assistActionAllowed(patient,action),false,'invalid '+action.kind);
 ctx.challenge.mode='competitive';
-for(const action of [{kind:'therapy',text:'ceftriaxona 1 g'},{kind:'speech',text:'consulta'},{kind:'exam',id:'general'}])
- assert.equal(ctx.assistActionAllowed(patient,action),false,'competitive unauthorized '+action.kind);
+for(const action of [{kind:'therapy',text:'ceftriaxona 1 g'},{kind:'study',id:'blood'},{kind:'intervention',id:'iv'}])
+ assert.equal(ctx.assistActionAllowed(patient,action),false,'competitive owner-only '+action.kind);
+for(const action of [{kind:'speech',text:'¿Qué le duele?'},{kind:'exam',id:'general'},{kind:'monitor'},{kind:'vitals'},{kind:'iv'}])
+ assert.equal(ctx.assistActionAllowed(patient,action),true,'competitive rival can safely observe/assess '+action.kind);
+
+// First valid bedside interaction wins, regardless of host/guest identity.
+// The original host authority processes simultaneous claims in arrival order.
+const claimStart=html.indexOf('function claim(index,id,x,y){');
+const claimEnd=html.indexOf('function loadPatient(index',claimStart);
+assert(claimStart>0&&claimEnd>claimStart,'native competitive claim function');
+const p0={index:0,state:'waiting',ownerId:null},claimed={patients:[p0],revision:1};
+const claimCtx={challenge:claimed,selfId:'A',host:()=>true,guard:()=>true,
+ person:id=>['A','B'].includes(id)?{id}:null,near:()=>true,elapsedMs:()=>7,
+ applyPatients:()=>{},publish:()=>{}};
+vm.createContext(claimCtx);new vm.Script(html.slice(claimStart,claimEnd)).runInContext(claimCtx);
+assert.equal(claimCtx.claim(0,'B',0,0),true,'guest first interaction claims patient');
+assert.equal(claimCtx.claim(0,'A',0,0),false,'host cannot steal already claimed patient');
+assert.equal(p0.ownerId,'B');
+assert.equal(claimed.revision,2,'one authoritative ownership transition');
 const db=new Map(),storage={get:async k=>db.get(k)??null,set:async(k,v)=>{db.set(k,v)},delete:async k=>db.delete(k)};
 let nonce=0;
 const server=createQaSocialServer(storage,{now:()=>2000000,
@@ -54,5 +71,5 @@ for(let i=0;i<5;i++){
 console.log('ATRIA MULTIPLAYER STABILIZATION BOT PASS',JSON.stringify({
  cycles:5,independentAuthenticatedClients:2,
  cooperative:['exam','speech','therapy','monitor','study'],
- competitiveNoForeignMutation:true,source:'integrated built source and live server contracts',
+ competitiveNoForeignMedicationOrStudy:true,competitiveRivalSpeechAndExam:true,firstInteractionClaim:true,source:'integrated built source and live server contracts',
  browser:false,realNetwork:false}));
