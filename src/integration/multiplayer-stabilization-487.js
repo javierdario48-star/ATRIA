@@ -70,6 +70,13 @@ export function applyMultiplayerStabilization487(html){
  "for(const m of data.messages){const packet=m.data;if(packet?.type==='atria_party_prepare'",
  "for(const m of data.messages){const packet=m.data;if(packet?.type==='cs_room_v411'){const member=room.members?.find(x=>x.userId===m.userId);if(!member||packet.peerId!==member.peerId)continue}if(packet?.type==='atria_party_prepare'",
  'room-peer-identity-bound-to-server-envelope');
+
+ // Explicitly retire guard overlays on lobby entry; the CSS guard below
+ // prevents late repaint races, not a substitute for lifecycle cleanup.
+ s=replaceOnce(s,
+ "try{closeSheet?.();hideRadial?.();closeFloatCard?.()}catch(_){}spawn();renderChat();",
+ "try{closeSheet?.();hideRadial?.();closeFloatCard?.()}catch(_){}document.body.classList.remove('keyboardOpen');for(const id of ['csDxDialog487','csActionsModal','csReceptionBoard','csShiftBoard','csAssistModal','csObserverModal','csChallengeSummary']){const el=document.getElementById(id);el?.classList.remove('show','open');if(el)el.setAttribute('aria-hidden','true')}const badge=document.getElementById('csDxBadge487');if(badge)badge.style.display='none';spawn();renderChat();",
+ 'lobby-entry-physically-closes-stale-guard-modals');
  s=replaceOnce(s,'</head>',
  '<style id="atria-multiplayer-overlay-lifecycle-487">body.nsLobbyMode #csDxBadge487,body.nsLobbyMode #csDxDialog487,body.nsLobbyMode #csActionsModal,body.nsLobbyMode #csReceptionBoard,body.nsLobbyMode #csShiftBoard,body.nsLobbyMode #csAssistModal,body.nsLobbyMode #csObserverModal,body.nsLobbyMode #csChallengeHud{display:none!important;pointer-events:none!important}</style></head>',
  'hide-guard-only-overlays-in-lobby');
