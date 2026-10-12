@@ -156,10 +156,6 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "if(m.kind==='assist_apply'&&m.peerId===challenge.hostId)",
  'competitive-exam-forwarded-to-patient-owner');
  s=edit(s,
- "return !!p&&p.ownerId===r.selfId&&p.state==='in_care'&&!sim.caseEnded;",
- "return !!p&&p.state==='in_care'&&!sim.caseEnded&&(p.ownerId===r.selfId||!!sim.__csRemoteMirror487);",
- 'cooperative-visitor-native-exam-gate');
- s=edit(s,
  "if(p?.uid===m.uid&&m.targetId===selfId)applyAssistAction(p,m.action,m.helperName);return",
  "if(p?.uid===m.uid&&m.targetId===selfId){const stamp=String(m.aid||'');const ids=challenge._appliedAssist487||(challenge._appliedAssist487=new Set());if(stamp&&stamp.length<=160&&!ids.has(stamp)){ids.add(stamp);if(ids.size>200)ids.delete(ids.values().next().value);applyAssistAction(p,m.action,m.helperName)}}return",
  'deduplicate-remote-clinical-execution');
@@ -188,6 +184,11 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "if(p?.ownerId===selfId){const idx=pendingClaim;pendingClaim=null;loadPatient(idx)}else if(p?.ownerId){pendingClaim=null;toast(",
  "if(p?.ownerId===selfId){const idx=pendingClaim;pendingClaim=null;loadPatient(idx);if(pendingAutoCommand487&&canAct()){const q=pendingAutoCommand487;pendingAutoCommand487=null;sendMessage(q)}}else if(p?.ownerId){pendingClaim=null;pendingAutoCommand487=null;toast(",
  'guest-claim-confirmed-before-running-queued-nurse-order');
+
+ s=edit(s,
+ "</body>",
+ "<script id=\"atria-coop-physical-access-487\">(function(){const old=window.nsMayExamine;window.nsMayExamine=function(){const r=window.csV41Challenge;if(r?.active&&r.mode==='coop'&&sim?.__csRemoteMirror487&&!sim?.caseEnded){const p=r.patients?.find(x=>x.uid===sim.patientInstance?.uid);if(p?.state==='in_care')return true}return old?.apply(this,arguments)}})();</script></body>",
+ 'coop-native-physical-access-without-frozen-script-modification');
 
  // Room message payloads include a claimed peerId; only the server envelope
  // identifies the authenticated user. Do not trust a peerId chosen by a
