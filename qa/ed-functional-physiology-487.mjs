@@ -60,8 +60,18 @@ function runPlan(id,variation){
  if(treated.administrations.some(x=>!drugs.some(y=>y.id===x.id)))
   hard.push({id,variation,error:'unexpected extra treatment'});
  // The ED referral ends responsibility; never synthesize source-control.
- if(['quirofano','procedimiento'].includes(plan.destination)&&p.phys?.sourceControlled)
-  hard.push({id,variation,error:'fictional source control without surgical act'});
+ if(['quirofano','procedimiento'].includes(plan.destination)){
+  const patientSource=!!p.phys?.sourceControlled;
+  const untreatedSource=!!control.ctx.sim.phys?.sourceControlled;
+  if(patientSource!==untreatedSource)
+   findings.push({kind:'source-control-divergence-without-procedure',id,variation,
+    patientSource,untreatedSource});
+  if(patientSource&&!untreatedSource)
+   hard.push({id,variation,error:'new fictitious source control following medication without surgery'});
+  if(patientSource&&untreatedSource)
+   findings.push({kind:'baseline-source-controlled-without-surgery-review',id,variation,
+    note:'Also present in matched untreated patient, not caused by medication; inspect case-seed semantics'});
+ }
  const changing=Object.values(deltas).some(x=>Math.abs(x)>.1);
  const treatmentSignals=Object.values(treated.effects).some((x,i)=>Math.abs(x-Object.values(untreated.effects)[i])>.05);
  const expectedNoImmediate=orders.length===0||orders.every(raw=>
