@@ -75,6 +75,61 @@ scenario('permission denied: no dose and explicit clinical feedback',()=>{
  assert.equal(delivered(p,'fluid').length,0);
  return {doses:0};
 });
+
+// Android reproduction: an acknowledged FOUR-way order must go through
+// native monitor receipts after the genuine bedside IV/monitor tasks.
+scenario('four-way bedside order delivers Ringer AND oxygen after IV',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:0}),p=r.ctx.sim;
+ r.ctx.sendMessage('Enfermera vías, monitor, Ringer y oxígeno');
+ assert.equal(p.venousAccessCount,0,'requested IV is not a completed cannulation');
+ assert.equal(delivered(p,'fluid').length,0,'no fluid delivered before IV');
+ assert((p.csPhase4Pending487||[]).some(x=>x.id==='fluid'),'native IV queue holds Ringer');
+ tick(r,2);
+ assert.equal(delivered(p,'oxygen').length,1,'IV-independent oxygen actually delivered');
+ tick(r,45);
+ assert.equal(p.venousAccessCount,2,'two physical IV accesses placed');
+ assert.equal(p.monitorConnected,true,'native monitor connected');
+ assert.equal(delivered(p,'fluid').length,1,'queued Ringer automatically drained to native monitor');
+ assert(/COMPLETADA|aplicado/i.test(chat(r)),'completed administration visible');
+ return {iv:p.venousAccessCount,monitor:p.monitorConnected,
+  drugs:p.administrationLog.map(x=>({id:x.id,dose:x.doseDisplay})),
+  elapsedSeconds:r.clock.realSeconds};
+});
+scenario('two antibiotics with IV: both reach native executor, not acknowledgement only',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:2}),p=r.ctx.sim;
+ r.ctx.sendMessage('Enfermera ceftriaxona metronidazol');
+ assert.equal(delivered(p,'ceftriaxone').length,0,'native dosing must be asynchronous');
+ assert.equal(delivered(p,'metronidazole').length,0);
+ tick(r,2.5);
+ for(const id of ['ceftriaxone','metronidazole']){
+  assert.equal(delivered(p,id).length,1,id+' genuine native administration');
+  assert(p.monitorTherapies.has(id),id+' active in clinical monitor');
+  assert.equal(delivered(p,id)[0].defaultApplied,true,'native catalog default for '+id);
+ }
+ return {drugs:p.administrationLog.map(x=>({id:x.id,dose:x.doseDisplay}))};
+});
+scenario('repeated antibiotic command while pending does not double administer',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:2}),p=r.ctx.sim;
+ r.ctx.sendMessage('Enfermera ceftriaxona y metronidazol');
+ r.ctx.sendMessage('Enfermera ceftriaxona y metronidazol');
+ tick(r,3);
+ assert.equal(delivered(p,'ceftriaxone').length,1);
+ assert.equal(delivered(p,'metronidazole').length,1);
+ return {ceftriaxone:1,metronidazole:1};
+});
+scenario('recognized case interventions must not hijack monitor medication dispatch',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:2}),p=r.ctx.sim;
+ // The former route branch skipped oxygen whenever it was also in the case
+ // intervention catalogue, even if the actual monitor catalog owned delivery.
+ const additions=['fluid','oxygen','ceftriaxone','metronidazole'].map(id=>
+  ({id,label:id,aliases:[id]}));
+ r.ctx.C.interventions.push(...additions.filter(x=>!r.ctx.C.interventions.some(y=>y.id===x.id)));
+ r.ctx.sendMessage('Enfermera Ringer, oxígeno, ceftriaxona y metronidazol');
+ tick(r,3);
+ for(const id of ['fluid','oxygen','ceftriaxone','metronidazole'])
+  assert.equal(delivered(p,id).length,1,id+' uses monitor owner despite case intervention alias');
+ return {delivered:['fluid','oxygen','ceftriaxone','metronidazole']};
+});
 const errors=cases.filter(x=>!x.passed);
 fs.mkdirSync('qa/android-fix-results',{recursive:true});
 fs.writeFileSync('qa/android-fix-results/oxygen-ringer.json',
