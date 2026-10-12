@@ -18,6 +18,9 @@ const {chromium}=require('playwright');
     await page.waitForFunction(()=>window.ATRIA_OBJECT_EDITOR_READY===true,null,{timeout:30000});
     const prior=await page.evaluate(()=>{
        const t=window.ATRIA_OBJECT_EDITOR_TEST,qa=t.assert(),o=t.get().objects.get('P31');
+       const p47=t.get().objects.get('P47')||t.restorePack&&(()=>{t.get().selected='P47';return t.get().objects.get('P47')})();
+       if(!p47||p47.bbox.join(',')!=='961,1270,56,90'||p47.collision.y!==1336.8)throw Error('Recovered P47 data lost');
+       t.get().selected='P31';
        const src=[...o.rgb.slice(0,4)];
        const before=t.pack(),hash=JSON.stringify(before);
        o.alpha[5]=129;o.occlusion[5]=55;o.collision.rearLift+=4;o.depth+=5;
