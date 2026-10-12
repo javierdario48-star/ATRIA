@@ -6,15 +6,15 @@
  */
 export const CASE_CLOSURE_RULES_487=Object.freeze({
  'CIRR-001':{destinations:['sala','observacion'],study:[['hepatograma','renal','eco']],treatment:[['espironolactona']]},
- 'PANC-001':{destinations:['uti'],study:[['lipasa']],treatment:[['fluid'],['npo']]},
+ 'PANC-001':{destinations:['uti'],study:[['lipasa']],treatment:[['fluid','npo']],consult:{uti:['uti']}},
  'CROHN-001':{destinations:['sala','observacion'],study:[['inflamatorio','colonoscopia','enterorm']],treatment:[['steroid']]},
- 'HDA-001':{destinations:['procedimiento','uti'],study:[['hda_lab','grupo']],treatment:[['iv'],['fluid','transfusion'],['ppi']],consult:{procedimiento:['gastro'],uti:['uti']}},
+ 'HDA-001':{destinations:['procedimiento','uti'],study:[['hda_lab','grupo']],treatment:[['iv','fluid','ppi'],['iv','transfusion','ppi']],consult:{procedimiento:['gastro'],uti:['uti']}},
  'COLON-001':{destinations:['alta','sala'],study:[['colonoscopia']],treatment:[]},
  'APP-001':{destinations:['quirofano'],study:[['app_us']],urgentStudyBypass:true,treatment:[['ceftriaxone','metronidazole'],['piptazo'],['imipenem']],consult:{quirofano:['cirugia']}},
- 'CHOLE-001':{destinations:['quirofano'],study:[['chole_us']],treatment:[['npo'],['ceftriaxone','metronidazole'],['piptazo'],['imipenem']],consult:{quirofano:['cirugia']}},
- 'ILEO-001':{destinations:['sala','quirofano','uti'],study:[['ileo_xray','ileo_ct']],treatment:[['fluid'],['ngt'],['npo']],consult:{quirofano:['cirugia'],uti:['uti']}},
- 'MESI-001':{destinations:['quirofano'],study:[['mesi_cta']],urgentStudyBypass:true,treatment:[['fluid'],['anticoagulation']],consult:{quirofano:['hemodinamia','cirugia']}},
- 'CHOLANG-001':{destinations:['procedimiento','uti'],study:[['cholang_liver','cholang_us']],treatment:[['fluid'],['ceftriaxone','metronidazole'],['piptazo'],['imipenem']],consult:{procedimiento:['gastro'],uti:['uti']}}
+ 'CHOLE-001':{destinations:['quirofano'],study:[['chole_us']],treatment:[['npo','ceftriaxone','metronidazole'],['npo','piptazo'],['npo','imipenem']],consult:{quirofano:['cirugia']}},
+ 'ILEO-001':{destinations:['sala','quirofano','uti'],study:[['ileo_xray','ileo_ct']],treatment:[['fluid','ngt','npo']],consult:{quirofano:['cirugia'],uti:['uti']}},
+ 'MESI-001':{destinations:['quirofano'],study:[['mesi_cta']],urgentStudyBypass:true,treatment:[['fluid','anticoagulation']],consult:{quirofano:['hemodinamia','cirugia']}},
+ 'CHOLANG-001':{destinations:['procedimiento','uti'],study:[['cholang_liver','cholang_us']],treatment:[['fluid','ceftriaxone','metronidazole'],['fluid','piptazo'],['fluid','imipenem']],consult:{procedimiento:['gastro'],uti:['uti']}}
 });
 export const CLOSURE_DEST_LABELS_487=Object.freeze({
  alta:'Dar de alta',observacion:'Dejar en observación',sala:'Internar en sala',
@@ -70,14 +70,7 @@ export function csEvaluateClosure487(a={}){
  // Separate minimum clinical treatment groups from the total desirable care.
  if(rule.treatment?.length){
   let accepted=rule.treatment.some(hasAll);
-  // Only fluid/access are unconditional; surgical/ERCP treatment *alternatives*
-  // form a second requirement rather than a single OR group.
-  if(['HDA-001','PANC-001','ILEO-001','CHOLE-001','MESI-001','CHOLANG-001'].includes(a.caseId)){
-   const groups=rule.treatment;
-   const essentials=groups.slice(0,groups.length>2?1:0);
-   const options=groups.slice(essentials.length);
-   accepted=essentials.every(hasAll)&&(options.length===0||options.some(hasAll));
-  }
+
   if(!accepted)missing.push('Confirmar las intervenciones imprescindibles y su ejecución real.');
  }
  const hemorrhage=a.clinicalFlags?.activeBleeding===true||
