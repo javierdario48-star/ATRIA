@@ -49,8 +49,8 @@ for(const id of Object.keys(CASE_CLOSURE_RULES_487)){
   const beforeXP=ctx.csProfile.xp;
   ctx.window.csCaseCompletionRefresh487();
   const question=rt.uiCalls.some(x=>x.includes('¿Qué destino indicamos ahora?'));
-  assert.equal(question,!blocked,
-   id+'/'+variant+' nurse question should only appear for eligible destination');
+  assert.equal(question,!blocked||variant==='wrongDestination',
+   id+'/'+variant+' nurse should offer valid choices even if player later selects a wrong destination');
   const response=ctx.nurseNatural(speak[chosen]);
   assert.equal(!!p.caseEnded,!blocked,id+'/'+variant+' actual finishCase');
   assert.equal(ctx.csProfile.xp>beforeXP,!blocked,id+'/'+variant+' actual native XP');
