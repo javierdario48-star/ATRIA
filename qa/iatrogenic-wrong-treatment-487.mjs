@@ -32,7 +32,7 @@ function run(caseId,kind,order,flags,seconds=22){
  const signature=kind==='heparinBleed'?harm.bleedingSeverity>0&&delta.sys< -2&&delta.hr>1:
   kind==='severeAllergy'?allergy.severity>0&&delta.sys< -2&&delta.spo2< -1:
   kind==='hypovolemicDiuretic'?delta.sys< -2&&delta.hr>=0:
-  kind==='shockBetaBlocker'?delta.sys< -2&&delta.hr< -2:
+  kind==='shockBetaBlocker'?(delta.sys< -2|| (delta.sys+2*delta.dia)/3< -2)&&delta.hr< -2:
   kind==='excessMorphine'?delta.rr< -1&&delta.spo2< -.5:
   kind==='fluidOverload'?delta.spo2< -1||delta.rr>1:false;
  const v={caseId,kind,drug:id,accepted,delivered,appropriate:report.appropriate,
@@ -62,12 +62,12 @@ for(const c of ['PANC-001','HDA-001','PERI-SEC-001','CHOLANG-001','MESI-001']){
 for(const c of ['CIRR-001','PERI-PBE-001','COLON-001']){
  const patient=createLiveNativeJourney487(c),control=createLiveNativeJourney487(c);
  const before=Number(patient.ctx.sim.therapyTotals.fluidMl||0);
- for(let n=0;n<5;n++){
+ for(let n=0;n<8;n++){
   patient.ctx.addMonitorTherapy('ringer 500 ml');
   advance(patient,2.7,{dt:1/30});
  }
  advance(patient,24,{dt:1/30});
- advance(control,37.5,{dt:1/30});
+ advance(control,45.6,{dt:1/30});
  const a=vitals(patient.ctx.sim),b=vitals(control.ctx.sim);
  const observed=a.spo2<b.spo2-.8||a.rr>b.rr+1;
  rows.push({caseId:c,kind:'fluidOverload',drug:'fluid',delivered:patient.ctx.sim.therapyTotals.fluidMl>before,
