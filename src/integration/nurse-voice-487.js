@@ -46,6 +46,7 @@ export function applyNurseVoice487(html){
   feedback('Recibí '+parsed.items.length+' indicaciones; informaré por separado su estado.');
   let ok=false;
   for(const item of parsed.items.slice(0,12)){
+   if(item.routeOnly)continue;
    if(item.negated){feedback('No ejecuté '+item.phrase+' (indicación negada).');continue}
    const issue=item.id==='vasopressor'&&item.action!=='stop'?
     window.csNoradrenalineOrderIssue487?.(item.text,item.contractText,text):null;

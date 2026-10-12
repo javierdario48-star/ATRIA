@@ -417,7 +417,7 @@ function csDrawRemote(){
   const scanned=C&&sim?window.csNurseVoice487?.parse?.(text):null;
   if(scanned?.active&&scanned.items?.length&&
      (declared||scanned.addressed)&&!scanned.items.some(x=>x.kind==='surgery')){
-   const all=scanned.items.filter(x=>!x.negated).map(x=>({
+   const all=scanned.items.filter(x=>!x.negated&&!x.routeOnly).map(x=>({
     kind:x.kind,id:x.id,text:x.text,count:x.count,label:x.phrase,
     verified487:true
    }));

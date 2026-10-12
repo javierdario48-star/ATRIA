@@ -15,3 +15,7 @@ RED: integrated 9/26 passed; combined access/monitor, two antibiotics and oxygen
 ## C — Independent partial orders and native defaults
 
 RED: oxygen was blocked by invalid norepinephrine (mg, oral, bolus); contextual «ambos antibióticos» could not execute. GREEN: 224 integrated scenarios pass, including pairwise order/connector/access/criticality variations, six original default doses, explicit antibiotic doses, pending repeats and both-antibiotic identity. No new dose values. Route qualifiers belong to the medicine rather than a cannulation request; malformed dose-before-name no longer contaminates preceding oxygen. The prior pressor tests now explicitly request a real IV when absent and retain independently valid Ringer while rejecting only the invalid pressor. Eighteen pressor functional checks and scanner/speech/voice/receipt regressions pass. These expectation changes implement the requested independent-order contract, not a concealed failure.
+
+### C follow-up — Route tokens remain visible, never cannulate
+
+The exhaustive lexical catalogue retains all noun matches; a route-only flag prevents bedside execution and is filtered by both legacy and current dispatch paths. This preserves unpunctuated independent oxygen/vía requests while rejecting nora vía nasal/oral/incomplete routes without phantom cannulation. The 72,881-subset catalogue, 18 pressor checks, 224 integrated orders and native receipt journeys pass.

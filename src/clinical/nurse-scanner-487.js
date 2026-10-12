@@ -65,8 +65,9 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
   const routeQualifier=/^via\s+(?:iv|ev|oral|po|im|sc|intramuscular|intravenos[oa]|endovenos[oa]|nasal|intraarterial|intratecal|epidural)\b/;
   // A medicine's route is not a request to cannulate. Previously the whole
   // pressor rejection hid this duplicate intention; partial orders expose it.
-  if(item.kind==='iv'&&item.phrase==='via'&&chosen[index-1]?.kind==='therapy'&&
-    (!/\b(?:y|e|ademas|mas|pero|luego|despues)\b/.test(before)||routeQualifier.test(phrase)))continue;
+  const routeOnly=item.kind==='iv'&&item.phrase==='via'&&chosen[index-1]?.kind==='therapy'&&
+    (routeQualifier.test(phrase)||chosen[index-1]?.id==='vasopressor'&&
+     !/\b(?:y|e|ademas|mas|pero|luego|despues)\b/.test(before));
   // A specific stop is an executable action, not a positive drug order.
   // Negations, questions and conditional/qualified stops remain non-executable.
   // Only oxygen and explicitly identified norepinephrine have confirmed stops.
@@ -93,6 +94,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
    input.slice(next.start,chosen[index+2]?.start??input.length):'';
   const contractText=(prefix+' '+phrase+' '+routeTail).trim();
   if(!duplicate)result.push({...item,text:stop?'suspender '+phrase:item.id==='vasopressor'?contractText:phrase,count,negated,
+   ...(routeOnly?{routeOnly:true}:{}),
    ...(item.id==='vasopressor'&&!stop?{contractText}:{}),...(stop?{action:'stop'}:{})});
  }
  // Unknown trailing clauses should be explicitly rejected, not silently lost.
