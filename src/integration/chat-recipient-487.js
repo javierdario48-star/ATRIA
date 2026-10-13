@@ -81,6 +81,7 @@ export function applyChatRecipient487(html){
     const owned=room.patients?.find(p=>p.uid===sim.patientInstance?.uid);
     const mayAct=room.active&&!room.ended&&owned?.ownerId===room.selfId&&
      owned?.state==='in_care'&&!sim.__csRemoteMirror487&&!sim.__csRoomSpectator;
+    if(mayAct||sim.__csRemoteMirror487)window.csBroadcastAddressedChat487?.(role,raw);
     // This is the SAME owner of the native clinical state. Cooperative
     // visitors and competitive rivals still use the room authorization path.
     if(!mayAct){pendingAddress=role;return originalSend.apply(this,arguments);}
