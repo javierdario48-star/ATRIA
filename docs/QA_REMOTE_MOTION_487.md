@@ -137,3 +137,32 @@ Frame times use actual RAF timestamps; draw execution time is also retained.
 CI artifacts contain full local/received/rendered traces, per-pair metrics,
 paired screenshots at straight movement, turns, stopping and reversal, and
 videos of each independent browser. Final matrix results remain to be checked.
+
+Matrix harness refinements: selects the same APP practice through the native
+practice selector in both versions, to isolate motion from randomized case
+startup; explicitly stops through the native destination controller before
+settling; checks companion coverage against all observer frames. Interrupted
+nonwalking relocations retain their measured jump and recovery checks, but
+are not counted as walking-orientation failures. Group clients require real
+RTC connections; each pair's recorded actual transport/cadence determines its
+budget, including any genuine HTTP fallback while the mesh completes.
+
+A further queue regression models actual room HTTP draining: after an outage,
+one old in-flight pose precedes the newest coalesced pose in a poll. Recovery
+must select a real current snapshot rather than retain the old backlog. The
+new regression failed with a 387-pixel discrepancy before the correction.
+
+The four-process HTTP/jitter run exposed another confirmed adapter defect:
+source poses `(429.5123,536.8780)` -> `(400.0744,588.6500)` were valid, but a
+coarse 4-pixel sweep missed a thin occupied corner. Subsequent shorter render
+steps hit it and stranded the remote 21.99 pixels from the delivered stop.
+The new native-map regression fails before the fix and reaches the exact
+endpoint afterward. The adapter checks crossing times of the ORIGINAL nine
+collision offsets and tile grid, delegates original `circleBlocked`, then
+uses the existing `astar` only where the full segment is blocked. Native
+collisions, map states, doors and local navigation are unchanged.
+
+Recovery also covers old/current snapshots separated by a render frame.
+Source age and source-time catch-up identify the queued stale pose; recovery
+ends on a current actual snapshot, never invented extrapolation. Both queue
+variants are explicit lifecycle regressions.

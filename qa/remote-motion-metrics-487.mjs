@@ -2,14 +2,15 @@ const stats=values=>{const mean=values.reduce((a,b)=>a+b,0)/Math.max(1,values.le
 export function metrics(local,remote,name){
  const frames=remote.frames.map(f=>({...f,actor:f.actors.find(a=>a.remote&&a.name===name)})).filter(f=>f.actor);
  let movingWithoutSteps=0,stepsWithoutMovement=0,movingFlagsWithoutDisplacement=0,orientation=0,total=0,maxJump=0,phaseDistanceErrorPx=0;
- const speeds=[],sourceSpeeds=[],fps=[],rebases=[];let prev=null,remoteTravelPx=0;
+ const speeds=[],sourceSpeeds=[],fps=[],rebases=[],cadences=[],transports=new Set();let prev=null,remoteTravelPx=0;
+ for(const f of frames){if(f.actor.cadence)cadences.push(f.actor.cadence);if(f.actor.transport)transports.add(f.actor.transport)}
  for(const f of frames){if(prev){const a=f.actor,b=prev.actor,dt=(f.now-prev.now)/1000,d=Math.hypot(a.x-b.x,a.y-b.y);remoteTravelPx+=d;if(dt>0&&dt<.1){
   fps.push(1/dt);maxJump=Math.max(maxJump,d);if(d>.05&&!a.moving){if(['network-resume','render-resume','position-discontinuity'].includes(a.resetReason))rebases.push({t:f.t,distancePx:d,reason:a.resetReason});else movingWithoutSteps++}
   // A tiny position/phase advance is not a footstep without displacement.
   // Compare both in pixels at the same precision, retaining raw flag counts.
   if(d<.001&&a.moving){movingFlagsWithoutDisplacement++;if(Math.abs(a.phase-b.phase)*18>.001)stepsWithoutMovement++}
   if(a.moving&&a.phase>=b.phase)phaseDistanceErrorPx=Math.max(phaseDistanceErrorPx,Math.abs((a.phase-b.phase)*18-d));
-  if(d>.2){total++;const dx=a.x-b.x,dy=a.y-b.y,oct=Math.round(Math.atan2(dy,dx)/(Math.PI/4));const dir=['E','SE','S','SW','W','NW','N','NE'][(oct+8)%8];if(a.dir!==dir)orientation++}
+  if(d>.2&&!(a.resetReason&&!a.moving)){total++;const dx=a.x-b.x,dy=a.y-b.y,oct=Math.round(Math.atan2(dy,dx)/(Math.PI/4));const dir=['E','SE','S','SW','W','NW','N','NE'][(oct+8)%8];if(a.dir!==dir)orientation++}
  }}prev=f}
  // Fit time shift against the actual local trajectory, including pathfinder turns.
  const lf=local.frames;
@@ -31,5 +32,5 @@ export function metrics(local,remote,name){
   if(f)stop.push(f.t-t);
  }
  const localTravelPx=lf.slice(1).reduce((s,f,i)=>s+Math.hypot(f.player.x-lf[i].player.x,f.player.y-lf[i].player.y),0);
- return {frames:frames.length,localFrames:lf.length,localTravelPx,remoteTravelPx,fps:stats(fps),speed:stats(speeds),sourceSpeed:stats(sourceSpeeds),orientationErrors:orientation,orientationFrames:total,movingWithoutSteps,stepsWithoutMovement,movingFlagsWithoutDisplacement,phaseDistanceErrorPx,maxJump,rebases,stopAnimationMs:stats(stop),followLagMs:lag,alignedErrorPx:Number.isFinite(error)?error:null,packetIntervals:stats(intervals.filter(v=>v>0))};
+ return {frames:frames.length,observerFrames:remote.frames.length,localFrames:lf.length,localTravelPx,remoteTravelPx,transports:[...transports],cadence:stats(cadences),fps:stats(fps),speed:stats(speeds),sourceSpeed:stats(sourceSpeeds),orientationErrors:orientation,orientationFrames:total,movingWithoutSteps,stepsWithoutMovement,movingFlagsWithoutDisplacement,phaseDistanceErrorPx,maxJump,rebases,stopAnimationMs:stats(stop),followLagMs:lag,alignedErrorPx:Number.isFinite(error)?error:null,packetIntervals:stats(intervals.filter(v=>v>0))};
 }

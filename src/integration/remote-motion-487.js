@@ -15,7 +15,19 @@ function csMotionAcceptState487(prev,m){if(!prev)return true;const session=m.mot
 // Explicitly enabled diagnostics stay on this device, bounded to 6000 entries.
 window.csRemoteMotionDiagnostics487={enabled:false,events:[],clear(){this.events.length=0}};
 function csMotionLog487(kind,id,p,data){const d=window.csRemoteMotionDiagnostics487;if(!d.enabled)return;d.events.push({kind,id,session:p.session,seq:p.seq,sourceTime:data?.motionAt,now:performance.now(),transport:p.transport,x:p.x,y:p.y,receivedX:data?.x,receivedY:data?.y,speed:p.visualSpeed||0,dir:p.dir,phase:p.walkPhase,moving:p.moving,delay:p.delay,effectiveDelay:p.renderAge,fps:p.fps,resetReason:p.resetReason,cadence:p.cadence});if(d.events.length>6000)d.events.splice(0,1000)}
-function csMotionSegment487(ax,ay,bx,by){if(typeof circleBlocked!=='function')return true;const n=Math.max(1,Math.ceil(Math.hypot(bx-ax,by-ay)/4));for(let i=1;i<=n;i++)if(circleBlocked(ax+(bx-ax)*i/n,ay+(by-ay)*i/n,10.5))return false;return true}
+function csMotionSegment487(ax,ay,bx,by){
+ if(typeof circleBlocked!=='function')return true;
+ const dx=bx-ax,dy=by-ay,r=10.5,times=[0,1];
+ // Native circleBlocked samples nine offsets against tile boundaries. Between
+ // these crossing times its answer is constant; no thin corner can be missed.
+ for(const offset of [-r,-r*.7,0,r*.7,r])for(const [a,d,size]of [[ax+offset,dx,TW],[ay+offset,dy,TH]]){
+  if(!d)continue;const lo=Math.min(a,a+d),hi=Math.max(a,a+d);
+  for(let k=Math.floor(lo/size)+1;k*size<hi;k++){const t=(k*size-a)/d;if(t>0&&t<1)times.push(t)}
+ }
+ times.sort((a,b)=>a-b);
+ for(let i=0;i<times.length;i++){const t=times[i];if(circleBlocked(ax+dx*t,ay+dy*t,r))return false;if(i&&circleBlocked(ax+dx*(t+times[i-1])/2,ay+dy*(t+times[i-1])/2,r))return false}
+ return true;
+}
 function csMotionReceive487(p,m,transport,now,cadence){
  if(!p)p=csRemoteMotion487.create({x:Number(m.x)||0,y:Number(m.y)||0,now,cadence});
  const seq=Number(m.stateSeq??m.seq)||0,session=String(m.motionSession||m.peerId||p.session||'');

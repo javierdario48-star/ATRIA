@@ -85,8 +85,8 @@ function initProbe({name,fps}){
 async function installRenderProbe(page){
  await page.evaluate(()=>{
   const sprite=drawSprite,nameplate=csDrawNameplate,render=draw;let current=[];
-  drawSprite=function(im,a,h){if(motionTrace.record&&(a===player||h===60||h===62))current.push({x:a.x,y:a.y,dir:a.dir,moving:!!a.moving,phase:a.walkPhase||0,local:a===player,h,resetReason:a.resetReason||null});return sprite.apply(this,arguments)};
-  csDrawNameplate=function(a,name,level,remote){if(motionTrace.record){const p=current.findLast(p=>p.x===a.x&&p.y===a.y);if(p){p.name=name;p.remote=remote;if(remote&&nsLobby.active){const q=[...nsLobby.players.values()].find(v=>v.name===name);p.resetReason=q?._motion?.resetReason||null}}}return nameplate.apply(this,arguments)};
+  drawSprite=function(im,a,h){if(motionTrace.record&&(a===player||h===60||h===62))current.push({x:a.x,y:a.y,dir:a.dir,moving:!!a.moving,phase:a.walkPhase||0,local:a===player,h,resetReason:a.resetReason||null,transport:a.transport||null,cadence:a.cadence||null});return sprite.apply(this,arguments)};
+  csDrawNameplate=function(a,name,level,remote){if(motionTrace.record){const p=current.findLast(p=>p.x===a.x&&p.y===a.y);if(p){p.name=name;p.remote=remote;if(remote&&nsLobby.active){const q=[...nsLobby.players.values()].find(v=>v.name===name);p.resetReason=q?._motion?.resetReason||null;p.transport=q?._motion?.transport||null;p.cadence=q?._motion?.cadence||null}}}return nameplate.apply(this,arguments)};
   draw=function(){current=[];const r=render.apply(this,arguments);if(motionTrace.record){const now=motionTrace.raf??performance.now();motionTrace.frames.push({t:performance.timeOrigin+now,now,drawTime:performance.now(),scene:nsLobby.active?'lobby':'guard',player:{x:player.x,y:player.y,dir:player.dir,moving:!!player.moving,phase:player.walkPhase||0},actors:current})}return r};
  });
 }
@@ -120,9 +120,9 @@ async function route(page,shot=async()=>{}){
  await page.evaluate(()=>{const [x,y]=worldToScreen(player.x,player.y);setPlayerTarget(x,y)});await pause(700);
  await shot('stop');await move(page,-7,0);await pause(1100);await shot('reverse');
  for(const [x,y]of [[0,-3],[4,0],[-3,0],[0,4]]){await move(page,x,y);await pause(330)}
- await pause(1100);await shot('rapid-turns');
+ await pause(350);await page.evaluate(()=>{const [x,y]=worldToScreen(player.x,player.y);setPlayerTarget(x,y)});await pause(1500);await shot('rapid-turns');
 }
-async function capture(scene,{simultaneous=false,short=false,impaired=false,httpFallback=false,action=null}={}){
+async function capture(scene,{simultaneous=false,short=false,impaired=false,httpFallback=false,action=null,qualitySince=null}={}){
  for(const c of clients)await c.page.evaluate(()=>{motionTrace.frames=[];motionTrace.packets=[];motionTrace.record=true;window.csRemoteMotionDiagnostics487?.clear()});
  const shot=async(tag,i)=>{for(let j=0;j<clients.length;j++)await clients[j].page.screenshot({path:output+'/'+scene+'-source'+i+'-'+tag+'-observer'+j+'.png'})};
  if(action)await action();
@@ -132,28 +132,31 @@ async function capture(scene,{simultaneous=false,short=false,impaired=false,http
  const traces=await Promise.all(clients.map(c=>c.page.evaluate(()=>{motionTrace.record=false;return {...motionTrace,motionDebug:window.csRemoteMotionDiagnostics487?.events||[],renderer:csDrawRemote.toString(),wire:csWireDataChannel.toString()}})));
  const pairs={};for(let i=0;i<clients.length;i++)for(let j=0;j<clients.length;j++)if(i!==j)pairs[i+'->'+j]=metrics(traces[i],traces[j],clients[i].name);
  const m={scene,label,clients:clients.length,simultaneous,impaired,pairs,AB:pairs['0->1'],BA:pairs['1->0']};
+ const since=qualitySince?.();if(since){const resumed=traces.map(t=>({...t,frames:t.frames.filter(f=>f.t>=since),packets:t.packets.filter(p=>p.t>=since)}));m.postRecoveryPairs={};for(let i=0;i<clients.length;i++)for(let j=0;j<clients.length;j++)if(i!==j)m.postRecoveryPairs[i+'->'+j]=metrics(resumed[i],resumed[j],clients[i].name)}
  for(let i=0;i<clients.length;i++)await clients[i].page.screenshot({path:output+'/'+scene+'-'+i+'.png'});
  await fs.writeFile(output+'/'+scene+'-trace.json',JSON.stringify(traces));await fs.writeFile(output+'/'+scene+'-metrics.json',JSON.stringify(m,null,2));
  console.log('CROSSED_MOTION',JSON.stringify(m));
- for(const p of Object.values(pairs)){
+ for(const p of Object.values(m.postRecoveryPairs||pairs)){
   assert(p.frames>60&&p.localFrames>60,'every independent client renders every real companion');
-  if(!process.env.MOTION_SOURCE_HTML){const cadence=scene.startsWith('lobby')?(httpFallback||process.env.MOTION_REQUIRE_RTC==='0'?260:100):220,poll=scene.startsWith('lobby')?(cadence===100?0:260):150;p.acceptance=assertMotionPair(p,{cadence,poll,impaired})}
+  if(!process.env.MOTION_SOURCE_HTML){const http=httpFallback||p.transports.includes('http'),cadence=p.cadence.max|| (scene.startsWith('lobby')?(http?260:100):220),poll=scene.startsWith('lobby')?(http?260:0):150;p.acceptance=assertMotionPair(p,{cadence,poll,impaired})}
  }
  return m;
 }
 async function waitRTC(){
- try{await Promise.all(clients.map(c=>c.page.waitForFunction(n=>[...window.__atriaLobbyNet461.peers.values()].filter(p=>p.open&&p.dc?.readyState==='open').length>=n,count-1,{timeout:25000})))}catch(e){
+ try{await Promise.all(clients.map(c=>c.page.waitForFunction(()=>[...window.__atriaLobbyNet461.peers.values()].some(p=>p.open&&p.dc?.readyState==='open'),{},{timeout:30000})))}catch(e){
   console.log('RTC_FAILURE_DIAGNOSTICS',JSON.stringify(await Promise.all(clients.map(c=>c.page.evaluate(()=>{const n=__atriaLobbyNet461;return {version:n.version,syncFailures:n.syncFailures,error:n.lastSyncError,postError:n.lastPostError,peers:[...n.peers.values()].map(p=>({open:p.open,connecting:p.connecting,connection:p.pc?.connectionState,ice:p.pc?.iceConnectionState,sdp:!!p.pc?.localDescription,remoteSdp:!!p.pc?.remoteDescription,channel:p.dc?.readyState})),roster:n.roster.size}})))));
   if(process.env.MOTION_REQUIRE_RTC!=='0')throw e;
  }
 }
 async function startGuard(mode){
+ for(const c of clients)await c.page.evaluate(()=>{nsPractice.configure({area:'gastro',organ:'peritoneo',pathology:'APP-001'});motionTrace.record=true});
  await clients[0].page.evaluate(({mode,ids})=>nsLobby.openGuardia(mode,ids),{mode,ids:clients.slice(1).map(c=>c.user.id)});
  await clients[0].page.locator('[data-guard="go"]').click();
  await clients[0].page.waitForFunction(()=>nsSocial.room()?.id);
  const room=await clients[0].page.evaluate(()=>nsSocial.room());
  for(const c of clients.slice(1))await c.page.evaluate(id=>nsSocial.joinRoom(id),room.id);
  try{await Promise.all(clients.map(c=>c.page.waitForFunction(()=>csV41Challenge.active)))}catch(e){
+  await fs.writeFile(output+'/guard-start-failure.json',JSON.stringify(await Promise.all(clients.map(c=>c.page.evaluate(()=>motionTrace)))));
   console.log('GUARD_START_DIAGNOSTICS',JSON.stringify(await Promise.all(clients.map(c=>c.page.evaluate(()=>({room:nsSocial.room(),challenge:{id:csV41Challenge.id,active:csV41Challenge.active,self:csV41Challenge.selfId,mode:csV41Challenge.mode},channel:csCoop.dc?.readyState,localCase:C?.id,lobby:nsLobby.active}))))));throw e;
  }
  assert.equal(new Set(await Promise.all(clients.map(c=>c.page.evaluate(()=>csV41Challenge.id)))).size,1,'all independent clients share one real guard');
@@ -188,7 +191,7 @@ try{
   scenarios.push(await capture('guard-jitter-loss',{short:true,impaired:true}));
   await Promise.all(clients.map(c=>c.page.evaluate(()=>{motionTrace.impair.enabled=false})));await pause(700);
   let onlineAt=0;
-  scenarios.push(await capture('guard-outage',{impaired:true,action:async()=>{
+  scenarios.push(await capture('guard-outage',{impaired:true,qualitySince:()=>onlineAt,action:async()=>{
    await clients[0].context.setOffline(true);await Promise.all(clients.map(c=>move(c.page,0,-8)));await pause(1800);
    await clients[0].context.setOffline(false);onlineAt=Date.now();await pause(500);
    await Promise.all(clients.map(c=>move(c.page,6,0)));await pause(4000);

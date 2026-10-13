@@ -20,6 +20,16 @@ const fallback=createRemotePose({cadence:100});receiveRemotePose(fallback,msg('A
 const loss=createRemotePose({cadence:100});
 for(let t=0;t<=5000;t+=10){if(t%100===0&&(t<1000||t>=3000))receiveRemotePose(loss,msg('A',t/100+1,t,t*.205));sampleRemotePose(loss,t)}
 assert(5000*.205-loss.x<205*.35,'recover to a real snapshot after an interruption');
+// The HTTP room queue can deliver one old in-flight state and the coalesced
+// current state in the same poll after reconnecting. Rebase to the newest real
+// state in that receive batch, rather than replaying the old in-flight pose.
+const batch=createRemotePose({cadence:100});receiveRemotePose(batch,msg('A',1,0,0));receiveRemotePose(batch,msg('A',2,100,20.5));sampleRemotePose(batch,150);
+receiveRemotePose(batch,{...msg('A',3,200,41),now:2100});receiveRemotePose(batch,{...msg('A',4,2100,430.5),now:2101});sampleRemotePose(batch,2110);
+assert.equal(batch.x,430.5,'a recovery batch resumes from its newest actual snapshot');assert.equal(batch.moving,false);
+const polls=createRemotePose({cadence:100});receiveRemotePose(polls,msg('A',1,0,0));receiveRemotePose(polls,msg('A',2,100,20.5));sampleRemotePose(polls,150);
+receiveRemotePose(polls,{...msg('A',3,200,41),now:2100});sampleRemotePose(polls,2110);
+for(let t=2200;t<=7200;t+=10){if(t%100===0)receiveRemotePose(polls,{...msg('A',t/100,t-100,(t-100)*.205),now:t});sampleRemotePose(polls,t)}
+assert(7100*.205-polls.x<205*.35,'recovery remains pending across render frames until a current source snapshot arrives');
 // A collision-safe elbow must complete after a render pause.
 const route=createRemotePose({cadence:100});receiveRemotePose(route,msg('A',1,0,0));sampleRemotePose(route,50);
 for(let t=100;t<=1000;t+=100)receiveRemotePose(route,{...msg('A',t/100+1,t,Math.min(100,t*.2),Math.max(0,(t-500)*.2)),moving:t<1000});
