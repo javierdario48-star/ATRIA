@@ -54,7 +54,7 @@ for(const device of ['desktop','android']){
  vm.createContext(context);vm.runInContext(code,context,{timeout:2000});
  // No-name anamnesis is always the attended patient, even after a Vega exchange.
  context.sendMessage('¿Qué le pasó?');
- assert.equal(records.at(-2)[0],'patient');checks++;
+ assert.equal(records.at(-1)[0],'patient');checks++;
  input.value='Creo que necesitamos antibióticos.';screen.activeElement=input;
  assert(context.window.nsSelectChatTarget487('expert'));
  assert.equal(input.value,'Dr. Vega, Creo que necesitamos antibióticos.');
@@ -81,7 +81,7 @@ for(const device of ['desktop','android']){
  assert(records.some(x=>x[0]==='nurse'));
  const before=records.filter(x=>x[0]==='vega').length;
  context.sendMessage('Paciente, ¿desde cuándo tiene dolor?');
- assert.equal(records.at(-2)[0],'patient');
+ assert.equal(records.at(-1)[0],'patient');
  assert.equal(records.filter(x=>x[0]==='vega').length,before);checks++;
  input.value='Enfermera, dos vías';
  screen.activeElement=null;
