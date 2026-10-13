@@ -195,6 +195,26 @@ The original case selector retains C/sim; lobby-return tests use actual room
 leave followed by an ordinary page reload with the same isolated storage.
 Native back-button cleanup is outside this motion change and remains unverified.
 
+The resumed matrix passed normal motion, impairments, guard outage, actual
+lobby return and channel-close HTTP fallback for all 2/3/4-player pairs. All
+three jobs then blocked at a post-reload RTC-only precondition: the existing
+signaling retained offers/answers, leaving channels negotiating. The reconnect
+test now requires every other client to accept the NEW actual page generation
+over the existing transport, then applies the complete movement gates. Initial
+principal lobby reproduction still requires real open RTC channels. Automatic
+RTC renegotiation after this channel-close/reload sequence is not certified;
+the HTTP fallback and fresh generation are the required recovery behavior.
+
+A subsequent two-browser HTTP trace exposed one erased 367ms native pause:
+one stopped snapshot between moving snapshots was linearly blended straight
+into the next short step, with no visual idle until an unrelated later stop
+2350ms later. A regression using those actual positions/times failed before
+the fix. Only moving/idle transition intervals now locate their path travel
+using the original 205px/s speed and retain stationary time at the received
+endpoint. Continuous-moving interpolation, bounded travel, buffer delay and
+collision-safe paths remain the same. No extra delay or movement extrapolation
+is introduced.
+
 The terminal-receipt gate has its own regression: a peer which travels normally
 but remains 22 pixels short AFTER receipt of the current stopped snapshot must
 fail even if the earlier interval had packet impairment. The test fails at that

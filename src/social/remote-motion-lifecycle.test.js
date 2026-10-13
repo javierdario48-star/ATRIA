@@ -42,4 +42,21 @@ for(let t=0;t<=8000;t+=100){const x=t<=500?t*.2:t<=1000?100:t<=1500?100-(t-1000)
 sampleRemotePose(hidden,8001,{canMove:(ax,ay,bx,by)=>!(bx<80&&by>20&&by<80)});
 assert(hidden.y>1200,'resume at a retained actual snapshot when route history was trimmed');
 assert.equal(hidden.moving,false,'a suspension rebase is not a walking step');
-console.log('remote motion generation, outage, cadence, suspension and collision-route lifecycle OK');
+// A real two-browser HTTP trace contains just one stopped snapshot between
+// walking snapshots. Linear interpolation across both intervals erased its
+// 367ms native pause and kept the feet moving until an unrelated later stop.
+const pausePose=createRemotePose({cadence:266.7});
+const pausedPackets=[
+ {t:0,x:454.97950000000026,y:1115.7735849056603,moving:true},
+ {t:266.7,x:432,y:1115.7735849056603,moving:false},
+ {t:533.3,x:432,y:1105.5235849056603,moving:true},
+ {t:800,x:432,y:1057.811320754717,moving:false}
+];
+let pending=0;const quiet=[];
+for(let now=0;now<=1200;now+=1000/60){
+ while(pending<pausedPackets.length&&pausedPackets[pending].t+60<=now){const s=pausedPackets[pending++];receiveRemotePose(pausePose,{...s,motionAt:s.t,now:s.t+60,seq:pending,motionSession:'RECORDED_PAUSE',motionCadence:266.7,transport:'http'})}
+ sampleRemotePose(pausePose,now);
+ if(!pausePose.moving&&Math.hypot(pausePose.x-432,pausePose.y-1115.7735849056603)<1e-7)quiet.push(now);
+}
+assert(quiet.length>=12,'one transmitted stopped snapshot retains at least 200ms of the recorded native pause');
+console.log('remote motion generation, outage, cadence, suspension, collision route and transmitted pause lifecycle OK');

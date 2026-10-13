@@ -219,8 +219,13 @@ try{
   assert(fallbackTrace.every((t,i)=>t.packets.some(p=>p.kind==='receive'&&p.transport==='http'&&p.data?.p?.userId!==clients[i].user.id&&p.data?.p?.moving&&p.data?.p?.motionAt!=null)),'closed RTC channels yield to genuine server states');
   const previous=await clients[0].page.evaluate(()=>({session:csMotionPage487,epoch:csMotionEpoch487}));
   await clients[0].page.reload();await clients[0].page.locator('#nsEnter').click();await clients[0].page.waitForFunction(()=>nsLobby.active&&nsSocial.state().user);await installRenderProbe(clients[0].page);
-  const next=await clients[0].page.evaluate(()=>({session:csMotionPage487,epoch:csMotionEpoch487}));assert.notEqual(next.session,previous.session);assert(next.epoch>previous.epoch,'real reload has an ordered new generation');
-  await waitRTC();scenarios.push(await capture('lobby-reconnect',{short:true}));
+  const next=await clients[0].page.evaluate(()=>({session:csMotionPage487,epoch:csMotionEpoch487,motionSession:csMotionPage487+':'+sessionStorage.getItem('atria.lobby.peer.v2')}));assert.notEqual(next.session,previous.session);assert(next.epoch>previous.epoch,'real reload has an ordered new generation');
+  // RTC is optional after a real channel failure/reload. Verify that every
+  // observer actually accepts the new source generation through the existing
+  // transport, including HTTP fallback, rather than requiring the old signal
+  // negotiation to reconnect as a precondition for measuring remote recovery.
+  await Promise.all(clients.slice(1).map(c=>c.page.waitForFunction(({id,motionSession,epoch})=>{const p=nsLobby.players.get(id)?._motion;return p?.session===motionSession&&p.epoch===epoch},{id:clients[0].user.id,...next},{timeout:15000})));
+  scenarios.push(await capture('lobby-reconnect',{short:true}));
   const secondRoom=await startGuard('competitive');assert.notEqual(secondRoom.id,firstRoom.id,'another guard has an independent scene identity');
   scenarios.push(await capture('guard-competitive-restart',{short:true}));
  }

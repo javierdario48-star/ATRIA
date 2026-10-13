@@ -64,14 +64,22 @@ export function createRemoteMotionRuntime(){
    const a=p.samples[i-1],b=p.samples[i];if(b.t<=from||a.t>=target)continue;
    const route=b.route||[{x:a.x,y:a.y},{x:b.x,y:b.y}];
    const lengths=route.slice(1).map((v,k)=>Math.hypot(v.x-route[k].x,v.y-route[k].y));
-   const total=lengths.reduce((x,y)=>x+y,0);let walked=0;
+   const total=lengths.reduce((x,y)=>x+y,0),travel=Math.min(b.t-a.t,total/p.speed*1000);
+   // A single idle snapshot is evidence of a pause. At its edges, locate
+   // travel inside the interval using the unchanged native speed rather than
+   // spreading a short resumed step across the whole stationary interval.
+   const motionStart=!a.moving&&b.moving?b.t-travel:a.t;
+   const motionEnd=a.moving&&!b.moving?a.t+travel:b.t;
+   if(motionStart>from)knots.push({x:a.x,y:a.y,t:Math.min(motionStart,target)});
+   let walked=0;
    for(let k=0;k<lengths.length;k++){
-    const start=a.t+(b.t-a.t)*(total?walked/total:0);walked+=lengths[k];
-    const end=a.t+(b.t-a.t)*(total?walked/total:1);
+    const start=motionStart+(motionEnd-motionStart)*(total?walked/total:0);walked+=lengths[k];
+    const end=motionStart+(motionEnd-motionStart)*(total?walked/total:1);
     if(end<=from||start>=target)continue;
     const t=Math.min(end,target),u=end>start?clamp((t-start)/(end-start),0,1):1,c=route[k],d=route[k+1];
     knots.push({x:c.x+(d.x-c.x)*u,y:c.y+(d.y-c.y)*u,t});
    }
+   if(motionEnd<target)knots.push({x:b.x,y:b.y,t:Math.min(b.t,target)});
   }
   const beforeX=p.x,beforeY=p.y;let budget=p.speed*1.1*Math.min(elapsed,.1),clock=from;
   for(const k of knots){const dx=k.x-p.x,dy=k.y-p.y,d=Math.hypot(dx,dy),fraction=d?Math.min(1,budget/d):1;
