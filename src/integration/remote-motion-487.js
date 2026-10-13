@@ -1,14 +1,17 @@
 import {createRemoteMotionRuntime} from '../social/remote-motion.js';
-const replace=(s,a,b,label)=>{const i=s.indexOf(a);if(i<0||s.indexOf(a,i+1)>=0)throw Error('remote motion anchor changed: '+label);return s.slice(0,i)+b+s.slice(i+a.length)};
+const replaceOnce=(s,a,b,label)=>{const i=s.indexOf(a);if(i<0||s.indexOf(a,i+1)>=0)throw Error('remote motion anchor changed: '+label);return s.slice(0,i)+b+s.slice(i+a.length)};
 const section=(s,a,b,code,label)=>{const i=s.indexOf(a),j=s.indexOf(b,i+a.length);if(i<0||j<0||s.indexOf(a,i+1)>=0)throw Error('remote motion section changed: '+label);return s.slice(0,i)+code+s.slice(j)};
-export function applyRemoteMotion487(html){
+export function applyRemoteMotion487(html,{changes=null}={}){
+ const replace=(s,a,b,label)=>{changes?.push([a,b]);return replaceOnce(s,a,b,label)};
+ const section=(s,a,b,code,label)=>{const i=s.indexOf(a),j=s.indexOf(b,i+a.length);if(i<0||j<0)throw Error('remote motion section changed: '+label);return replace(s,s.slice(i,j),code,label)};
  let s=html;
  const runtime=`<script id="atria-remote-motion-487">
 const csRemoteMotion487=(${createRemoteMotionRuntime.toString()})();
 const csMotionSequences487=new Map();
 const csMotionPage487=window.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
-function csMotionMeta487(session,cadence){const seq=(csMotionSequences487.get(session)||0)+1;csMotionSequences487.set(session,seq);return {motionSession:csMotionPage487+':'+session,seq,motionAt:performance.now(),sentAt:Date.now(),motionCadence:cadence}}
-function csMotionAcceptState487(prev,m){if(!prev)return true;const session=m.motionSession||m.peerId,old=prev.motionSession||prev.peerId,retired=prev._motionRetired||[];if(retired.includes(session))return false;if(session!==old){m._motionRetired=[...retired,old].slice(-8);return true}const seq=Number(m.stateSeq||m.seq)||0;return !seq||seq>Number(prev.stateSeq||prev.seq||0)}
+const csMotionEpoch487=(()=>{try{const key='atria.motion.generation.487',epoch=Math.max(Date.now(),Number(sessionStorage.getItem(key)||0)+1);sessionStorage.setItem(key,String(epoch));return epoch}catch(_){return Date.now()}})();
+function csMotionMeta487(session,cadence){const seq=(csMotionSequences487.get(session)||0)+1;csMotionSequences487.set(session,seq);return {motionEpoch:csMotionEpoch487,motionSession:csMotionPage487+':'+session,seq,motionAt:performance.now(),sentAt:Date.now(),motionCadence:cadence}}
+function csMotionAcceptState487(prev,m){if(!prev)return true;const session=m.motionSession||m.peerId,old=prev.motionSession||prev.peerId,retired=prev._motionRetired||[];if(retired.includes(session)||(session!==old&&prev.motionEpoch&&(Number(m.motionEpoch)||0)<=prev.motionEpoch))return false;if(session!==old){m._motionRetired=[...retired,old].slice(-8);return true}const seq=Number(m.stateSeq||m.seq)||0;return !seq||seq>Number(prev.stateSeq||prev.seq||0)}
 // Explicitly enabled diagnostics stay on this device, bounded to 6000 entries.
 window.csRemoteMotionDiagnostics487={enabled:false,events:[],clear(){this.events.length=0}};
 function csMotionLog487(kind,id,p,data){const d=window.csRemoteMotionDiagnostics487;if(!d.enabled)return;d.events.push({kind,id,session:p.session,seq:p.seq,sourceTime:data?.motionAt,now:performance.now(),transport:p.transport,x:p.x,y:p.y,receivedX:data?.x,receivedY:data?.y,speed:p.visualSpeed||0,dir:p.dir,phase:p.walkPhase,moving:p.moving,delay:p.delay,effectiveDelay:p.renderAge,fps:p.fps,resetReason:p.resetReason,cadence:p.cadence});if(d.events.length>6000)d.events.splice(0,1000)}
@@ -37,10 +40,13 @@ window.csLobbyMotionSample487=function(q,now){if(!q._motion)return;const p=csRem
  s=section(s,'function mergeRemote(p,source){','  function mergeRoster(list){',`function mergeRemote(p,source){
     if(!p||!p.userId||p.userId===myId())return;
     if(source==='rtc'&&p.peerId!==net.peers.get(p.userId)?.peerId)return;
-    var now=performance.now(),q=ensureMapEntry(p);if(!q)return;
+    if(!Number.isFinite(p.x)||!Number.isFinite(p.y))return;
+    var now=performance.now(),existing=window.nsLobby.players.get(p.userId);
     var session=String(p.motionSession||p.peerId||''),seq=Number(p.seq)||0;
-    if(q._motion?.retired.includes(session)||q._motion&&q._motion.session===session&&seq&&seq<=q._motion.seq)return;
+    var motion=existing?._motion;
+    if(motion?.retired.includes(session)||motion&&motion.session===session&&seq&&seq<=motion.seq||motion&&session!==motion.session&&motion.epoch&&(Number(p.motionEpoch)||0)<=motion.epoch)return;
     if(source!=='rtc'&&window.nsLobbyRtcHasFresh?.(p.userId))return;
+    var q=ensureMapEntry(p);if(!q)return;
     q._motion=csMotionReceive487(q._motion,p,source==='rtc'?'rtc':'http',now,source==='rtc'?100:260);
     var r=net.remotes.get(p.userId)||{};
     Object.assign(r,{data:p,tx:p.x,ty:p.y,at:now,seq,rtc:source==='rtc',last:now});net.remotes.set(p.userId,r);
@@ -53,17 +59,17 @@ window.csLobbyMotionSample487=function(q,now){if(!q._motion)return;const p=csRem
  const from=s.indexOf('for(const q of state.players.values()){const beforeX=q.x');
  const to=s.indexOf('}catch(_){}if(!state.demo&&t-state.lastStateSent',from);
  if(from<0||to<0)throw Error('remote lobby render owner changed');
- s=s.slice(0,from)+'for(const q of state.players.values())window.csLobbyMotionSample487(q,t)'+s.slice(to);
+ s=replace(s,s.slice(from,to),'for(const q of state.players.values())window.csLobbyMotionSample487(q,t)','lobby-render');
  // Sample fresh fallback states frequently enough to retain actual turns.
  // RTC peers use the previous low-rate roster polling; fallback uses existing tick.
  s=replace(s,"(state._lastPoll||0)+900<t", "(state._lastPoll||0)+([...state.players.keys()].some(id=>!window.nsLobbyRtcHasFresh?.(id))?260:900)<t",'fallback-moving-poll');
  const pollFrom=s.indexOf('for(const p of data.players||[]){if(p.userId===mine)continue;');
  const pollTo=s.indexOf('for(const[id,q]of state.players)',pollFrom);
  if(pollFrom<0||pollTo<0)throw Error('remote lobby poll changed');
- s=s.slice(0,pollFrom)+`for(const p of data.players||[]){if(p.userId===mine)continue;const old=state.players.get(p.userId)||{};
+ s=replace(s,s.slice(pollFrom,pollTo),`for(const p of data.players||[]){if(p.userId===mine)continue;const old=state.players.get(p.userId)||{};
  const q={...old,...p,x:Number.isFinite(old.x)?old.x:p.x,y:Number.isFinite(old.y)?old.y:p.y,dir:old.dir||p.dir,moving:!!old.moving,walkPhase:old.walkPhase||0,online:true};
  q._motion=old._motion&&window.nsLobbyRtcHasFresh?.(p.userId)?old._motion:csMotionReceive487(old._motion,p,'http',performance.now(),260);q._seen=performance.now();next.set(p.userId,q)}
- `+s.slice(pollTo);
+ `,'lobby-poll');
  // Legacy direct peer mode uses the same sampler, and resets on scene/peer changes.
  s=section(s,'let csRemotePose=null,csRemoteLegs=null;','const __csBaseDraw=draw;',`let csRemotePose=null,csRemoteLegs=null;
 function csRemoteVisual(r,now=performance.now()){csRemotePose=csMotionReceive487(csRemotePose,{...r,motionSession:r.motionSession||r.peerId||r.caseId},'rtc',now,220);return csRemoteMotion487.sample(csRemotePose,now,{canMove:csMotionSegment487})}
@@ -84,9 +90,10 @@ function csDrawRemote(){
  csWireDataChannel=function(dc){
   const result=wire.apply(this,arguments),send=dc.send.bind(dc),receive=dc.onmessage;
   dc.send=function(value){let m;try{m=JSON.parse(value)}catch(_){return send(value)}
-   if(m.type==='state'){Object.assign(m,csMotionMeta487((m.roomId||'direct')+':'+(m.peerId||selfId),220));csMotionLog487('send',m.peerId||selfId,{...m,session:m.motionSession,walkPhase:m.walkPhase},m);value=JSON.stringify(m)}return send(value)};
-  dc.onmessage=function(e){let m;try{m=JSON.parse(e.data)}catch(_){return receive?.call(dc,e)}
-   if(m.type!=='state')return receive?.call(dc,e);
+   if(m?.type==='state'){Object.assign(m,csMotionMeta487((m.roomId||'direct')+':'+(m.peerId||selfId),220));csMotionLog487('send',m.peerId||selfId,{...m,session:m.motionSession,walkPhase:m.walkPhase},m);value=JSON.stringify(m)}return send(value)};
+  dc.onmessage=function(e){if(typeof e.data!=='string'||e.data.length>524288)return receive?.call(dc,e);
+   let m;try{m=JSON.parse(e.data)}catch(_){return receive?.call(dc,e)}
+   if(m?.type!=='state')return receive?.call(dc,e);
    const pid=m.peerId||m._fromPeerId,prev=csCoop.remotes?.[pid];
    if(!csMotionAcceptState487(prev,m))return;
    // A restarted generation is passed through ALL original transport validators.
@@ -110,5 +117,12 @@ function csDrawRemote(){
 </script>`;
  // The golden master appends several later scripts after its original body close.
  // Append after those owners so they cannot replace this adapter at boot.
- return s+adapter;
+ changes?.push(['',adapter]);return s+adapter;
+}
+
+// Build-only exact inversion: fail if any reviewed replacement bytes differ.
+export function reverseRemoteMotion487(html,reference){
+ const changes=[];applyRemoteMotion487(reference,{changes});let s=html;
+ for(const [before,after] of changes.reverse())s=replaceOnce(s,after,before,'reverse');
+ return s;
 }

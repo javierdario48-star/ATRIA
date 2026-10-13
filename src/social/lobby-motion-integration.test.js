@@ -32,6 +32,13 @@ for(let test=0;test<120;test++){
  assert.equal(ctx.window.nsLobbyRtcHasFresh(id),true);
  now+=700;assert.equal(ctx.window.nsLobbyRtcHasFresh(id),false,'stale RTC yields to real fallback');
  for(let f=0;f<60;f++){now+=16;ctx.window.csLobbyMotionSample487(q,now)}assert.equal(q.moving,false,'loss holds the last known position');
+ ctx.mergeRemote({userId:id,peerId:'OTHER',motionSession:'NEW',motionEpoch:2000,seq:1,motionAt:10,x:50,y:30,moving:true},'rtc');
+ const acceptedAt=net.remotes.get(id).last;now+=700;
+ ctx.mergeRemote({userId:id,peerId:'OTHER',motionSession:'UNSEEN_OLD',motionEpoch:1000,seq:100,motionAt:20,x:10,y:30,moving:true},'rtc');
+ assert.equal(net.remotes.get(id).last,acceptedAt,'rejected generation cannot renew RTC freshness');
+ assert.equal(ctx.window.nsLobbyRtcHasFresh(id),false);
+ ctx.mergeRemote({userId:id,peerId:'OTHER',motionSession:'NEW',motionEpoch:2000,seq:2,motionAt:710,x:60,y:30,moving:true},'server');
+ assert.equal(q._motion.seq,2,'valid HTTP fallback is still accepted');
  scenarios++;
 }
 console.log('ATRIA LOBBY MOTION SOURCE INTEGRATION PASS',JSON.stringify({scenarios,frames:240,realNetwork:false,staleServerRejected:true}));

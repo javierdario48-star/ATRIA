@@ -12,6 +12,7 @@ import {applyGuardScoreboard487} from '../../src/integration/guard-scoreboard-48
 import {applyPhysiologyQABootstrap487,PHYSIOLOGY_QA_FILES_487,RINGER_SAFETY_OLD_487,RINGER_SAFETY_NEW_487,RINGER_COMPLETION_OLD_487,RINGER_COMPLETION_NEW_487} from '../../src/integration/physiology-qa-bootstrap-487.js';
 import {applyCriticalRescue487,CRITICAL_FINAL_OLD_487,CRITICAL_FINAL_NEW_487,CRITICAL_CLOCK_OLD_487,CRITICAL_CLOCK_NEW_487} from '../../src/integration/critical-rescue-487.js';
 import {applySecondaryBridge487} from '../../src/integration/secondary-sepsis-bridge-487.js';
+import {reverseRemoteMotion487} from '../../src/integration/remote-motion-487.js';
 import {apply487} from '../../src/integration/apply-487.js';
 import {applyMorphine487} from '../../src/integration/morphine-487.js';
 import {applyUrgentCare487} from '../../src/integration/urgent-care-487.js';
@@ -34,7 +35,9 @@ assert.equal(html,apply487(immutableVendor),'artifact equals current source-inte
 assert.equal(applyChatRecipient487(html,{reverse:true}),
  apply487(immutableVendor,{recipient:false}),
  'exact full-build inversion of NPC chat mentions, no unreviewed bytes');
-const historicalHtml=apply487(immutableVendor,{recipient:false,vega:false});
+const motionReference=apply487(immutableVendor,{recipient:false,vega:false,remoteMotion:false});
+const historicalHtml=reverseRemoteMotion487(apply487(immutableVendor,{recipient:false,vega:false}),motionReference);
+assert.equal(historicalHtml,motionReference,'exact inversion of all remote motion changes; original clinical digest remains unchanged');
 assert(html.includes("function csVegaPriorityStudies487()")&&
  html.includes('<script id="atria-recipient-selector-487">'),
  'new clinical teaching and chat layers remain in verified active build');

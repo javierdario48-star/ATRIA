@@ -86,3 +86,23 @@ The complete `cs-v410-modes` block retains its frozen hash; the guard adapter
 mounts outside that block and delegates to the original transport validators.
 The native physiology reference still compares all 4,537 numeric values at
 its original tolerance. No frozen reference or clinical expectation changed.
+
+## Checkpoint C: animation and lifecycle
+
+Displayed direction, walking/idle and foot phase use the same sampled path.
+A reload explicitly resets source clock/cursor. A monotonically ordered page
+start generation supplements the UUID, so a delayed older page that was never
+seen cannot retire a newer one. Raw guard message size/type validation remains
+in the original receive chain, including malformed JSON and null input.
+A suspended renderer whose route history expired resumes at a retained actual
+snapshot, tagged `render-resume`, with zero walking advance for that rebase.
+
+The full historical regression suite passed locally. GitHub checkpoint B's
+independent-browser job passed with genuinely open RTC channels in both lobby
+clients and the genuine HTTP guard transport. It measured no orientation
+errors and no frames sliding without steps in either direction/scene. This
+is interim evidence; final same-run comparison and 2–4 clients are still due.
+
+The artifact verifier now explicitly inverts every remote-motion replacement
+before its historical recovery. Its original protected HTML SHA-256 remains
+`dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7`.

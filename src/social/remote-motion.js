@@ -3,12 +3,13 @@
 export function createRemoteMotionRuntime(){
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
  const direction=(dx,dy)=>['E','SE','S','SW','W','NW','N','NE'][(Math.round(Math.atan2(dy,dx)/(Math.PI/4))+8)%8];
- const create=({x=0,y=0,now=0,cadence=120,speed=205}={})=>({x,y,speed,dir:'S',moving:false,walkPhase:0,samples:[],seq:0,session:null,retired:[],offset:null,cadence,delay:cadence,lastRender:now,lastReceive:now,jitter:[],rejected:0});
+ const create=({x=0,y=0,now=0,cadence=120,speed=205}={})=>({x,y,speed,dir:'S',moving:false,walkPhase:0,samples:[],seq:0,session:null,epoch:0,retired:[],offset:null,cursor:null,transport:null,visualSpeed:0,fps:0,renderAge:0,resetReason:null,cadence,delay:cadence,lastRender:now,lastReceive:now,jitter:[],rejected:0});
  function receive(p,m){
   const x=Number(m.x),y=Number(m.y),now=Number(m.now)||0;
   if(!Number.isFinite(x)||!Number.isFinite(y))return p;
   const session=String(m.motionSession||m.peerId||p.session||''),seq=Number(m.stateSeq??m.seq)||0;
-  if(p.retired.includes(session)){p.rejected++;return p}
+  const epoch=Number(m.motionEpoch)||0;
+  if(p.retired.includes(session)||(session!==p.session&&p.epoch&&epoch<=p.epoch)){p.rejected++;return p}
   if(p.session!==null&&p.session!==session){const retired=[...p.retired,p.session].slice(-8);Object.assign(p,create({x,y,now,cadence:p.cadence,speed:p.speed}),{retired})}
   if(seq&&p.seq&&seq<=p.seq){p.rejected++;return p}
   const stamped=Number.isFinite(m.motionAt),source=stamped?Number(m.motionAt):now;
@@ -30,7 +31,7 @@ export function createRemoteMotionRuntime(){
   const target=p.cadence+Math.min(extra,p.cadence*.5);
   // Increasing protection under jitter is gradual, not a backwards time jump.
   p.delay=prev?p.delay+.1*(target-p.delay):target;
-  p.lastReceive=now;p.seq=seq||p.seq;p.session=session;p.transport=m.transport||p.transport;
+  p.lastReceive=now;p.seq=seq||p.seq;p.session=session;p.epoch=epoch||p.epoch;p.transport=m.transport||p.transport;
   const interrupted=prev&&gap>Math.max(650,p.cadence*3);
   const snap=!!m.teleport||interrupted||(prev&&Math.hypot(x-prev.x,y-prev.y)>Math.max(160,((source-prev.t)/1000)*p.speed*2));
   p.resetReason=snap?(interrupted?'network-resume':'position-discontinuity'):null;
@@ -43,6 +44,13 @@ export function createRemoteMotionRuntime(){
  function sample(p,now,{canMove=null}={}){
   if(!p.samples.length||now<=p.lastRender)return p;
   const elapsed=Math.max(0,(now-p.lastRender)/1000),first=p.samples[0],last=p.samples.at(-1);
+  // A background tab can lose route history while its transport keeps receiving.
+  // Resume at a retained real pose, without inventing travel across lost corners.
+  if(elapsed*1000>Math.max(650,p.cadence*3)||(p.cursor!==null&&p.cursor<first.t)){
+   const target=now-(p.offset||0)-p.delay,pose=p.samples.findLast(v=>v.t<=target)||first;
+   p.x=pose.x;p.y=pose.y;p.dir=pose.dir;p.cursor=pose.t;p.lastRender=now;
+   p.moving=false;p.walkPhase=0;p.visualSpeed=0;p.fps=0;p.renderAge=now-(p.offset||0)-pose.t;p.resetReason='render-resume';return p;
+  }
   const from=Math.max(p.cursor??first.t,first.t);
   const target=Math.max(from,Math.min(last.t,now-(p.offset||0)-p.delay));
   const knots=[];
