@@ -71,9 +71,14 @@ export function applyChatRecipient487(html){
     return originalSend.apply(this,arguments);
    // Multiplayer authorization/clinical owner relays have their own native
    // validation. Never execute directly on a guest read-only mirror or rival.
-   if(window.csV41Challenge?.active){
-    pendingAddress=role;
-    return originalSend.apply(this,arguments);
+   const room=window.csV41Challenge;
+   if(room?.active){
+    const owned=room.patients?.find(p=>p.uid===sim.patientInstance?.uid);
+    const mayAct=room.active&&!room.ended&&owned?.ownerId===room.selfId&&
+     owned?.state==='in_care'&&!sim.__csRemoteMirror487&&!sim.__csRoomSpectator;
+    // This is the SAME owner of the native clinical state. Cooperative
+    // visitors and competitive rivals still use the room authorization path.
+    if(!mayAct){pendingAddress=role;return originalSend.apply(this,arguments);}
    }
    if(window.nsMayExamine?.()===false)return originalSend.apply(this,arguments);
    if(role==='expert'&&!sim.mentor?.enabled&&!sim.nsVegaCalled){
