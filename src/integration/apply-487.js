@@ -26,7 +26,7 @@ import {applyCaseCompletion487} from './case-completion-487.js';
 import {applyVegaStepCoach487} from './vega-step-coach-487.js';
 import {applyConciseVegaConsult487} from './vega-concise-consult-487.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
-export function apply487(html,{multiplayer=true}={}){
+export function apply487(html,{multiplayer=true,vega=true,recipient=true}={}){
  let s=html;
  // 4.8.7 replaces the legacy external study-repair pollers with source-level study resolution.
  s=replaceOnce(s,'<script src="/task7.js?v=483"></script>','<!-- legacy study fallback 7 retired in 4.8.7 -->','retire-task7-study-fallback');
@@ -692,8 +692,7 @@ function csDrawRemote(){
 })();
 </script>`;
  s=replaceOnce(s,'</body>',phase7Script+'</body>','phase7-nurse-audiovisual-receipts');
- s=applyVegaStepCoach487(s);
- s=applyConciseVegaConsult487(s);
+ if(vega){s=applyVegaStepCoach487(s);s=applyConciseVegaConsult487(s);}
  s=applyPeritonitis487(s);
  s=applyDiagnosticImpression487(s);
  s=applySurgicalNursing487(s);
@@ -706,5 +705,6 @@ function csDrawRemote(){
  s=applyClinicalConfirmations487(s);
  s=applyPharmacology487(s);
  const built=applyPhysiologyQABootstrap487(applyCaseCompletion487(applyUrgentCare487(applyMorphine487(multiplayer?applyMultiplayerStabilization487(s):s))));
- return applyChatRecipient487(multiplayer?applyGuardScoreboard487(built):built);
+ const mounted=multiplayer?applyGuardScoreboard487(built):built;
+ return recipient?applyChatRecipient487(mounted):mounted;
 }
