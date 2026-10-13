@@ -74,6 +74,58 @@ try{
    assert.equal(a.filter(a=>a.id==='ceftriaxone').at(-1).count,2,'a new deliberate order creates a native second exposure');
   });
  }
+ if(stage==='I'||stage==='all'){
+  if(stage==='I')await h.startGuard('competitive','PERI-SEC-001');
+  await check('competitive-atomic-race',async()=>{
+   const competitors=h.clients.length>2?h.clients.slice(1,3):h.clients.slice(0,2);
+   // Move with the game's original pathfinder, never by setting coordinates.
+   await Promise.all(competitors.map(async c=>{
+    await c.page.waitForFunction(()=>csV41Challenge.patients[0]?.state==='waiting',{},{timeout:40000});
+    await c.page.evaluate(()=>{
+     const p=csV41Challenge.patients[0],a=p.instance?.bed?.approach;
+     if(!a)throw Error('Native bed approach unavailable');
+     const g=nearestPassable(a[0],a[1],8)||a;
+     setPlayerTarget(...worldToScreen((g[0]+.5)*TW,(g[1]+.5)*TH));
+    });
+    await c.page.waitForFunction(()=>{
+     const a=csV41Challenge.patients[0]?.instance?.bed?.approach;
+     if(!a)return false;const g=nearestPassable(a[0],a[1],8)||a;
+     return Math.hypot(player.x-(g[0]+.5)*TW,player.y-(g[1]+.5)*TH)<52;
+    },{},{timeout:30000});
+   }));
+   // Let actual peer presence arrive before the host evaluates distance.
+   await Promise.all(competitors.map(c=>c.page.evaluate(()=>csSendPeerState())));
+   await new Promise(resolve=>setTimeout(resolve,1300));
+   const uid=await h.clients[0].page.evaluate(()=>csV41Challenge.patients[0].uid);
+   await Promise.all(competitors.map(c=>c.page.evaluate(()=>csV41TakePatient(0))));
+   await Promise.all(h.clients.map(c=>c.page.waitForFunction(uid=>{
+    const p=csV41Challenge.patients[0];return p?.uid===uid&&!!p.ownerId;
+   },uid,{timeout:25000})));
+   const views=await h.snapshot(),owners=views.map(v=>v.patients[0].ownerId);
+   assert.equal(new Set(owners).size,1,'exactly one winner across all independent browsers');
+   const winner=owners[0],winnerIndex=views.findIndex(v=>v.id===winner);
+   assert(winnerIndex>=0,'winner is an authenticated member');
+   assert(competitors.some(c=>c.user.id===winner),'only a racing doctor can acquire ownership');
+   await h.clients[winnerIndex].page.waitForFunction(uid=>sim?.patientInstance?.uid===uid&&!sim.__csRoomSpectator,uid,{timeout:20000});
+   const initial=(await h.snapshot())[winnerIndex].administrations.length;
+   const denied=h.clients.find(c=>c.user.id!==winner);
+   await denied.page.evaluate(()=>csV41TakePatient(0)); // read-only observer
+   await h.send(h.clients.indexOf(denied),'Enfermera ceftriaxona');
+   // Also inject an unauthorized clinical command through the REAL room API.
+   await denied.page.evaluate(({uid})=>csCoop.dc.send(JSON.stringify({
+    type:'cs_room_v411',kind:'assist',id:csV41Challenge.id,peerId:csV41Challenge.selfId,
+    aid:csV41Challenge.selfId+':FORGED',index:0,uid,
+    action:{kind:'therapy',text:'ceftriaxona'},x:player.x,y:player.y
+   })),{uid});
+   await new Promise(resolve=>setTimeout(resolve,2200));
+   const after=await h.snapshot();
+   assert(after.every(v=>v.patients[0].ownerId===winner),'rival packets cannot steal the patient');
+   assert.equal(after[winnerIndex].administrations.length,initial,'rival text/packet cannot administer a drug');
+   console.log('COMPETITIVE_ATOMIC_BROWSER',JSON.stringify({
+    players:h.clients.length,challengers:competitors.map(c=>c.user.id),winner,
+    allViewsAgree:true,unauthorizedDoses:0,realHTTP:true}));
+  });
+ }
  assert.deepEqual(h.errors,[],'no browser runtime errors');
 }finally{
  await fs.writeFile(output+'/report.json',JSON.stringify({stage,count,checks,errors:h.errors,snapshots:await h.snapshot(),requests:h.requests},null,2));
