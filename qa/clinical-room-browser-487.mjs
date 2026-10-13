@@ -74,8 +74,10 @@ try{
    assert.equal(a.filter(a=>a.id==='ceftriaxone').at(-1).count,2,'a new deliberate order creates a native second exposure');
   });
  }
- if(stage==='I'||stage==='all'){
-  if(stage==='I')await h.startGuard('competitive','PERI-SEC-001');
+ // The F/G combined suite stays in its existing cooperative guard. Race a
+ // different guard only in the explicit I invocation with fresh participants.
+ if(stage==='I'){
+  await h.startGuard('competitive','PERI-SEC-001');
   await check('competitive-atomic-race',async()=>{
    const competitors=h.clients.length>2?h.clients.slice(1,3):h.clients.slice(0,2);
    // Move with the game's original pathfinder, never by setting coordinates.
