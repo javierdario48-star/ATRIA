@@ -57,13 +57,18 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
  }
  const addUnique=(items,x,max=50)=>[...new Set([...(Array.isArray(items)?items:[]),x])].slice(-max);
  async function writeUserList(type,id,edit){const old=await get(type,id,[]);const next=edit(Array.isArray(old)?old:[]);await put(type,id,next);return next}
- async function addChat(user,text){
+ async function addChat(user,text,messageId){
   text=safe(text,180);if(!text)return failure(400,'Mensaje vacío');
+  const k=bucket(user.id),prev=await get('chat',k,[]);
+  if(messageId!=null){
+   if(typeof messageId!=='string'||messageId.length>120||!messageId.startsWith(user.id+':'))return failure(400,'Identificador de mensaje inválido');
+   const old=prev.find(m=>m.userId===user.id&&m.messageId===messageId);
+   if(old)return old.text===text?success({message:old,replayed:true}):failure(409,'El identificador ya corresponde a otro mensaje');
+  }
   const seq=await get('chat-seq','global',0)+1;
   // QA delivery is at-least-once via sequence and client dedupe; cache is not a transactional queue.
   await put('chat-seq','global',seq,ttl.chat);
-  const msg={sequence:seq,userId:user.id,name:user.name,handle:user.handle,text,createdAt:now()};
-  const k=bucket(user.id),prev=await get('chat',k,[]);
+  const msg={sequence:seq,userId:user.id,name:user.name,handle:user.handle,text,createdAt:now(),...(messageId?{messageId}:{})};
   await put('chat',k,[...(Array.isArray(prev)?prev:[]),msg].slice(-40),ttl.chat);
   return success({message:msg});
  }
@@ -112,7 +117,7 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
    const k=bucket(user.id),items=await get('presence',k,[]);await put('presence',k,items.filter(x=>x.userId!==user.id),ttl.presence);return success({ok:true});
   }
   if(path==='lobby'&&method==='GET')return lobbyRead(finite(query.after,0,1e12));
-  if(path==='lobby/chat'&&method==='POST')return addChat(user,body.text);
+  if(path==='lobby/chat'&&method==='POST')return addChat(user,body.text,body.messageId);
   if(path==='rooms'&&method==='POST'){
    const mode=body.mode;
    if(!['coop','competitive'].includes(mode))return failure(400,'Modo inválido');

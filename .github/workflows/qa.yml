@@ -7,6 +7,35 @@ permissions:
   contents: read
 jobs:
 
+  clinical-room-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        players: [2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Real full-game chat and clinical clients
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          CLINICAL_PLAYERS: ${{ matrix.players }}
+          CLINICAL_STAGE: F
+          CLINICAL_OUTPUT: qa/clinical-browser-results/${{ matrix.players }}
+        run: node qa/clinical-room-browser-487.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: clinical-independent-clients-${{ matrix.players }}
+          path: qa/clinical-browser-results/
+          retention-days: 14
+
   remote-motion-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 12

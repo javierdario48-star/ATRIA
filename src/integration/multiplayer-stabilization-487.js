@@ -299,6 +299,57 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "function roomCommand(q){",
  "window.csBroadcastNPCReply487=function(role,raw){if(!shared()||!challenge.active||challenge.ended||!['patient','expert','nurse','clinical-ok'].includes(role)||!sim||sim.__csRemoteMirror487||sim.__csRoomSpectator)return false;const p=challenge.patients.find(p=>p.uid===sim.patientInstance?.uid);if(!p||p.ownerId!==selfId)return false;const text=String(raw||'').trim().slice(0,1000);if(!text)return false;send('team_chat',{text,npcSpeaker:role,recipient:'doctor',patientUid:p.uid,messageId:selfId+':'+Date.now().toString(36)+':'+Math.random().toString(36).slice(2,7)});return true;};function roomCommand(q){",
  'npc-answers-use-existing-public-room-chat-transport');
+ // Retain the native composer node while it is focused, including an Android
+ // IME composition. Only the two text containers need repainting on receipt.
+ s=edit(s,
+ "dock.innerHTML=`<div class=\"nsLobbyHistory ${state.history?'show':''}\">",
+ "const prior=dock.querySelector('#dieInput'),draft=prior?.value||'';if(prior&&document.activeElement===prior){const history=dock.querySelector('.nsLobbyHistory'),recentNode=dock.querySelector('.chatRecent');if(history){history.classList.toggle('show',state.history);history.innerHTML=msgs.map(lineHTML).join('')}if(recentNode)recentNode.innerHTML=recent.map(lineHTML).join('');return}dock.innerHTML=`<div class=\"nsLobbyHistory ${state.history?'show':''}\">",
+ 'incoming-lobby-chat-preserves-native-focused-composer');
+ s=edit(s,
+ "const input=dock.querySelector('#dieInput'),send=dock.querySelector('#dieSend'),go=()=>",
+ "const input=dock.querySelector('#dieInput'),send=dock.querySelector('#dieSend');input.value=draft;const go=()=>",
+ 'unfocused-lobby-draft-survives-repaint');
+ s=edit(s,
+ "const key=m.sequence!=null?'s:'+m.sequence:",
+ "const key=m.messageId?(m.optimistic?'pending:':'id:')+m.messageId:m.sequence!=null?'s:'+m.sequence:",
+ 'lobby-dedupe-by-event-identity');
+ s=edit(s,
+ "x&&x.optimistic&&x.userId===mine&&x.text===m.text",
+ "x&&x.optimistic&&x.userId===mine&&(m.messageId?x.messageId===m.messageId:x.text===m.text)",
+ 'lobby-reconcile-correct-identical-text-event');
+ // The optimistic row and retries carry ONE stable identity. A failed request
+ // is never interpreted as a successful send. The same user may deliberately
+ // send identical text again; that gets a fresh identity.
+ const lobbySendOld="async function sendChat(text){text=String(text||'').trim().slice(0,180);if(!text)return;const u=me(),localId=u?.id||'local',localName=u?.name||csProfile?.name||'Tú',localHandle=u?.handle||'local';const optimistic={userId:localId,name:localName,handle:localHandle,text,createdAt:now(),optimistic:true};appendMessage(optimistic);if(!u)return;try{const data=await lobbyApi('lobby/chat',{method:'POST',body:{text,peerId:csV41Challenge?.selfId||'local'}});if(data.message)appendMessage(data.message)}catch(err){state.status='Chat sin conexión';optimistic.failed=true;renderChat();renderHud()}}";
+ const lobbySendNew=String.raw`async function sendChat(text){
+ text=String(text||'').trim().slice(0,180);if(!text)return false;
+ const u=me(),localId=u?.id||'local',messageId=localId+':'+Date.now().toString(36)+':'+Math.random().toString(36).slice(2);
+ const optimistic={userId:localId,name:u?.name||csProfile?.name||'Tú',handle:u?.handle||'local',text,createdAt:now(),optimistic:true,messageId,delivery:'sending'};
+ appendMessage(optimistic);if(!u){optimistic.delivery='failed';state.status='Mensaje pendiente: falta conexión social.';renderChat();return false}
+ const epoch=state.epoch;
+ for(let attempt=0;attempt<6;attempt++){
+  try{const data=await lobbyApi('lobby/chat',{method:'POST',body:{text,messageId,peerId:csV41Challenge?.selfId||'local'}});
+   if(!data.message)throw Error('Falta confirmación del servidor');
+   appendMessage({...data.message,delivery:'received'});return true;
+  }catch(err){
+   optimistic.failed=true;optimistic.delivery='pending';state.status='Mensaje pendiente. Reintentando conexión…';renderChat();renderHud();
+   if(err.status>=400&&err.status<500&&err.status!==429||attempt===5||state.epoch!==epoch||!state.active){optimistic.delivery='failed';state.status='Mensaje sin confirmar: '+(err.message||'sin conexión');renderChat();renderHud();return false}
+   await new Promise(resolve=>setTimeout(resolve,Math.min(4000,350*2**attempt)));
+  }
+ }
+}`;
+ s=edit(s,lobbySendOld,lobbySendNew,'retry-lobby-chat-with-stable-event-id');
+ s=edit(s,
+ "${e(m.text||'')}</span></div>`}",
+ "${e(m.text||'')}${m.optimistic?' · '+(m.delivery==='failed'?'Sin confirmar':m.delivery==='pending'?'Pendiente':'Enviando…'):m.messageId?' · Recibido':''}</span></div>`}",
+ 'delivery-feedback-in-existing-lobby-transcript');
+ // A reply can arrive before the compressed claim snapshot. Its authenticated
+ // envelope is valid, but the local patient still has no owner. Retain that
+ // text until the matching owner snapshot arrives instead of silently losing it.
+ s=edit(s,
+ "if(!challenge.active||challenge.ended||typeof m.text!=='string'||m.text.length>(npc?1000:180)||!person(m.peerId)||m.peerId===selfId||npc&&source?.ownerId!==m.peerId)return;",
+ "if(!challenge.active||challenge.ended||typeof m.text!=='string'||m.text.length>(npc?1000:180)||(!person(m.peerId)&&!(typeof csCoop!=='undefined'&&csCoop.remotes?.[m.peerId]))||m.peerId===selfId)return;if(npc&&source?.ownerId!==m.peerId){if(source&&!source.ownerId&&source.state==='waiting'&&typeof setTimeout==='function'){const pending=challenge._pendingChat487||(challenge._pendingChat487=new Map()),key=String(m.messageId||'');if(key&&pending.size<120&&!pending.has(key)){pending.set(key,Date.now());const roomId=challenge.id;const retry=()=>{if(challenge.id!==roomId||!challenge.active||challenge.ended){pending.delete(key);return}const p=challenge.patients.find(p=>p.uid===m.patientUid);if(p?.ownerId===m.peerId){pending.delete(key);receive(m);return}if(p?.ownerId||Date.now()-pending.get(key)>8000){pending.delete(key);addGlobalChat('system','Mensaje de NPC sin confirmar: cambió la asignación del paciente.');refreshChatDock();return}setTimeout(retry,100)};setTimeout(retry,100)}}return}",
+ 'retain-authenticated-npc-text-until-ownership-snapshot');
  if(reverse)for(const {from,to,label} of undo.reverse())s=replaceOnce(s,to,from,'reverse-'+label);
  return s;
 }
