@@ -79,6 +79,32 @@ assert(sim.interventions.has('metronidazole'),'second distinct treatment');
 time+=1700;context.tick();
 assert.equal(consulted,1,'source-control requests consult, not an imaginary operation');
 assert(!sim.interventions.has('source_control'));
+// Exercise the actual mentor text bridge: "no sé" must change treatment
+// phase, not become a patient question or loop back into the same prompt.
+const mentorA=source.indexOf(' const oldMentor=mentorUserMessage;',tickB);
+const mentorB=source.indexOf(' const oldExpert=updateExpert;',mentorA);
+assert(mentorA>tickB&&mentorB>mentorA);
+const remarks=[],studyUserActions=[];
+const resident={sim:{mentor:{enabled:true},nsVegaCalled:true,
+  nsVegaCare:{active:true,phase:'decision487'},chats:{expert:[]}},
+ window:{nsCoffeeRequested:()=>false,nsMayExamine:()=>true,
+  nsPatientState:()=>({color:'NARANJA'})},
+ mentorUserMessage:()=>{},mentorMessageIntent:()=>({type:'unknown'}),
+ learnerMessage:t=>studyUserActions.push(t),
+ say:t=>remarks.push(t),performance:{now:()=>18000},norm:t=>String(t).toLowerCase()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').trim()};
+vm.runInNewContext(source.slice(mentorA,mentorB),resident,{timeout:3000});
+resident.mentorUserMessage('no sé');
+assert.equal(resident.sim.nsVegaCare.phase,'reassessment','resident uncertainty starts stepwise care');
+assert(remarks.at(-1).includes('Empezaré por la primera medida'));
+resident.sim.nsVegaCare.phase='decision487';
+resident.mentorUserMessage('yo lo hago');
+assert.equal(resident.sim.nsVegaCare.phase,'learner','resident may retain clinical autonomy');
+assert.equal(resident.sim.nsVegaCare.participatory,true);
+resident.sim.nsVegaCare.phase='decision487';
+resident.mentorUserMessage('estoy confundido');
+assert.equal(resident.sim.nsVegaCare.phase,'decision487','ambiguous answer does not dose the patient');
+
 console.log('VEGA STEPWISE RUNTIME BOT PASS',JSON.stringify({
  exams:physical.length,quickStudies:studies,stepwiseDrugs:true,
  cultureDoesNotBlock:true,ctNotMandatoryInShock:true,surgicalConsultNotOperation:true}));
