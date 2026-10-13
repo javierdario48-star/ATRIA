@@ -9,6 +9,9 @@ export function applyNurseVoice487(html){
  const addressed=t=>/\\b(?:enfermera|enfermero|enfermeria)\\b/.test(norm(String(t||'')));
  function feedback(t){nurseSay(t);sim?.events?.push({m:sim.gameMinute,t:'Enfermería: '+t})}
  nurseNatural=function(text){
+  // A cooperative/competitive visitor has a read-only clinical mirror.
+  // Never administer on that copy: the multiplayer chat owner relays commands.
+  if(window.csV41Challenge?.active&&sim?.__csRemoteMirror487)return false;
   // "Both" can only refer to the last explicitly identified two-antibiotic
   // order on this very encounter. It never selects a regimen from diagnosis.
   const pair=sim?._csNurseAntibioticPair487;
@@ -166,6 +169,11 @@ export function applyNurseVoice487(html){
   return ok;
  };
  sendMessage=function(text){
+  // Shared visiting doctors must reach the multiplayer authority BEFORE
+  // this late nurse/chat intercept. Otherwise "enfermera ringer" mutates a
+  // private mirror and prints a misleading "received" acknowledgement.
+  if(window.csV41Challenge?.active&&sim?.__csRemoteMirror487)
+   return baseSend.apply(this,arguments);
   const raw=String(text||'').trim();
   const clean=norm(raw);
   // If the nurse is the current recipient, interpret actionable composite
