@@ -49,6 +49,13 @@ for(const device of ['desktop','android']){
  ctx.sendMessage('ceftriaxona');
  assert.equal(logs.filter(x=>x[0]==='nurse').length,count,'multiplayer must not bypass room clinical permission validation');
  assert.equal(logs.at(-1)[0],'native','team clinical send delegated to original multiplayer');
+ // The authoritative room owner, unlike a visitor/rival, can speak
+ // directly to the selected clinical NPC without proximity reclassification.
+ ctx.window.csV41Challenge={active:true,ended:false,selfId:'owner',
+  patients:[{uid:'P1',ownerId:'owner',state:'in_care'}]};
+ ctx.window.nsSelectChatTarget487('patient');
+ ctx.sendMessage('Contame qué pasó');
+ assert.equal(logs.filter(x=>x[0]==='patient').length,2,'room owner addresses patient directly');
  ctx.window.csV41Challenge.active=false;
  ctx.window.nsSelectChatTarget487(null);
  ctx.sendMessage('Hola');
@@ -56,6 +63,5 @@ for(const device of ['desktop','android']){
  ctx.window.nsSelectChatTarget487('patient');
  patient.patientInstance.uid='P2';patient.__atriaRecipient487=null;
  ctx.refreshChatDock();
- assert.equal(span.textContent,'Para: Paciente'===span.textContent?'Para: Paciente':span.textContent);
  console.log('RECIPIENT SELECTION BOT',device,'PASS',JSON.stringify({vega:2,patient:1,nurse:1,publicTranscript:true,roomAuthorityPreserved:true}));
 }
