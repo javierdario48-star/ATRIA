@@ -19,7 +19,7 @@ const sent=[],nurse=[],tasks=[],operations=[],consults=[],renders=[];
 const window={nsMayExamine:()=>true,csQueueMonitor:()=>{tasks.push('monitor');return true},
  csQueueIV:n=>{tasks.push('iv:'+n);return true},
  csSurgery487Request:()=>{consults.push('cirugia');nurse.push('Cirugía: solicitud en curso');return true}};
-const ctx={window,sim,C,MONITOR_THERAPY_CATALOG:[
+const ctx={window,sim,C,nurse:{task:{kind:'iv_access',_targetSim:sim,count:1},queue:[]},MONITOR_THERAPY_CATALOG:[
  {id:'oxygen',label:'Oxígeno suplementario',aliases:['oxigeno','o2']},
  {id:'fluid',label:'Ringer',aliases:['ringer','suero']}],
  norm:s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').trim(),
