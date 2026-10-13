@@ -29,8 +29,10 @@ for(const action of [{kind:'exam',id:'inventado'},{kind:'speech',text:''},{kind:
 ctx.challenge.mode='competitive';
 for(const action of [{kind:'therapy',text:'ceftriaxona 1 g'},{kind:'study',id:'blood'},{kind:'intervention',id:'iv'}])
  assert.equal(ctx.assistActionAllowed(patient,action),false,'competitive owner-only '+action.kind);
-for(const action of [{kind:'speech',text:'¿Qué le duele?'},{kind:'exam',id:'general'},{kind:'monitor'},{kind:'vitals'},{kind:'iv'}])
+for(const action of [{kind:'speech',text:'¿Qué le duele?'},{kind:'exam',id:'general'}])
  assert.equal(ctx.assistActionAllowed(patient,action),true,'competitive rival can safely observe/assess '+action.kind);
+for(const action of [{kind:'monitor'},{kind:'vitals'},{kind:'iv'}])
+ assert.equal(ctx.assistActionAllowed(patient,action),false,'competitive rival cannot change nurse task or patient state via '+action.kind);
 
 // First valid bedside interaction wins, regardless of host/guest identity.
 // The original host authority processes simultaneous claims in arrival order.
