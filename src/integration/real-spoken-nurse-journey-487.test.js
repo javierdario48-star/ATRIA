@@ -244,7 +244,8 @@ function finishScreenshotTasks(){
  assert.equal(p.csPhase4Pending487.length,11,
   'all other eleven IV drugs must remain queued, never silently truncated');
  ctx.sendMessage('Enfermera vías');
- assert.equal(nurse.task?.count,2);
+ assert.equal((nurse.task?.kind==='iv_access'?Number(nurse.task.count||1):0)+nurse.queue.filter(x=>x.kind==='iv_access').reduce((n,x)=>n+Number(x.count||1),0),2,
+  'automatic first line plus explicit plural request must schedule exactly two venous accesses');
  finishScreenshotTasks();
  assert.equal(p.venousAccessCount,2);
  assert.equal(p.csPhase4Pending487.length,0);
