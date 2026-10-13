@@ -11,7 +11,7 @@ export function applyChatRecipient487(html,{reverse=false}={}){
  s=s.split(expertLocator).join("es=(sim?.mentor?.enabled||sim?.nsVegaCalled)?npcScreen('expert'):null");
  s=once(s,
  "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){mentorFocus();return}",
- "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){window.nsSelectChatTarget487?.('expert');mentorFocus();return}",
+ "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){window.nsSelectChatTarget487?.('expert');return}",
  'tap-vega');
  s=once(s,
  "if(tapNear(e.clientX,e.clientY,ps[0],ps[1],42)){if(near==='patient')",
@@ -25,6 +25,8 @@ export function applyChatRecipient487(html,{reverse=false}={}){
  "document.getElementById('chatTargetBtn').onclick=()=>{pendingAddress=null;document.getElementById('mentorBtn')?.classList.remove('active');refreshChatDock();document.getElementById('dieInput')?.focus()}",
  "document.getElementById('chatTargetBtn').onclick=()=>{window.nsSelectChatTarget487?.(null);document.getElementById('dieInput')?.focus()}",
  'explicit-clear-recipient');
+ s=once(s, "const inp=document.getElementById('dieInput');if(inp&&document.activeElement===inp){inp.blur();document.body.classList.remove('keyboardOpen');syncDiegeticViewport()}", "const inp=document.getElementById('dieInput');const npcTap487=typeof pointerHitsNpc==='function'&&pointerHitsNpc(e);if(inp&&document.activeElement===inp&&!npcTap487){inp.blur();document.body.classList.remove('keyboardOpen');syncDiegeticViewport()}",'npc-tap-retains-focused-editor');
+ s=once(s, "if(tapNear(e.clientX,e.clientY,p[0],p[1],34)){wn.bubble='Estoy asignada a este box.'", "if(tapNear(e.clientX,e.clientY,p[0],p[1],34)){window.nsSelectChatTarget487?.('nurse');wn.bubble='Estoy asignada a este box.'",'ward-nurse-tap');
  }
  const script=String.raw`<style id="atria-recipient-selector-style-487">
  #chatDock .chatTarget.csExplicitTarget487{border:1px solid rgba(116,225,208,.67)!important;background:linear-gradient(110deg,rgba(15,75,76,.95),rgba(24,59,74,.91))!important;box-shadow:0 0 0 1px rgba(118,211,199,.08) inset}
@@ -106,6 +108,8 @@ export function applyChatRecipient487(html,{reverse=false}={}){
   // replacement in strict reverse order. The immutable baseline still hashes
   // to its original bytes; no digest or fixture is rewritten.
   s=once(s,script+'</body>','</body>','reverse-recipient-module');
+  s=once(s,"if(tapNear(e.clientX,e.clientY,p[0],p[1],34)){window.nsSelectChatTarget487?.('nurse');wn.bubble='Estoy asignada a este box.'","if(tapNear(e.clientX,e.clientY,p[0],p[1],34)){wn.bubble='Estoy asignada a este box.'",'reverse-ward-nurse-tap');
+  s=once(s,"const inp=document.getElementById('dieInput');const npcTap487=typeof pointerHitsNpc==='function'&&pointerHitsNpc(e);if(inp&&document.activeElement===inp&&!npcTap487){inp.blur();document.body.classList.remove('keyboardOpen');syncDiegeticViewport()}","const inp=document.getElementById('dieInput');if(inp&&document.activeElement===inp){inp.blur();document.body.classList.remove('keyboardOpen');syncDiegeticViewport()}",'reverse-tap-editor-focus');
   s=once(s,
    "document.getElementById('chatTargetBtn').onclick=()=>{window.nsSelectChatTarget487?.(null);document.getElementById('dieInput')?.focus()}",
    "document.getElementById('chatTargetBtn').onclick=()=>{pendingAddress=null;document.getElementById('mentorBtn')?.classList.remove('active');refreshChatDock();document.getElementById('dieInput')?.focus()}",
@@ -119,7 +123,7 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    "if(tapNear(e.clientX,e.clientY,ps[0],ps[1],42)){if(near==='patient')",
    'reverse-recipient-patient');
   s=once(s,
-   "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){window.nsSelectChatTarget487?.('expert');mentorFocus();return}",
+   "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){window.nsSelectChatTarget487?.('expert');return}",
    "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){mentorFocus();return}",
    'reverse-recipient-vega');
   const locator="es=(sim?.mentor?.enabled||sim?.nsVegaCalled)?npcScreen('expert'):null";
