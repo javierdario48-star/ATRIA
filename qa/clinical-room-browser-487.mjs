@@ -110,7 +110,8 @@ try{
    assert(competitors.some(c=>views[h.clients.indexOf(c)].id===winner),'only a racing doctor can acquire ownership');
    await h.clients[winnerIndex].page.waitForFunction(uid=>sim?.patientInstance?.uid===uid&&!sim.__csRoomSpectator,uid,{timeout:20000});
    const initial=(await h.snapshot())[winnerIndex].administrations.length;
-   const denied=h.clients[views.findIndex(v=>v.id!==winner)];
+   const denied=competitors.find(c=>views[h.clients.indexOf(c)].id!==winner);
+   assert(denied,'the simultaneous loser remains a legitimate read-only rival');
    await denied.page.evaluate(()=>csV41TakePatient(0)); // read-only observer
    await h.send(h.clients.indexOf(denied),'Enfermera ceftriaxona');
    // Also inject an unauthorized clinical command through the REAL room API.
