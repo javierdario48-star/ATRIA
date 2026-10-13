@@ -114,5 +114,34 @@ assert.equal(outgoing.at(-1).action.recipient,'expert');
 assert.equal(outgoing.at(-1).peerId,'P0');assert.equal(outgoing.at(-1).uid,'A');
 c.window.csBroadcastAddressedChat487('nurse','Enfermera, Ringer');
 assert.equal(outgoing.at(-1).recipient,'nurse');assert.equal(outgoing.at(-1).peerId,'P0');
+// The actual compiled send/receive functions: disconnected-room messages wait,
+// distinct peers acknowledge independently, and wrong-room ACKs are ignored.
+const reliable=section('const nsReliableChat487=new Map();','function roomPayload(full)');
+for(const count of [2,3,4]){
+ const members=Array.from({length:count},(_,i)=>({id:'P'+i,name:'Medic '+i,online:true}));
+ const sent=[],scheduled=[],notice=[],messageId='P0:RELIABLE-'+count;
+ const host={challenge:{active:true,ended:false,id:'ROOM',players:members},selfId:'P0',
+  csCoop:{dc:{readyState:'connecting',send:packet=>sent.push(JSON.parse(packet))}},
+  pendingCareers:new Map(),name:()=> 'Medic 0',person:id=>members.find(p=>p.id===id),
+  addGlobalChat:(role,text)=>notice.push([role,text]),refreshChatDock:()=>{},
+  setTimeout:fn=>{scheduled.push(fn);return scheduled.length;},host:()=>false};
+ vm.createContext(host);vm.runInContext(reliable+'\n'+receive,host);
+ assert.equal(host.send('team_chat',{text:'Hola al equipo',messageId}),true);
+ assert.equal(sent.length,0,'not-ready data channel cannot silently drop, nor pretend to transmit');
+ assert.equal(vm.runInContext('nsReliableChat487.size',host),1);
+ host.csCoop.dc.readyState='open';scheduled.shift()();
+ assert.equal(sent.filter(x=>x.kind==='team_chat').length,1);
+ const ack={type:'cs_room_v411',kind:'team_chat_ack',id:'ROOM',
+  messageId,targetId:'P0'};
+ host.receive({...ack,id:'OTHER',peerId:'P1'});
+ assert.equal(vm.runInContext('nsReliableChat487.size',host),1,'foreign-room ACK must not complete receipt');
+ for(let i=1;i<count;i++){
+  host.receive({...ack,peerId:'P'+i});
+  assert.equal(vm.runInContext('nsReliableChat487.size',host),i<count-1?1:0,
+   'delivery requires all current independent peers');
+ }
+ host.receive({...ack,peerId:'P1'});
+ assert.equal(notice.filter(x=>/mensaje recibido/i.test(x[1])).length,1,'exactly one receipt');
+}
 console.log('NPC ROOM PROTOCOL PASS',JSON.stringify({sessions,players:[2,3,4],realNativeAdministration:true,
  replaySafe:true,metadata:true,physicalDevices:false,realNetwork:false}));
