@@ -83,7 +83,7 @@ assert(!sim.interventions.has('source_control'));
 // phase, not become a patient question or loop back into the same prompt.
 const mentorA=source.indexOf(' const oldMentor=mentorUserMessage;',tickB);
 const mentorB=source.indexOf(' const oldExpert=updateExpert;',mentorA);
-assert(mentorA>tickB&&mentorB>mentorA);
+assert(mentorA===tickB&&mentorB>mentorA,'actual shared mentor listener region');
 const remarks=[],studyUserActions=[];
 const resident={sim:{mentor:{enabled:true},nsVegaCalled:true,
   nsVegaCare:{active:true,phase:'decision487'},chats:{expert:[]}},
