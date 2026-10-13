@@ -107,10 +107,10 @@ try{
    assert.equal(new Set(owners).size,1,'exactly one winner across all independent browsers');
    const winner=owners[0],winnerIndex=views.findIndex(v=>v.id===winner);
    assert(winnerIndex>=0,'winner is an authenticated member');
-   assert(competitors.some(c=>c.user.id===winner),'only a racing doctor can acquire ownership');
+   assert(competitors.some(c=>views[h.clients.indexOf(c)].id===winner),'only a racing doctor can acquire ownership');
    await h.clients[winnerIndex].page.waitForFunction(uid=>sim?.patientInstance?.uid===uid&&!sim.__csRoomSpectator,uid,{timeout:20000});
    const initial=(await h.snapshot())[winnerIndex].administrations.length;
-   const denied=h.clients.find(c=>c.user.id!==winner);
+   const denied=h.clients[views.findIndex(v=>v.id!==winner)];
    await denied.page.evaluate(()=>csV41TakePatient(0)); // read-only observer
    await h.send(h.clients.indexOf(denied),'Enfermera ceftriaxona');
    // Also inject an unauthorized clinical command through the REAL room API.
@@ -124,7 +124,7 @@ try{
    assert(after.every(v=>v.patients[0].ownerId===winner),'rival packets cannot steal the patient');
    assert.equal(after[winnerIndex].administrations.length,initial,'rival text/packet cannot administer a drug');
    console.log('COMPETITIVE_ATOMIC_BROWSER',JSON.stringify({
-    players:h.clients.length,challengers:competitors.map(c=>c.user.id),winner,
+    players:h.clients.length,challengers:competitors.map(c=>views[h.clients.indexOf(c)].id),winner,
     allViewsAgree:true,unauthorizedDoses:0,realHTTP:true}));
   });
  }
