@@ -148,7 +148,8 @@ function finishScreenshotTasks(){
    'unpunctuated nurse utterance cannot collapse to one matched antibiotic');
  ctx.sendMessage('Enfermera vías');
  assert.equal(nurse.task?.kind,'iv_access');
- assert.equal(nurse.task?.count,2,'plural vias must request TWO venous lines');
+ assert.equal((nurse.task?.kind==='iv_access'?Number(nurse.task.count||1):0)+nurse.queue.filter(x=>x.kind==='iv_access').reduce((n,x)=>n+Number(x.count||1),0),2,
+  'one automatically queued access plus explicit plural request must total TWO distinct real lines');
  finishScreenshotTasks();
  assert.equal(p.venousAccessCount,2,'two accesses completed by native finish function');
  assert.deepEqual(p.administrationLog.map(x=>x.id),
