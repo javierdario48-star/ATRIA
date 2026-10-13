@@ -7,7 +7,7 @@ for(const [label,fragment] of [
  ['patient map tapping',"window.nsSelectChatTarget487?.('patient')"],
  ['nursing map tapping',"window.nsSelectChatTarget487?.('nurse')"],
  ['Vega map tapping',"window.nsSelectChatTarget487?.('expert')"],
- ['shared room delegation',"if(window.csV41Challenge?.active)"],
+ ['shared room delegation',"const room=window.csV41Challenge;"],
  ['selected receiver label',"'Para: '+names[role]"],
  ['reset to nearby',"window.nsSelectChatTarget487?.(null)"]
 ])assert(html.includes(fragment),'missing explicit-target UI '+label);
