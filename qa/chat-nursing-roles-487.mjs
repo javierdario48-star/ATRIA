@@ -63,6 +63,42 @@ for(const mode of ['coop','competitive'])for(const platform of ['desktop','andro
  if(mode==='competitive')assert.equal(record.filter(x=>x[0]==='nurse').length,0);
  ack++;
 }
+// User-reported PC/phone pairing: a doctor's native interview must not
+// depend on whether the teammate remains online or has left the guard.
+const chatSource=pick("sendMessage=function(q){\n  if(shared()){const remote=foreignClinical487()"," // Guard both direct APIs");
+for(const mode of ['coop','competitive']){
+ const patient={index:0,uid:'patient-v',ownerId:'pc',state:'in_care',caseId:'CIRR-001'};
+ const track=[],members=[{id:'pc'},{id:'phone'}];
+ const ctx={challenge:{mode,active:true,ended:false,players:members,patients:[patient],assistIndex:null},
+  selfId:'pc',canAct:()=>true,currentPatient:()=>patient,shared:()=>true,
+  foreignClinical487:()=>null,foreignRivalInput487:()=>null,roomCommand:()=>false,
+  window:{nsIsClinicalQuestion:t=>/^(?:que|como|donde)\b/i.test(String(t))},
+  deliverPatientSpeech:t=>{track.push(['patient',t]);return true},
+  addGlobalChat:()=>{},oldSend:t=>track.push(['native',t]),
+  requestAssist:()=>{throw Error('owner cannot be treated as a helper')},
+  performance:{now:()=>0},player:{},refreshChatDock:()=>{},send:()=>{},near:()=>true,
+  oldCommand:()=>true,requirePatient:()=>true};
+ vm.createContext(ctx);new vm.Script(chatSource).runInContext(ctx);
+ ctx.sendMessage('que le paso');
+ assert.deepEqual(track.at(-1),['patient','que le paso'],
+  'desktop owner interview works while phone peer remains connected');
+ members.pop();
+ ctx.sendMessage('que le paso');
+ assert.equal(track.filter(x=>x[0]==='patient').length,2,
+  'a phone player departing cannot unblock or block the owner patient reply');
+ ctx.selfId='phone';ctx.canAct=()=>false;ctx.foreignClinical487=()=>patient;
+ ctx.requestAssist=(_index,a)=>{track.push(['guest-relay',a]);return true};
+ if(mode==='competitive'){
+  ctx.challenge.assistIndex=0;
+  ctx.foreignRivalInput487=t=>{track.push(['rival-bedside',t]);return true};
+ }
+ ctx.sendMessage('que le paso');
+ assert.equal(track.at(-1)[0],mode==='coop'?'guest-relay':'rival-bedside',
+  'guest patient question selects the clinical relay for its own mode');
+ if(mode==='coop')assert.equal(track.at(-1)[1].kind,'command');
+}
+// Social lobby text / invitation API is already covered by
+// src/social/qa-social-server.test.js, and start ACK by party-start.test.js.
 // All medicinal therapies in the original native catalog (procedures and
 // deprescribing excluded). Each of the 13 ED cases is requested through the
 // actual integrated native chat, then checked against administrationLog.
