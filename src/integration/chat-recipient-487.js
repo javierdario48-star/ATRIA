@@ -87,6 +87,6 @@ export function applyChatRecipient487(html){
    refreshChatDock();return true;
   };
  })();
- </script>\`;
+ </script>`;
  return once(s,'</body>',script+'</body>','recipient-after-existing-nursing-and-multiplayer');
 }
