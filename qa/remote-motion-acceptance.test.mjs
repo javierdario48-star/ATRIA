@@ -14,3 +14,9 @@ assert.throws(()=>assertMotionPair(metrics(original,partial,'A'),{cadence:100}),
 const rebase=structuredClone(partial);rebase.frames=rebase.frames.slice(0,100);rebase.frames[90].actors[0]={name:'A',remote:true,x:400,y:100,dir:'E',moving:false,phase:0,resetReason:'network-resume'};for(let i=91;i<100;i++)rebase.frames[i].actors[0]=structuredClone(rebase.frames[90].actors[0]);
 const relocation=metrics(original,rebase,'A');assert(relocation.rebases.length>0);assert.equal(relocation.orientationErrors,0,'nonwalking authoritative relocation is reported separately');
 console.log('remote acceptance rejects missing companions and distinguishes recovery from walking');
+const endpointSource={frames:[],packets:[]},stuck={frames:[],packets:[]};
+for(let i=0;i<900;i++){const x=Math.min(i,300)*205/60,rx=Math.min(x,300*205/60-22),now=i*1000/60,t=10000+now;endpointSource.frames.push({now,t,player:{x,y:0,dir:'E',moving:i<300,phase:x/18}});stuck.frames.push({now,t,actors:[{name:'A',remote:true,x:rx,y:0,dir:'E',moving:i<295,phase:rx/18}]})}
+const terminal={name:'A',motionSession:'CURRENT',motionAt:6000,x:300*205/60,y:0,moving:false};endpointSource.packets.push({kind:'send',t:16000,data:terminal});stuck.packets.push({kind:'receive',t:16100,data:terminal});
+const missedEndpoint=metrics(endpointSource,stuck,'A');assert.equal(missedEndpoint.settledStoppedPose.errorPx,22);
+assert.throws(()=>assertMotionPair(missedEndpoint,{cadence:100,impaired:true}),/actual receipt and settling/);
+console.log('remote acceptance rejects the stopped corner even after earlier packet impairment');

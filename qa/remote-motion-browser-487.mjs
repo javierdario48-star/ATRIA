@@ -30,6 +30,7 @@ const core=createQaSocialServer(storage);
 const base=await fs.readFile('vendor/atria-4.8.6/index.html','utf8');
 const html=process.env.MOTION_SOURCE_HTML?await fs.readFile(process.env.MOTION_SOURCE_HTML,'utf8'):apply487(base);
 const requests=[];
+let transaction=Promise.resolve();
 const server=createServer(async(req,res)=>{
  try{
   const u=new URL(req.url,'http://localhost');
@@ -37,7 +38,9 @@ const server=createServer(async(req,res)=>{
   if(u.pathname.startsWith('/api/')){
    let raw='';for await(const chunk of req)raw+=chunk;
    const args={method:req.method,path:u.pathname,query:Object.fromEntries(u.searchParams),headers:req.headers,body:raw?JSON.parse(raw):{}};
-   const t=Date.now(),r=await(u.pathname==='/api/lobby-sync'?core.signalRoute(args):core.route(args));
+   // The filesystem test KV has no transactions. Serialize complete handler
+   // transactions so concurrent read/modify/write message lists cannot lose ACKs.
+   const t=Date.now(),operation=transaction.then(()=>u.pathname==='/api/lobby-sync'?core.signalRoute(args):core.route(args));transaction=operation.catch(()=>{});const r=await operation;
    requests.push({t,path:u.pathname,method:req.method,status:r.status,seq:args.body.seq||args.body.presence?.seq,stale:r.body?.stale||false});
    res.writeHead(r.status,{'Content-Type':'application/json'});res.end(JSON.stringify(r.body));return;
   }
@@ -77,7 +80,7 @@ function initProbe({name,fps}){
   const r=await fetch(...args);
   if(/api\/lobby(?:\?|$)|rooms\/.*\/messages|lobby-sync/.test(u)){try{const d=await r.clone().json();
    for(const p of d.players||[])log('receive','http',{t:'p',p});
-   for(const m of d.messages||[])if(m.data?.type==='state')log('receive','http',m.data);
+   for(const m of d.messages||[])if(m.data?.type==='state'||/^atria_party_/.test(m.data?.type||''))log('receive','http',m.data);
   }catch{}}
   return r;
  };
@@ -129,6 +132,9 @@ async function capture(scene,{simultaneous=false,short=false,impaired=false,http
  else if(short){await Promise.all(clients.map(c=>move(c.page,0,-5)));await pause(1600);await Promise.all(clients.map(c=>move(c.page,5,0)));await pause(1200);await Promise.all(clients.map(c=>c.page.evaluate(()=>{const [x,y]=worldToScreen(player.x,player.y);setPlayerTarget(x,y)})));await pause(1200)}
  else if(simultaneous)await Promise.all(clients.map(c=>route(c.page)));
  else for(let i=0;i<clients.length;i++)await route(clients[i].page,tag=>shot(tag,i));
+ // Observe one unchanged lobby idle heartbeat after impaired terminal packets.
+ // This extends test recording, not the renderer's following delay.
+ if(impaired&&scene.startsWith('lobby'))await pause(1800);
  const traces=await Promise.all(clients.map(c=>c.page.evaluate(()=>{motionTrace.record=false;return {...motionTrace,motionDebug:window.csRemoteMotionDiagnostics487?.events||[],renderer:csDrawRemote.toString(),wire:csWireDataChannel.toString()}})));
  const pairs={};for(let i=0;i<clients.length;i++)for(let j=0;j<clients.length;j++)if(i!==j)pairs[i+'->'+j]=metrics(traces[i],traces[j],clients[i].name);
  const m={scene,label,clients:clients.length,simultaneous,impaired,pairs,AB:pairs['0->1'],BA:pairs['1->0']};
@@ -155,15 +161,17 @@ async function startGuard(mode){
  await clients[0].page.waitForFunction(()=>nsSocial.room()?.id);
  const room=await clients[0].page.evaluate(()=>nsSocial.room());
  for(const c of clients.slice(1))await c.page.evaluate(id=>nsSocial.joinRoom(id),room.id);
- try{await Promise.all(clients.map(c=>c.page.waitForFunction(()=>csV41Challenge.active)))}catch(e){
+ try{await Promise.all(clients.map(c=>c.page.waitForFunction(()=>csV41Challenge.active,{},{timeout:35000})))}catch(e){
   await fs.writeFile(output+'/guard-start-failure.json',JSON.stringify(await Promise.all(clients.map(c=>c.page.evaluate(()=>motionTrace)))));
-  console.log('GUARD_START_DIAGNOSTICS',JSON.stringify(await Promise.all(clients.map(c=>c.page.evaluate(()=>({room:nsSocial.room(),challenge:{id:csV41Challenge.id,active:csV41Challenge.active,self:csV41Challenge.selfId,mode:csV41Challenge.mode},channel:csCoop.dc?.readyState,localCase:C?.id,lobby:nsLobby.active}))))));throw e;
+  console.log('GUARD_START_DIAGNOSTICS',JSON.stringify(await Promise.all(clients.map(c=>c.page.evaluate(()=>({room:nsSocial.room(),challenge:{id:csV41Challenge.id,active:csV41Challenge.active,self:csV41Challenge.selfId,mode:csV41Challenge.mode},channel:csCoop.dc?.readyState,localCase:C?.id,lobby:nsLobby.active,status:nsLobby.status,plan:nsLobby.groupPlan,acks:nsLobby.partyHandshake?.acks?.size,expected:nsLobby.partyHandshake?.expected?.size}))))));throw e;
  }
  assert.equal(new Set(await Promise.all(clients.map(c=>c.page.evaluate(()=>csV41Challenge.id)))).size,1,'all independent clients share one real guard');
  return room;
 }
 async function returnLobby(){
- for(const c of clients)await c.page.evaluate(async()=>{await nsSocial.leave();csReturnToCases()});
+ // The original selector retains C/sim; use the normal page reload after
+ // authorized room leave, retaining each client's own session/storage.
+ for(const c of clients){await c.page.evaluate(()=>nsSocial.leave());await c.page.reload();await c.page.locator('#nsEnter').click();await c.page.waitForFunction(()=>nsLobby.active&&nsSocial.state().user);await installRenderProbe(c.page);await c.page.evaluate(()=>{csRemoteMotionDiagnostics487.enabled=true})}
  await Promise.all(clients.map(c=>c.page.waitForFunction(()=>nsLobby.active&&!csV41Challenge.active)));
  await pause(1000);
 }

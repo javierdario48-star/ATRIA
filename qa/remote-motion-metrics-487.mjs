@@ -4,7 +4,7 @@ export function metrics(local,remote,name){
  let movingWithoutSteps=0,stepsWithoutMovement=0,movingFlagsWithoutDisplacement=0,orientation=0,total=0,maxJump=0,phaseDistanceErrorPx=0;
  const speeds=[],rawSpeeds=[],sourceSpeeds=[],fps=[],rebases=[],cadences=[],transports=new Set();let prev=null,remoteTravelPx=0;
  for(const f of frames){if(f.actor.cadence)cadences.push(f.actor.cadence);if(f.actor.transport)transports.add(f.actor.transport)}
- for(const f of frames){if(prev){const a=f.actor,b=prev.actor,dt=(f.now-prev.now)/1000,d=Math.hypot(a.x-b.x,a.y-b.y);remoteTravelPx+=d;if(dt>0&&dt<.1){
+ for(const f of frames){if(prev){const a=f.actor,b=prev.actor,dt=(f.now-prev.now)/1000,d=Math.hypot(a.x-b.x,a.y-b.y);remoteTravelPx+=d;if(dt>0){
   fps.push(1/dt);maxJump=Math.max(maxJump,d);if(d>.05&&!a.moving){if(['network-resume','render-resume','position-discontinuity'].includes(a.resetReason))rebases.push({t:f.t,distancePx:d,reason:a.resetReason});else movingWithoutSteps++}
   // A tiny position/phase advance is not a footstep without displacement.
   // Compare both in pixels at the same precision, retaining raw flag counts.
@@ -21,14 +21,14 @@ export function metrics(local,remote,name){
   let prior=null;for(const f of frames){const t=f.t-lag,{f:source,i}=at(t),before=lf[i-2],after=lf[i+2];
    if(prior&&before&&after&&source.player.moving&&before.player.dir===source.player.dir&&after.player.dir===source.player.dir){
     const dt=(f.now-prior.now)/1000,sourceSpeed=Math.hypot(after.player.x-before.player.x,after.player.y-before.player.y)/((after.now-before.now)/1000);
-    if(dt>0&&dt<.1&&sourceSpeed>100&&sourceSpeed<230){const v=Math.hypot(f.actor.x-prior.actor.x,f.actor.y-prior.actor.y)/dt;rawSpeeds.push(v);
+    if(dt>0&&sourceSpeed>100&&sourceSpeed<230){const v=Math.hypot(f.actor.x-prior.actor.x,f.actor.y-prior.actor.y)/dt;rawSpeeds.push(v);
      // A tagged outage relocation is reported as a jump, not a walking burst.
      if(!(f.actor.resetReason&&!f.actor.moving)){speeds.push(v);sourceSpeeds.push(sourceSpeed)}
     }
    }prior=f;
   }
  }
- const intervals=[];let p=null;for(const e of remote.packets){const d=e.data?.p||e.data;if(e.kind==='receive'&&d.name===name&&d.x!=null){if(p?.transport===e.transport)intervals.push(e.t-p.t);p=e}}
+ const intervals=[];let p=null;for(const e of remote.packets){const d=e.data?.p||e.data;if(e.kind==='receive'&&d.name===name&&d.x!=null){if(p&&p.transport===e.transport)intervals.push(e.t-p.t);p=e}}
  const stop=[];
  for(let i=1;i<lf.length-12;i++)if(lf[i-1].player.moving&&!lf[i].player.moving&&lf.slice(i,i+12).every(f=>!f.player.moving)){
   // Animation rest and endpoint tracking are separate measurements. Waiting
@@ -38,5 +38,10 @@ export function metrics(local,remote,name){
  }
  const localTravelPx=lf.slice(1).reduce((s,f,i)=>s+Math.hypot(f.player.x-lf[i].player.x,f.player.y-lf[i].player.y),0);
  const endpointErrorPx=frames.length&&lf.length?Math.hypot(frames.at(-1).actor.x-lf.at(-1).player.x,frames.at(-1).actor.y-lf.at(-1).player.y):null;
- return {frames:frames.length,observerFrames:remote.frames.length,localFrames:lf.length,localTravelPx,remoteTravelPx,transports:[...transports],cadence:stats(cadences),fps:stats(fps),speed:stats(speeds),rawSpeed:stats(rawSpeeds),sourceSpeed:stats(sourceSpeeds),orientationErrors:orientation,orientationFrames:total,movingWithoutSteps,stepsWithoutMovement,movingFlagsWithoutDisplacement,phaseDistanceErrorPx,maxJump,rebases,stopAnimationMs:stats(stop),followLagMs:lag,alignedErrorPx:Number.isFinite(error)?error:null,endpointErrorPx,packetIntervals:stats(intervals.filter(v=>v>0))};
+ const pose=e=>e.data?.p||e.data?.presence||e.data?.message||e.data,session=local.packets.findLast(e=>e.kind==='send'&&pose(e)?.motionSession),generation=session&&pose(session).motionSession;
+ const lastMoving=lf.findLast(f=>f.player.moving),end=frames.at(-1),endTime=end?end.t+((end.drawTime??end.now)-end.now):0,settling=(cadences.length?Math.max(...cadences):0)*1.5+2000/Math.max(1,stats(fps).mean);
+ const received=remote.packets.find(e=>{const d=pose(e);return e.kind==='receive'&&d.name===name&&d.motionSession===generation&&d.moving===false&&Number.isFinite(d.motionAt)&&(!lastMoving||d.motionAt>=lastMoving.now-100)&&endTime-e.t>=settling&&lf.length&&Math.hypot(d.x-lf.at(-1).player.x,d.y-lf.at(-1).player.y)<=2});
+ const settledStoppedPose=received&&end?{receivedAt:received.t,settlingMs:endTime-received.t,errorPx:Math.hypot(end.actor.x-pose(received).x,end.actor.y-pose(received).y)}:null;
+ const duplicateFrames=remote.frames.filter(f=>f.actors.filter(a=>a.remote&&a.name===name).length>1).length;
+ return {frames:frames.length,observerFrames:remote.frames.length,localFrames:lf.length,localTravelPx,remoteTravelPx,transports:[...transports],cadence:stats(cadences),fps:stats(fps),speed:stats(speeds),rawSpeed:stats(rawSpeeds),sourceSpeed:stats(sourceSpeeds),orientationErrors:orientation,orientationFrames:total,movingWithoutSteps,stepsWithoutMovement,movingFlagsWithoutDisplacement,phaseDistanceErrorPx,maxJump,rebases,duplicateFrames,stopAnimationMs:stats(stop),followLagMs:lag,alignedErrorPx:Number.isFinite(error)?error:null,endpointErrorPx,settledStoppedPose,packetIntervals:stats(intervals.filter(v=>v>0))};
 }

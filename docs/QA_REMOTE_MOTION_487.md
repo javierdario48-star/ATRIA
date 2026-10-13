@@ -178,3 +178,24 @@ is a measured jump, not a burst of footsteps. Stop-animation time measures
 visual rest; final endpoint error separately prevents a stationary wrong pose
 from passing. This avoids mistaking a later revisit to an old source stop point
 for the time the animation first stopped.
+
+Acceptance uses actual receipt of the CURRENT stopped source generation and
+allows its measured buffer to settle, then requires <=2 pixels endpoint error
+even after earlier impairment. It therefore rejects the recorded 21.99-pixel
+corner freeze. All positive frame intervals, including long frames, enter FPS
+and velocity statistics; they are not discarded above 100ms. Two-client videos
+remain enabled; group runs use paired screenshot sequences to avoid encoding
+four videos competing with the tested 20/30-FPS clients on a small CI runner.
+
+Harness/storage limitation: production HTTP handlers run unchanged on a test
+filesystem KV. Whole handler transactions are serialized because that adapter
+has no atomic read/modify/write, preventing the fixture from losing party ACKs.
+This does not verify concurrent transactions in the deployed cloud KV.
+The original case selector retains C/sim; lobby-return tests use actual room
+leave followed by an ordinary page reload with the same isolated storage.
+Native back-button cleanup is outside this motion change and remains unverified.
+
+The terminal-receipt gate has its own regression: a peer which travels normally
+but remains 22 pixels short AFTER receipt of the current stopped snapshot must
+fail even if the earlier interval had packet impairment. The test fails at that
+specific acceptance boundary, independently of mean tracking error or CV.

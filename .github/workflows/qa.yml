@@ -48,7 +48,7 @@ jobs:
           MOTION_LABEL: final-${{ matrix.players }}
           MOTION_PLAYERS: ${{ matrix.players }}
           MOTION_EXTENDED: '1'
-          MOTION_VIDEO: '1'
+          MOTION_VIDEO: ${{ matrix.players == 2 && '1' || '0' }}
         run: node qa/remote-motion-browser-487.mjs
       - name: Measured improvement over the exact reference on the same runner
         if: matrix.players == 2
