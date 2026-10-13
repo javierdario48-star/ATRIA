@@ -44,6 +44,25 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    return {role:/vega|doctor/.test(word)?'expert':/enfermer/.test(word)?'nurse':'patient',length:m[0].length};
   }
   function compose(){return document.getElementById('dieInput')}
+  let composingInput=null,deferredMention=null;
+  document.addEventListener?.('compositionstart',event=>{
+   if(event.target===compose())composingInput=event.target;
+  },true);
+  document.addEventListener?.('compositionend',event=>{
+   if(event.target!==composingInput)return;
+   composingInput=null;
+   const request=deferredMention;deferredMention=null;
+   // Let the IME commit its final input before editing the prefix.
+   if(request)queueMicrotask(()=>{
+    if(request.input===compose()&&request.patient===sim)
+     window.nsSelectChatTarget487(request.role);
+   });
+  },true);
+  window.nsChatRecipient487=function(text){
+   const raw=String(text||'').trim(),mention=mentionOf(raw);
+   return {role:mention?.role||'patient',explicit:!!mention,
+    text:mention?raw.slice(mention.length).trim():raw};
+  };
   function decorate(){
    const dock=document.getElementById('chatDock');
    if(!dock||dock.classList.contains('nsLobbyChat'))return;
@@ -59,7 +78,10 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    if(auto||!sim||role!=null&&!names[role])return false;
    if(document.body?.classList?.contains('nsLobbyMode'))return false;
    const input=compose();if(!input)return false;
-   const wasFocused=document.activeElement===input;
+   // Focus during the original gesture, before touching the selection. Mobile
+   // browsers need this synchronous user activation to retain/open the editor.
+   try{input.focus({preventScroll:true})}catch(_){input.focus()}
+   if(composingInput===input){deferredMention={role,input,patient:sim};return true;}
    const match=mentionOf(input.value),rest=(match?input.value.slice(match.length):input.value).trimStart();
    const prefix=role?names[role]+', ':'';
    input.value=prefix+rest;
@@ -67,18 +89,43 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    pendingAddress=role||'patient';chatRole=role||'patient';
    document.getElementById('mentorBtn')?.classList?.toggle('active',role==='expert');
    try{input.setSelectionRange(prefix.length,prefix.length)}catch(_){}
-   if(wasFocused&&document.activeElement!==input)try{input.focus({preventScroll:true})}catch(_){input.focus()}
    decorate();return true;
   };
   window.nsMentionNPC487=window.nsSelectChatTarget487;
+  // Late hospital/monitor wrappers can consume taps before the original
+  // scene handler. Select the mention once at the outermost map boundary,
+  // then retain their native navigation and touch controls.
+  if(typeof handleGameTap==='function'){
+   const nativeMapTap=handleGameTap;
+   handleGameTap=function(event){
+    if(C&&sim&&!editorOpen&&!document.body?.classList?.contains('nsLobbyMode')){
+     const roles=['expert','patient','nurse'];
+     let hitRole=null;
+     for(const role of roles){
+      if(role==='expert'&&!sim.mentor?.enabled&&!sim.nsVegaCalled)continue;
+      const point=npcScreen(role);
+      if(point&&tapNear(event.clientX,event.clientY,point[0],point[1],role==='expert'?38:42)){
+       hitRole=role;break;
+      }
+     }
+     if(!hitRole&&typeof wardNurses!=='undefined')for(const actor of wardNurses){
+      const point=worldToScreen(actor.x,actor.y);
+      if(tapNear(event.clientX,event.clientY,point[0],point[1],34)){hitRole='nurse';break;}
+     }
+     if(hitRole)window.nsSelectChatTarget487(hitRole);
+    }
+    return nativeMapTap.apply(this,arguments);
+   };
+  }
   const oldRefresh=refreshChatDock;
   refreshChatDock=function(){
    const prior=compose(),focused=!!prior&&document.activeElement===prior;
    const draft=prior?.value||'';
    const start=prior?.selectionStart,end=prior?.selectionEnd;
+   if(prior&&prior===composingInput){decorate();return;}
    const result=oldRefresh.apply(this,arguments);
    const current=compose();
-   if(current&&current!==prior&&draft&&!current.value)current.value=draft;
+   if(current&&current!==prior)current.value=draft;
    if(current&&current!==prior&&focused){
     try{current.focus({preventScroll:true})}catch(_){current.focus()}
     try{if(start!=null&&end!=null)current.setSelectionRange(start,end)}catch(_){}

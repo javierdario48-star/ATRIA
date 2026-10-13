@@ -27,3 +27,12 @@ Review focus: input rebuilt during IME, explicit questions containing drugs, tea
 ## Verification limits
 
 Node VM fixtures simulate actors, DOM and transport. Chromium with mobile viewport/touch can verify browser events and caret, but cannot prove a physical Android soft keyboard or real multiplayer network. Never report those as physical-device tests.
+
+## Chat checkpoint
+
+- Reproduced: selecting an NPC while the composer was unfocused did not focus it. Corrected with synchronous `focus({preventScroll:true})` before changing the caret.
+- Reproduced: the final hospital actor wrapper consumed a nurse tap before the original patched handler. The outermost chat adapter now selects the mention and still invokes native navigation; it does not replace movement controls.
+- Composition now retains the same DOM input during native repaint and defers prefix replacement until the IME commits. Repeated selections retain only the last recipient; drafts and selections survive repaint.
+- The owner and cooperative relay share the leading-mention parser. Requests retain sender identity, patient UID and recipient; authoritative permissions reject conflicting recipient metadata. Existing native replay receipts are retained.
+- Passed: 26 VM editor checks, six native-engine/protocol sessions across 2–4 players in coop/competitive, ten multiplayer restart cycles. Real administration records verify the nursing action; Vega questions do not administer drugs or enter patient anamnesis.
+- Added `qa/chat-browser-487.mjs` and a required Actions job using actual Chromium DOM/pointer events, desktop and Pixel 5 emulation, the generated native canvas and hospital handlers. Local browser downloads were blocked, so browser execution must be verified by Actions rather than claimed from local VM results.

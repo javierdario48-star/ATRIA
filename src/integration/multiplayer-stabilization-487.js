@@ -264,8 +264,20 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  // Role-tagged clinical utterances stay visible to every room member.
  // This is a text-only broadcast; no therapy/exam code runs in the listener.
  s=edit(s,
+ "if(vega.test(txt))mentorUserMessage(txt.replace(vega,''));else if(txt.startsWith('/'))processCommand(txt);else if(nursing.test(txt))nurseNatural(txt);else deliverPatientSpeech(txt.replace(/^paciente\\s*[,.:]?\\s*/i,''),true);",
+ "const route=window.nsChatRecipient487?.(txt);if(txt.startsWith('/'))processCommand(txt);else if(route){if(route.role==='expert')mentorUserMessage(route.text);else if(route.role==='nurse')nurseNatural(txt);else deliverPatientSpeech(route.text,true);}else if(vega.test(txt))mentorUserMessage(txt.replace(vega,''));else if(nursing.test(txt))nurseNatural(txt);else deliverPatientSpeech(txt.replace(/^paciente\\s*[,.:]?\\s*/i,''),true);",
+ 'one-parser-for-manual-owner-and-guest-mentions');
+ s=edit(s,
+ "function requestAssist(index,a){",
+ "function requestAssist(index,a){if(a?.kind==='command'&&window.nsChatRecipient487)a={...a,recipient:window.nsChatRecipient487(a.text).role};",
+ 'relay-preserves-explicit-clinical-recipient');
+ s=edit(s,
+ "if(a.kind==='command')return challenge.mode==='coop'&&typeof a.text==='string'&&a.text.trim().length>0&&a.text.length<=220;",
+ "if(a.kind==='command')return challenge.mode==='coop'&&typeof a.text==='string'&&a.text.trim().length>0&&a.text.length<=220&&(!a.recipient||['patient','expert','nurse'].includes(a.recipient)&&(!window.nsChatRecipient487||a.recipient===window.nsChatRecipient487(a.text).role));",
+ 'validate-recipient-at-authoritative-permission-boundary');
+ s=edit(s,
  "function roomCommand(q){",
- "window.csBroadcastAddressedChat487=function(role,raw){if(!shared()||!challenge.active||challenge.ended||!['patient','expert','nurse'].includes(role))return false;const utterance=String(raw||'').trim().slice(0,150);if(!utterance)return false;const to={patient:'Paciente',expert:'Dr. Vega',nurse:'Enfermera'}[role];const text='A '+to+': '+utterance;send('team_chat',{text,messageId:selfId+':'+Date.now().toString(36)+':'+Math.random().toString(36).slice(2,7)});return true;};function roomCommand(q){",
+ "window.csBroadcastAddressedChat487=function(role,raw){if(!shared()||!challenge.active||challenge.ended||!['patient','expert','nurse'].includes(role))return false;const utterance=String(raw||'').trim().slice(0,150);if(!utterance)return false;const to={patient:'Paciente',expert:'Dr. Vega',nurse:'Enfermera'}[role];const text='A '+to+': '+utterance;send('team_chat',{text,recipient:role,patientUid:sim?.patientInstance?.uid||null,messageId:selfId+':'+Date.now().toString(36)+':'+Math.random().toString(36).slice(2,7)});return true;};function roomCommand(q){",
  'addressed-clinical-message-is-public-but-execution-stays-authoritative');
  if(reverse)for(const {from,to,label} of undo.reverse())s=replaceOnce(s,to,from,'reverse-'+label);
  return s;

@@ -7,6 +7,22 @@ permissions:
   contents: read
 jobs:
 
+  npc-chat-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Desktop and Android-emulated native canvas/editor regression
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/chat-browser-487.mjs
+
   immutable-source-and-artifact:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -18,7 +34,7 @@ jobs:
       - name: Validate frozen clinical source before lengthy regression
         run: node src/integration/vega-integrity-487.test.js && node src/clinical/physiology-native-reference-487.test.js
       - name: Verify NPC mentions and the thirteen-case Vega dialogue
-        run: node src/integration/chat-recipient-487.test.js && node src/integration/vega-consult-matrix-487.test.js
+        run: node src/integration/chat-recipient-487.test.js && node src/integration/chat-protocol-487.test.js && node src/integration/vega-consult-matrix-487.test.js
       - name: Verify exact baseline byte recovery and generated artifact
         run: npm run build && npm run qa:physiology-artifact
 

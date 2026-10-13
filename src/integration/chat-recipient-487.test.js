@@ -50,7 +50,7 @@ for(const role of ['patient','nurse','expert']){
 
 let checks=0;
 for(const device of ['desktop','android']){
- const records=[],roleLabel={textContent:''},classes=new Set();
+ const records=[],roleLabel={textContent:''},classes=new Set(),listeners=new Map();
  const makeInput=(value='')=>({
   value,placeholder:'',selectionStart:0,selectionEnd:0,
   setSelectionRange(a,b){this.selectionStart=a;this.selectionEnd=b},
@@ -63,14 +63,18 @@ for(const device of ['desktop','android']){
   querySelector:selector=>selector==='#chatTargetBtn'?button:selector==='#dieInput'?input:null};
  let lobby=false;
  const screen={activeElement:input,body:{classList:{contains:()=>lobby}},
+  addEventListener:(event,fn)=>listeners.set(event,fn),
   getElementById:id=>id==='dieInput'?input:id==='chatDock'?dock:
    id==='mentorBtn'?{classList:{toggle(){}}}:null};
  const sim={mentor:{enabled:true},patientInstance:{uid:'CASE-P1'},chats:{patient:[],expert:[],nurse:[]}};
  const room={active:false};
- const context={document:screen,sim,C:{id:'CASE'},window:{
+ const context={document:screen,sim,C:{id:'CASE'},queueMicrotask,window:{
   csV41Challenge:room,nsMayExamine:()=>true,
   csBroadcastAddressedChat487:(role,txt)=>records.push(['broadcast',role,txt])},
   pendingAddress:null,chatRole:null,player:{bubble:'',bubbleUntil:0},
+  editorOpen:false,npcScreen:k=>({patient:[100,80],nurse:[200,80],expert:[300,80]})[k],
+  tapNear:(x,y,px,py,d)=>Math.hypot(x-px,y-py)<=d,
+  handleGameTap(){this.nativeTaps=(this.nativeTaps||0)+1;},
   performance:{now:()=>1000},
   refreshChatDock(){/* native dock rebuilds the composer */
    input=makeInput();
@@ -81,6 +85,12 @@ for(const device of ['desktop','android']){
   nurseNatural:text=>records.push(['nurse',text]),
   addGlobalChat:(from,text)=>records.push(['chat',from,text])};
  vm.createContext(context);vm.runInContext(code,context,{timeout:2000});
+ input.value='Mi borrador';screen.activeElement=input;
+ context.handleGameTap({clientX:200,clientY:80});
+ assert.equal(input.value,'Enfermera, Mi borrador',
+  'final map adapter inserts mention even when hospital actor wrappers consume the tap');
+ assert.equal(context.nativeTaps,1,'native hospital navigation still executes');
+ input.value='';
  // No-name anamnesis is always the attended patient, even after a Vega exchange.
  context.sendMessage('¿Qué le pasó?');
  assert.equal(records.filter(x=>x[0]==='patient').length,1,JSON.stringify(records));checks++;
@@ -116,9 +126,32 @@ for(const device of ['desktop','android']){
  screen.activeElement=null;
  context.window.nsSelectChatTarget487('patient');
  assert.equal(input.value,'Paciente, dos vías');
- assert.equal(screen.activeElement,null,'NPC tap may not open closed keyboard');checks++;
+ assert.equal(screen.activeElement,input,'NPC tap focuses a previously unfocused composer');
+ assert.equal(input.selectionStart,'Paciente, '.length);checks++;
  context.window.nsSelectChatTarget487(null);
  assert.equal(input.value,'dos vías');checks++;
+ // Composition must finish in the same DOM editor. Repeated touches select
+ // one final recipient and never duplicate an Android IME's committed text.
+ input.value='Necesitamos antibióti';screen.activeElement=input;
+ const beforeTouch=records.length,imeEditor=input;
+ listeners.get('compositionstart')({target:input});
+ context.window.nsSelectChatTarget487('nurse');
+ context.window.nsSelectChatTarget487('expert');
+ assert.equal(input.value,'Necesitamos antibióti','no prefix editing during composition');
+ context.refreshChatDock();
+ assert.equal(input,imeEditor,'physiology redraw may not detach the composing editor');
+ input.value='Necesitamos antibióticos.';
+ listeners.get('compositionend')({target:input});
+ await new Promise(resolve=>queueMicrotask(resolve));
+ assert.equal(input.value,'Dr. Vega, Necesitamos antibióticos.');
+ assert.equal(input.selectionStart,'Dr. Vega, '.length);
+ assert.equal(screen.activeElement,input);
+ assert.equal(records.length,beforeTouch,'touches never submit a draft');checks++;
+ for(const [manual,expected] of [
+  ['Vega, no sé','expert'],['Dr. Vega, no sé','expert'],['Doctor, no sé','expert'],
+  ['Enfermero, vías','nurse'],['Enfermería: vías','nurse'],['Paciente, dolor','patient'],
+  ['¿La enfermera ya pasó?','patient'],['Ayer vi a Vega','patient'],['Vegano','patient']
+ ])assert.equal(context.window.nsChatRecipient487(manual).role,expected,manual);
  // Multiplayer visitor, rival and lobby text MUST pass through their
  // original authoritative security and routing checks, never dose a mirror.
  room.active=true;room.mode='coop';room.ended=false;room.selfId='HOST';
