@@ -43,6 +43,8 @@ for(const mode of ['coop','competitive'])for(const platform of ['desktop','andro
   window:{csWithPatientStateV203:(s,_caseId,fn)=>{assert.equal(s,target);return fn();}},
   nurseNatural:t=>{record.push(['nurse',t]);return true},
   deliverPatientSpeech:t=>{record.push(['patient',t]);patientReplies++;return true},
+  patientReply:t=>{patientReplies++;return 'Paciente responde a: '+t},
+  complete:()=>{}, 
   processCommand:t=>{record.push(['command',t]);return true},
   sendMessage:()=>{throw Error('owner relay must NOT reclassify through proximity chat')},
   addGlobalChat:()=>{},refreshChatDock:()=>{},
@@ -50,7 +52,8 @@ for(const mode of ['coop','competitive'])for(const platform of ['desktop','andro
   addMonitorTherapy:()=>{}};
  vm.createContext(ctx);new vm.Script(ownerRelay).runInContext(ctx);
  assert.equal(ctx.applyAssistAction(p,{kind:'speech',text:'¿Qué le pasó?'},'visitante'),true);
- assert.equal(record.at(-1)[0],'patient');
+ assert.equal(target.chats.patient.length,2,'guest or opponent interview receives native patient answer');
+ assert.equal(target.chats.patient[1][0],'patient');
  assert.equal(ctx.applyAssistAction(p,{kind:'command',text:'enfermera ringer'},'visitante'),mode==='coop');
  assert.equal(record.some(x=>x[0]==='nurse'),mode==='coop');
  if(mode==='competitive')assert.equal(record.filter(x=>x[0]==='nurse').length,0);
