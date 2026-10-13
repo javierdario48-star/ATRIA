@@ -2,8 +2,9 @@
 // shared transcript; only the selected clinical NPC processes the utterance.
 // Deliberately does not bypass cooperative/competitive room permissions.
 const once=(s,a,b,label)=>{const i=s.indexOf(a);if(i<0||s.indexOf(a,i+a.length)>=0)throw Error('recipient selector anchor: '+label);return s.slice(0,i)+b+s.slice(i+a.length)};
-export function applyChatRecipient487(html){
+export function applyChatRecipient487(html,{reverse=false}={}){
  let s=html;
+ if(!reverse){
  // Manually summoned Vega is selectable in Solitario as well as Aprendiz.
  const expertLocator="es=sim?.mentor?.enabled?npcScreen('expert'):null";
  if(s.split(expertLocator).length!==3)throw Error('expected one tap and one hit-test Vega locator');
@@ -24,6 +25,7 @@ export function applyChatRecipient487(html){
  "document.getElementById('chatTargetBtn').onclick=()=>{pendingAddress=null;document.getElementById('mentorBtn')?.classList.remove('active');refreshChatDock();document.getElementById('dieInput')?.focus()}",
  "document.getElementById('chatTargetBtn').onclick=()=>{window.nsSelectChatTarget487?.(null);document.getElementById('dieInput')?.focus()}",
  'explicit-clear-recipient');
+ }
  const script=String.raw`<style id="atria-recipient-selector-style-487">
  #chatDock .chatTarget.csExplicitTarget487{border:1px solid rgba(116,225,208,.67)!important;background:linear-gradient(110deg,rgba(15,75,76,.95),rgba(24,59,74,.91))!important;box-shadow:0 0 0 1px rgba(118,211,199,.08) inset}
  #chatDock .chatTarget.csExplicitTarget487 span{color:#ddfff6!important;font-weight:650}
@@ -99,5 +101,30 @@ export function applyChatRecipient487(html){
   };
  })();
  </script>`;
+ if(reverse){
+  // Remove exactly our own presentation module, then invert every source
+  // replacement in strict reverse order. The immutable baseline still hashes
+  // to its original bytes; no digest or fixture is rewritten.
+  s=once(s,script+'</body>','</body>','reverse-recipient-module');
+  s=once(s,
+   "document.getElementById('chatTargetBtn').onclick=()=>{window.nsSelectChatTarget487?.(null);document.getElementById('dieInput')?.focus()}",
+   "document.getElementById('chatTargetBtn').onclick=()=>{pendingAddress=null;document.getElementById('mentorBtn')?.classList.remove('active');refreshChatDock();document.getElementById('dieInput')?.focus()}",
+   'reverse-recipient-clear');
+  s=once(s,
+   "if(tapNear(e.clientX,e.clientY,ns[0],ns[1],42)){window.nsSelectChatTarget487?.('nurse');if(near==='nurse')",
+   "if(tapNear(e.clientX,e.clientY,ns[0],ns[1],42)){if(near==='nurse')",
+   'reverse-recipient-nurse');
+  s=once(s,
+   "if(tapNear(e.clientX,e.clientY,ps[0],ps[1],42)){window.nsSelectChatTarget487?.('patient');if(near==='patient')",
+   "if(tapNear(e.clientX,e.clientY,ps[0],ps[1],42)){if(near==='patient')",
+   'reverse-recipient-patient');
+  s=once(s,
+   "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){window.nsSelectChatTarget487?.('expert');mentorFocus();return}",
+   "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){mentorFocus();return}",
+   'reverse-recipient-vega');
+  const locator="es=(sim?.mentor?.enabled||sim?.nsVegaCalled)?npcScreen('expert'):null";
+  if(s.split(locator).length!==3)throw Error('reverse Vega locator is not exactly two occurrences');
+  return s.split(locator).join("es=sim?.mentor?.enabled?npcScreen('expert'):null");
+ }
  return once(s,'</body>',script+'</body>','recipient-after-existing-nursing-and-multiplayer');
 }
