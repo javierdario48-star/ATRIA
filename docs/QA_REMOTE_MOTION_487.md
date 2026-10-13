@@ -199,3 +199,38 @@ The terminal-receipt gate has its own regression: a peer which travels normally
 but remains 22 pixels short AFTER receipt of the current stopped snapshot must
 fail even if the earlier interval had packet impairment. The test fails at that
 specific acceptance boundary, independently of mean tracking error or CV.
+
+## Reuse for nearby spectators and independent guards
+
+The sampler keeps at most 32 actual snapshots per remote avatar. Lobby and
+guard adapters use the same sampler, while guard poses are keyed by room and
+player and cleared on scene changes. Each guard retains its existing limit of
+four players and its existing authority. There is no extra render loop or
+network scheduler.
+
+A future massive lobby can feed this adapter only the subscribed nearby
+spectators, adding/removing their bounded pose buffers as visibility changes.
+That interest-management boundary follows the useful nearby-spectator principle
+of Tibia without importing tile movement. The present roster/signaling mesh
+has not been rebuilt or certified for massive concurrency; subscription
+filtering and social infrastructure remain future work. Separate guard rooms
+must continue to have independent namespaces rather than one global pose map.
+
+## Physical Android acceptance
+
+Open the final branch preview on two physical Android phones with separate
+profiles and join the same lobby. On A, walk straight, turn 90 degrees, stop,
+reverse and change direction quickly while B observes. Repeat with B moving
+and A observing, then repeat both directions inside a cooperative guard.
+
+Confirm local movement is unchanged on each phone; the other phone shows
+natural steps, matching direction and a prompt idle transition; no duplicate
+avatar, unexplained jump or excessive following delay appears. Return to the
+lobby and start another guard. Record both screens together if possible.
+If returning through the original case selector leaves a retained scene,
+leave the room and reload, and report that separately. That native return
+flow is not certified by the motion harness.
+
+No two physical Android phones are available in this environment. Browser
+automation is evidence for the client correction, not definitive physical
+Android acceptance.
