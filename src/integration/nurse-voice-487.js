@@ -98,6 +98,12 @@ export function applyNurseVoice487(html){
     // Frozen V19 fixtures lacking the late IV adapter retain their safe path.
     if(Number(sim.venousAccessCount||0)<=0&&
        (iv||typeof window.csNurseTherapyRequiresIV487!=='function'&&item.id!=='oxygen')){
+      // This is a clinical order, not a request to manually place a line.
+      // Preserve the native venous-access scheduler and its patient-bound
+      // delayed therapy queue; NEVER report administration before its log.
+      const accessAlreadyPending=nurse.task?.kind==='iv_access'||
+       nurse.queue?.some(t=>t.kind==='iv_access');
+      if(!accessAlreadyPending)window.csQueueIV?.(1);
       const acknowledged=baseNurse.call(this,'enfermera '+raw);
       // Some legacy routes acknowledge without retaining the IV therapy.
       // The original monitor IV adapter is the authority for that fallback.
