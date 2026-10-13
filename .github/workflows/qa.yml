@@ -6,6 +6,21 @@ on:
 permissions:
   contents: read
 jobs:
+
+  immutable-source-and-artifact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate frozen clinical source before lengthy regression
+        run: node src/clinical/physiology-native-reference-487.test.js
+      - name: Verify exact baseline byte recovery and generated artifact
+        run: npm run build && npm run qa:physiology-artifact
+
+
   architecture-and-build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
