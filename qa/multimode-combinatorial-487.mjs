@@ -227,7 +227,7 @@ for(const [caseId,vitals] of Object.entries(sampleVitals))for(const mode of ['so
 }
 for(const fragment of [
  'sim?.__csRemoteMirror487?undefined:base.update.call(this,dt)',
- 'if(stamp&&stamp.length<=160&&!ids.has(stamp))',
+ 'if(stamp&&stamp.length<=160&&!ids.has(stamp)&&applyAssistAction(p,m.action,m.helperName))',
  'if(m.kind===\'score_xp\')',
  'guardXP487=0;guardXPReceipts487.clear()'
 ])assert(html.includes(fragment),'native runtime guard regression '+fragment);
