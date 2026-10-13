@@ -24,6 +24,7 @@ import {applyMorphine487} from './morphine-487.js';
 import {applyUrgentCare487} from './urgent-care-487.js';
 import {applyCaseCompletion487} from './case-completion-487.js';
 import {applyVegaStepCoach487} from './vega-step-coach-487.js';
+import {applyConciseVegaConsult487} from './vega-concise-consult-487.js';
 const replaceOnce=(s,from,to,label)=>{const i=s.indexOf(from);if(i<0)throw new Error('integration anchor missing: '+label);if(s.indexOf(from,i+from.length)>=0)throw new Error('integration anchor ambiguous: '+label);return s.slice(0,i)+to+s.slice(i+from.length)};
 export function apply487(html,{multiplayer=true}={}){
  let s=html;
@@ -692,6 +693,7 @@ function csDrawRemote(){
 </script>`;
  s=replaceOnce(s,'</body>',phase7Script+'</body>','phase7-nurse-audiovisual-receipts');
  s=applyVegaStepCoach487(s);
+ s=applyConciseVegaConsult487(s);
  s=applyPeritonitis487(s);
  s=applyDiagnosticImpression487(s);
  s=applySurgicalNursing487(s);
