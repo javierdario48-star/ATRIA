@@ -118,10 +118,12 @@ export function applyConciseVegaConsult487(html){
  // just its repetitive per-drug Q&A with bounded sequential execution.
  const therapy=String.raw`   // One native intervention per stable tick; critical cases start all
    // available urgent measures without a chat question for each drug.
-   if(sim.pendingTherapies?.size){
+   const urgent=window.nsPatientState().color==='ROJO';
+   // In shock, queue independent time-critical measures in parallel.
+   // A stable patient waits for each real administration before the next.
+   if(sim.pendingTherapies?.size&&!urgent){
      status(job,'administration','Tratamiento en curso','Esperando administración real.',true);return;
    }
-   const urgent=window.nsPatientState().color==='ROJO';
    const targets=C.keyInterventions.filter(id=>id!=='iv'&&!csVegaInterventionComplete487(id));
    if(targets.length){
      if(!urgent&&now<(job.csNextTherapy487||0))return;
@@ -141,6 +143,11 @@ export function applyConciseVegaConsult487(html){
      }
      if(!urgent)job.csNextTherapy487=now+1600;
      return;
+   }
+   // Even critical parallel orders cannot count as completed doses.
+   if(sim.pendingTherapies?.size){
+    status(job,'administration','Tratamiento en curso','Confirmando las dosis antes de derivar.',true);
+    return;
    }
 `;
  s=replaceSpan(s,"   // Prioritize finishing a real administration before starting the next one.","   if(!C.keyInterventions.every(csVegaInterventionComplete487)){",therapy,'quiet-sequential-therapy');
