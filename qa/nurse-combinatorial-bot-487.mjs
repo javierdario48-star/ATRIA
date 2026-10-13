@@ -50,16 +50,14 @@ function run(label,steps,iv,caseId='PERI-SEC-001',repeat=false){
   // Native async preparation, bedside access and monitor completion.
   tick(r,48);
   const receipts=p.administrationLog.filter(x=>x.action!=='stop');
-  const pendingAccess=iv===0&&!required.has('iv');
+  // Native IV-required orders now automatically ask nursing to cannulate;
+  // the real administration is still blocked until that access completes.
+  const autoAccess=iv===0&&!required.has('iv')&&[...required].some(id=>ivDrugs.has(id));
   for(const item of A.filter(x=>drugs.has(x.id))){
    const count=receipts.filter(x=>x.id===item.id).length;
-   const withheld=required.has(item.id)&&pendingAccess&&ivDrugs.has(item.id);
-   assert.equal(count,required.has(item.id)&&!withheld?1:0,'real dose count '+item.id);
-   if(withheld){
-    assert.equal(p.venousAccessCount,0,'no imaginary IV inserted');
-    assert((p.csPhase4Pending487||[]).some(x=>x.id===item.id),
-     item.id+' must stay explicitly pending for missing access');
-   }
+   assert.equal(count,required.has(item.id)?1:0,'real dose count '+item.id);
+   if(autoAccess&&ivDrugs.has(item.id)&&required.has(item.id))
+    assert(p.venousAccessCount>=1,'auto-cannulation must occur BEFORE native drug administration');
    if(count){
     assert(p.monitorTherapies.has(item.id),'monitor missing real '+item.id);
     assert.equal(receipts.find(x=>x.id===item.id).defaultApplied,true,
@@ -67,8 +65,8 @@ function run(label,steps,iv,caseId='PERI-SEC-001',repeat=false){
    }
   }
   if(required.has('iv'))assert.equal(p.venousAccessCount,2,'plural vias must place two real IV');
-  else if([...required].some(x=>ivDrugs.has(x))&&iv>0)
-   assert(p.venousAccessCount>=1,'IV drugs require access');
+  else if([...required].some(x=>ivDrugs.has(x)))
+   assert(p.venousAccessCount>=1,'IV drugs require completed real or automatically requested access');
   if(required.has('monitor'))assert.equal(p.monitorConnected,true,'monitor must be attached');
   assert(!receipts.some(x=>!required.has(x.id)),'no unintended drug administrations');
   cases.push({label,caseId,startIV:iv,steps:steps.map(s=>s.map(x=>x.id)),passed:true,
@@ -117,9 +115,11 @@ for(const phrase of [['Ringer'],['ceftriaxona','metronidazol'],
  const ids=items.map(x=>x.id);
  try{
   r.ctx.sendMessage('Enfermera '+phrase.join(' y '));tick(r,2);
-  assert.equal(p.administrationLog.length,0,'pending medications cannot appear as doses');
-  for(const id of ids)assert((p.csPhase4Pending487||[]).some(x=>x.id===id),
-   id+' must stay pending');
+  // Depending on the actor route, the new automatic IV may complete within
+  // the first 2 seconds. Never count that administration as a second dose.
+  for(const id of ids){const delivered=p.administrationLog.some(x=>x.id===id);
+   assert(delivered||(p.csPhase4Pending487||[]).some(x=>x.id===id),
+    id+' must already be given or retained in the native IV queue');}
   r.ctx.sendMessage('Enfermera vías');tick(r,45);
   assert.equal(p.venousAccessCount,2,'subsequent nursing access completed');
   for(const id of ids)assert.equal(p.administrationLog.filter(x=>x.id===id).length,1,
