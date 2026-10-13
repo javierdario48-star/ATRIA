@@ -104,8 +104,8 @@ export function applyNurseVoice487(html){
       // This is a clinical order, not a request to manually place a line.
       // Preserve the native venous-access scheduler and its patient-bound
       // delayed therapy queue; NEVER report administration before its log.
-      const accessAlreadyPending=nurse.task?.kind==='iv_access'||
-       nurse.queue?.some(t=>t.kind==='iv_access');
+      const accessAlreadyPending=nurse.task?.kind==='iv_access'&&nurse.task._targetSim===sim||
+       nurse.queue?.some(t=>t.kind==='iv_access'&&t._targetSim===sim);
       if(!accessAlreadyPending)window.csQueueIV?.(1);
       const acknowledged=baseNurse.call(this,'enfermera '+raw);
       // Some legacy routes acknowledge without retaining the IV therapy.
