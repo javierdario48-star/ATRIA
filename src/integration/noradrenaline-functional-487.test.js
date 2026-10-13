@@ -36,8 +36,11 @@ await check('incompatible units/routes/identity must not be rewritten into a val
    assert.equal(r.ctx.sim.monitorTherapies.has('vasopressor'),false,q);
    const independentFluid=q.startsWith('Ringer')&&source==='nurse';
    assert.equal((r.ctx.sim.csPhase4Pending487||[]).some(x=>x.id==='vasopressor'),false,q+': invalid pressor may not wait for an IV');
-   assert.equal(r.ctx.sim.csPhase4Pending487?.length||0,independentFluid?1:0,q+' '+source+': valid independent Ringer is retained');
-   assert.equal(r.ctx.sim.venousAccessCount,0,q+' '+source+': invalid route must not request cannulation either');
+   assert.equal(r.ctx.sim.csPhase4Pending487?.length||0,0,q+' '+source+': after completion no stale IV orders remain');
+   assert.equal(r.ctx.sim.venousAccessCount,independentFluid?1:0,q+' '+source+
+    ': only the independent valid Ringer may trigger real automatic cannulation');
+   assert.equal(r.ctx.sim.administrationLog.filter(x=>x.id==='fluid'&&x.action!=='stop').length,
+    independentFluid?1:0,q+' '+source+': independent Ringer must be actually administered once');
   }
  }
 });
