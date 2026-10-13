@@ -81,6 +81,8 @@ export function createLiveNativeJourney487(caseId = 'HDA-001', {confirmedIV = 1}
     pathTo: () => false, advanceActor: () => true, toast: noop, csPlaySound: noop,
     formatVitalsInline: () => '', recordVitals: noop});
   ctx.window.nsMayExamine = () => true;
+  // Reduced VM exports the existing native permission stub through its public capability.
+  ctx.window.csNativeNurseMayTreat487 = ctx.mayTreat;
   ctx.document.createElement=()=>({style:{},onclick:null,textContent:''});
   ctx.document.body.appendChild=noop;
   ctx.sim.patientInstance.bed = {approach: [24, 17], label: 'QA box'};
