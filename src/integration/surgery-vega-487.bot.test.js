@@ -12,11 +12,12 @@ const vega=html.slice(html.indexOf('<script id="ns422-vega-rescue">'),
  html.indexOf('</script>',html.indexOf('<script id="ns422-vega-rescue">')));
 assert.match(vega,/function csVegaPriorityStudies487\(\)/);
 assert.match(vega,/job\.phase='workup487'/);
-assert.match(vega,/¿Lo pedís vos o lo pido yo\?/);
-assert.match(vega,/¿La indicás vos o querés que lo haga yo\?/);
-assert.match(vega,/const nextId=C\.keyInterventions\.find/);
+assert.match(vega,/Mi diagnóstico presuntivo es|mi diagnóstico presuntivo es/);
+assert.match(vega,/¿Qué proponés hacer\?/);
+assert.match(vega,/const targets=C\.keyInterventions\.filter/);
 assert.match(vega,/csVegaInterventionComplete487/);
-assert.match(vega,/Los cultivos tardíos no detienen la guardia/);
+assert.match(vega,/\.slice\(0,2\)/,'initial workup capped at two studies');
+assert.match(vega,/cultiv\|culture\|hemocult/,'cultures never block presumptive diagnosis');
 assert.doesNotMatch(vega,/if\(C\.keyInterventions\.includes\('source_control'\)\)give\(job,'source_control'\)/,
  'Vega must not perform source control in the patient box');
 
