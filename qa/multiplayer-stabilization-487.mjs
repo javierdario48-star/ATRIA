@@ -75,16 +75,16 @@ assert.equal(mirrorCtx.sim.playMode,'coop');
 assert.equal(mirrorCtx.challenge.assistIndex,0);
 // Competitive bedside chat uses the existing authorized relay; text and voice
 // cannot turn a mixed nursing command into an opponent's administration/order.
-const rivalActions=[],rivalToasts=[];
+const rivalActions=[],rivalToasts=[],rivalObservations=[];
 const rivalCtx={challenge:{mode:'competitive',assistIndex:0,patients:[{...visitor,index:0}]},
- selfId:'GUEST',shared:()=>true,near:()=>true,canAct:()=>rivalCtx.ownsActivePatient===true,window:{nsIsClinicalQuestion:t=>/[?¿]/.test(t)},
+ selfId:'GUEST',shared:()=>true,near:()=>true,canAct:()=>rivalCtx.ownsActivePatient===true,window:{nsIsClinicalQuestion:t=>/[?¿]/.test(t),csObservePatientV487:index=>{rivalObservations.push(index)}}, 
  requestAssist:(index,action)=>{rivalActions.push({index,action});return true},
  toast:t=>rivalToasts.push(t)};
 vm.createContext(rivalCtx);
 new vm.Script(html.slice(foreignAt,takeAt)).runInContext(rivalCtx);
 assert.equal(rivalCtx.foreignRivalInput487('enfermera monitor, ceftriaxona y hemograma'),true);
-assert.equal(JSON.stringify(rivalActions),JSON.stringify([{index:0,action:{kind:'monitor'}}]),
- 'mixed monitor + antibiotic + study must execute ONLY the benign portion');
+assert.equal(rivalActions.length,0,'mixed monitor + antibiotic + study cannot enqueue ANY rival nursing order');
+assert.deepEqual(rivalObservations,[0],'monitor is observed in existing read-only panel');
 assert.equal(rivalToasts.length,1,'mixed order must explain the denied clinical actions');
 rivalActions.length=0;
 assert.equal(rivalCtx.foreignRivalInput487('enfermera hemograma'),true);
@@ -96,7 +96,8 @@ assert.equal(rivalActions.at(-1).action.kind,'speech','main clinical chat reache
 assert.equal(rivalCtx.foreignRivalInput487('examinar: auscultar'),true);
 assert.equal(rivalActions.at(-1).action.id,'ns:auscultation','bedside physical exam allowed');
 assert.equal(rivalCtx.foreignRivalInput487('enfermera signos vitales'),true);
-assert.equal(rivalActions.at(-1).action.kind,'vitals','nursing vitals remain allowed');
+assert.deepEqual(rivalObservations,[0,0],'vitals read existing monitor without nurse task');
+assert(rivalActions.every(a=>a.action.kind==='speech'||a.action.kind==='exam'),'rival never mutates treatment');
 assert.equal(rivalCtx.foreignRivalInput487('/equipo hola'),null,'explicit social chat is separate');
 rivalCtx.ownsActivePatient=true;
 assert.equal(rivalCtx.foreignRivalInput487('enfermera Ringer'),null,
