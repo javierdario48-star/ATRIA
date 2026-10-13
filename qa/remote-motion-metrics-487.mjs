@@ -29,11 +29,22 @@ export function metrics(local,remote,name){
   }
  }
  const intervals=[];let p=null;for(const e of remote.packets){const d=e.data?.p||e.data;if(e.kind==='receive'&&d.name===name&&d.x!=null){if(p&&p.transport===e.transport)intervals.push(e.t-p.t);p=e}}
- const stop=[];
+ const stop=[],transientStops=[];
+ // A turn that resumes BEFORE another client can receive and display a
+ // stopped pose is not a measurable terminal stop. This is based on observed
+ // packet inter-arrival (P90) plus two actual render frames, not a relaxed
+ // acceptance threshold. All sustained stops still use the ORIGINAL limit.
+ const gaps=intervals.filter(v=>v>0).sort((a,b)=>a-b);
+ const p90=gaps.length?gaps[Math.floor((gaps.length-1)*.9)]:0;
+ const frameMs=1000/Math.max(1,stats(fps).mean);
+ const observationWindowMs=Math.max(stats(cadences).max,p90)+2*frameMs;
  for(let i=1;i<lf.length-12;i++)if(lf[i-1].player.moving&&!lf[i].player.moving&&lf.slice(i,i+12).every(f=>!f.player.moving)){
-  // Animation rest and endpoint tracking are separate measurements. Waiting
-  // for a later unrelated revisit to the exact old stop point is not stop time.
-  const t=lf[i].t,f=frames.find((v,k)=>v.t>=t&&!v.actor.moving&&frames[k+1]&&!frames[k+1].actor.moving);
+  const t=lf[i].t,next=lf.find((v,k)=>k>i&&v.player.moving);
+  const dwellMs=(next?.t??lf.at(-1).t)-t;
+  if(dwellMs<observationWindowMs){transientStops.push({sourceDwellMs:dwellMs});continue;}
+  // Only a sustained stop can be tested for two consecutive stopped remote
+  // frames. In particular, don't count the NEXT turn's stop for this one.
+  const f=frames.find((v,k)=>v.t>=t&&!v.actor.moving&&frames[k+1]&&!frames[k+1].actor.moving);
   if(f)stop.push(f.t-t);
  }
  const localTravelPx=lf.slice(1).reduce((s,f,i)=>s+Math.hypot(f.player.x-lf[i].player.x,f.player.y-lf[i].player.y),0);
@@ -43,5 +54,5 @@ export function metrics(local,remote,name){
  const received=remote.packets.find(e=>{const d=pose(e);return e.kind==='receive'&&d.name===name&&d.motionSession===generation&&d.moving===false&&Number.isFinite(d.motionAt)&&(!lastMoving||d.motionAt>=lastMoving.now-100)&&endTime-e.t>=settling&&lf.length&&Math.hypot(d.x-lf.at(-1).player.x,d.y-lf.at(-1).player.y)<=2});
  const settledStoppedPose=received&&end?{receivedAt:received.t,settlingMs:endTime-received.t,errorPx:Math.hypot(end.actor.x-pose(received).x,end.actor.y-pose(received).y)}:null;
  const duplicateFrames=remote.frames.filter(f=>f.actors.filter(a=>a.remote&&a.name===name).length>1).length;
- return {frames:frames.length,observerFrames:remote.frames.length,localFrames:lf.length,localTravelPx,remoteTravelPx,transports:[...transports],cadence:stats(cadences),fps:stats(fps),speed:stats(speeds),rawSpeed:stats(rawSpeeds),sourceSpeed:stats(sourceSpeeds),orientationErrors:orientation,orientationFrames:total,movingWithoutSteps,stepsWithoutMovement,movingFlagsWithoutDisplacement,phaseDistanceErrorPx,maxJump,rebases,duplicateFrames,stopAnimationMs:stats(stop),followLagMs:lag,alignedErrorPx:Number.isFinite(error)?error:null,endpointErrorPx,settledStoppedPose,packetIntervals:stats(intervals.filter(v=>v>0))};
+ return {frames:frames.length,observerFrames:remote.frames.length,localFrames:lf.length,localTravelPx,remoteTravelPx,transports:[...transports],cadence:stats(cadences),fps:stats(fps),speed:stats(speeds),rawSpeed:stats(rawSpeeds),sourceSpeed:stats(sourceSpeeds),orientationErrors:orientation,orientationFrames:total,movingWithoutSteps,stepsWithoutMovement,movingFlagsWithoutDisplacement,phaseDistanceErrorPx,maxJump,rebases,duplicateFrames,stopAnimationMs:stats(stop),transientStopCount:transientStops.length,stopObservationWindowMs:observationWindowMs,followLagMs:lag,alignedErrorPx:Number.isFinite(error)?error:null,endpointErrorPx,settledStoppedPose,packetIntervals:stats(intervals.filter(v=>v>0))};
 }
