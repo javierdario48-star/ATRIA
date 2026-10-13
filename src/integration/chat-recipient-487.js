@@ -37,68 +37,86 @@ export function applyChatRecipient487(html,{reverse=false}={}){
  (function(){
   if(window.__atriaRecipientSelector487)return;window.__atriaRecipientSelector487=true;
   const names={patient:'Paciente',expert:'Dr. Vega',nurse:'Enfermera'};
+  const leading=/^\s*(dr\.?\s*vega|vega|doctor(?:\s+vega)?|enfermer(?:a|o|ia|ía)|paciente)\s*(?:[,;:]\s*|\s+|$)/i;
+  function mentionOf(text){
+   const m=String(text||'').match(leading);if(!m)return null;
+   const word=m[1].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+   return {role:/vega|doctor/.test(word)?'expert':/enfermer/.test(word)?'nurse':'patient',length:m[0].length};
+  }
+  function compose(){return document.getElementById('dieInput')}
   function decorate(){
-   const dock=document.getElementById('chatDock');if(!dock||dock.classList.contains('nsLobbyChat'))return;
-   const role=sim?.__atriaRecipient487;
-   const btn=dock.querySelector('#chatTargetBtn'),label=btn?.querySelector('span'),input=dock.querySelector('#dieInput');
-   if(!btn||!label||!input)return;
-   btn.classList.toggle('csExplicitTarget487',!!names[role]);
-   btn.setAttribute('aria-label',role?'Destinatario: '+names[role]+'. Tocar para volver a hablar cerca.':'Elegir conversación cercana');
-   if(role){label.textContent='Para: '+names[role];input.placeholder='Escribir a '+names[role]+'…';}
-   else{label.textContent=typeof listenerLabel==='function'?listenerLabel():'Hablar cerca';input.placeholder='Hablar cerca…';}
+   const dock=document.getElementById('chatDock');
+   if(!dock||dock.classList.contains('nsLobbyChat'))return;
+   const btn=dock.querySelector('#chatTargetBtn'),span=btn?.querySelector('span'),input=compose();
+   if(!btn||!span||!input)return;
+   const explicit=mentionOf(input.value),role=explicit?.role||'patient';
+   btn.classList.toggle('csExplicitTarget487',!!explicit);
+   span.textContent=explicit?'A: '+names[role]:'Paciente · predeterminado';
+   btn.setAttribute('aria-label',explicit?'Destinatario: '+names[role]+'. Tocar para volver al paciente.':'Paciente por defecto. Tocar para quitar la mención.');
+   input.placeholder='Pregunta al paciente o mencioná a Vega/enfermería…';
   }
   window.nsSelectChatTarget487=function(role,{auto=false}={}){
-   if(!sim)return false;
-   if(role!=null&&!names[role])return false;
-   // Automatic mentor prompts do not override an explicitly chosen patient
-   // or nurse. The user can always switch by touching a character.
-   if(auto&&sim.__atriaRecipient487&&sim.__atriaRecipient487!==role)return false;
+   if(auto||!sim||role!=null&&!names[role])return false;
+   if(document.body?.classList?.contains('nsLobbyMode'))return false;
+   const input=compose();if(!input)return false;
+   const wasFocused=document.activeElement===input;
+   const match=mentionOf(input.value),rest=(match?input.value.slice(match.length):input.value).trimStart();
+   const prefix=role?names[role]+', ':'';
+   input.value=prefix+rest;
    sim.__atriaRecipient487=role||null;
-   pendingAddress=role||null;chatRole=role||null;
-   document.getElementById('mentorBtn')?.classList.toggle('active',role==='expert');
+   pendingAddress=role||'patient';chatRole=role||'patient';
+   document.getElementById('mentorBtn')?.classList?.toggle('active',role==='expert');
+   try{input.setSelectionRange(prefix.length,prefix.length)}catch(_){}
+   if(wasFocused&&document.activeElement!==input)try{input.focus({preventScroll:true})}catch(_){input.focus()}
    decorate();return true;
   };
-  const originalRefresh=refreshChatDock;
+  window.nsMentionNPC487=window.nsSelectChatTarget487;
+  const oldRefresh=refreshChatDock;
   refreshChatDock=function(){
-   const result=originalRefresh.apply(this,arguments);decorate();return result;
-  };
-  const originalFocus=mentorFocus;
-  mentorFocus=function(){
-   window.nsSelectChatTarget487('expert');
-   return originalFocus.apply(this,arguments);
-  };
-  const originalMentorSay=mentorSay;
-  mentorSay=function(text,opts){
-   const result=originalMentorSay.apply(this,arguments);
-   if(opts?.question)window.nsSelectChatTarget487('expert',{auto:true});
-   return result;
+   const prior=compose(),focused=!!prior&&document.activeElement===prior;
+   const draft=prior?.value||'';
+   const start=prior?.selectionStart,end=prior?.selectionEnd;
+   const result=oldRefresh.apply(this,arguments);
+   const current=compose();
+   if(current&&current!==prior&&draft&&!current.value)current.value=draft;
+   if(current&&current!==prior&&focused){
+    try{current.focus({preventScroll:true})}catch(_){current.focus()}
+    try{if(start!=null&&end!=null)current.setSelectionRange(start,end)}catch(_){}
+   }
+   decorate();return result;
   };
   const originalSend=sendMessage;
   sendMessage=function(message){
-   const raw=String(message||'').trim(),role=sim?.__atriaRecipient487;
-   if(!raw||!role||!names[role]||!C||!sim||sim.caseEnded||raw.startsWith('/'))
-    return originalSend.apply(this,arguments);
-   // Multiplayer authorization/clinical owner relays have their own native
-   // validation. Never execute directly on a guest read-only mirror or rival.
+   const raw=String(message||'').trim();
+   if(!raw||raw.startsWith('/')||!C||!sim||sim.caseEnded||
+      document.body?.classList?.contains('nsLobbyMode'))return originalSend.apply(this,arguments);
+   const mention=mentionOf(raw),role=mention?.role||'patient';
+   const utterance=mention?raw.slice(mention.length).trim():raw;
+   if(!utterance)return false;
    const room=window.csV41Challenge;
    if(room?.active){
-    const owned=room.patients?.find(p=>p.uid===sim.patientInstance?.uid);
-    const mayAct=room.active&&!room.ended&&owned?.ownerId===room.selfId&&
-     owned?.state==='in_care'&&!sim.__csRemoteMirror487&&!sim.__csRoomSpectator;
-    if(mayAct||sim.__csRemoteMirror487)window.csBroadcastAddressedChat487?.(role,raw);
-    // This is the SAME owner of the native clinical state. Cooperative
-    // visitors and competitive rivals still use the room authorization path.
-    if(!mayAct){pendingAddress=role;return originalSend.apply(this,arguments);}
+    const item=room.patients?.find(p=>p.uid===sim.patientInstance?.uid);
+    const canOwn=!room.ended&&item?.ownerId===room.selfId&&item?.state==='in_care'&&
+     !sim.__csRemoteMirror487&&!sim.__csRoomSpectator;
+    if(!canOwn){
+     if(role==='expert'&&room.mode==='competitive'){
+      addGlobalChat('system','Vega no puede indicar acciones clínicas sobre un paciente rival.');
+      refreshChatDock();return false;
+     }
+     return originalSend.apply(this,arguments);
+    }
+    window.csBroadcastAddressedChat487?.(role,raw);
    }
    if(window.nsMayExamine?.()===false)return originalSend.apply(this,arguments);
-   if(role==='expert'&&!sim.mentor?.enabled&&!sim.nsVegaCalled){
-    addGlobalChat('system','Dr. Vega todavía no está disponible. Llamalo primero.');refreshChatDock();return false;
+   if(role==='expert'&&!sim.mentor?.enabled&&!sim.nsVegaCalled&&!sim.nsVegaCare?.active){
+    addGlobalChat('system','Llamá primero al Dr. Vega para conversar con él.');
+    refreshChatDock();return false;
    }
-   player.bubble=raw;player.bubbleUntil=performance.now()+2400;
-   addGlobalChat('doctor','A '+names[role]+': '+raw);
-   if(role==='expert')mentorUserMessage(raw);
-   else if(role==='patient')deliverPatientSpeech(raw,true);
-   else nurseNatural(raw);
+   player.bubble=raw;player.bubbleUntil=performance.now()+2200;
+   addGlobalChat('doctor','A '+names[role]+': '+utterance);
+   if(role==='expert')mentorUserMessage(utterance);
+   else if(role==='nurse')nurseNatural(raw);
+   else deliverPatientSpeech(utterance,true);
    refreshChatDock();return true;
   };
  })();
