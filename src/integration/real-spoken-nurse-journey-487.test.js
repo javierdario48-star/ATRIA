@@ -55,6 +55,7 @@ const ctx={
  mentorReactToAdministration:()=>false,
  toast:()=>{},csPlaySound:()=>{}
 };
+ctx.window.csNativeNurseMayTreat487=ctx.mayTreat;
 vm.createContext(ctx);
 const sources=[
  native('function findMonitorTherapy(text){','function therapyActive(id){'),

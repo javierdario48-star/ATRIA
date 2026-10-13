@@ -63,3 +63,6 @@ The user's specification in this session supplies the execution order and author
 - Recovery: remote branch matches the specified checkpoint E and reference workflow is successful. Repository has no AGENTS.md. Native engine and transport examined before implementation.
 
 - F RED→GREEN: independent 2- and 4-process full-game tests reproduce then eliminate lost lobby draft/focus, missing retry after accepted POST, and an NPC reply arriving before its compressed ownership snapshot. Team replay and recipient tests pass. Protocol/identity, frozen-source, build and exact recovery gates pass. G reproduction found an undefined cross-script permission reference; its fix belongs to G.
+
+- F publication: d0952bb6 (parent e546db7); all intervening remote changes preserved. F independent full-game chat checks passed with 2 and 4 processes; existing DOM/IME tests passed in desktop and Pixel emulation.
+- G RED→GREEN: a real PERI-SEC guard previously completed IV/monitor but threw mayTreat is not defined at the dependent Ringer clause. Phase 4/7 now delegate to the exact guard exported by the native nurse module. Real 2-client PERI-SEC and 3-client combined chat/nursing tests show actual oxygen, Ringer, both antibiotics and a fresh second antibiotic round. Legacy VM fixtures now expose that capability at the same boundary instead of a free global name.

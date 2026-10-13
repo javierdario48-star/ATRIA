@@ -23,7 +23,7 @@ const v412=script('cs-v412-box-vega-audio');
 const lateNursing=[
  '(function(){const base={natural:nurseNatural,send:sendMessage};',
  'const nurseFor=()=>nurse,withNurse=(actor,fn)=>fn(),roomToken=()=>"local-QA";',
- 'const mayTreat=(target=sim)=>!!target&&!target.caseEnded&&!target.patientDied&&window.nsMayExamine?.()!==false;',
+ 'const mayTreat=window.csNativeNurseMayTreat487=(target=sim)=>!!target&&!target.caseEnded&&!target.patientDied&&window.nsMayExamine?.()!==false;',
  between(v412,' const diminutives={',' mentorMessageIntent=function('),
  between(v412,' nurseNatural=function(text){',' processCommand=function('),
  between(v412,' sendMessage=function(text){',' window.csLanguageV412='),

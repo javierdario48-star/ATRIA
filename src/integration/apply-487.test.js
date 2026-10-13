@@ -296,8 +296,8 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
  assert.match(out,/observation:csObservationSnapshot\(s,p\)/,'owner progress must include read data');
  assert.match(out,/const observation=csSafeObservation\(m\.progress\?\.observation\)/,'host must validate relayed view');
  assert.match(out,/challenge\.mode==='competitive'\)return csOpenObserver\(index\)/,'competitive opponent opens viewer instead of action helper');
- assert.match(out,/challenge\.mode==='competitive'&&!\['exam','speech','vitals','monitor'\]\.includes\(a\?\.kind\)\)return false/,'competitive visitor can examine and talk while other actions are blocked');
- assert.match(out,/challenge\.mode==='competitive'&&\['therapy','study','intervention'\]\.includes\(a\.kind\)\)return false/,'competitive owner-only medications and studies still blocked');
+ assert.match(out,/challenge\.mode==='competitive'&&!\['exam','speech'\]\.includes\(a\?\.kind\)\)return false/,'competitive visitor can examine and talk while nursing mutations are blocked');
+ assert.match(out,/challenge\.mode==='competitive'&&\['therapy','study','intervention','iv','monitor','vitals'\]\.includes\(a\.kind\)\)return false/,'competitive owner-only medications, studies and support still blocked');
  assert.match(out,/else if\(m\.kind==='assist'\)\{/,'host forwards only guest actions admitted by assistActionAllowed');
  assert.match(out,/csObserverRefreshIfOpen\(\)/,'observation view refreshes on updates');
  assert.match(out,/conversation:\(s\.globalChat\|\|\[\]\)/,'conversation should be included');
@@ -337,7 +337,7 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
   assert.equal(vm.runInNewContext('requestAssist',accessContext)(3,{kind:'intervention',id:'antibiotico'}),false,'rival '+viewerId+' must not order medicines');
  }
  assert.match(out,/m\.kind==='assist_apply'&&m\.peerId===challenge\.hostId/,'owner accepts only host-authorized bedside assistance');
- assert.match(out,/if\(challenge\.mode==='competitive'&&\['therapy','study','intervention'\]\.includes\(a\.kind\)\)return false/,'no medication or new study can pass via competitive assist');
+ assert.match(out,/if\(challenge\.mode==='competitive'&&\['therapy','study','intervention','iv','monitor','vitals'\]\.includes\(a\.kind\)\)return false/,'no medication, new study or support can pass via competitive assist');
  assert.match(out,/const observation=csSafeObservation\(m\.progress\?\.observation\);if\(m\.progress\?\.observation&&/,'host must reject bad remote observation before committing state');
 
  // Phase 4: the original golden master lacks the multi-intent dispatcher.
@@ -363,6 +363,7 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
   updateSimulation:t=>{events.push(['update',t]);return true;},
   orderStudy:st=>{events.push(['study',st.id]);sharedSim.orders.set(st.id,{status:'queued'});return true;},
   nurseSay:t=>events.push(['reply',t])};
+ sampleCtx.window.csNativeNurseMayTreat487=sampleCtx.mayTreat;
  vm.runInNewContext(nursingJS,sampleCtx);
  const parse=sampleCtx.window.csNursingParse487;
  assert.deepEqual(Array.from(parse('Enfermera, vías, Ringer y oxígeno'),x=>x.kind),['iv','therapy','therapy']);
@@ -602,6 +603,7 @@ const fakeNurse={
  },mayTreat:()=>true,queueNurse:()=>true,addMonitorTherapy:t=>{clinicalPatient.administrationLog.push({id:'albumin'});return true;},
  nurseSay:msg=>spoken.push(msg),toast:msg=>notices.push(msg),csPlaySound:id=>sounds.push(id)
 };
+fakeNurse.window.csNativeNurseMayTreat487=fakeNurse.mayTreat;
 vm.runInNewContext(nurseScript,fakeNurse);
 assert.equal(fakeNurse.window.csNurse487Parse('Enfermera canalizá dos vías, oxígeno y hemograma')[0].count,2,'colloquial double IV resolves to 2 lines');
 fakeNurse.nurseNatural('Enfermera vías, ceftriaxona, oxígeno y hemograma');

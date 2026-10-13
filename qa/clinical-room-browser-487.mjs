@@ -67,6 +67,12 @@ try{
    assert.equal(a.filter(a=>a.id==='ceftriaxone').length,1);
    assert.equal(a.filter(a=>a.id==='metronidazole').length,1);
   });
+  await check('deliberate-antibiotic-round',async()=>{
+   await h.send(0,'Enfermera ceftriaxona y metronidazol');
+   await h.clients[0].page.waitForFunction(()=>sim.administrationLog.filter(a=>a.id==='ceftriaxone').length===2&&sim.administrationLog.filter(a=>a.id==='metronidazole').length===2,{},{timeout:25000});
+   const a=(await h.snapshot())[0].administrations;
+   assert.equal(a.filter(a=>a.id==='ceftriaxone').at(-1).count,2,'a new deliberate order creates a native second exposure');
+  });
  }
  assert.deepEqual(h.errors,[],'no browser runtime errors');
 }finally{

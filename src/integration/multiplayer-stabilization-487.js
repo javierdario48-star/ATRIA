@@ -350,6 +350,22 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "if(!challenge.active||challenge.ended||typeof m.text!=='string'||m.text.length>(npc?1000:180)||!person(m.peerId)||m.peerId===selfId||npc&&source?.ownerId!==m.peerId)return;",
  "if(!challenge.active||challenge.ended||typeof m.text!=='string'||m.text.length>(npc?1000:180)||(!person(m.peerId)&&!(typeof csCoop!=='undefined'&&csCoop.remotes?.[m.peerId]))||m.peerId===selfId)return;if(npc&&source?.ownerId!==m.peerId){if(source&&!source.ownerId&&source.state==='waiting'&&typeof setTimeout==='function'){const pending=challenge._pendingChat487||(challenge._pendingChat487=new Map()),key=String(m.messageId||'');if(key&&pending.size<120&&!pending.has(key)){pending.set(key,Date.now());const roomId=challenge.id;const retry=()=>{if(challenge.id!==roomId||!challenge.active||challenge.ended){pending.delete(key);return}const p=challenge.patients.find(p=>p.uid===m.patientUid);if(p?.ownerId===m.peerId){pending.delete(key);receive(m);return}if(p?.ownerId||Date.now()-pending.get(key)>8000){pending.delete(key);addGlobalChat('system','Mensaje de NPC sin confirmar: cambió la asignación del paciente.');refreshChatDock();return}setTimeout(retry,100)};setTimeout(retry,100)}}return}",
  'retain-authenticated-npc-text-until-ownership-snapshot');
+ // Phase 4/7 are separate script closures. Their old free `mayTreat` name
+ // accidentally relied on a helper private to the native ward-nurse closure.
+ // Export that exact guard, then delegate lazily (the native module mounts
+ // later). No permission predicate or nursing scheduler is duplicated.
+ s=edit(s,
+ "function taskSame(t,s=sim){",
+ "window.csNativeNurseMayTreat487=mayTreat;\n function taskSame(t,s=sim){",
+ 'expose-existing-native-nurse-authority-guard');
+ s=edit(s,
+ "const prevNatural=nurseNatural,prevInfer=inferRecipient,prevCommand=processCommand,prevUpdate=updateSimulation;",
+ "const prevNatural=nurseNatural,prevInfer=inferRecipient,prevCommand=processCommand,prevUpdate=updateSimulation;\n const mayTreat=(...args)=>window.csNativeNurseMayTreat487?.(...args)===true;",
+ 'composite-order-script-uses-native-permission-capability');
+ s=edit(s,
+ "const oldNatural=nurseNatural,oldInfer=inferRecipient,oldUpdate=updateSimulation,legacyParse=window.csNursingParse487;",
+ "const oldNatural=nurseNatural,oldInfer=inferRecipient,oldUpdate=updateSimulation,legacyParse=window.csNursingParse487;\n const mayTreat=(...args)=>window.csNativeNurseMayTreat487?.(...args)===true;",
+ 'receipt-script-uses-same-native-permission-capability');
  if(reverse)for(const {from,to,label} of undo.reverse())s=replaceOnce(s,to,from,'reverse-'+label);
  return s;
 }

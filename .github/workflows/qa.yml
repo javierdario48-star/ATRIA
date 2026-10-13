@@ -26,7 +26,7 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
           CLINICAL_PLAYERS: ${{ matrix.players }}
-          CLINICAL_STAGE: F
+          CLINICAL_STAGE: all
           CLINICAL_OUTPUT: qa/clinical-browser-results/${{ matrix.players }}
         run: node qa/clinical-room-browser-487.mjs
       - name: Native nursing and both antibiotics on real 2–4-client guard
