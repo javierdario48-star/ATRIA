@@ -63,7 +63,7 @@ for(const mode of ['coop','competitive'])for(const platform of ['desktop','andro
 // deprescribing excluded). Each of the 13 ED cases is requested through the
 // actual integrated native chat, then checked against administrationLog.
 const aliases=[
- ['oxygen','oxígeno'],['fluid','ringer'],['albumin','albúmina'],
+ ['oxygen','oxígeno'],['fluid','ringer'],['albumin','albúmina IV'],
  ['vasopressor','noradrenalina'],['morphine','morfina'],
  ['analgesia','paracetamol'],['antiemetic','ondansetron'],['ppi','pantoprazol'],
  ['transfusion','transfusión'],['espironolactona','espironolactona'],
