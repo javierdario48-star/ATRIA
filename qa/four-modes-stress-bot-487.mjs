@@ -122,13 +122,13 @@ const rival={challenge:{mode:'competitive',assistIndex:0,patients:[{...target,ow
  toast:t=>warnings.push(t)};
 vm.createContext(rival);new vm.Script(navigation).runInContext(rival);
 const inputs=[
- ['enfermera monitor, ceftriaxona y hemograma',['monitor']],
- ['enfermera signos vitales, ringer y cultivo',['vitals']],
+ ['enfermera monitor, ceftriaxona y hemograma',[]],
+ ['enfermera signos vitales, ringer y cultivo',[]],
  ['enfermera administrar morfina',[]],
  ['enfermera hemograma, tomografía y ecografía',[]],
  ['examinar y auscultar',['exam']],
  ['paciente, ¿dónde le duele?',['speech']],
- ['enfermera monitor y signos vitales',['monitor','vitals']],
+ ['enfermera monitor y signos vitales',[]],
  ['/equipo Hagan el triage',[]]
 ];
 let bedside=0;
