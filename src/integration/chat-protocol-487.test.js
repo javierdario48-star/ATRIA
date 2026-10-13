@@ -142,6 +142,24 @@ for(const count of [2,3,4]){
  }
  host.receive({...ack,peerId:'P1'});
  assert.equal(notice.filter(x=>/mensaje recibido/i.test(x[1])).length,1,'exactly one receipt');
+ // A cooperative clinical command must wait and retry under the SAME aid.
+ // An unrelated peer's acknowledgement cannot finalize a medical action.
+ host.challenge.hostId='P1';
+ const aid='P0:CLINICAL-'+count;
+ assert.equal(host.send('assist',{aid,index:0,uid:'PAT',action:{kind:'command',text:'Enfermera Ringer'}}),true);
+ assert.equal(sent.filter(x=>x.kind==='assist'&&x.aid===aid).length,1);
+ assert.equal(vm.runInContext('nsReliableChat487.size',host),1);
+ host.receive({type:'cs_room_v411',kind:'assist_ack',id:'ROOM',aid,peerId:'P0',targetId:'P0'});
+ assert.equal(vm.runInContext('nsReliableChat487.size',host),1,'self or foreign ACK is insufficient');
+ host.receive({type:'cs_room_v411',kind:'assist_ack',id:'ROOM',aid,peerId:'P1',targetId:'P0'});
+ assert.equal(vm.runInContext('nsReliableChat487.size',host),0,'host accepted order; still not called administered');
+ const appliedAid='P1:OWNER-AID-'+count;
+ host.send('assist_apply',{aid:appliedAid,targetId:'P1',uid:'PAT',action:{kind:'command',text:'Enfermera oxígeno'}});
+ assert.equal(vm.runInContext('nsReliableChat487.size',host),1);
+ host.receive({type:'cs_room_v411',kind:'assist_apply_ack',id:'ROOM',aid:appliedAid,peerId:'P1',targetId:'P0'});
+ assert.equal(vm.runInContext('nsReliableChat487.size',host),0);
+ assert(!notice.some(([role,text])=>/administrado|completado/i.test(text)&&role==='system'),
+  'ACK means reception by clinical owner, NEVER medication administration');
 }
 console.log('NPC ROOM PROTOCOL PASS',JSON.stringify({sessions,players:[2,3,4],realNativeAdministration:true,
  replaySafe:true,metadata:true,physicalDevices:false,realNetwork:false}));
