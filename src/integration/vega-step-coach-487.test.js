@@ -46,31 +46,38 @@ const context={C,sim,window,careEpoch:0,destinations:{'PERI-SEC-001':'quirofano'
  captureMonitorVitals:()=>{},therapyStartedAt:()=>null};
 vm.runInNewContext(source.slice(helperA,helperB)+'\n'+source.slice(tickA,tickB),context,{timeout:3000});
 
-for(let n=1;n<=5;n++){
- context.tick();assert.equal(physical.length,n,'exactly one exam action per tick: '+n);
- assert.equal(studies.length,0,'workup does not flood during exam');
- time+=1100;
-}
-context.tick();assert.equal(job.phase,'workup487','examination advances to next step');
+// One quiet bedside assessment, two high-yield studies, a single
+// presumptive diagnosis, and sequential confirmed native interventions.
+context.tick();
+assert.equal(physical.length,5,'Vega performs the real exam without five spoken messages');
+assert.equal(studies.length,0);
+assert.equal(job.phase,'workup487');
+assert(messages.filter(x=>/Ahora hago|Sigo con el siguiente/.test(x)).length===0,'no exam spam');
+time+=700;context.tick();
 assert.deepEqual(Array.from(context.csVegaPriorityStudies487()),['peri_cbc','peri_gas'],
- 'shocked peritonitis with examined abdomen must not wait for culture OR CT');
-time+=700;
-context.tick();assert.equal(studies.length,0,'Vega first offers learner the study');
-assert(messages.some(x=>x.includes('¿Lo pedís vos o lo pido yo?')));
-time+=2400;context.tick();assert.deepEqual(studies,['peri_cbc'],'first study requested only after a decision window');
-time+=750;context.tick();assert.equal(studies.length,1,'next study offered but not ordered instantly');
-time+=2400;context.tick();assert.deepEqual(studies,['peri_cbc','peri_gas']);
-time+=700;context.tick();assert.equal(job.phase,'results','workup automatically advances');
-assert.equal(sim.orders.has('ter_culture'),false,'delayed culture is not a compulsory order');
-assert.equal(sim.orders.has('peri_ct'),false,'shock may continue without CT');
+ 'shock avoids CT and cultures but still checks perfusion and infection');
+assert.deepEqual(studies,['peri_cbc','peri_gas'],'one bounded workup round requests only two studies');
+assert.equal(job.phase,'results');
+assert.equal(messages.filter(x=>x.includes('Solicité')).length,1,'one message for the grouped studies');
+assert.equal(sim.orders.has('ter_culture'),false);
+assert.equal(sim.orders.has('peri_ct'),false);
+for(let n=0;n<8;n++){time+=800;context.tick()}
+assert.equal(messages.filter(x=>x.includes('Solicité')).length,1,'no repeated study requests while awaiting results');
 sim.orders.get('peri_cbc').status='done';sim.orders.get('peri_gas').status='done';
-time+=800;context.tick();assert.equal(job.phase,'reassessment','studies complete advances treatment flow');
-time+=700;context.tick();assert(messages.some(x=>x.includes('¿La indicás vos o querés que lo haga yo?')),
- 'first intervention is explicitly offered to learner');
-time+=2400;context.tick();assert(sim.interventions.has('ceftriaxone'));
-assert(!sim.interventions.has('metronidazole'),'Vega must not prescribe every therapy simultaneously');
-time+=700;context.tick();time+=2400;context.tick();assert(sim.interventions.has('metronidazole'));
-time+=700;context.tick();time+=2400;context.tick();assert.equal(consulted,1,'source control becomes consultation, not instant surgery');
+time+=800;context.tick();
+assert.equal(job.phase,'decision487');
+assert.equal(sim.diagnosis,'peritonitis secundaria');
+assert(messages.some(x=>x.includes('diagnóstico presuntivo es')));
+assert(messages.some(x=>x.includes('¿Qué proponés hacer?')));
+assert(!sim.interventions.has('ceftriaxone'),'noncritical consultation waits for learner decision');
+job.phase='reassessment'; // Response "no sé" transitions here via the tested mentor routing.
+time+=600;context.tick();
+assert(sim.interventions.has('ceftriaxone'),'first treatment executed');
+assert(!sim.interventions.has('metronidazole'),'second not simultaneous');
+time+=1700;context.tick();
+assert(sim.interventions.has('metronidazole'),'second distinct treatment');
+time+=1700;context.tick();
+assert.equal(consulted,1,'source-control requests consult, not an imaginary operation');
 assert(!sim.interventions.has('source_control'));
 console.log('VEGA STEPWISE RUNTIME BOT PASS',JSON.stringify({
  exams:physical.length,quickStudies:studies,stepwiseDrugs:true,
