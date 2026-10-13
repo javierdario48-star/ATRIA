@@ -261,6 +261,12 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "challenge.players=list.map(x=>({id:x.id,name:String(x.name||'Jugador').slice(0,40)}));",
  "challenge.players=list.map(x=>({id:x.id,name:String(x.name||'Jugador').slice(0,40),xpGuard487:challenge.players.find(p=>p.id===x.id)?.xpGuard487||0}));",
  'preserve-earnings-across-roster-updates');
+ // Role-tagged clinical utterances stay visible to every room member.
+ // This is a text-only broadcast; no therapy/exam code runs in the listener.
+ s=edit(s,
+ "function roomCommand(q){",
+ "window.csBroadcastAddressedChat487=function(role,raw){if(!shared()||!challenge.active||challenge.ended||!['patient','expert','nurse'].includes(role))return false;const utterance=String(raw||'').trim().slice(0,150);if(!utterance)return false;const to={patient:'Paciente',expert:'Dr. Vega',nurse:'Enfermera'}[role];const text='A '+to+': '+utterance;send('team_chat',{text,messageId:selfId+':'+Date.now().toString(36)+':'+Math.random().toString(36).slice(2,7)});return true;};function roomCommand(q){",
+ 'addressed-clinical-message-is-public-but-execution-stays-authoritative');
  if(reverse)for(const {from,to,label} of undo.reverse())s=replaceOnce(s,to,from,'reverse-'+label);
  return s;
 }
