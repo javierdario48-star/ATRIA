@@ -136,7 +136,8 @@ Frame times use actual RAF timestamps; draw execution time is also retained.
 
 CI artifacts contain full local/received/rendered traces, per-pair metrics,
 paired screenshots at straight movement, turns, stopping and reversal, and
-videos of each independent browser. Final matrix results remain to be checked.
+videos of the two principal independent browsers. Group runs retain paired
+screenshot sequences. The completed matrix is recorded in checkpoint E below.
 
 Matrix harness refinements: selects the same APP practice through the native
 practice selector in both versions, to isolate motion from randomized case
@@ -254,3 +255,49 @@ flow is not certified by the motion harness.
 No two physical Android phones are available in this environment. Browser
 automation is evidence for the client correction, not definitive physical
 Android acceptance.
+
+## Checkpoint E: measured release evidence
+
+The complete matrix is green on `c825f3168fd02a5a0a7f40cb4527b0aeb2d95f14`:
+https://github.com/javierdario48-star/ATRIA/actions/runs/38410766874
+All six jobs passed: the original three checks and independent-process motion
+tests with 2, 3 and 4 clients. Eleven scenarios per group exercised 22 + 66 +
+132 = 220 ordered source/observer checks. Every settled delivered stop had
+0px endpoint error; every pair had zero displayed-orientation errors and zero
+foot-phase advances without displacement. Full traces and captures are run
+artifacts. `qa/remote-motion-validation-487.json` records this exact measured
+SHA, run, comparison and all matrix pairs. It is evidence for that checkpoint;
+the release SHA must independently pass its own workflow before handoff.
+
+Same-run principal comparison against the exact reference `2f13db3c`:
+
+| Scene / direction | Speed CV before -> after | Aligned error before -> after | Following delay before -> after |
+| --- | --- | --- | --- |
+| Lobby A -> B | 0.7159 -> 0.4425 | 4.20 -> 1.85px | 70 -> 110ms |
+| Lobby B -> A | 0.8066 -> 0.4556 | 5.02 -> 2.05px | 70 -> 110ms |
+| Guard A -> B | 0.7463 -> 0.6126 | 10.54 -> 8.30px | 350 -> 360ms |
+| Guard B -> A | 0.8965 -> 0.4949 | 9.90 -> 4.67px | 360 -> 340ms |
+
+Every direction improves both CV and aligned path error. The extra 40ms in
+the lobby is below one measured outgoing interval; guards add 10ms or reduce
+20ms. No larger fixed rendering delay was used to obtain these improvements.
+Primary maximum stop-animation time after the change is 117/167ms in lobby
+and 383/500ms in guard. The ideal constant-speed renderer regression remains
+CV 0.4242 -> 0.00125; real-network values above also include source, packet,
+collision/pathfinder and FPS variability and must not be confused with it.
+
+The release adds a compact two-client visual sequence in each scene, with
+both avatars kept in both cameras through ordinary native navigation and
+the same complete motion gates. Separate recordings/screenshots preserve
+local-vs-remote steps, turns, reversals and rest. A compiled-renderer regression
+also rejects foreign-room actors and verifies that another guard with the
+same peer identifier inherits neither buffered positions nor walking phase.
+No production logic is changed in this evidence checkpoint.
+
+Runtime/product files affected by the full movement correction:
+`src/social/remote-motion.js`, `src/integration/remote-motion-487.js`,
+`src/integration/apply-487.js` and the presence DTO/ordering in
+`src/social/qa-social-server.js`. Other changes are motion tests, CI, this
+report and the artifact verifier's exact motion inversion. Local controls,
+sprites, original collision/navigation functions, clinical authority and
+the complete protected `cs-v410-modes` block remain unchanged.

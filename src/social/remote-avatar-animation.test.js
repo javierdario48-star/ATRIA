@@ -34,6 +34,7 @@ const players={
  SELF:{peerId:'SELF',userId:'account-self',roomId:'CS_GUARD',name:'Yo',x:80,y:60,dir:'E',moving:true,walkPhase:100,coat:false},
  OTHER:{peerId:'OTHER',userId:'account-other',roomId:'CS_GUARD',name:'Amigo',x:120,y:60,dir:'E',moving:true,walkPhase:0,coat:false,stateSeq:1,motionAt:0,motionSession:'CS_GUARD:OTHER',motionCadence:192}
 };
+players.OUTSIDER={...players.OTHER,peerId:'OUTSIDER',roomId:'OTHER_GUARD',name:'Otra guardia',x:600};
 const actors=[],names=[],face={complete:true};
 let drawTime=0;
 const guard={csDrawRemote:null,csSharedRemotePose:new Map(),csCoop:{remotes:players},challenge:{id:'CS_GUARD'},selfId:'SELF',shared:()=>true,oldRemoteDraw(){},
@@ -60,5 +61,13 @@ const hold=players.OTHER.x;
 for(let frame=120;frame<165;frame++){drawTime=frame*16;guard.csDrawRemote()}
 assert.equal(players.OTHER.x,hold);
 assert.equal(actors.at(-1).moving,false,'remote stops foot motion after interpolation settles');
+// Independent guards can contain the same peer identifier without sharing
+// buffered positions or gait. Foreign-room actors never enter this renderer.
+guard.challenge.id='NEXT_GUARD';Object.assign(players.OTHER,{roomId:'NEXT_GUARD',x:700,motionAt:0,stateSeq:1,motionSession:'NEXT_GUARD:OTHER'});
+drawTime+=16;const beforeRoomSwitch=actors.length;guard.csDrawRemote();
+assert.equal(actors.length-beforeRoomSwitch,1,'only the current guard companion is rendered');
+assert.equal(actors.at(-1).x,700,'another guard starts from its actual pose rather than a prior room buffer');
+assert.equal(actors.at(-1).walkPhase,0,'another guard does not inherit prior footsteps');
+assert.deepEqual(Array.from(vm.runInContext('[...csSharedRemotePose.keys()]',guard)),['NEXT_GUARD:OTHER'],'retired room buffers are released');
 assert(html.includes("if(packet?.type==='state'&&m.userId===own)continue"),'authenticated server self echo filtered before legacy receive');
 console.log('ATRIA REMOTE AVATAR ANIMATION QA BOT PASS',JSON.stringify({lobbyFrames:115,guardFrames:165,actorsDrawnPerGuardFrame:1,guardMovingFrames:movingFrames,hostEchoExcluded:true,phaseDrivesVisibleDistance:true}));

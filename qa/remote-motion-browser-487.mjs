@@ -175,6 +175,29 @@ async function returnLobby(){
  await Promise.all(clients.map(c=>c.page.waitForFunction(()=>nsLobby.active&&!csV41Challenge.active)));
  await pause(1000);
 }
+async function nearbyVisual(scene){
+ // Supplement the long routes with both avatars in each camera. Reposition
+ // ONLY through each client's original pathfinder/destination controller.
+ const anchor=await clients[0].page.evaluate(()=>nearestPassable(Math.floor(player.x/TW),Math.floor(player.y/TH),8));
+ const targets=await Promise.all(clients.map((c,i)=>c.page.evaluate(([tx,ty])=>{const p=nearestPassable(tx,ty,3);if(!p)throw Error('No nearby native target');const x=(p[0]+.5)*TW,y=(p[1]+.5)*TH;setPlayerTarget(...worldToScreen(x,y));return {x,y}},[anchor[0]+i,anchor[1]])));
+ // The unchanged controller sets pathIndex=1 and skips the current tile. A
+ // same-tile request therefore preserves the continuous off-center position;
+ // native arrival is idle in the requested tile, not forced recentering.
+ await Promise.all(clients.map((c,i)=>c.page.waitForFunction(({x,y})=>!player.moving&&Math.floor(player.x/TW)===Math.floor(x/TW)&&Math.floor(player.y/TH)===Math.floor(y/TH),targets[i],{timeout:15000})));
+ await pause(650);
+ return capture(scene,{action:async()=>{
+  for(let i=0;i<clients.length;i++)for(const [tag,dx,dy]of [['straight',0,-2],['turn90',3,0],['reverse',-3,0],['return',0,2]]){
+   await move(clients[i].page,dx,dy);await pause(200);
+   await Promise.all(clients.map(async(c,j)=>{
+    const name=clients[1-j].name;
+    assert(await c.page.evaluate(name=>{const a=motionTrace.frames.at(-1)?.actors.find(a=>a.remote&&a.name===name);if(!a)return false;const [x,y]=worldToScreen(a.x,a.y);return x>48&&x<innerWidth-48&&y>100&&y<innerHeight-150},name),'the real rendered companion remains visible in both cameras');
+    await c.page.screenshot({path:output+'/'+scene+'-source'+i+'-'+tag+'-observer'+j+'.png'});
+   }));
+   await pause(650);
+  }
+  await pause(900);
+ }});
+}
 try{
  for(let i=0;i<count;i++)await makeClient(i);
  await Promise.all(clients.map(c=>c.page.waitForFunction(n=>nsLobby.players.size>=n,count-1)));
@@ -211,6 +234,7 @@ try{
    const observed=trace.frames.at(-1).actors.find(a=>a.remote&&a.name===clients[0].name);
    assert(observed&&Math.hypot(observed.x-sourceEnd.x,observed.y-sourceEnd.y)<18,'the rendered companion recovers within one stride without a persistent backlog');
   }
+  if(count===2)scenarios.push(await nearbyVisual('guard-nearby-visual'));
   await returnLobby();scenarios.push(await capture('lobby-return',{short:true}));
   // Close the actual channels; the original discovery/retry and HTTP fallback act.
   await Promise.all(clients.map(c=>c.page.evaluate(()=>{for(const p of __atriaLobbyNet461.peers.values()){p.dc?.close();p.pc?.close()}})));
@@ -226,6 +250,7 @@ try{
   // negotiation to reconnect as a precondition for measuring remote recovery.
   await Promise.all(clients.slice(1).map(c=>c.page.waitForFunction(({id,motionSession,epoch})=>{const p=nsLobby.players.get(id)?._motion;return p?.session===motionSession&&p.epoch===epoch},{id:clients[0].user.id,...next},{timeout:15000})));
   scenarios.push(await capture('lobby-reconnect',{short:true}));
+  if(count===2)scenarios.push(await nearbyVisual('lobby-nearby-visual'));
   const secondRoom=await startGuard('competitive');assert.notEqual(secondRoom.id,firstRoom.id,'another guard has an independent scene identity');
   scenarios.push(await capture('guard-competitive-restart',{short:true}));
  }

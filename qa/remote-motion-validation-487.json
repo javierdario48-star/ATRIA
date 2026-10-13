@@ -1,0 +1,4451 @@
+{
+  "measuredSHA": "c825f3168fd02a5a0a7f40cb4527b0aeb2d95f14",
+  "referenceSHA": "2f13db3ce1c47f58618c0955ca6e3c900f7f9aab",
+  "workflow": "https://github.com/javierdario48-star/ATRIA/actions/runs/38410766874",
+  "workflowRun": 38410766874,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "architecture-and-build",
+      "conclusion": "success"
+    },
+    {
+      "name": "remote-motion-browser (3)",
+      "conclusion": "success"
+    },
+    {
+      "name": "remote-motion-browser (4)",
+      "conclusion": "success"
+    },
+    {
+      "name": "npc-chat-browser",
+      "conclusion": "success"
+    },
+    {
+      "name": "remote-motion-browser (2)",
+      "conclusion": "success"
+    },
+    {
+      "name": "immutable-source-and-artifact",
+      "conclusion": "success"
+    }
+  ],
+  "comparison": {
+    "referenceSHA": "2f13db3ce1c47f58618c0955ca6e3c900f7f9aab",
+    "realNetwork": true,
+    "physicalAndroid": false,
+    "scenes": {
+      "lobby": {
+        "rows": [
+          {
+            "direction": "AB",
+            "before": {
+              "frames": 1088,
+              "observerFrames": 1088,
+              "localFrames": 1076,
+              "localTravelPx": 814.2007239452696,
+              "remoteTravelPx": 859.7510812232207,
+              "transports": [],
+              "cadence": {
+                "n": 0,
+                "mean": 0,
+                "cv": 0,
+                "min": 0,
+                "max": 0
+              },
+              "fps": {
+                "n": 1087,
+                "mean": 48.934075601495636,
+                "cv": 0.30979828736205833,
+                "min": 14.992503748125772,
+                "max": 60.6060606060606
+              },
+              "speed": {
+                "n": 152,
+                "mean": 204.25160180721326,
+                "cv": 0.7158612718856433,
+                "min": 22.33497611280006,
+                "max": 931.5261209995455
+              },
+              "rawSpeed": {
+                "n": 152,
+                "mean": 204.25160180721326,
+                "cv": 0.7158612718856433,
+                "min": 22.33497611280006,
+                "max": 931.5261209995455
+              },
+              "sourceSpeed": {
+                "n": 152,
+                "mean": 173.93252146571854,
+                "cv": 0.17676790007807486,
+                "min": 102.65367316341924,
+                "max": 205.3078078078147
+              },
+              "orientationErrors": 22,
+              "orientationFrames": 247,
+              "movingWithoutSteps": 61,
+              "stepsWithoutMovement": 0,
+              "movingFlagsWithoutDisplacement": 2,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "maxJump": 15.463333608591102,
+              "rebases": [],
+              "duplicateFrames": 0,
+              "stopAnimationMs": {
+                "n": 3,
+                "mean": 44.366617838541664,
+                "cv": 0.9363186642518606,
+                "min": 0,
+                "max": 99.89990234375
+              },
+              "followLagMs": 70,
+              "alignedErrorPx": 4.197503830685236,
+              "endpointErrorPx": 0,
+              "settledStoppedPose": null,
+              "packetIntervals": {
+                "n": 199,
+                "mean": 108.69849246231156,
+                "cv": 0.1597495762203091,
+                "min": 2,
+                "max": 150
+              }
+            },
+            "after": {
+              "frames": 1217,
+              "observerFrames": 1217,
+              "localFrames": 1196,
+              "localTravelPx": 823.812850764095,
+              "remoteTravelPx": 817.0617161098801,
+              "transports": [
+                "rtc"
+              ],
+              "cadence": {
+                "n": 1217,
+                "mean": 106.61978684146919,
+                "cv": 0.020142981167363457,
+                "min": 98.76,
+                "max": 112.34856447483888
+              },
+              "fps": {
+                "n": 1216,
+                "mean": 54.99038994374241,
+                "cv": 0.20498550797505213,
+                "min": 19.960079840319942,
+                "max": 60.6060606060606
+              },
+              "speed": {
+                "n": 167,
+                "mean": 193.52383950494507,
+                "cv": 0.4424870546966921,
+                "min": 66.34682467037625,
+                "max": 447.1887553119976
+              },
+              "rawSpeed": {
+                "n": 167,
+                "mean": 193.52383950494507,
+                "cv": 0.4424870546966921,
+                "min": 66.34682467037625,
+                "max": 447.1887553119976
+              },
+              "sourceSpeed": {
+                "n": 167,
+                "mean": 178.16832600133284,
+                "cv": 0.17053247623202017,
+                "min": 101.25638512430791,
+                "max": 219.74220623501577
+              },
+              "orientationErrors": 0,
+              "orientationFrames": 230,
+              "movingWithoutSteps": 0,
+              "stepsWithoutMovement": 0,
+              "movingFlagsWithoutDisplacement": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "maxJump": 7.509149999999863,
+              "rebases": [],
+              "duplicateFrames": 0,
+              "stopAnimationMs": {
+                "n": 3,
+                "mean": 116.733154296875,
+                "cv": 0.00040373318836691086,
+                "min": 116.69970703125,
+                "max": 116.7998046875
+              },
+              "followLagMs": 110,
+              "alignedErrorPx": 1.8537588798540425,
+              "endpointErrorPx": 0,
+              "settledStoppedPose": {
+                "receivedAt": 1791900610555,
+                "settlingMs": 13950.89990234375,
+                "errorPx": 0
+              },
+              "packetIntervals": {
+                "n": 189,
+                "mean": 104.78835978835978,
+                "cv": 0.1392147886748157,
+                "min": 26,
+                "max": 154
+              },
+              "acceptance": {
+                "lagBudgetMs": 223.07783355758042,
+                "pathBudgetPx": 30.487303919535996
+              }
+            },
+            "lagBudgetMs": 215.06848369252629
+          },
+          {
+            "direction": "BA",
+            "before": {
+              "frames": 1076,
+              "observerFrames": 1076,
+              "localFrames": 1088,
+              "localTravelPx": 1279.7090481592854,
+              "remoteTravelPx": 1433.3413298540781,
+              "transports": [],
+              "cadence": {
+                "n": 0,
+                "mean": 0,
+                "cv": 0,
+                "min": 0,
+                "max": 0
+              },
+              "fps": {
+                "n": 1075,
+                "mean": 48.19785584371615,
+                "cv": 0.31560907573826763,
+                "min": 14.992503748125772,
+                "max": 60.6060606060606
+              },
+              "speed": {
+                "n": 164,
+                "mean": 213.21022729152443,
+                "cv": 0.8066421880801625,
+                "min": 2.621960651732315,
+                "max": 932.2007935326474
+              },
+              "rawSpeed": {
+                "n": 164,
+                "mean": 213.21022729152443,
+                "cv": 0.8066421880801625,
+                "min": 2.621960651732315,
+                "max": 932.2007935326474
+              },
+              "sourceSpeed": {
+                "n": 164,
+                "mean": 166.65038300476198,
+                "cv": 0.1909168614929881,
+                "min": 101.41233421563696,
+                "max": 227.68666666667028
+              },
+              "orientationErrors": 62,
+              "orientationFrames": 299,
+              "movingWithoutSteps": 68,
+              "stepsWithoutMovement": 0,
+              "movingFlagsWithoutDisplacement": 2,
+              "phaseDistanceErrorPx": 1.2612133559741778e-13,
+              "maxJump": 19.64051832562753,
+              "rebases": [],
+              "duplicateFrames": 0,
+              "stopAnimationMs": {
+                "n": 3,
+                "mean": 83.36678059895833,
+                "cv": 0.3266319118395075,
+                "min": 50,
+                "max": 116.7001953125
+              },
+              "followLagMs": 70,
+              "alignedErrorPx": 5.019053615094423,
+              "endpointErrorPx": 4.320159668184792e-11,
+              "settledStoppedPose": null,
+              "packetIntervals": {
+                "n": 196,
+                "mean": 108.62244897959184,
+                "cv": 0.1293122904016635,
+                "min": 79,
+                "max": 144
+              }
+            },
+            "after": {
+              "frames": 1196,
+              "observerFrames": 1196,
+              "localFrames": 1217,
+              "localTravelPx": 1226.318505731736,
+              "remoteTravelPx": 1191.1199128858814,
+              "transports": [
+                "rtc"
+              ],
+              "cadence": {
+                "n": 1196,
+                "mean": 106.40007807759947,
+                "cv": 0.018552126604085683,
+                "min": 99.98299999999989,
+                "max": 111.62398729648189
+              },
+              "fps": {
+                "n": 1195,
+                "mean": 54.39031894204535,
+                "cv": 0.21733042290426305,
+                "min": 19.960079840319942,
+                "max": 60.6060606060606
+              },
+              "speed": {
+                "n": 244,
+                "mean": 190.57477082741832,
+                "cv": 0.4555769638355428,
+                "min": 21.709636721863173,
+                "max": 453.7168674699398
+              },
+              "rawSpeed": {
+                "n": 244,
+                "mean": 190.57477082741832,
+                "cv": 0.4555769638355428,
+                "min": 21.709636721863173,
+                "max": 453.7168674699398
+              },
+              "sourceSpeed": {
+                "n": 244,
+                "mean": 179.38602249345374,
+                "cv": 0.16306639561373532,
+                "min": 101.56264150943116,
+                "max": 220.00600240096037
+              },
+              "orientationErrors": 0,
+              "orientationFrames": 340,
+              "movingWithoutSteps": 0,
+              "stepsWithoutMovement": 0,
+              "movingFlagsWithoutDisplacement": 0,
+              "phaseDistanceErrorPx": 1.1368683772161603e-13,
+              "maxJump": 7.531700000000342,
+              "rebases": [],
+              "duplicateFrames": 0,
+              "stopAnimationMs": {
+                "n": 3,
+                "mean": 144.33349609375,
+                "cv": 0.10908670118124102,
+                "min": 133.2001953125,
+                "max": 166.60009765625
+              },
+              "followLagMs": 110,
+              "alignedErrorPx": 2.052794020253632,
+              "endpointErrorPx": 0,
+              "settledStoppedPose": {
+                "receivedAt": 1791900622233,
+                "settlingMs": 2264.400146484375,
+                "errorPx": 0
+              },
+              "packetIntervals": {
+                "n": 188,
+                "mean": 106.53191489361703,
+                "cv": 0.11582775449826958,
+                "min": 80,
+                "max": 137
+              },
+              "acceptance": {
+                "lagBudgetMs": 222.59285552007873,
+                "pathBudgetPx": 30.4210235877441
+              }
+            },
+            "lagBudgetMs": 215.3936986964958
+          }
+        ],
+        "meanSpeedCVBefore": 0.7612517299829029,
+        "meanSpeedCVAfter": 0.4490320092661174
+      },
+      "guard": {
+        "rows": [
+          {
+            "direction": "AB",
+            "before": {
+              "frames": 947,
+              "observerFrames": 947,
+              "localFrames": 928,
+              "localTravelPx": 1109.8157619309852,
+              "remoteTravelPx": 1050.8559740391813,
+              "transports": [],
+              "cadence": {
+                "n": 0,
+                "mean": 0,
+                "cv": 0,
+                "min": 0,
+                "max": 0
+              },
+              "fps": {
+                "n": 946,
+                "mean": 44.913887470689644,
+                "cv": 0.3469968079167656,
+                "min": 14.99250374812659,
+                "max": 60.6060606060606
+              },
+              "speed": {
+                "n": 187,
+                "mean": 177.66948843076904,
+                "cv": 0.7462751101693404,
+                "min": 0,
+                "max": 527.1005959095736
+              },
+              "rawSpeed": {
+                "n": 187,
+                "mean": 177.66948843076904,
+                "cv": 0.7462751101693404,
+                "min": 0,
+                "max": 527.1005959095736
+              },
+              "sourceSpeed": {
+                "n": 187,
+                "mean": 185.2322892390405,
+                "cv": 0.10155511558301455,
+                "min": 101.69184266715777,
+                "max": 205.32852564103604
+              },
+              "orientationErrors": 27,
+              "orientationFrames": 223,
+              "movingWithoutSteps": 0,
+              "stepsWithoutMovement": 0,
+              "movingFlagsWithoutDisplacement": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "maxJump": 15.895481016306576,
+              "rebases": [],
+              "duplicateFrames": 0,
+              "stopAnimationMs": {
+                "n": 4,
+                "mean": 358.199951171875,
+                "cv": 0.5248683947230891,
+                "min": 33.199951171875,
+                "max": 483.199951171875
+              },
+              "followLagMs": 350,
+              "alignedErrorPx": 10.54038536685844,
+              "endpointErrorPx": 0,
+              "settledStoppedPose": null,
+              "packetIntervals": {
+                "n": 95,
+                "mean": 253.8736842105263,
+                "cv": 0.43944400678886153,
+                "min": 156,
+                "max": 546
+              }
+            },
+            "after": {
+              "frames": 922,
+              "observerFrames": 928,
+              "localFrames": 924,
+              "localTravelPx": 1102.4522178437653,
+              "remoteTravelPx": 1061.052214660991,
+              "transports": [
+                "http"
+              ],
+              "cadence": {
+                "n": 922,
+                "mean": 220.7622164053846,
+                "cv": 0.004073355163197387,
+                "min": 219.6181229764074,
+                "max": 223.5542509626549
+              },
+              "fps": {
+                "n": 921,
+                "mean": 44.37517231424227,
+                "cv": 0.3526492102045351,
+                "min": 14.970059880238868,
+                "max": 60.6060606060606
+              },
+              "speed": {
+                "n": 170,
+                "mean": 178.28652552952155,
+                "cv": 0.6125710106208087,
+                "min": 0,
+                "max": 422.4728915659883
+              },
+              "rawSpeed": {
+                "n": 170,
+                "mean": 178.28652552952155,
+                "cv": 0.6125710106208087,
+                "min": 0,
+                "max": 422.4728915659883
+              },
+              "sourceSpeed": {
+                "n": 170,
+                "mean": 181.70606973139505,
+                "cv": 0.12033404361364447,
+                "min": 117.20983419096838,
+                "max": 205.32852564103052
+              },
+              "orientationErrors": 0,
+              "orientationFrames": 214,
+              "movingWithoutSteps": 0,
+              "stepsWithoutMovement": 0,
+              "movingFlagsWithoutDisplacement": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "maxJump": 11.996599999989485,
+              "rebases": [],
+              "duplicateFrames": 0,
+              "stopAnimationMs": {
+                "n": 4,
+                "mean": 108.42486572265625,
+                "cv": 1.4762647841153862,
+                "min": 0.099853515625,
+                "max": 383.39990234375
+              },
+              "followLagMs": 360,
+              "alignedErrorPx": 8.29974271339161,
+              "endpointErrorPx": 0,
+              "settledStoppedPose": {
+                "receivedAt": 1791900661069,
+                "settlingMs": 14050.7998046875,
+                "errorPx": 0
+              },
+              "packetIntervals": {
+                "n": 94,
+                "mean": 254.75531914893617,
+                "cv": 0.46408532067232977,
+                "min": 156,
+                "max": 698
+              },
+              "acceptance": {
+                "lagBudgetMs": 552.9367477258229,
+                "pathBudgetPx": 55.068022189195794
+              }
+            },
+            "lagBudgetMs": 648.9439317317533
+          },
+          {
+            "direction": "BA",
+            "before": {
+              "frames": 928,
+              "observerFrames": 928,
+              "localFrames": 947,
+              "localTravelPx": 1093.972762897559,
+              "remoteTravelPx": 1034.8039798072562,
+              "transports": [],
+              "cadence": {
+                "n": 0,
+                "mean": 0,
+                "cv": 0,
+                "min": 0,
+                "max": 0
+              },
+              "fps": {
+                "n": 927,
+                "mean": 44.22749196047425,
+                "cv": 0.35564411532172346,
+                "min": 12.004801920767887,
+                "max": 60.6060606060606
+              },
+              "speed": {
+                "n": 182,
+                "mean": 160.28860827817104,
+                "cv": 0.8964569833086886,
+                "min": 0,
+                "max": 621.3665538905859
+              },
+              "rawSpeed": {
+                "n": 182,
+                "mean": 160.28860827817104,
+                "cv": 0.8964569833086886,
+                "min": 0,
+                "max": 621.3665538905859
+              },
+              "sourceSpeed": {
+                "n": 182,
+                "mean": 186.10646360594717,
+                "cv": 0.10514382887261743,
+                "min": 102.50000000000227,
+                "max": 205.32852564103052
+              },
+              "orientationErrors": 21,
+              "orientationFrames": 243,
+              "movingWithoutSteps": 0,
+              "stepsWithoutMovement": 0,
+              "movingFlagsWithoutDisplacement": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "maxJump": 13.182699884340082,
+              "rebases": [],
+              "duplicateFrames": 0,
+              "stopAnimationMs": {
+                "n": 4,
+                "mean": 212.5750732421875,
+                "cv": 0.7344783248034341,
+                "min": 0.000244140625,
+                "max": 433.5
+              },
+              "followLagMs": 360,
+              "alignedErrorPx": 9.903838238138455,
+              "endpointErrorPx": 0,
+              "settledStoppedPose": null,
+              "packetIntervals": {
+                "n": 104,
+                "mean": 229.64423076923077,
+                "cv": 0.43495005476230486,
+                "min": 158,
+                "max": 652
+              }
+            },
+            "after": {
+              "frames": 917,
+              "observerFrames": 924,
+              "localFrames": 928,
+              "localTravelPx": 1104.6409637978918,
+              "remoteTravelPx": 1096.8454468630098,
+              "transports": [
+                "http"
+              ],
+              "cadence": {
+                "n": 917,
+                "mean": 219.14328659714675,
+                "cv": 0.005216578289183465,
+                "min": 215.07000000000116,
+                "max": 222.3451471184659
+              },
+              "fps": {
+                "n": 916,
+                "mean": 44.075367829139275,
+                "cv": 0.35381550196121797,
+                "min": 14.99250374812659,
+                "max": 60.24096385545338
+              },
+              "speed": {
+                "n": 166,
+                "mean": 177.9270027861098,
+                "cv": 0.4948730225570974,
+                "min": 0,
+                "max": 402.54175837211164
+              },
+              "rawSpeed": {
+                "n": 166,
+                "mean": 177.9270027861098,
+                "cv": 0.4948730225570974,
+                "min": 0,
+                "max": 402.54175837211164
+              },
+              "sourceSpeed": {
+                "n": 166,
+                "mean": 185.61449816204353,
+                "cv": 0.11585668112978138,
+                "min": 102.50000000000057,
+                "max": 205.32852564103052
+              },
+              "orientationErrors": 0,
+              "orientationFrames": 238,
+              "movingWithoutSteps": 0,
+              "stepsWithoutMovement": 0,
+              "movingFlagsWithoutDisplacement": 0,
+              "phaseDistanceErrorPx": 6.328271240363392e-14,
+              "maxJump": 10.643600000002607,
+              "rebases": [],
+              "duplicateFrames": 0,
+              "stopAnimationMs": {
+                "n": 4,
+                "mean": 329.1002197265625,
+                "cv": 0.44783958895976095,
+                "min": 166.600341796875,
+                "max": 499.900146484375
+              },
+              "followLagMs": 340,
+              "alignedErrorPx": 4.674158991552915,
+              "endpointErrorPx": 0,
+              "settledStoppedPose": {
+                "receivedAt": 1791900673114,
+                "settlingMs": 2016.300048828125,
+                "errorPx": 0
+              },
+              "packetIntervals": {
+                "n": 101,
+                "mean": 236.62376237623764,
+                "cv": 0.4381049978320752,
+                "min": 156,
+                "max": 653
+              },
+              "acceptance": {
+                "lagBudgetMs": 551.5829495744757,
+                "pathBudgetPx": 54.88300310851168
+              }
+            },
+            "lagBudgetMs": 635.0210500337487
+          }
+        ],
+        "meanSpeedCVBefore": 0.8213660467390145,
+        "meanSpeedCVAfter": 0.553722016588953
+      }
+    }
+  },
+  "matrix": [
+    {
+      "players": 2,
+      "scenarios": [
+        {
+          "scene": "lobby",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 1217,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 116.7998046875,
+              "followingDelayMs": 110,
+              "speedCV": 0.4424870546966921,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.509149999999863,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 1196,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.1368683772161603e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 166.60009765625,
+              "followingDelayMs": 110,
+              "speedCV": 0.4555769638355428,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.531700000000342,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-simultaneous",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 421,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.1945999744966684e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.2998046875,
+              "followingDelayMs": 110,
+              "speedCV": 0.4652967103069775,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 10.229500000000257,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 407,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2745360322696797e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 150.000244140625,
+              "followingDelayMs": 110,
+              "speedCV": 0.4834911688608406,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 9.361064467258302,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-jitter-loss-reorder",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 510,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.389199948993337e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 283.2998046875,
+              "followingDelayMs": 260,
+              "speedCV": 0.7946052447561919,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 11.297549999999646,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 502,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.495781359357352e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 233.2001953125,
+              "followingDelayMs": 270,
+              "speedCV": 0.6688196595949499,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 11.274999999999993,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 922,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.39990234375,
+              "followingDelayMs": 360,
+              "speedCV": 0.6125710106208087,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.996599999989485,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 917,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.328271240363392e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 499.900146484375,
+              "followingDelayMs": 340,
+              "speedCV": 0.4948730225570974,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.643600000002607,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-simultaneous",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 325,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.084022174945858e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.399658203125,
+              "followingDelayMs": 340,
+              "speedCV": 0.4898276758473231,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.613249999999994,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 324,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 299.800048828125,
+              "followingDelayMs": 320,
+              "speedCV": 0.43125406042257863,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 12.895107336874037,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-jitter-loss",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 158,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 7.105427357601002e-15,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 416.699951171875,
+              "followingDelayMs": 450,
+              "speedCV": 0.7693157461548129,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 27.719846265453373,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 167,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 449.900146484375,
+              "followingDelayMs": 470,
+              "speedCV": 0.5656731620665458,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.854349999989495,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-outage",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 158,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2434497875801753e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.5,
+              "followingDelayMs": 350,
+              "speedCV": 0.41237067021833257,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 210.15759088048765,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 160,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 433.300048828125,
+              "followingDelayMs": 370,
+              "speedCV": 0.4849135829577047,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 213.0523573193067,
+              "rebaseCount": 1
+            }
+          }
+        },
+        {
+          "scene": "lobby-return",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 194,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.019806626980426e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.7001953125,
+              "followingDelayMs": 310,
+              "speedCV": 0.6521667836569566,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.275000000000091,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 192,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.197442310920451e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.699951171875,
+              "followingDelayMs": 400,
+              "speedCV": 0.6786979011157873,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.274999999999942,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-fallback",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 192,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.197442310920451e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 16.7001953125,
+              "followingDelayMs": 420,
+              "speedCV": 0.6226175049613567,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 11.297550000000003,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 194,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.197442310920451e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.199951171875,
+              "followingDelayMs": 320,
+              "speedCV": 0.8261768216332182,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.531700000000001,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-reconnect",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 191,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.108624468950438e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.699951171875,
+              "followingDelayMs": 410,
+              "speedCV": 0.7136537828360825,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.252449999999953,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 184,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.197442310920451e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 16.60009765625,
+              "followingDelayMs": 440,
+              "speedCV": 0.7773845215827732,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.275000000000091,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-competitive-restart",
+          "orderedPairs": 2,
+          "metrics": {
+            "0->1": {
+              "frames": 159,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 300.10009765625,
+              "followingDelayMs": 310,
+              "speedCV": 0.622375776796483,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.06509999998957,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 147,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.300048828125,
+              "followingDelayMs": 320,
+              "speedCV": 0.48631061560246985,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.29617089967098,
+              "rebaseCount": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "players": 3,
+      "scenarios": [
+        {
+          "scene": "lobby",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 1467,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.39990234375,
+              "followingDelayMs": 90,
+              "speedCV": 0.3601120094834206,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.531700000000001,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 861,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.108624468950438e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.900146484375,
+              "followingDelayMs": 120,
+              "speedCV": 0.3393440020139941,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 11.297550000000115,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 2230,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.1368683772161603e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.300048828125,
+              "followingDelayMs": 110,
+              "speedCV": 0.2535474045784329,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7883999999998537,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 861,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.1368683772161603e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 183.30029296875,
+              "followingDelayMs": 120,
+              "speedCV": 0.2551634994337739,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 11.275000000000004,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 2230,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.328271240363392e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 100.099853515625,
+              "followingDelayMs": 90,
+              "speedCV": 0.32810097428504725,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 3.7658500000010235,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 1467,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 116.699951171875,
+              "followingDelayMs": 90,
+              "speedCV": 0.47653410521274964,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.531700000000303,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-simultaneous",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 312,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.128431095930864e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.39990234375,
+              "followingDelayMs": 100,
+              "speedCV": 0.2956995160049605,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.531700000000342,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 190,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 183.300048828125,
+              "followingDelayMs": 110,
+              "speedCV": 0.18775516185988045,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 10.298152908128628,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 487,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.17284001691587e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 100,
+              "followingDelayMs": 110,
+              "speedCV": 0.23088806523137836,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007063,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 190,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 183.300048828125,
+              "followingDelayMs": 120,
+              "speedCV": 0.1998600599016927,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 10.96289237680628,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 487,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.17284001691587e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.39990234375,
+              "followingDelayMs": 90,
+              "speedCV": 0.38100062279062896,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.765850000001022,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 312,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 150,
+              "followingDelayMs": 70,
+              "speedCV": 0.4119686376177419,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.509150000000705,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-jitter-loss-reorder",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 399,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2434497875801753e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 183.300048828125,
+              "followingDelayMs": 270,
+              "speedCV": 0.6581208568475146,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 11.274999999999977,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 231,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2789769243681803e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 416.7001953125,
+              "followingDelayMs": 270,
+              "speedCV": 0.6230800933666722,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 11.297550000001365,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 596,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.1501910535116622e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.699951171875,
+              "followingDelayMs": 290,
+              "speedCV": 0.6740249962022093,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.788400000000713,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 231,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2612133559741778e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 249.900146484375,
+              "followingDelayMs": 320,
+              "speedCV": 0.5290683833658292,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 11.297550000001365,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 596,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2390088954816747e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 233.39990234375,
+              "followingDelayMs": 270,
+              "speedCV": 0.6310907551874504,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007063,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 399,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2612133559741778e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 16.7998046875,
+              "followingDelayMs": 260,
+              "speedCV": 0.8869021506962743,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 10.78637070121696,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 1580,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.950795411990839e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 466.699951171875,
+              "followingDelayMs": 340,
+              "speedCV": 0.4407191590168263,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.327899999997271,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 948,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 716.60009765625,
+              "followingDelayMs": 340,
+              "speedCV": 0.34953230076581226,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.229900000003909,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 2323,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.300048828125,
+              "followingDelayMs": 360,
+              "speedCV": 0.370591506173513,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 6.129499999998757,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 946,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.17284001691587e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 433.26611328125,
+              "followingDelayMs": 360,
+              "speedCV": 0.263496301955082,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.936749999999961,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 2323,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.699951171875,
+              "followingDelayMs": 360,
+              "speedCV": 0.3436483374880199,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 5.569850000002589,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 1578,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.039613253960852e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 449.999755859375,
+              "followingDelayMs": 340,
+              "speedCV": 0.30607283151057935,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.430000000000007,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-simultaneous",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 340,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 400,
+              "followingDelayMs": 340,
+              "speedCV": 0.3927612582848514,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.824850000002584,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 200,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.039613253960852e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.8662109375,
+              "followingDelayMs": 340,
+              "speedCV": 0.24482632839101057,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.320100000002617,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 491,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.039613253960852e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.699951171875,
+              "followingDelayMs": 360,
+              "speedCV": 0.2866905538896606,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 4.803149999997402,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 200,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.128431095930864e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 400.000244140625,
+              "followingDelayMs": 360,
+              "speedCV": 0.21109563529830333,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.49600000000271,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 491,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.39990234375,
+              "followingDelayMs": 350,
+              "speedCV": 0.14233283952245887,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 4.803149999997402,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 340,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.39990234375,
+              "followingDelayMs": 340,
+              "speedCV": 0.27499523199311393,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.1467077842177105,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-jitter-loss",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 170,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.0658141036401503e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.199951171875,
+              "followingDelayMs": 520,
+              "speedCV": 0.8076681948561331,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 30.628930817610353,
+              "rebaseCount": 1
+            },
+            "0->2": {
+              "frames": 99,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 7.521760991835436e-15,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.60009765625,
+              "followingDelayMs": 470,
+              "speedCV": 0.9688010651436647,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 30.628930817610353,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.9753977059954195e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 83.300048828125,
+              "followingDelayMs": 470,
+              "speedCV": 0.6834425084943783,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 4.915899999997426,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 99,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 449.900146484375,
+              "followingDelayMs": 470,
+              "speedCV": 0.5349795474375729,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.342650000010508,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.7763568394002505e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 733.39990234375,
+              "followingDelayMs": 760,
+              "speedCV": 0.792981430584017,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 4.780599999989477,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 170,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 716.699951171875,
+              "followingDelayMs": 710,
+              "speedCV": 0.6297210593623233,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.636649999997417,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-outage",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 171,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 16.699951171875,
+              "followingDelayMs": 320,
+              "speedCV": 0.4705889693649993,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 214.91066664960368,
+              "rebaseCount": 1
+            },
+            "0->2": {
+              "frames": 107,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.60009765625,
+              "followingDelayMs": 340,
+              "speedCV": 0.39012381202998936,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 214.91066664960368,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 259,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.5,
+              "followingDelayMs": 340,
+              "speedCV": 0.30473694907058024,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 221.65917760043442,
+              "rebaseCount": 1
+            },
+            "1->2": {
+              "frames": 107,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.1530333899354446e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 449.80029296875,
+              "followingDelayMs": 360,
+              "speedCV": 0.2282192733075767,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.20735216530856,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 259,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 350,
+              "followingDelayMs": 340,
+              "speedCV": 0.2460731915171217,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 219.21983639116868,
+              "rebaseCount": 1
+            },
+            "2->1": {
+              "frames": 171,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.2998046875,
+              "followingDelayMs": 340,
+              "speedCV": 0.35817641656933774,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.673244624865561,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-return",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 161,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 400,
+              "followingDelayMs": 420,
+              "speedCV": 0.8209284810478599,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 27.32649999999944,
+              "rebaseCount": 1
+            },
+            "0->2": {
+              "frames": 98,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 549.900146484375,
+              "followingDelayMs": 370,
+              "speedCV": 0.5117142103530853,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 27.32649999999944,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.300048828125,
+              "followingDelayMs": 390,
+              "speedCV": 0.4701622760002394,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 27.340439999999944,
+              "rebaseCount": 1
+            },
+            "1->2": {
+              "frames": 98,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 483.2001953125,
+              "followingDelayMs": 440,
+              "speedCV": 0.5230102510508887,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 15.018299999999964,
+              "rebaseCount": 1
+            },
+            "2->0": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.086420008457935e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 100.099853515625,
+              "followingDelayMs": 370,
+              "speedCV": 0.4880064922489021,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 6.826499999999896,
+              "rebaseCount": 1
+            },
+            "2->1": {
+              "frames": 161,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.930988785010413e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 250.099853515625,
+              "followingDelayMs": 390,
+              "speedCV": 0.7991536485439361,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 7.531700000000184,
+              "rebaseCount": 1
+            }
+          }
+        },
+        {
+          "scene": "lobby-fallback",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 164,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.019806626980426e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 66.800048828125,
+              "followingDelayMs": 420,
+              "speedCV": 0.6947508868652242,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.531700000000406,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 94,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 449.900146484375,
+              "followingDelayMs": 340,
+              "speedCV": 0.48636543626900813,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 11.297550000000015,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 246,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 449.89990234375,
+              "followingDelayMs": 340,
+              "speedCV": 0.5206619681210416,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 30.7500000000001,
+              "rebaseCount": 1
+            },
+            "1->2": {
+              "frames": 94,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 483.199951171875,
+              "followingDelayMs": 320,
+              "speedCV": 0.6142399442427776,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 11.297550000000115,
+              "rebaseCount": 1
+            },
+            "2->0": {
+              "frames": 246,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 333.399658203125,
+              "followingDelayMs": 300,
+              "speedCV": 0.5558943881858889,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 3.788400000000138,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 164,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 0.099853515625,
+              "followingDelayMs": 370,
+              "speedCV": 0.802747384360197,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.531700000000228,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-reconnect",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 162,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.699951171875,
+              "followingDelayMs": 370,
+              "speedCV": 0.6809620126335977,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.531700000000319,
+              "rebaseCount": 1
+            },
+            "0->2": {
+              "frames": 89,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 483.199951171875,
+              "followingDelayMs": 360,
+              "speedCV": 0.5083641090964616,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.297550000000001,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 242,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.064215547965432e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 466.60009765625,
+              "followingDelayMs": 420,
+              "speedCV": 0.17530636412527967,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 6.847000000000207,
+              "rebaseCount": 1
+            },
+            "1->2": {
+              "frames": 89,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 549.900146484375,
+              "followingDelayMs": 490,
+              "speedCV": 0.4333656426960212,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.297550000000115,
+              "rebaseCount": 1
+            },
+            "2->0": {
+              "frames": 242,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 200.10009765625,
+              "followingDelayMs": 290,
+              "speedCV": 0.4447602327541539,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 3.7883999999999576,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 162,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 250.099853515625,
+              "followingDelayMs": 420,
+              "speedCV": 1.0191531561235245,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.25,
+              "rebaseCount": 1
+            }
+          }
+        },
+        {
+          "scene": "guard-competitive-restart",
+          "orderedPairs": 6,
+          "metrics": {
+            "0->1": {
+              "frames": 165,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 349.999755859375,
+              "followingDelayMs": 320,
+              "speedCV": 0.5049960626204176,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.230749999999944,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 99,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 433.199951171875,
+              "followingDelayMs": 350,
+              "speedCV": 0.2551861739394487,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.613250000000107,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 243,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.60009765625,
+              "followingDelayMs": 340,
+              "speedCV": 0.27879591164799167,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 6.314000000000078,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 99,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 433.2001953125,
+              "followingDelayMs": 300,
+              "speedCV": 0.46833905155162747,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.959299999994755,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 243,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.699951171875,
+              "followingDelayMs": 320,
+              "speedCV": 0.4852843390218788,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 6.314000000000078,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 165,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 350.099853515625,
+              "followingDelayMs": 310,
+              "speedCV": 0.5444106666643512,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.230749999999944,
+              "rebaseCount": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "players": 4,
+      "scenarios": [
+        {
+          "scene": "lobby",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 3914,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.199951171875,
+              "followingDelayMs": 110,
+              "speedCV": 0.3071572262977245,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 10.25,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 2633,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.950795411990839e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 183.2001953125,
+              "followingDelayMs": 100,
+              "speedCV": 0.4930600947710961,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 10.765351669734855,
+              "rebaseCount": 0
+            },
+            "0->3": {
+              "frames": 1627,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 183.39990234375,
+              "followingDelayMs": 150,
+              "speedCV": 0.4534896017315655,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 15.040849999999864,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 3991,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2789769243681803e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.39990234375,
+              "followingDelayMs": 110,
+              "speedCV": 0.2038981085667741,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 6.98232879718898,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 2633,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2789769243681803e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 150.000244140625,
+              "followingDelayMs": 110,
+              "speedCV": 0.5435580299563493,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 12.960663507109153,
+              "rebaseCount": 0
+            },
+            "1->3": {
+              "frames": 1627,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.1368683772161603e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 150.199951171875,
+              "followingDelayMs": 110,
+              "speedCV": 0.2983200322382192,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 13.67350000000031,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 3991,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.17284001691587e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.399658203125,
+              "followingDelayMs": 110,
+              "speedCV": 0.24561314545637813,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 5.046539449554189,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 3914,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.17284001691587e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 149.999755859375,
+              "followingDelayMs": 110,
+              "speedCV": 0.25119595448286963,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 5.7872629686830805,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 1627,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 200.19970703125,
+              "followingDelayMs": 110,
+              "speedCV": 0.3526107842030317,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 11.48275862069272,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 3991,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.128431095930864e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 99.900146484375,
+              "followingDelayMs": 90,
+              "speedCV": 0.25476573886462894,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 5.225524604483667,
+              "rebaseCount": 0
+            },
+            "3->1": {
+              "frames": 3914,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 99.900146484375,
+              "followingDelayMs": 90,
+              "speedCV": 0.2486989324253688,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7658499999993182,
+              "rebaseCount": 0
+            },
+            "3->2": {
+              "frames": 2633,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 99.900146484375,
+              "followingDelayMs": 90,
+              "speedCV": 0.5384448679874533,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 7.509149999998954,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-simultaneous",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 492,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.378231276471524e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 116.60009765625,
+              "followingDelayMs": 110,
+              "speedCV": 0.16583129893870519,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.765850000002615,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 340,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.30029296875,
+              "followingDelayMs": 110,
+              "speedCV": 0.491127471536671,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.509150000000659,
+              "rebaseCount": 0
+            },
+            "0->3": {
+              "frames": 197,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 200,
+              "followingDelayMs": 110,
+              "speedCV": 0.2661621606910678,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 10.822444678611191,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 493,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 116.7001953125,
+              "followingDelayMs": 110,
+              "speedCV": 0.15177761054343925,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000006495,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 340,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 150.000244140625,
+              "followingDelayMs": 110,
+              "speedCV": 0.4941806908554378,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.516365999998811,
+              "rebaseCount": 0
+            },
+            "1->3": {
+              "frames": 197,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 166.800048828125,
+              "followingDelayMs": 120,
+              "speedCV": 0.23969077652690457,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 10.812236286914526,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 493,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.17284001691587e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 100.06787109375,
+              "followingDelayMs": 110,
+              "speedCV": 0.23637076750861719,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.765850000002615,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 492,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.039613253960852e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 100.06787109375,
+              "followingDelayMs": 110,
+              "speedCV": 0.23927398982502338,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.765850000002615,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 197,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.039613253960852e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 183.468017578125,
+              "followingDelayMs": 110,
+              "speedCV": 0.2893792148413584,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 11.274999999999977,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 493,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 83.300048828125,
+              "followingDelayMs": 90,
+              "speedCV": 0.36138159572332246,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007063,
+              "rebaseCount": 0
+            },
+            "3->1": {
+              "frames": 492,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 83.199951171875,
+              "followingDelayMs": 90,
+              "speedCV": 0.370295023152767,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007063,
+              "rebaseCount": 0
+            },
+            "3->2": {
+              "frames": 340,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 83.2001953125,
+              "followingDelayMs": 90,
+              "speedCV": 0.6103592933563862,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.531700000001933,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-jitter-loss-reorder",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 599,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2390088954816747e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 283.300048828125,
+              "followingDelayMs": 290,
+              "speedCV": 0.5287037090344947,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007063,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 411,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.247890679678676e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 416.56640625,
+              "followingDelayMs": 240,
+              "speedCV": 0.8316934706162312,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.531700000001995,
+              "rebaseCount": 0
+            },
+            "0->3": {
+              "frames": 242,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2612133559741778e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.800048828125,
+              "followingDelayMs": 260,
+              "speedCV": 0.5584842259004746,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 11.297550000001365,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 600,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.1590728377086634e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 266.699951171875,
+              "followingDelayMs": 250,
+              "speedCV": 0.5714904221063937,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007063,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 411,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.270095140171179e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 283.300048828125,
+              "followingDelayMs": 260,
+              "speedCV": 0.7674437013584169,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.53170000000199,
+              "rebaseCount": 0
+            },
+            "1->3": {
+              "frames": 242,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.270095140171179e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 233.39990234375,
+              "followingDelayMs": 240,
+              "speedCV": 0.5819890069841133,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 15.040849999999296,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 600,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2212453270876722e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.699951171875,
+              "followingDelayMs": 270,
+              "speedCV": 0.5354491548503638,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007085,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 599,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2034817586936697e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 266.69970703125,
+              "followingDelayMs": 250,
+              "speedCV": 0.6687306913637489,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007063,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 242,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.270095140171179e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.69970703125,
+              "followingDelayMs": 210,
+              "speedCV": 0.5716146918619208,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 15.040849999999296,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 600,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2079226507921703e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 16.60009765625,
+              "followingDelayMs": 220,
+              "speedCV": 0.8217908973330285,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007063,
+              "rebaseCount": 0
+            },
+            "3->1": {
+              "frames": 599,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2523315717771766e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 199.900146484375,
+              "followingDelayMs": 240,
+              "speedCV": 0.6969455264298904,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 3.7884000000007063,
+              "rebaseCount": 0
+            },
+            "3->2": {
+              "frames": 411,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2390088954816747e-13,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 216.500244140625,
+              "followingDelayMs": 240,
+              "speedCV": 0.8560839595748098,
+              "transports": [
+                "rtc"
+              ],
+              "maxJumpPx": 7.531700000001994,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 3353,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 500,
+              "followingDelayMs": 360,
+              "speedCV": 0.5922341313848831,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.230750000000057,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 2493,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 733.2001953125,
+              "followingDelayMs": 370,
+              "speedCV": 0.5866077464729481,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 14.58985000000257,
+              "rebaseCount": 0
+            },
+            "0->3": {
+              "frames": 1647,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 583.5,
+              "followingDelayMs": 340,
+              "speedCV": 0.4552359172400261,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 15.333999999999888,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 3429,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.39990234375,
+              "followingDelayMs": 360,
+              "speedCV": 0.48205477600410035,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 12.830949999992203,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 2492,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.900390625,
+              "followingDelayMs": 340,
+              "speedCV": 0.4303860162740579,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 13.529999999999973,
+              "rebaseCount": 0
+            },
+            "1->3": {
+              "frames": 1645,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.039613253960852e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 516.800048828125,
+              "followingDelayMs": 360,
+              "speedCV": 0.2912367959245641,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 12.730499999995033,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 3429,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.699951171875,
+              "followingDelayMs": 340,
+              "speedCV": 0.3974264902672163,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.84659890944772,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 3353,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.950795411990839e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.69970703125,
+              "followingDelayMs": 340,
+              "speedCV": 0.44678179418455,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.734649999997373,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 1647,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.197442310920451e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 416.899658203125,
+              "followingDelayMs": 350,
+              "speedCV": 0.35025948297660814,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.455399999997326,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 3438,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 4.263256414560601e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.2998046875,
+              "followingDelayMs": 340,
+              "speedCV": 0.5738296037054096,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.079849999989392,
+              "rebaseCount": 0
+            },
+            "3->1": {
+              "frames": 3353,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.552713678800501e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.5,
+              "followingDelayMs": 350,
+              "speedCV": 0.3750176408549792,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.726850000002571,
+              "rebaseCount": 0
+            },
+            "3->2": {
+              "frames": 2493,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 433.2001953125,
+              "followingDelayMs": 360,
+              "speedCV": 0.3868395853218975,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.660000000000082,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-simultaneous",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 395,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.199951171875,
+              "followingDelayMs": 370,
+              "speedCV": 0.5965937288988038,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.847400000010461,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 304,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.900146484375,
+              "followingDelayMs": 360,
+              "speedCV": 0.49291372610040934,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.591550000007828,
+              "rebaseCount": 0
+            },
+            "0->3": {
+              "frames": 193,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.300048828125,
+              "followingDelayMs": 360,
+              "speedCV": 0.40955524274222416,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 12.537799999994718,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 412,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.699951171875,
+              "followingDelayMs": 360,
+              "speedCV": 0.4748756141753179,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.48421928234573,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 304,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.80029296875,
+              "followingDelayMs": 360,
+              "speedCV": 0.40362026480661484,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.692885991874453,
+              "rebaseCount": 0
+            },
+            "1->3": {
+              "frames": 193,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 416.800048828125,
+              "followingDelayMs": 360,
+              "speedCV": 0.26493335201586504,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.801449999992087,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 412,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.7998046875,
+              "followingDelayMs": 350,
+              "speedCV": 0.46355083847327405,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.922166599154046,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 395,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.306066779870889e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 83.39990234375,
+              "followingDelayMs": 340,
+              "speedCV": 0.4508615233699988,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.238549999994746,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 193,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 400.199951171875,
+              "followingDelayMs": 360,
+              "speedCV": 0.27130405930826335,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.947000000004834,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 412,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.217248937900877e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 300,
+              "followingDelayMs": 320,
+              "speedCV": 0.45964558641046344,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 27.33333333333394,
+              "rebaseCount": 1
+            },
+            "3->1": {
+              "frames": 395,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 349.900146484375,
+              "followingDelayMs": 340,
+              "speedCV": 0.49999586631814275,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 27.33333333333394,
+              "rebaseCount": 1
+            },
+            "3->2": {
+              "frames": 304,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.906386491005833e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.900146484375,
+              "followingDelayMs": 350,
+              "speedCV": 0.3522178702591332,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 27.33333333333394,
+              "rebaseCount": 1
+            }
+          }
+        },
+        {
+          "scene": "guard-jitter-loss",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 200,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.1316282072803006e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 499.800048828125,
+              "followingDelayMs": 510,
+              "speedCV": 0.575947413376489,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.9670999999895,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 159,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 349.900390625,
+              "followingDelayMs": 360,
+              "speedCV": 0.6700691138973415,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 78.46226415094316,
+              "rebaseCount": 1
+            },
+            "0->3": {
+              "frames": 93,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.1316282072803006e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 500,
+              "followingDelayMs": 460,
+              "speedCV": 0.5805081222886622,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.793649999997342,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 211,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 733.300048828125,
+              "followingDelayMs": 710,
+              "speedCV": 0.6073950232822818,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.433699999992143,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 159,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 550.000244140625,
+              "followingDelayMs": 520,
+              "speedCV": 0.6635667260338278,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.020000000000035,
+              "rebaseCount": 0
+            },
+            "1->3": {
+              "frames": 93,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.4868995751603507e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 700,
+              "followingDelayMs": 540,
+              "speedCV": 0.43538007105967685,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 12.064250000000015,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 211,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 450,
+              "followingDelayMs": 510,
+              "speedCV": 0.7197069583438632,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.079850000002637,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 200,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.7763568394002505e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 16.599853515625,
+              "followingDelayMs": 540,
+              "speedCV": 0.7544855727842734,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.9670999999895,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 93,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 483.39990234375,
+              "followingDelayMs": 490,
+              "speedCV": 0.8102508055284205,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 12.064250000000015,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 211,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.900146484375,
+              "followingDelayMs": 440,
+              "speedCV": 0.7734307533285792,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.079850000002637,
+              "rebaseCount": 0
+            },
+            "3->1": {
+              "frames": 200,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 483.199951171875,
+              "followingDelayMs": 560,
+              "speedCV": 0.8109620792271658,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 9.9670999999895,
+              "rebaseCount": 0
+            },
+            "3->2": {
+              "frames": 159,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.4868995751603507e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 533.2001953125,
+              "followingDelayMs": 540,
+              "speedCV": 0.8507296330700056,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.704300000007834,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-outage",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 203,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.2001953125,
+              "followingDelayMs": 420,
+              "speedCV": 0.7488170463025273,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 207.02563973971306,
+              "rebaseCount": 1
+            },
+            "0->2": {
+              "frames": 145,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.2001953125,
+              "followingDelayMs": 410,
+              "speedCV": 0.6111591144290223,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 207.02563973971306,
+              "rebaseCount": 1
+            },
+            "0->3": {
+              "frames": 100,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 483.300048828125,
+              "followingDelayMs": 440,
+              "speedCV": 0.513426394591391,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 218.07024172761174,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 197,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.197442310920451e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 400.099853515625,
+              "followingDelayMs": 360,
+              "speedCV": 0.3799018629463892,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.366049999994743,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 145,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 416.7001953125,
+              "followingDelayMs": 360,
+              "speedCV": 0.33609520053170827,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.324480913858679,
+              "rebaseCount": 0
+            },
+            "1->3": {
+              "frames": 100,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 4.263256414560601e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 400.199951171875,
+              "followingDelayMs": 360,
+              "speedCV": 0.15609841808424293,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.096607869156564,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 197,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 350.067626953125,
+              "followingDelayMs": 360,
+              "speedCV": 0.42174077206792954,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.366049999994743,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 203,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.9753977059954195e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.567626953125,
+              "followingDelayMs": 310,
+              "speedCV": 0.46086599352645063,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.554250000000025,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 100,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.4677734375,
+              "followingDelayMs": 320,
+              "speedCV": 0.30900796812152376,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.883850000002623,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 197,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 0,
+              "followingDelayMs": 400,
+              "speedCV": 0.5342866598482184,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.96647553516334,
+              "rebaseCount": 0
+            },
+            "3->1": {
+              "frames": 203,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 99.900146484375,
+              "followingDelayMs": 320,
+              "speedCV": 0.49925638587150456,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.915049999994738,
+              "rebaseCount": 0
+            },
+            "3->2": {
+              "frames": 145,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.684341886080802e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.900390625,
+              "followingDelayMs": 370,
+              "speedCV": 0.41087835285091273,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 12.834703350611221,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-return",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 245,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.2001953125,
+              "followingDelayMs": 370,
+              "speedCV": 0.24283003821189122,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 3.788400000000024,
+              "rebaseCount": 1
+            },
+            "0->2": {
+              "frames": 167,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.108624468950438e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.900146484375,
+              "followingDelayMs": 410,
+              "speedCV": 0.6749280907107175,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 7.531700000000001,
+              "rebaseCount": 0
+            },
+            "0->3": {
+              "frames": 93,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2434497875801753e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 433.300048828125,
+              "followingDelayMs": 410,
+              "speedCV": 0.5688826508618687,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 11.297550000000001,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 245,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.1530333899354446e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 333.2998046875,
+              "followingDelayMs": 370,
+              "speedCV": 0.2482924379940861,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 3.788400000000138,
+              "rebaseCount": 1
+            },
+            "1->2": {
+              "frames": 167,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 266.699951171875,
+              "followingDelayMs": 320,
+              "speedCV": 0.6011471978150847,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 11.068470071644885,
+              "rebaseCount": 1
+            },
+            "1->3": {
+              "frames": 93,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 116.599853515625,
+              "followingDelayMs": 400,
+              "speedCV": 0.5346341621671383,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.29755000000007,
+              "rebaseCount": 1
+            },
+            "2->0": {
+              "frames": 245,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.1530333899354446e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 83.39990234375,
+              "followingDelayMs": 460,
+              "speedCV": 0.6715066849944493,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 3.788400000000138,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 245,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.930988785010413e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.300048828125,
+              "followingDelayMs": 410,
+              "speedCV": 0.601827533586828,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 3.7883999999999105,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 93,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.108624468950438e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 333.300048828125,
+              "followingDelayMs": 320,
+              "speedCV": 0.5951126339323913,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.297550000000001,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 245,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.699951171875,
+              "followingDelayMs": 370,
+              "speedCV": 0.6391153069888413,
+              "transports": [
+                "http",
+                "rtc"
+              ],
+              "maxJumpPx": 6.826500000000124,
+              "rebaseCount": 1
+            },
+            "3->1": {
+              "frames": 245,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 266.7001953125,
+              "followingDelayMs": 310,
+              "speedCV": 0.34116560352702463,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 6.826500000000124,
+              "rebaseCount": 1
+            },
+            "3->2": {
+              "frames": 167,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 233.300048828125,
+              "followingDelayMs": 290,
+              "speedCV": 0.9784925608885057,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.554250000000055,
+              "rebaseCount": 1
+            }
+          }
+        },
+        {
+          "scene": "lobby-fallback",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 243,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.995204332975845e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 0.10009765625,
+              "followingDelayMs": 420,
+              "speedCV": 0.5154901107850942,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.509150000000222,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 164,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.197442310920451e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 0.10009765625,
+              "followingDelayMs": 420,
+              "speedCV": 0.7616910561004631,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.531700000000328,
+              "rebaseCount": 0
+            },
+            "0->3": {
+              "frames": 95,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.197442310920451e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 83.300048828125,
+              "followingDelayMs": 420,
+              "speedCV": 0.5722305504651938,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 15.040850000000205,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 245,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 5.950795411990839e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 216.69970703125,
+              "followingDelayMs": 420,
+              "speedCV": 0.5130315703312611,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.531699999999959,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 164,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.394884621840902e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 416.599853515625,
+              "followingDelayMs": 420,
+              "speedCV": 0.7286167038360362,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.531700000000283,
+              "rebaseCount": 1
+            },
+            "1->3": {
+              "frames": 95,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 466.599853515625,
+              "followingDelayMs": 410,
+              "speedCV": 0.5039814025986271,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 15.040850000000091,
+              "rebaseCount": 1
+            },
+            "2->0": {
+              "frames": 245,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.1530333899354446e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 16.599853515625,
+              "followingDelayMs": 420,
+              "speedCV": 0.5589423129024427,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.5316999999999785,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 243,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 6.261657858885883e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 0,
+              "followingDelayMs": 420,
+              "speedCV": 0.5145463842265413,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.509150000000262,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 95,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.019806626980426e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.599853515625,
+              "followingDelayMs": 440,
+              "speedCV": 0.6480231562438455,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 15.018300000000112,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 245,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 4.263256414560601e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 150.10009765625,
+              "followingDelayMs": 370,
+              "speedCV": 0.6718876849669564,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.531699999999887,
+              "rebaseCount": 0
+            },
+            "3->1": {
+              "frames": 243,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 116.7001953125,
+              "followingDelayMs": 370,
+              "speedCV": 0.6905870387005638,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.509150000000204,
+              "rebaseCount": 0
+            },
+            "3->2": {
+              "frames": 164,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 283.30029296875,
+              "followingDelayMs": 370,
+              "speedCV": 0.8402371215145242,
+              "transports": [
+                "rtc",
+                "http"
+              ],
+              "maxJumpPx": 7.531700000000342,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "lobby-reconnect",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.554312234475219e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 483.5,
+              "followingDelayMs": 410,
+              "speedCV": 0.37598076382036144,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.25,
+              "rebaseCount": 1
+            },
+            "0->2": {
+              "frames": 165,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.197442310920451e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 516.7001953125,
+              "followingDelayMs": 350,
+              "speedCV": 0.5933352522834404,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.531700000000397,
+              "rebaseCount": 0
+            },
+            "0->3": {
+              "frames": 96,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 533.300048828125,
+              "followingDelayMs": 370,
+              "speedCV": 0.5191799404465894,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.297550000000482,
+              "rebaseCount": 1
+            },
+            "1->0": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.1530333899354446e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.599853515625,
+              "followingDelayMs": 390,
+              "speedCV": 0.352324742660374,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.509150000000024,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 165,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.064215547965432e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 233.300048828125,
+              "followingDelayMs": 400,
+              "speedCV": 0.605790398266996,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.274999999999977,
+              "rebaseCount": 0
+            },
+            "1->3": {
+              "frames": 96,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 49.999755859375,
+              "followingDelayMs": 450,
+              "speedCV": 0.487057021291819,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 15.018300000000522,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.1530333899354446e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.599853515625,
+              "followingDelayMs": 410,
+              "speedCV": 0.4659798664949748,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.509150000000036,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.9753977059954195e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 250,
+              "followingDelayMs": 400,
+              "speedCV": 0.7324617254841246,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 3.788400000000697,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 96,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 3.019806626980426e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 516.69970703125,
+              "followingDelayMs": 450,
+              "speedCV": 0.7611206292739807,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 15.040849999999296,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 166.60009765625,
+              "followingDelayMs": 350,
+              "speedCV": 0.4209004529444843,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 4.226542877373479,
+              "rebaseCount": 0
+            },
+            "3->1": {
+              "frames": 244,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 183.30029296875,
+              "followingDelayMs": 370,
+              "speedCV": 0.5820997886245423,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 3.78839999999982,
+              "rebaseCount": 0
+            },
+            "3->2": {
+              "frames": 165,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 2.842170943040401e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.600341796875,
+              "followingDelayMs": 340,
+              "speedCV": 0.49227999140875167,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 7.789144188865407,
+              "rebaseCount": 0
+            }
+          }
+        },
+        {
+          "scene": "guard-competitive-restart",
+          "orderedPairs": 12,
+          "metrics": {
+            "0->1": {
+              "frames": 175,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.400146484375,
+              "followingDelayMs": 360,
+              "speedCV": 0.41421254191500034,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.079850000015767,
+              "rebaseCount": 0
+            },
+            "0->2": {
+              "frames": 136,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.400146484375,
+              "followingDelayMs": 340,
+              "speedCV": 0.5154835963444072,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.508299999994733,
+              "rebaseCount": 0
+            },
+            "0->3": {
+              "frames": 90,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.2434497875801753e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 400.099853515625,
+              "followingDelayMs": 320,
+              "speedCV": 0.20211458158356044,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.568150000010519,
+              "rebaseCount": 0
+            },
+            "1->0": {
+              "frames": 180,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.2998046875,
+              "followingDelayMs": 340,
+              "speedCV": 0.5565763150560009,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 6.621500000009489,
+              "rebaseCount": 0
+            },
+            "1->2": {
+              "frames": 135,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 383.199951171875,
+              "followingDelayMs": 320,
+              "speedCV": 0.49733621307960213,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.959299999994755,
+              "rebaseCount": 0
+            },
+            "1->3": {
+              "frames": 90,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 399.899658203125,
+              "followingDelayMs": 350,
+              "speedCV": 0.20258193042043615,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.906400000010535,
+              "rebaseCount": 0
+            },
+            "2->0": {
+              "frames": 180,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 133.2998046875,
+              "followingDelayMs": 300,
+              "speedCV": 0.6255462738279898,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 6.621500000009558,
+              "rebaseCount": 0
+            },
+            "2->1": {
+              "frames": 173,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 300,
+              "followingDelayMs": 310,
+              "speedCV": 0.5058342177599302,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 8.49411451728156,
+              "rebaseCount": 0
+            },
+            "2->3": {
+              "frames": 90,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.4210854715202004e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 366.69970703125,
+              "followingDelayMs": 320,
+              "speedCV": 0.4548038445262862,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 11.568150000010519,
+              "rebaseCount": 0
+            },
+            "3->0": {
+              "frames": 181,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 316.5,
+              "followingDelayMs": 320,
+              "speedCV": 0.5048422844934833,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 6.621500000009567,
+              "rebaseCount": 0
+            },
+            "3->1": {
+              "frames": 175,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.5987211554602254e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 300,
+              "followingDelayMs": 290,
+              "speedCV": 0.3500366297841259,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.079850000015767,
+              "rebaseCount": 0
+            },
+            "3->2": {
+              "frames": 136,
+              "orientationErrors": 0,
+              "stepsWithoutMovement": 0,
+              "movingWithoutSteps": 0,
+              "phaseDistanceErrorPx": 1.509903313490213e-14,
+              "endpointErrorPx": 0,
+              "stopAnimationMs": 349.900146484375,
+              "followingDelayMs": 320,
+              "speedCV": 0.5025846603662372,
+              "transports": [
+                "http"
+              ],
+              "maxJumpPx": 10.959299999994755,
+              "rebaseCount": 0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "physicalAndroid": false,
+  "limitations": [
+    "Physical Android acceptance pending",
+    "Post-close/reload automatic RTC renegotiation not certified; genuine HTTP fallback and new generation verified",
+    "Cloud KV transaction concurrency not tested; lab filesystem transactions serialized",
+    "Lobby return uses actual leave plus ordinary reload; original case-selector cleanup not certified",
+    "Future nearby-spectator subscriptions and massive lobby infrastructure not implemented; shared math remains bounded per avatar"
+  ]
+}
