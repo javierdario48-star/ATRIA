@@ -45,6 +45,10 @@ export function applyConciseVegaConsult487(html){
  s=once(s,"sim.consults?.get('cirugia')?.status==='done':present(id);",
  "['done','accepted'].includes(sim.consults?.get('cirugia')?.status):present(id);",
  'accepted-surgery-consult');
+ s=once(s,
+ "const csVegaInterventionComplete487=id=>id==='source_control'?\n    ['done','accepted'].includes(sim.consults?.get('cirugia')?.status):present(id);",
+ "const csVegaInterventionComplete487=id=>id==='iv'?Number(sim.venousAccessCount||0)>0:\n    ['source_control','surgery'].includes(id)?['done','accepted'].includes(sim.consults?.get('cirugia')?.status):present(id);",
+ 'access-is-real-and-all-surgical-variants-require-accepted-consult');
  const assessment=String.raw`  if(job.phase==='assessment'){
    const point=sim.patientInstance?.bed?.patient||[patient.ix,patient.iy];
    if(Math.hypot(expert.x-point[0],expert.y-point[1])>145){
@@ -122,7 +126,7 @@ export function applyConciseVegaConsult487(html){
    if(targets.length){
      if(!urgent&&now<(job.csNextTherapy487||0))return;
      for(const id of urgent?targets:targets.slice(0,1)){
-      if(id==='source_control'){
+      if(id==='source_control'||id==='surgery'){
        if(!sim.consults?.get('cirugia')&&!job.issued.has(id)){
         actor(()=>window.csSurgery487Request?.());
         job.issued.add(id);
@@ -140,6 +144,12 @@ export function applyConciseVegaConsult487(html){
    }
 `;
  s=replaceSpan(s,"   // Prioritize finishing a real administration before starting the next one.","   if(!C.keyInterventions.every(csVegaInterventionComplete487)){",therapy,'quiet-sequential-therapy');
+ // Once clinically indicated measures and real specialty acceptance are
+ // verified, record an appropriate disposition. This is not an auto-discharge.
+ s=once(s,
+ "if(!C.keyInterventions.every(csVegaInterventionComplete487)){status(job,'treatment','Medidas pendientes','Verifico su ejecución y la respuesta de los servicios; no lo dejamos sin orientación.',true);return;}",
+ "if(!C.keyInterventions.every(csVegaInterventionComplete487)){status(job,'treatment','Medidas pendientes','Verifico su ejecución y la respuesta de los servicios; no lo dejamos sin orientación.',true);return;}const goal=destinations[C.id]||'observacion';if((sim.disposition?.id||sim.disposition)!==goal)actor(()=>csSetDisposition(goal));",
+ 'resolve-native-destination-only-after-key-interventions');
  // The previous range included the original second pending check, so the
  // native downstream reassessment, rescue and outcome checks are retained.
  const decision=String.raw`  if(sim.nsVegaCare?.active&&sim.nsVegaCare.phase==='decision487'){
