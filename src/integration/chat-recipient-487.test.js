@@ -19,6 +19,35 @@ for(const text of [
 const tag='<script id="atria-recipient-selector-487">';
 const code=html.split(tag)[1]?.split('</script>')[0];
 assert(code,'compiled mention runtime exists');new vm.Script(code);
+// Execute the actual scene tap handler, not just the mention helper.
+// It must preserve focus only for an NPC; tapping elsewhere retains native
+// move/blur behavior so the keyboard cannot trap the player.
+const tapFrom=html.indexOf('function handleGameTap(e){');
+const tapUntil=html.indexOf('function diegeticTick(){',tapFrom);
+assert(tapFrom>0&&tapUntil>tapFrom,'native RPG map tap handler');
+const tapSource=html.slice(tapFrom,tapUntil);
+for(const role of ['patient','nurse','expert']){
+ let blurred=0,selected=[];
+ const input={blur(){blurred++}};
+ const env={C:{},sim:{mentor:{enabled:true}},editorOpen:false,
+  document:{activeElement:input,body:{classList:{remove(){}}},
+   getElementById:id=>id==='dieInput'?input:null},
+  window:{nsSelectChatTarget487:r=>selected.push(r)},
+  npcScreen:k=>({patient:[100,80],nurse:[200,80],expert:[300,80]})[k],
+  pointerHitsNpc:e=>[100,200,300].some(x=>Math.abs(x-e.clientX)<20),
+  tapNear:(x,y,px,py,d)=>Math.hypot(x-px,y-py)<=d,
+  near:'patient',showRadial(){},moveToEntity(){},syncDiegeticViewport(){},
+  monitorHotspotAt:()=>null,wardNurses:[],hideRadial(){},closeFloatCard(){},
+  setPlayerTarget(){},performance:{now:()=>0}};
+ vm.createContext(env);new vm.Script(tapSource).runInContext(env);
+ const x={patient:100,nurse:200,expert:300}[role];
+ env.handleGameTap({clientX:x,clientY:80});
+ assert.deepEqual(selected,[role],role+' tap inserts correct NPC mention');
+ assert.equal(blurred,0,role+' map gesture preserves the active composer and Android keyboard');
+ env.handleGameTap({clientX:450,clientY:250});
+ assert.equal(blurred,1,'non-NPC map tap retains original keyboard dismissal');
+}
+
 let checks=0;
 for(const device of ['desktop','android']){
  const records=[],roleLabel={textContent:''},classes=new Set();
