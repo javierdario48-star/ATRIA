@@ -19,11 +19,11 @@ await fs.mkdir(output,{recursive:true});
 const dir=await fs.mkdtemp(path.join(os.tmpdir(),'atria-motion-http-'));
 const file=k=>path.join(dir,createHash('sha256').update(k).digest('hex')+'.json');
 const storage={async get(k){try{const d=JSON.parse(await fs.readFile(file(k),'utf8'));return d.until>Date.now()?d.value:null}catch{return null}},
- async set(k,value,{ttl=600}={}){await fs.writeFile(file(k),JSON.stringify({until:Date.now()+ttl*1000,value}))},
+ async set(k,value,{ttl=600}={}){const tmp=file(k)+'.'+Math.random().toString(36).slice(2);await fs.writeFile(tmp,JSON.stringify({until:Date.now()+ttl*1000,value}));await fs.rename(tmp,file(k))},
  async delete(k){await fs.rm(file(k),{force:true})}};
 const core=createQaSocialServer(storage);
 const base=await fs.readFile('vendor/atria-4.8.6/index.html','utf8');
-const html=apply487(base);
+const html=process.env.MOTION_SOURCE_HTML?await fs.readFile(process.env.MOTION_SOURCE_HTML,'utf8'):apply487(base);
 const requests=[];
 const server=createServer(async(req,res)=>{
  try{
@@ -48,8 +48,9 @@ const launch={headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--di
  ...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH}:{})};
 // Observe packets at their real boundaries. This probe is test-only and opt-in.
 function initProbe({name}){
- localStorage.setItem('clinicalShift.profile.v1',JSON.stringify({name,scrubColor:'navy',soundEnabled:false}));
+ if(!localStorage.getItem('clinicalShift.profile.v1'))localStorage.setItem('clinicalShift.profile.v1',JSON.stringify({name,deviceId:'motion-device-'+name,scrubColor:'navy',soundEnabled:false}));
  localStorage.setItem('nightShift.social.client.v2@'+name.toLowerCase(),'atria_motion_isolated_client_'+name);
+ localStorage.setItem('nightShift.social.client.v2@medico','atria_motion_isolated_client_'+name);
  window.motionTrace={frames:[],packets:[],errors:[],record:false};
  const log=(kind,transport,data)=>{if(!motionTrace.record)return;motionTrace.packets.push({t:Date.now(),now:performance.now(),kind,transport,data})};
  const wire=dc=>{
@@ -87,23 +88,24 @@ async function makeClient(i){
  await page.goto(url);await page.locator('#nsEnter').click();
  await page.waitForFunction(()=>window.nsLobby?.active&&window.nsSocial?.state?.().user);
  await installRenderProbe(page);
+ if(!process.env.MOTION_SOURCE_HTML)assert(await page.evaluate(()=>csDrawRemote.toString().includes('csMotionReceive487')),'final active renderer owns the shared timeline');
  const user=await page.evaluate(()=>nsSocial.state().user);
  const c={browser,context,page,user,name:user.name};clients.push(c);return c;
 }
 async function move(page,dx,dy){
- // Feed the original pointer controller and original pathfinder; never assign player.x/y.
+ // Feed the original destination controller and pathfinder; never assign player.x/y.
  const pt=await page.evaluate(({dx,dy})=>{
   const tx=Math.floor(player.x/TW)+dx,ty=Math.floor(player.y/TH)+dy;
   const p=nearestPassable(tx,ty,8);if(!p)throw Error('No passable movement target');
   return worldToScreen((p[0]+.5)*TW,(p[1]+.5)*TH);
  },{dx,dy});
- await page.mouse.click(pt[0],pt[1]);
+ await page.evaluate(([x,y])=>setPlayerTarget(x,y),pt);
 }
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 async function route(page){
  await move(page,0,-10);await pause(1800);
  await move(page,7,0);await pause(1300);
- await page.evaluate(()=>{const [x,y]=worldToScreen(player.x,player.y);handleGameTap({clientX:x,clientY:y})});await pause(700);
+ await page.evaluate(()=>{const [x,y]=worldToScreen(player.x,player.y);setPlayerTarget(x,y)});await pause(700);
  await move(page,-7,0);await pause(1100);
  for(const [x,y]of [[0,-3],[4,0],[-3,0],[0,4]]){await move(page,x,y);await pause(330)}
  await pause(1100);
@@ -111,7 +113,7 @@ async function route(page){
 async function capture(scene){
  for(const c of clients)await c.page.evaluate(()=>{motionTrace.frames=[];motionTrace.packets=[];motionTrace.record=true});
  await route(clients[0].page);await route(clients[1].page);
- const traces=await Promise.all(clients.map(c=>c.page.evaluate(()=>{motionTrace.record=false;return motionTrace})));
+ const traces=await Promise.all(clients.map(c=>c.page.evaluate(()=>{motionTrace.record=false;return {...motionTrace,motionDebug:window.csRemoteMotionDiagnostics487?.events||[],renderer:csDrawRemote.toString(),wire:csWireDataChannel.toString()}})));
  const m={scene,label,clients:clients.length,AB:metrics(traces[0],traces[1],clients[0].name),BA:metrics(traces[1],traces[0],clients[1].name)};
  for(let i=0;i<clients.length;i++)await clients[i].page.screenshot({path:output+'/'+scene+'-'+i+'.png'});
  await fs.writeFile(output+'/'+scene+'-trace.json',JSON.stringify(traces));await fs.writeFile(output+'/'+scene+'-metrics.json',JSON.stringify(m,null,2));
@@ -130,11 +132,15 @@ try{
  }
  console.log('INDEPENDENT_CLIENTS',JSON.stringify(await Promise.all(clients.map(c=>c.page.evaluate(()=>({user:nsSocial.state().user.id,session:sessionStorage.getItem('atria.lobby.peer.v2'),rtc:[...window.__atriaLobbyNet461.peers.values()].map(p=>({open:p.open,channel:p.dc?.readyState,session:p.peerId}))}))))));
  const lobby=await capture('lobby');
- const room=await clients[0].page.evaluate(id=>nsSocial.createRoom('coop',[id]),clients[1].user.id);
+ await clients[0].page.evaluate(id=>nsLobby.openGuardia('coop',[id]),clients[1].user.id);
+ await clients[0].page.locator('[data-guard="go"]').click();
+ await clients[0].page.waitForFunction(()=>nsSocial.room()?.id);
+ const room=await clients[0].page.evaluate(()=>nsSocial.room());
  await clients[1].page.evaluate(id=>nsSocial.joinRoom(id),room.id);
  await clients[0].page.waitForFunction(()=>nsSocial.room()?.allAccepted&&csCoop.dc?.readyState==='open');
- await clients[0].page.evaluate(()=>{nsPractice.setMode('coop');nsPractice.start(false)});
- await Promise.all(clients.map(c=>c.page.waitForFunction(()=>csV41Challenge.active)));
+ try{await Promise.all(clients.map(c=>c.page.waitForFunction(()=>csV41Challenge.active)))}catch(e){
+  console.log('GUARD_START_DIAGNOSTICS',JSON.stringify(await Promise.all(clients.map(c=>c.page.evaluate(()=>({room:nsSocial.room(),challenge:{id:csV41Challenge.id,active:csV41Challenge.active,self:csV41Challenge.selfId,mode:csV41Challenge.mode},channel:csCoop.dc?.readyState,localCase:C?.id,lobby:nsLobby.active,packet:motionTrace.packets.slice(-4)}))))));throw e;
+ }
  const guard=await capture('guard');
  await fs.writeFile(output+'/summary.json',JSON.stringify({label,lobby,guard,httpRequests:requests.length,stalePresenceWrites:requests.filter(r=>r.stale).length,realNetwork:true,physicalAndroid:false},null,2));
 }finally{

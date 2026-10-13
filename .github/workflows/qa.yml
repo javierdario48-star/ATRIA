@@ -21,7 +21,7 @@ jobs:
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
-          MOTION_LABEL: baseline
+          MOTION_LABEL: checkpoint-b
         run: node qa/remote-motion-browser-487.mjs
       - uses: actions/upload-artifact@v4
         if: always()

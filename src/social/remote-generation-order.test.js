@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {createQaSocialServer} from './qa-social-server.js';
+import {apply487} from '../integration/apply-487.js';
+// Supporting protocol test; the main browser reproduction uses filesystem + HTTP.
+const data=new Map(),server=createQaSocialServer({get:async k=>data.get(k),set:async(k,v)=>data.set(k,v),delete:async k=>data.delete(k)});
+const registered=await server.route({method:'POST',path:'register',body:{name:'Generation',handle:'generation',clientKey:'motion_generation_independent_client'}});
+const headers={authorization:'Bearer '+registered.body.token};
+const send=(motionSession,seq)=>server.route({method:'POST',path:'lobby/state',headers,body:{peerId:'same-tab-peer',motionSession,seq,motionAt:seq*100,x:50,y:50,dir:'NE'}});
+assert.equal((await send('PAGE_A',100)).body.stale,undefined);
+assert.equal((await send('PAGE_B',1)).body.stale,undefined,'a reload may restart its counter');
+assert.equal((await send('PAGE_A',101)).body.stale,true,'old page cannot regain authority over current pose');
+const roster=(await server.roster());assert.equal(roster[0].motionSession,'PAGE_B');assert.equal(roster[0].dir,'NE');
+const html=apply487(fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'));
+let now=0;const ctx={window:{},performance:{now:()=>now},Date,Math,Map};vm.createContext(ctx);
+vm.runInContext(html.match(/<script id="atria-remote-motion-487">([\s\S]*?)<\/script>/)[1],ctx);
+const a=ctx.csMotionMeta487('L_TAB',100);now=10;const b=ctx.csMotionMeta487('L_TAB',260);assert.equal(b.seq,a.seq+1);assert.equal(a.motionSession,b.motionSession);
+const current={peerId:'P',motionSession:'A',stateSeq:100};
+const next={peerId:'P',motionSession:'B',stateSeq:1};assert(ctx.csMotionAcceptState487(current,next));
+assert(!ctx.csMotionAcceptState487(next,{peerId:'P',motionSession:'A',stateSeq:101}));
+assert(!ctx.csMotionAcceptState487(next,{peerId:'P',motionSession:'B',stateSeq:1}));
+console.log('source-integrated common sequence, generation-aware server and guard ordering OK');

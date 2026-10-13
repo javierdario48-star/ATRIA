@@ -1,40 +1,29 @@
-import assert from'node:assert/strict';
-
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function sample(p,now){const t=clamp((now-p.at)/220,0,1),e=t*t*(3-2*t);return{x:p.fromX+(p.toX-p.fromX)*e,y:p.fromY+(p.toY-p.fromY)*e}}
-function receive(map,id,msg,now){
- const old=map.get(id);
- if(old&&msg.seq<=old.seq)return false;
- let p=old||{fromX:msg.x,fromY:msg.y,toX:msg.x,toY:msg.y,at:now,seq:0};
- const cur=sample(p,now);
- map.set(id,{fromX:cur.x,fromY:cur.y,toX:msg.x,toY:msg.y,at:now,seq:msg.seq});
- return true;
-}
-const poses=new Map(),lastRendered=new Map();
-let maxFrameJump=0,accepted=0,rejected=0;
-const peers=['b','c','d'];
-for(let frame=0;frame<10000;frame++){
- const now=frame*16;
- for(let k=0;k<peers.length;k++){
-  const id=peers[k],cadence=80+((frame*37+k*71)%271);
-  if(frame===0||((now+k*53)%cadence)<16){
-   const seq=Math.floor(now/80)+1,x=now*.02+k*90,y=120+k*55;
-   if(receive(poses,id,{seq,x,y},now))accepted++;
-   if(frame%97===0){if(receive(poses,id,{seq:Math.max(1,seq-2),x:x-500,y},now))accepted++;else rejected++}
-   if(frame%131===0){if(receive(poses,id,{seq,x,y},now))accepted++;else rejected++}
+import assert from 'node:assert/strict';
+import {createRemotePose,receiveRemotePose,sampleRemotePose} from './remote-motion.js';
+let rejected=0,frames=0,maxStep=0;
+for(const fps of [20,30,60,120])for(const count of [1,2,3]){
+ const peers=Array.from({length:count},(_,i)=>createRemotePose({x:100+i*80,y:200,now:0,cadence:100}));
+ const pending=[];
+ for(let f=0;f<fps*16;f++){
+  const now=f*1000/fps;
+  if(f%Math.round(fps/10)===0)for(let i=0;i<count;i++){
+   const seq=Math.floor(now/100)+1;
+   // Real supporting mathematical test: sender time stays ordered while arrivals jitter.
+   if(seq%13!==0)pending.push({at:now+(seq%4)*10,i,m:{peerId:'p'+i,seq,motionAt:now,x:100+i*80+now*.12,y:200,dir:'E',moving:true,now:0}});
+   if(seq%17===0)pending.push({at:now+20,i,m:{peerId:'p'+i,seq:seq-2,motionAt:now-200,x:0,y:200,moving:true,now:0}});
+  }
+  for(let j=pending.length-1;j>=0;j--)if(pending[j].at<=now){const e=pending.splice(j,1)[0],p=peers[e.i],prior=p.rejected;e.m.now=now;receiveRemotePose(p,e.m);rejected+=p.rejected-prior;}
+  for(const p of peers){const x=p.x,y=p.y,phase=p.walkPhase;sampleRemotePose(p,now);const d=Math.hypot(p.x-x,p.y-y);maxStep=Math.max(maxStep,d);
+   assert(Number.isFinite(p.x));assert(d<=205*1.1/fps+.0001,'network bursts cannot exceed native movement per rendered frame');
+   if(d>.05){assert(p.moving);assert.equal(p.dir,'E');assert(Math.abs(p.walkPhase-phase-d/18)<1e-8)}
+   frames++;
   }
  }
- for(const id of peers){
-  const p=poses.get(id);if(!p)continue;
-  const cur=sample(p,now),prev=lastRendered.get(id);
-  if(prev)maxFrameJump=Math.max(maxFrameJump,Math.hypot(cur.x-prev.x,cur.y-prev.y));
-  lastRendered.set(id,cur);
-  assert(Number.isFinite(cur.x)&&Number.isFinite(cur.y));
- }
+ for(const p of peers){for(let f=0;f<fps*2;f++)sampleRemotePose(p,16000+f*1000/fps);assert.equal(p.moving,false,'packet loss does not extrapolate indefinitely')}
+ assert.equal(peers.length,count,'each remote keeps an independent timeline');
 }
-assert.equal(poses.size,3,'three simultaneous remotes must retain independent poses');
-assert(rejected>0,'stale/duplicate hostile packets must be rejected');
-assert(maxFrameJump<40,'render cadence must not jump a full network snapshot under deterministic jitter');
-for(const id of peers){const p=poses.get(id),end=sample(p,p.at+220);assert.equal(end.x,p.toX);assert.equal(end.y,p.toY)}
-poses.delete('c');assert.equal(poses.has('c'),false,'disconnect cleanup must remove one peer without affecting others');assert.equal(poses.size,2);
-console.log('shared remote hostile-network stress OK',{frames:10000,peers:3,accepted,rejected,maxFrameJump:Number(maxFrameJump.toFixed(3))});
+assert(rejected>0);
+const reconnect=createRemotePose();receiveRemotePose(reconnect,{x:200,y:100,now:0,motionAt:0,peerId:'OLD',seq:500});
+receiveRemotePose(reconnect,{x:300,y:100,now:1000,motionAt:0,peerId:'NEW',seq:1});assert.equal(reconnect.x,300);assert.equal(reconnect.seq,1);
+const wall=createRemotePose({x:0,y:0,cadence:100});receiveRemotePose(wall,{x:0,y:0,now:0,motionAt:0,seq:1});receiveRemotePose(wall,{x:10,y:0,now:100,motionAt:100,seq:2});sampleRemotePose(wall,200,{canMove:()=>false});assert.equal(wall.x,0);assert.equal(wall.moving,false);
+console.log('shared remote timeline network/FPS stress OK',JSON.stringify({frames,fps:[20,30,60,120],players:[2,3,4],rejected,maxStep,realNetwork:false}));

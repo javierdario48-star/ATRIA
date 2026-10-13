@@ -60,3 +60,29 @@ ATRIA retains continuous coordinates. No OT code, grid movement, or OTServer
 engine is imported.
 
 Physical Android validation remains mandatory before definitive acceptance.
+
+## Checkpoint B: common timeline and ordering
+
+The integrated guard constant-speed test first failed on the original code:
+mean 204.31 px/s and speed CV 0.4242. With the common linear source-time
+timeline it measures 205.06 px/s and CV 0.00125 at the same 60 FPS/13-frame
+packet cadence. This test executes the actual active guard renderer.
+
+Both scenes now share the math and rendered-distance footsteps. Lobby HTTP
+and RTC share sequence numbers and a per-page motion generation. Server and
+guard ordering allow a new generation and reject retired ones. Fresh RTC is
+preferred; HTTP resumes with its actual cadence. No extrapolation is used.
+
+Explicit supporting regressions cover source generations, retired packets,
+outages, a suspended renderer at a collision-safe corner, transport cadence,
+20/30/60/120 FPS, and two-to-four-player independent pose buffers.
+After a long interruption, the renderer resumes at an actual received pose,
+tagged `network-resume` in opt-in diagnostics; it does not replay a stale
+backlog with seconds of hidden lag. Short catch-up is bounded to 110% of the
+native speed, within the one-frame/snapshot speed budget, following the
+buffered path rather than cutting a corner.
+
+The complete `cs-v410-modes` block retains its frozen hash; the guard adapter
+mounts outside that block and delegates to the original transport validators.
+The native physiology reference still compares all 4,537 numeric values at
+its original tolerance. No frozen reference or clinical expectation changed.

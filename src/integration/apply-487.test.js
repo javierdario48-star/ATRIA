@@ -48,21 +48,22 @@ assert.equal((out.match(/window\.nsLobbyRtcPulse=function/g)||[]).length,1,'inte
 assert.equal((out.match(/ensureSession:async/g)||[]).length,1,'integrated artifact must have exactly one exported social session owner');
 assert.match(out,/lastRtcSend>=100/,'RTC movement sends have bounded 10 Hz cadence');
 assert.match(out,/window\.nsLobbyRtcHasFresh=function/,'RTC can provide fresh positions to primary lobby frame');
-assert.match(out,/lobby-server-fallback-not-override-fresh-rtc|window\.nsLobbyRtcHasFresh\?\.\(p\.userId\)/,'HTTP snapshots must not override newer RTC positions');
+assert.match(out,/seq<=p\.seq&&session===p\.session/,'HTTP snapshots must not override newer RTC positions');
 assert.match(out,/lastDiscovery>=2500/,'RTC discovery must be bounded');
 assert.match(out,/bufferedAmount\|\|0\)>65536/,'shared-mode data channel must apply backpressure');
 assert.match(out,/function csRemoteVisual\(/,'guard renderer must interpolate remote network snapshots');
-assert.match(out,/\(now-p\.at\)\/220/,'guard interpolation must bridge the legacy 220 ms network cadence');
+assert.match(out,/csRemoteMotion487\.sample\(csRemotePose/,'guard interpolation must bridge the legacy 220 ms network cadence');
 const remoteDraw=out.match(/function csDrawRemote\(\)\{[\s\S]*?\n\}/)?.[0]||'';
 assert.match(remoteDraw,/const p=csRemoteVisual\(r\)/,'guard renderer must sample the interpolated remote pose');
 assert.doesNotMatch(remoteDraw,/actor=\{x:r\.x\|\|0,y:r\.y\|\|0/,'guard renderer must not draw raw remote packet coordinates');
 assert.match(out,/const csSharedRemotePose=new Map\(\)/,'shared rooms must keep independent interpolation state per remote peer');
 assert.match(out,/stateSeq:\+\+csSharedStateSeq/,'shared room state packets must carry monotonic sequence numbers');
-assert.match(out,/seq>Number\(prev\.stateSeq\|\|0\)/,'shared rooms must reject stale sequenced state packets');
+assert.match(out,/csMotionAcceptState487\(prev,m\)/,'shared rooms must reject stale sequenced state packets');
 assert.match(out,/csCoop\.dc\.bufferedAmount\|\|0\)<=65536/,'shared 2-4 player sender must apply data-channel backpressure');
-const sharedDraw=out.match(/csDrawRemote=function\(\)\{if\(!shared\(\)\)[\s\S]*?csSharedRemotePose\.delete\(id\)\}\;/)?.[0]||'';
+const sharedAdapter=out.match(/<script id="atria-guard-remote-adapter-487">([\s\S]*?)<\/script>/)[1];
+const sharedDraw=sharedAdapter.slice(sharedAdapter.indexOf('csDrawRemote=function(){if(!shared())'),sharedAdapter.indexOf('// remote renderer end'));
 assert.match(sharedDraw,/Object\.values\(csCoop\.remotes\|\|\{\}\)/,'shared renderer must iterate all remote players');
-assert.match(sharedDraw,/actor=\{x:p\.x,y:p\.y/,'shared renderer must draw interpolated per-peer positions');
+assert.match(sharedDraw,/drawSprite\(im,p,60\)/,'shared renderer must draw interpolated per-peer positions');
 assert.doesNotMatch(sharedDraw,/actor=\{x:r\.x\|\|0,y:r\.y\|\|0/,'shared renderer must not draw raw packet coordinates');
 
 assert.doesNotMatch(out,/sesión social vencida/i,'integrated artifact must not expose expired-social-session UX');
@@ -115,7 +116,7 @@ console.log('4.8.7 Android transcript anchoring and speech reconciliation OK');
 
 assert.doesNotMatch(out,/window.fetch=async function\(input,init\)/,'lobby must never monkey-patch fetch into fabricated success or empty rosters');
 assert.match(out,/window.nsLobbyRtcPulse=function/,'bounded RTC acceleration remains active');
-assert.match(out,/\+900<t\)/,'authoritative backend lobby polling uses bounded cadence');
+assert.match(out,/\?260:900/,'authoritative backend lobby polling uses bounded cadence');
 assert.match(out,/sessionStorage.getItem\('atria.lobby.peer.v2'\)/,'player presence uses a unique tab-local peer id');
 assert.match(out,/csStudyTiming=\{/,'integrated artifact must include complete ED turnaround catalog');
 console.log('4.8.7 authoritative lobby transport and ED timing source contract OK');
@@ -218,8 +219,8 @@ assert.match(out,/function csRtcAuth\(\)/,'RTC signaling uses existing social be
 assert.match(out,/headers:\{\.\.\.\(body\?\{'Content-Type':'application\/json'\}:\{\}\),\.\.\.csRtcAuth\(\)\}/,'RTC request carries bearer token');
 console.log('mic-only ASR short greetings and secure RTC signaling wiring OK');
 
-assert.match(out,/return\{peerId:pid,seq:\(state\._qaSeq=/,'stable peer ID and monotonic sequence coexist');
-assert.match(out,/seq:\(state\._qaSeq=\(state\._qaSeq\|\|0\)\+1\)/,'lobby movement is versioned to reject stale updates');
+assert.match(out,/return\{peerId:pid,\.\.\.csMotionMeta487\(pid,260\)/,'stable peer ID and monotonic sequence coexist');
+assert.match(out,/const seq=\(csMotionSequences487\.get\(session\)\|\|0\)\+1/,'lobby movement is versioned to reject stale updates');
 console.log('QA lobby peer ID and monotonic sequence integration OK');
 
 assert.match(out,/if\(chest&&!abdomen&&ct\)return 'tc_torax'/,'active study resolver must distinguish thoracic CT');

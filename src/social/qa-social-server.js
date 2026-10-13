@@ -29,11 +29,14 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
   return slots.flatMap(x=>Array.isArray(x)?x:[]).filter(x=>x&&x.lastSeen>=cutoff).sort((a,b)=>a.userId.localeCompare(b.userId));
  }
  async function updatePresence(user,body){
-  const p={userId:user.id,name:user.name,handle:user.handle,peerId:safe(body.peerId,100),x:finite(body.x,0,10000),y:finite(body.y,0,10000),dir:/^[NESW]$/.test(body.dir)?body.dir:'S',moving:!!body.moving,walkPhase:finite(body.walkPhase,0,1),color:safe(body.color||'navy',24),coat:!!body.coat,level:finite(body.level,1,1000,1),seq:finite(body.seq,0,1e9),lastSeen:now()};
+  const p={userId:user.id,name:user.name,handle:user.handle,peerId:safe(body.peerId,100),x:finite(body.x,0,10000),y:finite(body.y,0,10000),dir:/^(?:N[EW]?|S[EW]?|[EW])$/.test(body.dir)?body.dir:'S',moving:!!body.moving,walkPhase:finite(body.walkPhase,0,1),color:safe(body.color||'navy',24),coat:!!body.coat,level:finite(body.level,1,1000,1),seq:finite(body.seq,0,1e9),motionSession:safe(body.motionSession||body.peerId,100),motionAt:Number.isFinite(body.motionAt)?finite(body.motionAt,0,1e12):undefined,motionCadence:finite(body.motionCadence,40,1000,260),sentAt:finite(body.sentAt,0,1e15),lastSeen:now()};
   if(!p.peerId||p.peerId.length<6)return failure(400,'Identificador del dispositivo inválido');
   const k=bucket(user.id),prev=await get('presence',k,[]);
   const last=(Array.isArray(prev)?prev:[]).find(x=>x.userId===user.id);
-  if(p.seq>0&&last?.seq>0&&p.seq<=last.seq)return success({ok:true,stale:true,seq:last.seq});
+  const retired=last?._motionRetired||[];
+  if(retired.includes(p.motionSession))return success({ok:true,stale:true,seq:last.seq});
+  if(p.peerId===last?.peerId&&p.motionSession===last?.motionSession&&p.seq>0&&last?.seq>0&&p.seq<=last.seq)return success({ok:true,stale:true,seq:last.seq});
+  p._motionRetired=last?.motionSession&&p.motionSession!==last.motionSession?[...retired,last.motionSession].slice(-8):retired;
   const list=(Array.isArray(prev)?prev:[]).filter(x=>x.userId!==user.id&&x.lastSeen>=now()-35000);
   list.push(p);await put('presence',k,list,ttl.presence);return success({ok:true,seq:p.seq});
  }
