@@ -26,7 +26,7 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  // nurse order gets a delayed local execution instead of the owner relay.
  s=edit(s,
  "const raw=String(text||'').trim();if(!raw||raw.startsWith('/')||!mayTreat()||inferRecipient(raw)!=='nurse')return base.send.apply(this,arguments);",
- "const raw=String(text||'').trim();if(sim?.__csRemoteMirror487||!raw||raw.startsWith('/')||!mayTreat()||inferRecipient(raw)!=='nurse')return base.send.apply(this,arguments);",
+ "const raw=String(text||'').trim();if(sim?.__csRemoteMirror487||sim?.__csRoomSpectator||!raw||raw.startsWith('/')||!mayTreat()||inferRecipient(raw)!=='nurse')return base.send.apply(this,arguments);",
  'visiting-mirror-skips-late-v412-local-nurse-interceptor');
 
  // Guest's clinical dock can be built BEFORE late lobby deactivation.
