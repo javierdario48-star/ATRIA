@@ -139,7 +139,7 @@ export function applyConciseVegaConsult487(html){
      return;
    }
 `;
- s=replaceSpan(s,"   // Prioritize finishing a real administration before starting the next one.","   if(sim.pendingTherapies?.size){\n     status(job,'administration'",therapy,'quiet-sequential-therapy');
+ s=replaceSpan(s,"   // Prioritize finishing a real administration before starting the next one.","   if(!C.keyInterventions.every(csVegaInterventionComplete487)){",therapy,'quiet-sequential-therapy');
  // The previous range included the original second pending check, so the
  // native downstream reassessment, rescue and outcome checks are retained.
  const decision=String.raw`  if(sim.nsVegaCare?.active&&sim.nsVegaCare.phase==='decision487'){
