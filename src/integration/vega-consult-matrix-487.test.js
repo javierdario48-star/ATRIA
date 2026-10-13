@@ -42,6 +42,25 @@ for(const token of ["job.phase='decision487'","diagnóstico presuntivo es","¿Qu
  "no se que hacer","if(critical){","csVegaConsultRequested487"]){
  assert(rescue.includes(token),'missing concise Vega safety/flow '+token);
 }
+// Do not silently authorize medication when a stable player is thinking.
+const decisionStart=rescue.indexOf("  if(job.phase==='decision487'){");
+const decisionEnd=rescue.indexOf("  if(job.phase==='reassessment'){",decisionStart);
+assert(decisionStart>=0&&decisionEnd>decisionStart,'real native Vega wait state');
+const decisionCode=rescue.slice(decisionStart,decisionEnd);
+let notices=[];
+const job={phase:'decision487',csDecisionAt487:1000};
+const consultCtx={job,now:10000,window:{nsPatientState:()=>({color:'VERDE'})},
+ immediateDanger:()=>false,say:t=>notices.push(t)};
+const tick=()=>vm.runInNewContext('(function(){'+decisionCode+'})()',consultCtx,{timeout:1500});
+tick();assert.equal(job.phase,'decision487');assert.equal(notices.length,0);
+consultCtx.now=18000;tick();
+assert.equal(job.phase,'decision487','silence is not authorization to treat stable patients');
+assert.equal(notices.length,1,'single optional guidance prompt');
+consultCtx.now=90000;tick();
+assert.equal(job.phase,'decision487');assert.equal(notices.length,1,'no repeated timer spam');
+consultCtx.window.nsPatientState=()=>({color:'ROJO'});
+tick();assert.equal(job.phase,'reassessment','true critical deterioration interrupts wait');
+
 console.log('VEGA CONCISE 13-CASE CLINICAL PRIORITY PASS',JSON.stringify({
  cases:13,studiesMax:2,criticalSupportRetained:true,decisionWindow:true,
  sequentialStableCare:true,source:'native 4.8.7 generated browser script'}));
