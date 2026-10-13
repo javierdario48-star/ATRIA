@@ -32,6 +32,10 @@ for(const role of ['desktop-guest','android-guest'])for(const mode of ['coop','c
  new vm.Script(v412).runInContext(context);
  assert.equal(context.sendMessage('enfermera ringer'),'relay:enfermera ringer');
  assert.equal(nursing,0,'V412 also bypasses visitor-local nurse interception');
+ context.sim.__csRemoteMirror487=false;context.sim.__csRoomSpectator=true;
+ assert.equal(context.sendMessage('enfermera ringer'),'relay:enfermera ringer',
+  'unassigned guest/observer chat must reach room routing, not nurse parser');
+ assert.equal(nursing,0,'no patient may be treated while in team-chat spectator state');
 }
 const ownerRelay=pick('function applyAssistAction(p,a,helper){','function requestAssist(index,a){');
 for(const mode of ['coop','competitive'])for(const platform of ['desktop','android']){
