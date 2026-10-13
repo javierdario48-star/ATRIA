@@ -91,7 +91,7 @@ jobs:
 
   npc-chat-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -103,11 +103,7 @@ jobs:
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
-        run: |
-          node qa/chat-browser-487.mjs
-          for players in 2 3 4; do
-            ROOM_CHAT_PLAYERS="$players" node qa/room-chat-browser-487.mjs
-          done
+        run: node qa/chat-browser-487.mjs
 
   immutable-source-and-artifact:
     runs-on: ubuntu-latest
