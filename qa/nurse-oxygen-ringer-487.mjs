@@ -132,6 +132,34 @@ scenario('recognized case interventions must not hijack monitor medication dispa
   assert.equal(delivered(p,id).length,1,id+' uses monitor owner despite case intervention alias');
  return {delivered:['fluid','oxygen','ceftriaxone','metronidazole']};
 });
+scenario('full mixed order with no initial IV: independent oxygen and all three IV medications',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:0}),p=r.ctx.sim;
+ r.ctx.sendMessage('Enfermera, dos vías, monitor, Ringer, oxígeno, ceftriaxona y metronidazol');
+ tick(r,.2);
+ for(const id of ['fluid','ceftriaxone','metronidazole'])
+  assert.equal(delivered(p,id).length,0,id+' cannot be given before IV');
+ tick(r,2.5);
+ assert.equal(delivered(p,'oxygen').length,1,'oxygen must execute independently of IV placement');
+ tick(r,53);
+ assert.equal(p.venousAccessCount,2,'native cannulation must finish');
+ assert.equal(p.monitorConnected,true,'native monitor must be connected');
+ for(const id of ['fluid','ceftriaxone','metronidazole'])
+  assert.equal(delivered(p,id).length,1,id+' must execute once through native owner');
+ return {iv:p.venousAccessCount,monitor:p.monitorConnected,
+  meds:p.administrationLog.map(x=>x.id)};
+});
+scenario('two sequential deliberate antibiotic rounds are two native dose events',()=>{
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001',{confirmedIV:2}),p=r.ctx.sim;
+ r.ctx.sendMessage('Enfermera ceftriaxona y metronidazol');
+ tick(r,3);
+ assert.equal(delivered(p,'ceftriaxone').length,1);
+ assert.equal(delivered(p,'metronidazole').length,1);
+ r.ctx.sendMessage('Enfermera ceftriaxona y metronidazol');
+ tick(r,3);
+ for(const id of ['ceftriaxone','metronidazole'])
+  assert.equal(delivered(p,id).length,2,id+' intentionally re-ordered after completion');
+ return {rounds:2};
+});
 const errors=cases.filter(x=>!x.passed);
 fs.mkdirSync('qa/android-fix-results',{recursive:true});
 fs.writeFileSync('qa/android-fix-results/oxygen-ringer.json',
