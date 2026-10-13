@@ -37,10 +37,10 @@ for(const c of cases){
   'stable deterministic workup choice');
 }
 const rescue=html.split('<script id="ns422-vega-rescue">')[1].split('</script>')[0];
-for(const token of ['job.phase=\\'decision487\\'','diagnóstico presuntivo es','¿Qué proponés hacer?',
- 'if(job.phase===\\'decision487\\')','urgent?targets:targets.slice(0,1)',
- 'no se que hacer','if(critical){','csVegaConsultRequested487']){
- assert(rescue.includes(token.replaceAll("\\'","'")),'missing concise Vega safety/flow '+token);
+for(const token of ["job.phase='decision487'","diagnóstico presuntivo es","¿Qué proponés hacer?",
+ "if(job.phase==='decision487')","urgent?targets:targets.slice(0,1)",
+ "no se que hacer","if(critical){","csVegaConsultRequested487"]){
+ assert(rescue.includes(token),'missing concise Vega safety/flow '+token);
 }
 console.log('VEGA CONCISE 13-CASE CLINICAL PRIORITY PASS',JSON.stringify({
  cases:13,studiesMax:2,criticalSupportRetained:true,decisionWindow:true,
