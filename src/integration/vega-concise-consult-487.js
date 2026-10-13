@@ -170,7 +170,7 @@ export function applyConciseVegaConsult487(html){
  // seeing Vega on the map. A returned/closed patient cannot revive it.
  s=once(s,
  " window.nsTreatmentContext=()=>(",
- " const oldExplicitCall487=window.csCallVega;window.csCallVega=function(){const ok=oldExplicitCall487?.apply(this,arguments);if(ok!==false&&sim)sim.csVegaConsultRequested487=true;return ok;};\n window.nsTreatmentContext=()=>(",
+ " const oldExplicitCall487=window.csCallVega;window.csCallVega=function(){const ok=oldExplicitCall487?.apply(this,arguments);if(ok!==false&&sim){sim.csVegaConsultRequested487=true;window.nsSelectChatTarget487?.('expert');}return ok;};\n window.nsTreatmentContext=()=>(",
  'explicit-call-for-autoconsult');
  s=once(s,
  " function tick(){\n  const job=sim?.nsVegaCare;if(!job)return;",
