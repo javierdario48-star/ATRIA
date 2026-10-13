@@ -110,6 +110,9 @@ const ownerCtx={challenge:{mode:'coop'},selfId:'OWNER',
  assistTargetSim:()=>ownerSim,assistActionAllowed:()=>true,
  CASES:[{id:'CASE'}],window:{csWithPatientStateV203:(_s,_c,fn)=>fn()},
  sendMessage:(text)=>{calls.push(['native-command',text]);return true;},
+ nurseNatural:(text)=>{calls.push(['native-command',text]);return true;},
+ deliverPatientSpeech:(text)=>{calls.push(['native-patient',text]);return true;},
+ processCommand:(text)=>{calls.push(['native-command',text]);return true;},
  addGlobalChat:()=>{},refreshChatDock:()=>{}};
 vm.createContext(ownerCtx);
 new vm.Script(html.slice(actionStart,actionEnd)).runInContext(ownerCtx);
