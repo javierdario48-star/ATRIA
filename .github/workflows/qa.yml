@@ -17,6 +17,8 @@ jobs:
           node-version: '22'
       - name: Validate frozen clinical source before lengthy regression
         run: node src/clinical/physiology-native-reference-487.test.js
+      - name: Verify NPC mentions and the thirteen-case Vega dialogue
+        run: node src/integration/chat-recipient-487.test.js && node src/integration/vega-consult-matrix-487.test.js
       - name: Verify exact baseline byte recovery and generated artifact
         run: npm run build && npm run qa:physiology-artifact
 
