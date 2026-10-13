@@ -106,6 +106,41 @@ for(const caseId of cases)for(const [id,word] of [
   automaticIV++;
  }catch(e){issues.push({caseId,id,kind:'auto-IV',reason:e.message})}
 }
+// Original V180 procedures, with the current V487 patient-isolation patches,
+// execute against a shared (hospital-wide) nursing actor, not invented queues.
+const procStart=html.indexOf('function csQueueMonitor(){');
+const procEnd=html.indexOf('window.csQueueMonitor=csQueueMonitor;',procStart);
+assert(procStart>=0&&procEnd>procStart,'native monitor and IV scheduling present');
+const patientA={venousAccessCount:0,monitorConnected:false},patientB={venousAccessCount:0,monitorConnected:false};
+const procedureCtx={sim:patientA,nurse:{task:null,queue:[]},
+ csEnsureProcedureState:()=>{},nurseSay:()=>{},csAccessLabel:()=>'Vía',
+ window:{},Number,Math};
+procedureCtx.queueNurse=task=>{
+ task._targetSim=procedureCtx.sim;
+ if(!procedureCtx.nurse.task)procedureCtx.nurse.task=task;
+ else procedureCtx.nurse.queue.push(task);
+ return true;
+};
+vm.createContext(procedureCtx);
+new vm.Script(html.slice(procStart,procEnd)).runInContext(procedureCtx);
+assert.equal(procedureCtx.csQueueIV(1),true);
+assert.equal(procedureCtx.nurse.task._targetSim,patientA);
+procedureCtx.sim=patientB;
+assert.equal(procedureCtx.csQueueIV(2),true,'second patient must not inherit first patient access request');
+assert.equal(procedureCtx.nurse.queue.at(-1)._targetSim,patientB);
+assert.equal(procedureCtx.nurse.queue.at(-1).count,2);
+assert.equal(procedureCtx.csQueueIV(2),false,'same patient IV request deduplicated');
+assert.equal(procedureCtx.csQueueMonitor(),true);
+procedureCtx.sim=patientA;
+assert.equal(procedureCtx.csQueueMonitor(),true,'A needs a monitor even if B already requested one');
+assert.equal(procedureCtx.csQueueIV(1),false,'A IV request still deduplicated');
+assert.equal(procedureCtx.nurse.queue.filter(t=>t.kind==='monitor').length,2);
+assert.equal(procedureCtx.nurse.queue.filter(t=>t.kind==='iv_access').length,1);
+assert(html.includes("t.kind==='iv_access'&&t._targetSim===sim"),
+ 'clinical IV dedupe is patient-specific');
+assert(html.includes("t.kind==='monitor'&&t._targetSim===sim"),
+ 'clinical monitor dedupe is patient-specific');
+
 console.log('ATRIA CHAT AND NURSING ROLE MATRIX',JSON.stringify({
  totalMedicineCases:cases.length*aliases.length,confirmed:medications,
  autoIVCases:cases.length*4,autoIVConfirmed:automaticIV,
