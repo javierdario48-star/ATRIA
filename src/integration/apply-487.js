@@ -405,8 +405,7 @@ function csDrawRemote(){
  'use strict';
  if(window.__atriaPhase4Orders)return;
  window.__atriaPhase4Orders=true;
- const mayTreat=(target=sim)=>!!target&&!target.caseEnded&&!target.patientDied&&
-  !target.__csRemoteMirror487&&!target.__csRoomSpectator&&window.nsMayExamine?.()!==false;
+
  const prevNatural=nurseNatural,prevInfer=inferRecipient,prevCommand=processCommand,prevUpdate=updateSimulation;
  const normalized=t=>norm(String(t||'').trim());
  const introduction=/^(?:(?:enfermera|enfermero|enfermeria|por favor|solicito|solicitamos|pido|pedimos|quiero pedir|necesito|indico|indicamos|ordenar|orden|solicito estudios? de|solicito estudios?)\s*[,.:]?\s*)+/;
@@ -534,8 +533,7 @@ function csDrawRemote(){
  'use strict';
  if(window.__atriaNursingReceipts487)return;
  window.__atriaNursingReceipts487=true;
- const mayTreat=(target=sim)=>!!target&&!target.caseEnded&&!target.patientDied&&
-  !target.__csRemoteMirror487&&!target.__csRoomSpectator&&window.nsMayExamine?.()!==false;
+
  const oldNatural=nurseNatural,oldInfer=inferRecipient,oldUpdate=updateSimulation,legacyParse=window.csNursingParse487;
  const ivMeds=new Set(['fluid','albumin','ceftriaxone','metronidazole','ceftazidime','cefoperazone','cefepime','imipenem','piptazo','ampicillin','amikacin','gentamicin','fluconazole','amphotericin','transfusion','vasopressor','morphine','ppi']);
  const norm487=v=>norm(String(v||''));
