@@ -35,7 +35,7 @@ const window={
 const context={C,sim,window,careEpoch:0,destinations:{'PERI-SEC-001':'quirofano'},
  performance:{now:()=>time},token:()=>null,player:{x:0,y:0},
  patient:{ix:0,iy:0},expert:{x:0,y:0},present:id=>sim.interventions.has(id),
- support:()=>{},urgentEmpiric:()=>{},actor:fn=>fn(),say:t=>messages.push(t),
+ support:()=>{},urgentEmpiric:()=>{},needsIV:()=>false,actor:fn=>fn(),say:t=>messages.push(t),
  status:()=>{},orderStudy:study=>{studies.push(study.id);sim.orders.set(study.id,{status:'pending'})},
  csSetDiagnosticImpression:()=>{sim.diagnosis='peritonitis secundaria'},
  csSetDisposition:()=>{sim.disposition={id:'quirofano'}},
