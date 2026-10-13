@@ -114,7 +114,7 @@ for(const size of [2,3,4])for(const mode of ['coop','competitive'])for(let round
     {kind:'finish',reason:'completed'}
    ].filter(x=>x.id!==undefined||!('id' in x));
    for(const action of sample){
-    const permitted=mode==='coop'||['exam','speech','monitor','vitals'].includes(action.kind);
+    const permitted=mode==='coop'||['exam','speech'].includes(action.kind);
     const actual=clinicalContext.assistActionAllowed(clinical,action);
     assert.equal(actual,permitted,mode+' permit '+action.kind+' case '+c.id);
     counters.clinicalPermissions++;
