@@ -113,7 +113,9 @@ try{
    const denied=competitors.find(c=>views[h.clients.indexOf(c)].id!==winner);
    assert(denied,'the simultaneous loser remains a legitimate read-only rival');
    await denied.page.evaluate(()=>csV41TakePatient(0)); // read-only observer
-   await h.send(h.clients.indexOf(denied),'Enfermera ceftriaxona');
+   // The observer intentionally hides the editable composer. Exercise the
+   // native command boundary directly to ensure no hidden keyboard/API bypass.
+   await denied.page.evaluate(()=>sendMessage('Enfermera ceftriaxona'));
    // Also inject an unauthorized clinical command through the REAL room API.
    await denied.page.evaluate(({uid})=>csCoop.dc.send(JSON.stringify({
     type:'cs_room_v411',kind:'assist',id:csV41Challenge.id,peerId:csV41Challenge.selfId,
