@@ -2,7 +2,7 @@ const stats=values=>{const mean=values.reduce((a,b)=>a+b,0)/Math.max(1,values.le
 export function metrics(local,remote,name){
  const frames=remote.frames.map(f=>({...f,actor:f.actors.find(a=>a.remote&&a.name===name)})).filter(f=>f.actor);
  let movingWithoutSteps=0,stepsWithoutMovement=0,movingFlagsWithoutDisplacement=0,orientation=0,total=0,maxJump=0,phaseDistanceErrorPx=0;
- const speeds=[],sourceSpeeds=[],fps=[],rebases=[],cadences=[],transports=new Set();let prev=null,remoteTravelPx=0;
+ const speeds=[],rawSpeeds=[],sourceSpeeds=[],fps=[],rebases=[],cadences=[],transports=new Set();let prev=null,remoteTravelPx=0;
  for(const f of frames){if(f.actor.cadence)cadences.push(f.actor.cadence);if(f.actor.transport)transports.add(f.actor.transport)}
  for(const f of frames){if(prev){const a=f.actor,b=prev.actor,dt=(f.now-prev.now)/1000,d=Math.hypot(a.x-b.x,a.y-b.y);remoteTravelPx+=d;if(dt>0&&dt<.1){
   fps.push(1/dt);maxJump=Math.max(maxJump,d);if(d>.05&&!a.moving){if(['network-resume','render-resume','position-discontinuity'].includes(a.resetReason))rebases.push({t:f.t,distancePx:d,reason:a.resetReason});else movingWithoutSteps++}
@@ -21,16 +21,22 @@ export function metrics(local,remote,name){
   let prior=null;for(const f of frames){const t=f.t-lag,{f:source,i}=at(t),before=lf[i-2],after=lf[i+2];
    if(prior&&before&&after&&source.player.moving&&before.player.dir===source.player.dir&&after.player.dir===source.player.dir){
     const dt=(f.now-prior.now)/1000,sourceSpeed=Math.hypot(after.player.x-before.player.x,after.player.y-before.player.y)/((after.now-before.now)/1000);
-    if(dt>0&&dt<.1&&sourceSpeed>100&&sourceSpeed<230){speeds.push(Math.hypot(f.actor.x-prior.actor.x,f.actor.y-prior.actor.y)/dt);sourceSpeeds.push(sourceSpeed)}
+    if(dt>0&&dt<.1&&sourceSpeed>100&&sourceSpeed<230){const v=Math.hypot(f.actor.x-prior.actor.x,f.actor.y-prior.actor.y)/dt;rawSpeeds.push(v);
+     // A tagged outage relocation is reported as a jump, not a walking burst.
+     if(!(f.actor.resetReason&&!f.actor.moving)){speeds.push(v);sourceSpeeds.push(sourceSpeed)}
+    }
    }prior=f;
   }
  }
  const intervals=[];let p=null;for(const e of remote.packets){const d=e.data?.p||e.data;if(e.kind==='receive'&&d.name===name&&d.x!=null){if(p?.transport===e.transport)intervals.push(e.t-p.t);p=e}}
  const stop=[];
  for(let i=1;i<lf.length-12;i++)if(lf[i-1].player.moving&&!lf[i].player.moving&&lf.slice(i,i+12).every(f=>!f.player.moving)){
-  const t=lf[i].t,f=frames.find((v,k)=>v.t>=t&&!v.actor.moving&&frames[k+1]&&!frames[k+1].actor.moving&&Math.hypot(v.actor.x-lf[i].player.x,v.actor.y-lf[i].player.y)<3);
+  // Animation rest and endpoint tracking are separate measurements. Waiting
+  // for a later unrelated revisit to the exact old stop point is not stop time.
+  const t=lf[i].t,f=frames.find((v,k)=>v.t>=t&&!v.actor.moving&&frames[k+1]&&!frames[k+1].actor.moving);
   if(f)stop.push(f.t-t);
  }
  const localTravelPx=lf.slice(1).reduce((s,f,i)=>s+Math.hypot(f.player.x-lf[i].player.x,f.player.y-lf[i].player.y),0);
- return {frames:frames.length,observerFrames:remote.frames.length,localFrames:lf.length,localTravelPx,remoteTravelPx,transports:[...transports],cadence:stats(cadences),fps:stats(fps),speed:stats(speeds),sourceSpeed:stats(sourceSpeeds),orientationErrors:orientation,orientationFrames:total,movingWithoutSteps,stepsWithoutMovement,movingFlagsWithoutDisplacement,phaseDistanceErrorPx,maxJump,rebases,stopAnimationMs:stats(stop),followLagMs:lag,alignedErrorPx:Number.isFinite(error)?error:null,packetIntervals:stats(intervals.filter(v=>v>0))};
+ const endpointErrorPx=frames.length&&lf.length?Math.hypot(frames.at(-1).actor.x-lf.at(-1).player.x,frames.at(-1).actor.y-lf.at(-1).player.y):null;
+ return {frames:frames.length,observerFrames:remote.frames.length,localFrames:lf.length,localTravelPx,remoteTravelPx,transports:[...transports],cadence:stats(cadences),fps:stats(fps),speed:stats(speeds),rawSpeed:stats(rawSpeeds),sourceSpeed:stats(sourceSpeeds),orientationErrors:orientation,orientationFrames:total,movingWithoutSteps,stepsWithoutMovement,movingFlagsWithoutDisplacement,phaseDistanceErrorPx,maxJump,rebases,stopAnimationMs:stats(stop),followLagMs:lag,alignedErrorPx:Number.isFinite(error)?error:null,endpointErrorPx,packetIntervals:stats(intervals.filter(v=>v>0))};
 }

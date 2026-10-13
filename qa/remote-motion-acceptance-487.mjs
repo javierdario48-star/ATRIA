@@ -13,6 +13,7 @@ export function assertMotionPair(p,{cadence,poll=0,impaired=false}){
  const frame=1000/Math.max(1,p.fps.mean),extra=impaired?270+cadence*2:0,lagBudget=cadence*1.5+poll+frame*3+extra;
  assert(p.followLagMs<=lagBudget,'following delay fits measured transport and FPS');
  assert(p.alignedErrorPx<=205*(cadence+extra+frame*2)/1000,'displayed path stays within packet/frame travel uncertainty');
+ assert(Number.isFinite(p.endpointErrorPx)&&p.endpointErrorPx<=2+205*(impaired?cadence+extra:frame*2)/1000,'the final stopped pose reaches the source within native stop/frame uncertainty');
  const referenceCV=Math.max(measured[poll===150?'guard':'lobby'].AB.speed.cv,measured[poll===150?'guard':'lobby'].BA.speed.cv);
  assert(p.speed.cv<=referenceCV+p.sourceSpeed.cv+p.packetIntervals.cv+p.fps.cv,'variation cannot exceed the measured old implementation plus observed source/network/frame variability');
  assert(p.stopAnimationMs.n>0,'an actual start/stop is observed');

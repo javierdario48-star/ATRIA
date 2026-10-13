@@ -16,3 +16,11 @@ ctx.csMotionReceive487(p,{...b,motionSession:'A',seq:2,motionAt:300,moving:false
 for(let t=316;t<=1500;t+=16)ctx.window.csLobbyMotionSample487({_motion:p},t);
 assert(Math.hypot(p.x-b.x,p.y-b.y)<.001,'the unchanged native astar route reaches the actual stopped source pose');
 assert(!ctx.circleBlocked(p.x,p.y,10.5));console.log('recorded four-client native-map collision corner reaches the real source endpoint');
+// The native controller resolves this off-center adjacent-tile turn by its
+// existing axis collision fallback. A detour must first center the start tile.
+const c={x:336,y:173.3867924528302},d={x:368,y:159.39622641509433};
+assert(!ctx.circleBlocked(c.x,c.y,10.5)&&!ctx.circleBlocked(d.x,d.y,10.5));
+const turn=ctx.csMotionReceive487(null,{...c,motionSession:'B',seq:1,motionAt:0},'http',0,260);
+ctx.csMotionReceive487(turn,{...d,motionSession:'B',seq:2,motionAt:300,moving:false},'http',300,260);
+for(let t=316;t<=2500;t+=16)ctx.window.csLobbyMotionSample487({_motion:turn},t);
+assert(Math.hypot(turn.x-d.x,turn.y-d.y)<.001,'off-center adjacent-tile turn preserves a collision-safe detour');

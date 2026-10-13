@@ -166,3 +166,15 @@ Recovery also covers old/current snapshots separated by a render frame.
 Source age and source-time catch-up identify the queued stale pose; recovery
 ends on a current actual snapshot, never invented extrapolation. Both queue
 variants are explicit lifecycle regressions.
+
+The exact sweep also requires a detour to include the starting tile center:
+actual native movement from `(336,173.3868)` to `(368,159.3962)` uses its
+original axis collision fallback, whereas skipping the start center recreates
+a blocked direct leg. Both native-map cases now have failing-before/passing-
+after tests; every reconstructed leg is validated against the exact sweep.
+
+Walking velocity and raw velocity are both retained: a tagged outage relocation
+is a measured jump, not a burst of footsteps. Stop-animation time measures
+visual rest; final endpoint error separately prevents a stationary wrong pose
+from passing. This avoids mistaking a later revisit to an old source stop point
+for the time the animation first stopped.

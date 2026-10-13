@@ -35,7 +35,9 @@ function csMotionReceive487(p,m,transport,now,cadence){
  let route=null;const last=p.samples.at(-1);
  if(last&&typeof astar==='function'&&!csMotionSegment487(last.x,last.y,m.x,m.y)){
   const tiles=astar(tileAt(last.x,last.y),tileAt(m.x,m.y));
-  if(tiles.length)route=[{x:last.x,y:last.y},...tiles.slice(1).map(v=>({x:(v[0]+.5)*TW,y:(v[1]+.5)*TH})),{x:m.x,y:m.y}];
+  if(tiles.length){const detour=[{x:last.x,y:last.y},...tiles.map(v=>({x:(v[0]+.5)*TW,y:(v[1]+.5)*TH})),{x:m.x,y:m.y}];
+   if(detour.slice(1).every((v,i)=>csMotionSegment487(detour[i].x,detour[i].y,v.x,v.y)))route=detour;
+  }
  }
  csRemoteMotion487.receive(p,{...m,route,now,transport,motionCadence:cadence});
  csMotionLog487('receive',m.peerId||m.userId,p,m);return p;
