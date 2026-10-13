@@ -106,3 +106,34 @@ is interim evidence; final same-run comparison and 2–4 clients are still due.
 The artifact verifier now explicitly inverts every remote-motion replacement
 before its historical recovery. Its original protected HTML SHA-256 remains
 `dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7`.
+
+## Checkpoint D: independent-client acceptance matrix
+
+The browser workflow now opens 2, 3 and 4 isolated browser processes and checks
+all ordered observer/source pairs in lobby and real cooperative guards. It
+also exercises simultaneous movement, actual 20/30-FPS scheduling, delayed,
+lost and reordered outgoing RTC poses, degraded HTTP room sends, an offline
+HTTP interruption with observed post-recovery position, real channel closure
+and HTTP fallback, a page reload, lobby return and a new competitive guard.
+No generated packets, shared client memory, or injected player coordinates
+are substituted for those network tests.
+
+The two-client job builds the exact reference SHA in a separate directory,
+including its original backend. It measures before/after on the same runner
+and requires improvement separately for A->B and B->A. Every additional pair
+must show real source and remote travel, nonempty speed samples, finite time
+alignment, a measured stop, consistent direction and stride, and bounded
+tracking. A supporting regression confirms that a completely frozen remote
+with apparently perfect zero CV/direction errors cannot pass acceptance.
+
+Budgets use original 100/220/260-ms transmit cadences, existing 150/260-ms
+HTTP polling, observed render periods, and the test's actual 270-ms maximum
+outgoing delay. Speed variability is bounded using the recorded old baseline
+plus observed native, packet and FPS variability; the primary two-client
+comparison requires a decrease for each direction. Raw tiny moving flags and
+explicit interruption rebases are reported separately, not silently erased.
+Frame times use actual RAF timestamps; draw execution time is also retained.
+
+CI artifacts contain full local/received/rendered traces, per-pair metrics,
+paired screenshots at straight movement, turns, stopping and reversal, and
+videos of each independent browser. Final matrix results remain to be checked.

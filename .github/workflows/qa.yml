@@ -9,24 +9,54 @@ jobs:
 
   remote-motion-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        players: [2, 3, 4]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install isolated browser test driver
-        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
-      - name: Crossed movement in independent Chromium processes on real RTC and HTTP
+      - name: Install isolated browser test driver and video encoder
+        run: |
+          npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+          node "$RUNNER_TEMP/atria-browser/node_modules/playwright/cli.js" install ffmpeg
+      - name: Build the exact reference without changing the working checkout
+        if: matrix.players == 2
+        run: |
+          git fetch --depth=1 origin 2f13db3ce1c47f58618c0955ca6e3c900f7f9aab
+          mkdir -p "$RUNNER_TEMP/atria-motion-reference"
+          git archive 2f13db3ce1c47f58618c0955ca6e3c900f7f9aab | tar -x -C "$RUNNER_TEMP/atria-motion-reference"
+          cd "$RUNNER_TEMP/atria-motion-reference"
+          node build.js
+      - name: Reproduce reference A to B and B to A on real RTC and HTTP
+        if: matrix.players == 2
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
-          MOTION_LABEL: checkpoint-b
+          MOTION_SOURCE_HTML: ${{ runner.temp }}/atria-motion-reference/out/index.html
+          MOTION_SOURCE_SERVER: ${{ runner.temp }}/atria-motion-reference/src/social/qa-social-server.js
+          MOTION_LABEL: reference
+          MOTION_VIDEO: '1'
         run: node qa/remote-motion-browser-487.mjs
+      - name: Independent clients, FPS, jitter, loss, fallback, reload and second guard
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          MOTION_LABEL: final-${{ matrix.players }}
+          MOTION_PLAYERS: ${{ matrix.players }}
+          MOTION_EXTENDED: '1'
+          MOTION_VIDEO: '1'
+        run: node qa/remote-motion-browser-487.mjs
+      - name: Measured improvement over the exact reference on the same runner
+        if: matrix.players == 2
+        run: node qa/remote-motion-compare-487.mjs qa/remote-motion-results/reference/summary.json qa/remote-motion-results/final-2/summary.json qa/remote-motion-results/comparison.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: remote-motion-measurements
+          name: remote-motion-measurements-${{ matrix.players }}
           path: qa/remote-motion-results/
           retention-days: 14
 
