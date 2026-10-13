@@ -65,12 +65,12 @@ for(const action of denied){
  permissions++;
 }
 scope.challenge.mode='competitive';
-for(const action of [{kind:'speech',text:'¿Cómo está?'},{kind:'exam',id:'ns:percussion'},{kind:'monitor'},{kind:'vitals'}]){
+for(const action of [{kind:'speech',text:'¿Cómo está?'},{kind:'exam',id:'ns:percussion'}]){
  assert.equal(scope.assistActionAllowed(patient,action),true,'rival may observe/examine: '+action.kind);permissions++;
 }
 for(const action of [
  {kind:'therapy',text:'ceftriaxona 1 g'},{kind:'study',id:'lab'},
- {kind:'intervention',id:'iv'}, {kind:'command',text:'enfermera ceftriaxona'},
+ {kind:'intervention',id:'iv'}, {kind:'monitor'}, {kind:'vitals'}, {kind:'iv'}, {kind:'command',text:'enfermera ceftriaxona'},
  {kind:'finish',reason:'completed'},
  {kind:'clinical_call',method:'csRequestConsult',args:['cirugia']}
 ]){
