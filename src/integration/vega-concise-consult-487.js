@@ -106,9 +106,11 @@ export function applyConciseVegaConsult487(html){
     say('Está empeorando. Intervengo ya; después discutimos la conducta.');
     job.phase='reassessment';return;
    }
-   if(now-(job.csDecisionAt487||now)>=16000){
-    say('Para no demorar el caso, voy a iniciar una medida por vez. Podés intervenir cuando quieras.');
-    job.phase='reassessment';
+   // In a stable patient silence is NOT authorization to prescribe.
+   // One short reminder is enough; urgent deterioration overrides the wait.
+   if(!job.csReminderSent487&&now-(job.csDecisionAt487||now)>=16000){
+    job.csReminderSent487=true;
+    say('Te escucho. Si necesitás ayuda, escribí «Dr. Vega, no sé».');
    }
    return;
   }
