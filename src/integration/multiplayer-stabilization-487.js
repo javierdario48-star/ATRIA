@@ -179,7 +179,7 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  'competitive-exam-forwarded-to-patient-owner');
  s=edit(s,
  "if(p?.uid===m.uid&&m.targetId===selfId)applyAssistAction(p,m.action,m.helperName);return",
- "if(p?.uid===m.uid&&m.targetId===selfId){const stamp=String(m.aid||'');const ids=challenge._appliedAssist487||(challenge._appliedAssist487=new Set());if(stamp&&stamp.length<=160&&!ids.has(stamp)&&applyAssistAction(p,m.action,m.helperName)){ids.add(stamp);if(ids.size>200)ids.delete(ids.values().next().value)}if(ids.has(stamp))send('assist_apply_ack',{aid:stamp,targetId:m.peerId})}return",
+ "if(p?.uid===m.uid&&m.targetId===selfId){const stamp=String(m.aid||'');const ids=challenge._appliedAssist487||(challenge._appliedAssist487=new Set());if(stamp&&stamp.length<=160&&!ids.has(stamp)&&applyAssistAction(p,m.action,m.helperName)){ids.add(stamp);if(ids.size>200)ids.delete(ids.values().next().value)}if(ids.has(stamp)&&typeof send==='function')send('assist_apply_ack',{aid:stamp,targetId:m.peerId})}return",
  'deduplicate-remote-clinical-execution');
 
  s=edit(s,
@@ -267,7 +267,7 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  'preserve-earnings-across-roster-updates');
  s=edit(s,
  "challenge.revision++;applyPatients();publish()}}}else if(m.kind==='member_leave')",
- "challenge.revision++;applyPatients();publish()}send('assist_ack',{aid:m.aid,targetId:peer.id})}}else if(m.kind==='member_leave')",
+ "challenge.revision++;applyPatients();publish()}if(typeof send==='function')send('assist_ack',{aid:m.aid,targetId:peer.id})}}else if(m.kind==='member_leave')",
  'H-host-receipt-for-accepted-relay');
  // Role-tagged clinical utterances stay visible to every room member.
  // This is a text-only broadcast; no therapy/exam code runs in the listener.
