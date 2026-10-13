@@ -1,0 +1,117 @@
+{
+  "referenceSHA": "2f13db3ce1c47f58618c0955ca6e3c900f7f9aab",
+  "transport": "real HTTP fallback; local Chromium ICE produced no connected candidates",
+  "independentBrowserProcesses": 2,
+  "physicalAndroid": false,
+  "lobby": {
+    "scene": "lobby",
+    "label": "baseline",
+    "clients": 2,
+    "AB": {
+      "frames": 880,
+      "localFrames": 885,
+      "speed": {
+        "n": 132,
+        "mean": 194.77072979656592,
+        "cv": 1.3940197288550449,
+        "min": 1.1457809929229728,
+        "max": 1273.5426742427155
+      },
+      "orientationErrors": 165,
+      "orientationFrames": 256,
+      "movingWithoutSteps": 1,
+      "stepsWithoutMovement": 1,
+      "maxJump": 25.475568170879743,
+      "followLagMs": 550,
+      "alignedErrorPx": 35.813212343837726,
+      "packetIntervals": {
+        "n": 21,
+        "mean": 662.8095238095239,
+        "cv": 0.44946710763901776,
+        "min": 32,
+        "max": 933
+      }
+    },
+    "BA": {
+      "frames": 885,
+      "localFrames": 880,
+      "speed": {
+        "n": 144,
+        "mean": 154.05134282650738,
+        "cv": 1.6358506185646358,
+        "min": 2.40433957131497,
+        "max": 1669.5599069184066
+      },
+      "orientationErrors": 136,
+      "orientationFrames": 232,
+      "movingWithoutSteps": 1,
+      "stepsWithoutMovement": 1,
+      "maxJump": 26.712958510694506,
+      "followLagMs": 600,
+      "alignedErrorPx": 35.81893975198741,
+      "packetIntervals": {
+        "n": 21,
+        "mean": 653.2857142857143,
+        "cv": 0.4244995730364704,
+        "min": 94,
+        "max": 927
+      }
+    }
+  },
+  "guard": {
+    "scene": "guard",
+    "label": "baseline",
+    "clients": 2,
+    "AB": {
+      "frames": 763,
+      "localFrames": 594,
+      "speed": {
+        "n": 48,
+        "mean": 177.71533594725858,
+        "cv": 0.6458131090135296,
+        "min": 0,
+        "max": 327.83576937893616
+      },
+      "orientationErrors": 14,
+      "orientationFrames": 77,
+      "movingWithoutSteps": 0,
+      "stepsWithoutMovement": 0,
+      "maxJump": 5.573208079441915,
+      "followLagMs": 360,
+      "alignedErrorPx": 6.3175847732087025,
+      "packetIntervals": {
+        "n": 66,
+        "mean": 219.62121212121212,
+        "cv": 0.3504672327920024,
+        "min": 154,
+        "max": 332
+      }
+    },
+    "BA": {
+      "frames": 588,
+      "localFrames": 774,
+      "speed": {
+        "n": 32,
+        "mean": 196.2251792826251,
+        "cv": 0.5375584010663135,
+        "min": 0,
+        "max": 353.418090088223
+      },
+      "orientationErrors": 9,
+      "orientationFrames": 53,
+      "movingWithoutSteps": 0,
+      "stepsWithoutMovement": 0,
+      "maxJump": 9.542288432382021,
+      "followLagMs": 330,
+      "alignedErrorPx": 5.718696396412649,
+      "packetIntervals": {
+        "n": 66,
+        "mean": 221.07575757575756,
+        "cv": 0.3592067864227744,
+        "min": 154,
+        "max": 426
+      }
+    }
+  },
+  "stalePresenceWrites": 28
+}
