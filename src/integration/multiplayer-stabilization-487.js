@@ -11,6 +11,16 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  let s=html;
  const undo=[];
  const edit=(text,from,to,label)=>{undo.push({from,to,label});return reverse?text:replaceOnce(text,from,to,label)};
+ // Nurse task deduplication is per clinical patient, not per room.
+ // Native task ownership is already bound by the V203 queueNurse adapter.
+ s=edit(s,
+ "if(nurse.task?.kind==='monitor'||nurse.queue.some(t=>t.kind==='monitor'))",
+ "if(nurse.task?.kind==='monitor'&&nurse.task._targetSim===sim||nurse.queue.some(t=>t.kind==='monitor'&&t._targetSim===sim))",
+ 'patient-scoped-monitor-dedupe');
+ s=edit(s,
+ "const queued=(nurse.task?.kind==='iv_access'?Number(nurse.task.count||1):0)+nurse.queue.filter(t=>t.kind==='iv_access').reduce((a,t)=>a+Number(t.count||1),0);",
+ "const queued=(nurse.task?.kind==='iv_access'&&nurse.task._targetSim===sim?Number(nurse.task.count||1):0)+nurse.queue.filter(t=>t.kind==='iv_access'&&t._targetSim===sim).reduce((a,t)=>a+Number(t.count||1),0);",
+ 'patient-scoped-iv-dedupe');
  // The native late V412 nurse wrapper executes BEFORE the final 4.8.7
  // voice adapter. Visiting mirrors must bypass it as well, otherwise the
  // nurse order gets a delayed local execution instead of the owner relay.
