@@ -29,6 +29,14 @@ jobs:
           CLINICAL_STAGE: F
           CLINICAL_OUTPUT: qa/clinical-browser-results/${{ matrix.players }}
         run: node qa/clinical-room-browser-487.mjs
+      - name: Native nursing and both antibiotics on real 2–4-client guard
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          CLINICAL_PLAYERS: ${{ matrix.players }}
+          CLINICAL_STAGE: G
+          CLINICAL_OUTPUT: qa/clinical-browser-results/${{ matrix.players }}-nursing
+        run: node qa/clinical-room-browser-487.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
