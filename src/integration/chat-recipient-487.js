@@ -4,6 +4,10 @@
 const once=(s,a,b,label)=>{const i=s.indexOf(a);if(i<0||s.indexOf(a,i+a.length)>=0)throw Error('recipient selector anchor: '+label);return s.slice(0,i)+b+s.slice(i+a.length)};
 export function applyChatRecipient487(html){
  let s=html;
+ // Manually summoned Vega is selectable in Solitario as well as Aprendiz.
+ const expertLocator="es=sim?.mentor?.enabled?npcScreen('expert'):null";
+ if(s.split(expertLocator).length!==3)throw Error('expected one tap and one hit-test Vega locator');
+ s=s.split(expertLocator).join("es=(sim?.mentor?.enabled||sim?.nsVegaCalled)?npcScreen('expert'):null");
  s=once(s,
  "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){mentorFocus();return}",
  "if(es&&tapNear(e.clientX,e.clientY,es[0],es[1],38)){window.nsSelectChatTarget487?.('expert');mentorFocus();return}",
