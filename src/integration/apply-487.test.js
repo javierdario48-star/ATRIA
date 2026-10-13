@@ -497,7 +497,10 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
   finishCase:()=>{},csSetDiagnosticImpression:()=>{},csSetDisposition:()=>{},
   addMonitorTherapy:()=>false,orderIntervention:()=>false
  };
- vm.runInNewContext(out.slice(learnerBegin,learnerEnd),simTutor);
+ const proposalHelpersBegin=out.indexOf(' function csVegaPriorityStudies487(){');
+ const proposalHelpersEnd=out.indexOf(' function learnerTarget(){',proposalHelpersBegin);
+ assert.ok(proposalHelpersBegin>0&&proposalHelpersEnd>proposalHelpersBegin);
+ vm.runInNewContext(out.slice(proposalHelpersBegin,proposalHelpersEnd)+'\n'+out.slice(learnerBegin,learnerEnd),simTutor);
  const talk=(t,i={type:'uncertainty'})=>simTutor.learnerMessage(t,i);
  talk('No sé');talk('No entiendo');talk('Dame una pista');talk('¿Por qué pedimos hemograma?');
  assert.equal(delegated,0,'repeated uncertainty never delegates');

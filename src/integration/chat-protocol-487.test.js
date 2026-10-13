@@ -13,6 +13,20 @@ const receive=section("function receive(m){if(m?.type!=='cs_room_v411')",' csWir
 const request=section('function requestAssist(index,a){','function openAssistPanel(index)');
 const broadcast=section('window.csBroadcastAddressedChat487=function(role,raw){','function roomCommand(q){');
 const selector=html.split('<script id="atria-recipient-selector-487">')[1].split('</script>')[0];
+// A delayed answer must stay on the interviewed patient, even when the
+// physician switches beds before the native speech delay has elapsed.
+{
+ const r=createAndroidIntegratedRuntime487('APP-001',{confirmedIV:1});
+ installAndroidClinicalJourney487(r);const c=r.ctx;
+ vm.runInContext(section('function patientReply(q){','function mentorProfile(){'),c);
+ const a=c.sim;a.chats.patient=[];
+ c.deliverPatientSpeech('¿Desde cuándo tiene dolor?',true);
+ c.sim=c.freshSim();c.sim.patientInstance={uid:'PATIENT-B'};c.sim.chats.patient=[];
+ const b=c.sim;
+ advance(r,.5,{dt:1/6});
+ assert(a.chats.patient.some(x=>x[0]==='patient'),'delayed reply remains on patient A');
+ assert.equal(b.chats.patient.length,0,'switching beds cannot record patient A answer on B');
+}
 let sessions=0;
 for(const count of [2,3,4])for(const mode of ['coop','competitive']){
  const r=createAndroidIntegratedRuntime487('PERI-PBE-001',{confirmedIV:1});
@@ -20,6 +34,24 @@ for(const count of [2,3,4])for(const mode of ['coop','competitive']){
  const ctx=r.ctx,owner=ctx.sim,players=Array.from({length:count},(_,i)=>({id:'P'+i,name:'Player '+i}));
  owner.patientInstance.uid='PATIENT-A';owner.chats.patient=[];owner.chats.expert=[];
  const p={index:0,uid:'PATIENT-A',ownerId:'P1',state:'in_care',caseId:ctx.C.id,instance:{name:'Paciente A'}};
+ // NPC answers stay in the same public transcript for teammates who are
+ // attending a different patient. Reading one must never execute an order.
+ for(const reader of players.filter(x=>x.id!=='P1')){
+  const messages=[],view={challenge:{active:true,ended:false,id:'ROOM',mode,hostId:'P0',players,patients:[p]},
+   selfId:reader.id,person:id=>players.find(x=>x.id===id),host:()=>reader.id==='P0',
+   addGlobalChat:(role,text)=>messages.push({role,text}),refreshChatDock:()=>{},
+   nurseNatural:()=>{throw Error('public NPC response may not execute nursing')},
+   applyAssistAction:()=>{throw Error('public NPC response may not execute clinical actions')}};
+  vm.createContext(view);vm.runInContext(receive,view);
+  const message={type:'cs_room_v411',kind:'team_chat',id:'ROOM',peerId:'P1',
+   npcSpeaker:'expert',patientUid:p.uid,recipient:'doctor',messageId:'P1:REPLY',
+   text:'Si la PA es <90, reevaluemos antes de noradrenalina. '+ 'Reevaluemos perfusión. '.repeat(10)};
+  view.receive(message);view.receive(message);
+  assert.equal(messages.length,1,'one full NPC response visible to every teammate');
+  assert.equal(messages[0].role,'expert');assert.equal(messages[0].text,message.text);
+  view.receive({...message,peerId:'P0',messageId:'P0:FORGED'});
+  assert.equal(messages.length,1,'foreign peer cannot impersonate another patient NPC');
+ }
  ctx.challenge={active:true,ended:false,id:'ROOM',mode,hostId:'P0',players,patients:[p]};
  ctx.selfId='P1';ctx.host=()=>false;ctx.person=id=>ctx.challenge.players.find(x=>x.id===id);
  ctx.assistTargetSim=()=>owner;ctx.refreshChatDock=()=>{};
@@ -69,7 +101,7 @@ for(const count of [2,3,4])for(const mode of ['coop','competitive']){
 // Request and public transcript retain the actual author and NPC recipient.
 const outgoing=[],room={mode:'coop',active:true,ended:false,id:'ROOM',patients:[
  {index:0,uid:'A',ownerId:'P1',state:'in_care',instance:{name:'A'}}]};
-const c={window:{},document:{},sim:null,refreshChatDock:()=>{},sendMessage:()=>{},
+const c={window:{},document:{},sim:null,addGlobalChat:()=>{},refreshChatDock:()=>{},sendMessage:()=>{},
  challenge:room,selfId:'P0',near:()=>true,host:()=>false,
  shared:()=>true,player:{x:1,y:2},csSendPeerState:()=>{},assistActionAllowed:()=>true,
  send:(kind,payload)=>outgoing.push({kind,peerId:'P0',...payload}),

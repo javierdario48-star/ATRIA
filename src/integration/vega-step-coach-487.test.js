@@ -85,7 +85,7 @@ const mentorA=source.indexOf(' const oldMentor=mentorUserMessage;',tickB);
 const mentorB=source.indexOf(' const oldExpert=updateExpert;',mentorA);
 assert(mentorA===tickB&&mentorB>mentorA,'actual shared mentor listener region');
 const remarks=[],studyUserActions=[];
-const resident={sim:{mentor:{enabled:true},nsVegaCalled:true,
+const resident={C,sim:{mentor:{enabled:true},nsVegaCalled:true,orders:new Map(),
   nsVegaCare:{active:true,phase:'decision487'},chats:{expert:[]}},
  window:{nsCoffeeRequested:()=>false,nsMayExamine:()=>true,
   nsPatientState:()=>({color:'NARANJA'})},
@@ -93,7 +93,7 @@ const resident={sim:{mentor:{enabled:true},nsVegaCalled:true,
  learnerMessage:t=>studyUserActions.push(t),
  say:t=>remarks.push(t),performance:{now:()=>18000},norm:t=>String(t).toLowerCase()
   .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').trim()};
-vm.runInNewContext(source.slice(mentorA,mentorB),resident,{timeout:3000});
+vm.runInNewContext(source.slice(helperA,helperB)+'\n'+source.slice(mentorA,mentorB),resident,{timeout:3000});
 resident.mentorUserMessage('no sé');
 assert.equal(resident.sim.nsVegaCare.phase,'reassessment','resident uncertainty starts stepwise care');
 assert(remarks.at(-1).includes('Empezaré por la primera medida'));

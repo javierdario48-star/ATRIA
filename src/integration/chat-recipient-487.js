@@ -2,9 +2,30 @@
 // shared transcript; only the selected clinical NPC processes the utterance.
 // Deliberately does not bypass cooperative/competitive room permissions.
 const once=(s,a,b,label)=>{const i=s.indexOf(a);if(i<0||s.indexOf(a,i+a.length)>=0)throw Error('recipient selector anchor: '+label);return s.slice(0,i)+b+s.slice(i+a.length)};
+const speechOld="function deliverPatientSpeech(text,localMode=false){const activeSim=sim,activeCase=C;sim.chats.patient.push(['doctor',text]);const a=patientReply(text);setTimeout(()=>{if(!sim||sim!==activeSim||C!==activeCase||sim.caseEnded)return;sim.chats.patient.push(['patient',a]);addGlobalChat('patient',a);patient.bubble=a;patient.bubbleUntil=performance.now()+2800;refreshChatDock()},320)}";
+const speechNew=String.raw`function deliverPatientSpeech(text,localMode=false){
+ const target=sim,caseId=C?.id,uid=target?.patientInstance?.uid;
+ const context=window.nsTreatmentContext?.();
+ if(!target||target.caseEnded||target.patientDied)return false;
+ target.chats.patient.push(['doctor',text]);const answer=patientReply(text);
+ setTimeout(()=>{
+  const current=window.nsTreatmentContext?.(),room=window.csV41Challenge;
+  if(target.caseEnded||target.patientDied||target.patientInstance?.uid!==uid||
+     context&&(!current||context.epoch!==current.epoch||context.shift!==current.shift||
+      context.roomId!==current.roomId)||context?.roomId&&(!room?.active||room.ended))return;
+  const foreground=sim===target;
+  const deliver=()=>{
+   target.chats.patient.push(['patient',answer]);addGlobalChat('patient',answer);
+   if(foreground){patient.bubble=answer;patient.bubbleUntil=performance.now()+2800;refreshChatDock();}
+  };
+  if(window.csWithPatientStateV203)window.csWithPatientStateV203(target,caseId,deliver);
+  else if(foreground)deliver();
+ },320);return true;
+}`;
 export function applyChatRecipient487(html,{reverse=false}={}){
  let s=html;
  if(!reverse){
+ s=once(s,speechOld,speechNew,'delayed-anamnesis-is-patient-bound');
  // Manually summoned Vega is selectable in Solitario as well as Aprendiz.
  const expertLocator="es=sim?.mentor?.enabled?npcScreen('expert'):null";
  if(s.split(expertLocator).length!==3)throw Error('expected one tap and one hit-test Vega locator');
@@ -133,6 +154,13 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    decorate();return result;
   };
   const originalSend=sendMessage;
+  const nativeGlobalChat=addGlobalChat;
+  addGlobalChat=function(role,text,options={}){
+   const result=nativeGlobalChat.apply(this,arguments);
+   if(!options.nsRemoteNPC487&&['patient','expert','nurse','clinical-ok'].includes(role))
+    window.csBroadcastNPCReply487?.(role,text);
+   return result;
+  };
   sendMessage=function(message){
    const raw=String(message||'').trim();
    if(!raw||raw.startsWith('/')||!C||!sim||sim.caseEnded||
@@ -193,7 +221,8 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    'reverse-recipient-vega');
   const locator="es=(sim?.mentor?.enabled||sim?.nsVegaCalled)?npcScreen('expert'):null";
   if(s.split(locator).length!==3)throw Error('reverse Vega locator is not exactly two occurrences');
-  return s.split(locator).join("es=sim?.mentor?.enabled?npcScreen('expert'):null");
+  s=s.split(locator).join("es=sim?.mentor?.enabled?npcScreen('expert'):null");
+  return once(s,speechNew,speechOld,'reverse-delayed-anamnesis');
  }
  return once(s,'</body>',script+'</body>','recipient-after-existing-nursing-and-multiplayer');
 }
