@@ -59,7 +59,7 @@ function initProbe({name,fps}){
  if(!localStorage.getItem('clinicalShift.profile.v1'))localStorage.setItem('clinicalShift.profile.v1',JSON.stringify({name,deviceId:'motion-device-'+name,scrubColor:'navy',soundEnabled:false}));
  localStorage.setItem('nightShift.social.client.v2@'+name.toLowerCase(),'atria_motion_isolated_client_'+name);
  localStorage.setItem('nightShift.social.client.v2@medico','atria_motion_isolated_client_'+name);
- window.motionTrace={frames:[],packets:[],errors:[],record:false,impair:{enabled:false,count:0,dropped:0,delayed:0}};
+ window.motionTrace={frames:[],packets:[],markers:[],errors:[],record:false,impair:{enabled:false,count:0,dropped:0,delayed:0}};
  const raf=requestAnimationFrame.bind(window);
  window.requestAnimationFrame=cb=>{const run=()=>raf(t=>{motionTrace.raf=t;cb(t)});return fps?setTimeout(run,Math.max(0,1000/fps-1000/60)):run()};
  const log=(kind,transport,data)=>{if(!motionTrace.record)return;motionTrace.packets.push({t:Date.now(),now:performance.now(),kind,transport,data})};
@@ -96,7 +96,7 @@ async function installRenderProbe(page){
 async function makeClient(i){
  const browser=await chromium.launch(launch);browsers.push(browser);
  const context=await browser.newContext({viewport:{width:1024,height:768},...(process.env.MOTION_VIDEO==='1'?{recordVideo:{dir:output+'/video',size:{width:1024,height:768}}}:{})});
- const page=await context.newPage();page.setDefaultTimeout(15000);
+ const videoStartBefore=Date.now(),page=await context.newPage(),videoStartAfter=Date.now();page.setDefaultTimeout(15000);
  page.on('pageerror',e=>{browserErrors.push({client:i,error:e.message});console.log('BROWSER_ERROR',i,e.message)});
  await context.addInitScript(initProbe,{name:'MotionClient_'+i,fps:extended&&count>2&&i===count-1?20:extended&&count>2&&i===count-2?30:null});
  await page.goto(url);await page.locator('#nsEnter').click();
@@ -105,7 +105,8 @@ async function makeClient(i){
  await page.evaluate(()=>{if(window.csRemoteMotionDiagnostics487)csRemoteMotionDiagnostics487.enabled=true});
  if(!process.env.MOTION_SOURCE_HTML)assert(await page.evaluate(()=>csDrawRemote.toString().includes('csMotionReceive487')),'final active renderer owns the shared timeline');
  const user=await page.evaluate(()=>nsSocial.state().user);
- const c={browser,context,page,user,name:user.name};clients.push(c);return c;
+ const video=page.video(),videoFile=video?path.basename(await video.path()):null;
+ const c={browser,context,page,user,name:user.name,videoFile,videoStartBefore,videoStartAfter};clients.push(c);return c;
 }
 async function move(page,dx,dy){
  // Feed the original destination controller and pathfinder; never assign player.x/y.
@@ -126,7 +127,7 @@ async function route(page,shot=async()=>{}){
  await pause(350);await page.evaluate(()=>{const [x,y]=worldToScreen(player.x,player.y);setPlayerTarget(x,y)});await pause(1500);await shot('rapid-turns');
 }
 async function capture(scene,{simultaneous=false,short=false,impaired=false,httpFallback=false,action=null,qualitySince=null}={}){
- for(const c of clients)await c.page.evaluate(()=>{motionTrace.frames=[];motionTrace.packets=[];motionTrace.record=true;window.csRemoteMotionDiagnostics487?.clear()});
+ for(const c of clients)await c.page.evaluate(()=>{motionTrace.frames=[];motionTrace.packets=[];motionTrace.markers=[];motionTrace.record=true;window.csRemoteMotionDiagnostics487?.clear()});
  const shot=async(tag,i)=>{for(let j=0;j<clients.length;j++)await clients[j].page.screenshot({path:output+'/'+scene+'-source'+i+'-'+tag+'-observer'+j+'.png'})};
  if(action)await action();
  else if(short){await Promise.all(clients.map(c=>move(c.page,0,-5)));await pause(1600);await Promise.all(clients.map(c=>move(c.page,5,0)));await pause(1200);await Promise.all(clients.map(c=>c.page.evaluate(()=>{const [x,y]=worldToScreen(player.x,player.y);setPlayerTarget(x,y)})));await pause(1200)}
@@ -135,7 +136,7 @@ async function capture(scene,{simultaneous=false,short=false,impaired=false,http
  // Observe one unchanged lobby idle heartbeat after impaired terminal packets.
  // This extends test recording, not the renderer's following delay.
  if(impaired&&scene.startsWith('lobby'))await pause(1800);
- const traces=await Promise.all(clients.map(c=>c.page.evaluate(()=>{motionTrace.record=false;return {...motionTrace,motionDebug:window.csRemoteMotionDiagnostics487?.events||[],renderer:csDrawRemote.toString(),wire:csWireDataChannel.toString()}})));
+ const traces=await Promise.all(clients.map(async c=>({...await c.page.evaluate(()=>{motionTrace.record=false;return {...motionTrace,motionDebug:window.csRemoteMotionDiagnostics487?.events||[],renderer:csDrawRemote.toString(),wire:csWireDataChannel.toString()}}),video:{file:c.videoFile,startBefore:c.videoStartBefore,startAfter:c.videoStartAfter}})));
  const pairs={};for(let i=0;i<clients.length;i++)for(let j=0;j<clients.length;j++)if(i!==j)pairs[i+'->'+j]=metrics(traces[i],traces[j],clients[i].name);
  const m={scene,label,clients:clients.length,simultaneous,impaired,pairs,AB:pairs['0->1'],BA:pairs['1->0']};
  const since=qualitySince?.();if(since){const resumed=traces.map(t=>({...t,frames:t.frames.filter(f=>f.t>=since),packets:t.packets.filter(p=>p.t>=since)}));m.postRecoveryPairs={};for(let i=0;i<clients.length;i++)for(let j=0;j<clients.length;j++)if(i!==j)m.postRecoveryPairs[i+'->'+j]=metrics(resumed[i],resumed[j],clients[i].name)}
@@ -190,11 +191,13 @@ async function nearbyVisual(scene){
    await move(clients[i].page,dx,dy);await pause(200);
    await Promise.all(clients.map(async(c,j)=>{
     const name=clients[1-j].name;
-    assert(await c.page.evaluate(name=>{const a=motionTrace.frames.at(-1)?.actors.find(a=>a.remote&&a.name===name);if(!a)return false;const [x,y]=worldToScreen(a.x,a.y);return x>48&&x<innerWidth-48&&y>100&&y<innerHeight-150},name),'the real rendered companion remains visible in both cameras');
-    await c.page.screenshot({path:output+'/'+scene+'-source'+i+'-'+tag+'-observer'+j+'.png'});
+    assert(await c.page.evaluate(({name,source,tag})=>{const f=motionTrace.frames.at(-1),a=f?.actors.find(a=>a.remote&&a.name===name);if(!a)return false;const [x,y]=worldToScreen(a.x,a.y);motionTrace.markers.push({t:f.t,now:f.now,source,tag,companion:name,screen:{x,y}});return x>48&&x<innerWidth-48&&y>100&&y<innerHeight-150},{name,source:i,tag}),'the real rendered companion remains visible in both cameras');
    }));
    await pause(650);
   }
+  // PNG capture can pause a busy browser and its sender while a step is being
+  // measured. Record the videos and timestamped visible frames without taking
+  // live PNGs here; extract walking frames after the browser run has completed.
   await pause(900);
  }});
 }
@@ -219,7 +222,10 @@ try{
  if(extended){
   scenarios.push(await capture('guard-simultaneous',{simultaneous:true}));
   await Promise.all(clients.map(c=>c.page.evaluate(()=>{motionTrace.impair.enabled=true})));
-  scenarios.push(await capture('guard-jitter-loss',{short:true,impaired:true}));
+  // Use the same complete route as the other impaired tests. Two brief
+  // sub-second legs can both fall inside a real delivery gap, leaving no
+  // sustained moving interval for the velocity measurement to compare.
+  scenarios.push(await capture('guard-jitter-loss',{simultaneous:true,impaired:true}));
   await Promise.all(clients.map(c=>c.page.evaluate(()=>{motionTrace.impair.enabled=false})));await pause(700);
   let onlineAt=0;
   scenarios.push(await capture('guard-outage',{impaired:true,qualitySince:()=>onlineAt,action:async()=>{

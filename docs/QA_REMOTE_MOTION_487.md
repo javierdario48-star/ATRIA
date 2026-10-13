@@ -288,8 +288,21 @@ collision/pathfinder and FPS variability and must not be confused with it.
 
 The release adds a compact two-client visual sequence in each scene, with
 both avatars kept in both cameras through ordinary native navigation and
-the same complete motion gates. Separate recordings/screenshots preserve
-local-vs-remote steps, turns, reversals and rest. A compiled-renderer regression
+the same complete motion gates. Recordings and timestamped visibility markers
+preserve local-vs-remote steps, turns, reversals and rest. Walking PNGs are
+extracted afterward: taking live screenshots on a busy runner reduced FPS to
+27 and produced 869ms packet gaps, perturbing the quantity being measured.
+The acceptance limits were retained.
+
+The degraded guard now uses the complete simultaneous route, like the lobby
+and other continuous-motion tests. A former two-leg probe contained only
+sub-second movement; one real 742ms delivery gap covered most of a leg and
+produced a misleading fixed-shift velocity sample despite exact final travel.
+The complete route measures sustained movement as well as brief turns and
+stops. All gates still apply to the FULL degraded interval, including speed,
+direction, phase and the authenticated terminal endpoint; no healthy later
+route is substituted for that interval.
+The compiled-renderer regression
 also rejects foreign-room actors and verifies that another guard with the
 same peer identifier inherits neither buffered positions nor walking phase.
 No production logic is changed in this evidence checkpoint.
