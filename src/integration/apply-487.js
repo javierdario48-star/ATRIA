@@ -692,7 +692,10 @@ function csDrawRemote(){
 })();
 </script>`;
  s=replaceOnce(s,'</body>',phase7Script+'</body>','phase7-nurse-audiovisual-receipts');
- if(vega){s=applyVegaStepCoach487(s);s=applyConciseVegaConsult487(s);}
+ // The original step coach predates the frozen HTML checkpoint and MUST
+ // remain present in both current and historical-source reconstructions.
+ s=applyVegaStepCoach487(s);
+ if(vega)s=applyConciseVegaConsult487(s);
  s=applyPeritonitis487(s);
  s=applyDiagnosticImpression487(s);
  s=applySurgicalNursing487(s);
