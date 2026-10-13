@@ -185,10 +185,12 @@ export function applyConciseVegaConsult487(html){
  s=s.slice(0,index)+decision+s.slice(index);
  // Auto-enter consultation only after an explicit call, not when merely
  // seeing Vega on the map. A returned/closed patient cannot revive it.
+ // Do not alter the frozen ns422-treatment-context prefix (IIFE to say).
+ // Install the same call adapter after the existing say() function instead.
  s=once(s,
- " window.nsTreatmentContext=()=>(",
- " const oldExplicitCall487=window.csCallVega;window.csCallVega=function(){const ok=oldExplicitCall487?.apply(this,arguments);if(ok!==false&&sim){sim.csVegaConsultRequested487=true;window.nsSelectChatTarget487?.('expert');}return ok;};\n window.nsTreatmentContext=()=>(",
- 'explicit-call-for-autoconsult');
+ " function status(job,id,label,reason,canLeave=false){",
+ " const oldExplicitCall487=window.csCallVega;window.csCallVega=function(){const ok=oldExplicitCall487?.apply(this,arguments);if(ok!==false&&sim){sim.csVegaConsultRequested487=true;window.nsSelectChatTarget487?.('expert');}return ok;};\n function status(job,id,label,reason,canLeave=false){",
+ 'explicit-call-for-autoconsult-after-frozen-prefix');
  s=once(s,
  " function tick(){\n  const job=sim?.nsVegaCare;if(!job)return;",
  " function tick(){\n  if(sim?.csVegaConsultRequested487&&sim.nsVegaArrived&&!sim.nsVegaCare?.active&&!sim.caseEnded){sim.csVegaConsultRequested487=false;begin(false,false);}\n  const job=sim?.nsVegaCare;if(!job)return;",
