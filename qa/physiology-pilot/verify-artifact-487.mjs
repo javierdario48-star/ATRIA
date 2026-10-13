@@ -7,6 +7,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
 import {applyMultiplayerStabilization487} from '../../src/integration/multiplayer-stabilization-487.js';
+import {applyChatRecipient487} from '../../src/integration/chat-recipient-487.js';
 import {applyGuardScoreboard487} from '../../src/integration/guard-scoreboard-487.js';
 import {applyPhysiologyQABootstrap487,PHYSIOLOGY_QA_FILES_487,RINGER_SAFETY_OLD_487,RINGER_SAFETY_NEW_487,RINGER_COMPLETION_OLD_487,RINGER_COMPLETION_NEW_487} from '../../src/integration/physiology-qa-bootstrap-487.js';
 import {applyCriticalRescue487,CRITICAL_FINAL_OLD_487,CRITICAL_FINAL_NEW_487,CRITICAL_CLOCK_OLD_487,CRITICAL_CLOCK_NEW_487} from '../../src/integration/critical-rescue-487.js';
@@ -128,7 +129,8 @@ const restored=beforeStop.replace(entries[0][0],'').replace(criticalScripts[0][0
  .replace(CRITICAL_FINAL_NEW_487,CRITICAL_FINAL_OLD_487).replace(CRITICAL_CLOCK_NEW_487,CRITICAL_CLOCK_OLD_487);
 // Reverse only the reviewed QA multiplayer deltas, then preserve the
 // immutable clinical golden-master hash instead of silently rebaselining it.
-const clinicRestored=applyMultiplayerStabilization487(restored,{reverse:true});
+const withoutAddressedChat=applyChatRecipient487(restored,{reverse:true});
+const clinicRestored=applyMultiplayerStabilization487(withoutAddressedChat,{reverse:true});
 const originalHash=createHash('sha256').update(clinicRestored).digest('hex');
 assert.equal(originalHash,'dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7','all prior HTML bytes remain identical after removing sole QA entry');
 assert(!html.includes('physiology-pilot-487')&&!html.includes('physiology-shadow-487'),'no eager B1 import or effect writer');
