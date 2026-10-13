@@ -41,6 +41,7 @@ export function applyChatRecipient487(html){
    btn.classList.toggle('csExplicitTarget487',!!names[role]);
    btn.setAttribute('aria-label',role?'Destinatario: '+names[role]+'. Tocar para volver a hablar cerca.':'Elegir conversación cercana');
    if(role){label.textContent='Para: '+names[role];input.placeholder='Escribir a '+names[role]+'…';}
+   else{label.textContent=typeof listenerLabel==='function'?listenerLabel():'Hablar cerca';input.placeholder='Hablar cerca…';}
   }
   window.nsSelectChatTarget487=function(role,{auto=false}={}){
    if(!sim)return false;
