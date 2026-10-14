@@ -88,7 +88,7 @@ try{
    await owner.waitForFunction(()=>sim.chats.patient.some(x=>x[0]==='patient'),{},{timeout:25000});
    await visitor.waitForFunction(t=>sim.globalChat.some(x=>x[0]==='doctor'&&x[1].includes(t)),phrase);
    const a=await h.snapshot();
-   assert(a[0].chat.some(x=>x[0]==='doctor'&&x[1].includes(phrase)),'native owner transcript has guest question');
+   assert.equal(a[0].chat.filter(x=>x[0]==='doctor'&&x[1].includes(phrase)).length,1,'native owner logs each guest question exactly once');
    assert(a[1].chat.some(x=>x[0]==='doctor'&&x[1].includes(phrase)),'guest transcript does not disappear');
    assert.equal(a[0].administrations.length,0,'bedside question does not use nursing');
    console.log('COOP_BEDSIDE_GUEST_HEARD',JSON.stringify({players:count,guest:1,owner:0,realNativeAnamnesis:true,noNurseFirst:true}));
