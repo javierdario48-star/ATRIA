@@ -47,6 +47,19 @@ try{
    assert(snapshots[0].chat.some(m=>m[0]==='patient'),'actual native patient answer');
    assert.equal(snapshots[0].administrations?.length||0,0,'social chat cannot execute medication');
   });
+  await check('coop-host-keyboard-raw-question',async()=>{
+   await h.select(0);
+   const question='¿Desde cuándo viene sintiendo esta molestia?';
+   await h.clients[0].page.evaluate(()=>{
+    const native=sendMessage;
+    window.__qaOutboundSpeech487=[];
+    sendMessage=function(q){window.__qaOutboundSpeech487.push(q);return native.apply(this,arguments)};
+   });
+   await h.send(0,question);
+   await h.clients[0].page.waitForFunction(q=>sim.chats.patient.some(x=>x[0]==='doctor'&&x[1].includes(q)),question,{timeout:15000});
+   const sent=await h.clients[0].page.evaluate(()=>window.__qaOutboundSpeech487);
+   assert(sent.includes(question),'pressing Enter preserves the actual doctor utterance');
+  });
   await check('coop-guest-first-bedside-question',async()=>{
    const visitor=h.clients[1].page,owner=h.clients[0].page;
    await visitor.evaluate(()=>{
