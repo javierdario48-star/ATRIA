@@ -273,7 +273,7 @@ export function applyChatRecipient487(html,{reverse=false}={}){
   }
   // Android IME and hardware Enter must take the same native Send-button path.
   // Run before legacy key handlers; composition must never submit prematurely.
-  document.addEventListener('keydown',event=>{
+  document.addEventListener?.('keydown',event=>{
    if(!inWard487()||event.target?.id!=='dieInput'||event.key!=='Enter'||
       event.isComposing||event.keyCode===229)return;
    event.preventDefault();event.stopImmediatePropagation();
