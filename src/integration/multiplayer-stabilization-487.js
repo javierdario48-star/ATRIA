@@ -393,7 +393,7 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  'global-rebroadcast-is-authorized-by-host');
  s=edit(s,
  "if(seen.has(marker))return;seen.add(marker);if(seen.size>160)seen.delete(seen.values().next().value);",
- "if(relayAuthor===selfId||seen.has(eventId))return;seen.add(eventId);if(seen.size>160)seen.delete(seen.values().next().value);if(host()&&m.peerId!==selfId&&!m.originPeerId)send('team_chat',{text:m.text,npcSpeaker:m.npcSpeaker,recipient:m.recipient,patientUid:m.patientUid,originPeerId:m.peerId,originMessageId:marker,messageId:selfId+':fwd:'+marker});",
+ "if(relayAuthor===selfId||seen.has(eventId))return;seen.add(eventId);if(seen.size>160)seen.delete(seen.values().next().value);if(typeof send==='function'&&host()&&m.peerId!==selfId&&!m.originPeerId)send('team_chat',{text:m.text,npcSpeaker:m.npcSpeaker,recipient:m.recipient,patientUid:m.patientUid,originPeerId:m.peerId,originMessageId:marker,messageId:selfId+':fwd:'+marker});",
  'global-guest-message-host-fanout-once');
  s=edit(s,
  "(person(m.peerId)?.name||'Compañero')+': '+m.text.replace(/[<>]/g,'')",
