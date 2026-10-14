@@ -133,10 +133,20 @@ export function applyNurseVoice487(html){
       const accessAlreadyPending=nurse.task?.kind==='iv_access'&&nurse.task._targetSim===sim||
        nurse.queue?.some(t=>t.kind==='iv_access'&&t._targetSim===sim);
       if(!accessAlreadyPending)window.csQueueIV?.(1);
+      // Snapshot native pending identities BEFORE the existing executor queues
+      // anything. A repeated order must not steal the original dose's source.
+      const pendingBefore=new Set(sim.csPhase4Pending487||[]);
       const acknowledged=baseNurse.call(this,'enfermera '+raw);
       // Some legacy routes acknowledge without retaining the IV therapy.
       // The original monitor IV adapter is the authority for that fallback.
       if(!isPending()&&iv)addMonitorTherapy(raw);
+      for(const pending of sim.csPhase4Pending487||[]){
+       if(pending.uid===uid&&pending.id===item.id&&!pendingBefore.has(pending)&&
+          !pending.csOrderIntentId487){
+        pending.csOrderIntentId487=intentId;
+        pending.csOrderSourceText487=String(text).slice(0,300);
+       }
+      }
       if(isPending())feedback(label+': PENDIENTE. Esperando vía periférica; ejecutaré al colocarla.');
       else feedback(label+': RECIBIDA. Verificando acceso y registro de enfermería.');
       ok=acknowledged!==false||isPending()||ok;continue;
