@@ -120,7 +120,7 @@ const reliable=section('const nsReliableChat487=new Map();','function roomPayloa
 for(const count of [2,3,4]){
  const members=Array.from({length:count},(_,i)=>({id:'P'+i,name:'Medic '+i,online:true}));
  const sent=[],scheduled=[],notice=[],messageId='P0:RELIABLE-'+count;
- const host={challenge:{active:true,ended:false,id:'ROOM',players:members},selfId:'P0',
+ const host={challenge:{active:true,ended:false,id:'ROOM',hostId:'P1',players:members},selfId:'P0',
   csCoop:{dc:{readyState:'connecting',send:packet=>sent.push(JSON.parse(packet))}},
   pendingCareers:new Map(),name:()=> 'Medic 0',person:id=>members.find(p=>p.id===id),
   addGlobalChat:(role,text)=>notice.push([role,text]),refreshChatDock:()=>{},
@@ -137,8 +137,8 @@ for(const count of [2,3,4]){
  assert.equal(vm.runInContext('nsReliableChat487.size',host),1,'foreign-room ACK must not complete receipt');
  for(let i=1;i<count;i++){
   host.receive({...ack,peerId:'P'+i});
-  assert.equal(vm.runInContext('nsReliableChat487.size',host),i<count-1?1:0,
-   'delivery requires all current independent peers');
+  assert.equal(vm.runInContext('nsReliableChat487.size',host),0,
+   'guest outbox is acknowledged by the verified host on a host-spoked room');
  }
  host.receive({...ack,peerId:'P1'});
  assert.equal(notice.filter(x=>/mensaje recibido/i.test(x[1])).length,1,'exactly one receipt');
