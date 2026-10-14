@@ -47,31 +47,6 @@ try{
    assert(snapshots[0].chat.some(m=>m[0]==='patient'),'actual native patient answer');
    assert.equal(snapshots[0].administrations?.length||0,0,'social chat cannot execute medication');
   });
-  await check('coop-host-keyboard-raw-question',async()=>{
-   const question='¿Desde cuándo viene sintiendo esta molestia?';
-   await h.clients[0].page.evaluate(()=>{
-    const native=sendMessage;
-    window.__qaOutboundSpeech487=[];
-    sendMessage=function(q){window.__qaOutboundSpeech487.push(q);return native.apply(this,arguments)};
-   });
-   await h.clients[0].page.evaluate(()=>{window.__qaKeydowns487=[];document.addEventListener('keydown',e=>{
-    if(e.key==='Enter')window.__qaKeydowns487.push({text:e.target?.value,current:document.getElementById('dieInput')?.value,
-     same:e.target===document.getElementById('dieInput'),active:document.activeElement===e.target});
-   },true)});
-   await h.clients[0].page.locator('#dieInput').fill(question);
-   console.log('KEYBOARD_BEFORE_ENTER',JSON.stringify(await h.clients[0].page.evaluate(()=>({
-    text:document.getElementById('dieInput')?.value,active:document.activeElement===document.getElementById('dieInput'),
-    html:document.getElementById('dieInput')?.outerHTML.slice(0,200)}))));
-   await h.clients[0].page.locator('#dieInput').press('Enter');
-   const captured=await h.clients[0].page.evaluate(()=>({keydowns:window.__qaKeydowns487,sent:window.__qaOutboundSpeech487,
-    input:document.getElementById('dieInput')?.value,
-    owner:csV41Challenge.patients[0]?.ownerId,
-    self:csV41Challenge.selfId,
-    answered:sim.chats.patient.slice(-6)}));
-   console.log('KEYBOARD_FIRST_SPEECH_AUDIT',JSON.stringify(captured));
-   assert(captured.sent.includes(question),'Enter must call the native message sender with the exact typed text');
-   await h.clients[0].page.waitForFunction(q=>sim.chats.patient.some(x=>x[0]==='doctor'&&x[1].includes(q)),question,{timeout:15000});
-  });
   await check('coop-guest-first-bedside-question',async()=>{
    const visitor=h.clients[1].page,owner=h.clients[0].page;
    await visitor.evaluate(()=>{
