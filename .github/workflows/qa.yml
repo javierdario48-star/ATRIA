@@ -37,6 +37,14 @@ jobs:
           CLINICAL_STAGE: G
           CLINICAL_OUTPUT: qa/clinical-browser-results/${{ matrix.players }}-nursing
         run: node qa/clinical-room-browser-487.mjs
+      - name: First clinical speech before nursing, including party host not owning patient
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          CLINICAL_PLAYERS: ${{ matrix.players }}
+          CLINICAL_STAGE: C
+          CLINICAL_OUTPUT: qa/clinical-browser-results/${{ matrix.players }}-first-chat
+        run: node qa/clinical-room-browser-487.mjs
       - name: Real competitive simultaneous claims, owner permissions and tampered rival order
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
