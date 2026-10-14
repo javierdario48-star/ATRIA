@@ -29,6 +29,11 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "const raw=String(text||'').trim();if(sim?.__csRemoteMirror487||sim?.__csRoomSpectator||!raw||raw.startsWith('/')||!mayTreat()||inferRecipient(raw)!=='nurse')return base.send.apply(this,arguments);",
  'visiting-mirror-skips-late-v412-local-nurse-interceptor');
 
+ // In a shared guard, another doctor's words must not be labeled "Tú".
+ s=edit(s,
+ "function chatLineLabel(r){return r==='doctor'?'Tú':",
+ "function chatLineLabel(r){return r==='doctor'?(window.csV41Challenge?.active?'Médico':'Tú'):",
+ 'shared-ward-message-author-label');
  // Guest's clinical dock can be built BEFORE late lobby deactivation.
  s=edit(s,
  "if(dock){dock.classList.remove('nsLobbyChat');dock.innerHTML='';dock.classList.remove('show');}",
