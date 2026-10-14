@@ -307,13 +307,13 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  'validate-recipient-at-authoritative-permission-boundary');
  s=edit(s,
  "function roomCommand(q){",
- "window.csWardAskPatient487=function(index,raw,role='patient'){
+ `window.csWardAskPatient487=function(index,raw,role='patient'){
  const p=challenge.patients[index];if(!p||!near(p)||!challenge.active||challenge.ended)return false;
  if(!p.ownerId){pendingAutoCommand487=raw;takePatient(index);return 'pending'}
  if(p.ownerId===selfId){if(sim?.patientInstance?.uid!==p.uid)takePatient(index);return false}
  return requestAssist(index,role==='patient'?{kind:'speech',text:window.nsChatRecipient487?.(raw)?.text||raw}:{kind:'command',text:raw});
 };
-window.csBroadcastAddressedChat487=function(role,raw){if(!shared()||!challenge.active||challenge.ended||!['patient','expert','nurse'].includes(role))return false;const utterance=String(raw||'').trim().slice(0,150);if(!utterance)return false;const to={patient:'Paciente',expert:'Dr. Vega',nurse:'Enfermera'}[role];const text=utterance;send('team_chat',{text,recipient:role,patientUid:sim?.patientInstance?.uid||null,messageId:selfId+':'+Date.now().toString(36)+':'+Math.random().toString(36).slice(2,7)});return true;};function roomCommand(q){",
+window.csBroadcastAddressedChat487=function(role,raw){if(!shared()||!challenge.active||challenge.ended||!['patient','expert','nurse'].includes(role))return false;const utterance=String(raw||'').trim().slice(0,150);if(!utterance)return false;const to={patient:'Paciente',expert:'Dr. Vega',nurse:'Enfermera'}[role];const text=utterance;send('team_chat',{text,recipient:role,patientUid:sim?.patientInstance?.uid||null,messageId:selfId+':'+Date.now().toString(36)+':'+Math.random().toString(36).slice(2,7)});return true;};function roomCommand(q){`,
  'addressed-clinical-message-is-public-but-execution-stays-authoritative');
  s=edit(s,
  "function roomCommand(q){",
