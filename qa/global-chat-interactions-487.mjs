@@ -99,6 +99,28 @@ try{
    assert(p.hits.some(x=>x.match&&x.verified),'human character should be selectable by touch');
   }
  });
+ await check('real-human-avatar-tap-shows-social-card',async()=>{
+  const p=h.clients[0].page;
+  const found=await p.evaluate(()=>{
+   const peer=Object.values(csCoop.remotes||{}).find(r=>r.roomId===csV41Challenge.id);
+   if(!peer)throw Error('remote doctor not in real room');
+   const [x,y]=worldToScreen(peer.x,peer.y);
+   handleGameTap({clientX:x,clientY:y});
+   const card=document.getElementById('atriaHumanAvatarCard487'),button=card?.querySelector('button');
+   return {card:!!card,label:button?.textContent,
+    input:document.getElementById('dieInput')?.value||''};
+  });
+  assert.equal(found.card,true,'actual human tap opens contextual social card');
+  assert.match(found.label||'',/Agregar a amigos|Ver perfil/);
+  assert(!/ClinicalClient_1,/.test(found.input),'tap must never mention the remote player');
+  await p.locator('#atriaHumanAvatarCard487 button').click();
+  await p.waitForFunction(()=>{const b=document.querySelector('#atriaHumanAvatarCard487 button');
+   return !b||b.textContent.includes('Solicitud enviada')||b.textContent.includes('No se pudo enviar')},
+   {},{timeout:12000});
+  const result=await p.locator('#atriaHumanAvatarCard487 button').count();
+  if(result){const response=await p.locator('#atriaHumanAvatarCard487 button').textContent();
+   assert.equal(response,'Solicitud enviada','must call existing persistent friendship backend');}
+ });
  await check('patient-snapshot-on-guest-resume',async()=>{
   await Promise.all(h.clients.slice(1).map(c=>c.page.evaluate(()=>window.csRequestRoomSync487?.())));
   await Promise.all(h.clients.map(c=>c.page.waitForFunction(()=>
