@@ -23,6 +23,19 @@ async function approach(i,index=0){const p=h.clients[i].page;await p.evaluate(in
  await p.evaluate(()=>csSendPeerState());await sleep(1200)}
 try{
  await h.startGuard('coop','APP-001');
+ await check('full-roster-ready-before-message-fanout',async()=>{
+  await Promise.all(h.clients.map(c=>c.page.waitForFunction(n=>
+   csV41Challenge.players?.length>=n&&csV41Challenge.players.every(p=>p.id&&p.name),
+   count,{timeout:30000})));
+  const rosters=await Promise.all(h.clients.map(c=>c.page.evaluate(()=>({
+   self:csV41Challenge.selfId,players:csV41Challenge.players.map(p=>({id:p.id,name:p.name,online:p.online}))
+  }))));
+  console.log('GLOBAL_CHAT_ROSTERS',JSON.stringify(rosters));
+  const actualIds=new Set(h.clients.map(c=>c.user.id));
+  for(const r of rosters)assert.deepEqual(new Set(r.players.map(p=>p.id)),actualIds,
+   'all room participants must know every authenticated peer');
+  await sleep(1600);
+ });
  await check('everyone-sends-unprefixed-message-correct-identity',async()=>{
   for(let i=0;i<count;i++){const msg='BOT_DOCTOR_'+count+'_'+i;
    await h.send(i,msg,{tap:i%2===0});const views=await one(msg);
@@ -43,11 +56,18 @@ try{
   await inp.fill('BOT_DRAFT_SENT_'+count);await inp.press('Enter');await one('BOT_DRAFT_SENT_'+count)
  });
  await check('owner-native-anamnesis-and-public-NPC-answer',async()=>{
-  await h.select(0);const msg='¿Desde cuándo tiene dolor '+count+'?';await h.send(0,'Paciente, '+msg,{tap:true});
+  await h.select(0);const msg='¿Desde cuándo tiene dolor '+count+'?';await h.send(0,'Paciente, '+msg);
   await one(msg);await Promise.all(h.clients.map(c=>c.page.waitForFunction(()=>
    sim?.globalChat?.some(x=>x[0]==='patient'),{},{timeout:25000})));
   const n=await h.clients[0].page.evaluate(t=>sim.chats.patient.filter(x=>x[0]==='doctor'&&x[1].includes(t)).length,msg);
   assert.equal(n,1,'native patient history contains one question')
+ });
+ await check('owner-tap-send-publishes-same-clinical-chat',async()=>{
+  const msg='¿Qué ocurrió con el dolor '+count+'?';
+  await h.send(0,'Paciente, '+msg,{tap:true});await one(msg);
+  const n=await h.clients[0].page.evaluate(t=>
+   sim.chats.patient.filter(x=>x[0]==='doctor'&&x[1].includes(t)).length,msg);
+  assert.equal(n,1,'native history must register tap-sent question exactly once');
  });
  await check('unassigned-guest-nearest-patient-before-any-nurse',async()=>{
   await approach(1);const msg='¿Qué síntomas presenta hoy '+count+'?';await h.send(1,msg,{tap:true});
