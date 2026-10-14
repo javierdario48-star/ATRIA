@@ -49,11 +49,23 @@ try{
      'lost true author '+i);assert(!s.chat.some(x=>x[0]==='system'&&x[1].includes(msg)))}}
  });
  await check('remote-avatar-shows-nearby-speech-bubble',async()=>{
+  const painter=h.clients[0].page;
+  await painter.evaluate(()=>{
+   window.__atriaPaintedChat487=[];
+   window.__atriaOriginalSpeech487=speech;
+   speech=function(...args){
+    if(String(args[0]).startsWith('BOT_REMOTE_SPEECH_BUBBLE_'))
+     window.__atriaPaintedChat487.push(String(args[0]));
+    return window.__atriaOriginalSpeech487.apply(this,args);
+   };
+  });
   const msg='BOT_REMOTE_SPEECH_BUBBLE_'+count;
   await h.send(1,msg,{tap:true});await allSee(msg);
   await h.clients[0].page.waitForFunction(()=>window.csWardChatState487?.().bubbles>0,{},{timeout:7000});
   const state=await h.clients[0].page.evaluate(()=>window.csWardChatState487());
   assert.equal(state.active,true);assert(state.history>0);
+  await painter.waitForFunction(text=>window.__atriaPaintedChat487?.includes(text),msg,{timeout:7000});
+  await painter.evaluate(()=>{speech=window.__atriaOriginalSpeech487;delete window.__atriaOriginalSpeech487;});
  });
  await check('hearing-range-distinguishes-near-and-far',async()=>{
   for(const c of h.clients){
