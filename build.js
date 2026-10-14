@@ -6,7 +6,16 @@ const manifest=JSON.parse(await fs.readFile(base+'/MANIFEST.json','utf8'));if(ma
 const files=Object.keys(manifest.files||{});if(!files.includes('index.html'))throw new Error('golden master index missing');
 for(const name of files){if(name==='index.html'||!/^task\d+\.js$/.test(name))continue;await fs.copyFile(base+'/'+name,out+'/'+name)}
 const source=await fs.readFile(base+'/index.html','utf8');if(!source.includes('4.8.6'))throw new Error('golden master marker missing');
-const html=apply487(source);await fs.writeFile(out+'/index.html',html);
+// Opt-in UX comparison uses independent static assets; the clinical patch stays byte-identical.
+const html=apply487(source);
+const closing='</body>',point=html.lastIndexOf(closing);
+if(point<0||html.indexOf(closing)!==point)throw new Error('UX lab: unique body closing tag not found');
+const assets='<link rel="stylesheet" href="/atria-ux-lab.css"><script src="/atria-ux-lab.js"></script>';
+const enhanced=html.slice(0,point)+assets+html.slice(point);
+await fs.writeFile(out+'/index.html',enhanced);
+for(const asset of ['atria-ux-lab.css','atria-ux-lab.js']) {
+  await fs.copyFile('src/ui/'+asset,out+'/'+asset);
+}
 for(const name of PHYSIOLOGY_QA_FILES_487){
  const target=out+'/qa-physiology/'+name;
  await fs.mkdir(target.slice(0,target.lastIndexOf('/')),{recursive:true});
