@@ -194,6 +194,93 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    else deliverPatientSpeech(utterance,true);
    refreshChatDock();return true;
   };
+  // Exactly one public ward transcript and one native clinical interpreter.
+  // The historical "team_chat" name is ONLY a transport packet, not a room,
+  // chat tab, mode or second interpreter.
+  const audibleRadius487=280,patientRadius487=135;
+  const wardBubbles487=new Map();
+  function inWard487(){const r=window.csV41Challenge;return !!r?.active&&!r.ended&&!!sim&&!!C&&!document.body?.classList?.contains('nsLobbyMode')}
+  function nearPatient487(){
+   const r=window.csV41Challenge;
+   if(!inWard487()||!Array.isArray(r.patients))return null;
+   return r.patients.filter(p=>p?.instance&&['in_care','waiting'].includes(p.state))
+    .map(p=>{const a=p.instance?.bed?.approach;if(!a)return null;
+     const x=(a[0]+.5)*TW,y=(a[1]+.5)*TH;
+     return {patient:p,d:Math.hypot(player.x-x,player.y-y)};})
+    .filter(x=>x&&x.d<=patientRadius487).sort((a,b)=>a.d-b.d)[0]?.patient||null;
+  }
+  window.csWardChatAudible487=function(packet){
+   // Absence of position is only for packets from older supported clients;
+   // do not silently discard a valid message during an upgrade.
+   if(!inWard487()||!packet||!Number.isFinite(packet.x)||!Number.isFinite(packet.y))return true;
+   return Math.hypot(player.x-packet.x,player.y-packet.y)<=audibleRadius487;
+  };
+  window.csWardRemoteSpeech487=function(author,text,x,y,npc=false){
+   if(npc||!inWard487()||!author||author===window.csV41Challenge?.selfId)return;
+   wardBubbles487.set(author,{text:String(text||'').slice(0,180),until:performance.now()+2900,x,y});
+  };
+  // The movement sampler and remote sprites remain untouched. Draw a speech
+  // overlay at each visible remote's current position, after its nameplate.
+  if(typeof csDrawRemote==='function'){
+   const drawOriginalRemotes487=csDrawRemote;
+   csDrawRemote=function(){
+    const result=drawOriginalRemotes487.apply(this,arguments);
+    if(!inWard487()){wardBubbles487.clear();return result;}
+    const now=performance.now();
+    for(const [id,speechEvent] of wardBubbles487){
+     if(now>speechEvent.until){wardBubbles487.delete(id);continue;}
+     const actor=csCoop?.remotes?.[id];
+     if(!actor||actor.roomId!==window.csV41Challenge.id)continue;
+     if(Math.hypot(player.x-actor.x,player.y-actor.y)>audibleRadius487)continue;
+     speech(speechEvent.text,actor.x,actor.y-54,'#ccecff',speechEvent.until);
+    }
+    return result;
+   };
+  }
+  const globalChatOld487=addGlobalChat;
+  addGlobalChat=function(role,text,options={}){
+   if(inWard487()&&role==='doctor'&&!options.nsRemoteNPC487){
+    const r=window.csV41Challenge,n=String(csProfile?.name||'Médico'),raw=String(text||'');
+    const alreadyNamed=(r.players||[]).some(p=>p?.name&&raw.startsWith(p.name+': '));
+    if(!alreadyNamed&&!/^[^:]{1,50}:\s/.test(raw.replace(/^A (?:Paciente|Enfermera|Dr\. Vega):\s*/i,'')))
+     text=n+': '+raw;
+   }
+   return globalChatOld487.call(this,role,text,options);
+  };
+  const globalLabelOld487=chatLineLabel;
+  chatLineLabel=function(role){return inWard487()&&role==='doctor'?'':globalLabelOld487.call(this,role)};
+  function publishSpeech487(raw,role){
+   if(!window.csBroadcastAddressedChat487?.(role,raw))return false;
+   player.bubble=raw;player.bubbleUntil=performance.now()+2900;
+   addGlobalChat('doctor',raw);refreshChatDock();return true;
+  }
+  const globalSendOld487=sendMessage;
+  sendMessage=function(message){
+   const raw=String(message||'').trim();
+   if(!inWard487()||!raw||raw.startsWith('/'))return globalSendOld487.apply(this,arguments);
+   const parsed=window.nsChatRecipient487(raw),role=parsed.role,target=nearPatient487(),room=window.csV41Challenge;
+   // No automatic recipient except the nearest physically audible patient.
+   // Explicit "Enfermera, ..." and "Vega, ..." retain their existing native
+   // clinical dispatch and competitive permission rules.
+   if(role==='patient'){
+    if(!target)return publishSpeech487(raw,role);
+    const own=target.ownerId===room.selfId&&sim.patientInstance?.uid===target.uid&&!sim.__csRemoteMirror487&&!sim.__csRoomSpectator;
+    if(own)return globalSendOld487.apply(this,arguments);
+    const routed=window.csWardAskPatient487?.(target.index,raw,role);
+    if(routed==='pending')return true; // one send only, after authoritative claim
+    if(routed===true)return publishSpeech487(raw,role);
+    if(target.ownerId===room.selfId&&sim.patientInstance?.uid===target.uid)
+     return globalSendOld487.apply(this,arguments);
+    return publishSpeech487(raw,role);
+   }
+   // Named NPCs use precisely the solo interpreter through the native
+   // owner or the already existing cooperative action relay.
+   if(target&&target.ownerId&&target.ownerId!==room.selfId&&room.mode==='coop'){
+    const routed=window.csWardAskPatient487?.(target.index,raw,role);
+    if(routed===true)return publishSpeech487(raw,role);
+   }
+   return globalSendOld487.apply(this,arguments);
+  };
  })();
  </script>`;
  if(reverse){
