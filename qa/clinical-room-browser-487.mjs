@@ -54,8 +54,16 @@ try{
     window.__qaOutboundSpeech487=[];
     sendMessage=function(q){window.__qaOutboundSpeech487.push(q);return native.apply(this,arguments)};
    });
-   await h.send(0,question);
-   const captured=await h.clients[0].page.evaluate(()=>({sent:window.__qaOutboundSpeech487,
+   await h.clients[0].page.evaluate(()=>{window.__qaKeydowns487=[];document.addEventListener('keydown',e=>{
+    if(e.key==='Enter')window.__qaKeydowns487.push({text:e.target?.value,current:document.getElementById('dieInput')?.value,
+     same:e.target===document.getElementById('dieInput'),active:document.activeElement===e.target});
+   },true)});
+   await h.clients[0].page.locator('#dieInput').fill(question);
+   console.log('KEYBOARD_BEFORE_ENTER',JSON.stringify(await h.clients[0].page.evaluate(()=>({
+    text:document.getElementById('dieInput')?.value,active:document.activeElement===document.getElementById('dieInput'),
+    html:document.getElementById('dieInput')?.outerHTML.slice(0,200)}))));
+   await h.clients[0].page.locator('#dieInput').press('Enter');
+   const captured=await h.clients[0].page.evaluate(()=>({keydowns:window.__qaKeydowns487,sent:window.__qaOutboundSpeech487,
     input:document.getElementById('dieInput')?.value,
     owner:csV41Challenge.patients[0]?.ownerId,
     self:csV41Challenge.selfId,
