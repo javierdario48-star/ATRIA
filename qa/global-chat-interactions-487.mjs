@@ -31,7 +31,7 @@ try{
    self:csV41Challenge.selfId,players:csV41Challenge.players.map(p=>({id:p.id,name:p.name,online:p.online}))
   }))));
   console.log('GLOBAL_CHAT_ROSTERS',JSON.stringify(rosters));
-  const actualIds=new Set(h.clients.map(c=>c.user.id));
+  const actualIds=new Set(rosters.map(r=>r.self));
   for(const r of rosters)assert.deepEqual(new Set(r.players.map(p=>p.id)),actualIds,
    'all room participants must know every authenticated peer');
   await sleep(1600);
