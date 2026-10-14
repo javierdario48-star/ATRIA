@@ -40,13 +40,21 @@ try {
       const dock=document.querySelector('#chatDock'),history=document.querySelector('#chatDock .chatRecent'),
        input=document.querySelector('#dieInput');
       const r=dock.getBoundingClientRect();
+      const glass=dock.querySelector('.chatGlass');
       return {dockHeight:r.height,historyDisplay:getComputedStyle(history).display,
+        dockPointerEvents:getComputedStyle(dock).pointerEvents,
+        composerPointerEvents:getComputedStyle(glass).pointerEvents,
+        composerHeight:glass.getBoundingClientRect().height,
         font:parseFloat(getComputedStyle(input).fontSize),
         fieldFocused:document.activeElement===input,
         fieldHeight:input.getBoundingClientRect().height};
     });
     assert.equal(keyboard.historyDisplay,'none',variant+': expanded transcript obscures keyboard');
-    assert(keyboard.dockHeight<=72,variant+': keyboard chat still covers hospital');
+    // Native IME positioning owns the dock box; it can be tall as a geometry
+    // fallback. Only its small composer may intercept touches or paint over map.
+    assert(keyboard.composerHeight<=72,variant+': visible keyboard composer is too tall');
+    assert.equal(keyboard.dockPointerEvents,'none',variant+': transparent IME space traps map taps');
+    assert.equal(keyboard.composerPointerEvents,'auto',variant+': cannot tap/send with keyboard');
     assert(keyboard.font>=16&&keyboard.fieldHeight>=38&&keyboard.fieldFocused,variant+': keyboard composer unusable');
     const keyboardPath=out+'/'+variant+'-keyboard-synthetic.png';
     await page.screenshot({path:keyboardPath,fullPage:true});report.screenshots.push(keyboardPath);
