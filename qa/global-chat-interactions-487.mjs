@@ -42,6 +42,34 @@ try{
    for(const s of views){assert(s.chat.some(x=>x[0]==='doctor'&&x[1].includes(h.clients[i].name+': '+msg)),
      'lost true author '+i);assert(!s.chat.some(x=>x[0]==='system'&&x[1].includes(msg)))}}
  });
+ await check('remote-avatar-shows-nearby-speech-bubble',async()=>{
+  const msg='BOT_REMOTE_SPEECH_BUBBLE_'+count;
+  await h.send(1,msg,{tap:true});await allSee(msg);
+  await h.clients[0].page.waitForFunction(()=>window.csWardChatState487?.().bubbles>0,{},{timeout:7000});
+  const state=await h.clients[0].page.evaluate(()=>window.csWardChatState487());
+  assert.equal(state.active,true);assert(state.history>0);
+ });
+ await check('hearing-range-distinguishes-near-and-far',async()=>{
+  for(const c of h.clients){
+   const d=await c.page.evaluate(()=>({
+    near:window.csWardChatAudible487({x:player.x+30,y:player.y}),
+    far:window.csWardChatAudible487({x:player.x+600,y:player.y}),
+    radius:window.csWardChatState487().audibleRadius
+   }));
+   assert.equal(d.near,true);assert.equal(d.far,false);
+   assert(d.radius>=180&&d.radius<=400);
+  }
+ });
+ await check('guard-history-persists-across-patient-state-switch',async()=>{
+  const state=await h.clients[0].page.evaluate(()=>{
+   const previous=sim,before=activeChatArray().map(x=>x.slice());
+   try{sim={...previous,globalChat:[]};const other=activeChatArray();
+    return {before:before.length,after:other.length,
+     retained:JSON.stringify(before)===JSON.stringify(other)}}
+   finally{sim=previous}
+  });
+  assert(state.before>0&&state.retained,'ward conversation independent of patient record');
+ });
  await check('all-doctors-send-concurrently',async()=>{
   const words=Array.from({length:count},(_,i)=>'BOT_RACE_'+count+'_'+i);
   await Promise.all(words.map((w,i)=>h.send(i,w,{tap:i%2===1})));
