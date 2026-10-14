@@ -63,6 +63,36 @@ try{
   for(let i=0;i<p.length;i++)for(let j=i+1;j<p.length;j++)
    assert(Math.hypot(p[i].x-p[j].x,p[i].y-p[j].y)<=280,'clients must be nearby to hear each other');
  });
+ await check('bedside-patient-versus-monitor-hit-targets',async()=>{
+  const views=await Promise.all(h.clients.map(c=>c.page.evaluate(()=>{
+   const p=csV41Challenge.patients.find(p=>p.instance?.bed?.patient);
+   if(!p)throw Error('no real native patient');
+   const [x,y]=worldToScreen(...p.instance.bed.patient),a=window.cs413TapTarget487?.(x,y);
+   const m=monitorFor(p.instance),[mx,my]=worldToScreen(m.x,m.y);
+   const b=window.cs413TapTarget487?.(mx,my);
+   return {uid:p.uid,patient:a?.patient?.uid,patientKind:a?.kind,
+    monitor:b?.patient?.uid,monitorKind:b?.kind,bedId:p.instance.bedId};
+  })));
+  for(const p of views){
+   assert.equal(p.patient,p.uid,'patient tap must target actual bed');
+   assert.equal(p.patientKind,'patient');
+   assert.equal(p.monitor,p.uid,'monitor tap must target same bed');
+   assert.equal(p.monitorKind,'monitor');
+  }
+  console.log('NATIVE_BEDSIDE_HIT_MAP',JSON.stringify(views));
+ });
+ await check('patient-snapshot-on-guest-resume',async()=>{
+  await Promise.all(h.clients.slice(1).map(c=>c.page.evaluate(()=>window.csRequestRoomSync487?.())));
+  await Promise.all(h.clients.map(c=>c.page.waitForFunction(()=>
+   typeof window.csWardPatientDigest487==='function'&&csV41Challenge.patients.length>0,{},{timeout:12000})));
+  const views=await Promise.all(h.clients.map(c=>c.page.evaluate(()=>{
+   const d=window.csWardPatientDigest487();
+   return {room:d.room,patients:d.patients.map(p=>({
+    uid:p.uid,caseId:p.caseId,bedId:p.bedId,state:p.state,index:p.index}))};
+  })));
+  for(const v of views.slice(1))assert.deepEqual(v,views[0],
+   'host and Android guest must share actual patient instances');
+ });
  await check('everyone-sends-unprefixed-message-correct-identity',async()=>{
   for(let i=0;i<count;i++){const msg='BOT_DOCTOR_'+count+'_'+i;
    await h.send(i,msg,{tap:i%2===0});const views=await one(msg);
