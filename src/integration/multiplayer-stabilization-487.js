@@ -308,9 +308,9 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  s=edit(s,
  "function roomCommand(q){",
  `window.csWardAskPatient487=function(index,raw,role='patient'){
- const p=challenge.patients[index];if(!p||!near(p)||!challenge.active||challenge.ended)return false;
+ const p=challenge.patients[index];if(!p||!(near(p)||role==='patient'&&window.csWardPatientInZone487?.(p))||!challenge.active||challenge.ended)return false;
  if(!p.ownerId){pendingAutoCommand487=raw;takePatient(index);return 'pending'}
- if(p.ownerId===selfId){if(sim?.patientInstance?.uid!==p.uid)takePatient(index);return false}
+ if(p.ownerId===selfId){if(sim?.patientInstance?.uid!==p.uid){pendingAutoCommand487=raw;takePatient(index);return 'pending'}return false}
  return requestAssist(index,role==='patient'?{kind:'speech',text:window.nsChatRecipient487?.(raw)?.text||raw}:{kind:'command',text:raw});
 };
 window.csBroadcastAddressedChat487=function(role,raw){if(!shared()||!challenge.active||challenge.ended||!['patient','expert','nurse'].includes(role))return false;const utterance=String(raw||'').trim().slice(0,150);if(!utterance)return false;const to={patient:'Paciente',expert:'Dr. Vega',nurse:'Enfermera'}[role];const text=utterance;send('team_chat',{text,recipient:role,patientUid:sim?.patientInstance?.uid||null,messageId:selfId+':'+Date.now().toString(36)+':'+Math.random().toString(36).slice(2,7)});return true;};function roomCommand(q){`,
@@ -418,6 +418,8 @@ window.csBroadcastAddressedChat487=function(role,raw){if(!shared()||!challenge.a
  s=edit(s,"const oldPeerSend=csSendPeerState,oldRemoteDraw=csDrawRemote,oldRemoteAudio=csUpdateRemoteAudio;","const oldPeerSend=csSendPeerState,oldRemoteDraw=csDrawRemote,oldRemoteAudio=csUpdateRemoteAudio;\n let csLastRoomSnapshot487=Date.now(),csLastRoomJoin487=0;\n function csRequestRoomSync487(force=false){\n  if(!challenge.active||host()||!shared()||csCoop?.dc?.readyState!=='open')return false;\n  const now=Date.now();\n  if((!force&&now-csLastRoomSnapshot487<6500)||now-csLastRoomJoin487<4500)return false;\n  csLastRoomJoin487=now;send('join');return true;\n }\n window.csRequestRoomSync487=()=>csRequestRoomSync487(true);\n window.csWardPatientDigest487=()=>({room:challenge.id,revision:challenge.revision,\n  patients:challenge.patients.map(p=>({uid:p.uid,index:p.index,caseId:p.caseId,state:p.state,\n   bedId:p.instance?.bedId||null,ownerId:p.ownerId||null})),\n  records:(shiftSession?.records||[]).filter(r=>r.instance).map(r=>({uid:r.patientUid||r.instance?.uid,bedId:r.bedId,state:r.state})),\n  visible:window.csSceneMonitorsV413?.().filter(m=>m.occupied).map(m=>m.patientUid)||[]});\n window.addEventListener('focus',()=>csRequestRoomSync487(true));\n document.addEventListener('visibilitychange',()=>{if(!document.hidden)csRequestRoomSync487(true)});","mobile-rejoin-and-patient-digest");
  s=edit(s,"if(m.peerId!==challenge.hostId||m.kind!=='snapshot'||!validRoom(m.room))return;const r=m.room;","if(m.peerId!==challenge.hostId||m.kind!=='snapshot'||!validRoom(m.room))return;if(typeof csLastRoomSnapshot487!=='undefined')csLastRoomSnapshot487=Date.now();const r=m.room;","verified-snapshot-received-at");
  s=edit(s,"let disconnectedAt=null;setInterval(()=>{if(challenge.active){disconnectedAt=null;","let disconnectedAt=null;setInterval(()=>{if(challenge.active){csRequestRoomSync487();disconnectedAt=null;","stale-guest-snapshot-rejoin-throttled");
+ s=edit(s,"||!near(p)||!assistActionAllowed(p,a)","||!(near(p)||a.kind==='speech'&&window.csWardPatientInZone487?.(p))||!assistActionAllowed(p,a)","allow-authorized-speech-around-own-bed-not-new-therapy-privileges");
+ s=edit(s,"window.nsSyncVegaButton?.();renderHud()}return ok}","window.nsSyncVegaButton?.();renderHud();if(pendingAutoCommand487){const pending=pendingAutoCommand487;pendingAutoCommand487=null;setTimeout(()=>sendMessage(pending),0)}}return ok}","deliver-queued-patient-question-on-exact-owner-load");
  if(reverse)for(const {from,to,label} of undo.reverse())s=replaceOnce(s,to,from,'reverse-'+label);
  return s;
 }
