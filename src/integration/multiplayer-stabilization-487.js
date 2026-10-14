@@ -377,7 +377,7 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  // Keep the original author and event ID, including owner-authenticated NPCs.
  s=edit(s,
  "const source=npc?challenge.patients.find(p=>p.uid===m.patientUid):null;",
- "const source=npc?challenge.patients.find(p=>p.uid===m.patientUid):null;const relayAuthor=m.originPeerId&&m.peerId===challenge.hostId&&person(m.originPeerId)?m.originPeerId:m.peerId;",
+ "const source=npc?challenge.patients.find(p=>p.uid===m.patientUid):null;const relayAuthor=m.originPeerId&&m.peerId===challenge.hostId?m.originPeerId:m.peerId;",
  'global-chat-host-relay-original-author');
  s=edit(s,
  "if(npc&&source?.ownerId!==m.peerId){",
@@ -393,11 +393,11 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  'global-rebroadcast-is-authorized-by-host');
  s=edit(s,
  "if(seen.has(marker))return;seen.add(marker);if(seen.size>160)seen.delete(seen.values().next().value);",
- "if(relayAuthor===selfId||seen.has(eventId))return;seen.add(eventId);if(seen.size>160)seen.delete(seen.values().next().value);if(typeof send==='function'&&host()&&m.peerId!==selfId&&!m.originPeerId)send('team_chat',{text:m.text,npcSpeaker:m.npcSpeaker,recipient:m.recipient,patientUid:m.patientUid,originPeerId:m.peerId,originMessageId:marker,messageId:selfId+':fwd:'+marker});",
+ "if(relayAuthor===selfId||seen.has(eventId))return;seen.add(eventId);if(seen.size>160)seen.delete(seen.values().next().value);if(typeof send==='function'&&host()&&m.peerId!==selfId&&!m.originPeerId)send('team_chat',{text:m.text,npcSpeaker:m.npcSpeaker,recipient:m.recipient,patientUid:m.patientUid,originPeerId:m.peerId,originName:person(m.peerId)?.name||m.name,originMessageId:marker,messageId:selfId+':fwd:'+marker});",
  'global-guest-message-host-fanout-once');
  s=edit(s,
  "(person(m.peerId)?.name||'Compañero')+': '+m.text.replace(/[<>]/g,'')",
- "(person(relayAuthor)?.name||'Compañero')+': '+m.text.replace(/[<>]/g,'')",
+ "(m.originPeerId&&m.peerId===challenge.hostId?(m.originName||person(relayAuthor)?.name||'Compañero'):(person(relayAuthor)?.name||'Compañero'))+': '+m.text.replace(/[<>]/g,'')",
  'global-rebroadcast-renders-original-speaker');
  if(reverse)for(const {from,to,label} of undo.reverse())s=replaceOnce(s,to,from,'reverse-'+label);
  return s;
