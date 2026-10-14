@@ -47,6 +47,61 @@ try{
    assert(snapshots[0].chat.some(m=>m[0]==='patient'),'actual native patient answer');
    assert.equal(snapshots[0].administrations?.length||0,0,'social chat cannot execute medication');
   });
+  await check('coop-guest-first-bedside-question',async()=>{
+   const visitor=h.clients[1].page,owner=h.clients[0].page;
+   await visitor.evaluate(()=>{
+    const a=csV41Challenge.patients[0].instance.bed.approach;
+    const g=nearestPassable(a[0],a[1],8)||a;
+    setPlayerTarget(...worldToScreen((g[0]+.5)*TW,(g[1]+.5)*TH));
+   });
+   await visitor.waitForFunction(()=>{
+    const a=csV41Challenge.patients[0]?.instance?.bed?.approach;
+    if(!a)return false;const g=nearestPassable(a[0],a[1],8)||a;
+    return Math.hypot(player.x-(g[0]+.5)*TW,player.y-(g[1]+.5)*TH)<52;
+   },{},{timeout:30000});
+   await visitor.evaluate(()=>csSendPeerState());
+   await new Promise(r=>setTimeout(r,1200));
+   const phrase='¿Dónde te duele ahora, paciente?';
+   assert.equal(await visitor.evaluate(()=>sim.__csRoomSpectator),true,'visitor has not selected the patient');
+   await h.send(1,phrase);
+   await owner.waitForFunction(t=>sim.chats.patient.some(x=>x[0]==='doctor'&&x[1].includes(t)),phrase,{timeout:25000});
+   await owner.waitForFunction(()=>sim.chats.patient.some(x=>x[0]==='patient'),{},{timeout:25000});
+   await visitor.waitForFunction(t=>sim.globalChat.some(x=>x[0]==='doctor'&&x[1].includes(t)),phrase);
+   const a=await h.snapshot();
+   assert(a[0].chat.some(x=>x[0]==='doctor'&&x[1].includes(phrase)),'native owner transcript has guest question');
+   assert(a[1].chat.some(x=>x[0]==='doctor'&&x[1].includes(phrase)),'guest transcript does not disappear');
+   assert.equal(a[0].administrations.length,0,'bedside question does not use nursing');
+   console.log('COOP_BEDSIDE_GUEST_HEARD',JSON.stringify({players:count,guest:1,owner:0,realNativeAnamnesis:true,noNurseFirst:true}));
+  });
+ }
+ if(stage==='C'){
+  await h.startGuard('coop','HDA-001');
+  await check('party-host-speaks-before-any-nurse-when-guest-owns-patient',async()=>{
+   await h.select(1);
+   const clinicalOwner=h.clients[1].page,partyHost=h.clients[0].page;
+   await h.send(1,'Paciente, ¿qué molestias tiene?');
+   await clinicalOwner.waitForFunction(()=>sim.chats.patient.some(x=>x[0]==='patient'),{},{timeout:20000});
+   await partyHost.evaluate(()=>{
+    const a=csV41Challenge.patients[0].instance.bed.approach;
+    const g=nearestPassable(a[0],a[1],8)||a;
+    setPlayerTarget(...worldToScreen((g[0]+.5)*TW,(g[1]+.5)*TH));
+   });
+   await partyHost.waitForFunction(()=>{
+    const a=csV41Challenge.patients[0]?.instance?.bed?.approach;
+    if(!a)return false;const g=nearestPassable(a[0],a[1],8)||a;
+    return Math.hypot(player.x-(g[0]+.5)*TW,player.y-(g[1]+.5)*TH)<52;
+   },{},{timeout:30000});
+   await partyHost.evaluate(()=>csSendPeerState());
+   await new Promise(r=>setTimeout(r,1200));
+   const phrase='¿Desde cuándo comenzaron los síntomas?';
+   await h.send(0,phrase);
+   await clinicalOwner.waitForFunction(t=>sim.chats.patient.some(x=>x[0]==='doctor'&&x[1].includes(t)),phrase,{timeout:25000});
+   const snapshots=await h.snapshot();
+   assert(snapshots[1].chat.some(x=>x[0]==='doctor'&&x[1].includes(phrase)));
+   assert(snapshots[0].chat.some(x=>x[0]==='doctor'&&x[1].includes(phrase)));
+   assert.equal(snapshots[1].administrations.length,0);
+   console.log('COOP_HOST_CHAT_PRE_NURSE',JSON.stringify({players:count,owner:1,guest:0,patientHeard:true,realHTTP:true}));
+  });
  }
  if(stage==='G'||stage==='all'){
   if(stage==='G')await h.startGuard('coop','PERI-SEC-001');
