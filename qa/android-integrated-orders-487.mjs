@@ -102,6 +102,21 @@ if(!process.argv.includes('--checkpoint-b'))for(const context of [false,true]){
   rows.push({q:'ambos antibióticos',context,pass:true});
  }catch(e){errors.push('ambos/'+context+': '+e.message);rows.push({q:'ambos antibióticos',context,pass:false,error:e.message});}
 }
+// Fail-closed regression: a corrupted pending IV entry must never turn the
+// hemogram noun into an albumin infusion when nursing finishes cannulation.
+if(!process.argv.includes('--checkpoint-b')){
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001'),p=r.ctx.sim;
+ p.csPhase4Pending487=[{uid:p.patientInstance.uid,id:'albumin',text:'hemograma'}];
+ r.ctx.sendMessage('Enfermera vías');
+ advance(r,40,{dt:1/6});
+ assert(p.venousAccessCount>=1,'real IV completion reached the deferred-order boundary');
+ assert(!p.administrationLog.some(x=>x.id==='albumin'),
+  'mismatched hemogram pending entry cannot administer albumin');
+ assert(p.csNurse487RejectedOrders?.some(x=>x.itemId==='albumin'&&x.text==='hemograma'),
+  'block is auditable with original mismatched order text');
+ rows.push({q:'corrupt deferred albumin whose source says hemograma',pass:true,
+  rejected:p.csNurse487RejectedOrders});
+}
 fs.mkdirSync('qa/android-fix-results',{recursive:true});
 fs.writeFileSync('qa/android-fix-results/orders.json',JSON.stringify({
  scope:'generated native VM with late V412 nurse and send wrappers; local actor/DOM/path fixtures',
