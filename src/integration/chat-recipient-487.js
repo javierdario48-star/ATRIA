@@ -237,8 +237,25 @@ export function applyChatRecipient487(html,{reverse=false}={}){
     return result;
    };
   }
+  // Room-level history survives switching patients or opening another box.
+  // A patient's clinical anamnesis remains separate and authoritative.
+  function sharedWardHistory487(){
+   if(!inWard487())return null;
+   const room=window.csV41Challenge;
+   if(room._wardHistoryRoomId487!==room.id){
+    room._wardHistoryRoomId487=room.id;room._wardTranscript487=[];
+   }
+   if(sim.globalChat!==room._wardTranscript487)sim.globalChat=room._wardTranscript487;
+   return room._wardTranscript487;
+  }
+  const oldActiveChatArray487=typeof activeChatArray==='function'?activeChatArray:()=>sim?.globalChat||[];
+  activeChatArray=function(){return sharedWardHistory487()||oldActiveChatArray487.apply(this,arguments)};
+  window.csWardChatState487=function(){return {active:inWard487(),
+   roomId:window.csV41Challenge?.id||null,history:sharedWardHistory487()?.length||0,
+   bubbles:wardBubbles487.size,audibleRadius:audibleRadius487,patientRadius:patientRadius487}};
   const globalChatOld487=addGlobalChat;
   addGlobalChat=function(role,text,options={}){
+   sharedWardHistory487();
    if(inWard487()&&role==='doctor'&&!options.nsRemoteNPC487){
     const r=window.csV41Challenge,n=String((typeof csProfile!=='undefined'&&csProfile?.name)||'Médico'),raw=String(text||'');
     const alreadyNamed=(r.players||[]).some(p=>p?.name&&raw.startsWith(p.name+': '));
