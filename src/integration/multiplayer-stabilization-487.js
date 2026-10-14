@@ -218,7 +218,7 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  'one-unambiguous-clinical-first-contact');
  s=edit(s,
  "if(p?.ownerId===selfId){const idx=pendingClaim;pendingClaim=null;loadPatient(idx)}else if(p?.ownerId){pendingClaim=null;toast(",
- "if(p?.ownerId===selfId){const idx=pendingClaim;pendingClaim=null;loadPatient(idx);if(pendingAutoCommand487&&canAct()){const q=pendingAutoCommand487;pendingAutoCommand487=null;sendMessage(q)}}else if(p?.ownerId){pendingClaim=null;pendingAutoCommand487=null;toast(",
+ "if(p?.ownerId===selfId){const idx=pendingClaim;pendingClaim=null;loadPatient(idx);if(pendingAutoCommand487&&canAct()){const q=pendingAutoCommand487;pendingAutoCommand487=null;sendMessage(q)}}else if(p?.ownerId){pendingClaim=null;const retrySpeech487=pendingAutoCommand487;pendingAutoCommand487=null;if(retrySpeech487&&typeof setTimeout==='function')setTimeout(()=>sendMessage(retrySpeech487),0);toast(",
  'guest-claim-confirmed-before-running-queued-nurse-order');
 
  s=edit(s,
