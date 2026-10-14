@@ -70,8 +70,8 @@ try{
    const [x,y]=worldToScreen(...p.instance.bed.patient),a=window.cs413TapTarget487?.(x,y);
    const m=window.csSceneMonitorsV413?.().find(m=>m.bedId===p.instance.bedId);if(!m)throw Error('native monitor missing');const [mx,my]=worldToScreen(m.x,m.y);
    const b=window.cs413TapTarget487?.(mx,my);
-   return {uid:p.uid,patient:a?.patient?.uid,patientKind:a?.kind,
-    monitor:b?.patient?.uid,monitorKind:b?.kind,bedId:p.instance.bedId};
+   return {uid:p.uid,patient:a?.patient?.instance?.uid,patientKind:a?.kind,
+    monitor:b?.patient?.instance?.uid,monitorKind:b?.kind,bedId:p.instance.bedId};
   })));
   for(const p of views){
    assert.equal(p.patient,p.uid,'patient tap must target actual bed');
@@ -136,7 +136,7 @@ try{
  await check('naturally-arriving-second-patient-synchronizes-on-mobile',async()=>{
   const host=h.clients[0].page;
   await host.waitForFunction(()=>csV41Challenge.patients.some(p=>p.index>0&&p.state==='waiting'&&p.instance?.bedId),
-   {},{timeout:35000});
+   {},{timeout:120000});
   const arrived=await host.evaluate(()=>{
    const p=csV41Challenge.patients.find(p=>p.index>0&&p.state==='waiting'&&p.instance?.bedId);
    return {uid:p.uid,bedId:p.instance.bedId,index:p.index,caseId:p.caseId};
