@@ -48,7 +48,6 @@ try{
    assert.equal(snapshots[0].administrations?.length||0,0,'social chat cannot execute medication');
   });
   await check('coop-host-keyboard-raw-question',async()=>{
-   await h.select(0);
    const question='¿Desde cuándo viene sintiendo esta molestia?';
    await h.clients[0].page.evaluate(()=>{
     const native=sendMessage;
@@ -56,9 +55,14 @@ try{
     sendMessage=function(q){window.__qaOutboundSpeech487.push(q);return native.apply(this,arguments)};
    });
    await h.send(0,question);
+   const captured=await h.clients[0].page.evaluate(()=>({sent:window.__qaOutboundSpeech487,
+    input:document.getElementById('dieInput')?.value,
+    owner:csV41Challenge.patients[0]?.ownerId,
+    self:csV41Challenge.selfId,
+    answered:sim.chats.patient.slice(-6)}));
+   console.log('KEYBOARD_FIRST_SPEECH_AUDIT',JSON.stringify(captured));
+   assert(captured.sent.includes(question),'Enter must call the native message sender with the exact typed text');
    await h.clients[0].page.waitForFunction(q=>sim.chats.patient.some(x=>x[0]==='doctor'&&x[1].includes(q)),question,{timeout:15000});
-   const sent=await h.clients[0].page.evaluate(()=>window.__qaOutboundSpeech487);
-   assert(sent.includes(question),'pressing Enter preserves the actual doctor utterance');
   });
   await check('coop-guest-first-bedside-question',async()=>{
    const visitor=h.clients[1].page,owner=h.clients[0].page;
