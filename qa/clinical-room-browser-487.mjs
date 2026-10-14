@@ -29,6 +29,26 @@ try{
    assert(h.requests.filter(r=>r.path==='/api/lobby/chat'&&r.body.text==='Aceptado con respuesta perdida').length>=2,'lost response must be retried with the same event identity');
   });
   await h.startGuard('coop');
+  await check('one-global-ward-transcript',async()=>{
+   // Unassigned visitors must use THE SAME shared log as an assigned doctor;
+   // no separate /equipo mode and no role='system' hiding ordinary speech.
+   const phrase='Estoy entrando a la guardia';
+   await h.send(1,phrase);
+   await Promise.all(h.clients.map(c=>c.page.waitForFunction(t=>
+    sim.globalChat.some(m=>m[0]==='doctor'&&m[1].includes(t)),phrase,{timeout:20000})));
+   const snapshots=await h.snapshot();
+   for(const snap of snapshots){
+    assert.equal(snap.chat.filter(m=>m[0]==='doctor'&&m[1].includes(phrase)).length,1,
+      'one global doctor utterance per peer, no duplicate');
+    assert.equal(snap.chat.filter(m=>m[0]==='system'&&m[1].includes(phrase)).length,0,
+      'a doctor utterance must not be hidden as system feedback');
+   }
+   await Promise.all(h.clients.map(async c=>{
+    await c.page.waitForFunction(t=>document.querySelector('#chatDock .chatRecent')?.textContent?.includes(t),phrase,
+      {timeout:12000});
+   }));
+   console.log('ONE_GLOBAL_WARD_CHAT',JSON.stringify({players:count,visibleToEveryone:true,oneTranscript:true}));
+  });
   await check('team-retry',async()=>{
    h.faults.push({remaining:1,match:a=>a.body.message?.kind==='team_chat'&&a.body.message.text==='Equipo con respuesta perdida'});
    await h.send(0,'/equipo Equipo con respuesta perdida');
