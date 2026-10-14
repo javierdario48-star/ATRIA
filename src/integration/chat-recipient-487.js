@@ -247,7 +247,7 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    }
    return globalChatOld487.call(this,role,text,options);
   };
-  const globalLabelOld487=chatLineLabel;
+  const globalLabelOld487=typeof chatLineLabel==='function'?chatLineLabel:()=>'';
   chatLineLabel=function(role){return inWard487()&&role==='doctor'?'':globalLabelOld487.call(this,role)};
   function publishSpeech487(raw,role){
    if(!window.csBroadcastAddressedChat487?.(role,raw))return false;
