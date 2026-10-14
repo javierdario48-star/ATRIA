@@ -144,19 +144,6 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    const draft=prior?.value||'';
    const start=prior?.selectionStart,end=prior?.selectionEnd;
    if(prior&&prior===composingInput){decorate();return;}
-   // This console is also a live editor. The old refresh replaces the
-   // <input> node on every incoming NPC/peer message. Enter can then read
-   // an older freshly-recreated node rather than the doctor's last draft.
-   // While focused, retain the SAME input, handlers, caret and IME state;
-   // repaint only the visible transcript. Unfocused refreshes stay native.
-   const dock=document.getElementById('chatDock'),recent=dock?.querySelector('.chatRecent');
-   if(focused&&recent&&typeof recentChatLines==='function'&&sim&&
-      !document.body?.classList?.contains('nsLobbyMode')){
-    const atBottom=recent.scrollHeight-recent.scrollTop-recent.clientHeight<32;
-    recent.innerHTML=recentChatLines();
-    if(atBottom)recent.scrollTop=recent.scrollHeight;
-    decorate();return;
-   }
    const result=oldRefresh.apply(this,arguments);
    const current=compose();
    if(current&&current!==prior)current.value=draft;
