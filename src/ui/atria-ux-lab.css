@@ -169,6 +169,17 @@ html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) .chatRecent,
 html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) #chatHistoryMini {
   display:none!important;
 }
+/* Native 4.8.7 viewport owner may keep a tall transparent dock on Android.
+   Do not override its inline IME geometry: make only the composer hit-testable. */
+html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) {
+  pointer-events:none!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) .chatGlass {
+  pointer-events:auto!important;
+}
 html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) .chatGlass {
   position:absolute!important;inset:0!important;
   width:100%!important;
