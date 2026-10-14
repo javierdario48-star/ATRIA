@@ -1,5 +1,7 @@
 import assert from'node:assert/strict';import vm from'node:vm';import fs from'node:fs';import{apply487}from'./apply-487.js';
 const src=fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'),out=apply487(src);
+assert.equal(out.split("if(m.type==='cs_room_v411'&&dc.peerGameId&&m.peerId!==dc.peerGameId&&(!Array.isArray(dc.peerGameIds)||!dc.peerGameIds.includes(m.peerId)))return;").length,2,'exactly one verified 2-4-participant room filter');
+
 assert.match(out,/function csStudyCatalog\(\)/,'artifact must build one universal catalog from all case study definitions');
 assert.match(out,/function csNormalStudyResult\(st\)/,'artifact must provide a normal fallback for every catalog entry');
 assert.match(src,/task7\.js\?v=483/,'golden master must retain legacy task7 fallback loader');
