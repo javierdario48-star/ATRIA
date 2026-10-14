@@ -1,0 +1,336 @@
+/*
+ * ATRIA 4.8.7 UX lab — independent styling of the existing real game.
+ * Two opt-in variants: ?atria-ui=immersive | ?atria-ui=tactical.
+ * No game state, networking, clinical logic or input handlers are modified here.
+ * Each selector is scoped; without a variant parameter the 4.8.7 UI is untouched.
+ */
+html[data-atria-ui] {
+  --atria-ux-green:#0d635c;
+  --atria-ux-border:rgba(176,221,223,.22);
+  --atria-ux-text:#eef8f8;
+  --atria-ux-muted:#afcbd0;
+  --atria-ux-radius:12px;
+  color-scheme:dark;
+}
+html[data-atria-ui] button:focus-visible,
+html[data-atria-ui] input:focus-visible {
+  outline:2px solid #85dbd1!important;
+  outline-offset:2px!important;
+}
+html[data-atria-ui] .topbar {
+  background:linear-gradient(180deg,rgba(5,24,31,.98),rgba(6,27,34,.94))!important;
+  border-bottom:1px solid var(--atria-ux-border)!important;
+  box-shadow:0 6px 20px rgba(0,0,0,.15)!important;
+}
+html[data-atria-ui] #nsPlayerHeader {gap:7px!important;}
+html[data-atria-ui] #nsPlayerProfile,
+html[data-atria-ui] #nsWardBtn,
+html[data-atria-ui] #nsMenuBtn,
+html[data-atria-ui] .nsHeaderBtn {
+  border:1px solid var(--atria-ux-border)!important;
+  background:rgba(10,42,49,.95)!important;
+  color:var(--atria-ux-text)!important;
+  box-shadow:none!important;
+}
+html[data-atria-ui] #nsWardBtn,
+html[data-atria-ui] #nsMenuBtn {
+  min-height:44px!important;
+}
+html[data-atria-ui] #nsPlayerName {font-size:15px!important;}
+html[data-atria-ui] #nsPlayerLevel,
+html[data-atria-ui] #nsXPText {font-size:11px!important;letter-spacing:0!important;}
+html[data-atria-ui] #nsXPTrack {min-height:7px!important;}
+
+/* Shared mobile chat ergonomics. Scope to ward conversation; lobby layout stays intact. */
+html[data-atria-ui] body:not(.keyboardOpen) #chatDock:not(.nsLobbyChat):not(.historyExpanded) {
+  height:58px!important;
+  overflow:visible!important;
+}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatGlass {
+  height:56px!important;
+  min-height:56px!important;
+  max-height:56px!important;
+  border:1px solid var(--atria-ux-border)!important;
+  border-radius:var(--atria-ux-radius)!important;
+  padding:5px 6px!important;
+  box-shadow:0 8px 20px rgba(0,0,0,.25)!important;
+  background:rgba(4,23,30,.94)!important;
+  backdrop-filter:blur(10px)!important;
+  -webkit-backdrop-filter:blur(10px)!important;
+}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatInputRow input {
+  font:500 16px/1.35 Inter,system-ui,Arial,sans-serif!important;
+  color:#f2faf9!important;
+  min-height:42px!important;
+  height:42px!important;
+  padding:0 10px!important;
+  background:rgba(2,13,21,.54)!important;
+  border:1px solid rgba(172,214,217,.18)!important;
+  border-radius:9px!important;
+  outline:none;
+  text-overflow:ellipsis;
+}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatInputRow input::placeholder {
+  color:#abc1c7!important;opacity:1!important;
+}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatSend,
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatLogBtn,
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .voiceBtn,
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .radioBtn {
+  min-width:40px!important;min-height:42px!important;
+  width:40px!important;height:42px!important;
+  font-size:16px!important;border-radius:9px!important;
+  border:1px solid rgba(147,202,204,.27)!important;
+  color:#effafa!important;
+  background:rgba(16,63,68,.94)!important;
+  flex-shrink:0!important;
+}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatSend {
+  background:#0d635c!important;
+  border-color:#328c83!important;
+}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatTarget {
+  min-height:42px!important;height:42px!important;
+  max-width:88px!important;
+  font-size:11px!important;
+  border-radius:9px!important;
+  border:1px solid rgba(147,202,204,.22)!important;
+  color:#d8edec!important;
+}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatRecentLine,
+html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) .chatRecentLine {
+  font:500 13px/1.45 Inter,system-ui,Arial,sans-serif!important;
+  letter-spacing:0!important;
+  color:#e1f0ef!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatRecentLine b {
+  font-weight:750!important;
+  color:#9de2dc!important;
+}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatRecentLine.patient b {color:#ffe0a4!important;}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatRecentLine.nurse b {color:#a3ecbf!important;}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatRecentLine.expert b {color:#b8c4ff!important;}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatRecentLine.doctor b {color:#acdfff!important;}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatRecentEmpty {font-size:12px!important;color:#a4bac3!important;}
+html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatRecent {
+  left:0!important;right:0!important;
+  padding:8px 11px!important;
+  gap:3px!important;
+  min-height:0!important;
+  scrollbar-width:thin!important;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain!important;
+}
+html[data-atria-ui] body:not(.keyboardOpen) #chatDock:not(.nsLobbyChat):not(.historyExpanded) .chatRecent {
+  position:absolute!important;
+  top:auto!important;
+  bottom:calc(100% + 5px)!important;
+  height:auto!important;
+  max-height:100px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-end!important;
+  overflow-y:hidden!important;
+  pointer-events:none!important;
+}
+html[data-atria-ui] body:not(.keyboardOpen) #chatDock.historyExpanded:not(.nsLobbyChat) {
+  height:min(44dvh,340px)!important;
+  max-height:340px!important;
+  overflow:visible!important;
+}
+html[data-atria-ui] body:not(.keyboardOpen) #chatDock.historyExpanded:not(.nsLobbyChat) .chatRecent {
+  position:absolute!important;
+  top:0!important;bottom:66px!important;
+  height:auto!important;max-height:none!important;
+  display:block!important;overflow-y:auto!important;
+  pointer-events:auto!important;
+  padding:12px!important;
+}
+html[data-atria-ui] body:not(.keyboardOpen) #chatDock.historyExpanded:not(.nsLobbyChat) .chatGlass {
+  position:absolute!important;bottom:0!important;left:0!important;right:0!important;
+}
+
+/* When Gboard is open, the composer is the only permanent chat surface.
+   The existing keyboard geometry/position owner is kept intact. */
+html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat),
+html[data-atria-ui] body.keyboardOpen #chatDock.historyExpanded:not(.nsLobbyChat) {
+  height:58px!important;
+  min-height:58px!important;
+  max-height:58px!important;
+  overflow:visible!important;
+}
+html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) .chatRecent,
+html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) #chatHistoryMini {
+  display:none!important;
+}
+html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) .chatGlass {
+  position:absolute!important;inset:0!important;
+  width:100%!important;
+  height:56px!important;
+  min-height:56px!important;
+  background:rgba(4,23,30,.98)!important;
+}
+html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) .chatInputRow input {
+  height:42px!important;min-height:42px!important;font-size:16px!important;
+}
+html[data-atria-ui] body.keyboardOpen #chatDock:not(.nsLobbyChat) .chatSend {
+  width:44px!important;height:42px!important;
+}
+html[data-atria-ui] #commandPalette.show,
+html[data-atria-ui] #chatHistoryMini {
+  background:rgba(5,24,32,.98)!important;
+  border:1px solid var(--atria-ux-border)!important;
+  border-radius:11px!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.38)!important;
+}
+html[data-atria-ui] #commandPalette .cmdSuggest {
+  min-height:44px!important;
+  font-size:13px!important;
+  line-height:1.35!important;
+}
+html[data-atria-ui] .csModal .csPanel,
+html[data-atria-ui] #nsGameMenu .csPanel {
+  color:#ecf7f5!important;
+  background:linear-gradient(160deg,#0d2930,#071a23)!important;
+  border:1px solid rgba(151,213,214,.32)!important;
+  border-radius:16px!important;
+  box-shadow:0 18px 54px rgba(0,0,0,.45)!important;
+}
+html[data-atria-ui] .csPanelHead b {font-size:17px!important;line-height:1.3!important;}
+html[data-atria-ui] .csPanelHead small,
+html[data-atria-ui] .csRuleBox,
+html[data-atria-ui] .csChallengeReception {
+  font-size:12px!important;line-height:1.5!important;
+}
+html[data-atria-ui] #nsGameMenu .nsMenuGrid button {
+  font-size:14px!important;min-height:48px!important;border-radius:10px!important;
+}
+html[data-atria-ui] .csClose {min-width:44px!important;min-height:44px!important;}
+html[data-atria-ui] .csChallengeHud {
+  font-size:11px!important;
+  line-height:1.3!important;
+  flex-wrap:wrap!important;
+  max-width:calc(100vw - 22px)!important;
+  white-space:normal!important;
+  padding:6px 10px!important;
+  border:1px solid rgba(155,216,214,.34)!important;
+  border-radius:10px!important;
+}
+html[data-atria-ui] .csChallengeHud b {font-size:11px!important;}
+
+/* Variant A: world-first, translucent HUD, floating transcript. */
+html[data-atria-ui="immersive"] {
+  --atria-ux-border:rgba(187,222,220,.17);
+  --atria-ux-radius:15px;
+}
+html[data-atria-ui="immersive"] #nsPlayerHeader {
+  background:linear-gradient(180deg,rgba(5,25,31,.96),rgba(5,25,31,.72))!important;
+}
+html[data-atria-ui="immersive"] #nsWardBtn,
+html[data-atria-ui="immersive"] #nsMenuBtn {
+  background:rgba(17,67,72,.8)!important;
+  border-radius:12px!important;
+}
+html[data-atria-ui="immersive"] #chatDock:not(.nsLobbyChat) .chatRecent {
+  background:linear-gradient(0deg,rgba(3,20,27,.82),rgba(3,20,27,.56))!important;
+  border:0!important;border-radius:13px!important;
+  box-shadow:none!important;
+  backdrop-filter:blur(5px)!important;
+}
+html[data-atria-ui="immersive"] #chatDock:not(.nsLobbyChat) .chatRecentLine {
+  margin:3px 0!important;padding:3px 4px!important;
+  border-left:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+html[data-atria-ui="immersive"] #chatDock:not(.nsLobbyChat) .chatGlass {
+  background:rgba(5,27,33,.90)!important;
+  box-shadow:0 8px 28px rgba(0,0,0,.24)!important;
+}
+html[data-atria-ui="immersive"] .csChallengeHud {
+  background:rgba(3,25,30,.82)!important;
+  backdrop-filter:blur(12px)!important;
+}
+
+/* Variant B: tactical RPG, bounded console with clearer actor separation. */
+html[data-atria-ui="tactical"] {
+  --atria-ux-border:rgba(111,178,181,.45);
+  --atria-ux-radius:8px;
+}
+html[data-atria-ui="tactical"] .topbar {
+  background:linear-gradient(180deg,rgba(4,23,31,.99),rgba(7,32,42,.98))!important;
+  border-bottom:2px solid rgba(28,120,111,.85)!important;
+}
+html[data-atria-ui="tactical"] #nsWardBtn,
+html[data-atria-ui="tactical"] #nsMenuBtn {
+  border-radius:8px!important;
+  background:rgba(9,42,53,.97)!important;
+}
+html[data-atria-ui="tactical"] #chatDock:not(.nsLobbyChat) .chatGlass {
+  background:rgba(4,19,27,.97)!important;
+  border-top:2px solid #28897f!important;
+}
+html[data-atria-ui="tactical"] body:not(.keyboardOpen) #chatDock:not(.nsLobbyChat):not(.historyExpanded) .chatRecent {
+  max-height:148px!important;
+  overflow-y:auto!important;
+  pointer-events:auto!important;
+  justify-content:flex-end!important;
+}
+html[data-atria-ui="tactical"] #chatDock:not(.nsLobbyChat) .chatRecent {
+  background:rgba(4,21,29,.94)!important;
+  border:1px solid rgba(77,157,157,.55)!important;
+  border-left:3px solid #24887d!important;
+  border-radius:9px!important;
+  box-shadow:0 10px 30px rgba(0,0,0,.28)!important;
+}
+html[data-atria-ui="tactical"] #chatDock:not(.nsLobbyChat) .chatRecentLine {
+  margin:3px 0!important;
+  padding:5px 7px!important;
+  border:0!important;
+  border-bottom:1px solid rgba(150,201,206,.12)!important;
+  background:transparent!important;
+  border-radius:0!important;
+}
+html[data-atria-ui="tactical"] #chatDock:not(.nsLobbyChat) .chatRecentLine.nurse {
+  border-left:2px solid #82dbaa!important;
+}
+html[data-atria-ui="tactical"] #chatDock:not(.nsLobbyChat) .chatRecentLine.expert {
+  border-left:2px solid #aeaaff!important;
+}
+html[data-atria-ui="tactical"] #chatDock:not(.nsLobbyChat) .chatRecentLine.patient {
+  border-left:2px solid #e5b571!important;
+}
+html[data-atria-ui="tactical"] .csChallengeHud {
+  background:rgba(4,24,33,.96)!important;
+  border-radius:7px!important;
+  box-shadow:0 6px 22px rgba(0,0,0,.35)!important;
+}
+html[data-atria-ui="tactical"] .csModal .csPanel {
+  border-radius:9px!important;
+}
+/* Mobile-width guarantees avoid clipping side actions and excessive vertical HUD. */
+@media (max-width:430px) {
+  html[data-atria-ui] #nsPlayerHeader {gap:5px!important;}
+  html[data-atria-ui] #nsPlayerName {font-size:14px!important;}
+  html[data-atria-ui] #nsXPText {font-size:10px!important;}
+  html[data-atria-ui] #nsWardBtn {font-size:12px!important;padding-inline:9px!important;}
+  html[data-atria-ui] #nsMenuBtn {min-width:44px!important;}
+  html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatGlass {padding:5px!important;}
+  html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatTarget {max-width:72px!important;font-size:10px!important;}
+}
+@media (max-width:360px) {
+  html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatTarget {max-width:52px!important;}
+  html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatSend,
+  html[data-atria-ui] #chatDock:not(.nsLobbyChat) .chatLogBtn {width:38px!important;min-width:38px!important;}
+}
+@media (prefers-reduced-motion:reduce) {
+  html[data-atria-ui] .csPanel,
+  html[data-atria-ui] #chatDock,
+  html[data-atria-ui] #chatDock * {animation-duration:.01ms!important;transition-duration:.01ms!important;}
+}
