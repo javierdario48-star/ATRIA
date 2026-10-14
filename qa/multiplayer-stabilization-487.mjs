@@ -140,7 +140,7 @@ const inputCtx={challenge:{mode:'competitive',active:true,ended:false,assistInde
  claimed:false,near:()=>true,pendingAutoCommand487:null,window:{nsIsClinicalQuestion:()=>false},
  takePatient:index=>{autoCalls.push(['claim',index]);inputCtx.claimed=true;return true;},
  oldSend:text=>{autoCalls.push(['native',text]);return true;},send:()=>true,addGlobalChat:()=>{},
- refreshChatDock:()=>{},player:{},selfId:'GUEST',performance:{now:()=>0}};
+ refreshChatDock:()=>{},name:()=> 'Invitado',player:{},selfId:'GUEST',performance:{now:()=>0}};
 vm.createContext(inputCtx);
 new vm.Script(html.slice(inputAt,inputEnd)).runInContext(inputCtx);
 inputCtx.sendMessage('enfermera Ringer');
