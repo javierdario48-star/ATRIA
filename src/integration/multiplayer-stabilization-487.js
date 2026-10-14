@@ -29,6 +29,15 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "const raw=String(text||'').trim();if(sim?.__csRemoteMirror487||sim?.__csRoomSpectator||!raw||raw.startsWith('/')||!mayTreat()||inferRecipient(raw)!=='nurse')return base.send.apply(this,arguments);",
  'visiting-mirror-skips-late-v412-local-nurse-interceptor');
 
+ // The native log already removes adjacent duplicate lines. A
+ // multiplayer guest utterance can arrive from the room packet AND its native
+ // authorized patient relay with a nurse/receipt line between them. Apply the
+ // same 450ms duplicate window across the recent native transcript, for
+ // shared DOCTOR lines only; preserve Solitario and deliberate later speech.
+ s=edit(s,
+ "if(last&&last[0]===role&&last[1]===t&&now-Number(last[2]||0)<dedupeMs)return;",
+ "if(window.csV41Challenge?.active&&role==='doctor'?(sim.globalChat||[]).slice(-12).some(v=>v[0]===role&&v[1]===t&&now-Number(v[2]||0)<dedupeMs):last&&last[0]===role&&last[1]===t&&now-Number(last[2]||0)<dedupeMs)return;",
+ 'shared-ward-clinical-echo-dedupe');
  // In a shared guard, another doctor's words must not be labeled "Tú".
  s=edit(s,
  "function chatLineLabel(r){return r==='doctor'?'Tú':",
