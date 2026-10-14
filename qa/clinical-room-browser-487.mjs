@@ -63,7 +63,7 @@ try{
    await new Promise(r=>setTimeout(r,1200));
    const phrase='¿Dónde te duele ahora, paciente?';
    assert.equal(await visitor.evaluate(()=>sim.__csRoomSpectator),true,'visitor has not selected the patient');
-   await h.send(1,phrase);
+   await h.send(1,phrase,{tap:true});
    await owner.waitForFunction(t=>sim.chats.patient.some(x=>x[0]==='doctor'&&x[1].includes(t)),phrase,{timeout:25000});
    await owner.waitForFunction(()=>sim.chats.patient.some(x=>x[0]==='patient'),{},{timeout:25000});
    await visitor.waitForFunction(t=>sim.globalChat.some(x=>x[0]==='doctor'&&x[1].includes(t)),phrase);
@@ -79,7 +79,7 @@ try{
   await check('party-host-speaks-before-any-nurse-when-guest-owns-patient',async()=>{
    await h.select(1);
    const clinicalOwner=h.clients[1].page,partyHost=h.clients[0].page;
-   await h.send(1,'Paciente, ¿qué molestias tiene?');
+   await h.send(1,'Paciente, ¿qué molestias tiene?',{tap:true});
    await clinicalOwner.waitForFunction(()=>sim.chats.patient.some(x=>x[0]==='patient'),{},{timeout:20000});
    await partyHost.evaluate(()=>{
     const a=csV41Challenge.patients[0].instance.bed.approach;
@@ -94,7 +94,7 @@ try{
    await partyHost.evaluate(()=>csSendPeerState());
    await new Promise(r=>setTimeout(r,1200));
    const phrase='¿Desde cuándo comenzaron los síntomas?';
-   await h.send(0,phrase);
+   await h.send(0,phrase,{tap:true});
    await clinicalOwner.waitForFunction(t=>sim.chats.patient.some(x=>x[0]==='doctor'&&x[1].includes(t)),phrase,{timeout:25000});
    const snapshots=await h.snapshot();
    assert(snapshots[1].chat.some(x=>x[0]==='doctor'&&x[1].includes(phrase)));
