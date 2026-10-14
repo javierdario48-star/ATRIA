@@ -371,6 +371,34 @@ export function applyMultiplayerStabilization487(html,{reverse=false}={}){
  "const oldNatural=nurseNatural,oldInfer=inferRecipient,oldUpdate=updateSimulation,legacyParse=window.csNursingParse487;",
  "const oldNatural=nurseNatural,oldInfer=inferRecipient,oldUpdate=updateSimulation,legacyParse=window.csNursingParse487;\n const mayTreat=(...args)=>window.csNativeNurseMayTreat487?.(...args)===true;",
  'receipt-script-uses-same-native-permission-capability');
+
+ // The HTTP/WebRTC room is host-spoked: a guest's public message reaches
+ // the host first. Fan it out on the SAME transport; never create a new chat.
+ // Keep the original author and event ID, including owner-authenticated NPCs.
+ s=edit(s,
+ "const source=npc?challenge.patients.find(p=>p.uid===m.patientUid):null;",
+ "const source=npc?challenge.patients.find(p=>p.uid===m.patientUid):null;const relayAuthor=m.originPeerId&&m.peerId===challenge.hostId&&person(m.originPeerId)?m.originPeerId:m.peerId;",
+ 'global-chat-host-relay-original-author');
+ s=edit(s,
+ "if(npc&&source?.ownerId!==m.peerId){",
+ "if(npc&&source?.ownerId!==relayAuthor){",
+ 'global-npc-relay-preserves-owner-proof');
+ s=edit(s,
+ "if(p?.ownerId===m.peerId){pending.delete(key);receive(m);return}",
+ "if(p?.ownerId===relayAuthor){pending.delete(key);receive(m);return}",
+ 'global-npc-retry-preserves-origin');
+ s=edit(s,
+ "if(!marker||!marker.startsWith(m.peerId+':'))return;",
+ "if(!marker||!marker.startsWith(m.peerId+':')||m.originPeerId&&(m.peerId!==challenge.hostId||!m.originMessageId||!m.originMessageId.startsWith(m.originPeerId+':')))return;const eventId=m.originMessageId||marker;",
+ 'global-rebroadcast-is-authorized-by-host');
+ s=edit(s,
+ "if(seen.has(marker))return;seen.add(marker);if(seen.size>160)seen.delete(seen.values().next().value);",
+ "if(relayAuthor===selfId||seen.has(eventId))return;seen.add(eventId);if(seen.size>160)seen.delete(seen.values().next().value);if(host()&&m.peerId!==selfId&&!m.originPeerId)send('team_chat',{text:m.text,npcSpeaker:m.npcSpeaker,recipient:m.recipient,patientUid:m.patientUid,originPeerId:m.peerId,originMessageId:marker,messageId:selfId+':fwd:'+marker});",
+ 'global-guest-message-host-fanout-once');
+ s=edit(s,
+ "(person(m.peerId)?.name||'Compañero')+': '+m.text.replace(/[<>]/g,'')",
+ "(person(relayAuthor)?.name||'Compañero')+': '+m.text.replace(/[<>]/g,'')",
+ 'global-rebroadcast-renders-original-speaker');
  if(reverse)for(const {from,to,label} of undo.reverse())s=replaceOnce(s,to,from,'reverse-'+label);
  return s;
 }
