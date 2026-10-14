@@ -156,7 +156,7 @@ try{
  const transports=await Promise.all(h.clients.map(c=>c.page.evaluate(()=>({
   self:csV41Challenge.selfId,hostId:csV41Challenge.hostId,
   role:csCoop.role,ready:csCoop.dc?.readyState,
-  peers:csCoop.dc?.peerGameIds||[],known:csV41Challenge.players.map(p=>p.id)
+  peers:csCoop.dc?.peerGameIds||[],known:csV41Challenge.players.map(p=>p.id),socialRoom:window.nsSocial?.room?.()?.members?.map(p=>({userId:p.userId,peerId:p.peerId,name:p.name}))
  }))));
  await fs.writeFile(output+'/report.json',JSON.stringify({
   players:count,checks,errors:h.errors,snapshots:await h.snapshot(),wire,transports,reads:h.requests.filter(x=>x.method==='GET'&&x.heard?.some(m=>/BOT_DOCTOR_|BOT_RACE_|BOT_AFTER_MOVEMENT_/.test(m.text||''))).slice(-200).map(x=>({after:x.after,cursor:x.cursor,heard:x.heard,roomMembers:x.roomMembers}))
