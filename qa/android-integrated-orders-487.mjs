@@ -121,11 +121,13 @@ if(!process.argv.includes('--checkpoint-b')){
 // another command for the SAME drug arrives before IV access is completed.
 if(!process.argv.includes('--checkpoint-b')){
  const r=createAndroidIntegratedRuntime487('PERI-SEC-001'),p=r.ctx.sim;
- const first='Enfermera ceftriaxona 1 g',later='Enfermera ceftriaxona 2 g';
- r.ctx.sendMessage(first);
+ const first='Enfermera ceftriaxona y metronidazol',later='Enfermera ceftriaxona';
+ // Use the existing verified direct nurse boundary: a composite native IV
+ // order demonstrably queues both antibiotics before cannulation.
+ r.ctx.nurseNatural(first);
  const original=p.csPhase4Pending487?.find(x=>x.id==='ceftriaxone');
- assert(original,'first real order remains pending before access');
- r.ctx.sendMessage(later);
+ assert(original,'first real antibiotic order remains pending before access');
+ r.ctx.nurseNatural(later);
  assert.equal(p.csPhase4Pending487.filter(x=>x.id==='ceftriaxone').length,1,
   'second message must not replace or duplicate the pending antibiotic');
  assert.equal(p.csPhase4Pending487.find(x=>x.id==='ceftriaxone'),original,
