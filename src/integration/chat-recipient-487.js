@@ -188,7 +188,7 @@ export function applyChatRecipient487(html,{reverse=false}={}){
     refreshChatDock();return false;
    }
    player.bubble=raw;player.bubbleUntil=performance.now()+2200;
-   addGlobalChat('doctor','A '+names[role]+': '+utterance);
+   addGlobalChat('doctor',raw);
    if(role==='expert')mentorUserMessage(utterance);
    else if(role==='nurse')nurseNatural(raw);
    else deliverPatientSpeech(utterance,true);
@@ -276,6 +276,10 @@ export function applyChatRecipient487(html,{reverse=false}={}){
   const globalChatOld487=addGlobalChat;
   addGlobalChat=function(role,text,options={}){
    sharedWardHistory487();
+   if(inWard487()&&role==='doctor'&&options.nsRemoteNPC487){
+    const recent=sim.globalChat||[],now=performance.now();
+    if(recent.slice(-36).some(v=>v[0]===role&&v[1]===text&&now-Number(v[2]||0)<2500))return;
+   }
    if(inWard487()&&role==='doctor'&&!options.nsRemoteNPC487){
     const r=window.csV41Challenge,n=String((typeof csProfile!=='undefined'&&csProfile?.name)||'Médico'),raw=String(text||'');
     const alreadyNamed=(r.players||[]).some(p=>p?.name&&raw.startsWith(p.name+': '));
