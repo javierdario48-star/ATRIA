@@ -81,6 +81,23 @@ export function applyNurseVoice487(html){
     ok=true;continue;
    }
    if(item.kind==='surgery'){ok=window.csSurgery487Request?.()!==false||ok;continue}
+   if(item.kind==='study'){
+    // Study orders have one native owner and never enter the legacy therapy
+    // fallback. There is no implicit conversion from "hemograma" to a drug.
+    const study=(C.studies||[]).find(x=>x.id===item.id);
+    if(!study||typeof orderStudy!=='function'){
+     feedback(item.phrase+': NO ejecutado. El estudio no está disponible.');continue;
+    }
+    const patientUid=sim.patientInstance?.uid;
+    orderStudy(study,false,'Enfermería');
+    if(sim.patientInstance?.uid!==patientUid){
+     feedback(study.label+': cambió el paciente durante la solicitud; revisá la orden.');continue;
+    }
+    const status=sim.orders?.get(study.id)?.status;
+    feedback(study.label+(status?': SOLICITADO. Estado: '+status+'.':
+     ': NO consta registrado. Revisá el pedido.'));
+    ok=!!status||ok;continue;
+   }
    if(item.kind==='therapy'&&item.id!=='vasopressor'&&typeof MONITOR_THERAPY_CATALOG!=='undefined'&&
       MONITOR_THERAPY_CATALOG.some(t=>t.id===item.id)){
     // A nurse order and a manual monitor order MUST reach the same native
