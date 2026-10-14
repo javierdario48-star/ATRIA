@@ -32,6 +32,23 @@ assert.equal(joined.members.length,2);assert.equal(joined.allAccepted,true,'all 
 assert.equal((await call('rooms/'+room.id+'/messages','POST',{message:{type:'chat',text:'listo'}},tokA)).status,200);
 assert.equal((await call('rooms/'+room.id+'/messages','GET',{},tokB,{after:0})).body.messages.length,1);
 assert.equal((await call('rooms/'+room.id+'/messages','GET',{},tokC)).status,403,'outsider cannot read private party');
+for(let i=0;i<160;i++){
+ const posted=await call('rooms/'+room.id+'/messages','POST',
+  {message:{type:'cs_room_v411',kind:'team_chat',peerId:i%2?'peer-martina-01':'peer-prueba-01',text:'REGRESSION_'+i,
+   messageId:'peer:'+i}},i%2?tokB:tokA);
+ assert.equal(posted.status,200);
+}
+const page1=(await call('rooms/'+room.id+'/messages','GET',{},tokB,{after:0})).body;
+const page2=(await call('rooms/'+room.id+'/messages','GET',{},tokB,{after:page1.cursor})).body;
+assert.equal(page1.messages.length,100,'first room page keeps earliest unseen packets');
+assert.equal(page2.messages.length,61,'second page completes backlog without skipping');
+const backlog=[...page1.messages,...page2.messages];
+assert.equal(new Set(backlog.map(m=>m.sequence)).size,161,'exactly once despite 100-message pagination');
+assert.deepEqual(backlog.filter(m=>m.data.kind==='team_chat').map(m=>m.data.text),
+ Array.from({length:160},(_,i)=>'REGRESSION_'+i),'all physician texts survive concurrent-room backlog');
+assert.equal(page2.cursor,backlog.at(-1).sequence);
+console.log('ATRIA ROOM PAGINATION 160 CHAT PACKETS PASS');
+
 const text=await call('lobby/chat','POST',{text:'Hola'},tokA);
 assert.equal(text.status,200);
 assert.equal((await call('lobby','GET',{},tokB,{after:0})).body.messages.at(-1).text,'Hola');
