@@ -81,6 +81,24 @@ try{
   }
   console.log('NATIVE_BEDSIDE_HIT_MAP',JSON.stringify(views));
  });
+ await check('touching-human-avatar-opens-existing-social-action',async()=>{
+  await Promise.all(h.clients.map(c=>c.page.waitForFunction(()=>
+   Object.values(csCoop.remotes||{}).some(r=>r?.roomId===csV41Challenge.id),
+   {},{timeout:25000})));
+  const probes=await Promise.all(h.clients.map(c=>c.page.evaluate(()=>{
+   const peers=Object.values(csCoop.remotes||{}).filter(r=>r?.roomId===csV41Challenge.id);
+   const hits=peers.map(r=>{
+    const [x,y]=worldToScreen(r.x,r.y),hit=window.csHumanAvatarHit487?.(x,y);
+    return {peer:r.peerId,match:hit?.member?.userId,
+     verified:nsSocial.room()?.members?.some(m=>m.userId===hit?.member?.userId)||false};
+   });
+   return {hits,hasFriendAPI:typeof nsSocial.addFriend==='function'};
+  })));
+  for(const p of probes){
+   assert(p.hasFriendAPI,'must use existing social store');
+   assert(p.hits.some(x=>x.match&&x.verified),'human character should be selectable by touch');
+  }
+ });
  await check('patient-snapshot-on-guest-resume',async()=>{
   await Promise.all(h.clients.slice(1).map(c=>c.page.evaluate(()=>window.csRequestRoomSync487?.())));
   await Promise.all(h.clients.map(c=>c.page.waitForFunction(()=>
