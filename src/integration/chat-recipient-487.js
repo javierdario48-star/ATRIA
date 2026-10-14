@@ -200,15 +200,33 @@ export function applyChatRecipient487(html,{reverse=false}={}){
   const audibleRadius487=280,patientRadius487=135;
   const wardBubbles487=new Map();
   function inWard487(){const r=window.csV41Challenge;return !!r?.active&&!r.ended&&!!sim&&!!C&&!document.body?.classList?.contains('nsLobbyMode')}
+  // Bed-space selection: use the actual occupied bed, not its single walk-to tile.
+  // Box 2A and 2B are 120 world units apart and must remain distinct.
+  function patientBedScore487(p,x=player.x,y=player.y){
+   const b=p?.instance?.bed,point=b?.patient;
+   if(!point||!Number.isFinite(x)||!Number.isFinite(y))return Infinity;
+   const dx=Math.abs(x-point[0]),dy=y-point[1];
+   if(dx>76||dy< -105||dy>148)return Infinity;
+   return (dx/76)**2+(dy<0?dy/105:dy/148)**2;
+  }
+  window.csWardPatientInZone487=function(p,x=player.x,y=player.y){
+   return Number.isFinite(patientBedScore487(p,x,y));
+  };
   function nearPatient487(){
    const r=window.csV41Challenge;
    if(!inWard487()||!Array.isArray(r.patients))return null;
-   return r.patients.filter(p=>p?.instance&&['in_care','waiting'].includes(p.state))
-    .map(p=>{const a=p.instance?.bed?.approach;if(!a)return null;
-     const x=(a[0]+.5)*TW,y=(a[1]+.5)*TH;
-     return {patient:p,d:Math.hypot(player.x-x,player.y-y)};})
-    .filter(x=>x&&x.d<=patientRadius487).sort((a,b)=>a.d-b.d)[0]?.patient||null;
+   const candidates=r.patients.filter(p=>p?.instance&&['in_care','waiting'].includes(p.state))
+    .map(p=>({patient:p,score:patientBedScore487(p)}))
+    .filter(x=>Number.isFinite(x.score))
+    .sort((a,b)=>a.score-b.score);
+   if(!candidates.length){r._wardBedFocus487=null;return null;}
+   const focus=r._wardBedFocus487||sim?.patientInstance?.uid;
+   const stillHere=candidates.find(x=>x.patient.uid===focus);
+   const chosen=stillHere&&stillHere.score<=candidates[0].score+.09?stillHere:candidates[0];
+   r._wardBedFocus487=chosen.patient.uid;
+   return chosen.patient;
   }
+  window.csWardNearestBed487=()=>nearPatient487()?.uid||null;
   window.csWardChatAudible487=function(packet){
    // Absence of position is only for packets from older supported clients;
    // do not silently discard a valid message during an upgrade.
