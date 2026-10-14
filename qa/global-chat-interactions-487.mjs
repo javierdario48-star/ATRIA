@@ -56,7 +56,7 @@ try{
   await inp.fill('BOT_DRAFT_SENT_'+count);await inp.press('Enter');await one('BOT_DRAFT_SENT_'+count)
  });
  await check('owner-native-anamnesis-and-public-NPC-answer',async()=>{
-  await h.select(0);const msg='¿Desde cuándo tiene dolor '+count+'?';await h.send(0,'Paciente, '+msg);
+  await h.select(0);await Promise.all(h.clients.slice(1).map((_,i)=>approach(i+1)));const msg='¿Desde cuándo tiene dolor '+count+'?';await h.send(0,'Paciente, '+msg);
   await one(msg);await Promise.all(h.clients.map(c=>c.page.waitForFunction(()=>
    sim?.globalChat?.some(x=>x[0]==='patient'),{},{timeout:25000})));
   const n=await h.clients[0].page.evaluate(t=>sim.chats.patient.filter(x=>x[0]==='doctor'&&x[1].includes(t)).length,msg);
