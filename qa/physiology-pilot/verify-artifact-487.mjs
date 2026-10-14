@@ -153,7 +153,9 @@ const restored=beforeStop.replace(entries[0][0],'').replace(criticalScripts[0][0
  .replace(CRITICAL_FINAL_NEW_487,CRITICAL_FINAL_OLD_487).replace(CRITICAL_CLOCK_NEW_487,CRITICAL_CLOCK_OLD_487);
 // Reverse the reviewed multiplayer changes from the exact pre-Vega/pre-chat
 // source, then compare the SAME original protected digest as before.
-const clinicRestored=applyMultiplayerStabilization487(restored,{reverse:true});
+const oldWardPeerGuard487="if(m.type==='cs_room_v411'&&dc.peerGameId&&m.peerId!==dc.peerGameId)return;",newWardPeerGuard487="if(m.type==='cs_room_v411'&&dc.peerGameId&&m.peerId!==dc.peerGameId&&(!Array.isArray(dc.peerGameIds)||!dc.peerGameIds.includes(m.peerId)))return;";
+assert.equal(restored.split(newWardPeerGuard487).length,2,'verified room packet filter is unique');
+const clinicRestored=applyMultiplayerStabilization487(restored.replace(newWardPeerGuard487,oldWardPeerGuard487),{reverse:true});
 const originalHash=createHash('sha256').update(clinicRestored).digest('hex');
 assert.equal(originalHash,'dc59039a59220582a1f5c86fcd8a2a0227c1cd3868550ba34a290049b94ef9c7','all prior HTML bytes remain identical after removing sole QA entry');
 assert(!html.includes('physiology-pilot-487')&&!html.includes('physiology-shadow-487'),'no eager B1 import or effect writer');
