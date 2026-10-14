@@ -23,6 +23,27 @@ async function approach(i,index=0){const p=h.clients[i].page;await p.evaluate(in
  await p.evaluate(()=>csSendPeerState());await sleep(1200)}
 try{
  await h.startGuard('coop','APP-001');
+ // Trace the exact incoming clinical room packets without changing their semantics.
+ await Promise.all(h.clients.map(c=>c.page.evaluate(()=>{
+  window.__wardInboundProbe487=[];
+  const channel=csCoop.dc,original=channel?.onmessage;
+  if(channel&&typeof original==='function'){
+   channel.onmessage=function(event){
+    try{
+     const m=JSON.parse(event.data);
+     if(m.kind==='team_chat'&&/BOT_DOCTOR_|BOT_RACE_|BOT_AFTER_MOVEMENT_/.test(m.text||'')){
+      window.__wardInboundProbe487.push({
+       text:m.text,id:m.id,expected:csV41Challenge.id,
+       from:m.peerId,origin:m.originPeerId||null,
+       x:m.x,y:m.y,listenerX:player.x,listenerY:player.y,
+       audible:window.csWardChatAudible487?.(m),
+       known:csV41Challenge.players.some(p=>p.id===m.peerId)
+      });
+     }
+    }catch(_){}return original.call(this,event);
+   };
+  }
+ })));
  await check('full-roster-ready-before-message-fanout',async()=>{
   await Promise.all(h.clients.map(c=>c.page.waitForFunction(n=>
    csV41Challenge.players?.length>=n&&csV41Challenge.players.every(p=>p.id&&p.name),
@@ -159,7 +180,7 @@ try{
   peers:csCoop.dc?.peerGameIds||[],known:csV41Challenge.players.map(p=>p.id),socialRoom:window.nsSocial?.room?.()?.members?.map(p=>({userId:p.userId,peerId:p.peerId,name:p.name}))
  }))));
  await fs.writeFile(output+'/report.json',JSON.stringify({
-  players:count,checks,errors:h.errors,snapshots:await h.snapshot(),wire,transports,reads:h.requests.filter(x=>x.method==='GET'&&x.heard?.some(m=>/BOT_DOCTOR_|BOT_RACE_|BOT_AFTER_MOVEMENT_/.test(m.text||''))).slice(-200).map(x=>({after:x.after,cursor:x.cursor,heard:x.heard,roomMembers:x.roomMembers}))
+  players:count,checks,errors:h.errors,snapshots:await h.snapshot(),wire,transports,inbound:await Promise.all(h.clients.map(c=>c.page.evaluate(()=>window.__wardInboundProbe487||[]))),reads:h.requests.filter(x=>x.method==='GET'&&x.heard?.some(m=>/BOT_DOCTOR_|BOT_RACE_|BOT_AFTER_MOVEMENT_/.test(m.text||''))).slice(-200).map(x=>({after:x.after,cursor:x.cursor,heard:x.heard,roomMembers:x.roomMembers}))
  },null,2));
  for(let i=0;i<count;i++)await h.clients[i].page.screenshot({path:output+'/client-'+i+'.png'});
  await h.close()
