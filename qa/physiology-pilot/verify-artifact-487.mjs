@@ -24,7 +24,21 @@ import {NURSE_STOP_FINISH_OLD_487,NURSE_STOP_FINISH_NEW_487,NURSE_STOP_STATUS_OL
  NORA_PENDING_OLD_487,NORA_PENDING_NEW_487,NORA_CANCEL_OLD_487,NORA_CANCEL_NEW_487,
  NORA_DELIVERY_OLD_487,NORA_DELIVERY_NEW_487,NORA_BIND_RECEIPT_OLD_487,NORA_BIND_RECEIPT_NEW_487,
  NORA_FLUSH_OLD_487,NORA_FLUSH_NEW_487} from '../../src/integration/nurse-execution-487.js';
-const html=fs.readFileSync('out/index.html','utf8');
+// UX A/B is a single, explicitly whitelisted style/selector insertion.
+ // Invert EXACTLY that insertion for the protected clinical byte-digest.
+ // Any extra HTML, missing asset, mutated golden master or extra script still fails.
+const deliveredHtml=fs.readFileSync('out/index.html','utf8');
+const visualInsertion='<link rel="stylesheet" href="/atria-ux-lab.css"><script src="/atria-ux-lab.js"></script>';
+const visualEnd=deliveredHtml.lastIndexOf('</body>');
+assert(visualEnd>=visualInsertion.length,'UX artifact: closing body missing');
+assert.equal(deliveredHtml.split(visualInsertion).length,2,'UX artifact: exactly one reviewed insertion');
+assert.equal(deliveredHtml.slice(visualEnd-visualInsertion.length,visualEnd),visualInsertion,
+ 'UX artifact: reviewed assets must be immediately before the body close');
+for(const asset of ['atria-ux-lab.css','atria-ux-lab.js']){
+ assert.equal(fs.readFileSync('out/'+asset,'utf8'),fs.readFileSync('src/ui/'+asset,'utf8'),
+  'UX artifact: exact visual asset source copy '+asset);
+}
+const html=deliveredHtml.slice(0,visualEnd-visualInsertion.length)+deliveredHtml.slice(visualEnd);
 const hash=createHash('sha256').update(html).digest('hex');
 const immutableVendor=fs.readFileSync('vendor/atria-4.8.6/index.html','utf8');
 assert.equal(html,apply487(immutableVendor),'artifact equals current source-integrated build');
