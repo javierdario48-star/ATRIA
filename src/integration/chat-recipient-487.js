@@ -221,29 +221,28 @@ export function applyChatRecipient487(html,{reverse=false}={}){
   };
   // The movement sampler and remote sprites remain untouched. Draw a speech
   // overlay at each visible remote's current position, after its nameplate.
+  // Paint after the final scene draw, so late multiplayer renderer replacements
+  // cannot hide remote speech. This is visual-only: the movement sampler is untouched.
   const installWardBubbleOverlay487=()=>{
-   if(typeof csDrawRemote!=='function'||csDrawRemote.__atriaWardBubbleOverlay487)return;
-   const drawOriginalRemotes487=csDrawRemote;let lastVerifiedRoster487=0;
+   if(typeof draw!=='function'||draw.__atriaWardBubbleOverlay487)return;
+   const nativeDraw487=draw;let lastRoster487=0;
    const overlay487=function(){
-    const nowRoster487=performance.now();
-    if(nowRoster487-lastVerifiedRoster487>500){lastVerifiedRoster487=nowRoster487;window.csWardRefreshRoster487?.();}
-    const result=drawOriginalRemotes487.apply(this,arguments);
+    const result=nativeDraw487.apply(this,arguments),now=performance.now();
+    if(now-lastRoster487>500){lastRoster487=now;window.csWardRefreshRoster487?.();}
     if(!inWard487()){wardBubbles487.clear();return result;}
-    const now=performance.now();
     for(const [id,speechEvent] of wardBubbles487){
      if(now>speechEvent.until){wardBubbles487.delete(id);continue;}
      const actor=csCoop?.remotes?.[id];
-     if(!actor||actor.roomId!==window.csV41Challenge.id)continue;
+     if(!actor||actor.roomId!==window.csV41Challenge.id||
+        !Number.isFinite(actor.x)||!Number.isFinite(actor.y))continue;
      if(Math.hypot(player.x-actor.x,player.y-actor.y)>audibleRadius487)continue;
      speech(speechEvent.text,actor.x,actor.y-54,'#ccecff',speechEvent.until);
     }
     return result;
    };
-   overlay487.__atriaWardBubbleOverlay487=true;
-   csDrawRemote=overlay487;
+   overlay487.__atriaWardBubbleOverlay487=true;draw=overlay487;
   };
   installWardBubbleOverlay487();
-  // Late remote rendering is installed after the document body: wrap final renderer too.
   if(typeof setTimeout==='function')setTimeout(installWardBubbleOverlay487,0);
   // Room-level history survives switching patients or opening another box.
   // A patient's clinical anamnesis remains separate and authoritative.
