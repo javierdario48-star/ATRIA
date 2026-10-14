@@ -159,7 +159,7 @@ try{
   peers:csCoop.dc?.peerGameIds||[],known:csV41Challenge.players.map(p=>p.id)
  }))));
  await fs.writeFile(output+'/report.json',JSON.stringify({
-  players:count,checks,errors:h.errors,snapshots:await h.snapshot(),wire,transports
+  players:count,checks,errors:h.errors,snapshots:await h.snapshot(),wire,transports,reads:h.requests.filter(x=>x.method==='GET'&&x.heard?.some(m=>/BOT_DOCTOR_|BOT_RACE_|BOT_AFTER_MOVEMENT_/.test(m.text||''))).slice(-200).map(x=>({after:x.after,cursor:x.cursor,heard:x.heard,roomMembers:x.roomMembers}))
  },null,2));
  for(let i=0;i<count;i++)await h.clients[i].page.screenshot({path:output+'/client-'+i+'.png'});
  await h.close()
