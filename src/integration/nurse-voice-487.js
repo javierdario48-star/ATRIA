@@ -39,6 +39,15 @@ export function applyNurseVoice487(html){
    feedback('No hay una atención activa con permiso para ejecutar estas indicaciones.');return false;
   }
   const parsed=csNurseScan487(text,C.studies,MONITOR_THERAPY_CATALOG,C.interventions);
+  const audit=sim.csNurse487OrderAudit||(sim.csNurse487OrderAudit=[]);
+  const intentId=String(sim.patientInstance?.uid||'unknown')+':'+
+   String(sim.gameMinute??0)+':'+String(audit.length+1);
+  audit.push({id:intentId,patientUid:sim.patientInstance?.uid||null,
+   text:String(text).slice(0,300),minute:sim.gameMinute,
+   accepted:parsed.active,items:parsed.items.map(x=>({
+    kind:x.kind,id:x.id,negated:!!x.negated,phrase:x.phrase}))});
+  if(audit.length>80)audit.splice(0,audit.length-80);
+  window.csNurse487Audit=()=>sim?.csNurse487OrderAudit?.slice()||[];
   if(!parsed.active){feedback('Es una pregunta o una negación; no ejecuté procedimientos.');return false}
   if(!parsed.items.length){feedback('No reconocí acciones en el pedido. Reformulalo.');return false}
   const antibiotics=new Set(['ceftriaxone','metronidazole','imipenem','ceftazidime','cefoperazone',
