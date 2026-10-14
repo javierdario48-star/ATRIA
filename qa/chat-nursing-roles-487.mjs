@@ -76,7 +76,7 @@ for(const mode of ['coop','competitive']){
   deliverPatientSpeech:t=>{track.push(['patient',t]);return true},
   addGlobalChat:()=>{},oldSend:t=>track.push(['native',t]),
   requestAssist:()=>{throw Error('owner cannot be treated as a helper')},
-  performance:{now:()=>0},player:{},refreshChatDock:()=>{},send:()=>{},near:()=>true,
+  performance:{now:()=>0},player:{},name:()=> 'Médico visitante',refreshChatDock:()=>{},send:()=>{},near:()=>true,
   oldCommand:()=>true,requirePatient:()=>true};
  vm.createContext(ctx);new vm.Script(chatSource).runInContext(ctx);
  ctx.sendMessage('que le paso');
