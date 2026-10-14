@@ -113,6 +113,34 @@ jobs:
           path: qa/remote-motion-results/
           retention-days: 14
 
+  global-chat-interactions-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        players: [2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Native chat interactions across independent doctors and NPCs
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          CLINICAL_PLAYERS: ${{ matrix.players }}
+          CLINICAL_OUTPUT: qa/global-chat-browser-results/${{ matrix.players }}
+        run: node qa/global-chat-interactions-487.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: global-chat-independent-clients-${{ matrix.players }}
+          path: qa/global-chat-browser-results/
+          retention-days: 14
+
   npc-chat-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 5
