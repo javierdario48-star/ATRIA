@@ -239,6 +239,24 @@ export function applyChatRecipient487(html,{reverse=false}={}){
   }
   // Room-level history survives switching patients or opening another box.
   // A patient's clinical anamnesis remains separate and authoritative.
+  // The HTTP room already provides a server-authenticated participant list.
+  // Repair a late V41 game roster from that existing list, never from a
+  // self-declared chat nickname or unverified packet.
+  window.csWardRefreshRoster487=function(){
+   if(!inWard487()||typeof csCoop==='undefined')return 0;
+   const dc=csCoop.dc,room=window.csV41Challenge;
+   if(dc?.readyState!=='open'||!Array.isArray(dc.peerGameIds))return 0;
+   let added=0;
+   for(const peerId of dc.peerGameIds.slice(0,3)){
+    const remote=csCoop.remotes?.[peerId];
+    if(!peerId||peerId===room.selfId||!remote?.name)continue;
+    let person=room.players.find(p=>p.id===peerId);
+    if(!person&&room.players.length<4){
+     room.players.push({id:peerId,name:String(remote.name).slice(0,40),online:remote.online!==false,xpGuard487:0});added++;
+    }else if(person)person.name=String(remote.name).slice(0,40);
+   }
+   return added;
+  };
   function sharedWardHistory487(){
    if(!inWard487())return null;
    const room=window.csV41Challenge;
