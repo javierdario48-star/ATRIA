@@ -145,6 +145,28 @@ jobs:
         run: npm run build && npm run qa:physiology-artifact
 
 
+  ux-visual-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Two real-game UX variants on simulated Android
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/ux-lab-browser-487.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-ux-variant-screenshots
+          path: qa/ux-lab-results/
+          retention-days: 14
+
   architecture-and-build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
