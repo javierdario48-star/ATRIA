@@ -1,7 +1,7 @@
 name: ATRIA Architecture QA
 on:
   push:
-    branches: [main, atria-4.8.7-qa, atria-4.8.7-grace-nursing-qa, atria-4.8.7-morphine-qa, atria-4.8.7-heparin-care-qa, atria-4.8.7-heparin-harm-qa, atria-4.8.7-general-therapy-rules-qa, atria-4.8.7-clinical-matrix-bots-qa, atria-4.8.7-care-journeys-qa, atria-4.8.7-case-completion-qa, atria-4.8.7-closure-harm-combinatorial-qa, atria-4.8.7-multiplayer-stabilization]
+    branches: [main, atria-4.8.7-qa, atria-4.8.7-grace-nursing-qa, atria-4.8.7-morphine-qa, atria-4.8.7-heparin-care-qa, atria-4.8.7-heparin-harm-qa, atria-4.8.7-general-therapy-rules-qa, atria-4.8.7-clinical-matrix-bots-qa, atria-4.8.7-care-journeys-qa, atria-4.8.7-case-completion-qa, atria-4.8.7-closure-harm-combinatorial-qa, atria-4.8.7-multiplayer-stabilization, atria-4.8.7-structural-cleanup-qa]
   workflow_dispatch:
 permissions:
   contents: read
