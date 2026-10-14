@@ -240,7 +240,7 @@ export function applyChatRecipient487(html,{reverse=false}={}){
   const globalChatOld487=addGlobalChat;
   addGlobalChat=function(role,text,options={}){
    if(inWard487()&&role==='doctor'&&!options.nsRemoteNPC487){
-    const r=window.csV41Challenge,n=String(csProfile?.name||'Médico'),raw=String(text||'');
+    const r=window.csV41Challenge,n=String((typeof csProfile!=='undefined'&&csProfile?.name)||'Médico'),raw=String(text||'');
     const alreadyNamed=(r.players||[]).some(p=>p?.name&&raw.startsWith(p.name+': '));
     if(!alreadyNamed&&!/^[^:]{1,50}:\s/.test(raw.replace(/^A (?:Paciente|Enfermera|Dr\. Vega):\s*/i,'')))
      text=n+': '+raw;
@@ -263,7 +263,7 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    // Explicit "Enfermera, ..." and "Vega, ..." retain their existing native
    // clinical dispatch and competitive permission rules.
    if(role==='patient'){
-    if(!target)return publishSpeech487(raw,role);
+    if(!target){const selected=room.patients?.find(p=>p.uid===sim.patientInstance?.uid);if(selected?.ownerId===room.selfId&&!sim.__csRoomSpectator&&!sim.__csRemoteMirror487&&!selected.instance)return globalSendOld487.apply(this,arguments);return publishSpeech487(raw,role);}
     const own=target.ownerId===room.selfId&&sim.patientInstance?.uid===target.uid&&!sim.__csRemoteMirror487&&!sim.__csRoomSpectator;
     if(own)return globalSendOld487.apply(this,arguments);
     const routed=window.csWardAskPatient487?.(target.index,raw,role);
