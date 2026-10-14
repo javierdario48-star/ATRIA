@@ -271,6 +271,19 @@ export function applyChatRecipient487(html,{reverse=false}={}){
    player.bubble=raw;player.bubbleUntil=performance.now()+2900;
    addGlobalChat('doctor',raw);refreshChatDock();return true;
   }
+  // Android IME and hardware Enter must take the same native Send-button path.
+  // Run before legacy key handlers; composition must never submit prematurely.
+  document.addEventListener('keydown',event=>{
+   if(!inWard487()||event.target?.id!=='dieInput'||event.key!=='Enter'||
+      event.isComposing||event.keyCode===229)return;
+   event.preventDefault();event.stopImmediatePropagation();
+   const live=document.getElementById('dieInput'),draft=event.target.value||live?.value||'';
+   if(!draft.trim())return;
+   if(live&&live!==event.target)live.value=draft;
+   const sendButton=document.getElementById('dieSend');
+   if(sendButton)sendButton.click();
+   else{event.target.value='';sendMessage(draft);}
+  },true);
   const globalSendOld487=sendMessage;
   sendMessage=function(message){
    const raw=String(message||'').trim();
