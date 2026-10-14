@@ -169,6 +169,23 @@ jobs:
           path: qa/hemogram-dose-results/
           retention-days: 14
 
+  critical-codebase-and-order-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Whole-source inventory, native parser vs study/drug check
+        run: node qa/critical-path-audit-487.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: critical-codebase-audit
+          path: qa/audit-results/
+          retention-days: 14
+
   npc-chat-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 5
