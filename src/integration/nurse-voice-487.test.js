@@ -25,6 +25,7 @@ const ctx={window,sim,C,nurse:{task:{kind:'iv_access',_targetSim:sim,count:1},qu
  norm:s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').trim(),
  nurseNatural:q=>{operations.push(q);nurse.push('Recibido: '+q);(sim.csNurse487History??=[]).push({text:q});return true},
  sendMessage:q=>sent.push('old '+q),
+ orderStudy:study=>{sim.orders.set(study.id,{id:study.id,status:'collecting'});operations.push('study: '+study.label);return true;},
  nurseSay:t=>nurse.push(t),
  addMonitorTherapy:txt=>{sim.monitorTherapies.set('oxygen',{id:'oxygen',label:'Oxígeno suplementario'});
    sim.administrationLog.push({id:'oxygen',label:'Oxígeno suplementario'});nurse.push('Oxígeno iniciado');return true},
