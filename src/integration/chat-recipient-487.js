@@ -222,8 +222,10 @@ export function applyChatRecipient487(html,{reverse=false}={}){
   // The movement sampler and remote sprites remain untouched. Draw a speech
   // overlay at each visible remote's current position, after its nameplate.
   if(typeof csDrawRemote==='function'){
-   const drawOriginalRemotes487=csDrawRemote;
+   const drawOriginalRemotes487=csDrawRemote;let lastVerifiedRoster487=0;
    csDrawRemote=function(){
+    const nowRoster487=performance.now();
+    if(nowRoster487-lastVerifiedRoster487>500){lastVerifiedRoster487=nowRoster487;window.csWardRefreshRoster487?.();}
     const result=drawOriginalRemotes487.apply(this,arguments);
     if(!inWard487()){wardBubbles487.clear();return result;}
     const now=performance.now();
