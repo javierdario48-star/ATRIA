@@ -148,7 +148,19 @@ try{
  });
  assert.deepEqual(h.errors,[],'no uncaught Chromium errors')
 }finally{
- await fs.writeFile(output+'/report.json',JSON.stringify({players:count,checks,errors:h.errors,snapshots:await h.snapshot()},null,2));
+ const wire=h.requests.filter(x=>x.method==='POST'&&x.path.includes('/messages')&&
+  x.body?.message?.kind==='team_chat').map(x=>({status:x.status,
+  peerId:x.body.message.peerId,kind:x.body.message.kind,
+  text:x.body.message.text,messageId:x.body.message.messageId,
+  originPeerId:x.body.message.originPeerId})).filter(x=>/BOT_|CHAT_/.test(String(x.text))).slice(-200);
+ const transports=await Promise.all(h.clients.map(c=>c.page.evaluate(()=>({
+  self:csV41Challenge.selfId,hostId:csV41Challenge.hostId,
+  role:csCoop.role,ready:csCoop.dc?.readyState,
+  peers:csCoop.dc?.peerGameIds||[],known:csV41Challenge.players.map(p=>p.id)
+ }))));
+ await fs.writeFile(output+'/report.json',JSON.stringify({
+  players:count,checks,errors:h.errors,snapshots:await h.snapshot(),wire,transports
+ },null,2));
  for(let i=0;i<count;i++)await h.clients[i].page.screenshot({path:output+'/client-'+i+'.png'});
  await h.close()
 }
