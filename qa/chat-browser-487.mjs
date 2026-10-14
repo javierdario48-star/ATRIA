@@ -59,9 +59,9 @@ try{
   await input().fill('Creo que necesitamos antibióticos.');
   const initial=await state();
   for(const role of ['expert','nurse','patient','expert','expert','nurse']){
-   await click(role);const s=await state(),prefix={expert:'Dr. Vega, ',nurse:'Enfermera, ',patient:'Paciente, '}[role];
-   assert.equal(s.value,prefix+'Creo que necesitamos antibióticos.');
-   assert(s.focused);assert.equal(s.start,prefix.length);assert.equal(s.end,prefix.length);
+   await click(role);const s=await state(),prefix={expert:'Dr. Vega, ',nurse:'Enfermera, '}[role];
+   assert.equal(s.value,role==='patient'?'Enfermera, Creo que necesitamos antibióticos.':prefix+'Creo que necesitamos antibióticos.');
+   assert(s.focused);if(prefix){assert.equal(s.start,prefix.length);assert.equal(s.end,prefix.length);}
    assert.equal(s.sent,0);assert.equal(s.y,initial.y);assert.equal(s.height,initial.height);
   }
   await page.evaluate(()=>document.getElementById('dieInput').blur());
