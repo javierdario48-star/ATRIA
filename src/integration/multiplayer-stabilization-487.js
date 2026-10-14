@@ -408,7 +408,7 @@ window.csBroadcastAddressedChat487=function(role,raw){if(!shared()||!challenge.a
  'global-rebroadcast-is-authorized-by-host');
  s=edit(s,
  "if(seen.has(marker))return;seen.add(marker);if(seen.size>160)seen.delete(seen.values().next().value);",
- "if(relayAuthor===selfId||seen.has(eventId))return;seen.add(eventId);if(seen.size>160)seen.delete(seen.values().next().value);if(typeof send==='function'&&host()&&m.peerId!==selfId&&!m.originPeerId)send('team_chat',{text:m.text,npcSpeaker:m.npcSpeaker,recipient:m.recipient,patientUid:m.patientUid,originPeerId:m.peerId,originName:person(m.peerId)?.name||m.name,originMessageId:marker,x:m.x,y:m.y,messageId:selfId+':fwd:'+marker});if(window.csWardChatAudible487?.(m)===false)return;window.csWardRemoteSpeech487?.(relayAuthor,m.text,m.x,m.y,!!npc);",
+ "if(relayAuthor===selfId||seen.has(eventId))return;seen.add(eventId);if(seen.size>160)seen.delete(seen.values().next().value);if(typeof send==='function'&&host()&&m.peerId!==selfId&&!m.originPeerId)send('team_chat',{text:m.text,npcSpeaker:m.npcSpeaker,recipient:m.recipient,patientUid:m.patientUid,originPeerId:m.peerId,originName:person(m.peerId)?.name||m.name,originMessageId:marker,x:m.x,y:m.y,messageId:selfId+':fwd:'+marker});if(typeof window!=='undefined'){if(window.csWardChatAudible487?.(m)===false)return;window.csWardRemoteSpeech487?.(relayAuthor,m.text,m.x,m.y,!!npc);}",
  'global-guest-message-host-fanout-once');
  s=edit(s,
  "(person(m.peerId)?.name||'Compañero')+': '+m.text.replace(/[<>]/g,'')",
