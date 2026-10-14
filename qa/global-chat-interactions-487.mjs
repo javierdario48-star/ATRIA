@@ -68,7 +68,7 @@ try{
    const p=csV41Challenge.patients.find(p=>p.instance?.bed?.patient);
    if(!p)throw Error('no real native patient');
    const [x,y]=worldToScreen(...p.instance.bed.patient),a=window.cs413TapTarget487?.(x,y);
-   const m=monitorFor(p.instance),[mx,my]=worldToScreen(m.x,m.y);
+   const m=window.csSceneMonitorsV413?.().find(m=>m.bedId===p.instance.bedId);if(!m)throw Error('native monitor missing');const [mx,my]=worldToScreen(m.x,m.y);
    const b=window.cs413TapTarget487?.(mx,my);
    return {uid:p.uid,patient:a?.patient?.uid,patientKind:a?.kind,
     monitor:b?.patient?.uid,monitorKind:b?.kind,bedId:p.instance.bedId};
