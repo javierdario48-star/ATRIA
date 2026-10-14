@@ -27,11 +27,26 @@ try {
       const rect=e=>{const r=e.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}};
       return {font:parseFloat(getComputedStyle(i).fontSize),composer:rect(i),
         dock:rect(dock),history:rect(chat),hud:rect(document.querySelector('#nsPlayerHeader')),
-        historyDisplay:getComputedStyle(chat).display};
+        historyDisplay:getComputedStyle(chat).display,
+        overlays:['#nsWardNotice','.csChallengeHud','#atriaGuardScore487'].map(sel=>{
+          const el=document.querySelector(sel);
+          const style=el?getComputedStyle(el):null;
+          const visible=!!el&&style.display!=='none'&&style.visibility!=='hidden'&&style.opacity!=='0'&&(!el.hidden);
+          return {sel,visible,rect:el?rect(el):null};
+        })};
     });
     assert(initial.font>=16,variant+': input below 16px and could trigger mobile zoom');
     assert(initial.composer.w>=75&&initial.composer.h>=38,variant+': input too small');
     assert(initial.dock.h<=360,variant+': chat dock obscures too much of the map');
+    // Visual overlap must be checked, not just CSS declarations or screenshots.
+    const intersects=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+    const visible=initial.overlays.filter(x=>x.visible);
+    for(let i=0;i<visible.length;i++)for(let j=i+1;j<visible.length;j++){
+      assert(!intersects(visible[i].rect,visible[j].rect),
+        variant+': HUD overlays collide '+visible[i].sel+' and '+visible[j].sel);
+    }
+    const score=initial.overlays.find(x=>x.sel==='#atriaGuardScore487');
+    assert.equal(score.visible,variant==='tactical',variant+': expected scoreboard visibility differs');
     const guardPath=out+'/'+variant+'-guard.png';
     await page.screenshot({path:guardPath,fullPage:true});report.screenshots.push(guardPath);
     await page.locator('#dieInput').focus();
@@ -45,11 +60,19 @@ try {
         dockPointerEvents:getComputedStyle(dock).pointerEvents,
         composerPointerEvents:getComputedStyle(glass).pointerEvents,
         composerHeight:glass.getBoundingClientRect().height,
+        auxiliary:['#nsWardNotice','.csChallengeHud','#atriaGuardScore487'].map(sel=>{
+          const el=document.querySelector(sel);
+          return {sel,display:el?getComputedStyle(el).display:'absent'};
+        }),
         font:parseFloat(getComputedStyle(input).fontSize),
         fieldFocused:document.activeElement===input,
         fieldHeight:input.getBoundingClientRect().height};
     });
     assert.equal(keyboard.historyDisplay,'none',variant+': expanded transcript obscures keyboard');
+    for(const overlay of keyboard.auxiliary) {
+      assert(['none','absent'].includes(overlay.display),
+        variant+': clinical notification overlays keyboard composer: '+overlay.sel);
+    }
     // Native IME positioning owns the dock box; it can be tall as a geometry
     // fallback. Only its small composer may intercept touches or paint over map.
     assert(keyboard.composerHeight<=72,variant+': visible keyboard composer is too tall');
