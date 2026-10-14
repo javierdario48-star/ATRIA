@@ -75,11 +75,11 @@ assert.equal(mirrorCtx.sim.playMode,'coop');
 assert.equal(mirrorCtx.challenge.assistIndex,0);
 // Competitive bedside chat uses the existing authorized relay; text and voice
 // cannot turn a mixed nursing command into an opponent's administration/order.
-const rivalActions=[],rivalToasts=[],rivalObservations=[];
+const rivalActions=[],rivalToasts=[],rivalObservations=[],rivalPublicChat=[];
 const rivalCtx={challenge:{mode:'competitive',assistIndex:0,patients:[{...visitor,index:0}]},
- selfId:'GUEST',shared:()=>true,near:()=>true,canAct:()=>rivalCtx.ownsActivePatient===true,window:{nsIsClinicalQuestion:t=>/[?¿]/.test(t),csObservePatientV487:index=>{rivalObservations.push(index)}}, 
+ selfId:'GUEST',shared:()=>true,near:()=>true,canAct:()=>rivalCtx.ownsActivePatient===true,window:{nsIsClinicalQuestion:t=>/[?¿]/.test(t),csObservePatientV487:index=>{rivalObservations.push(index)},csBroadcastAddressedChat487:(role,text)=>rivalPublicChat.push({role,text})}, 
  requestAssist:(index,action)=>{rivalActions.push({index,action});return true},
- toast:t=>rivalToasts.push(t)};
+ toast:t=>rivalToasts.push(t),name:()=> 'Visitante',addGlobalChat:(role,text)=>rivalPublicChat.push({role,text}),refreshChatDock:()=>{}};
 vm.createContext(rivalCtx);
 new vm.Script(html.slice(foreignAt,takeAt)).runInContext(rivalCtx);
 assert.equal(rivalCtx.foreignRivalInput487('enfermera monitor, ceftriaxona y hemograma'),true);
@@ -93,12 +93,13 @@ assert.equal(rivalCtx.foreignRivalInput487('enfermera ceftriaxona'),true);
 assert.equal(rivalActions.length,0,'rival cannot request medication');
 assert.equal(rivalCtx.foreignRivalInput487('paciente, ¿dónde le duele?'),true);
 assert.equal(rivalActions.at(-1).action.kind,'speech','main clinical chat reaches rival patient history');
+assert(rivalPublicChat.some(m=>m.role==='patient'&&m.text==='paciente, ¿dónde le duele?'),'rival question also reaches the global chat');
 assert.equal(rivalCtx.foreignRivalInput487('examinar: auscultar'),true);
 assert.equal(rivalActions.at(-1).action.id,'ns:auscultation','bedside physical exam allowed');
 assert.equal(rivalCtx.foreignRivalInput487('enfermera signos vitales'),true);
 assert.deepEqual(rivalObservations,[0,0],'vitals read existing monitor without nurse task');
 assert(rivalActions.every(a=>a.action.kind==='speech'||a.action.kind==='exam'),'rival never mutates treatment');
-assert.equal(rivalCtx.foreignRivalInput487('/equipo hola'),null,'explicit social chat is separate');
+assert.equal(rivalCtx.foreignRivalInput487('/equipo hola'),null,'legacy alias falls through to the one global conversation');
 rivalCtx.ownsActivePatient=true;
 assert.equal(rivalCtx.foreignRivalInput487('enfermera Ringer'),null,
  "a previously observed rival must never hijack an owned patient's native clinical commands");
