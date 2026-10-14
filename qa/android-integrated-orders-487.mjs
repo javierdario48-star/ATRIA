@@ -117,6 +117,30 @@ if(!process.argv.includes('--checkpoint-b')){
  rows.push({q:'corrupt deferred albumin whose source says hemograma',pass:true,
   rejected:p.csNurse487RejectedOrders});
 }
+// Regression: a queued antibiotic keeps the order that created it, even when
+// another command for the SAME drug arrives before IV access is completed.
+if(!process.argv.includes('--checkpoint-b')){
+ const r=createAndroidIntegratedRuntime487('PERI-SEC-001'),p=r.ctx.sim;
+ const first='Enfermera ceftriaxona 1 g',later='Enfermera ceftriaxona 2 g';
+ r.ctx.sendMessage(first);
+ const original=p.csPhase4Pending487?.find(x=>x.id==='ceftriaxone');
+ assert(original,'first real order remains pending before access');
+ r.ctx.sendMessage(later);
+ assert.equal(p.csPhase4Pending487.filter(x=>x.id==='ceftriaxone').length,1,
+  'second message must not replace or duplicate the pending antibiotic');
+ assert.equal(p.csPhase4Pending487.find(x=>x.id==='ceftriaxone'),original,
+  'pending native order retains its original identity');
+ r.ctx.sendMessage('Enfermera vías');
+ advance(r,40,{dt:1/6});
+ const provenance=(p.csNurse487MedicationProvenance||[]).find(x=>x.itemId==='ceftriaxone');
+ assert.equal(p.administrationLog.filter(x=>x.id==='ceftriaxone').length,1,
+  'one confirmed native ceftriaxone administration');
+ assert.equal(provenance?.sourceText,first,
+  'later duplicate text cannot overwrite the source of an earlier pending dose');
+ assert(provenance?.intentId,'original deferred medication keeps its clinical intent identity');
+ rows.push({q:'pending antibiotic retains original source when later dose request arrives',pass:true,
+  source:provenance?.sourceText});
+}
 fs.mkdirSync('qa/android-fix-results',{recursive:true});
 fs.writeFileSync('qa/android-fix-results/orders.json',JSON.stringify({
  scope:'generated native VM with late V412 nurse and send wrappers; local actor/DOM/path fixtures',
