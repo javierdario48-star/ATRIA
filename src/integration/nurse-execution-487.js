@@ -216,7 +216,10 @@ export function applyNurseExecution487(html){
       continue;
      }
      const evidence=target.csNurse487MedicationProvenance||(target.csNurse487MedicationProvenance=[]);
+     const source=[...(target.csNurse487OrderAudit||[])].reverse().find(e=>
+      e.patientUid===uid&&e.items?.some(x=>x.kind==='therapy'&&x.id===item.id&&!x.negated));
      evidence.push({uid,itemId:item.id,orderText:String(item.text).slice(0,180),
+      intentId:source?.id||null,sourceText:source?.text||String(item.text).slice(0,180),
       origin:'orden farmacológica previa',at:target.gameMinute});
      if(evidence.length>80)evidence.splice(0,evidence.length-80);
     }
