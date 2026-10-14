@@ -202,6 +202,24 @@ export function applyNurseExecution487(html){
     const index=pending.indexOf(item);if(index<0)continue;
     pending.splice(index,1);
     const isCatalog=typeof MONITOR_THERAPY_CATALOG!=='undefined'&&MONITOR_THERAPY_CATALOG.some(x=>x.id===item.id);
+    // Deferred IV medication remains bound to its own original order text,
+    // never to whichever message arrives while cannulation completes.
+    if(isCatalog){
+     const scanned=window.csNurseVoice487?.parse?.(item.text);
+     const authorized=!!scanned?.active&&scanned.items?.some(x=>
+      x.kind==='therapy'&&x.id===item.id&&!x.negated&&!x.routeOnly);
+     if(!authorized){
+      (target.csNurse487RejectedOrders||(target.csNurse487RejectedOrders=[])).push({
+       uid,itemId:item.id,text:String(item.text||'').slice(0,180),reason:'no matching explicit drug'});
+      target.csNurse487RejectedOrders=target.csNurse487RejectedOrders.slice(-30);
+      nurseSay('Orden pendiente BLOQUEADA: medicamento sin indicación explícita coincidente.');
+      continue;
+     }
+     const evidence=target.csNurse487MedicationProvenance||(target.csNurse487MedicationProvenance=[]);
+     evidence.push({uid,itemId:item.id,orderText:String(item.text).slice(0,180),
+      origin:'orden farmacológica previa',at:target.gameMinute});
+     if(evidence.length>80)evidence.splice(0,evidence.length-80);
+    }
     const ok=isCatalog?addMonitorTherapy(item.text):nurseNatural('enfermera '+item.text);
     if(item.id==='vasopressor')item.noraExecution487=target.pendingTherapies?.get(item.id);
     if(ok===false){
