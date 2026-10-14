@@ -150,7 +150,7 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
     if(!member)return failure(403,'No sos integrante de esta guardia');
     if(method==='GET'){
      const all=await get('room-msg',id,[]),after=finite(query.after,0,1e12);
-     return success({room:await publicRoom(room,user.id),messages:all.filter(x=>x.sequence>after).slice(-100),cursor:Math.max(after,...all.map(x=>x.sequence),0),closed:false});
+     const page=all.filter(x=>x.sequence>after).slice(0,100);return success({room:await publicRoom(room,user.id),messages:page,cursor:page.length?page.at(-1).sequence:after,closed:false});
     }
     if(method==='POST'){
      const data=body.message;if(!data||typeof data!=='object'||JSON.stringify(data).length>6000)return failure(400,'Mensaje inválido');
@@ -158,7 +158,7 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
      const obj={sequence,userId:user.id,data,createdAt:now()};
      const isSnapshot=data.type==='state'||data.kind==='snapshot';
      const items=isSnapshot?q.filter(x=>!(x.userId===user.id&&(x.data.type==='state'||x.data.kind==='snapshot'))):q;
-     await put('room-msg',id,[...items,obj].slice(-120),ttl.room);
+     await put('room-msg',id,[...items,obj].slice(-320),ttl.room);
      return success({ok:true,sequence});
     }
    }
