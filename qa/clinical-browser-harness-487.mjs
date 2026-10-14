@@ -82,9 +82,10 @@ export async function clinicalBrowserHarness487(count=2){
    const p=csV41Challenge.patients[index];return p?.ownerId&&sim?.patientInstance?.uid===p.uid&&!sim.__csRoomSpectator;
   },index,{timeout:30000});
  }
- async function send(client,text){
+ async function send(client,text,{tap=false}={}){
   const page=clients[client].page,input=page.locator('#dieInput');
-  await input.fill(text);await input.press('Enter');
+  await input.fill(text);
+  if(tap)await page.locator('#dieSend').click();else await input.press('Enter');
  }
  async function snapshot(){return Promise.all(clients.map(c=>c.page.evaluate(()=>({
   id:csV41Challenge.selfId,room:csV41Challenge.id,mode:csV41Challenge.mode,active:csV41Challenge.active,
