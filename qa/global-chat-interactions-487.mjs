@@ -36,6 +36,12 @@ try{
    'all room participants must know every authenticated peer');
   await sleep(1600);
  });
+ await check('all-physicians-meet-within-local-hearing-range',async()=>{
+  await Promise.all(h.clients.map((_,i)=>approach(i)));
+  const p=await Promise.all(h.clients.map(c=>c.page.evaluate(()=>({x:player.x,y:player.y}))));
+  for(let i=0;i<p.length;i++)for(let j=i+1;j<p.length;j++)
+   assert(Math.hypot(p[i].x-p[j].x,p[i].y-p[j].y)<=280,'clients must be nearby to hear each other');
+ });
  await check('everyone-sends-unprefixed-message-correct-identity',async()=>{
   for(let i=0;i<count;i++){const msg='BOT_DOCTOR_'+count+'_'+i;
    await h.send(i,msg,{tap:i%2===0});const views=await one(msg);
