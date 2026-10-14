@@ -345,3 +345,57 @@ html[data-atria-ui="tactical"] .csModal .csPanel {
   html[data-atria-ui] #chatDock,
   html[data-atria-ui] #chatDock * {animation-duration:.01ms!important;transition-duration:.01ms!important;}
 }
+
+/* Visual audit v2: three legacy top overlays occupied the same strip. */
+html[data-atria-ui] body:not(.keyboardOpen) #nsWardNotice {
+  top:calc(63px + env(safe-area-inset-top))!important;
+  z-index:85!important;
+  max-height:64px!important;
+  overflow:hidden!important;
+}
+html[data-atria-ui] body:not(.keyboardOpen) .csChallengeHud {
+  top:calc(112px + env(safe-area-inset-top))!important;
+  left:10px!important;right:auto!important;
+  transform:none!important;
+  max-width:calc(100vw - 20px)!important;
+  z-index:86!important;
+}
+html[data-atria-ui="immersive"] #atriaGuardScore487[data-mode="coop"],
+html[data-atria-ui="immersive"] #atriaGuardScore487[data-mode="solo"] {
+  display:none!important; /* team XP and resolved count already available in mode HUD/reception */
+}
+html[data-atria-ui="tactical"] #atriaGuardScore487[data-visible="1"] {
+  top:calc(174px + env(safe-area-inset-top))!important;
+  max-width:calc(100vw - 20px)!important;
+}
+html[data-atria-ui="tactical"] #atriaGuardScore487 .ags-shell {
+  padding:6px 10px!important;
+  border-radius:8px!important;
+  background:rgba(5,24,32,.93)!important;
+}
+html[data-atria-ui="tactical"] #atriaGuardScore487 .ags-summary .ags-eyebrow {
+  display:none!important;
+}
+html[data-atria-ui="tactical"] #atriaGuardScore487 .ags-summary .ags-stat {
+  flex-direction:row!important;
+  gap:6px!important;
+}
+html[data-atria-ui="tactical"] #atriaGuardScore487 .ags-summary .ags-stat>span {
+  font-size:10px!important;letter-spacing:0!important;
+}
+html[data-atria-ui="tactical"] #atriaGuardScore487 .ags-summary .ags-stat>strong {
+  font-size:14px!important;
+}
+html[data-atria-ui="tactical"] #atriaGuardScore487 .ags-summary .ags-metrics>i {
+  height:18px!important;
+}
+/* Guard status becomes redundant and physically overlays the composer on IME focus.
+   Hide auxiliary overlays only while typing; do not hide the critical bedside monitor. */
+html[data-atria-ui] body.keyboardOpen #nsWardNotice,
+html[data-atria-ui] body.keyboardOpen .csChallengeHud,
+html[data-atria-ui] body.keyboardOpen #atriaGuardScore487 {
+  display:none!important;
+}
+html[data-atria-ui] body:not(.keyboardOpen) #chatDock:not(.nsLobbyChat):not(.historyExpanded) .chatRecent {
+  bottom:calc(100% + 35px)!important;
+}
