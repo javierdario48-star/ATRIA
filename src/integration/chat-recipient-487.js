@@ -221,9 +221,10 @@ export function applyChatRecipient487(html,{reverse=false}={}){
   };
   // The movement sampler and remote sprites remain untouched. Draw a speech
   // overlay at each visible remote's current position, after its nameplate.
-  if(typeof csDrawRemote==='function'){
+  const installWardBubbleOverlay487=()=>{
+   if(typeof csDrawRemote!=='function'||csDrawRemote.__atriaWardBubbleOverlay487)return;
    const drawOriginalRemotes487=csDrawRemote;let lastVerifiedRoster487=0;
-   csDrawRemote=function(){
+   const overlay487=function(){
     const nowRoster487=performance.now();
     if(nowRoster487-lastVerifiedRoster487>500){lastVerifiedRoster487=nowRoster487;window.csWardRefreshRoster487?.();}
     const result=drawOriginalRemotes487.apply(this,arguments);
@@ -238,7 +239,12 @@ export function applyChatRecipient487(html,{reverse=false}={}){
     }
     return result;
    };
-  }
+   overlay487.__atriaWardBubbleOverlay487=true;
+   csDrawRemote=overlay487;
+  };
+  installWardBubbleOverlay487();
+  // Late remote rendering is installed after the document body: wrap final renderer too.
+  if(typeof setTimeout==='function')setTimeout(installWardBubbleOverlay487,0);
   // Room-level history survives switching patients or opening another box.
   // A patient's clinical anamnesis remains separate and authoritative.
   // The HTTP room already provides a server-authenticated participant list.
