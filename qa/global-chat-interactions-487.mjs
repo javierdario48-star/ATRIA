@@ -111,6 +111,28 @@ try{
   for(const v of views.slice(1))assert.deepEqual(v,views[0],
    'host and Android guest must share actual patient instances');
  });
+ await check('naturally-arriving-second-patient-synchronizes-on-mobile',async()=>{
+  const host=h.clients[0].page;
+  await host.waitForFunction(()=>csV41Challenge.patients.some(p=>p.index>0&&p.state==='waiting'&&p.instance?.bedId),
+   {},{timeout:35000});
+  const arrived=await host.evaluate(()=>{
+   const p=csV41Challenge.patients.find(p=>p.index>0&&p.state==='waiting'&&p.instance?.bedId);
+   return {uid:p.uid,bedId:p.instance.bedId,index:p.index,caseId:p.caseId};
+  });
+  await Promise.all(h.clients.slice(1).map(c=>c.page.evaluate(()=>window.csRequestRoomSync487?.())));
+  const reports=await Promise.all(h.clients.map(async c=>{
+   await c.page.waitForFunction(a=>csV41Challenge.patients.some(p=>p.uid===a.uid&&p.state==='waiting'&&p.instance?.bedId===a.bedId),
+    arrived,{timeout:25000});
+   return c.page.evaluate(a=>{
+    const p=csV41Challenge.patients.find(p=>p.uid===a.uid),mon=window.csSceneMonitorsV413().find(m=>m.patientUid===a.uid);
+    return {uid:p.uid,bedId:p.instance.bedId,index:p.index,caseId:p.caseId,
+     state:p.state,rendered:!!mon&&mon.bedId===p.instance.bedId};
+   },arrived);
+  }));
+  for(const r of reports){assert.equal(r.uid,arrived.uid);assert.equal(r.bedId,arrived.bedId);
+   assert.equal(r.caseId,arrived.caseId);assert.equal(r.state,'waiting');assert.equal(r.rendered,true);}
+  console.log('NATIVE_ARRIVAL_SYNC_487',JSON.stringify({arrived,clients:reports}));
+ });
  await check('everyone-sends-unprefixed-message-correct-identity',async()=>{
   for(let i=0;i<count;i++){const msg='BOT_DOCTOR_'+count+'_'+i;
    await h.send(i,msg,{tap:i%2===0});const views=await one(msg);
