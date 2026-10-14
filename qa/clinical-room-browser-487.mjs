@@ -59,6 +59,22 @@ try{
   });
   await check('npc-routing',async()=>{
    await h.select(0);
+   // A spoken ward message is retained by doctors physically in earshot.
+   // Walk the other independent browser processes into the patient's box.
+   await Promise.all(h.clients.slice(1).map(async c=>{
+    await c.page.evaluate(()=>{
+     const a=csV41Challenge.patients[0].instance.bed.approach;
+     const g=nearestPassable(a[0],a[1],8)||a;
+     setPlayerTarget(...worldToScreen((g[0]+.5)*TW,(g[1]+.5)*TH));
+    });
+    await c.page.waitForFunction(()=>{
+     const a=csV41Challenge.patients[0]?.instance?.bed?.approach;
+     if(!a)return false;const g=nearestPassable(a[0],a[1],8)||a;
+     return Math.hypot(player.x-(g[0]+.5)*TW,player.y-(g[1]+.5)*TH)<52;
+    },{},{timeout:30000});
+    await c.page.evaluate(()=>csSendPeerState());
+   }));
+   await new Promise(r=>setTimeout(r,1200));
    await h.send(0,'Paciente, ¿desde cuándo tiene dolor?');
    await h.clients[1].page.waitForFunction(()=>sim.globalChat.some(m=>m[0]==='patient'));
    await h.send(0,'/equipo Solicitaré la tomografía');
