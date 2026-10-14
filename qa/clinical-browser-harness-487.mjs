@@ -29,7 +29,7 @@ export async function clinicalBrowserHarness487(count=2){
     const operation=transaction.then(()=>u.pathname==='/api/lobby-sync'?core.signalRoute(args):core.route(args));
     transaction=operation.catch(()=>{});const result=await operation;
     const fault=faults.find(f=>f.remaining>0&&req.method==='POST'&&f.match(args));
-    requests.push({at:Date.now(),path:u.pathname,method:req.method,body:args.body,status:result.status,lostResponse:!!fault});
+    requests.push({at:Date.now(),path:u.pathname,method:req.method,body:args.body,status:result.status,lostResponse:!!fault,...(req.method==='GET'&&u.pathname.includes('/messages')?{after:args.query.after,cursor:result.body?.cursor,roomMembers:result.body?.room?.members?.map(m=>({userId:m.userId,peerId:m.peerId})),heard:result.body?.messages?.filter(m=>m.data?.kind==='team_chat').map(m=>({userId:m.userId,peerId:m.data.peerId,text:m.data.text,messageId:m.data.messageId,originPeerId:m.data.originPeerId}))}: {})});
     if(fault){fault.remaining--;res.writeHead(503,{'Content-Type':'application/json'});res.end(JSON.stringify({error:'Test: response lost AFTER acceptance'}));return}
     res.writeHead(result.status,{'Content-Type':'application/json'});res.end(JSON.stringify(result.body));return;
    }
