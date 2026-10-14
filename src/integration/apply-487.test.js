@@ -244,7 +244,7 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
 
 
  // Regression Phase 2: B4 patient sprite must win over overlapping B4 monitor target.
- const cs413Start=out.indexOf(' function cs413PatientAtTap(');
+ const cs413Start=out.indexOf(' function cs413TapTarget487(');
  const cs413Stop=out.indexOf(' openBedsideMonitor=function(anchor){',cs413Start);
  assert.ok(cs413Start>0&&cs413Stop>cs413Start,'effective 4.13 scene must expose patient-specific hit routing');
  const cs413Calls=[];
@@ -252,6 +252,7 @@ assert.match(out,/startEpoch!==VoiceV2\.startEpoch/,'stale permission response r
  const b3={index:2,instance:{uid:'case-B3',bedId:'B3',bed:{patient:[827,424]}}};
  const cs413={C:{},editorOpen:false,scale:1,handleGameTap:null,pending:null,monitorIntent:null,
    patients:()=>[b3,b4],worldToScreen:(x,y)=>[x,y],
+   monitorFor:inst=>{const p=inst.bed.patient;return {x:inst.bedId==='B3'?830:inst.bedId==='B4'?978:p[0]+31,y:inst.bedId==='B3'?394:inst.bedId==='B4'?391:p[1]-33,width:30,height:25}},window:{},
    scene:()=>[{bedId:'B4',x:978,y:391,width:30,height:25},{bedId:'B3',x:830,y:394,width:30,height:25}],
    hit:(x,y,m)=>Math.abs(x-m.x)<=22&&Math.abs(y-m.y)<=22,
    select:(p,monitor)=>cs413Calls.push([p.instance.bedId,monitor]),
