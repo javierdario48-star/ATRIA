@@ -20,10 +20,10 @@ Files: `src/v5/content/**`, `src/v5/engine/navigation.js`, `src/v5/engine/naviga
 
 Interfaces: content provides hospital dimensions/grid/doors/interactions, original images, original case catalog and provenance hashes. `createNavigation(map)` provides `tileAt(x,y)`, `center(c,r)`, `passable(c,r)`, `nearest(c,r,max)`, `route(start,goal)`, `move(actor,dt)` and `target(actor,x,y)`. No DOM, globals or timers.
 
-- [ ] Write failing content/provenance and collision/navigation contracts.
-- [ ] Extract data and assets ONCE, recording source hashes and symbols. Extraction is a migration tool, never a build dependency.
-- [ ] Implement deterministic movement/A* with original speed (205 px/s), diagonal corner protection and reachable bedside targets.
-- [ ] Run content/navigation tests and frozen source contract; commit.
+- [x] Write failing content/provenance and collision/navigation contracts.
+- [x] Extract data and assets ONCE, recording source hashes and symbols. Extraction is a migration tool, never a build dependency.
+- [x] Implement deterministic movement/A* with original speed (205 px/s), diagonal corner protection and reachable bedside targets.
+- [x] Run content/navigation tests and frozen source contract; commit.
 
 ## Task 2: Standalone executable application
 
@@ -31,10 +31,10 @@ Files: `src/v5/app/**`, `src/v5/render/**`, `src/v5/ui/**`, `src/v5/web/**`, `sc
 
 Interfaces: `createApplication({document,window,content})` owns boot/lobby/guard/destroy; renderer consumes world snapshots and never mutates clinical state; inputs issue commands; `FrameScheduler` owns simulation cadence. Clinical functionality that has not migrated is disclosed rather than reported as working.
 
-- [ ] Add failing build/browser contract: independent HTML entry, original images, complete lobby, real movement and guard/lobby transition.
-- [ ] Implement canonical HTML/CSS and explicit modules; keep original map, whole-character sprites and familiar HUD/chat controls.
-- [ ] Build reproducibly with a SHA-256 file manifest and explicit import closure; reject patch modules/global code generation.
-- [ ] Verify desktop/mobile browser boot, movement, NPC presence, focus and repeated transition cleanup; commit a navigable checkpoint.
+- [x] Add failing build/browser contract: independent HTML entry, original images, complete lobby, real movement and guard/lobby transition.
+- [x] Implement canonical HTML/CSS and explicit modules; keep original map, whole-character sprites and familiar HUD/chat controls.
+- [x] Build reproducibly with a SHA-256 file manifest and explicit import closure; reject patch modules/global code generation.
+- [x] Verify desktop/mobile browser boot, movement, NPC presence, focus and repeated transition cleanup; commit a navigable checkpoint.
 
 ## Task 3: One clinical path and one communication path
 
@@ -43,6 +43,9 @@ Files: `src/v5/clinical/**`, room authority/port integration, patient panels and
 Interfaces: native executor owns patient state; room authority serializes and authenticates commands; text, touch and voice submit the same envelope. Renderer only reads confirmed state. Catalogs retain original medical content.
 
 - [ ] Characterize original studies, procedures, medicines and physiologic timing for one complete case.
+- [x] Connect real study requests, deadlines and original results to the actual game UI through one authority/port.
+- [x] Add serialized native-completion events; settle pending duplicate requests against one physical study.
+- [x] Preserve every current-case native study label and exact menu selection; reproduce and fix disposal races.
 - [ ] Add negative regression tests (hemogram cannot dose albumin, retries cannot duplicate effects, pending action provenance, IV dependency).
 - [ ] Migrate established algorithms to explicit modules and wire the real game UI through the V5 authority/port.
 - [ ] Verify actual browser clinical case, shared transcript and lifecycle cleanup; commit.
@@ -67,6 +70,7 @@ Interfaces: native executor owns patient state; room authority serializes and au
 - 2026-10-15: remote HEAD and successful CI 38658985952 verified. Isolated linked worktree created; unrelated modified 4.8.7 checkout preserved. Existing V5 contracts: 20/20 passing; pure core build and golden-master contract passing. Full historical regression started separately.
 - Pre-flight: Task 1 content/navigation feeds Task 2 render/app; no writes overlap audit tasks. Task 3 consumes existing V5 authority/port; no second executor authorized. Task 4 must use Task 3 confirmed state, not replay effects.
 - Task 1 complete: published A1 `a171de907317f00a92d0bfda9f8dfd878da22c23`, CI 38663219281 success. Canonical source and swept-circle navigation; no legacy source deleted.
-- Task 2 verification: 47 V5 contracts green; standalone build reproduced without vendor. Real desktop/mobile-emulated/landscape navigation, 15 mode cycles, IME and actual listener disposal passed. Review findings reproduced before fixes; six boot/focus/rotation regressions now pass. Physical Android remains untested.
-- Task 3 preparation only: study service 73×13 = 949 canonical study/result combinations passed. It is an isolated module until wired through the sole authority/port; no administration/physiology migration claimed.
+- Task 2 complete: published B1 `da4b64e200effc605e18f47013be6777dd8c376c`, CI 38663833989 success. 47 V5 contracts green; standalone build reproduced without vendor. Real desktop/mobile-emulated/landscape navigation, 15 mode cycles, IME and actual listener disposal passed. Review findings reproduced before fixes; six boot/focus/rotation regressions now pass. Physical Android remains untested.
+- Task 3 C1: real study service wired through the sole authority/port to chat and Historia/Estudios. 73×13 = 949 canonical study/result combinations plus all 54 native study labels are covered; 68 V5 contracts pass. Pending completion updates the original command; duplicate messages share one order/result. Review findings reproduced RED before fixes. Native administration/physiology, full patient dialogue and case closure remain pending; this does not complete Task 3.
+- Next: C2 complete native CIRR path, including spironolactone administration, original physiological response and closure/XP. Reference locations and the dual clock mapping are recorded in `ATRIA_50_CORE_REBUILD.md`. No re-extraction or repeat navigation rebuild.
 - Publishing decision: shell Git has read access but no push credential; use the connected GitHub Git-data API, verify the published tree equals the local tested tree, and update only the experimental ref with an expected-HEAD lease. Align the local HEAD to the byte-identical published commit without changing working files.

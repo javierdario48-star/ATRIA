@@ -8,6 +8,13 @@ export function routeWardSpeech(text,context={}){
  const original=String(text??'').trim();
  if(!original||original.length>500)return {recipient:'none',patientUid:null,intents:[],error:'invalid-text'};
  const normalized=clean(original);
+ const explicitStudy=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(original);
+ if(explicitStudy){
+  const patientUid=context.patientUid??null,study=(context.studies||[]).find(s=>s.id===explicitStudy[1]);
+  const error=!study?'unknown-study':!patientUid?'no-patient-target':null;
+  return {recipient:'nurse',patientUid,original,intents:error?[]:[{kind:'study.request',id:study.id,
+   sourceText:original,clause:original,count:1}],...(error?{error}:{})};
+ }
  const focus=context.focusedNpc;
  const recipient=nurseAddress.test(normalized)||focus==='nurse'?'nurse':
   vegaAddress.test(normalized)||focus==='vega'?'vega':'patient';

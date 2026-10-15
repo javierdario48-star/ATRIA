@@ -2,6 +2,7 @@ import {FrameScheduler} from '../../app/frame-scheduler.js';
 import {Lifecycle} from '../../app/lifecycle.js';
 import {createWorld} from './world.js';
 import {createHospitalRenderer} from '../render/hospital.js';
+import {createGuardSession} from '../clinical/guard-session.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PROFILE_KEY='atria.v5.profile.v1';
@@ -17,7 +18,8 @@ export function readProfile(storage){
 export async function createApplication({document,window,content,signal}){
  const rootLifecycle=new Lifecycle(),scope=rootLifecycle.enter('application');
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
-  toastUntil=0,focusedNpc=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0;
+  toastUntil=0,focusedNpc=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
+  guardSession=null,lastPanelUpdate=0,messageNumber=0;
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
  const renderer=await createHospitalRenderer(canvas,content,{signal,window});
  const scheduler=new FrameScheduler(),listeners=[];
@@ -33,17 +35,30 @@ export async function createApplication({document,window,content,signal}){
   ui('chatHistory').append(el);while(ui('chatHistory').children.length>300)ui('chatHistory').firstChild.remove();
   ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
  }
+ function renderGuardCommunication(){
+  if(!guardSession)return;const rows=guardSession.read().messages.slice(-300),fragment=document.createDocumentFragment();
+  history.length=0;
+  for(const row of rows){
+   history.push({name:row.name,text:row.text,system:row.role!=='player'});
+   const el=document.createElement('div'),who=document.createElement('b');el.className='line';el.dataset.messageId=row.id;
+   who.textContent=row.name+':';el.append(who,document.createTextNode(row.text));fragment.append(el);
+  }
+  ui('chatHistory').replaceChildren(fragment);ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
+  renderStudyOrders();
+ }
  function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;line('ATRIA',message,true);}
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard';
-  ui('status').textContent=guard?(s.mode==='apprentice'?'Aprendiz':'Solitario')+' · exploración 5.0':'Lobby local · 5.0 experimental';
+  const minute=Math.floor(guardSession?.read().clock.clinicalMinute||0),total=8*60+15+minute;
+  ui('status').textContent=guard?(s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':'Lobby local · 5.0 experimental';
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
+  ui('peopleButton').textContent=guard?'Historia':'Personas';
   ui('recipientButton').textContent=guard?({nurse:'Enfermera',vega:'Dr. Vega'}[focusedNpc]||'Paciente cercano'):'Lobby · público';
   input.placeholder=guard?'Hablar en la guardia…':'Hablar en el lobby…';
   document.body.dataset.phase=s.phase;document.body.dataset.generation=String(s.generation);
  }
  function enterLobby(){
-  close();world.enterLobby();resetChat('El lobby está listo para hablar.');
+  guardSession?.dispose();guardSession=null;close();world.enterLobby();resetChat('El lobby está listo para hablar.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;updateHud();
  }
  function guardSetup(){
@@ -53,7 +68,7 @@ export async function createApplication({document,window,content,signal}){
    <button class="mode" disabled><b>Cooperativo</b><small>2–4 jugadores · pendiente de integrar.</small></button>
    <button class="mode" disabled><b>Competitivo</b><small>2–4 jugadores · pendiente de integrar.</small></button></div>
    <label class="field">Caso<select id="caseChoice">${content.cases.map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join('')}</select></label>
-   <p class="note">Primera compilación navegable. La simulación clínica y el multijugador siguen en migración; no otorga XP.</p>
+   <p class="note">Navegación y estudios conectados. Tratamientos, evolución clínica, tutor, multijugador y XP siguen en migración.</p>
    <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);
  }
  function selectRecipient(kind){
@@ -66,8 +81,28 @@ export async function createApplication({document,window,content,signal}){
  function showPatient(patient){
   const c=content.cases.find(c=>c.id===patient.caseId);if(!c)return;
   open(`<h2>${esc(patient.bedId)} · Paciente</h2><p>${esc(c.demo)}</p><div class="note">${esc(c.chief)}</div>
-   <p>Historia clínica, examen, estudios y tratamientos se habilitan a medida que se conecta el motor común.</p>
-   <div class="actions"><button data-action="patient-target">Hablar</button><button data-action="close">Cerrar</button></div>`);
+   <p>Podés solicitar estudios a Enfermera y consultar aquí sus resultados. Los tratamientos y la evolución clínica todavía no están habilitados.</p>
+   <div class="actions"><button data-action="patient-target">Hablar</button><button data-action="studies">Estudios</button><button data-action="close">Cerrar</button></div>`);
+ }
+ function showStudies(){
+  if(!guardSession)return;
+  open(`<h2>Estudios solicitados</h2><p>Acercate al paciente y pedí el estudio a Enfermera. Un minuto real equivale a una hora clínica.</p>
+   <div id="studyOrders" class="data-list"></div><label class="field">Estudio<select id="studyChoice">${guardSession.catalog().map(s=>`<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('')}</select></label>
+   <div class="actions"><button data-action="request-study" class="primary">Pedir a Enfermera</button><button data-action="close">Cerrar</button></div>`);
+  renderStudyOrders();
+ }
+ function renderStudyOrders(){
+  const node=ui('studyOrders');if(!node||!guardSession)return;
+  const state=guardSession.read();node.innerHTML=state.patient.orders.length?state.patient.orders.map(order=>
+   `<div data-study="${esc(order.id)}" data-status="${order.status}"><b>${esc(order.label)}</b><small>${order.status==='done'?'Resultado disponible':
+    'Pendiente · '+Math.max(0,Math.ceil(order.readyAtMinute-state.clock.clinicalMinute))+' min clínicos'}</small>${order.status==='done'?'<p>'+esc(order.result)+'</p>':''}</div>`).join(''):'<p>Todavía no solicitaste estudios.</p>';
+ }
+ async function submitText(text){
+  if(!text.trim())return;
+  if(!guardSession){line(profile.name,text);return;}
+  const session=guardSession;
+  try{await session.post({id:'message-'+(++messageNumber),text});}
+  catch{if(guardSession===session)toast('No pude confirmar el mensaje.');}
  }
  function canvasDown(event){
   if(world.snapshot().phase==='title')return;
@@ -96,16 +131,27 @@ export async function createApplication({document,window,content,signal}){
   world=createWorld(content,profile);enterLobby();
  });
  listen(ui('guardButton'),'click',()=>world.snapshot().phase==='guard'?enterLobby():guardSetup());
- listen(ui('peopleButton'),'click',()=>open('<h2>Personas</h2><p>Esta compilación funciona en modo local. La presencia, las invitaciones y las salas compartidas todavía no están conectadas.</p>'));
+ listen(ui('peopleButton'),'click',()=>world.snapshot().phase==='guard'?showPatient(world.snapshot().patients[0]):
+  open('<h2>Personas</h2><p>Esta compilación funciona en modo local. La presencia, las invitaciones y las salas compartidas todavía no están conectadas.</p>'));
  listen(ui('profileButton'),'click',showProfile);listen(ui('modalClose'),'click',close);
  listen(dialog,'click',event=>{
   const button=event.target.closest('button');if(!button)return;
   if(button.dataset.mode){draftMode=button.dataset.mode;guardSetup();}
   if(button.dataset.action==='close')close();
   if(button.dataset.action==='start-guard'){
-   world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});close();resetChat('Guardia de exploración. Clínica en migración.');updateHud();
+   guardSession?.dispose();world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});
+   const s=world.snapshot(),roomId='guard-'+window.crypto.randomUUID();
+   guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,
+    patient:s.patients[0],content,resolveContext:()=>({patientUid:world.nearby(),focusedNpc}),
+    onChange:(_event,room)=>{if(guardSession?.read().room.roomId===room.roomId)renderGuardCommunication();}});
+   close();resetChat('Guardia experimental. Estudios conectados; tratamientos y evolución en migración.');updateHud();
   }
   if(button.dataset.action==='patient-target'){close();selectRecipient('patient');}
+  if(button.dataset.action==='studies')showStudies();
+  if(button.dataset.action==='request-study'){
+   const study=guardSession?.catalog().find(s=>s.id===ui('studyChoice').value);
+   if(study){close();submitText('/estudio '+study.id);}
+  }
   if(button.dataset.action==='save-profile'){
    profile={name:ui('aliasChoice').value.trim().slice(0,32)||'Médico',scrubColor:ui('colorChoice').value};
    try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
@@ -120,8 +166,7 @@ export async function createApplication({document,window,content,signal}){
  });
  listen(ui('chatForm'),'submit',event=>{
   event.preventDefault();if(composition)return;const text=input.value.trim();if(!text)return;
-  line(profile.name,text);input.value='';
-  if(world.snapshot().phase==='guard')line('ATRIA','Mensaje registrado. Las respuestas clínicas y las órdenes aún no están conectadas.',true);
+  input.value='';submitText(text);
  });
  listen(input,'compositionstart',()=>composition=true);
  listen(input,'compositionend',()=>{composition=false;if(deferredRecipient){const target=deferredRecipient;deferredRecipient=null;selectRecipient(target);}});
@@ -147,19 +192,20 @@ export async function createApplication({document,window,content,signal}){
  listen(input,'focus',()=>{world.stop();drag=null;keyboard();});listen(input,'blur',()=>{keyboard();resize();});
  function frame(now){
   if(destroyed)return;raf=null;frames++;
-  scheduler.tick(now,{simulate:dt=>world.step(dt),maintain:()=>{
+  scheduler.tick(now,{simulate:dt=>{world.step(dt);guardSession?.advance(dt);},maintain:()=>{
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
+   if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();renderStudyOrders();}
   },render:()=>renderer.draw(world.snapshot()),isMobile:window.innerWidth<700});
   raf=window.requestAnimationFrame(frame);
  }
  function resume(){if(!destroyed&&raf===null){scheduler.reset(window.performance.now());raf=window.requestAnimationFrame(frame);}}
  function pause(){if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
- function destroy(){if(destroyed)return;destroyed=true;pause();close();rootLifecycle.leave();}
+ function destroy(){if(destroyed)return;destroyed=true;guardSession?.dispose();guardSession=null;pause();close();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
  renderer.draw(world.snapshot());resume();
- return Object.freeze({snapshot:()=>({...world.snapshot(),history:structuredClone(history)}),
+ return Object.freeze({snapshot:()=>({...world.snapshot(),history:structuredClone(history),clinical:guardSession?.read()||null}),
   diagnostics:()=>({destroyed,raf:raf===null?0:1,listeners:destroyed?0:listeners.length,timers:0,frames,
    renderer:renderer.metrics(),generation:world.snapshot().generation}),destroy});
 }

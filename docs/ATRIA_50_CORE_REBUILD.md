@@ -2,7 +2,7 @@
 
 **Branch:** atria-5.0-core-rebuild-experimental
 **Protected legacy baseline:** atria-4.8.7-structural-cleanup-qa @ be6707b9ea9c9cff66db442acc374e4aea95f6ce (16/16 GitHub Actions jobs green).
-**Status:** independently built, navigable experimental game. Original map/artwork, walking, local lobby and solo/apprentice exploration now run from canonical ESM source. Full clinical simulation, voice, shared multiplayer and XP are NOT migrated or certified. No production deployment.
+**Status:** independently built, navigable experimental game with real local study requests/results. Original map/artwork, walking, local lobby, solo/apprentice exploration and the study panel run from canonical ESM source. Full clinical simulation, voice, shared multiplayer and XP are NOT migrated or certified. No production deployment. This is a recoverable partial reconstruction, not ATRIA 5.0 completion.
 
 ## Technical decision
 
@@ -19,7 +19,7 @@ The Forgotten Server (TFS/OTServ) supplies architectural inspiration: protocol/i
 - src/v5/index.js: reuse existing proven roomReducer and FrameScheduler, no monkey-patching.
 - Tests: treatment/study separation, delayed/repeated network commands, wrong patient, forged actor, 2–4 participants, competitive claiming, question/negation, unconfirmed receipts and stale snapshots.
 
-This is an executable domain slice. Its native port is injected by a test fixture until the game's existing native executor is wired through a proper module interface. **Do not claim that these tests demonstrate in-game integration.** User-facing clinical logic and screen rendering are still those of 4.8.7.
+At the recovery checkpoint these were isolated domain modules with an injected test executor. B1 now supplies an independent renderer/application, and C1 connects the real study service through this authority and port. Medication/physiology remain unavailable in the new app. **The 2–4-member domain tests are objects in one process, not independent multiplayer clients.** The unchanged 4.8.7 build remains the full-game control group.
 
 ## Design invariants
 
@@ -36,10 +36,10 @@ This is an executable domain slice. Its native port is injected by a test fixtur
 
 ## Subsequent reconstruction requirements
 
-1. Extract the current clinical case/registry data without duplicating medication or physiological policy.
-2. Replace only the original native engine's global call boundary with a tested module-based adapter: nurse procedures, orderStudy, addMonitorTherapy, valid completion receipts.
-3. Route actual chat/voice/tap traffic through the authoritative room endpoint; keep network signaling, movement and sprites unchanged during the handover.
-4. Port the current UI, map and assets byte-identically into a modular source build. Remove old script blocks and generated-source patches ONLY once equivalent functions and real-browser tests pass.
+1. Effective case/registry/map/asset extraction is complete (A1); do not repeat it or rebuild validated navigation.
+2. Study requests/results and pending completion are connected (C1). Next migrate native nurse procedures, dosing, administration and physiology through the same port; no parallel medication engine.
+3. Local guard text and study-menu selections use the authority. Patient dialogue, tutor, voice, lobby/guard history continuity and authenticated shared transport still need integration.
+4. Original map/assets and a canonical UI are independently executable (B1). Full UI/clinical parity is pending; remove historical source ONLY after its replacement passes equivalent browser tests.
 5. Establish real browser integration checks on the new page for 2, 3 and 4 participants plus suspend/reconnect and physical Android acceptance.
 6. Measure absence of duplicate listeners, timers, effects, messages and XP; protect the 13 existing case paths.
 7. No promotion to the playable branch until visual and behavior acceptance is achieved.
@@ -47,6 +47,11 @@ This is an executable domain slice. Its native port is injected by a test fixtur
 ## Run locally
 
 Node.js 22+:
+- npm run test:v5 (canonical game, studies, authority and lifecycle contracts)
+- npm run build:v5 (independent executable in out-v5)
+- npm run qa:v5-browser (real desktop/mobile-emulated navigation)
+- node qa/v5/boot-focus-browser.mjs
+- node qa/v5/studies-browser.mjs (real elapsed study clock and UI results)
 - node --test src/v5/core/room-authority.test.js src/v5/adapters/native-clinical-port.test.js
 - npm run build (verifies the untouched 4.8.7 candidate build)
 - node src/app/golden-master-contract.test.js
@@ -82,15 +87,45 @@ Published A1: `a171de907317f00a92d0bfda9f8dfd878da22c23`; [CI passed](https://gi
 - `src/v5/render/hospital.js`: original map, garden/pavement, aspect-preserving sprites, original gait proportions, camera scale/projection and nameplate. It only reads spatial snapshots.
 - `src/v5/web/`: canonical HTML/CSS and familiar HUD/chat/guard/profile controls. This is an exploration checkpoint: coop/competitive are visibly unavailable; clinical treatment/XP are not represented as implemented.
 - `scripts/build-v5.mjs`: explicit transitive ESM dependency closure plus committed content, deterministic SHA-256 manifest. Test builds in a clean temporary tree without `vendor/`, integration HTML, or old build output. `build:v5-core` now writes a different directory so it cannot erase the game distribution.
-- Isolated study service: `src/v5/clinical/studies.js` reuses the existing registry and turnaround rules. Tests complete 949 combinations (73 studies × 13 cases), preserve native results/fallbacks, and reject identity collisions/repeats. It is not yet connected to the UI or physiology.
+- At B1, isolated study service `src/v5/clinical/studies.js` reused the existing registry and turnaround rules. Tests complete 949 combinations (73 studies × 13 cases), preserve native results/fallbacks, and reject identity collisions/repeats. C1 below connects it to the UI, without claiming physiology integration.
 - `vercel.json` on this experimental branch selects the new build/output. Stable branches and production settings are unchanged; deploy only a branch preview.
 - Verification: `npm run test:v5` 47/47; independent build; original full `npm test` exit 0; golden master unchanged. Real Chromium desktop, Pixel 5 emulation and landscape pass movement, initial chat, 15 total guard/lobby cycles, synthetic IME, viewport bounds and measured listener/RAF disposal. No physical Android test was performed.
 - Independent review found unsupported saved colors, walking during editing, and uncaught module failures. All were reproduced RED and fixed GREEN, plus focused rotation. Six real-browser regression scenarios cover these findings.
 - State: an executable, navigable local game. No full 4.8.7 clinical/multiplayer parity claim.
 
+Published B1: `da4b64e200effc605e18f47013be6777dd8c376c`; [all CI jobs passed](https://github.com/javierdario48-star/ATRIA/actions/runs/38663833989). Branch preview opened in an independent browser and verified through title, lobby and guard. C1 supersedes this navigation-only checkpoint.
+
 Commands: `npm run build:v5`; `npm run test:v5`; `npm run qa:v5-browser`; `node qa/v5/boot-focus-browser.mjs`. Browser commands accept `PLAYWRIGHT_MODULE_PATH` and `CHROMIUM_EXECUTABLE_PATH`. CI archives the standalone build and browser evidence separately.
 
 Reference capture: `npm run build`, then `node qa/v5/capture-reference.mjs`. The resulting JSON can reproduce the one-time content migration; it is never needed to build/play V5.
+
+### C1 — Real local clinical studies and asynchronous completion
+
+- `src/v5/clinical/guard-session.js` composes the existing room authority, private native clinical port, canonical study service and original pure clinical clock. One authoritative patient owns orders. Trusted world proximity chooses the target; UI and chat cannot write patient data. Solo/apprentice use this same composition. Apprentice tutoring is still unavailable.
+- Text and the actual Historia → Estudios menu submit through the same serialized command lane. Case-specific study aliases precede the global fallback catalog. Menu selections preserve the selected study ID while presenting the familiar clinical label. No treatment is inferred from a study.
+- One real second advances one clinical minute (24 real minutes per 24 clinical hours). The study service retains original turnaround rules; frame scheduling owns advancement, without a second timer. Results remain visibly pending until the clinical deadline. No native physiology is loaded in this checkpoint.
+- `native-clinical-port.complete()` accepts only a known pending event with the exact patient/event receipt. Room authority serializes completion with commands, updates the original cached acknowledgement, and emits a monotonic completion event. It never attributes a result to later chat.
+- Two messages requesting one pending study share one physical order/result; both original acknowledgements settle, with one availability announcement. Retries cannot move the deadline or create another order. Disposal unsubscribes completion and blocks later composite actions/presentation commits; it cannot undo a native action already dispatched before disposal.
+- Review regressions were reproduced failing before correction: 12/54 native study labels selected a different catalog ID; a second pending request never settled; and disposal during an awaited native call allowed remaining composite actions. Tests now cover all 54 native study labels across the 13 cases, pending aliases, exact-ID menu routing and disposal during execution.
+- Local verification: 68 V5 tests; independent reproducible 45-file game build. Browser evidence is generated by `qa/v5/studies-browser.mjs`: actual walking to B1, range rejection, chat before any NPC, two pending hemogram requests, negated albumin, unsupported dual antibiotics, real elapsed wait, native CIRR anemia/thrombocytopenia result, selected APP CT identity and clean lobby return. This is a studies scenario, not a complete treated case.
+- Desktop, mobile-emulated and landscape navigation plus the six boot/focus regressions passed again after integration. Identical-camera original lobby background comparison passed (maximum mean channel errors .5167 and .3258, threshold 1/255); it does not certify complete UI parity. Golden-master historical-flow contract and protected-tree comparison passed.
+- Structural replacement: C1 adds no `apply-487.js`, historical HTML, global replacement, second pharmacology engine or network backend to the new executable. The only additional reused runtime module is the existing pure `clinical-clock-487.js`. All protected source/assets remain intact.
+- CI keeps the full historical regression enabled and adds the actual study-browser scenario. Exact publication SHA, CI and opened preview are recorded in the handoff checkpoint after publication; do not infer completion from unit tests alone.
+
+Acceptance boundaries:
+
+| Requirement | Verified scope / remaining work |
+| --- | --- |
+| Independent boot, map, characters, movement | Executable original-art navigation; deterministic clean build |
+| Studies | Local requests, native/fallback results, real deadlines, receipts and deduplication |
+| Solitario / Aprendiz | Navigation and studies; patient conversation, tutor, treatment and full guard flow pending |
+| Clinical executor | One port and one real study service; medications, procedures, physiology and closures pending |
+| Shared communication | Local guard ordered transcript; cross-client distribution and lobby/guard history continuity pending |
+| Cooperativo / Competitivo | Domain contracts only; visibly unavailable in the game; no independent-client certification |
+| Voice / mobile keyboard | Voice unavailable; synthetic IME and Pixel 5 Chromium emulation only |
+| Visual parity | Identical-camera lobby background comparison; full HUD/monitor/history/NPC parity pending |
+| Physical Android | Not performed |
+| Production | Unchanged; only experimental branch preview |
 
 ### Global audit evidence
 
@@ -102,6 +137,14 @@ Reusable modules: `FrameScheduler`, lifecycle class, nurse scanner, room authori
 
 ### Remaining native dependencies
 
-The existing V5 port is still a boundary, not a ported administration engine. Native dosing/administration/physiology, asynchronous nurse completion, patient dialogue/exam, tutor, consultations, dispositions, XP and shared transport still require explicit integration and browser parity tests. Pending acknowledgements need an event completion path before delayed medication migration. Do not mistake requested treatment for administered treatment.
+The V5 port now supports verified delayed completion, but is not a ported administration engine. Native dosing/administration/physiology, nurse procedures, patient dialogue/exam, tutor, consultations, dispositions, XP and shared transport still require explicit integration and browser parity tests. Do not mistake requested treatment for administered treatment. Direct concurrent calls to the private native port are not an authorized route: room authority owns serialization. Port-level concurrent-call hardening remains optional future defense, not multiplayer certification.
+
+### Next executable checkpoint — C2
+
+Continue from the published C1 tree; do not repeat A1/B1. Port the effective native CIRR clinical path: anamnesis/exam/vitals, existing study service, oral spironolactone with real administration receipt, native physiological response, diagnosis/reassessment and sala/observación closure with exactly-once XP. Characterize the original equations and nurse queues before moving them; do not reuse the generic severity helper or experimental shadow physiology as a substitute.
+
+Native reference locations in the protected original: initial patient state around 658–667; dosing/nurse/physiology around 1232–1437; delayed administration around 3745–3793; patient-bound queue bindings around 6911–6991. Effective case amendments around 3639–3668 and 5293–5322 are already captured in canonical content. These are migration references, never runtime imports or string anchors.
+
+Preserve the distinction between clinical study time (1 game minute per real second) and native physiology progression (normally .12 native minutes per real second; historical typing slowdown must be characterized). Only after a complete local case works should transport/2–4 independent-client integration and remaining case expansion be certified. The new build has removed historical code generation from execution; the old implementation has not been deleted.
 
 Plan and ongoing decisions: `docs/ATRIA_50_IMPLEMENTATION_PLAN.md`.

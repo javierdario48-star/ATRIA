@@ -74,3 +74,97 @@ test('native exception after dispatch is not automatically repeated',async()=>{
  assert.equal((await p.execute(req)).status,'unconfirmed');
  assert.equal(calls,1);
 });
+
+const pendingRequest={eventId:'pending-1',patientUid:'p',actorId:'doctor',
+ intent:{kind:'study.request',id:'hemograma'}};
+const finished=(status='executed')=>({eventId:'pending-1',patientUid:'p',status,
+ ...(status==='executed'?{receipt:{eventId:'pending-1',patientUid:'p',studyId:'hemograma'}}:
+  {reason:'native '+status})});
+function pendingPort(){
+ let calls=0;
+ const port=createNativeClinicalPort({withPatient:(uid,fn)=>fn({uid}),
+  invoke:({patientUid})=>{calls++;return {status:'pending',patientUid};}});
+ return {port,calls:()=>calls};
+}
+
+test('pending native execution completes once and retries read the terminal receipt',async()=>{
+ const f=pendingPort(),notifications=[];
+ const unsubscribe=f.port.subscribeCompletion(result=>notifications.push(result));
+ assert.equal((await f.port.execute(pendingRequest)).status,'pending');
+ const result=f.port.complete(finished());
+ assert.equal(result.status,'executed');
+ assert.deepEqual(await f.port.execute(pendingRequest),result);
+ assert.deepEqual(f.port.receipt(pendingRequest.eventId),result);
+ assert.deepEqual(f.port.complete(finished()),result);
+ assert.deepEqual(f.port.complete({status:'executed',patientUid:'p',eventId:'pending-1',
+  receipt:{studyId:'hemograma',patientUid:'p',eventId:'pending-1'}}),result);
+ assert.equal(notifications.length,1);
+ assert.equal(f.calls(),1);
+ unsubscribe();
+});
+
+test('rejected and unconfirmed native completions are terminal without another invocation',async()=>{
+ for(const status of ['rejected','unconfirmed']){
+  const f=pendingPort(),notifications=[];
+  f.port.subscribeCompletion(result=>notifications.push(result));
+  await f.port.execute(pendingRequest);
+  const result=f.port.complete(finished(status));
+  assert.equal(result.status,status);
+  assert.equal((await f.port.execute(pendingRequest)).status,status);
+  assert.deepEqual(f.port.complete(finished(status)),result);
+  assert.equal(notifications.length,1);
+  assert.equal(f.calls(),1);
+ }
+});
+
+test('invalid completion identities and receipts cannot change a pending native execution',async()=>{
+ const f=pendingPort(),notifications=[];
+ f.port.subscribeCompletion(result=>notifications.push(result));
+ const pending=await f.port.execute(pendingRequest);
+ const invalid=[null,{...finished(),eventId:'unknown'},
+  {...finished(),patientUid:'other'}, {...finished(),status:'pending'},
+  {...finished(),receipt:null},
+  {...finished(),receipt:{eventId:'different',patientUid:'p'}},
+  {...finished(),receipt:{eventId:'pending-1',patientUid:'other'}}];
+ for(const result of invalid){
+  assert.throws(()=>f.port.complete(result),/completion|receipt|patient|pending|event/i);
+  assert.deepEqual(f.port.receipt(pendingRequest.eventId),pending);
+ }
+ assert.equal(notifications.length,0);
+ assert.equal(f.port.complete(finished()).status,'executed');
+});
+
+test('a stale or conflicting completion cannot replace a completed native effect',async()=>{
+ const f=pendingPort();
+ await f.port.execute(pendingRequest);
+ const done=f.port.complete(finished());
+ for(const result of [finished('rejected'),finished('unconfirmed'),
+  {...finished(),receipt:{...finished().receipt,studyId:'eco'}}]){
+  assert.throws(()=>f.port.complete(result),/completion|collision|terminal/i);
+  assert.deepEqual(f.port.receipt(pendingRequest.eventId),done);
+ }
+});
+
+test('completion requires an originally pending action rather than another executed event',async()=>{
+ const port=createNativeClinicalPort({withPatient:(uid,fn)=>fn({uid}),
+  invoke:({eventId,patientUid})=>({status:'executed',patientUid,receipt:{eventId,patientUid}})});
+ await port.execute(pendingRequest);
+ assert.throws(()=>port.complete(finished()),/pending|completion/i);
+});
+
+test('native completion subscribers are isolated and unsubscribe without changing the receipt',async()=>{
+ const f=pendingPort(),observed=[];
+ assert.throws(()=>f.port.subscribeCompletion(null),/callback|subscriber|function/i);
+ const stop=f.port.subscribeCompletion(()=>{throw Error('view failed');});
+ const stopView=f.port.subscribeCompletion(value=>{observed.push(value);value.receipt.studyId='view mutation';});
+ const stopped=[];
+ const stopOther=f.port.subscribeCompletion(value=>stopped.push(value));
+ stopOther();stopOther();
+ await f.port.execute(pendingRequest);
+ const result=f.port.complete(finished());
+ assert.equal(observed.length,1);
+ assert.equal(stopped.length,0);
+ assert.equal(result.receipt.studyId,'hemograma');
+ assert.equal(f.port.receipt(pendingRequest.eventId).receipt.studyId,'hemograma');
+ stop();stopView();
+});
