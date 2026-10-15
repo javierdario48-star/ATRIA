@@ -26,6 +26,7 @@ export function characterizeAppNative(){
   });
   assert.equal(points[0].administrationCount,0,'administration cannot occur on order submission');
   assert.equal(points[1].administrationCount,0,'native 550 ms preparation not yet elapsed');
+  console.log('APP NATIVE DIAGNOSTIC',JSON.stringify({scenario:s.id,counts:points.map(x=>x.administrationCount),pending:points.map(x=>x.pending),active:points.map(x=>x.active),timers:runtime.clock.timers.map(x=>({id:x.id,at:x.at})),log}));
   assert.equal(points[3].administrationCount,s.orders.length,'real IV preparation must confirm each ordered therapy within one real second');
   assert.equal(log.length,s.orders.length,'no duplicate administration log');
   assert.equal(points[5].administrationCount,s.orders.length);
