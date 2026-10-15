@@ -19,6 +19,13 @@ export function routeWardSpeech(text,context={}){
   return {recipient:'patient',patientUid,original,intents:error?[]:[{kind:kinds[action],id:action==='examen'||action==='disposicion'?value:action,
    ...(action==='diagnostico'?{value}:{}),sourceText:original}],...(error?{error}:{})};
  }
+ const consult=/^\/consulta\s+(cirugia)$/i.exec(normalized);
+ if(consult&&context.clinicalEvaluation){
+  const patientUid=context.patientUid??null;
+  return {recipient:'nurse',patientUid,original,
+   intents:patientUid?[{kind:'consult.request',id:'cirugia',sourceText:original,clause:original}]:[],
+   ...(!patientUid?{error:'no-patient-target'}:{})};
+ }
  const explicitStudy=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(original);
  if(explicitStudy){
   const patientUid=context.patientUid??null,study=(context.studies||[]).find(s=>s.id===explicitStudy[1]);

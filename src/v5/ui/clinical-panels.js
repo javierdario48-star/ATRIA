@@ -11,7 +11,10 @@ export function examHTML(patient){return Object.entries(patient.exam||{}).map(([
 export function therapyHTML(patient){
  const confirmed=(patient.treatments||[]).map(t=>'<div class="clinical-section"><b>'+esc(t.label)+'</b><small>Ejecutado'+(t.dose?' · '+esc(t.dose.display)+(t.dose.defaultApplied?' · dosis predeterminada':''):'')+'</small></div>');
  const pending=(patient.pendingTreatments||[]).map(t=>'<div class="clinical-section"><b>'+esc(t.id)+'</b><small>Indicado · en preparación · aún no administrado</small></div>');
- return [...pending,...confirmed].join('')||'<p>Sin intervenciones ejecutadas.</p>';
+ const venous=patient.venousAccessCount?'<div class="clinical-section"><b>Vías venosas confirmadas</b><small>'+patient.venousAccessCount+'</small></div>':'';
+ const consults=(patient.consults||[]).map(c=>'<div class="clinical-section"><b>Cirugía</b><small>Recepción confirmada · derivación pendiente</small></div>');
+ const pendingConsults=(patient.pendingConsults||[]).map(c=>'<div class="clinical-section"><b>Cirugía</b><small>Respuesta pendiente · no aceptada aún</small></div>');
+ return [venous,...pending,...pendingConsults,...confirmed,...consults].join('')||'<p>Sin intervenciones ejecutadas.</p>';
 }
 export function cirrPatientHTML(p){return `
  <div id="clinicalVitals" class="clinical-section"></div>
@@ -22,3 +25,9 @@ export function cirrPatientHTML(p){return `
  <div class="actions"><button data-action="save-diagnosis">Registrar impresión</button></div>
  <p id="caseReadiness" class="note"></p><div id="caseDestinations" class="actions"></div><div id="caseResult" role="status"></div>
  <p class="note">CIRR conserva los signos del modelo original: no simula una reducción rápida de ascitis ni de diuresis por espironolactona. El destino indica continuidad del cuidado.</p>`;}
+
+export function appPatientHTML(p){
+ return cirrPatientHTML(p).replace(
+  '<p class="note">CIRR conserva los signos del modelo original: no simula una reducción rápida de ascitis ni de diuresis por espironolactona. El destino indica continuidad del cuidado.</p>',
+  '<p class="note">APP-001: primero confirmar vía venosa, antibióticos y respuesta de cirugía. La derivación a quirófano NO significa apendicectomía realizada.</p>');
+}

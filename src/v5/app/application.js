@@ -4,7 +4,7 @@ import {createWorld} from './world.js';
 import {createHospitalRenderer} from '../render/hospital.js';
 import {createGuardSession} from '../clinical/guard-session.js';
 import {createProgressionLedger} from '../clinical/progression.js';
-import {cirrPatientHTML,vitalsHTML,examHTML,therapyHTML,examNames} from '../ui/clinical-panels.js';
+import {cirrPatientHTML,appPatientHTML,vitalsHTML,examHTML,therapyHTML,examNames} from '../ui/clinical-panels.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PROFILE_KEY='atria.v5.profile.v1';
@@ -85,7 +85,7 @@ export async function createApplication({document,window,content,signal}){
    <button class="mode" disabled><b>Cooperativo</b><small>2–4 jugadores · pendiente de integrar.</small></button>
    <button class="mode" disabled><b>Competitivo</b><small>2–4 jugadores · pendiente de integrar.</small></button></div>
    <label class="field">Caso<select id="caseChoice">${content.cases.map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join('')}</select></label>
-   <p class="note">CIRR: evaluación, estudios, tratamiento y cierre con XP. Otros casos: navegación y estudios. Tutor, voz y multijugador siguen en migración.</p>
+   <p class="note">CIRR y APP-001: evaluación, estudios, tratamiento y cierre con XP. Otros casos: navegación y estudios. Tutor, voz y multijugador siguen en migración.</p>
    <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);
  }
  function selectRecipient(kind){
@@ -99,7 +99,7 @@ export async function createApplication({document,window,content,signal}){
   const c=content.cases.find(c=>c.id===patient.caseId);if(!c)return;
   const clinical=guardSession?.read(),complete=!!clinical?.patient.liveVitals;
   open(`<h2>${esc(patient.bedId)} · Paciente</h2><p>${esc(c.demo)}</p><div class="note">${esc(c.chief)}</div>
-   ${complete?cirrPatientHTML(clinical.patient):'<p>Podés solicitar estudios a Enfermera. La atención completa de este caso sigue en migración.</p><div class="actions"><button data-action="studies">Estudios</button></div>'}
+   ${complete?(c.id==='APP-001'?appPatientHTML(clinical.patient):cirrPatientHTML(clinical.patient)):'<p>Podés solicitar estudios a Enfermera. La atención completa de este caso sigue en migración.</p><div class="actions"><button data-action="studies">Estudios</button></div>'}
    <div class="actions"><button data-action="patient-target">Hablar</button><button data-action="close">Cerrar</button></div>`);
   renderClinicalPanels();
  }
@@ -107,7 +107,13 @@ export async function createApplication({document,window,content,signal}){
   open('<h2>Examen físico</h2><div class="actions">'+Object.entries(examNames).map(([id,name])=>'<button data-exam-section="'+id+'">'+esc(name)+'</button>').join('')+'</div><div id="examResults"></div><p class="note">Un órgano sin hallazgo modelado queda sin dato; no equivale a un examen normal.</p>');renderClinicalPanels();
  }
  function showTreatment(){
-  open('<h2>Tratamiento · Enfermería</h2><div id="therapyRecords"></div><label class="field">Orden<input id="therapyOrder" maxlength="200" placeholder="espironolactona 100 mg oral"></label><p class="note">C2 valida espironolactona 100 mg oral (también por defecto), dieta sin sal y paracentesis terapéutica solo si la indicás. Las otras intervenciones siguen en migración.</p><div class="actions"><button data-action="order-therapy" class="primary">Indicar a Enfermera</button><button data-action="close">Cerrar</button></div>');renderClinicalPanels();
+  const isApp=guardSession?.read().patient.caseId==='APP-001';
+  const placeholder=isApp?'colocar una vía, ceftriaxona 1 g y metronidazol 500 mg':'espironolactona 100 mg oral';
+  const note=isApp?'APP: confirmar vía; Ringer 500 ml, ceftriaxona 1 g y metronidazol 500 mg siguen la preparación original. Pedí interconsulta a cirugía; no se realiza apendicectomía en guardia.':
+   'CIRR: espironolactona 100 mg oral (o predeterminada), dieta sin sal y paracentesis terapéutica solo con orden.';
+  open('<h2>Tratamiento · Enfermería</h2><div id="therapyRecords"></div><label class="field">Orden<input id="therapyOrder" maxlength="200" placeholder="'+esc(placeholder)+'"></label><p class="note">'+esc(note)+'</p>'+
+   (isApp?'<div class="actions"><button data-action="request-surgery" class="primary">Solicitar interconsulta a cirugía</button></div>':'')+
+   '<div class="actions"><button data-action="order-therapy" class="primary">Indicar a Enfermera</button><button data-action="close">Cerrar</button></div>');renderClinicalPanels();
  }
  function renderClinicalPanels(){
   if(!guardSession)return;const state=guardSession.read(),p=state.patient;if(!p.liveVitals)return;
@@ -116,8 +122,10 @@ export async function createApplication({document,window,content,signal}){
   if(ui('therapyRecords'))ui('therapyRecords').innerHTML=therapyHTML(p);
   if(ui('clinicalHistory'))ui('clinicalHistory').innerHTML=p.intentHistory.map(x=>'<p>'+esc(x.answer)+'</p>').join('')||'<p>Sin datos interrogados.</p>';
   if(ui('caseReadiness'))ui('caseReadiness').textContent=p.caseEnded?'Atención cerrada.':state.closure?.ready?'Evaluación completa. Elegí cómo continúa el cuidado.':(state.closure?.missing||[]).join(' ');
-  if(ui('caseDestinations'))ui('caseDestinations').innerHTML=p.caseEnded?'':['sala','observacion'].map(id=>'<button data-destination="'+id+'" '+(!state.closure?.ready?'disabled':'')+'>'+(id==='sala'?'Internar en sala':'Dejar en observación')+'</button>').join('');
-  if(ui('caseResult'))ui('caseResult').innerHTML=p.closure?'<h3>Caso cerrado · '+p.closure.quality.score+'/100</h3><p>'+(p.closure.destination==='sala'?'Internación en sala':'Observación')+' · +'+p.closure.xp+' XP</p>':'';
+  if(ui('caseDestinations'))ui('caseDestinations').innerHTML=p.caseEnded?'':(p.caseId==='APP-001'?['quirofano']:['sala','observacion'])
+   .map(id=>'<button data-destination="'+id+'" '+(!state.closure?.ready?'disabled':'')+'>'+
+    (id==='quirofano'?'Derivar a quirófano':id==='sala'?'Internar en sala':'Dejar en observación')+'</button>').join('');
+  if(ui('caseResult'))ui('caseResult').innerHTML=p.closure?'<h3>Caso cerrado · '+p.closure.quality.score+'/100</h3><p>'+(p.closure.destination==='quirofano'?'Derivación a quirófano':p.closure.destination==='sala'?'Internación en sala':'Observación')+' · +'+p.closure.xp+' XP</p>':'';
  }
  function showStudies(){
   if(!guardSession)return;
@@ -181,7 +189,7 @@ export async function createApplication({document,window,content,signal}){
     patient:s.patients[0],content,resolveContext:()=>({patientUid:world.nearby(),focusedNpc}),
     onChange:(_event,room)=>{if(guardSession?.read().room.roomId===room.roomId)renderGuardCommunication();}});
    lastClinicalFrame=window.performance.now();
-   close();resetChat(s.caseId==='CIRR-001'?'Guardia CIRR. Evaluación, estudios y cierre clínico disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
+   close();resetChat(['CIRR-001','APP-001'].includes(s.caseId)?'Guardia clínica. Evaluación, estudios, tratamiento y cierre disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
   }
   if(button.dataset.action==='patient-target'){close();selectRecipient('patient');}
   if(button.dataset.action==='studies')showStudies();
@@ -193,6 +201,7 @@ export async function createApplication({document,window,content,signal}){
   if(button.dataset.action==='save-diagnosis'){await submitText('/diagnostico '+ui('diagnosisInput').value.trim());renderClinicalPanels();}
   if(button.dataset.destination){await submitText('/disposicion '+button.dataset.destination);renderClinicalPanels();
    if(guardSession?.read().patient.caseEnded)ui('caseResult')?.scrollIntoView({block:'nearest'});}
+  if(button.dataset.action==='request-surgery'){close();await submitText('/consulta cirugia');}
   if(button.dataset.action==='order-therapy'){
    const text=ui('therapyOrder').value.trim();if(text){close();await submitText(/^enfermer[ao]/i.test(text)?text:'Enfermera, '+text);}
   }

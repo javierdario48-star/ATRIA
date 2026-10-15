@@ -2,6 +2,7 @@ import {createRoomAuthority} from '../core/room-authority.js';
 import {createNativeClinicalPort} from '../adapters/native-clinical-port.js';
 import {createStudyService} from './studies.js';
 import {createCirrCare} from './cirr-care.js';
+import {createAppCare} from './app-care.js';
 import {createProgressionLedger} from './progression.js';
 import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
@@ -20,7 +21,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  if(!['solo','apprentice'].includes(mode)||typeof resolveContext!=='function')throw Error('local clinical mode/context required');
  const caseData=content.cases.find(c=>c.id===patient.caseId);if(!caseData)throw Error('unknown patient case');
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[]};
- const care=caseData.id==='CIRR-001'?createCirrCare(nativePatient,caseData,{mode,defaultDoses:content.defaultDoses,progress}):null;
+ const options={mode,defaultDoses:content.defaultDoses,progress};
+ const care=caseData.id==='CIRR-001'?createCirrCare(nativePatient,caseData,options):
+  caseData.id==='APP-001'?createAppCare(nativePatient,caseData,options):null;
  const studies=createStudyService(content.cases),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
  const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))];
  const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map();
@@ -96,7 +99,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   },
   flush:()=>authority.flush(),
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
-   closure:care?copy(care.readiness('sala')):null};},
+   closure:care?copy(care.readiness(caseData.id==='APP-001'?'quirofano':'sala')):null};},
   dispose(){if(disposed)return;disposed=true;pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }
