@@ -83,7 +83,7 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
   // never from an arbitrary patientUid in the network packet.
   const routed=routeWardSpeech(envelope.text,{...context,patientUid});
   const clinical=[];
-  if(routed.recipient==='nurse'&&!routed.error){
+  if(routed.intents.length&&!routed.error){
    for(let n=0;n<routed.intents.length;n++){
     if(disposed)return rejection(envelope.id,'authority-disposed');
     const intent=routed.intents[n],patient=byPatient.get(patientUid);
@@ -101,6 +101,12 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
        throw Error('invalid native execution receipt');
       if(mode==='competitive'&&!patient.ownerId&&['executed','pending'].includes(outcome.status))
        patient.ownerId=actor.id;
+      if(intent.kind==='case.close'&&outcome.status==='executed'){
+       const proof=outcome.receipt?.closure;
+       if(!proof||proof.closed!==true||proof.eventId!==eventId||proof.patientUid!==patientUid)
+        throw Error('invalid native closure receipt');
+       patient.closed=true;
+      }
       if(outcome.status==='pending'&&!disposed)pendingExecutions.set(eventId,{key,
        commandId:envelope.id,actorId:actor.id,patientUid,index:clinical.length,
        kind:intent.kind,id:intent.id});

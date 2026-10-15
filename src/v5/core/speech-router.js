@@ -8,6 +8,17 @@ export function routeWardSpeech(text,context={}){
  const original=String(text??'').trim();
  if(!original||original.length>500)return {recipient:'none',patientUid:null,intents:[],error:'invalid-text'};
  const normalized=clean(original);
+ const clinical=/^\/(signos|examen|reevaluar|diagnostico|disposicion)(?:\s+(.+))?$/i.exec(original);
+ if(clinical&&context.clinicalEvaluation){
+  const action=clinical[1].toLowerCase(),value=clinical[2]?.trim(),patientUid=context.patientUid??null;
+  const kinds={signos:'vitals.record',examen:'exam.record',reevaluar:'patient.reassess',diagnostico:'diagnosis.record',disposicion:'case.close'};
+  const valid=action==='examen'?['general','inspection','auscultation','percussion','palpation'].includes(value):
+   action==='disposicion'?['sala','observacion','alta','uti','quirofano','procedimiento'].includes(value):
+   action==='diagnostico'?!!value&&value.length<=200:!value;
+  const error=!valid?'invalid-clinical-command':!patientUid?'no-patient-target':null;
+  return {recipient:'patient',patientUid,original,intents:error?[]:[{kind:kinds[action],id:action==='examen'||action==='disposicion'?value:action,
+   ...(action==='diagnostico'?{value}:{}),sourceText:original}],...(error?{error}:{})};
+ }
  const explicitStudy=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(original);
  if(explicitStudy){
   const patientUid=context.patientUid??null,study=(context.studies||[]).find(s=>s.id===explicitStudy[1]);
@@ -19,7 +30,8 @@ export function routeWardSpeech(text,context={}){
  const recipient=nurseAddress.test(normalized)||focus==='nurse'?'nurse':
   vegaAddress.test(normalized)||focus==='vega'?'vega':'patient';
  const patientUid=context.patientUid??null;
- if(recipient!=='nurse')return {recipient,patientUid,intents:[],original};
+ if(recipient!=='nurse')return {recipient,patientUid,intents:context.clinicalEvaluation&&recipient==='patient'&&patientUid?
+  [{kind:'history.ask',id:'dialogue',sourceText:original}]:[],original};
  const parsed=csNurseScan487(original,context.studies||[],context.therapies||[],context.interventions||[]);
  if(!parsed.active)return {recipient,patientUid,intents:[],original,error:'question-or-negation'};
  if(parsed.unknown.length)return {recipient,patientUid,intents:[],original,error:'unknown-clause',unknown:parsed.unknown};

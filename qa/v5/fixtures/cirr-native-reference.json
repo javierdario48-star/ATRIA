@@ -1,0 +1,1294 @@
+{
+  "schema": "atria-cirr-native-c2/v1",
+  "testOnly": true,
+  "reference": "effective apply487 source via existing native-reference-487 harness; deterministic baseline, response/trajectory factors 1",
+  "clock": {
+    "studyMinutesPerRealSecond": 1,
+    "nativeMinutesPerRealSecond": 0.12,
+    "typingNativeMinutesPerRealSecond": 0.03
+  },
+  "preparationRealSeconds": 0.55,
+  "limitation": "Original spironolactone has empty vital effects, no CIRR physiology engine and no modeled ascites/diuresis kinetics. Do not invent rapid improvement.",
+  "scenarios": [
+    {
+      "text": "espironolactona",
+      "id": "espironolactona",
+      "initial": {
+        "nativeMinute": 0,
+        "clinicalMinute": 0,
+        "realSeconds": 0,
+        "vitals": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 20,
+          "sys": 108,
+          "dia": 68,
+          "spo2": 96
+        },
+        "physiology": null,
+        "effects": {
+          "temp": 0,
+          "hr": 0,
+          "rr": 0,
+          "sys": 0,
+          "dia": 0,
+          "spo2": 0
+        },
+        "toxicity": {
+          "temp": 0,
+          "hr": 0,
+          "rr": 0,
+          "sys": 0,
+          "dia": 0,
+          "spo2": 0
+        },
+        "fluidMl": 0,
+        "active": [],
+        "pending": [],
+        "administrationCount": 0,
+        "confirmedIV": 1,
+        "hypoperfusionNativeMinutes": 0,
+        "graceActiveRealSeconds": 0,
+        "criticalSupportRealSeconds": 0,
+        "fatalExposureNativeMinutes": 0,
+        "patientDied": false,
+        "caseEnded": false
+      },
+      "points": [
+        {
+          "nativeMinute": 0,
+          "clinicalMinute": 0,
+          "realSeconds": 0,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [],
+          "pending": [
+            "espironolactona"
+          ],
+          "administrationCount": 0,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0,
+          "criticalSupportRealSeconds": 0,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.06000000000000004,
+          "clinicalMinute": 0.5000000000000003,
+          "realSeconds": 0.49999999999999994,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [],
+          "pending": [
+            "espironolactona"
+          ],
+          "administrationCount": 0,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.4999999999999999,
+          "criticalSupportRealSeconds": 0.49999999999999994,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.06600000000000004,
+          "clinicalMinute": 0.5500000000000004,
+          "realSeconds": 0.55,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.55,
+          "criticalSupportRealSeconds": 0.55,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.11999999999999993,
+          "clinicalMinute": 0.9999999999999994,
+          "realSeconds": 1,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.9999999999999987,
+          "criticalSupportRealSeconds": 1,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 1.0000000000000007,
+          "clinicalMinute": 8.33333333333334,
+          "realSeconds": 8.333333333333325,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 8.333333333333323,
+          "criticalSupportRealSeconds": 8.333333333333325,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 4.999999999999671,
+          "clinicalMinute": 41.66666666666393,
+          "realSeconds": 41.666666666665584,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 41.66666666666558,
+          "criticalSupportRealSeconds": 41.666666666665584,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        }
+      ],
+      "dose": {
+        "defaultApplied": true,
+        "amount": 100,
+        "unit": "mg",
+        "display": "100 mg"
+      },
+      "administration": {
+        "m": 0.06600000000000004,
+        "id": "espironolactona",
+        "label": "Espironolactona",
+        "doseDisplay": "100 mg",
+        "defaultApplied": true,
+        "raw": "espironolactona",
+        "count": 1
+      }
+    },
+    {
+      "text": "espironolactona 100 mg",
+      "id": "espironolactona",
+      "initial": {
+        "nativeMinute": 0,
+        "clinicalMinute": 0,
+        "realSeconds": 0,
+        "vitals": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 20,
+          "sys": 108,
+          "dia": 68,
+          "spo2": 96
+        },
+        "physiology": null,
+        "effects": {
+          "temp": 0,
+          "hr": 0,
+          "rr": 0,
+          "sys": 0,
+          "dia": 0,
+          "spo2": 0
+        },
+        "toxicity": {
+          "temp": 0,
+          "hr": 0,
+          "rr": 0,
+          "sys": 0,
+          "dia": 0,
+          "spo2": 0
+        },
+        "fluidMl": 0,
+        "active": [],
+        "pending": [],
+        "administrationCount": 0,
+        "confirmedIV": 1,
+        "hypoperfusionNativeMinutes": 0,
+        "graceActiveRealSeconds": 0,
+        "criticalSupportRealSeconds": 0,
+        "fatalExposureNativeMinutes": 0,
+        "patientDied": false,
+        "caseEnded": false
+      },
+      "points": [
+        {
+          "nativeMinute": 0,
+          "clinicalMinute": 0,
+          "realSeconds": 0,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [],
+          "pending": [
+            "espironolactona"
+          ],
+          "administrationCount": 0,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0,
+          "criticalSupportRealSeconds": 0,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.06000000000000004,
+          "clinicalMinute": 0.5000000000000003,
+          "realSeconds": 0.49999999999999994,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [],
+          "pending": [
+            "espironolactona"
+          ],
+          "administrationCount": 0,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.4999999999999999,
+          "criticalSupportRealSeconds": 0.49999999999999994,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.06600000000000004,
+          "clinicalMinute": 0.5500000000000004,
+          "realSeconds": 0.55,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.55,
+          "criticalSupportRealSeconds": 0.55,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.11999999999999993,
+          "clinicalMinute": 0.9999999999999994,
+          "realSeconds": 1,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.9999999999999987,
+          "criticalSupportRealSeconds": 1,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 1.0000000000000007,
+          "clinicalMinute": 8.33333333333334,
+          "realSeconds": 8.333333333333325,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 8.333333333333323,
+          "criticalSupportRealSeconds": 8.333333333333325,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 4.999999999999671,
+          "clinicalMinute": 41.66666666666393,
+          "realSeconds": 41.666666666665584,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 41.66666666666558,
+          "criticalSupportRealSeconds": 41.666666666665584,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        }
+      ],
+      "dose": {
+        "defaultApplied": false,
+        "amount": 100,
+        "unit": "mg",
+        "display": "100 mg"
+      },
+      "administration": {
+        "m": 0.06600000000000004,
+        "id": "espironolactona",
+        "label": "Espironolactona",
+        "doseDisplay": "100 mg",
+        "defaultApplied": false,
+        "raw": "espironolactona 100 mg",
+        "count": 1
+      }
+    },
+    {
+      "text": "espironolactona 0,1 g",
+      "id": "espironolactona",
+      "initial": {
+        "nativeMinute": 0,
+        "clinicalMinute": 0,
+        "realSeconds": 0,
+        "vitals": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 20,
+          "sys": 108,
+          "dia": 68,
+          "spo2": 96
+        },
+        "physiology": null,
+        "effects": {
+          "temp": 0,
+          "hr": 0,
+          "rr": 0,
+          "sys": 0,
+          "dia": 0,
+          "spo2": 0
+        },
+        "toxicity": {
+          "temp": 0,
+          "hr": 0,
+          "rr": 0,
+          "sys": 0,
+          "dia": 0,
+          "spo2": 0
+        },
+        "fluidMl": 0,
+        "active": [],
+        "pending": [],
+        "administrationCount": 0,
+        "confirmedIV": 1,
+        "hypoperfusionNativeMinutes": 0,
+        "graceActiveRealSeconds": 0,
+        "criticalSupportRealSeconds": 0,
+        "fatalExposureNativeMinutes": 0,
+        "patientDied": false,
+        "caseEnded": false
+      },
+      "points": [
+        {
+          "nativeMinute": 0,
+          "clinicalMinute": 0,
+          "realSeconds": 0,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [],
+          "pending": [
+            "espironolactona"
+          ],
+          "administrationCount": 0,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0,
+          "criticalSupportRealSeconds": 0,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.06000000000000004,
+          "clinicalMinute": 0.5000000000000003,
+          "realSeconds": 0.49999999999999994,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [],
+          "pending": [
+            "espironolactona"
+          ],
+          "administrationCount": 0,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.4999999999999999,
+          "criticalSupportRealSeconds": 0.49999999999999994,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.06600000000000004,
+          "clinicalMinute": 0.5500000000000004,
+          "realSeconds": 0.55,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.55,
+          "criticalSupportRealSeconds": 0.55,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.11999999999999993,
+          "clinicalMinute": 0.9999999999999994,
+          "realSeconds": 1,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.9999999999999987,
+          "criticalSupportRealSeconds": 1,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 1.0000000000000007,
+          "clinicalMinute": 8.33333333333334,
+          "realSeconds": 8.333333333333325,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 8.333333333333323,
+          "criticalSupportRealSeconds": 8.333333333333325,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 4.999999999999671,
+          "clinicalMinute": 41.66666666666393,
+          "realSeconds": 41.666666666665584,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "espironolactona"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 41.66666666666558,
+          "criticalSupportRealSeconds": 41.666666666665584,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        }
+      ],
+      "dose": {
+        "defaultApplied": false,
+        "amount": 100,
+        "unit": "mg",
+        "display": "100 mg"
+      },
+      "administration": {
+        "m": 0.06600000000000004,
+        "id": "espironolactona",
+        "label": "Espironolactona",
+        "doseDisplay": "100 mg",
+        "defaultApplied": false,
+        "raw": "espironolactona 0,1 g",
+        "count": 1
+      }
+    },
+    {
+      "text": "paracentesis terapeutica",
+      "id": "paracentesis_ter",
+      "initial": {
+        "nativeMinute": 0,
+        "clinicalMinute": 0,
+        "realSeconds": 0,
+        "vitals": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 20,
+          "sys": 108,
+          "dia": 68,
+          "spo2": 96
+        },
+        "physiology": null,
+        "effects": {
+          "temp": 0,
+          "hr": 0,
+          "rr": 0,
+          "sys": 0,
+          "dia": 0,
+          "spo2": 0
+        },
+        "toxicity": {
+          "temp": 0,
+          "hr": 0,
+          "rr": 0,
+          "sys": 0,
+          "dia": 0,
+          "spo2": 0
+        },
+        "fluidMl": 0,
+        "active": [],
+        "pending": [],
+        "administrationCount": 0,
+        "confirmedIV": 1,
+        "hypoperfusionNativeMinutes": 0,
+        "graceActiveRealSeconds": 0,
+        "criticalSupportRealSeconds": 0,
+        "fatalExposureNativeMinutes": 0,
+        "patientDied": false,
+        "caseEnded": false
+      },
+      "points": [
+        {
+          "nativeMinute": 0,
+          "clinicalMinute": 0,
+          "realSeconds": 0,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [],
+          "pending": [
+            "paracentesis_ter"
+          ],
+          "administrationCount": 0,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0,
+          "criticalSupportRealSeconds": 0,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.06000000000000004,
+          "clinicalMinute": 0.5000000000000003,
+          "realSeconds": 0.49999999999999994,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [],
+          "pending": [
+            "paracentesis_ter"
+          ],
+          "administrationCount": 0,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.4999999999999999,
+          "criticalSupportRealSeconds": 0.49999999999999994,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.06600000000000004,
+          "clinicalMinute": 0.5500000000000004,
+          "realSeconds": 0.55,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 94,
+            "rr": 20,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": -3,
+            "rr": -2,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "paracentesis_ter"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.55,
+          "criticalSupportRealSeconds": 0.55,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 0.11999999999999993,
+          "clinicalMinute": 0.9999999999999994,
+          "realSeconds": 1,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 93.52709012204168,
+            "rr": 19.684726748027778,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": -3,
+            "rr": -2,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "paracentesis_ter"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 0.9999999999999987,
+          "criticalSupportRealSeconds": 1,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 1.0000000000000007,
+          "clinicalMinute": 8.33333333333334,
+          "realSeconds": 8.333333333333325,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 91.15436118641166,
+            "rr": 18.102907457607788,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": -3,
+            "rr": -2,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "paracentesis_ter"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 8.333333333333323,
+          "criticalSupportRealSeconds": 8.333333333333325,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        },
+        {
+          "nativeMinute": 4.999999999999671,
+          "clinicalMinute": 41.66666666666393,
+          "realSeconds": 41.666666666665584,
+          "vitals": {
+            "temp": 37.2,
+            "hr": 91.00000046771441,
+            "rr": 18.000000311809583,
+            "sys": 108,
+            "dia": 68,
+            "spo2": 96
+          },
+          "physiology": null,
+          "effects": {
+            "temp": 0,
+            "hr": -3,
+            "rr": -2,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "toxicity": {
+            "temp": 0,
+            "hr": 0,
+            "rr": 0,
+            "sys": 0,
+            "dia": 0,
+            "spo2": 0
+          },
+          "fluidMl": 0,
+          "active": [
+            "paracentesis_ter"
+          ],
+          "pending": [],
+          "administrationCount": 1,
+          "confirmedIV": 1,
+          "hypoperfusionNativeMinutes": 0,
+          "graceActiveRealSeconds": 41.66666666666558,
+          "criticalSupportRealSeconds": 41.666666666665584,
+          "fatalExposureNativeMinutes": 0,
+          "patientDied": false,
+          "caseEnded": false
+        }
+      ],
+      "dose": {
+        "defaultApplied": false,
+        "amount": null,
+        "unit": "",
+        "display": ""
+      },
+      "administration": {
+        "m": 0.06600000000000004,
+        "id": "paracentesis_ter",
+        "label": "Paracentesis terapéutica",
+        "doseDisplay": "—",
+        "defaultApplied": false,
+        "raw": "paracentesis terapeutica",
+        "count": 1
+      }
+    }
+  ]
+}

@@ -2,6 +2,34 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createNativeClinicalPort} from './native-clinical-port.js';
 
+test('concurrent native retries reserve the event before awaiting the actual executor',async()=>{
+ let calls=0,release;const gate=new Promise(r=>release=r);
+ const port=createNativeClinicalPort({withPatient:(uid,fn)=>fn({uid}),invoke:async({eventId,patientUid})=>{
+  calls++;await gate;return {status:'executed',eventId,patientUid,receipt:{eventId,patientUid}};
+ }});
+ const req={eventId:'concurrent',patientUid:'p',actorId:'a',intent:{kind:'therapy.request',id:'espironolactona'}};
+ const a=port.execute(req),b=port.execute(req);release();assert.deepEqual(await a,await b);assert.equal(calls,1);
+});
+
+test('the real game receipt validator rejects wrong medicine and quarantines the dispatched event from retries',async()=>{
+ const {assertMatchingClinicalReceipt}=await import('../clinical/receipts.js');let calls=0;
+ const port=createNativeClinicalPort({withPatient:(uid,fn)=>fn({uid}),validateReceipt:assertMatchingClinicalReceipt,
+  invoke:({eventId,patientUid})=>{calls++;return {status:'executed',eventId,patientUid,receipt:{eventId,patientUid,therapyId:'albumin'}};}});
+ const req={eventId:'wrong-drug',patientUid:'p',actorId:'a',intent:{kind:'therapy.request',id:'espironolactona'}};
+ await assert.rejects(port.execute(req),/receipt.*(action|medicine|clinical)/i);
+ assert.equal((await port.execute(req)).status,'unconfirmed');assert.equal(calls,1);
+});
+
+test('invalid delayed medicine receipts cannot complete the original pending order',async()=>{
+ const {assertMatchingClinicalReceipt}=await import('../clinical/receipts.js');
+ const port=createNativeClinicalPort({withPatient:(uid,fn)=>fn({uid}),validateReceipt:assertMatchingClinicalReceipt,
+  invoke:({eventId,patientUid})=>({status:'pending',eventId,patientUid})});
+ await port.execute({eventId:'delayed',patientUid:'p',actorId:'a',intent:{kind:'therapy.request',id:'espironolactona'}});
+ const result={status:'executed',eventId:'delayed',patientUid:'p',receipt:{eventId:'delayed',patientUid:'p',therapyId:'albumin'}};
+ assert.throws(()=>port.complete(result),/receipt.*(action|medicine|clinical)/i);assert.equal(port.receipt('delayed').status,'pending');
+ assert.equal(port.complete({...result,receipt:{...result.receipt,therapyId:'espironolactona'}}).status,'executed');
+});
+
 test('native clinical port invokes exactly once and confirms same patient',async()=>{
  let calls=0;
  const p=createNativeClinicalPort({withPatient:(id,fn)=>fn({uid:id}),
