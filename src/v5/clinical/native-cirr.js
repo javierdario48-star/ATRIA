@@ -32,6 +32,10 @@ export function advanceCirrVitals(p,c,dt){
  // peritonitis engine, shock progression or modeled ascites/diuresis kinetics.
  if(active.has('paracentesis_ter')){target.hr-=3;target.rr-=2;}
  const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
- for(const key of keys){target[key]=clamp(target[key],...bounds[key]);
-  p.liveVitals[key]+=(target[key]-p.liveVitals[key])*Math.min(1,dt*(key==='temp'?.08:.38));}
+ // Exact closed form of repeated native 1/60-second Euler smoothing for a
+ // constant target, plus its fractional final step. No unbounded catch-up loop.
+ const steps=Math.floor(dt*60+1e-10),remaining=Math.max(0,dt-steps/60);
+ for(const key of keys){target[key]=clamp(target[key],...bounds[key]);const rate=key==='temp'?.08:.38;
+  const blend=1-Math.pow(1-rate/60,steps)*(1-Math.min(1,remaining*rate));
+  p.liveVitals[key]+=(target[key]-p.liveVitals[key])*blend;}
 }

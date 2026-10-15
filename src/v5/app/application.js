@@ -24,7 +24,7 @@ export async function createApplication({document,window,content,signal}){
  let savedRewardCount=progress.read().receipts.length;
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
-  guardSession=null,lastPanelUpdate=0,messageNumber=0;
+  guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false;
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
  const renderer=await createHospitalRenderer(canvas,content,{signal,window});
  const scheduler=new FrameScheduler(),listeners=[];
@@ -57,6 +57,11 @@ export async function createApplication({document,window,content,signal}){
   updateHud();
  }
  function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;line('ATRIA',message,true);}
+ function advanceClinicalTo(now){
+  now=Math.max(lastClinicalFrame??now,now);
+  const previous=lastClinicalFrame;lastClinicalFrame=now;
+  if(guardSession&&previous!==null)guardSession.advance(Math.max(0,(now-previous)/1000),{typing:clinicalTyping});
+ }
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard';
   const minute=Math.floor(guardSession?.read().clock.clinicalMinute||0),total=8*60+15+minute;
@@ -69,6 +74,7 @@ export async function createApplication({document,window,content,signal}){
   document.body.dataset.phase=s.phase;document.body.dataset.generation=String(s.generation);
  }
  function enterLobby(){
+  advanceClinicalTo(window.performance.now());
   guardSession?.dispose();guardSession=null;close();world.enterLobby();resetChat('El lobby está listo para hablar.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;updateHud();
  }
@@ -129,6 +135,7 @@ export async function createApplication({document,window,content,signal}){
  async function submitText(text){
   if(!text.trim())return;
   if(!guardSession){line(profile.name,text);return;}
+  advanceClinicalTo(window.performance.now());
   const session=guardSession;
   try{await session.post({id:'message-'+(++messageNumber),text});}
   catch{if(guardSession===session)toast('No pude confirmar el mensaje.');}
@@ -173,6 +180,7 @@ export async function createApplication({document,window,content,signal}){
    guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,progress,
     patient:s.patients[0],content,resolveContext:()=>({patientUid:world.nearby(),focusedNpc}),
     onChange:(_event,room)=>{if(guardSession?.read().room.roomId===room.roomId)renderGuardCommunication();}});
+   lastClinicalFrame=window.performance.now();
    close();resetChat(s.caseId==='CIRR-001'?'Guardia CIRR. Evaluación, estudios y cierre clínico disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
   }
   if(button.dataset.action==='patient-target'){close();selectRecipient('patient');}
@@ -230,16 +238,22 @@ export async function createApplication({document,window,content,signal}){
  };
  if(window.visualViewport){listen(window.visualViewport,'resize',keyboard);listen(window.visualViewport,'scroll',keyboard);}
  listen(input,'focus',()=>{world.stop();drag=null;keyboard();});listen(input,'blur',()=>{keyboard();resize();});
+ // Focus transitions split native .12/.03-rate epochs at their actual time;
+ // clinical study/preparation time remains independent of text editing.
+ listen(document,'focusin',event=>{advanceClinicalTo(window.performance.now());clinicalTyping=/INPUT|TEXTAREA/.test(event.target?.tagName);});
+ listen(document,'focusout',event=>{advanceClinicalTo(window.performance.now());clinicalTyping=/INPUT|TEXTAREA/.test(event.relatedTarget?.tagName);});
  function frame(now){
   if(destroyed)return;raf=null;frames++;
-  scheduler.tick(now,{simulate:dt=>{world.step(dt);guardSession?.advance(dt,{typing:/INPUT|TEXTAREA/.test(document.activeElement?.tagName)});},maintain:()=>{
+  advanceClinicalTo(now);
+  scheduler.tick(now,{simulate:dt=>world.step(dt),maintain:()=>{
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
    if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();renderStudyOrders();renderClinicalPanels();}
   },render:()=>renderer.draw(world.snapshot()),isMobile:window.innerWidth<700});
   raf=window.requestAnimationFrame(frame);
  }
- function resume(){if(!destroyed&&raf===null){scheduler.reset(window.performance.now());raf=window.requestAnimationFrame(frame);}}
- function pause(){if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
+ function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
+  clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);raf=window.requestAnimationFrame(frame);}}
+ function pause(){advanceClinicalTo(window.performance.now());lastClinicalFrame=null;if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
  function destroy(){if(destroyed)return;destroyed=true;guardSession?.dispose();guardSession=null;pause();close();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);

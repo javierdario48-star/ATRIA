@@ -35,3 +35,9 @@ test('spironolactone preserves native stable vitals; native paracentesis alone h
  p.treatments.push({id:'paracentesis_ter'});advanceCirrVitals(p,c,1);
  assert(p.liveVitals.hr<94&&p.liveVitals.rr<20);assert.equal(p.liveVitals.sys,108);
 });
+test('a delayed presentation frame retains the original 60Hz physiological smoothing trajectory',async()=>{
+ const {initialCirrVitals,advanceCirrVitals}=await api();
+ const a={liveVitals:initialCirrVitals(c),treatments:[{id:'paracentesis_ter'}]},b=structuredClone(a);
+ for(let i=0;i<600;i++)advanceCirrVitals(a,c,1/60);advanceCirrVitals(b,c,10);
+ for(const key of Object.keys(a.liveVitals))assert(Math.abs(a.liveVitals[key]-b.liveVitals[key])<1e-9,key);
+});

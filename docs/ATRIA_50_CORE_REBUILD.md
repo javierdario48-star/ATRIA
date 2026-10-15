@@ -118,7 +118,7 @@ Published C1 code checkpoint: `8f0310fc76f85820caa4de87ed8213c297ceb08e`, tree `
 
 Continuation: use the remote experimental HEAD, whose latest functional code is C1 above. A following documentation-only commit records this publication; it does not change the tested runtime. Verify the real remote HEAD before resuming. Working tree is clean, no uncommitted engine work is required to recover C1, and no stable/golden branch or protected file was changed.
 
-Acceptance boundaries:
+Acceptance boundaries at the historical C1 checkpoint (superseded for CIRR by C2 below):
 
 | Requirement | Verified scope / remaining work |
 | --- | --- |
@@ -143,9 +143,9 @@ Reusable modules: `FrameScheduler`, lifecycle class, nurse scanner, room authori
 
 ### Remaining native dependencies
 
-The V5 port now supports verified delayed completion, but is not a ported administration engine. Native dosing/administration/physiology, nurse procedures, patient dialogue/exam, tutor, consultations, dispositions, XP and shared transport still require explicit integration and browser parity tests. Do not mistake requested treatment for administered treatment. Direct concurrent calls to the private native port are not an authorized route: room authority owns serialization. Port-level concurrent-call hardening remains optional future defense, not multiplayer certification.
+C2 adds the native CIRR dose/preparation/physiology, evaluation, safe closure and unique persisted XP through the original V5 port. Other-case administration/physiology, physical nursing procedures, complete dialogue, tutor, consultations, shared transport and full progression still require explicit migration and browser parity tests. Requested treatment never means administered treatment. Port-level concurrent reservation is now hardened, but room authority remains the sole authorized command owner; it is not multiplayer certification.
 
-### Next executable checkpoint — C2
+### Historical C1 → C2 migration references (C2 implementation recorded below)
 
 Continue from the published C1 tree; do not repeat A1/B1. Port the effective native CIRR clinical path: anamnesis/exam/vitals, existing study service, oral spironolactone with real administration receipt, native physiological response, diagnosis/reassessment and sala/observación closure with exactly-once XP. Characterize the original equations and nurse queues before moving them; do not reuse the generic severity helper or experimental shadow physiology as a substitute.
 
@@ -164,3 +164,5 @@ Real UI path: original hospital traversal → authentic onset/alcohol history �
 Independent review found two important issues, now RED→GREEN: closing with a treatment still preparing and accepting residual quantities after100mg. Reassessment now binds all intervention event IDs even at equal timestamps, and UI vitals display actual measured values. Minor deferred: simultaneous tabs can overwrite saved progress; local single-instance persistence only.
 
 Native CIRR has no spironolactone vital effects/ascites kinetics: preserve that fact instead of inventing rapid improvement. Dose scope is the original100mg oral reference; other regimens are rejected pending C3. Next checkpoint C3 expands the same executor after characterizing the next original clinical path. C4 dialogue/Vega/voice, C5 shared chat/real multiplayer, C6 parity/mobile/cleanup follow. See the permanent handoff for exact functions, contracts, commands, pending work and final CI/preview evidence.
+
+C2b published `744d5026d9e7913fa705829b556df22cb237776b`; [CI38690988414 passed](https://github.com/javierdario48-star/ATRIA/actions/runs/38690988414). C2c corrects a preview-discovered timing regression: clinical elapsed time must not be dropped by the spatial FrameScheduler cap. A single application-owned monotonic advance handles RAF/focus/commands; medication preparation cannot inherit pre-request stall time. Native smoothing uses exact repeated60Hz Euler steps in closed form.89 V5 contracts and a real Chromium stall/form-submission regression cover these changes. Final publication/preview evidence is recorded in the handoff after verification.
