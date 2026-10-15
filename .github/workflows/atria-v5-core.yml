@@ -23,6 +23,8 @@ jobs:
         run: npm run test:v5
       - name: Original CIRR dose, preparation and physiological trajectories remain equivalent
         run: node qa/v5/characterize-cirr-native.mjs
+      - name: Characterize original APP dual antibiotics and fluid response (QA-only)
+        run: node qa/v5/characterize-app-native.mjs
       - name: Build independent V5 module distribution
         run: npm run build:v5-core
       - name: Build independent executable V5 game
