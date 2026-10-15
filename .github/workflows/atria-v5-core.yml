@@ -1,0 +1,38 @@
+name: ATRIA 5 Experimental Core
+
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  clean-core-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the original module based core
+        run: node --test src/v5/core/room-authority.test.js src/v5/adapters/native-clinical-port.test.js
+      - name: Reused proven legacy contracts
+        run: node src/social/room-state.test.js && node src/app/frame-scheduler.test.js && node src/clinical/nurse-scanner-487.test.js
+      - name: Immutable 4.8.6 clinical source remains preserved
+        run: node src/app/golden-master-contract.test.js
+      - name: Legacy playable build remains operational
+        run: npm run build
+      - name: New core cannot depend on string anchor patching
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const names=['src/v5/core/room-authority.js','src/v5/core/speech-router.js','src/v5/core/replica.js','src/v5/adapters/native-clinical-port.js'];
+          for (const name of names){
+            const source=fs.readFileSync(name,'utf8');
+            if (/apply487\(|replaceOnce\(|document\.write\(|eval\(/.test(source)) throw Error('old source patch in '+name);
+          }
+          console.log('new-core:no-generated-source-patching');
+          NODE
