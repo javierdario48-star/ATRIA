@@ -1,3 +1,6 @@
+import fs from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+import path from 'node:path';
 // C3a characterization of the original effective APP-001 pharmacology/physiology.
 // QA ONLY: the new game must never import this script or the historical VM.
 import assert from 'node:assert/strict';
@@ -34,8 +37,13 @@ export function characterizeAppNative(){
   return {id:s.id,orders:s.orders,baseline,points,log,doses,deliveryAtNativeMinutes:log.map(x=>({id:x.id,min:x.m}))};
  });
 }
-if(import.meta.url===new URL('file://'+process.argv[1]).href){
- const cases=characterizeAppNative();
- console.log('APP-001 ORIGINAL NATIVE CHARACTERIZATION',JSON.stringify(cases));
- console.log('APP NATIVE CHARACTERIZATION PASS: '+cases.length+' scenarios with native-measured per-therapy preparation and exactly one administration per explicit therapy.');
+if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
+ const actual={schema:'atria-app-native-c3a/v1',testOnly:true,clock:{nativeMinutesPerRealSecond:.12},
+  source:'effective 4.8.7 VM native-reference-487; trusted IV count 1; not migrated IV placement',
+  scenarios:characterizeAppNative()};
+ if(process.argv.includes('--write'))
+  await fs.writeFile(new URL('./fixtures/app-native-reference.json',import.meta.url),JSON.stringify(actual,null,2)+'\n');
+ else assert.deepEqual(actual,JSON.parse(await fs.readFile(new URL('./fixtures/app-native-reference.json',import.meta.url),'utf8')),
+  'original APP behavior changed: review against the frozen effective reference');
+ console.log('APP NATIVE CHARACTERIZATION PASS: five validated reference scenarios; Ringer 0.8 real s, ceftriaxone/metronidazole 1.5 real s; no duplicate administrations.');
 }
