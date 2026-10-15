@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+ <meta name="theme-color" content="#0d635c">
+ <title>ATRIA 5.0 · Experimental</title>
+ <link rel="icon" href="data:,">
+ <link rel="stylesheet" href="./src/v5/web/game.css">
+</head>
+<body>
+ <canvas id="game" aria-label="Hospital ATRIA. Tocá el mapa para caminar." tabindex="0"></canvas>
+ <header id="hud" hidden>
+  <div class="brand"><span class="logo">A</span><div><b>ATRIA</b><small id="status">5.0 · Experimental</small></div></div>
+  <div class="hud-actions"><button id="guardButton" class="primary">Hacer guardia</button><button id="peopleButton">Personas</button><button id="profileButton">Perfil</button></div>
+ </header>
+ <section id="splash" class="overlay">
+  <div class="splash-card"><div class="wordmark"><span class="logo">A</span> ATRIA</div><p class="eyebrow">GUARDIAS QUE ENSEÑAN</p>
+   <h1>La noche empieza acá.</h1><p>Un hospital vivo. Decisiones clínicas. Tu próximo desafío.</p>
+   <form id="profileForm"><label for="playerName">Tu alias</label><input id="playerName" autocomplete="nickname" maxlength="32" value="Médico" required><button id="enterButton" class="primary" disabled>Cargando hospital…</button></form>
+   <small>5.0 · Navegación experimental · clínica en migración</small>
+  </div>
+ </section>
+ <section id="chatDock" hidden aria-label="Consola compartida">
+  <div id="chatHistory" role="log" aria-live="polite"></div>
+  <form id="chatForm"><button type="button" id="historyButton" aria-label="Abrir historial" aria-expanded="false">···</button><button type="button" id="recipientButton">Lobby · público</button><input id="dieInput" aria-label="Mensaje" placeholder="Hablar en el lobby…" maxlength="500" autocomplete="off" enterkeyhint="send"><button type="button" id="voiceButton" aria-label="Entrada de voz" disabled>♩</button><button type="submit" aria-label="Enviar mensaje">↵</button></form>
+ </section>
+ <dialog id="modal"><div class="panel"><button id="modalClose" class="close" aria-label="Cerrar ventana">×</button><div id="modalContent"></div></div></dialog>
+ <div id="toast" role="status" hidden></div>
+ <section id="fatal" class="overlay" hidden><div class="panel"><h1>No se pudo iniciar ATRIA</h1><p id="fatalText"></p><button onclick="location.reload()">Reintentar</button></div></section>
+ <script type="module" src="./src/v5/app/main.js" onerror="document.body.dataset.boot='failed';document.getElementById('fatalText').textContent='No se pudo cargar el inicio del juego. Revisá la conexión y reintentá.';document.getElementById('fatal').hidden=false"></script>
+</body>
+</html>

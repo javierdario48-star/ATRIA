@@ -13,7 +13,7 @@ const files=[
  'src/social/room-state.js',
  'src/app/frame-scheduler.js'
 ];
-const output='out-v5';
+const output='out-v5-core';
 await fs.rm(output,{recursive:true,force:true});
 const manifest={version:'5.0-core-experimental',sourceMode:'esm-no-html-patches',files:{}};
 for(const file of files){

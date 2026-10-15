@@ -2,7 +2,7 @@
 
 **Branch:** atria-5.0-core-rebuild-experimental
 **Protected legacy baseline:** atria-4.8.7-structural-cleanup-qa @ be6707b9ea9c9cff66db442acc374e4aea95f6ce (16/16 GitHub Actions jobs green).
-**Status:** reconstruction in progress. The original domain core remains covered; canonical content and navigation have now been extracted. See the checkpoint ledger below for the exact executable coverage. NOT a complete replacement or production deployment.
+**Status:** independently built, navigable experimental game. Original map/artwork, walking, local lobby and solo/apprentice exploration now run from canonical ESM source. Full clinical simulation, voice, shared multiplayer and XP are NOT migrated or certified. No production deployment.
 
 ## Technical decision
 
@@ -59,8 +59,8 @@ Do NOT interpret a green V5 unit suite as proof that the 5.0 replacement game is
 Run npm run build:v5-core to create out-v5-core/src/v5/index.js and its referenced
 pure modules. This command imports the actual newly built public API and writes
 a SHA-256 manifest. It does not load the golden HTML, rewrite its scripts, or
-alter the existing out/index.html. Runtime consumer/UI integration remains a
-subsequent phase; the new distribution is not yet a game preview.
+alter the existing out/index.html. This original pure-core distribution is still
+separate from the new executable game: `npm run build:v5` creates `out-v5/index.html`.
 
 ## Reconstruction checkpoint ledger — 2026-10-15
 
@@ -73,6 +73,24 @@ Recovery: remote HEAD `64fedba8c8a0fb49fca58e210985740b09e26bed` and successful 
 - `src/v5/engine/navigation.js`: one explicit radius-aware spatial owner. Original dimensions, grid, door rules, 205 px/s movement, 10.5 px radius and walking phase retained. Swept-circle collision and safe route edges remove furniture-corner stalls without altering the authored map.
 - Verification: content 2/2, navigation 13/13; all eight original bedside approaches plus coffee/reception/imaging traversed at 60 Hz; frozen historical-flow contract passing. Original full `npm test` finished with exit 0.
 - State: canonical assets and executable isolated navigation module. App/UI integration follows in B1. Clinical seed data alone is not an implemented clinical engine.
+
+Published A1: `a171de907317f00a92d0bfda9f8dfd878da22c23`; [CI passed](https://github.com/javierdario48-star/ATRIA/actions/runs/38663219281).
+
+### B1 — Independent navigable game
+
+- `src/v5/app/`: bootstrap with fatal/retry boundary, one lifecycle, one fixed-step/RAF owner, world state and input coordination. Lobby ↔ guard transitions replace owned entities and drafts. No historical global override is installed.
+- `src/v5/render/hospital.js`: original map, garden/pavement, aspect-preserving sprites, original gait proportions, camera scale/projection and nameplate. It only reads spatial snapshots.
+- `src/v5/web/`: canonical HTML/CSS and familiar HUD/chat/guard/profile controls. This is an exploration checkpoint: coop/competitive are visibly unavailable; clinical treatment/XP are not represented as implemented.
+- `scripts/build-v5.mjs`: explicit transitive ESM dependency closure plus committed content, deterministic SHA-256 manifest. Test builds in a clean temporary tree without `vendor/`, integration HTML, or old build output. `build:v5-core` now writes a different directory so it cannot erase the game distribution.
+- Isolated study service: `src/v5/clinical/studies.js` reuses the existing registry and turnaround rules. Tests complete 949 combinations (73 studies × 13 cases), preserve native results/fallbacks, and reject identity collisions/repeats. It is not yet connected to the UI or physiology.
+- `vercel.json` on this experimental branch selects the new build/output. Stable branches and production settings are unchanged; deploy only a branch preview.
+- Verification: `npm run test:v5` 47/47; independent build; original full `npm test` exit 0; golden master unchanged. Real Chromium desktop, Pixel 5 emulation and landscape pass movement, initial chat, 15 total guard/lobby cycles, synthetic IME, viewport bounds and measured listener/RAF disposal. No physical Android test was performed.
+- Independent review found unsupported saved colors, walking during editing, and uncaught module failures. All were reproduced RED and fixed GREEN, plus focused rotation. Six real-browser regression scenarios cover these findings.
+- State: an executable, navigable local game. No full 4.8.7 clinical/multiplayer parity claim.
+
+Commands: `npm run build:v5`; `npm run test:v5`; `npm run qa:v5-browser`; `node qa/v5/boot-focus-browser.mjs`. Browser commands accept `PLAYWRIGHT_MODULE_PATH` and `CHROMIUM_EXECUTABLE_PATH`. CI archives the standalone build and browser evidence separately.
+
+Reference capture: `npm run build`, then `node qa/v5/capture-reference.mjs`. The resulting JSON can reproduce the one-time content migration; it is never needed to build/play V5.
 
 ### Global audit evidence
 

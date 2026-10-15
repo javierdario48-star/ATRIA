@@ -1,4 +1,4 @@
-name: ATRIA 5 Experimental Core
+name: ATRIA 5 Experimental Game
 
 on:
   push:
@@ -19,8 +19,12 @@ jobs:
           node-version: '22'
       - name: Verify the original module based core
         run: npm run test:v5-core
+      - name: Canonical content, navigation, study and independent game contracts
+        run: npm run test:v5
       - name: Build independent V5 module distribution
         run: npm run build:v5-core
+      - name: Build independent executable V5 game
+        run: npm run build:v5
       - name: Reused proven legacy contracts
         run: node src/social/room-state.test.js && node src/app/frame-scheduler.test.js && node src/clinical/nurse-scanner-487.test.js
       - name: Immutable 4.8.6 clinical source remains preserved
@@ -38,3 +42,62 @@ jobs:
           }
           console.log('new-core:no-generated-source-patching');
           NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atria-v5-independent-game
+          path: |
+            out-v5/
+            out-v5-core/
+          retention-days: 14
+
+  independent-game-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Build the game without historical HTML
+        run: npm run build:v5
+      - name: Desktop, Android emulation, landscape, transitions, IME and disposal
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: npm run qa:v5-browser
+      - name: Boot failures, saved appearance, focus and rotation regressions
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/boot-focus-browser.mjs
+      - name: Capture unchanged original lobby as a visual control
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: npm run build && node qa/v5/capture-reference.mjs
+      - name: Compare original lobby background at identical viewport and camera
+        run: |
+          python -m pip install Pillow==11.3.0
+          python qa/v5/compare-background.py qa/v5-reference-results/reference-lobby.png qa/v5-browser-results/android-emulated-lobby.png qa/v5-browser-results/visual-background-summary.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-browser-evidence
+          path: |
+            qa/v5-browser-results/
+            qa/v5-reference-results/reference-lobby.png
+            qa/v5-reference-results/reference-title.png
+          retention-days: 14
+
+  preserved-historical-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Full historical regression remains enabled
+        run: npm test
