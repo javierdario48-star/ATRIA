@@ -52,3 +52,12 @@ Node.js 22+:
 - node src/app/golden-master-contract.test.js
 
 Do NOT interpret a green V5 unit suite as proof that the 5.0 replacement game is ready. Existing 4.8.7 remains the playable control group.
+
+
+## Independent clean source build
+
+Run npm run build:v5-core to create out-v5/src/v5/index.js and its referenced
+pure modules. This command imports the actual newly built public API and writes
+a SHA-256 manifest. It does not load the golden HTML, rewrite its scripts, or
+alter the existing out/index.html. Runtime consumer/UI integration remains a
+subsequent phase; the new distribution is not yet a game preview.

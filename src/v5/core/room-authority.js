@@ -35,7 +35,6 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
    return rejection(envelope?.id??null,'invalid-command');
   if(typeof envelope.text!=='string'||!envelope.text.trim()||envelope.text.length>500)
    return rejection(envelope.id,'invalid-text');
-  if(seen.size>=10000)return rejection(envelope.id,'room-command-capacity');
   const fingerprint=JSON.stringify([envelope.kind,envelope.text,envelope.patientUid??null]);
   const key=actor.id+':'+envelope.id;
   if(seen.has(key)){
@@ -43,6 +42,7 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
    return prior.fingerprint===fingerprint?copy(prior.ack):
     rejection(envelope.id,'command-id-reused-with-different-payload');
   }
+  if(seen.size>=10000)return rejection(envelope.id,'room-command-capacity');
   const context=await resolveSpeechContext({actorId:actor.id,roomId,mode,envelope});
   const patientUid=context?.patientUid??null;
   // Patient selection and NPC proximity come from the trusted game context,
@@ -83,7 +83,8 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
   seen.set(key,{fingerprint,ack:copy(ack)});
   // Presentation and networking are subscribers; they do not reinterpret
   // chat text or execute clinical actions.
-  emit(copy(event),snapshot());
+  // Network subscribers cannot retroactively invalidate native effects.
+  try{emit(copy(event),snapshot());}catch{/* transport retries read the cached ack */ }
   return copy(ack);
  }
  return Object.freeze({

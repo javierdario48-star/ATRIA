@@ -43,3 +43,34 @@ test('unconfirmed execution stays unconfirmed on retries',async()=>{
  assert.equal(b.status,'unconfirmed');
  assert.equal(attempts,1);
 });
+
+
+test('never claim administration without the exact native receipt',async()=>{
+ const p=createNativeClinicalPort({withPatient:(id,fn)=>fn({uid:id}),
+  invoke:({patientUid})=>({status:'executed',patientUid})});
+ await assert.rejects(p.execute({eventId:'no-receipt',patientUid:'p',
+  actorId:'a',intent:{kind:'therapy.request',id:'ceftriaxone'}}),
+  /exact patient\/event receipt/);
+});
+
+test('same native event identity cannot authorize a different treatment',async()=>{
+ const p=createNativeClinicalPort({withPatient:(id,fn)=>fn({uid:id}),
+  invoke:({patientUid,eventId})=>({status:'executed',patientUid,receipt:{patientUid,eventId}})});
+ const base={eventId:'one-event',patientUid:'p',actorId:'a',
+  intent:{kind:'therapy.request',id:'ceftriaxone'}};
+ await p.execute(base);
+ await assert.rejects(p.execute({...base,intent:{kind:'therapy.request',id:'albumin'}}),
+  /event identity collision/);
+});
+
+test('native exception after dispatch is not automatically repeated',async()=>{
+ let calls=0;
+ const p=createNativeClinicalPort({withPatient:(id,fn)=>fn({uid:id}),invoke:()=>{
+  calls++;throw Error('lost response after native mutation');
+ }});
+ const req={eventId:'lost',patientUid:'p',actorId:'doctor',
+  intent:{kind:'therapy.request',id:'ceftriaxone'}};
+ assert.equal((await p.execute(req)).status,'unconfirmed');
+ assert.equal((await p.execute(req)).status,'unconfirmed');
+ assert.equal(calls,1);
+});

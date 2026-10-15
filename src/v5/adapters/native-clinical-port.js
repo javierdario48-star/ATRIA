@@ -9,22 +9,31 @@ export function createNativeClinicalPort({withPatient,invoke}={}){
   async execute({eventId,patientUid,actorId,intent}){
    if(typeof eventId!=='string'||!eventId||typeof patientUid!=='string'||!patientUid)
     throw Error('patient-scoped native event identity required');
-   if(receipts.has(eventId))return structuredClone(receipts.get(eventId));
+   const fingerprint=JSON.stringify([patientUid,actorId,intent]);
+   if(receipts.has(eventId)){
+    const prior=receipts.get(eventId);
+    if(prior.fingerprint!==fingerprint)throw Error('native execution event identity collision');
+    return structuredClone(prior.ack);
+   }
    // The game-native patient context is selected before invoking any effect.
    // Its implementation MUST restore the previous patient even on failures.
    const result=await withPatient(patientUid,async nativePatient=>{
     if(nativePatient?.uid!==patientUid)throw Error('native patient context mismatch');
-    return invoke({eventId,actorId,patientUid,intent,nativePatient});
+    try{return await invoke({eventId,actorId,patientUid,intent,nativePatient});}
+    catch{return {status:'unconfirmed',patientUid,reason:'native invocation failed after dispatch'};}
    });
    if(!result||!['executed','pending','rejected','unconfirmed'].includes(result.status))
     throw Error('native executor returned no trustworthy execution state');
    if(result.patientUid!==patientUid)throw Error('native receipt patient mismatch');
+   if(result.status==='executed'&&
+    (!result.receipt||result.receipt.patientUid!==patientUid||result.receipt.eventId!==eventId))
+    throw Error('executed native action needs an exact patient/event receipt');
    const acknowledged={status:result.status,patientUid,eventId,receipt:result.receipt??null,
     reason:result.reason??null};
    // An explicitly unconfirmed native effect is never silently retried.
-   receipts.set(eventId,structuredClone(acknowledged));
+   receipts.set(eventId,{fingerprint,ack:structuredClone(acknowledged)});
    return structuredClone(acknowledged);
   },
-  receipt:eventId=>receipts.has(eventId)?structuredClone(receipts.get(eventId)):null
+  receipt:eventId=>receipts.has(eventId)?structuredClone(receipts.get(eventId).ack):null
  });
 }

@@ -18,7 +18,9 @@ jobs:
         with:
           node-version: '22'
       - name: Verify the original module based core
-        run: node --test src/v5/core/room-authority.test.js src/v5/adapters/native-clinical-port.test.js
+        run: npm run test:v5-core
+      - name: Build independent V5 module distribution
+        run: npm run build:v5-core
       - name: Reused proven legacy contracts
         run: node src/social/room-state.test.js && node src/app/frame-scheduler.test.js && node src/clinical/nurse-scanner-487.test.js
       - name: Immutable 4.8.6 clinical source remains preserved
