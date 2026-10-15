@@ -6,7 +6,14 @@ Repositorio `javierdario48-star/ATRIA`, rama exclusiva `atria-5.0-core-rebuild-e
 Base publicada verificada antes de C2: `465ad3d67eddef33a3427dfc751fe4d0cb39d716`.
 Último checkpoint anterior certificado: C1, código `8f0310fc76f85820caa4de87ed8213c297ceb08e`. C2a publicado: `becd8ba80f5ee48264cc695f7ed63294133aaacc`; CI https://github.com/javierdario48-star/ATRIA/actions/runs/38689354945 aprobada.
 CI C1 aprobada: https://github.com/javierdario48-star/ATRIA/actions/runs/38666019213 .
-C2b publicado: `744d5026d9e7913fa705829b556df22cb237776b`, árbol `b4b0787baa43153429b2c1c07c7addf52608472a`; CI https://github.com/javierdario48-star/ATRIA/actions/runs/38690988414 aprobada (los tres jobs). Su recorrido CIRR completo pasó en Chromium real;88 contratos V5. Durante comprobación pública se detectó pérdida de tiempo clínico con render lento. Esta actualización C2c corrige el dueño del tiempo;89 contratos y regresiones temporales reales aprobados localmente. La certificación final registrará el SHA/CI/preview de C2c después de verificarlos; no confundir una CI previa con la del HEAD actual.
+**Último SHA de código publicado y certificado C2:** `04557ba229231080690a513a0fa79968fb802294`, árbol `40a1f0bd3a93e92599ca4b0817fd1aba52553d4c`.
+C2b anterior: `744d5026d9e7913fa705829b556df22cb237776b`, CI38690988414 aprobada. C2c es el checkpoint funcional vigente:89/89 contratos V5; los tres jobs de [CI38692877642](https://github.com/javierdario48-star/ATRIA/actions/runs/38692877642) TERMINADOS con success, incluida toda la regresión histórica.
+
+**Estado C2: completo para el recorrido CIRR del modelo original, local y de un caso elegido.** UI real ejecuta evaluación, cuatro estudios/resultados,100mg oral confirmado, fisiología original, reevaluación, diagnóstico, sala/observación, cierre y XP exactamente una vez. Espironolactona no tiene efectos agudos modelados en el original; no se inventaron. La paracentesis terapéutica solicitada expresamente permite observar FC/FR reales antes de cerrar. No equivale a ATRIA5.0 completo ni a una nueva simulación diurética.
+
+Preview funcional verificada: https://night-shift-clinical-p2qug5rq0-javierdario4878-7324.vercel.app/ . Deployment `dpl_Bg4KWS5ZY2xgZr9w7L11eF99Jx6g`, READY, target preview, SHA exacto C2c. Se completó la partida mediante controles/chat visibles en Chrome remoto:100/100,+133XP; tras repetir cierre y recargar permanecen133XP. En la MISMA partida se indicó paracentesis terapéutica y se midió FC94→91/FR20→18. Captura y registro permanente: `docs/evidence/c2/public-cirr-closed.png` y `verification.json`.
+
+Este handoff y las evidencias se publican en un commit posterior de documentación, sin cambiar el ejecutable certificado. Su SHA portador se obtiene con `git rev-parse HEAD`/HEAD remoto y figura en el mensaje de entrega; un archivo no puede incluir el hash del commit que lo contiene. El SHA funcional anterior identifica exactamente código, CI, build y preview comprobados. Verificar siempre el HEAD remoto por si hubo avances posteriores.
 
 Las tareas auxiliares `C2 native physiology` y `C2 native closure` terminaron por límite de uso sin entregar cambios ni investigaciones. No existe un resultado oculto del que dependa la continuación. El árbol estaba limpio al recuperar C2.
 
@@ -67,7 +74,7 @@ node qa/v5/studies-browser.mjs
 node qa/v5/cirr-browser.mjs
 ```
 
-Resultado C2a:80/80 y CI38689354945 verde. Resultado local C2b:88/88, builds reproducibles53 archivos, caracterización original, golden-master y `npm test` con exit0. También se ejecutaron explícitamente cierre nativo, enfermería, oxígeno y noradrenalina pertinentes. Regresiones Chromium de navegación (desktop, Pixel5, landscape,15 ciclos), foco/IME y estudios C1 aprobadas.
+Resultado C2a:80/80; C2b:88/88; **C2c:89/89**. Builds independientes53 archivos, caracterización original4 escenarios exactos, golden-master, `npm test` exit0 local y job histórico completo en CI C2c success. Regresiones Chromium de navegación (desktop, Pixel5, landscape,15 ciclos), foco/IME, estudios C1, reloj bloqueado y CIRR completo aprobadas. CI38692877642 está terminada:clean-core-contract, independent-game-browser y preserved-historical-regression success. Manifest del ejecutable C2c SHA256 `c91e128141df3c4229d5e7dbe3393b7b42306f9b1a413af0efcda14139f3bc53`.
 
 `qa/v5/cirr-browser.mjs`: escribe y pulsa controles reales; solo LEE diagnósticos, sin mutaciones internas, avance de reloj ni adjudicación artificial. Completa anamnesis, cinco técnicas, signos, cuatro estudios con tiempo real, rechaza50mg y fármacos no migrados, administra100mg una vez, reevalúa, registra diagnóstico, rechaza alta, interna en sala, verifica100/100 y133XP, reintentos y persistencia tras recarga. Una segunda guardia comprueba UID nuevo y respuesta FC/FR real a paracentesis terapéutica solicitada expresamente, sin otorgar XP a un caso sin cerrar. Acepta `V5_BROWSER_URL` para repetir el recorrido en la preview pública. Capturas/resultados JSON van a los artefactos CI, no son dependencias para compilar.
 
@@ -87,18 +94,63 @@ Los paneles `clinical-panels.js` solo representan snapshots. Cada botón clínic
 
 ## Pendientes y próxima intervención
 
-1. C2c antes de certificación: publicar el árbol probado, esperar sus tres jobs de CI y completar CIRR en su URL pública exacta. C2b ya tiene CI verde; su URL fue abierta e interactuada, pero se usa solo como evidencia intermedia porque reveló el defecto temporal ahora corregido.
-2. C3: ampliar medicamentos/procedimientos y casos a través de `createGuardSession`/puerto; conservar nativeCIRR, C1 y la idempotencia. Caracterizar primero dosificación/colas/efectos del siguiente caso. Enfermería física (vías/monitor), consultas, tutor, voz, clínica de otros casos y carrera/guardia continua NO están certificados.
+1. C2 cerrado y publicado: preservar el recorrido, clock y comprobantes certificados. No repetir C1 ni volver a migrar CIRR. La preview inmutable C2c y CI38692877642 son la evidencia funcional; las siguientes revisiones documentales no cambian ese runtime.
+2. Próximo bloque C3a: `APP-001`, atención de apendicitis aguda, ampliando el MISMO ejecutor/puerto. Datos canónicos: estudios `app_cbc`/`app_us`; intervenciones clave `ceftriaxone`, `metronidazole`, `source_control`. Caracterizar primero dosis, preparación, vía IV, fluidos, respuesta nativa y consulta/derivación/cierre originales. Luego integrar la orden dual, requisitos de vías/monitor y cirugía con recibos ligados al paciente/evento. Inspeccionar primero `cirr-care.js`, `native-cirr.js`, `guard-session.js`, `receipts.js`, `speech-router.js`, `cases.json` y referencias históricas documentadas; extraer helpers comunes explícitos solo cuando la equivalencia esté probada. Aceptación: APP evaluado→ambos antibióticos realmente administrados una vez→fisiología original→conducta quirúrgica validada→cierre/XP único desde UI; pruebas negativas, Chromium y CI completas, sin romper CIRR/C1. No crear un segundo motor farmacológico permanente ni aceptar tratamientos de otros casos sin validación. Enfermería física (vías/monitor), consultas, tutor, voz, clínica de otros casos y carrera/guardia continua NO están certificados.
 3. Limitación nativa preservada: espironolactona no tiene cinética de ascitis/diuresis ni cambio agudo de signos. Las variantes clínicas aleatorias y nuevas curvas farmacológicas requieren trabajo explícito; no sustituir con una gravedad genérica. C2 demuestra el recorrido del modelo original, no valida una respuesta diurética nueva.
 4. Menor diferido reproducible: dos pestañas inicializan el mismo progreso; cada una cierra un paciente y sobrescribe localStorage con su copia. No hay fusión de receipts entre pestañas. El C2 probado es una sola instancia local; resolver persistencia concurrente al integrar identidad/transporte, sin duplicar XP.
 5. C4: diálogo completo, Vega/enfermería/voz; C5: chat global y multijugador2–4 clientes independientes; C6: paridad completa, Android físico, limpieza y certificación. Aprendiz usa el mismo caso/estudios pero el tutor todavía no funciona. Cooperativo/Competitivo y voz siguen deshabilitados.
 
 ## CÓMO CONTINUAR DESDE OTRO CHATGPT
 
-Clonar `https://github.com/javierdario48-star/ATRIA`, seleccionar exclusivamente `atria-5.0-core-rebuild-experimental`, consultar HEAD remoto antes de editar y conservar cualquier avance posterior. Base conocida `465ad3d67eddef33a3427dfc751fe4d0cb39d716`; usar el HEAD real, no resetear hacia esta base.
+Clonar `https://github.com/javierdario48-star/ATRIA`, seleccionar exclusivamente `atria-5.0-core-rebuild-experimental`, consultar HEAD remoto antes de editar y conservar cualquier avance posterior. SHA funcional inicial que debe estar contenido en HEAD: `04557ba229231080690a513a0fa79968fb802294`. Usar el HEAD real (incluye este handoff), no resetear a C1 ni a C2c si avanzó. Comprobar `git merge-base --is-ancestor 04557ba229231080690a513a0fa79968fb802294 HEAD` antes de editar.
+
+Recuperación mínima reproducible (si ya existe checkout, hacer fetch y revisar diferencias antes de cambiar archivos):
+
+```sh
+git clone --branch atria-5.0-core-rebuild-experimental --single-branch https://github.com/javierdario48-star/ATRIA.git
+cd ATRIA
+git fetch origin atria-5.0-core-rebuild-experimental
+git rev-parse HEAD FETCH_HEAD
+git merge-base --is-ancestor 04557ba229231080690a513a0fa79968fb802294 HEAD
+npm ci --ignore-scripts
+npm run test:v5
+npm run build:v5-core
+npm run build:v5
+node qa/v5/characterize-cirr-native.mjs
+npm test
+```
+
+Navegador reproducible sin herramientas privadas del autor (Linux, Node22+, Chromium y sus dependencias del sistema):
+
+```sh
+npm install --prefix /tmp/atria-v5-browser --no-save --ignore-scripts playwright@1.58.2
+export PLAYWRIGHT_MODULE_PATH=/tmp/atria-v5-browser/node_modules/playwright
+node /tmp/atria-v5-browser/node_modules/playwright/cli.js install chromium
+# Si se usa Chrome del sistema, definir CHROMIUM_EXECUTABLE_PATH=/ruta/a/chrome.
+npm run qa:v5-browser
+node qa/v5/boot-focus-browser.mjs
+node qa/v5/clinical-clock-browser.mjs
+node qa/v5/studies-browser.mjs
+node qa/v5/cirr-browser.mjs
+```
+
+Sin Chrome del sistema ni variables especiales, el harness usa Chromium instalado por Playwright. En Linux mínimo instalar las dependencias de Chromium (`playwright/cli.js install --with-deps chromium`, requiere permisos del sistema). Cada harness sirve `out-v5` por HTTP local y crea contextos aislados; no necesita backend, credenciales ni cuentas. Para abrirlo manualmente: `python3 -m http.server 8000 --directory out-v5` y visitar `http://localhost:8000`. No abrir como file://. CI instala el driver en temporal y usa Chrome de Ubuntu. Local probado Node24, CI Node22.
 
 Leer primero este archivo, `docs/ATRIA_50_CORE_REBUILD.md`, `docs/ATRIA_50_IMPLEMENTATION_PLAN.md`; después `guard-session.js`, `cirr-care.js`, `native-cirr.js`, `application.js`, `guard-clock.js`, `progression.js` y sus pruebas. Conservar `room-authority`, `native-clinical-port`, C1 y sus contratos; no volver a extraer mapa/arte ni reconstruir navegación. Ejecutar los comandos anteriores. No hace falta historial privado, agentes ni rutas temporales del autor.
 
-Preview C1 certificada: https://night-shift-clinical-a8n8i9raf-javierdario4878-7324.vercel.app/ — solo navegación/estudios; no demuestra C2. CI publica artefactos `atria-v5-independent-game` y `atria-v5-browser-evidence` con retención14 días; el código de las pruebas/fixture permanece en git. Verificar el SHA de cada nuevo despliegue en Vercel; nunca promover producción.
+Preview funcional C2 y alcance están al inicio. Para repetir manualmente: entrar→Hacer guardia→Solitario/CIRR→caminar al paciente B1→preguntar inicio/alcohol→Historia (signos y cinco técnicas)→cuatro estudios→Tratamiento100mg oral→esperar comprobante→dieta sin sal→reevaluar/diagnóstico→sala. Paracentesis terapéutica es opcional y debe pedirse expresamente si se desea repetir el cambio de FC/FR observado. La prueba automática `cirr-browser.mjs` recorre este caso sin paracentesis terapéutica y comprueba su efecto por separado en otra guardia.
+
+Evidencias permanentes sin dependencia de rutas locales: `qa/v5/fixtures/cirr-native-reference.json`, código QA/tests, `docs/evidence/c2/cirr-summary.json`, `clock-stall-summary.json`, `verification.json`, `public-cirr-closed.png`. CI38692877642 artifacts: independent-game11952433279 y browser-evidence11952294074, retención14 días (expiran2026-10-29); enlace de ejecución conserva el resultado y las pruebas permiten regenerarlos. No se requiere descargar esos artefactos para compilar. Nunca promover producción.
 
 No tocar `main`, ramas estables ni `vendor/atria-4.8.6/**`. No retirar legado sin pruebas equivalentes; no importar `qa/*`, HTML histórico o generadores de integración en runtime V5. Conservar tests C1 y suite histórica; no cambiar expectativas para esconder regresiones. Si un paso no puede verificarse, registrar el bloqueo con precisión.
+
+## Inventario de cambios C2a→C2c para revisar sin otra auditoría
+
+- Nuevos módulos clínicos: `src/v5/clinical/{cirr-care,native-cirr,progression,receipts,guard-clock}.js`. Nuevas pruebas: `cirr-care.test.js`, `native-cirr.test.js`, `progression.test.js`, `guard-clock.test.js`, `measurement-presentation.test.js`.
+- Nuevos UI/QA: `src/v5/ui/clinical-panels.js`, `qa/v5/{characterize-cirr-native,cirr-browser,clinical-clock-browser}.mjs`, fixture nativa y evidencias permanentes. Test-only harness histórico sigue fuera del build.
+- Modificados: `guard-session.js` (composición), `native-clinical-port.js/.test.js` (reserva concurrente y comprobantes), `room-authority.js` (intents/closed), `speech-router.js` (evaluación), `progression.js` (ledger), `application.js` (inputs/paneles/reloj/persistencia), `world.js/.test.js` (UUID/nivel), webHTML/CSS (controles clínicos/XP), `scripts/build-v5.mjs` (importación pura de cierre/manifest), workflowV5 (gates reales). Se conservan todos los tests previos.
+- Histórico puro adaptado: `src/clinical/nurse-scanner-487.js`, dos calificadores oral/po. Su suite y matriz histórica siguen habilitadas. Se reutiliza `case-completion-487.js` sin cambiarlo.
+- Retirado efectivamente del runtime V5: ninguna cadena de inyección histórica se ejecuta; no se importa `apply-487.js`, HTML vendor ni QA. Eso ya era cierto desde B1 y C2 lo conserva; no atribuirlo como una eliminación nueva. No se borró implementación histórica ni recurso protegido.
+- Fallos corregidos/reproducibles cubiertos: dosis residual, pendiente al cerrar, comprobantes equivocados, proveniencia a igual timestamp, medición atrasada, colisiónUID tras recarga, límite de épocas de reloj, pérdida temporal por frame y preparación adelantada por stall anterior al envío. Los tests negativos incluyen fármaco no solicitado, hemograma sin fármaco, paciente incorrecto, repetición/concurrencia/reintentos, comprobante inválido, cierre y XP duplicados.
+- Fallo abierto reproducible: persistencia last-writer entre dos pestañas. Hipótesis no certificadas: BFCache/ocultación real y teclado físico Android; no afirmar que fallan ni que pasaron. No hay bloqueo conocido para continuar C3; no se requiere recuperar agentes auxiliares.
+- Integridad: solo rama experimental publicada; `main` observado `08fa4565a3415888c9eae30860693d0f5040afbb`, estable estructural `be6707b9ea9c9cff66db442acc374e4aea95f6ce`. Vendor idéntico al checkpoint465ad3d y golden-master contract aprobado. No se modificó producción ni se hizo merge/promoción.

@@ -1,0 +1,53 @@
+{
+  "sourceCommit": "04557ba229231080690a513a0fa79968fb802294",
+  "sourceTree": "40a1f0bd3a93e92599ca4b0817fd1aba52553d4c",
+  "buildManifestSHA256": "c91e128141df3c4229d5e7dbe3393b7b42306f9b1a413af0efcda14139f3bc53",
+  "ci": {
+    "run": 38692877642,
+    "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/38692877642",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      "clean-core-contract",
+      "independent-game-browser",
+      "preserved-historical-regression"
+    ],
+    "artifacts": {
+      "atria-v5-independent-game": 11952433279,
+      "atria-v5-browser-evidence": 11952294074
+    },
+    "artifactRetentionDays": 14
+  },
+  "deployment": {
+    "id": "dpl_Bg4KWS5ZY2xgZr9w7L11eF99Jx6g",
+    "target": "preview",
+    "url": "https://night-shift-clinical-p2qug5rq0-javierdario4878-7324.vercel.app/",
+    "state": "READY",
+    "gitCommit": "04557ba229231080690a513a0fa79968fb802294"
+  },
+  "publicBrowser": {
+    "method": "Cloud Chrome, real UI actions only; DOM and screenshot observations, no hidden clinical API calls or clock mutation",
+    "caseId": "CIRR-001",
+    "mode": "solo",
+    "steps": [
+      "Title, lobby, original hospital walking to B1",
+      "Onset and alcohol questions: authentic case answers before NPC",
+      "Five physical-exam techniques and initial measured vitals",
+      "Hepatogram, renal panel, ultrasound, diagnostic paracentesis requested and all four native results observed after real elapsed time",
+      "Spironolactone 100 mg oral: preparation observed, duplicate order, one confirmed medication record",
+      "Negated albumin: not among confirmed interventions",
+      "Explicit sodium restriction and explicitly requested therapeutic paracentesis",
+      "Reassessed vitals show native HR94 to91 and RR20 to18; BP108/68 and SpO296 unchanged",
+      "Diagnosis cirrosis descompensada; sala enabled and case closed100/100, +133XP",
+      "Repeated closure and medication after closure, lobby return, reload:133XP unchanged"
+    ],
+    "screenshot": "public-cirr-closed.png",
+    "physicalAndroid": false,
+    "automaticStateAssertions": "See qa/v5/cirr-browser.mjs and versioned cirr-summary.json; public check used visible UI only"
+  },
+  "limitations": [
+    "Original spironolactone has no acute vital, ascites or diuresis kinetics; therapeutic paracentesis alone supplies the observed original physiological change",
+    "One local application instance; concurrent-tab ledger merge remains pending",
+    "No physical Android or V5 independent multiplayer certification"
+  ]
+}

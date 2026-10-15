@@ -1,0 +1,21 @@
+{
+  "testedSourceCommit": "04557ba229231080690a513a0fa79968fb802294",
+  "environment": "Local real Chromium; Pixel 5 emulation, no physical Android",
+  "reproduce": "node qa/v5/clinical-clock-browser.mjs",
+  "result": {
+    "wallSeconds": 1.2327000000001862,
+    "clinicalMinutes": 1.2333,
+    "nativeMinutes": 0.14799600000000002,
+    "typing": {
+      "wallSeconds": 1.2341000000000932,
+      "clinicalMinutes": 1.2333,
+      "nativeMinutes": 0.036999000000000004
+    },
+    "commandBoundary": {
+      "elapsedAfterSubmission": 53.8000000002794,
+      "administered": 0,
+      "pending": 1
+    },
+    "physicalAndroid": false
+  }
+}
