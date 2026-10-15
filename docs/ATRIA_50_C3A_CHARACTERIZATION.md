@@ -8,7 +8,7 @@ Run: \`node qa/v5/characterize-app-native.mjs\`.
 The scenario matrix executes the original effective 4.8.7 VM for APP-001,
 with one confirmed IV reference access: baseline; ceftriaxone 1 g;
 metronidazole 500 mg; both antibiotic drugs ordered together; Ringer 500 ml.
-It verifies the real 550 ms preparation and exactly-one administration
+It verifies pending orders at 500 ms and execution no later than one real second (the IV preparation boundary must not be inferred from the 550 ms oral CIRR case), plus exactly-one administration
 per actual order, and prints original snapshots, dose references and log
 details in CI. **A confirmed IV in this historical harness is a controlled
 input, not proof of a migrated V5 venous access procedure.**

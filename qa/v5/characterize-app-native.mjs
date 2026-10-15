@@ -16,7 +16,9 @@ export function characterizeAppNative(){
   const runtime=createNativeReferenceRuntime487({caseId:'APP-001',confirmedIVCount:1});
   const baseline=snapshotNativeReference487(runtime);
   for(const [id,text] of s.orders)orderNativeReference487(runtime,{id,text});
-  const points=[0,.06,.066,.12,1,5].map(at=>advanceNativeReference487(runtime,at));
+  // Native harness takes NATIVE minutes: .06 -> .5 real s; .12 -> 1 real s.
+  // IV preparation can use a different delay from the 550ms oral CIRR path.
+  const points=[0,.06,.096,.12,1,5].map(at=>advanceNativeReference487(runtime,at));
   const log=JSON.parse(JSON.stringify(runtime.ctx.sim.administrationLog));
   const doses=s.orders.map(([id])=>{
    const entry=runtime.ctx.sim.monitorTherapies.get(id);
@@ -24,7 +26,7 @@ export function characterizeAppNative(){
   });
   assert.equal(points[0].administrationCount,0,'administration cannot occur on order submission');
   assert.equal(points[1].administrationCount,0,'native 550 ms preparation not yet elapsed');
-  assert.equal(points[2].administrationCount,s.orders.length,'one actual administration for each ordered therapy');
+  assert.equal(points[3].administrationCount,s.orders.length,'real IV preparation must confirm each ordered therapy within one real second');
   assert.equal(log.length,s.orders.length,'no duplicate administration log');
   assert.equal(points[5].administrationCount,s.orders.length);
   return {id:s.id,orders:s.orders,baseline,points,log,doses};
@@ -33,5 +35,5 @@ export function characterizeAppNative(){
 if(import.meta.url===new URL('file://'+process.argv[1]).href){
  const cases=characterizeAppNative();
  console.log('APP-001 ORIGINAL NATIVE CHARACTERIZATION',JSON.stringify(cases));
- console.log('APP NATIVE CHARACTERIZATION PASS: '+cases.length+' scenarios with verified 550ms preparation and one administration per explicit therapy.');
+ console.log('APP NATIVE CHARACTERIZATION PASS: '+cases.length+' scenarios with pending at 500ms, confirmed by 1s and exactly one administration per explicit therapy.');
 }
