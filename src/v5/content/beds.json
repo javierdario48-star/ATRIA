@@ -1,0 +1,106 @@
+[
+  {
+    "id": "B1",
+    "label": "Box 1 · cama A",
+    "acuity": "monitored",
+    "patient": [
+      97,
+      409
+    ],
+    "approach": [
+      4,
+      14
+    ]
+  },
+  {
+    "id": "B2",
+    "label": "Box 1 · cama B",
+    "acuity": "monitored",
+    "patient": [
+      224,
+      423
+    ],
+    "approach": [
+      9,
+      15
+    ]
+  },
+  {
+    "id": "B3",
+    "label": "Box 2 · cama A",
+    "acuity": "critical",
+    "patient": [
+      827,
+      424
+    ],
+    "approach": [
+      24,
+      15
+    ]
+  },
+  {
+    "id": "B4",
+    "label": "Box 2 · cama B",
+    "acuity": "critical",
+    "patient": [
+      947,
+      424
+    ],
+    "approach": [
+      28,
+      15
+    ]
+  },
+  {
+    "id": "B5",
+    "label": "Box 3",
+    "acuity": "standard",
+    "patient": [
+      96,
+      611
+    ],
+    "approach": [
+      5,
+      19
+    ]
+  },
+  {
+    "id": "B6",
+    "label": "Box 4",
+    "acuity": "standard",
+    "patient": [
+      96,
+      794
+    ],
+    "approach": [
+      5,
+      28
+    ]
+  },
+  {
+    "id": "B7",
+    "label": "Box 5",
+    "acuity": "standard",
+    "patient": [
+      946,
+      611
+    ],
+    "approach": [
+      27,
+      22
+    ]
+  },
+  {
+    "id": "B8",
+    "label": "Box 6",
+    "acuity": "standard",
+    "patient": [
+      946,
+      794
+    ],
+    "approach": [
+      27,
+      28
+    ]
+  }
+]

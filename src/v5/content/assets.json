@@ -1,0 +1,54 @@
+{
+  "hospital": {
+    "path": "assets/hospital.webp",
+    "sha256": "37a236113cc58628a6e6c7891875d491b4824b4389912f2a92823af44f2f1903"
+  },
+  "player": {
+    "path": "assets/player.webp",
+    "sha256": "eb575d1cb0290406104de31f4c99b95db117da4d550978f2a26c8ae34570659a"
+  },
+  "nurse": {
+    "path": "assets/nurse.webp",
+    "sha256": "eaa0a246eb6f8be2aedcc5f7f4ed207ff6434e177daed2172c88ffea8d801ed0"
+  },
+  "patient": {
+    "path": "assets/patient.webp",
+    "sha256": "6317b0bce6e08063135b80567a42b440b550db223d41e7f1d926659df7ab18b1"
+  },
+  "vega": {
+    "path": "assets/vega.webp",
+    "sha256": "d4d08219e9aa615045eb066aa0ec321dcab9ccb4eafe57e37051b7e57f844f6e"
+  },
+  "pavement": {
+    "path": "assets/pavement.webp",
+    "sha256": "6cb6e313c2e441b6eeb145b6d300de545a3e1dff01e66b482f98cf43f8cc9e96"
+  },
+  "garden": {
+    "path": "assets/garden.webp",
+    "sha256": "57e407d53c8d60e4ac1bafda369472931940fa3578e80e21cbf40bdb58c67205"
+  },
+  "player-navy": {
+    "path": "assets/player-navy.webp",
+    "sha256": "eb575d1cb0290406104de31f4c99b95db117da4d550978f2a26c8ae34570659a"
+  },
+  "player-green": {
+    "path": "assets/player-green.webp",
+    "sha256": "9c52a75817cbcf8491caf147fcd6e1269e87e835b34dc8907d4b09a62e77909f"
+  },
+  "player-gray": {
+    "path": "assets/player-gray.webp",
+    "sha256": "6e6c9cde572adec68975cbc543adb7b11d9e9d5addaf0237893f8b7c93e29f39"
+  },
+  "player-coat": {
+    "path": "assets/player-coat.webp",
+    "sha256": "69ad06700751fc624d1279013013ac8ba0df8acbc5370279812db6e88ebf1783"
+  },
+  "player-pink": {
+    "path": "assets/player-pink.webp",
+    "sha256": "d96478895fdb836ecfa102cbb8e1bbc2f668df11b5ff8621bf7480526f5ae343"
+  },
+  "player-teal": {
+    "path": "assets/player-teal.png",
+    "sha256": "67fa7a4eb37689f39ef013358297c889e524311864b92e6e63876215ee12c0eb"
+  }
+}

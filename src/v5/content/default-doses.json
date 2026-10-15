@@ -1,0 +1,107 @@
+{
+  "oxygen": {
+    "amount": 4,
+    "unit": "L/min",
+    "display": "4 L/min"
+  },
+  "fluid": {
+    "amount": 500,
+    "unit": "ml",
+    "display": "500 ml"
+  },
+  "albumin": {
+    "amount": 1.5,
+    "unit": "g/kg",
+    "display": "1.5 g/kg"
+  },
+  "vasopressor": {
+    "amount": 0.05,
+    "unit": "µg/kg/min",
+    "display": "0.05 µg/kg/min"
+  },
+  "morphine": {
+    "amount": 4,
+    "unit": "mg",
+    "display": "4 mg"
+  },
+  "ppi": {
+    "amount": 40,
+    "unit": "mg",
+    "display": "40 mg"
+  },
+  "transfusion": {
+    "amount": 1,
+    "unit": "unidad",
+    "display": "1 unidad"
+  },
+  "espironolactona": {
+    "amount": 100,
+    "unit": "mg",
+    "display": "100 mg"
+  },
+  "ceftriaxone": {
+    "amount": 1000,
+    "unit": "mg",
+    "display": "1 g"
+  },
+  "metronidazole": {
+    "amount": 500,
+    "unit": "mg",
+    "display": "500 mg"
+  },
+  "imipenem": {
+    "amount": 500,
+    "unit": "mg",
+    "display": "500 mg"
+  },
+  "ceftazidime": {
+    "amount": 1000,
+    "unit": "mg",
+    "display": "1 g"
+  },
+  "cefoperazone": {
+    "amount": 1000,
+    "unit": "mg",
+    "display": "1 g"
+  },
+  "cefepime": {
+    "amount": 1000,
+    "unit": "mg",
+    "display": "1 g"
+  },
+  "piptazo": {
+    "amount": 4500,
+    "unit": "mg",
+    "display": "4.5 g"
+  },
+  "ampicillin": {
+    "amount": 2000,
+    "unit": "mg",
+    "display": "2 g"
+  },
+  "amikacin": {
+    "amount": 500,
+    "unit": "mg",
+    "display": "500 mg"
+  },
+  "gentamicin": {
+    "amount": 80,
+    "unit": "mg",
+    "display": "80 mg"
+  },
+  "fluconazole": {
+    "amount": 400,
+    "unit": "mg",
+    "display": "400 mg"
+  },
+  "furosemide": {
+    "amount": 40,
+    "unit": "mg",
+    "display": "40 mg"
+  },
+  "aza": {
+    "amount": 50,
+    "unit": "mg",
+    "display": "50 mg"
+  }
+}

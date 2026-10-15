@@ -1,0 +1,22 @@
+{
+  "navy": [
+    "Negro clínico",
+    "#25282d"
+  ],
+  "green": [
+    "Verde oscuro",
+    "#1f5a3d"
+  ],
+  "gray": [
+    "Gris clínico",
+    "#666b72"
+  ],
+  "pink": [
+    "Rosa clínico",
+    "#e96b98"
+  ],
+  "teal": [
+    "Verde teal",
+    "#0D635C"
+  ]
+}

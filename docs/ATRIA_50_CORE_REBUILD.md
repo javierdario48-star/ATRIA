@@ -2,7 +2,7 @@
 
 **Branch:** atria-5.0-core-rebuild-experimental
 **Protected legacy baseline:** atria-4.8.7-structural-cleanup-qa @ be6707b9ea9c9cff66db442acc374e4aea95f6ce (16/16 GitHub Actions jobs green).
-**Status:** isolated, runnable core library and automated tests. NOT a playable replacement, production deployment, or UI migration.
+**Status:** reconstruction in progress. The original domain core remains covered; canonical content and navigation have now been extracted. See the checkpoint ledger below for the exact executable coverage. NOT a complete replacement or production deployment.
 
 ## Technical decision
 
@@ -56,8 +56,34 @@ Do NOT interpret a green V5 unit suite as proof that the 5.0 replacement game is
 
 ## Independent clean source build
 
-Run npm run build:v5-core to create out-v5/src/v5/index.js and its referenced
+Run npm run build:v5-core to create out-v5-core/src/v5/index.js and its referenced
 pure modules. This command imports the actual newly built public API and writes
 a SHA-256 manifest. It does not load the golden HTML, rewrite its scripts, or
 alter the existing out/index.html. Runtime consumer/UI integration remains a
 subsequent phase; the new distribution is not yet a game preview.
+
+## Reconstruction checkpoint ledger — 2026-10-15
+
+Recovery: remote HEAD `64fedba8c8a0fb49fca58e210985740b09e26bed` and successful CI [38658985952](https://github.com/javierdario48-star/ATRIA/actions/runs/38658985952) verified before editing. Work is isolated from an unrelated modified 4.8.7 checkout. No protected branch or vendor file changed.
+
+### A1 — Effective original content and spatial engine
+
+- `src/v5/content/`: 13 effective case definitions, algorithms, exam segments, therapy/default-dose catalog, eight beds, colors and 13 original image assets. Capture includes later corrected case data, not only the first `CASES` literal. Provenance records the exact original and generated-reference hashes and each asset/data SHA-256.
+- `scripts/import-v5-content.mjs` is a one-time migration utility. Neither V5 build nor runtime invokes it or reads historical HTML.
+- `src/v5/engine/navigation.js`: one explicit radius-aware spatial owner. Original dimensions, grid, door rules, 205 px/s movement, 10.5 px radius and walking phase retained. Swept-circle collision and safe route edges remove furniture-corner stalls without altering the authored map.
+- Verification: content 2/2, navigation 13/13; all eight original bedside approaches plus coffee/reception/imaging traversed at 60 Hz; frozen historical-flow contract passing. Original full `npm test` finished with exit 0.
+- State: canonical assets and executable isolated navigation module. App/UI integration follows in B1. Clinical seed data alone is not an implemented clinical engine.
+
+### Global audit evidence
+
+The verified baseline had 63 integration files (26 production / 37 tests), a 1,980,964-byte frozen index, and 57 inline plus 11 external script tags. The generated reference contains 80 inline plus 7 active external scripts (2,328,830 bytes). `apply-487.js` contains 130 literal `replaceOnce(` sites. These are static source counts, not measurements of active duplicate callbacks.
+
+Historical source contains 18 assignment sites for `updateSimulation`, 15 for `sendMessage`, 12 for `refreshChatDock`, 8 for `handleGameTap` and 8 for `addMonitorTherapy`. This supports replacing their accumulated ownership chains with explicit modules. No historical implementation has been deleted.
+
+Reusable modules: `FrameScheduler`, lifecycle class, nurse scanner, room authority/replica/port, study registry/materialization, anamnesis classifier, clinical closure evaluators and remote-motion timeline. Generic severity helpers and the experimental B1 shadow physiology are not substitutes for native clinical physiology.
+
+### Remaining native dependencies
+
+The existing V5 port is still a boundary, not a ported administration engine. Native dosing/administration/physiology, asynchronous nurse completion, patient dialogue/exam, tutor, consultations, dispositions, XP and shared transport still require explicit integration and browser parity tests. Pending acknowledgements need an event completion path before delayed medication migration. Do not mistake requested treatment for administered treatment.
+
+Plan and ongoing decisions: `docs/ATRIA_50_IMPLEMENTATION_PLAN.md`.

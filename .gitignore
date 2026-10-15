@@ -1,0 +1,6 @@
+node_modules/
+out/
+out-v5/
+out-v5-core/
+qa/*-results/
+.superpowers/

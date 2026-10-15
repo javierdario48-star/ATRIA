@@ -1,0 +1,301 @@
+{
+  "CIRR-001": {
+    "label": "Cirrosis descompensada con ascitis",
+    "coreStudies": [
+      "hepatograma",
+      "hemograma",
+      "renal",
+      "eco",
+      "paracentesis"
+    ],
+    "conditionalStudies": [],
+    "interventions": [
+      "sal_restriccion",
+      "espironolactona"
+    ],
+    "conditionalInterventions": [
+      "paracentesis_ter"
+    ],
+    "diagnosisPrompt": "Ascitis progresiva, estigmas de hepatopatía crónica y antecedentes compatibles. ¿Qué síndrome integra mejor el cuadro y qué complicaciones tenés que buscar desde el inicio?",
+    "diagnosisTeach": "El cuadro organiza una cirrosis descompensada con ascitis. Además de confirmar función hepática y anatomía, hay que buscar infección del líquido ascítico, deterioro renal/electrolítico, encefalopatía y sangrado.",
+    "planPrompt": "Con ascitis por cirrosis y sin una urgencia inmediata, ¿cómo la manejás y qué parámetros vas a vigilar para no provocar deterioro renal o electrolítico?",
+    "planTeach": "En esta semilla: restricción de sodio y espironolactona, controlando función renal, sodio y potasio. La paracentesis terapéutica queda para ascitis tensa/refractaria; la paracentesis diagnóstica sirve para descartar infección en el contexto hospitalario.",
+    "reassess": "Reevaluá peso/distensión, presión, diuresis, creatinina, Na/K, encefalopatía y signos de infección o sangrado."
+  },
+  "PANC-001": {
+    "label": "Pancreatitis aguda",
+    "coreStudies": [
+      "hemograma",
+      "lipasa",
+      "gasometria",
+      "eco"
+    ],
+    "conditionalStudies": [
+      "tc"
+    ],
+    "interventions": [
+      "fluid",
+      "analgesia"
+    ],
+    "conditionalInterventions": [],
+    "diagnosisPrompt": "Dolor epigástrico intenso irradiado a espalda, vómitos y antecedente biliar. ¿Cuál es tu hipótesis y qué datos te hacen pensar en gravedad?",
+    "diagnosisTeach": "El patrón orienta a pancreatitis aguda, probablemente biliar. Lipasa confirma el origen pancreático, pero el manejo exige valorar hematocrito/leucocitos, glucemia, calcio, función renal, oxigenación y equilibrio ácido-base; ecografía busca litiasis y TC caracteriza extensión/necrosis según el esquema del libro.",
+    "planPrompt": "Con pancreatitis confirmada y signos de gravedad, ¿qué soporte inicial priorizás y qué vas a reevaluar?",
+    "planTeach": "Reposición hidroelectrolítica guiada por respuesta y analgesia, con reevaluación estrecha. La TC no es obligatoria de entrada si el diagnóstico es claro y no hay duda o complicación; la alimentación oral se retoma precozmente según tolerancia.",
+    "reassess": "Reevaluá PA/PAM, FC, SpO₂, FR, diuresis, función renal/electrolitos y signos de sobrecarga o deterioro."
+  },
+  "CROHN-001": {
+    "label": "Enfermedad de Crohn ileocecal",
+    "coreStudies": [
+      "inflamatorio",
+      "stool",
+      "colonoscopia",
+      "enterorm"
+    ],
+    "conditionalStudies": [
+      "b12"
+    ],
+    "interventions": [
+      "steroid"
+    ],
+    "conditionalInterventions": [
+      "aza"
+    ],
+    "diagnosisPrompt": "Diarrea crónica, pérdida de peso y dolor en fosa ilíaca derecha en un adulto joven. ¿Qué enfermedad inflamatoria intestinal te parece más probable y qué tenés que excluir antes de inmunosuprimir?",
+    "diagnosisTeach": "Crohn es transmural y parcheado; la forma ileocecal es típica. Primero se cuantifica inflamación/anemia/albumina y se excluye infección de materia fecal; colonoscopía con biopsia confirma patrón mucoso y entero-RM busca enfermedad transmural, estenosis, fístula o absceso.",
+    "planPrompt": "Si descartaste infección y la semilla confirma Crohn activo sin absceso, ¿cómo iniciás tratamiento y qué complicaciones cambian la conducta?",
+    "planTeach": "Tras excluir infección y complicaciones que cambien conducta, los corticoides pueden usarse para inducción en esta semilla. Azatioprina no se exige como tratamiento agudo inmediato; queda como estrategia de mantenimiento o ahorro de corticoides según contexto.",
+    "reassess": "Reevaluá diarrea, dolor, fiebre, peso, PCR/albúmina, tolerancia al tratamiento y aparición de obstrucción, absceso o enfermedad perianal."
+  },
+  "HDA-001": {
+    "label": "Hemorragia digestiva alta",
+    "coreStudies": [
+      "hda_lab",
+      "grupo",
+      "eda"
+    ],
+    "conditionalStudies": [],
+    "interventions": [
+      "iv",
+      "fluid",
+      "ppi"
+    ],
+    "conditionalInterventions": [
+      "transfusion"
+    ],
+    "diagnosisPrompt": "Hematemesis + melena con hipotensión y taquicardia. Antes de pensar en la causa exacta, ¿qué síndrome tenés y qué prioridad manda?",
+    "diagnosisTeach": "Es una hemorragia digestiva alta con compromiso hemodinámico. La prioridad es reanimación y cuantificación del sangrado; hemograma/renal/coagulación y grupo-reserva acompañan el soporte. La endoscopía identifica y permite tratar la lesión una vez encaminada la estabilización.",
+    "planPrompt": "¿Cómo sostenés circulación y qué tratamiento/estudio definitivo preparás en paralelo?",
+    "planTeach": "Accesos venosos, reposición guiada por respuesta, PPI y sangre si la situación clínica lo requiere; después endoscopía digestiva alta para diagnóstico y hemostasia.",
+    "reassess": "Reevaluá PA/PAM, FC, perfusión, diuresis, nueva hematemesis/melena, Hb tras reposición y necesidad de hemoderivados."
+  },
+  "COLON-001": {
+    "label": "Cáncer de colon en estudio por anemia ferropénica",
+    "coreStudies": [
+      "iron",
+      "fobt",
+      "colonoscopia",
+      "staging"
+    ],
+    "conditionalStudies": [
+      "cea"
+    ],
+    "interventions": [
+      "staging_order",
+      "surgery"
+    ],
+    "conditionalInterventions": [],
+    "diagnosisPrompt": "Varón mayor con anemia ferropénica sin causa evidente. ¿Qué lesión digestiva hay que excluir y cuál es el estudio que permite confirmarla con tejido?",
+    "diagnosisTeach": "El cáncer de colon debe descartarse en este contexto. La sangre oculta puede apoyar pero tiene falsos negativos; la videocolonoscopía visualiza y permite biopsia. Una vez confirmado, se completa estadificación antes de la conducta quirúrgica. El CEA no reemplaza el diagnóstico histológico.",
+    "planPrompt": "Con lesión colónica biopsiada, ¿qué falta antes de definir cirugía?",
+    "planTeach": "Completar estadificación y valoración preoperatoria; luego derivación quirúrgica según localización y extensión. CEA sirve como referencia/seguimiento, no como prueba diagnóstica principal.",
+    "reassess": "Revisá anemia, anatomía patológica, extensión/metástasis, estado funcional y plan quirúrgico."
+  },
+  "PERI-PBE-001": {
+    "label": "Peritonitis bacteriana espontánea",
+    "coreStudies": [
+      "pbe_paracentesis",
+      "pbe_renal",
+      "pbe_cbc",
+      "pbe_culture"
+    ],
+    "conditionalStudies": [],
+    "interventions": [
+      "ceftriaxone",
+      "albumin"
+    ],
+    "conditionalInterventions": [
+      "stop_beta_blocker"
+    ],
+    "diagnosisPrompt": "Cirrótico con ascitis que se descompensa, fiebre/confusión y pocos signos peritoneales. ¿Qué complicación sospechás y qué prueba no puede esperar?",
+    "diagnosisTeach": "Esto orienta a PBE. En un cirrótico con ascitis la clínica puede ser poco peritonítica; la paracentesis con recuento de PMN define el diagnóstico y el cultivo ayuda a microbiología sin retrasar el tratamiento. Hay que vigilar función renal.",
+    "planPrompt": "Con PBE, ¿qué tratamiento iniciás y qué complicación renal querés prevenir?",
+    "planTeach": "Ceftriaxona IV + albúmina en esta semilla, con vigilancia renal/hemodinámica. Si aparecen datos de foco visceral, deja de comportarse como PBE y hay que replantear secundaria.",
+    "reassess": "Reevaluá fiebre, conciencia, PA/PAM, creatinina/diuresis, Na y respuesta clínica."
+  },
+  "PERI-SEC-001": {
+    "label": "Peritonitis secundaria por perforación",
+    "coreStudies": [
+      "peri_cbc",
+      "peri_gas",
+      "peri_ct"
+    ],
+    "conditionalStudies": [
+      "peri_rx",
+      "peri_fluid"
+    ],
+    "interventions": [
+      "fluid",
+      "ceftriaxone",
+      "metronidazole",
+      "source_control"
+    ],
+    "conditionalInterventions": [],
+    "diagnosisPrompt": "Dolor que se generaliza, defensa/contractura, Blumberg e íleo. ¿Qué tipo de peritonitis es y cuál es la diferencia terapéutica clave frente a una primaria?",
+    "diagnosisTeach": "Peritonitis secundaria: existe una fuente intraabdominal. Se evalúa repercusión sistémica y, si el estado lo permite sin retrasar el tratamiento definitivo, imagen para localizar causa. Antibióticos solos no resuelven una perforación.",
+    "planPrompt": "¿Qué hacés en paralelo para sostener al paciente, cubrir contaminación y resolver la fuente?",
+    "planTeach": "Reposición según respuesta, cobertura de gram negativos/anaerobios y control urgente del foco con cirugía/lavado en esta semilla. Una TC no debe retrasar control de foco si el paciente está demasiado inestable.",
+    "reassess": "Reevaluá perfusión, lactato/gases, función renal, dolor/peritonismo y respuesta después del control de foco."
+  },
+  "PERI-TER-001": {
+    "label": "Peritonitis terciaria",
+    "coreStudies": [
+      "ter_cbc",
+      "ter_ct",
+      "ter_culture"
+    ],
+    "conditionalStudies": [],
+    "interventions": [
+      "fluid",
+      "piptazo",
+      "source_control"
+    ],
+    "conditionalInterventions": [
+      "ampicillin",
+      "amikacin",
+      "fluconazole",
+      "amphotericin"
+    ],
+    "diagnosisPrompt": "Paciente multioperado e inmunosuprimido con sepsis abdominal persistente pese a tratamiento. ¿Cómo clasificás la peritonitis y qué dos cosas necesitás reevaluar?",
+    "diagnosisTeach": "La persistencia luego de una secundaria tratada orienta a peritonitis terciaria. Hay que reevaluar foco residual y obtener microbiología porque el espectro puede cambiar; en esta semilla aparecen Enterococcus y Candida.",
+    "planPrompt": "¿Cómo ajustás tratamiento cuando ya tenés cultivo y qué hacés con la posibilidad de foco persistente?",
+    "planTeach": "Soporte hemodinámico, cobertura antibiótica amplia ajustada a epidemiología y cultivos, y búsqueda activa de un foco residual que requiera drenaje o cirugía. Antifúngicos o esquemas dirigidos no se usan como receta fija: dependen de riesgo y microbiología.",
+    "reassess": "Reevaluá foco residual, cultivos, función renal, perfusión y respuesta a antimicrobianos dirigidos."
+  },
+  "APP-001": {
+    "label": "Apendicitis aguda",
+    "coreStudies": [
+      "app_cbc",
+      "app_us"
+    ],
+    "conditionalStudies": [
+      "app_urine",
+      "app_ct"
+    ],
+    "interventions": [
+      "npo",
+      "fluid",
+      "ceftriaxone",
+      "metronidazole",
+      "source_control"
+    ],
+    "conditionalInterventions": [],
+    "diagnosisPrompt": "Dolor con cronología migratoria hacia FID, anorexia/náuseas y signos locales. ¿Cuál es tu hipótesis y qué estudio usarías primero en esta semilla?",
+    "diagnosisTeach": "El patrón es típico de apendicitis aguda. Hemograma/PCR apoyan pero no excluyen si son normales; ecografía es el primer estudio de imagen de esta semilla. TC queda para duda diagnóstica/complicaciones.",
+    "planPrompt": "Si el cuadro está constituido, ¿qué preparación hacés antes del tratamiento definitivo?",
+    "planTeach": "Nada por boca, corrección breve de líquidos/electrolitos, antibiótico con cobertura de gram negativos/anaerobios antes de cirugía y apendicectomía. Si hay perforación/peritonitis, el control quirúrgico no debe demorarse.",
+    "reassess": "Vigilá fiebre, dolor/peritonismo, hidratación y signos de perforación o absceso."
+  },
+  "CHOLE-001": {
+    "label": "Colecistitis aguda",
+    "coreStudies": [
+      "chole_cbc",
+      "chole_liver",
+      "chole_us"
+    ],
+    "conditionalStudies": [],
+    "interventions": [
+      "npo",
+      "fluid",
+      "ceftriaxone",
+      "metronidazole",
+      "source_control"
+    ],
+    "conditionalInterventions": [],
+    "diagnosisPrompt": "Dolor HCD persistente, fiebre y Murphy positivo con litiasis previa. ¿Cuál es el diagnóstico probable y cuál es la imagen de elección?",
+    "diagnosisTeach": "Colecistitis aguda. Hemograma ayuda a medir inflamación, hepatograma orienta a compromiso biliar asociado y ecografía es el método de elección. En esta paciente >60 años/diabética el esquema del libro agrega cobertura anaerobia.",
+    "planPrompt": "¿Qué medidas iniciales y tratamiento definitivo corresponden en esta semilla?",
+    "planTeach": "Nada por boca, vía/hidratación, analgesia prudente, ceftriaxona; por edad/diabetes se agrega metronidazol en el esquema del libro. El tratamiento definitivo es colecistectomía laparoscópica.",
+    "reassess": "Reevaluá dolor, fiebre, PA, vómitos, ictericia y signos de perforación/sepsis."
+  },
+  "ILEO-001": {
+    "label": "Íleo mecánico / obstrucción intestinal",
+    "coreStudies": [
+      "ileo_lab",
+      "ileo_gas",
+      "ileo_xray",
+      "ileo_ct"
+    ],
+    "conditionalStudies": [],
+    "interventions": [
+      "npo",
+      "fluid",
+      "ngt"
+    ],
+    "conditionalInterventions": [
+      "surgery"
+    ],
+    "diagnosisPrompt": "Distensión, vómitos, obstipación y antecedente de cirugía. ¿Qué síndrome sospechás y qué dato te obligaría a pensar en estrangulación/isquemia?",
+    "diagnosisTeach": "La semilla corresponde a obstrucción mecánica. Laboratorio/ionograma miden pérdidas; gases/lactato ayudan con compromiso metabólico; radiografía muestra patrón obstructivo y TC localiza punto de transición y busca isquemia/estrangulación.",
+    "planPrompt": "Si no hay perforación ni isquemia en la TC, ¿qué manejo inicial hacés y qué hallazgos te harían llamar a cirugía de urgencia?",
+    "planTeach": "Nada por boca, reposición hidroelectrolítica y descompresión nasogástrica. Dolor continuo, peritonismo, lactato/acidosis o signos de isquemia/asa cerrada cambian la conducta hacia cirugía urgente.",
+    "reassess": "Reevaluá dolor, distensión, vómitos, eliminación de gases, diuresis, electrolitos y aparición de peritonismo/lactato ascendente."
+  },
+  "MESI-001": {
+    "label": "Isquemia mesentérica aguda embólica",
+    "coreStudies": [
+      "mesi_lab",
+      "mesi_gas",
+      "mesi_cta"
+    ],
+    "conditionalStudies": [
+      "mesi_angio"
+    ],
+    "interventions": [
+      "fluid",
+      "piptazo",
+      "anticoagulation",
+      "source_control"
+    ],
+    "conditionalInterventions": [
+      "npo"
+    ],
+    "diagnosisPrompt": "Dolor súbito muy intenso, inicialmente desproporcionado al examen, FA y mala anticoagulación. ¿Qué diagnóstico no podés perder?",
+    "diagnosisTeach": "El patrón orienta a isquemia mesentérica aguda embólica. Lactato/acidosis y LDH apoyan gravedad, pero la imagen vascular es decisiva; la angiografía puede confirmar y además guiar tratamiento si el estado lo permite.",
+    "planPrompt": "¿Cuál es la prioridad terapéutica además de sostener hemodinamia?",
+    "planTeach": "Reanimación, antibiótico de amplio espectro, anticoagulación con heparina si no hay contraindicación y activación urgente de revascularización o cirugía según anatomía y viabilidad intestinal. El tiempo hasta reperfusión es crítico.",
+    "reassess": "Reevaluá dolor, lactato/acidosis, PA/perfusión y signos de peritonitis que obliguen a cirugía."
+  },
+  "CHOLANG-001": {
+    "label": "Colangitis aguda obstructiva",
+    "coreStudies": [
+      "cholang_cbc",
+      "cholang_liver",
+      "cholang_us",
+      "cholang_ercp"
+    ],
+    "conditionalStudies": [],
+    "interventions": [
+      "fluid",
+      "ceftriaxone",
+      "metronidazole",
+      "source_control"
+    ],
+    "conditionalInterventions": [],
+    "diagnosisPrompt": "Fiebre, ictericia, dolor HCD e hipotensión. ¿Qué síndrome biliar infeccioso sospechás y cuál es la amenaza inmediata?",
+    "diagnosisTeach": "Colangitis aguda con sepsis por obstrucción biliar. Hemograma/renal miden repercusión, hepatograma confirma patrón colestásico, ecografía busca dilatación/causa y el drenaje de la vía biliar es parte del tratamiento causal.",
+    "planPrompt": "¿Qué hacés en paralelo para tratar sepsis y eliminar la obstrucción?",
+    "planTeach": "Reposición según respuesta, ceftriaxona + metronidazol en esta semilla y drenaje urgente de la vía biliar (CPRE). Los antibióticos no sustituyen el drenaje de una vía infectada y obstruida.",
+    "reassess": "Reevaluá PA/PAM, fiebre, función renal, bilirrubina/colestasis y respuesta tras drenaje."
+  }
+}

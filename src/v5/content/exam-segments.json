@@ -1,0 +1,114 @@
+{
+  "CIRR-001": {
+    "general": [
+      "General",
+      "Paciente adelgazado, con arañas vasculares y eritema palmar."
+    ],
+    "abdomen": [
+      "Abdomen",
+      "Abdomen globoso con ascitis moderada y esplenomegalia."
+    ],
+    "target": [
+      "Neuro",
+      "Sin asterixis ni desorientación."
+    ]
+  },
+  "PANC-001": {
+    "general": [
+      "General",
+      "Paciente con facies de dolor, taquicárdica e hipotensa."
+    ],
+    "abdomen": [
+      "Abdomen",
+      "Dolor epigástrico intenso y distensión supraumbilical, sin signos peritoneales francos."
+    ],
+    "target": [
+      "Perfusión",
+      "Taquicardia e hipotensión, con compromiso hemodinámico."
+    ]
+  },
+  "CROHN-001": {
+    "general": [
+      "General",
+      "Paciente joven con aspecto adelgazado, sin compromiso hemodinámico."
+    ],
+    "abdomen": [
+      "Abdomen",
+      "Dolor a la palpación profunda en fosa ilíaca derecha, sin signos peritoneales."
+    ],
+    "target": [
+      "Perianal",
+      "Sin enfermedad perianal visible en esta semilla."
+    ]
+  },
+  "HDA-001": {
+    "general": [
+      "General",
+      "Paciente pálido, piel fría y relleno capilar enlentecido."
+    ],
+    "abdomen": [
+      "Abdomen",
+      "Abdomen sin signos peritoneales francos."
+    ],
+    "target": [
+      "Hepático",
+      "Sin estigmas claros de hepatopatía crónica."
+    ]
+  },
+  "COLON-001": {
+    "general": [
+      "General",
+      "Palidez cutaneomucosa."
+    ],
+    "abdomen": [
+      "Abdomen",
+      "Abdomen blando, sin signos peritoneales; molestia vaga en fosa ilíaca derecha."
+    ],
+    "target": [
+      "Mucosas",
+      "Palidez cutaneomucosa compatible con anemia."
+    ]
+  },
+  "PERI-PBE-001": {
+    "general": [
+      "General",
+      "Paciente cirrótico, febril y algo lento para responder."
+    ],
+    "abdomen": [
+      "Abdomen",
+      "Ascitis abundante con molestia difusa leve, sin defensa ni Blumberg franco."
+    ],
+    "target": [
+      "Neurológico",
+      "Atención enlentecida; diferenciar encefalopatía séptica de encefalopatía hepática."
+    ]
+  },
+  "PERI-SEC-001": {
+    "general": [
+      "General",
+      "Paciente inmóvil, febril, taquicárdica e hipotensa; respiración costal y superficial."
+    ],
+    "abdomen": [
+      "Abdomen",
+      "Distensión, defensa y contractura difusas, Blumberg positivo y ruidos hidroaéreos muy disminuidos."
+    ],
+    "target": [
+      "Peritoneal",
+      "El dolor aumenta con movimiento, tos y respiración profunda; cuadro compatible con irritación peritoneal."
+    ]
+  },
+  "PERI-TER-001": {
+    "general": [
+      "General",
+      "Paciente multioperado, tóxico, febril e hipotenso con mala perfusión periférica."
+    ],
+    "abdomen": [
+      "Abdomen",
+      "Dolor y distensión difusos en postoperatorio, sin colección focal palpable."
+    ],
+    "target": [
+      "Postoperatorio",
+      "Múltiples heridas quirúrgicas recientes; persistencia del cuadro séptico pese a intervenciones previas."
+    ]
+  }
+}
