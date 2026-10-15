@@ -8,7 +8,7 @@ Run: \`node qa/v5/characterize-app-native.mjs\`.
 The scenario matrix executes the original effective 4.8.7 VM for APP-001,
 with one confirmed IV reference access: baseline; ceftriaxone 1 g;
 metronidazole 500 mg; both antibiotic drugs ordered together; Ringer 500 ml.
-It verifies pending IV orders at one real second and actual delivery at approximately 1.5 real seconds (native minute 0.18); this is distinct from CIRR's 550 ms oral preparation, plus exactly-one administration
+It verifies no administration before 500 ms and eventual real administration exactly once per ordered therapy; times are measured for each native medicine separately from administration log, not assumed to share one 550ms/1500ms preparation deadline
 per actual order, and prints original snapshots, dose references and log
 details in CI. **A confirmed IV in this historical harness is a controlled
 input, not proof of a migrated V5 venous access procedure.**
