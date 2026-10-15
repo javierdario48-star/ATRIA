@@ -39,11 +39,11 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
   receipt:{eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,...data}});
  const txReceipt=(cmd,t,reused=false)=>executed(cmd,{therapyId:t.id,sourceEventId:t.sourceEventId,dose:copy(t.dose),
   administeredAtRealSecond:t.administeredAtRealSecond,administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
-  message:(reused?'Ya ejecutado por la indicación original: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
+  message:(reused?'Ya ejecutado por la indicación original: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
  function readiness(destination){
   const out=csEvaluateClosure487(closureSnapshot(p,c,destination));
-  const last=p.treatments.at(-1);
-  if(last&&(!p.lastReassessment||p.lastReassessment.nativeMinute<last.administeredAtNativeMinute)){
+  if(p.pendingTreatments.length){out.ready=false;out.action=null;out.missing.push('Esperar la ejecución o resolución de las intervenciones en preparación.');}
+  if(p.treatments.some(t=>!p.lastReassessment?.interventionEvents?.includes(t.sourceEventId))){
    out.ready=false;out.action=null;out.missing.push('Reevaluar después de la última intervención efectivamente ejecutada.');
   }
   return out;
@@ -91,7 +91,9 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
     return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
    }
    if(intent.kind==='patient.reassess'){
-    p.reassessments++;p.lastReassessment={nativeMinute:clock.nativeMinute,eventId:cmd.eventId,vitals:copy(p.liveVitals),administrationEvents:p.administrationLog.map(t=>t.sourceEventId)};
+    p.reassessments++;p.lastReassessment={nativeMinute:clock.nativeMinute,eventId:cmd.eventId,vitals:copy(p.liveVitals),
+     administrationEvents:p.administrationLog.map(t=>t.sourceEventId),interventionEvents:p.treatments.map(t=>t.sourceEventId)};
+    p.lastVitalsKnown={vitals:copy(p.liveVitals),nativeMinute:clock.nativeMinute,eventId:cmd.eventId};
     return executed(cmd,{assessment:copy(p.lastReassessment),message:'Reevaluación registrada. PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+' · FC '+Math.round(p.liveVitals.hr)+'. Ascitis y respuesta diurética no tienen cinética modelada en la semilla original; continuar seguimiento.'});
    }
    if(intent.kind==='diagnosis.record'){

@@ -3,9 +3,12 @@ import {Lifecycle} from '../../app/lifecycle.js';
 import {createWorld} from './world.js';
 import {createHospitalRenderer} from '../render/hospital.js';
 import {createGuardSession} from '../clinical/guard-session.js';
+import {createProgressionLedger} from '../clinical/progression.js';
+import {cirrPatientHTML,vitalsHTML,examHTML,therapyHTML,examNames} from '../ui/clinical-panels.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PROFILE_KEY='atria.v5.profile.v1';
+const PROGRESS_KEY='atria.v5.progress.v1';
 const supportedColors=new Set(['navy','green','gray','pink','teal']);
 export function readProfile(storage){
  try{
@@ -17,6 +20,8 @@ export function readProfile(storage){
 /** Exactly one owner for boot, input listeners, RAF and all mode transitions. */
 export async function createApplication({document,window,content,signal}){
  const rootLifecycle=new Lifecycle(),scope=rootLifecycle.enter('application');
+ let progress;try{progress=createProgressionLedger(JSON.parse(window.localStorage.getItem(PROGRESS_KEY)||'{}'));}catch{progress=createProgressionLedger();}
+ let savedRewardCount=progress.read().receipts.length;
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0;
@@ -44,7 +49,12 @@ export async function createApplication({document,window,content,signal}){
    who.textContent=row.name+':';el.append(who,document.createTextNode(row.text));fragment.append(el);
   }
   ui('chatHistory').replaceChildren(fragment);ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
-  renderStudyOrders();
+  renderStudyOrders();renderClinicalPanels();
+  if(progress.read().receipts.length!==savedRewardCount){
+   try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));savedRewardCount=progress.read().receipts.length;}
+   catch{toast('Progreso confirmado en esta sesión; no se pudo guardar en este dispositivo.');}
+  }
+  updateHud();
  }
  function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;line('ATRIA',message,true);}
  function updateHud(){
@@ -53,6 +63,7 @@ export async function createApplication({document,window,content,signal}){
   ui('status').textContent=guard?(s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':'Lobby local · 5.0 experimental';
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
   ui('peopleButton').textContent=guard?'Historia':'Personas';
+  const career=progress.read();ui('playerProgress').textContent='Nivel '+career.level+' · '+(career.xp%200)+'/200 XP';world.setLevel(career.level);
   ui('recipientButton').textContent=guard?({nurse:'Enfermera',vega:'Dr. Vega'}[focusedNpc]||'Paciente cercano'):'Lobby · público';
   input.placeholder=guard?'Hablar en la guardia…':'Hablar en el lobby…';
   document.body.dataset.phase=s.phase;document.body.dataset.generation=String(s.generation);
@@ -68,7 +79,7 @@ export async function createApplication({document,window,content,signal}){
    <button class="mode" disabled><b>Cooperativo</b><small>2–4 jugadores · pendiente de integrar.</small></button>
    <button class="mode" disabled><b>Competitivo</b><small>2–4 jugadores · pendiente de integrar.</small></button></div>
    <label class="field">Caso<select id="caseChoice">${content.cases.map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join('')}</select></label>
-   <p class="note">Navegación y estudios conectados. Tratamientos, evolución clínica, tutor, multijugador y XP siguen en migración.</p>
+   <p class="note">CIRR: evaluación, estudios, tratamiento y cierre con XP. Otros casos: navegación y estudios. Tutor, voz y multijugador siguen en migración.</p>
    <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);
  }
  function selectRecipient(kind){
@@ -80,9 +91,27 @@ export async function createApplication({document,window,content,signal}){
  }
  function showPatient(patient){
   const c=content.cases.find(c=>c.id===patient.caseId);if(!c)return;
+  const clinical=guardSession?.read(),complete=!!clinical?.patient.liveVitals;
   open(`<h2>${esc(patient.bedId)} · Paciente</h2><p>${esc(c.demo)}</p><div class="note">${esc(c.chief)}</div>
-   <p>Podés solicitar estudios a Enfermera y consultar aquí sus resultados. Los tratamientos y la evolución clínica todavía no están habilitados.</p>
-   <div class="actions"><button data-action="patient-target">Hablar</button><button data-action="studies">Estudios</button><button data-action="close">Cerrar</button></div>`);
+   ${complete?cirrPatientHTML(clinical.patient):'<p>Podés solicitar estudios a Enfermera. La atención completa de este caso sigue en migración.</p><div class="actions"><button data-action="studies">Estudios</button></div>'}
+   <div class="actions"><button data-action="patient-target">Hablar</button><button data-action="close">Cerrar</button></div>`);
+  renderClinicalPanels();
+ }
+ function showExamination(){
+  open('<h2>Examen físico</h2><div class="actions">'+Object.entries(examNames).map(([id,name])=>'<button data-exam-section="'+id+'">'+esc(name)+'</button>').join('')+'</div><div id="examResults"></div><p class="note">Un órgano sin hallazgo modelado queda sin dato; no equivale a un examen normal.</p>');renderClinicalPanels();
+ }
+ function showTreatment(){
+  open('<h2>Tratamiento · Enfermería</h2><div id="therapyRecords"></div><label class="field">Orden<input id="therapyOrder" maxlength="200" placeholder="espironolactona 100 mg oral"></label><p class="note">C2 valida espironolactona 100 mg oral (también por defecto), dieta sin sal y paracentesis terapéutica solo si la indicás. Las otras intervenciones siguen en migración.</p><div class="actions"><button data-action="order-therapy" class="primary">Indicar a Enfermera</button><button data-action="close">Cerrar</button></div>');renderClinicalPanels();
+ }
+ function renderClinicalPanels(){
+  if(!guardSession)return;const state=guardSession.read(),p=state.patient;if(!p.liveVitals)return;
+  if(ui('clinicalVitals'))ui('clinicalVitals').innerHTML=vitalsHTML(p);
+  if(ui('examResults'))ui('examResults').innerHTML=examHTML(p);
+  if(ui('therapyRecords'))ui('therapyRecords').innerHTML=therapyHTML(p);
+  if(ui('clinicalHistory'))ui('clinicalHistory').innerHTML=p.intentHistory.map(x=>'<p>'+esc(x.answer)+'</p>').join('')||'<p>Sin datos interrogados.</p>';
+  if(ui('caseReadiness'))ui('caseReadiness').textContent=p.caseEnded?'Atención cerrada.':state.closure?.ready?'Evaluación completa. Elegí cómo continúa el cuidado.':(state.closure?.missing||[]).join(' ');
+  if(ui('caseDestinations'))ui('caseDestinations').innerHTML=p.caseEnded?'':['sala','observacion'].map(id=>'<button data-destination="'+id+'" '+(!state.closure?.ready?'disabled':'')+'>'+(id==='sala'?'Internar en sala':'Dejar en observación')+'</button>').join('');
+  if(ui('caseResult'))ui('caseResult').innerHTML=p.closure?'<h3>Caso cerrado · '+p.closure.quality.score+'/100</h3><p>'+(p.closure.destination==='sala'?'Internación en sala':'Observación')+' · +'+p.closure.xp+' XP</p>':'';
  }
  function showStudies(){
   if(!guardSession)return;
@@ -119,7 +148,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function showProfile(){
   const s=world.snapshot();
-  open(`<h2>Perfil</h2><p>${esc(profile.name)} · Nivel 1</p><p>Los progresos de la versión estable se conservan separados de esta prueba.</p>
+  open(`<h2>Perfil</h2><p>${esc(profile.name)} · Nivel ${progress.read().level} · ${progress.read().xp} XP</p><p>Los progresos de la versión estable se conservan separados de esta prueba.</p>
    <label class="field">Alias<input id="aliasChoice" value="${esc(profile.name)}" maxlength="32"></label>
    <label class="field">Ambo<select id="colorChoice">${['navy','green','gray','pink','teal'].filter(k=>content.assets['player-'+k]).map(k=>`<option value="${k}" ${k===profile.scrubColor?'selected':''}>${esc(content.colors[k]?.[0]||k)}</option>`).join('')}</select></label>
    <div class="actions"><button data-action="close">Cerrar</button><button data-action="save-profile" ${s.phase==='guard'?'disabled':''}>Guardar</button></div>`);
@@ -134,20 +163,31 @@ export async function createApplication({document,window,content,signal}){
  listen(ui('peopleButton'),'click',()=>world.snapshot().phase==='guard'?showPatient(world.snapshot().patients[0]):
   open('<h2>Personas</h2><p>Esta compilación funciona en modo local. La presencia, las invitaciones y las salas compartidas todavía no están conectadas.</p>'));
  listen(ui('profileButton'),'click',showProfile);listen(ui('modalClose'),'click',close);
- listen(dialog,'click',event=>{
+ listen(dialog,'click',async event=>{
   const button=event.target.closest('button');if(!button)return;
   if(button.dataset.mode){draftMode=button.dataset.mode;guardSetup();}
   if(button.dataset.action==='close')close();
   if(button.dataset.action==='start-guard'){
    guardSession?.dispose();world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});
    const s=world.snapshot(),roomId='guard-'+window.crypto.randomUUID();
-   guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,
+   guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,progress,
     patient:s.patients[0],content,resolveContext:()=>({patientUid:world.nearby(),focusedNpc}),
     onChange:(_event,room)=>{if(guardSession?.read().room.roomId===room.roomId)renderGuardCommunication();}});
-   close();resetChat('Guardia experimental. Estudios conectados; tratamientos y evolución en migración.');updateHud();
+   close();resetChat(s.caseId==='CIRR-001'?'Guardia CIRR. Evaluación, estudios y cierre clínico disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
   }
   if(button.dataset.action==='patient-target'){close();selectRecipient('patient');}
   if(button.dataset.action==='studies')showStudies();
+  if(button.dataset.action==='examination')showExamination();
+  if(button.dataset.action==='treatment')showTreatment();
+  if(button.dataset.examSection){await submitText('/examen '+button.dataset.examSection);renderClinicalPanels();}
+  if(button.dataset.action==='record-vitals'){await submitText('/signos');renderClinicalPanels();}
+  if(button.dataset.action==='reassess'){await submitText('/reevaluar');renderClinicalPanels();}
+  if(button.dataset.action==='save-diagnosis'){await submitText('/diagnostico '+ui('diagnosisInput').value.trim());renderClinicalPanels();}
+  if(button.dataset.destination){await submitText('/disposicion '+button.dataset.destination);renderClinicalPanels();
+   if(guardSession?.read().patient.caseEnded)ui('caseResult')?.scrollIntoView({block:'nearest'});}
+  if(button.dataset.action==='order-therapy'){
+   const text=ui('therapyOrder').value.trim();if(text){close();await submitText(/^enfermer[ao]/i.test(text)?text:'Enfermera, '+text);}
+  }
   if(button.dataset.action==='request-study'){
    const study=guardSession?.catalog().find(s=>s.id===ui('studyChoice').value);
    if(study){close();submitText('/estudio '+study.id);}
@@ -192,9 +232,9 @@ export async function createApplication({document,window,content,signal}){
  listen(input,'focus',()=>{world.stop();drag=null;keyboard();});listen(input,'blur',()=>{keyboard();resize();});
  function frame(now){
   if(destroyed)return;raf=null;frames++;
-  scheduler.tick(now,{simulate:dt=>{world.step(dt);guardSession?.advance(dt);},maintain:()=>{
+  scheduler.tick(now,{simulate:dt=>{world.step(dt);guardSession?.advance(dt,{typing:/INPUT|TEXTAREA/.test(document.activeElement?.tagName)});},maintain:()=>{
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
-   if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();renderStudyOrders();}
+   if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();renderStudyOrders();renderClinicalPanels();}
   },render:()=>renderer.draw(world.snapshot()),isMobile:window.innerWidth<700});
   raf=window.requestAnimationFrame(frame);
  }

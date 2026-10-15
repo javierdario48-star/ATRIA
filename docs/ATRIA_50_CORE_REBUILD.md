@@ -2,7 +2,7 @@
 
 **Branch:** atria-5.0-core-rebuild-experimental
 **Protected legacy baseline:** atria-4.8.7-structural-cleanup-qa @ be6707b9ea9c9cff66db442acc374e4aea95f6ce (16/16 GitHub Actions jobs green).
-**Status:** independently built, navigable experimental game with real local study requests/results. Original map/artwork, walking, local lobby, solo/apprentice exploration and the study panel run from canonical ESM source. Full clinical simulation, voice, shared multiplayer and XP are NOT migrated or certified. No production deployment. This is a recoverable partial reconstruction, not ATRIA 5.0 completion.
+**Status:** independently built original-art game with C1 studies and a locally verified complete C2 CIRR care journey: history, exam/vitals, real oral administration, original physiological model, reassessment, diagnosis, safe disposition and unique persisted XP. Other cases retain navigation/studies; voice, tutor, shared multiplayer, complete career and full visual parity remain pending. Original CIRR spironolactone has no modeled diuresis/ascites kinetics or acute vital effects. No production deployment; this is not completion of all ATRIA 5.0. Current publication evidence and recovery instructions: `docs/ATRIA_50_HANDOFF.md`.
 
 ## Technical decision
 
@@ -19,7 +19,7 @@ The Forgotten Server (TFS/OTServ) supplies architectural inspiration: protocol/i
 - src/v5/index.js: reuse existing proven roomReducer and FrameScheduler, no monkey-patching.
 - Tests: treatment/study separation, delayed/repeated network commands, wrong patient, forged actor, 2–4 participants, competitive claiming, question/negation, unconfirmed receipts and stale snapshots.
 
-At the recovery checkpoint these were isolated domain modules with an injected test executor. B1 now supplies an independent renderer/application, and C1 connects the real study service through this authority and port. Medication/physiology remain unavailable in the new app. **The 2–4-member domain tests are objects in one process, not independent multiplayer clients.** The unchanged 4.8.7 build remains the full-game control group.
+At the recovery checkpoint these were isolated domain modules with an injected test executor. B1 now supplies an independent renderer/application, and C1 connects the real study service through this authority and port. C2 now connects native CIRR care; full all-case medication/physiology parity remains pending. **The 2–4-member domain tests are objects in one process, not independent multiplayer clients.** The unchanged 4.8.7 build remains the full-game control group.
 
 ## Design invariants
 
@@ -154,3 +154,13 @@ Native reference locations in the protected original: initial patient state arou
 Preserve the distinction between clinical study time (1 game minute per real second) and native physiology progression (normally .12 native minutes per real second; historical typing slowdown must be characterized). Only after a complete local case works should transport/2–4 independent-client integration and remaining case expansion be certified. The new build has removed historical code generation from execution; the old implementation has not been deleted.
 
 Plan and ongoing decisions: `docs/ATRIA_50_IMPLEMENTATION_PLAN.md`.
+
+## C2 — Native CIRR care journey and technical handoff
+
+C2a published `becd8ba80f5ee48264cc695f7ed63294133aaacc`, CI38689354945 passed. C2b adds real clinical panels, saved receipt-ledger XP, globally unique patient UIDs, bounded typing-clock epochs and real Chromium CIRR completion. 88 V5 contracts pass locally; original native characterization reproduces100mg/550ms and exact vital trajectories. No historical runtime imports were added. The existing pure closure evaluator is reused explicitly.
+
+Real UI path: original hospital traversal → authentic onset/alcohol history → five exam techniques and vitals → four native studies/results → requested espironolactone100mg oral → exact receipt → sodium restriction → reassessment/diagnosis → sala with100/100 and133XP once → lobby/reload with saved XP. Separate explicit therapeutic paracentesis checks real native HR/RR response; no unrequested medication is added. Chromium Pixel5 emulation is not physical Android.
+
+Independent review found two important issues, now RED→GREEN: closing with a treatment still preparing and accepting residual quantities after100mg. Reassessment now binds all intervention event IDs even at equal timestamps, and UI vitals display actual measured values. Minor deferred: simultaneous tabs can overwrite saved progress; local single-instance persistence only.
+
+Native CIRR has no spironolactone vital effects/ascites kinetics: preserve that fact instead of inventing rapid improvement. Dose scope is the original100mg oral reference; other regimens are rejected pending C3. Next checkpoint C3 expands the same executor after characterizing the next original clinical path. C4 dialogue/Vega/voice, C5 shared chat/real multiplayer, C6 parity/mobile/cleanup follow. See the permanent handoff for exact functions, contracts, commands, pending work and final CI/preview evidence.

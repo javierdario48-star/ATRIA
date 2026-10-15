@@ -6,6 +6,7 @@ const actor=(id,point,extra={})=>({id,...point,r:10.5,speed:205,path:[],pathInde
 
 /** Owns spatial state only. No DOM, clock, clinical execution or network writes. */
 export function createWorld(content,profile){
+ const identity=globalThis.crypto.randomUUID();
  const navigation=createNavigation(content.map);
  const start=content.map.player_start_tile;
  const point=tile=>navigation.center(...(navigation.nearest(...tile,8)||start));
@@ -27,6 +28,7 @@ export function createWorld(content,profile){
   const bed=content.beds.find(b=>b.id===(options.bedId||'B1'))||content.beds[0];
   patients=[{id:'patient-'+generation,uid:'patient-'+generation,caseId:c.id,bedId:bed.id,
    x:bed.patient[0],y:bed.patient[1],approach:[...bed.approach],name:c.demo,chief:c.chief}];
+  patients[0].uid=identity+':'+patients[0].uid;
   expert=selected==='apprentice'?actor('vega',point([14,45]),{kind:'vega',name:'Dr. Vega',r:9.5,speed:220}):null;
  }
  function step(dt){
@@ -51,6 +53,7 @@ export function createWorld(content,profile){
  }
  const snapshot=()=>structuredClone({phase,mode,caseId,generation,player,nurses,patients,expert});
  return Object.freeze({navigation,enterLobby,enterGuard,step,snapshot,
+  setLevel(level){if(!Number.isSafeInteger(level)||level<1)throw Error('invalid player level');player.level=level;},
   target:(x,y)=>phase!=='title'&&navigation.target(player,x,y),
   stop(){player.path=[];player.pathIndex=0;player.target=null;player.moving=false;},
   nearby(){return patients.filter(p=>Math.hypot(player.x-p.x,player.y-p.y)<=150).sort((a,b)=>

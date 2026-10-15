@@ -16,6 +16,8 @@ export function parseCirrDose(text,reference={amount:100,unit:'mg',display:'100 
   return {...reference,defaultApplied:true};
  }
  if(matches.length!==1)throw Error('ambiguous-dose');
+ const remaining=raw.slice(0,matches[0].index)+raw.slice(matches[0].index+matches[0][0].length);
+ if(/\d|\b(?:ml|cc|mcg|ug|mg|g|litros?|microgramos?|miligramos?)\b/.test(remaining))throw Error('ambiguous-dose-qualifier');
  const amount=Number(matches[0][1])*(matches[0][2]==='g'?1000:1);
  // C2 only certifies the original reference regimen. Other explicit regimens
  // await C3 validation; they must never silently become the default dose.

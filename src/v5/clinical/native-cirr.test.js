@@ -9,7 +9,8 @@ test('native oral dose preserves the original 100mg default and gram conversion'
  const {parseCirrDose}=await api();
  for(const scenario of reference.scenarios.slice(0,3))assert.deepEqual(parseCirrDose(scenario.text),scenario.dose);
  for(const text of ['espironolactona 0 mg','espironolactona -100 mg','espironolactona 100 ml','espironolactona 100 mg IV',
-  'espironolactona 50 mg','espironolactona 100 mg y 200 mg'])assert.throws(()=>parseCirrDose(text),/dose|route/i,text);
+  'espironolactona 50 mg','espironolactona 100 mg y 200 mg','espironolactona 100 mg 50 ml',
+  'espironolactona 100 mg y 50','espironolactona 100 mg ml'])assert.throws(()=>parseCirrDose(text),/dose|route/i,text);
 });
 
 test('migrated original CIRR target/smoothing matches every characterized trajectory',async()=>{

@@ -3,6 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const read=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name,import.meta.url)));
+test('patients in independent world instances cannot share a persistent XP identity',async()=>{
+ const {createWorld}=await import('./world.js'),content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
+ const worlds=[createWorld(content,{name:'same'}),createWorld(content,{name:'same'})];
+ for(const world of worlds){world.enterLobby();world.enterGuard({mode:'solo',caseId:'CIRR-001'});}
+ assert.notEqual(worlds[0].snapshot().patients[0].uid,worlds[1].snapshot().patients[0].uid);
+});
 test('one world owns lobby and guard navigation; repeated transitions reset rather than duplicate actors',async()=>{
  const file=new URL('./world.js',import.meta.url);assert(fs.existsSync(file),'modular world is missing');
  const {createWorld}=await import('./world.js');

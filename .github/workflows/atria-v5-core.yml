@@ -21,6 +21,8 @@ jobs:
         run: npm run test:v5-core
       - name: Canonical content, navigation, study and independent game contracts
         run: npm run test:v5
+      - name: Original CIRR dose, preparation and physiological trajectories remain equivalent
+        run: node qa/v5/characterize-cirr-native.mjs
       - name: Build independent V5 module distribution
         run: npm run build:v5-core
       - name: Build independent executable V5 game
@@ -77,6 +79,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/studies-browser.mjs
+      - name: Complete CIRR through real UI, native administration, reassessment, closure and unique persisted XP
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/cirr-browser.mjs
       - name: Capture unchanged original lobby as a visual control
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright

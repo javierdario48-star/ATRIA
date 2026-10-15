@@ -75,3 +75,13 @@ Interfaces: native executor owns patient state; room authority serializes and au
 - C1 published `8f0310fc76f85820caa4de87ed8213c297ceb08e`, CI 38665491977 success (all three jobs, including unchanged full historical regression). Preview deployment `dpl_8UGmVkbbZAQuVYiRjWQPKHRZn3p3` opened and checked through a real pending hemogram order. Exact verified URL and coverage are recorded in `ATRIA_50_CORE_REBUILD.md`; no production promotion.
 - Next: C2 complete native CIRR path, including spironolactone administration, original physiological response and closure/XP. Reference locations and the dual clock mapping are recorded in `ATRIA_50_CORE_REBUILD.md`. No re-extraction or repeat navigation rebuild.
 - Publishing decision: shell Git has read access but no push credential; use the connected GitHub Git-data API, verify the published tree equals the local tested tree, and update only the experimental ref with an expected-HEAD lease. Align the local HEAD to the byte-identical published commit without changing working files.
+
+## C2 continuation — execution record
+
+- Recovery verified remote465ad3d and clean tree. Interrupted physiology/closure agents produced no code; no unpublished work was lost. No repeat of A1/B1/C1.
+- C2a published becd8ba80f5ee48264cc695f7ed63294133aaacc; CI38689354945 success. Native care/receipt/closure integration,80 tests.
+- C2b: clinical UI/persistence/clock integration;88 tests after independent review fixes. Actual Chromium UI completed CIRR100/100,+133XP once with original treatment/study state, plus explicit native paracentesis response in a separate guard. CI and verified preview publication are tracked in ATRIA_50_HANDOFF.md.
+- Ruling: selected one-case practice uses native practice1/shift1 multipliers; continuous-shift and random-case multipliers are not claimed before those systems migrate.
+- Ruling: preserve native empty spironolactone effects and no CIRR diuresis/ascites engine. Cost/limit: no acute drug response is newly simulated; expanding it requires an explicit clinical-model task, not a substitute severity model.
+- Review: two Important findings fixed with failing-then-passing tests; measured-vitals/provenance concerns also corrected. Minor deferred: localStorage progress across concurrent tabs; current C2 certification is one local application instance.
+- C3: expand the same clinical executor and verify another full native case; C4 dialogue/Vega/voice; C5 global chat and2–4 real clients; C6 parity, physical Android, final obsolete-code removal and certification. Do not erase validated native CIRR or C1 contracts.

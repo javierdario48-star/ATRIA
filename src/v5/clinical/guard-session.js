@@ -4,7 +4,7 @@ import {createStudyService} from './studies.js';
 import {createCirrCare} from './cirr-care.js';
 import {createProgressionLedger} from './progression.js';
 import {assertMatchingClinicalReceipt} from './receipts.js';
-import {createClinicalClock487,advanceClinicalClock487} from '../../clinical/clinical-clock-487.js';
+import {createGuardClock} from './guard-clock.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -25,7 +25,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))];
  const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map();
  for(const item of [...content.therapies,...caseData.interventions])labels.set(item.id,item.label);
- let clock=createClinicalClock487({authorityId:actorId}),disposed=false;
+ const guardClock=createGuardClock(actorId);let clock=guardClock.read(),disposed=false;
  const credentials=Object.freeze({roomId,actorId,nonce:Symbol('local-room')});
  const port=createNativeClinicalPort({
   validateReceipt:assertMatchingClinicalReceipt,
@@ -82,7 +82,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   advance(deltaRealSeconds,{typing=false}={}){
    if(disposed)throw Error('guard session disposed');
    const before=clock;
-   clock=advanceClinicalClock487(clock,{deltaRealSeconds,nativeMinutesPerRealSecond:typing?.03:.12});
+   clock=guardClock.advance(deltaRealSeconds,typing);
    for(const result of care?.advance(before,clock,deltaRealSeconds)||[])port.complete(result);
    const ready=studies.advance(nativePatient,clock.clinicalMinute);
    for(const order of ready){

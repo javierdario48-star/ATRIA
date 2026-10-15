@@ -111,7 +111,7 @@ export function csNurseScan487(text,studies=[],therapies=[],interventions=[]){
  let previous=0;
  for(const x of chosen){segments.push(input.slice(previous,x.start));previous=x.end;}
  segments.push(input.slice(previous));
- const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|pero|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|pongas|poneme|ponga|canaliza|canalicen|canalizame|conecta|conectame|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|mcg|ug|kg|litros|litro|cuatro|tres|cinco|seis|canula|nasal|mascara|lpm|min|por|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
+ const neutral=/\b(?:enfermera|enfermero|por|favor|y|e|ademas|mas|pero|con|de|del|la|el|los|las|un|una|al|para|que|me|le|lo|podes|puedes|quiero|pido|necesito|indico|solicito|poner|pone|pongan|pongas|poneme|ponga|canaliza|canalicen|canalizame|conecta|conectame|dar|pasar|pasale|prepara|hacer|hace|tomar|tomale|colocar|controlar|dos|2|una|1|no|sin|evitar|ml|mg|g|mcg|ug|kg|litros|litro|cuatro|tres|cinco|seis|canula|nasal|mascara|lpm|min|por|oral|po|iv|endovenoso|intravenoso|l|cada|ahora|primero|despues|cuanto|tanto)\b/g;
  const unknown=segments.map(x=>x.replace(/\b(?:suspender|suspende|suspenda|retirar|retira|retire|detener|detene)\b/g,' ')
   .replace(neutral,' ').replace(/\b\d+(?:\.\d+)?\b/g,' ').replace(/\s+/g,' ').trim()).filter(x=>x.length>=4);
  return {addressed:/^(?:enfermera|enfermero|enfermeria)\b/.test(s),items:result,unknown,

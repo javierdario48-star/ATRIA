@@ -31,7 +31,7 @@ export async function buildV5(output='out-v5'){
  files.set('index.html',await fs.readFile('src/v5/web/index.html'));
  files.set('src/v5/web/game.css',await fs.readFile('src/v5/web/game.css'));
  await fs.rm(output,{recursive:true,force:true});
- const manifest={version:'5.0-studies-experimental',sourceMode:'canonical-esm-game',
+ const manifest={version:'5.0-cirr-experimental',sourceMode:'canonical-esm-game',
   entry:'src/v5/app/main.js',reusedPureModules:[...allowedReuse].filter(x=>files.has(x)).sort(),files:{}};
  for(const [file,bytes] of [...files.entries()].sort(([a],[b])=>a.localeCompare(b))){
   const destination=path.join(output,file);await fs.mkdir(path.dirname(destination),{recursive:true});await fs.writeFile(destination,bytes);
