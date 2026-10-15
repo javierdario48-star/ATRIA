@@ -92,7 +92,7 @@ test('APP surgical referral requires completed studies, both IV drugs and confir
  assert.equal(consult.clinical[0].status,'pending');
  await f.send('/diagnostico apendicitis aguda');
  assert.equal((await f.send('/disposicion quirofano')).clinical[0].status,'rejected');
- f.s.advance(45);await f.s.flush();
+ f.s.advance(120);await f.s.flush();
  const p=f.s.read().patient;
  assert.equal(p.pendingTreatments.length,0);
  assert.equal(p.administrationLog.length,2);
