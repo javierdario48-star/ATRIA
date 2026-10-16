@@ -49,11 +49,17 @@ try{
   const start=performance.now();while(performance.now()-start<1200){/* stall before submitting the actual UI form */}
   const submittedAt=performance.now();document.querySelector('#chatForm').requestSubmit();
   await new Promise(resolve=>setTimeout(resolve,50));
-  const p=atriaV5.snapshot().clinical.patient;
-  return {elapsedAfterSubmission:performance.now()-submittedAt,administered:p.administrationLog.length,pending:p.pendingTreatments.length};
+  const snapshot=atriaV5.snapshot(),p=snapshot.clinical.patient;
+  const command=snapshot.clinical.room.events.filter(e=>e.type==='chat.posted').at(-1);
+  return {elapsedAfterSubmission:performance.now()-submittedAt,
+   administered:p.administrationLog.length,pending:p.pendingTreatments.length,
+   accepted:command?.clinical?.filter(x=>x.status==='pending').length||0,
+   nurseTravelling:snapshot.nurses.some(x=>x.journeyId)};
  });
  assert.equal(boundary.administered,0,'pre-request elapsed time cannot satisfy medication preparation');
- assert.equal(boundary.pending,1,'the actual order must be preparing, not silently rejected');
+ assert.equal(boundary.pending,0,'medication preparation cannot begin before a real nurse arrives');
+ assert.equal(boundary.accepted,1,'the actual order is accepted as pending by room authority');
+ assert.equal(boundary.nurseTravelling,true,'the nurse must be traversing the real ward');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.administrationLog.length===1);
  const report={wallSeconds:wall,clinicalMinutes:clinical,nativeMinutes:native,
   typing:{wallSeconds:typingWall,clinicalMinutes:typingClinical,nativeMinutes:typingNative},commandBoundary:boundary,physicalAndroid:false};
