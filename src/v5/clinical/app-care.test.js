@@ -170,3 +170,29 @@ test('C07 post-administration wrong-dose repeat never claims the existing APP re
  assert.equal(f.s.read().patient.administrationLog.length,1);
  f.s.dispose();
 });
+
+test('C07 a combined nurse instruction preserves IV-first dependency and drug-specific receipts',async()=>{
+ const f=fixture();
+ const ack=await f.send('Enfermera dos vías, ceftriaxona 1 g y metronidazol 500 mg','combined');
+ assert.deepEqual(ack.clinical.map(x=>[x.kind,x.id,x.status]),[
+  ['procedure.request','iv','executed'],
+  ['therapy.request','ceftriaxone','pending'],
+  ['therapy.request','metronidazole','pending']
+ ]);
+ assert.equal(f.s.read().patient.venousAccessCount,2);
+ assert.equal(f.s.read().patient.administrationLog.length,0,
+  'acknowledging a compound order cannot prematurely administer');
+ f.s.advance(1.49);await f.s.flush();
+ assert.equal(f.s.read().patient.administrationLog.length,0);
+ f.s.advance(.02);await f.s.flush();
+ const p=f.s.read().patient;
+ assert.deepEqual(p.administrationLog.map(x=>[x.id,x.dose.amount,x.sourceEventId]),[
+  ['ceftriaxone',1000,'APP-ROOM:doctor:combined:1'],
+  ['metronidazole',500,'APP-ROOM:doctor:combined:2']
+ ]);
+ const retry=await f.send('Enfermera dos vías, ceftriaxona 1 g y metronidazol 500 mg','combined');
+ assert.deepEqual(retry.clinical.map(x=>x.status),['executed','executed','executed']);
+ assert.equal(f.s.read().patient.administrationLog.length,2);
+ assert.equal(f.s.read().messages.filter(x=>x.id.startsWith('completion:')).length,2);
+ f.s.dispose();
+});
