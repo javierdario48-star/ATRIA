@@ -281,6 +281,6 @@ export async function createApplication({document,window,content,signal}){
  if(signal)listen(signal,'abort',destroy,{once:true});
  drawWorld();resume();
  return Object.freeze({snapshot:()=>({...world.snapshot(),history:structuredClone(history),clinical:guardSession?.read()||null}),
-  diagnostics:()=>({destroyed,raf:raf===null?0:1,listeners:destroyed?0:listeners.length,timers:0,frames,
+  diagnostics:()=>({destroyed,raf:raf===null?0:1,listeners:destroyed?0:listeners.length+atriaKeyboard.listenerCount(),timers:0,frames,
    renderer:renderer.metrics(),keyboard:{open:atriaKeyboard.isOpen()},generation:world.snapshot().generation}),destroy});
 }
