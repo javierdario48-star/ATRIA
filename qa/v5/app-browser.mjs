@@ -50,6 +50,23 @@ try{
  await page.locator('[data-action="record-vitals"]').click();
  assert.match(await page.locator('#clinicalVitals').innerText(),/118\/72/);
  await page.locator('#modalClose').click();
+ // C08d: a spoken nursing spot measurement has its own physical trip.
+ const previousSpot=(await state()).patient.lastVitalsKnown?.eventId;
+ await send('Enfermera signos vitales');
+ const spotOrder=(await state()).room.events.filter(e=>e.type==='chat.posted').at(-1);
+ assert.deepEqual(spotOrder.clinical.map(x=>[x.id,x.status]),[['vitals','pending']]);
+ assert.equal((await state()).patient.lastVitalsKnown?.eventId,previousSpot,
+  'nursing has not yet returned a verified spot measurement');
+ await page.waitForFunction(previous=>{
+  const c=atriaV5.snapshot().clinical;
+  return c.patient.lastVitalsKnown?.eventId!==previous&&c.patient.lastVitalsKnown?.source==='spot';
+ },previousSpot,{timeout:30000});
+ const currentSpot=(await state());
+ assert(currentSpot.room.events.some(e=>e.type==='clinical.completed'&&e.clinical.some(x=>
+  x.id==='vitals'&&x.status==='executed'&&x.receipt?.patientUid===currentSpot.patient.uid&&
+  x.receipt?.eventId===currentSpot.patient.lastVitalsKnown.eventId)));
+ assert.equal(currentSpot.patient.procedures.monitor?.connected??false,false);
+
  for(const id of ['app_cbc','app_us']){
   await page.locator('#peopleButton').click();
   await page.locator('[data-action="studies"]').click();
