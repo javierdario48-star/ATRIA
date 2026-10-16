@@ -4,7 +4,8 @@ import {initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,executeVenousAccess,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
-import {initialAppVitals,parseAppDose,advanceAppVitals,APP_NATIVE_PREPARATION_SECONDS} from './native-app.js';
+import {initialAppVitals,advanceAppVitals} from './native-app.js';
+import {createIVAdministration} from './native-medications.js';
 
 const copy=x=>structuredClone(x);
 export function appClosureSnapshot(p,c,destination){
@@ -32,7 +33,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
   pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,
   consults:[],pendingConsults:[],caseEnded:false,closure:null});
  initializeExamination(p);
- const pending=new Map(),pendingConsults=new Map();
+ const pendingConsults=new Map();
  const rejected=(cmd,reason,message)=>({status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason,
   ...(message?{receipt:{eventId:cmd.eventId,patientUid:p.uid,message}}:{})});
  const executed=(cmd,data)=>({status:'executed',eventId:cmd.eventId,patientUid:p.uid,
@@ -42,6 +43,9 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
   administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
   message:(reused?'Ya confirmado por la orden original: ':t.id==='npo'?'Conducta registrada: ':'Administración confirmada: ')+t.label+
    (t.dose?' · '+t.dose.display:'')+'.'});
+ const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
+  labels:id=>c.interventions.find(x=>x.id===id)?.label,
+  proof,rejected});
  function readiness(destination){
   const out=csEvaluateClosure487(appClosureSnapshot(p,c,destination));
   if(!out)return null;
@@ -74,34 +78,14 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
     p.pendingConsults.push({id:'cirugia',sourceEventId:cmd.eventId,readyAtRealSecond:task.readyAtRealSecond});
     return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
    }
-   if(intent.kind==='therapy.request'&&['ceftriaxone','metronidazole','fluid','npo'].includes(intent.id)){
-    // Every new instruction must validate its own dose and route *before*
-    // considering a matching pending or administered therapy. A different
-    // regimen cannot inherit the receipt of the already accepted one.
-    let dose=null;
-    if(intent.id!=='npo'){
-     try{dose=parseAppDose(intent.clause||intent.sourceText,defaultDoses?.[intent.id]);}
-     catch(error){return rejected(cmd,error.message,'Dosis o vía no validada para APP-001. No administrado.');}
-    }
-    const existing=p.treatments.find(t=>t.id===intent.id);
+   const iv=ivMedicines.request(cmd,clock);if(iv)return iv;
+   if(intent.kind==='therapy.request'&&intent.id==='npo'){
+    const existing=p.treatments.find(t=>t.id==='npo');
     if(existing)return proof(cmd,existing,true);
-    const job=pending.get(intent.id);
-    if(job){job.commands.push(copy(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
-    if(intent.id!=='npo'&&p.venousAccessCount<1)
-     return rejected(cmd,'venous-access-required','Primero confirmar al menos una vía venosa periférica. No administrado.');
-    const label=c.interventions.find(i=>i.id===intent.id)?.label||intent.id;
-    if(intent.id==='npo'){
-     const t={id:'npo',label,dose,sourceEventId:cmd.eventId,actorId:cmd.actorId,
-      patientUid:p.uid,administeredAtRealSecond:clock.clinicalMinute,administeredAtNativeMinute:clock.nativeMinute};
-     p.treatments.push(t);return proof(cmd,t);
-    }
-    const task={id:intent.id,label,dose,sourceEventId:cmd.eventId,actorId:cmd.actorId,
-     patientUid:p.uid,readyAtRealSecond:clock.clinicalMinute+APP_NATIVE_PREPARATION_SECONDS[intent.id],
-     commands:[copy(cmd)]};
-    pending.set(intent.id,task);
-    p.pendingTreatments.push({id:task.id,sourceEventId:task.sourceEventId,patientUid:p.uid,
-     readyAtRealSecond:task.readyAtRealSecond});
-    return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
+    const label=c.interventions.find(i=>i.id==='npo')?.label||'Nada por boca';
+    const t={id:'npo',label,dose:null,sourceEventId:cmd.eventId,actorId:cmd.actorId,
+     patientUid:p.uid,administeredAtRealSecond:clock.clinicalMinute,administeredAtNativeMinute:clock.nativeMinute};
+    p.treatments.push(t);return proof(cmd,t);
    }
    if(intent.kind==='patient.reassess'){
     p.reassessments++;
@@ -130,19 +114,15 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
   advance(clockBefore,clockAfter,dt){
    const results=[];if(p.caseEnded)return results;
    let cursor=clockBefore.clinicalMinute;
-   const due=[...pending.values()].filter(x=>x.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9)
+   const due=ivMedicines.due(clockBefore,clockAfter)
     .sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond);
    for(const task of due){
     const at=Math.max(cursor,task.readyAtRealSecond);
     advanceAppVitals(p,c,at-cursor);cursor=at;
     const fraction=dt>0?(at-clockBefore.clinicalMinute)/dt:0;
-    const t={id:task.id,label:task.label,dose:copy(task.dose),sourceEventId:task.sourceEventId,
-     actorId:task.actorId,patientUid:p.uid,administeredAtRealSecond:at,
-     administeredAtNativeMinute:clockBefore.nativeMinute+(clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction};
-    p.treatments.push(t);p.administrationLog.push(copy(t));
-    pending.delete(task.id);
-    p.pendingTreatments=p.pendingTreatments.filter(x=>x.sourceEventId!==task.sourceEventId);
-    for(const cmd of task.commands)results.push(proof(cmd,t));
+    const nativeMinute=clockBefore.nativeMinute+
+      (clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction;
+    results.push(...ivMedicines.finish(task,at,nativeMinute));
    }
    advanceAppVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor));
    for(const task of [...pendingConsults.values()].filter(x=>x.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9)){
@@ -153,6 +133,6 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
    }
    return results;
   },
-  dispose(){pending.clear();pendingConsults.clear();p.pendingTreatments=[];p.pendingConsults=[];}
+  dispose(){ivMedicines.dispose();pendingConsults.clear();p.pendingTreatments=[];p.pendingConsults=[];}
  });
 }
