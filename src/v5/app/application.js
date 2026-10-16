@@ -4,6 +4,7 @@ import {createWorld} from './world.js';
 import {createHospitalRenderer} from '../render/hospital.js';
 import {createGuardSession} from '../clinical/guard-session.js';
 import {createProgressionLedger} from '../clinical/progression.js';
+import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {cirrPatientHTML,appPatientHTML,vitalsHTML,examHTML,therapyHTML,examNames} from '../ui/clinical-panels.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -27,7 +28,18 @@ export async function createApplication({document,window,content,signal}){
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false;
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
  const renderer=await createHospitalRenderer(canvas,content,{signal,window});
- const scheduler=new FrameScheduler(),listeners=[];
+ const scheduler=new FrameScheduler({mobileRenderHz:60}),listeners=[];
+ const atriaKeyboard=createAtriaKeyboard({document,window,input,host:ui('chatDock'),
+  onSubmit:()=>{if(composition)return;const message=input.value.trim();if(message){input.value='';submitText(message);}},
+  onRecipient:()=>ui('recipientButton').click()});
+ function drawWorld(now=window.performance.now()){
+  if(atriaKeyboard.isOpen()&&!ui('chatDock').hidden&&!ui('hud').hidden){
+   const origin=canvas.getBoundingClientRect().top;
+   renderer.setPlayableBounds({top:ui('hud').getBoundingClientRect().bottom-origin+7,
+    bottom:ui('chatDock').getBoundingClientRect().top-origin-5});
+  }else renderer.setPlayableBounds(null);
+  renderer.draw(world.snapshot(),now);
+ }
  const history=[];
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
  function toast(message){ui('toast').textContent=message;ui('toast').hidden=false;toastUntil=window.performance.now()+3200;}
@@ -257,18 +269,18 @@ export async function createApplication({document,window,content,signal}){
   scheduler.tick(now,{simulate:dt=>world.step(dt),maintain:()=>{
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
    if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();renderStudyOrders();renderClinicalPanels();}
-  },render:()=>renderer.draw(world.snapshot()),isMobile:window.innerWidth<700});
+  },render:()=>drawWorld(now),isMobile:window.innerWidth<700});
   raf=window.requestAnimationFrame(frame);
  }
  function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
   clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);raf=window.requestAnimationFrame(frame);}}
  function pause(){advanceClinicalTo(window.performance.now());lastClinicalFrame=null;if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
- function destroy(){if(destroyed)return;destroyed=true;guardSession?.dispose();guardSession=null;pause();close();rootLifecycle.leave();}
+ function destroy(){if(destroyed)return;destroyed=true;guardSession?.dispose();guardSession=null;pause();close();atriaKeyboard.destroy();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
- renderer.draw(world.snapshot());resume();
+ drawWorld();resume();
  return Object.freeze({snapshot:()=>({...world.snapshot(),history:structuredClone(history),clinical:guardSession?.read()||null}),
   diagnostics:()=>({destroyed,raf:raf===null?0:1,listeners:destroyed?0:listeners.length,timers:0,frames,
-   renderer:renderer.metrics(),generation:world.snapshot().generation}),destroy});
+   renderer:renderer.metrics(),keyboard:{open:atriaKeyboard.isOpen()},generation:world.snapshot().generation}),destroy});
 }
