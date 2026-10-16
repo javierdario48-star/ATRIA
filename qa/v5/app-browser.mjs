@@ -63,6 +63,11 @@ try{
  await page.locator('[data-action="order-therapy"]').click();
  assert.equal((await state()).patient.administrationLog.length,0,'IV access required, not a fake administration');
  await send('Enfermera una vía y monitor');
+ const bedsidePending=await page.evaluate(()=>atriaV5.snapshot());
+ assert.equal(bedsidePending.clinical.patient.venousAccessCount,0,
+  'nursing orders remain pending while the real NPC travels');
+ assert.equal(bedsidePending.clinical.patient.procedures.monitor?.connected??false,false);
+ assert(bedsidePending.nurses.some(n=>n.journeyId),'nurse must begin a physical hospital path');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.venousAccessCount===1);
  await page.locator('#peopleButton').click();
  await page.locator('[data-action="treatment"]').click();
