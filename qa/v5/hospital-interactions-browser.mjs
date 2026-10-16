@@ -37,7 +37,10 @@ try{
  const tapEntity=async kind=>{
   await page.waitForFunction(()=>{const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;});
   const point=await page.evaluate(kind=>{const e=atriaV5.snapshot().entities.find(e=>e.kind===kind),r=atriaV5.diagnostics().renderer;
-   return {x:(e.x-r.camera.x)*r.scale+r.anchorX,y:(e.y-r.camera.y)*r.scale+r.anchorY};},kind);
+   // B1's visible screen is independently characterized against the last native
+   // scene. Do not click a position derived from the very hitbox under test.
+   const [x,y]=kind==='monitor'?[48,361]:[e.x,e.y];
+   return {x:(x-r.camera.x)*r.scale+r.anchorX,y:(y-r.camera.y)*r.scale+r.anchorY};},kind);
   await page.locator('#game').click({position:point});await page.waitForFunction(()=>document.querySelector('#modal').open);
   assert.equal(await page.locator('#modalContent').getAttribute('data-patient-uid'),uid);
  };
@@ -80,7 +83,7 @@ try{
  assert.match(await page.locator('#modalContent').innerText(),/B1/);await page.locator('#modalClose').click();
  await page.locator('#guardButton').click();assert.equal(await state(),null);
  const report={test:'hospital-interactions',realBrowser:true,physicalAndroid:false,androidEmulated:true,
-  url:page.url(),worldHitboxes:true,explicitPatientUid:true,unknownMonitorNoLeak:true,spotAndContinuousMeasurement:true,
+  url:page.url(),worldHitboxes:true,visibleNativeMonitorScreen:true,explicitPatientUid:true,unknownMonitorNoLeak:true,spotAndContinuousMeasurement:true,
   anatomyAndTechniques:true,partialExamDoesNotComplete:true,glasgowByComponents:true,historyAcquiredEvidence:true,
   keyboardOpenAndClosed:true,periodicRefreshPreservesFocusAndPress:true,rotated:true,cleanLobbyReturn:true,errors};
  assert.deepEqual(errors,[]);await fs.writeFile(out+'/hospital-interactions-summary.json',JSON.stringify(report,null,2));

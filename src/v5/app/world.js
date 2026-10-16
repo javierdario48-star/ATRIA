@@ -12,7 +12,7 @@ export function createWorld(content,profile){
  const start=content.map.player_start_tile;
  const point=tile=>navigation.center(...(navigation.nearest(...tile,8)||start));
  let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null;
- const entities=()=>hospitalEntities({patients,nurses,expert},content.map);
+ const entities=()=>hospitalEntities({patients,nurses,expert},content.map,content.beds);
  function lobbyTile(){
   let hash=0;for(const char of profile.name||'Medico')hash=(hash*31+char.charCodeAt(0))>>>0;
   const offsets=[[-3,-2],[0,-3],[3,-2],[-4,1],[4,1],[-2,3],[2,3],[0,1]],d=offsets[hash%offsets.length];

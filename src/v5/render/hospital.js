@@ -46,6 +46,19 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   if(level){ctx.font='800 '+sub+'px system-ui';ctx.fillStyle='#8edcf5';ctx.fillText('Nv.'+level,x,top+4*scale);}
   ctx.restore();
  }
+ // The original B4/relocated monitor is an added screen, not baked into the map.
+ // Draw the spatial entity only; this code never reads or changes patient signs.
+ function monitor(m){
+  const [x,y]=screen(m.x,m.y),s=scale;
+  ctx.save();ctx.lineWidth=2*s;ctx.strokeStyle='#548791';ctx.beginPath();ctx.moveTo(x,y+11*s);ctx.lineTo(x,y+31*s);
+  ctx.moveTo(x-10*s,y+31*s);ctx.lineTo(x+10*s,y+31*s);ctx.stroke();
+  ctx.fillStyle='#4d707c';ctx.beginPath();ctx.roundRect(x-16*s,y-13*s,32*s,26*s,4*s);ctx.fill();
+  ctx.strokeStyle='#b5d2d6';ctx.lineWidth=1.2*s;ctx.stroke();ctx.fillStyle='#071f2d';
+  ctx.beginPath();ctx.roundRect(x-13.5*s,y-10.5*s,27*s,20*s,2*s);ctx.fill();
+  ctx.strokeStyle='#69d6db';ctx.lineWidth=s;ctx.beginPath();
+  [[-11,0],[-6,0],[-3,-4],[0,5],[3,-6],[5,0],[11,0]].forEach(([a,b],i)=>i?ctx.lineTo(x+a*s,y+b*s):ctx.moveTo(x+a*s,y+b*s));ctx.stroke();
+  ctx.fillStyle='#97d8e4';ctx.fillRect(x+8*s,y-8*s,3*s,2*s);ctx.restore();
+ }
  function draw(world,now=window.performance.now()){
   const valid=playBounds&&playBounds.bottom>playBounds.top+100;
   const desiredY=valid?playBounds.top+(playBounds.bottom-playBounds.top)*.55:height/2;
@@ -70,6 +83,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
    ctx.fillStyle=light;ctx.fillRect(x-62*scale,y-62*scale,124*scale,124*scale);
   }
   const [mx,my]=screen(0,0);ctx.drawImage(images.hospital,mx,my,mapWidth*scale,mapHeight*scale);
+  for(const m of world.entities||[])if(m.kind==='monitor'&&m.added)monitor(m);
   for(const p of world.patients){
    const [x,y]=screen(p.x,p.y),im=images.patient,h=40*scale,w=h*im.width/im.height;ctx.drawImage(im,x-w/2,y-h/2,w,h);
   }

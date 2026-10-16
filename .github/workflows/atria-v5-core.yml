@@ -29,6 +29,8 @@ jobs:
         run: node qa/v5/characterize-app-native.mjs
       - name: Effective original CIRR and APP exam findings remain equivalent
         run: node qa/v5/characterize-exam-native.mjs
+      - name: Visible monitor screens match the effective final original scene
+        run: node qa/v5/characterize-monitor-native.mjs
       - name: Native patient profiles, compound pain questions and follow-ups remain equivalent
         run: node qa/v5/characterize-dialogue-native.mjs
       - name: Build independent V5 module distribution

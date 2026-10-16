@@ -1,13 +1,12 @@
 // Spatial interaction policy. All positions and hitboxes are hospital pixels.
+import {bedsideMonitor} from './bedside-layout.js';
 export const PATIENT_RANGE=150;
-export function hospitalEntities(world,map){
+export function hospitalEntities(world,map,beds=[]){
  const entities=[];
  for(const p of world.patients){
   const common={patientUid:p.uid,bedId:p.bedId,approach:p.approach};
   entities.push({...common,id:'patient:'+p.uid,kind:'patient',x:p.x,y:p.y,width:52,height:48});
-  // Original v40MonitorPoint: monitor toward the hospital's central corridor.
-  entities.push({...common,id:'monitor:'+p.uid,kind:'monitor',
-   x:p.x+(p.x<map.source_size_px[0]/2?42:-42),y:p.y-27,width:38,height:34});
+  entities.push({...common,id:'monitor:'+p.uid,kind:'monitor',...bedsideMonitor(p,map,beds)});
  }
  for(const n of world.nurses)entities.push({...n,kind:'nurse',x:n.x,y:n.y-22,width:44,height:62});
  if(world.expert)entities.push({...world.expert,kind:'vega',x:world.expert.x,y:world.expert.y-22,width:44,height:70});

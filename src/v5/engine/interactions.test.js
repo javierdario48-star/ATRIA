@@ -7,10 +7,12 @@ const read=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.
 const content={map:read('hospital'),beds:read('beds'),cases:read('cases')};
 test('each bedside monitor has the original world coordinates, bed ID and explicit patient UID',()=>{
  const patients=content.beds.map((b,i)=>({uid:'P'+i,bedId:b.id,x:b.patient[0],y:b.patient[1]}));
- const entities=hospitalEntities({patients,nurses:[],expert:null},content.map);
+ const entities=hospitalEntities({patients,nurses:[],expert:null},content.map,content.beds);
+ const expected=[[48,361],[184,371],[830,394],[978,391],[48,588],[48,766],[976,589],[976,766]];
  for(const [i,p] of patients.entries()){
   const m=entities.find(e=>e.kind==='monitor'&&e.patientUid===p.uid);
-  assert.equal(m.bedId,p.bedId);assert.equal(m.x,p.x+(p.x<512?42:-42));assert.equal(m.y,p.y-27);
+  assert.equal(m.bedId,p.bedId);assert.deepEqual([m.x,m.y],expected[i]);
+  assert.equal(m.added,p.bedId==='B4');
   assert.equal(hitWorldEntity(entities,m.x,m.y).id,m.id);
   assert.equal(hitWorldEntity(entities,p.x,p.y).patientUid,p.uid);
  }
@@ -32,13 +34,22 @@ test('clinical range remains the existing 150 world pixels; a monitor cannot aut
 test('world owns entities and validates explicit targets without falling back to a different nearby patient',()=>{
  const w=createWorld(content,{name:'Javier'});w.enterGuard({caseId:'CIRR-001'});
  assert(w.snapshot().entities.some(e=>e.kind==='monitor'));
- assert.equal(w.interactionAt(139,382).kind,'monitor');
+ assert.equal(w.interactionAt(48,361).kind,'monitor');
+ assert.equal(w.interactionAt(139,382),null,'superseded generic hotspot is not a visible screen');
  const uid=w.snapshot().patients[0].uid;
  assert.equal(w.patientInRange(uid),null);
  const b=content.beds[0],point=w.navigation.center(...b.approach);assert(w.target(point.x,point.y));
  for(let i=0;i<1200;i++)w.step(1/60);
  assert.equal(w.patientInRange(uid),uid);assert.equal(w.patientInRange('foreign'),null);
- w.enterLobby();assert.deepEqual(w.snapshot().entities,[]);assert.equal(w.interactionAt(139,382),null);
+ w.enterLobby();assert.deepEqual(w.snapshot().entities,[]);assert.equal(w.interactionAt(48,361),null);
+});
+test('relocated and custom beds keep their monitor attached using the effective original fallback',()=>{
+ for(const [x,y] of [[300,450],[800,500]]){
+  const p={uid:'moved',bedId:'B1',x,y};
+  const m=hospitalEntities({patients:[p],nurses:[],expert:null},content.map,content.beds).find(e=>e.kind==='monitor');
+  assert.deepEqual([m.x,m.y],[x+(x<512?-42:42),y-43]);assert.equal(m.added,true);
+  assert.equal(hitWorldEntity([m],m.x,m.y).patientUid,p.uid);
+ }
 });
 test('a distant entity approach keeps its UID and is cancelled by a new destination or room transition',()=>{
  const w=createWorld(content,{name:'Javier'});w.enterGuard({caseId:'CIRR-001'});
