@@ -8,6 +8,7 @@ import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
 import {refreshMonitoring} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
+import {parseAppDose} from './native-app.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -28,7 +29,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   caseData.id==='APP-001'?createAppCare(nativePatient,caseData,options):null;
  const studies=createStudyService(content.cases),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
  const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))];
- const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map();
+ const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map(),waitingForAccess=new Map();
  if(nursing&&(!['enqueue','takeArrivals','accept'].every(k=>typeof nursing[k]==='function')))
   throw Error('nursing adapter needs enqueue, takeArrivals and accept');
  for(const item of [...content.therapies,...caseData.interventions])labels.set(item.id,item.label);
@@ -50,6 +51,17 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      return {status:'pending',patientUid,eventId};
     }
     return {status:'rejected',patientUid,eventId,reason:'nurse-'+travel.status};
+   }
+   // APP antibiotics and fluid ordered with a still-travelling IV must wait
+   // for its real native access receipt. Validate the dose *before* accepting
+   // a deferred job, and start normal pharmacological preparation only then.
+   const needsIV=nursing&&caseData.id==='APP-001'&&intent.kind==='therapy.request'&&
+    ['ceftriaxone','metronidazole','fluid'].includes(intent.id)&&nativePatient.venousAccessCount<1;
+   if(needsIV&&[...pendingNurseJobs.values()].some(job=>job.intent.kind==='procedure.request'&&job.intent.id==='iv')){
+    try{parseAppDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);}
+    catch(error){return {status:'rejected',patientUid,eventId,reason:error.message};}
+    waitingForAccess.set(eventId,{eventId,actorId,patientUid,intent:copy(intent)});
+    return {status:'pending',patientUid,eventId};
    }
    if(intent.kind==='study.request'){
     const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute});
@@ -134,6 +146,17 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     if(result.status==='pending')throw Error('physical procedure cannot remain pending after arrival');
     port.complete(result);
     pendingNurseJobs.delete(arrival.eventId);
+    // The original native procedure now owns the IV state. Only after its
+    // executed receipt exists do dependent drugs enter their normal executor.
+    if(task.intent.kind==='procedure.request'&&task.intent.id==='iv'){
+     for(const [id,waiting] of waitingForAccess){
+      waitingForAccess.delete(id);
+      const outcome=result.status==='executed'?
+       care.execute(waiting,clock):
+       {status:'rejected',patientUid:waiting.patientUid,eventId:id,reason:'venous-access-unavailable'};
+      if(outcome.status!=='pending')port.complete(outcome);
+     }
+    }
     const spatial=nursing.accept({eventId:arrival.eventId,patientUid:arrival.patientUid,
      status:result.status,receipt:result.receipt});
     if(spatial.status!==('executed'===result.status?'confirmed':'rejected'))
@@ -153,6 +176,6 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   },
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    closure:care?copy(care.readiness(caseData.id==='APP-001'?'quirofano':'sala')):null};},
-  dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
+  dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }
