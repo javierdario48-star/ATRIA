@@ -1,22 +1,12 @@
 import {csAnamnesisFact} from '../../clinical/anamnesis-intents.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
-import {CIRR_EXAM_NAMES} from './cirr-care.js';
+import {initializeExamination,executePhysicalExam} from './physical-exam.js';
+import {executeObservation,recordVitalMeasurement} from './observations.js';
 import {nativeCaseXP} from './progression.js';
 import {initialAppVitals,parseAppDose,advanceAppVitals,APP_NATIVE_PREPARATION_SECONDS} from './native-app.js';
 
 const copy=x=>structuredClone(x);
 const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
-const unsupported='Sin hallazgo específico modelado en este escenario.';
-function examRows(section,p){
- const row=(organ,text)=>({organ,text:text||unsupported});
- if(section==='general')return [row('Estado general','Febril, con dolor abdominal.'),
-  row('Consciencia y orientación','Alerta y orientado.'),row('Perfusión',p.liveVitals.sys<90?'Comprometida.':'Sin compromiso circulatorio objetivado.')];
- if(section==='inspection')return [row('Abdomen','Dolor localizado en fosa ilíaca derecha.'),row('Patrón respiratorio'),row('Piel y mucosas')];
- if(section==='auscultation')return [row('Ruidos intestinales'),row('Corazón'),row('Pulmones')];
- if(section==='percussion')return [row('Abdomen','Dolor en fosa ilíaca derecha.'),row('Hígado'),row('Bazo')];
- return [row('Fosa ilíaca derecha','Máximo dolor en McBurney, defensa localizada y Blumberg positivo.'),
-  row('Maniobra del psoas','Dolor con maniobra del psoas.'),row('Abdomen general','Sin abdomen en tabla generalizado.')];
-}
 export function appClosureSnapshot(p,c,destination){
  return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,
   historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
@@ -37,10 +27,11 @@ export function appClosureSnapshot(p,c,destination){
  */
 export function createAppCare(p,c,{mode,defaultDoses,progress}){
  if(c.id!=='APP-001')throw Error('C3a APP policy requires APP-001');
- Object.assign(p,{liveVitals:initialAppVitals(c),intentHistory:[],exam:{},examDone:false,
+ Object.assign(p,{liveVitals:initialAppVitals(c),baselineVitals:initialAppVitals(c),intentHistory:[],exam:{},examDone:false,
   lastVitalsKnown:null,diagnosis:'',reassessments:0,lastReassessment:null,
   pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,
   consults:[],pendingConsults:[],caseEnded:false,closure:null});
+ initializeExamination(p);
  const pending=new Map(),pendingConsults=new Map();
  const rejected=(cmd,reason,message)=>({status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason,
   ...(message?{receipt:{eventId:cmd.eventId,patientUid:p.uid,message}}:{})});
@@ -79,20 +70,8 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
      p.intentHistory.push({id:historyId,answer,eventId:cmd.eventId,source:matching?'case.intents.'+matching.id:fact.source});
     return executed(cmd,{answer,message:answer,historyId,source:matching?'case.intents.'+matching.id:fact?.source||'case.opening'});
    }
-   if(intent.kind==='exam.record'){
-    if(!CIRR_EXAM_NAMES[intent.id])return rejected(cmd,'unknown-exam');
-    const rows=examRows(intent.id,p);
-    p.exam[intent.id]={rows,nativeMinute:clock.nativeMinute,eventId:cmd.eventId};
-    p.examDone=Object.keys(CIRR_EXAM_NAMES).every(x=>p.exam[x]);
-    return executed(cmd,{rows,message:CIRR_EXAM_NAMES[intent.id]+': '+rows.map(x=>x.organ+': '+x.text).join(' · ')});
-   }
-   if(intent.kind==='vitals.record'||intent.kind==='procedure.request'&&['vitals','monitor'].includes(intent.id)){
-    p.lastVitalsKnown={vitals:copy(p.liveVitals),nativeMinute:clock.nativeMinute,eventId:cmd.eventId};
-    if(intent.id==='monitor')p.procedures.monitor={eventId:cmd.eventId,patientUid:p.uid,connected:true};
-    return executed(cmd,{vitals:copy(p.liveVitals),message:'Signos registrados: FC '+Math.round(p.liveVitals.hr)+
-     ' · PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+
-     ' · FR '+Math.round(p.liveVitals.rr)+'.'});
-   }
+   const exam=executePhysicalExam(p,c,cmd,clock);if(exam)return exam;
+   const observation=executeObservation(p,cmd,clock);if(observation)return observation;
    if(intent.kind==='procedure.request'&&intent.id==='iv'){
     const requested=intent.count===2?2:1,previous=p.venousAccessCount;
     p.venousAccessCount=Math.max(previous,requested);
@@ -142,7 +121,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
     p.lastReassessment={nativeMinute:clock.nativeMinute,eventId:cmd.eventId,vitals:copy(p.liveVitals),
      administrationEvents:p.administrationLog.map(t=>t.sourceEventId),
      interventionEvents:p.treatments.map(t=>t.sourceEventId)};
-    p.lastVitalsKnown={vitals:copy(p.liveVitals),nativeMinute:clock.nativeMinute,eventId:cmd.eventId};
+    recordVitalMeasurement(p,clock,cmd.eventId,'reassessment');
     return executed(cmd,{assessment:copy(p.lastReassessment),
      message:'Reevaluación: FC '+Math.round(p.liveVitals.hr)+', PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+'. Se mantiene indicación de valoración quirúrgica.'});
    }

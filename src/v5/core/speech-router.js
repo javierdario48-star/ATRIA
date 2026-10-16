@@ -1,4 +1,5 @@
 import {csNurseScan487} from '../../clinical/nurse-scanner-487.js';
+import {EXAM_TECHNIQUES,GLASGOW_COMPONENTS,validExamSelection} from '../clinical/exam-contract.js';
 
 const nurseAddress=/^(?:enfermera|enfermero|enfermeria)\b|(?:\b(?:enfermera|enfermero|enfermeria))\s*[,!.]?\s*$/i;
 const vegaAddress=/^(?:(?:dr|doctor)\.?\s*)?vega\b/i;
@@ -8,15 +9,30 @@ export function routeWardSpeech(text,context={}){
  const original=String(text??'').trim();
  if(!original||original.length>500)return {recipient:'none',patientUid:null,intents:[],error:'invalid-text'};
  const normalized=clean(original);
+ const monitor=/^\/monitor\s+(conectar|desconectar)$/i.exec(normalized);
+ if(monitor&&context.clinicalEvaluation){
+  const patientUid=context.patientUid??null;
+  return {recipient:'nurse',patientUid,original,intents:patientUid?[{kind:'monitor.set',id:monitor[1]==='conectar'?'connect':'disconnect',sourceText:original}]:[],
+   ...(!patientUid?{error:'no-patient-target'}:{})};
+ }
+ const glasgow=/^\/glasgow(?:\s+(\S+))?$/i.exec(original);
+ if(glasgow&&context.clinicalEvaluation){
+  const component=glasgow[1]||'all',patientUid=context.patientUid??null;
+  const error=component!=='all'&&!Object.hasOwn(GLASGOW_COMPONENTS,component)?'invalid-clinical-command':!patientUid?'no-patient-target':null;
+  return {recipient:'patient',patientUid,original,intents:error?[]:[{kind:'exam.glasgow',id:component,sourceText:original}],...(error?{error}:{})};
+ }
  const clinical=/^\/(signos|examen|reevaluar|diagnostico|disposicion)(?:\s+(.+))?$/i.exec(original);
  if(clinical&&context.clinicalEvaluation){
   const action=clinical[1].toLowerCase(),value=clinical[2]?.trim(),patientUid=context.patientUid??null;
   const kinds={signos:'vitals.record',examen:'exam.record',reevaluar:'patient.reassess',diagnostico:'diagnosis.record',disposicion:'case.close'};
-  const valid=action==='examen'?['general','inspection','auscultation','percussion','palpation'].includes(value):
+  const parts=action==='examen'?(value||'').split(/\s+/):[],regionId=parts.length===2?parts[0]:null,
+   technique=regionId?parts[1]:value;
+  const valid=action==='examen'?(regionId?validExamSelection(regionId,technique):Object.hasOwn(EXAM_TECHNIQUES,technique)):
    action==='disposicion'?['sala','observacion','alta','uti','quirofano','procedimiento'].includes(value):
    action==='diagnostico'?!!value&&value.length<=200:!value;
   const error=!valid?'invalid-clinical-command':!patientUid?'no-patient-target':null;
-  return {recipient:'patient',patientUid,original,intents:error?[]:[{kind:kinds[action],id:action==='examen'||action==='disposicion'?value:action,
+  return {recipient:'patient',patientUid,original,intents:error?[]:[{kind:kinds[action],id:action==='examen'?technique:action==='disposicion'?value:action,
+   ...(regionId?{regionId}:{}),
    ...(action==='diagnostico'?{value}:{}),sourceText:original}],...(error?{error}:{})};
  }
  const consult=/^\/consulta\s+(cirugia)$/i.exec(normalized);

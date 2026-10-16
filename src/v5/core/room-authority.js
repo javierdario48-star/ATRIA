@@ -68,7 +68,7 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
    return rejection(envelope?.id??null,'invalid-command');
   if(typeof envelope.text!=='string'||!envelope.text.trim()||envelope.text.length>500)
    return rejection(envelope.id,'invalid-text');
-  const fingerprint=JSON.stringify([envelope.kind,envelope.text,envelope.patientUid??null]);
+  const fingerprint=JSON.stringify([envelope.kind,envelope.text,envelope.patientUid??null,envelope.targetPatientUid??null]);
   const key=actor.id+':'+envelope.id;
   if(seen.has(key)){
    const prior=seen.get(key);

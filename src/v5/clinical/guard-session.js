@@ -6,6 +6,7 @@ import {createAppCare} from './app-care.js';
 import {createProgressionLedger} from './progression.js';
 import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
+import {refreshMonitoring} from './observations.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -48,7 +49,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  });
  const authority=createRoomAuthority({roomId,mode,members:[{id:actorId}],patients:[{uid:patient.uid}],
   authenticate:token=>token===credentials?{id:actorId,roomId}:null,clinicalPort:port,
-  resolveSpeechContext:()=>({...resolveContext(),clinicalEvaluation:!!care,studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions}),
+  resolveSpeechContext:({envelope})=>({...resolveContext({targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions}),
   time:()=>clock.clinicalMinute,emit:(event,snapshot)=>onChange(copy(event),copy(snapshot))});
  function messages(room){
   const rows=[],announcedResults=new Set();
@@ -87,6 +88,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    const before=clock;
    clock=guardClock.advance(deltaRealSeconds,typing);
    for(const result of care?.advance(before,clock,deltaRealSeconds)||[])port.complete(result);
+   refreshMonitoring(nativePatient,clock);
    const ready=studies.advance(nativePatient,clock.clinicalMinute);
    for(const order of ready){
     for(const eventId of pendingStudyRequests.get(order.sourceEventId)||[order.sourceEventId])

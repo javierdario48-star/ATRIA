@@ -4,8 +4,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
 const h=await browserHarness();
+let inspectedPage,lastWaypoint;
 try{
  const context=await h.browser.newContext(h.devices['Pixel 5']),page=await context.newPage();
+ inspectedPage=page;
  await page.goto(h.url);await page.locator('#enterButton').click();
  await page.locator('#guardButton').click();await page.locator('[data-action="start-guard"]').click();
  await page.locator('#dieInput').blur();await page.locator('#game').focus();
@@ -31,9 +33,15 @@ try{
  // Reach the patient through normal movement; a command submitted before the
  // first post-stall RAF must not inherit time elapsed BEFORE its request.
  await page.locator('#dieInput').fill('');await page.locator('#dieInput').blur();
+ // Typing opened the custom keyboard. Use the public toggle and the actual
+ // camera projection, as in the complete clinical journeys. A screen-center
+ // formula with the keyboard open can hit a nurse instead of this waypoint.
+ if(await page.evaluate(()=>atriaV5.diagnostics().keyboard.open))await page.locator('#keyboardToggleButton').click();
+ await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
  for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){
   const t=await page.evaluate(()=>({p:atriaV5.snapshot().player,r:atriaV5.diagnostics().renderer}));
-  await page.locator('#game').click({position:{x:(x-t.p.x)*t.r.scale+t.r.width/2,y:(y-t.p.y)*t.r.scale+t.r.height/2}});
+  lastWaypoint={x,y,...t};
+  await page.locator('#game').click({position:{x:(x-t.r.camera.x)*t.r.scale+t.r.anchorX,y:(y-t.r.camera.y)*t.r.scale+t.r.anchorY}});
   await page.waitForFunction(()=>atriaV5.snapshot().player.moving);await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
  }
  await page.locator('#dieInput').fill('Enfermera espironolactona 100 mg oral');
@@ -51,4 +59,10 @@ try{
   typing:{wallSeconds:typingWall,clinicalMinutes:typingClinical,nativeMinutes:typingNative},commandBoundary:boundary,physicalAndroid:false};
  await fs.mkdir('qa/v5-browser-results',{recursive:true});await fs.writeFile('qa/v5-browser-results/clock-stall-summary.json',JSON.stringify(report,null,2));
  console.log('CLINICAL CLOCK REAL STALL PASS',JSON.stringify(report));
+}catch(error){
+ if(inspectedPage){await fs.mkdir('qa/v5-browser-results',{recursive:true});
+  await inspectedPage.screenshot({path:'qa/v5-browser-results/clinical-clock-failure.png'}).catch(()=>{});
+  await fs.writeFile('qa/v5-browser-results/clinical-clock-failure.json',JSON.stringify({error:String(error),lastWaypoint,
+   snapshot:await inspectedPage.evaluate(()=>({world:atriaV5.snapshot(),renderer:atriaV5.diagnostics().renderer,modal:document.querySelector('#modalContent')?.innerText})).catch(()=>null)},null,2));}
+ throw error;
 }finally{await h.close();}

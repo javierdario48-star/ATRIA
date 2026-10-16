@@ -5,12 +5,13 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   const image=new window.Image();image.src=url;await image.decode();
   if(signal?.aborted)throw new DOMException('disposed','AbortError');return [key,image];
  })));
- let width=0,height=0,dpr=1,scale=1,camera={x:496,y:1348},lastWorld=null;
+ let width=0,height=0,dpr=1,scale=1,camera={x:496,y:1348};
  let playBounds=null,anchorX=0,anchorY=null,lastAnchorTime=null;
  const pixel=value=>Math.round(value*dpr)/dpr;
  const [mapWidth,mapHeight]=content.map.source_size_px;
  const screen=(x,y)=>[(x-camera.x)*scale+anchorX,(y-camera.y)*scale+(anchorY??height/2)];
- const toWorld=(x,y)=>[(x-anchorX)/scale+camera.x,(y-(anchorY??height/2))/scale+camera.y];
+ const toWorld=(x,y)=>{const rect=canvas.getBoundingClientRect();
+  return [(x-rect.left-anchorX)/scale+camera.x,(y-rect.top-(anchorY??height/2))/scale+camera.y];};
  function resize(){
   const rect=canvas.getBoundingClientRect();width=rect.width;height=rect.height;
   dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
@@ -46,7 +47,6 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   ctx.restore();
  }
  function draw(world,now=window.performance.now()){
-  lastWorld=world;
   const valid=playBounds&&playBounds.bottom>playBounds.top+100;
   const desiredY=valid?playBounds.top+(playBounds.bottom-playBounds.top)*.55:height/2;
   const dt=lastAnchorTime===null?.1:Math.max(0,Math.min(.12,(now-lastAnchorTime)/1000));
@@ -79,19 +79,11 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   if(world.expert)label(world.expert,'Dr. Vega');
   if(world.player.target){const [x,y]=screen(...world.player.target);ctx.strokeStyle='#ffd25f';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,9*scale,0,Math.PI*2);ctx.stroke();}
  }
- function hit(x,y){
-  if(!lastWorld)return null;
-  const [wx,wy]=toWorld(x,y);
-  const candidates=[...lastWorld.patients.map(p=>({...p,kind:'patient'})),...lastWorld.nurses,
-   ...(lastWorld.expert?[lastWorld.expert]:[])];
-  return candidates.map(a=>({a,d:Math.hypot(wx-a.x,wy-(a.y-(a.kind==='patient'?0:22)))}))
-   .filter(x=>x.d<32).sort((a,b)=>a.d-b.d)[0]?.a||null;
- }
  function setPlayableBounds(bounds){
   playBounds=bounds&&Number.isFinite(bounds.top)&&Number.isFinite(bounds.bottom)?
    {top:Math.max(0,bounds.top),bottom:Math.min(height,bounds.bottom)}:null;
  }
- resize();return Object.freeze({draw,resize,setPlayableBounds,toWorld,screen,hit,
+ resize();return Object.freeze({draw,resize,setPlayableBounds,toWorld,screen,
   metrics:()=>({width,height,scale,dpr,anchorX,anchorY,camera:{...camera},
    playableBounds:playBounds?{...playBounds}:null,images:Object.keys(images).length})});
 }

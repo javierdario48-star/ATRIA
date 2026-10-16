@@ -6,7 +6,7 @@ import {createPresentationTimeline} from '../render/presentation-timeline.js';
 import {createGuardSession} from '../clinical/guard-session.js';
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
-import {cirrPatientHTML,appPatientHTML,vitalsHTML,examHTML,therapyHTML,examNames} from '../ui/clinical-panels.js';
+import {createClinicalInterface} from '../ui/clinical-controller.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PROFILE_KEY='atria.v5.profile.v1';
@@ -25,7 +25,7 @@ export async function createApplication({document,window,content,signal}){
  let progress;try{progress=createProgressionLedger(JSON.parse(window.localStorage.getItem(PROGRESS_KEY)||'{}'));}catch{progress=createProgressionLedger();}
  let savedRewardCount=progress.read().receipts.length;
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
-  toastUntil=0,focusedNpc=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
+  toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false;
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
  const renderer=await createHospitalRenderer(canvas,content,{signal,window});
@@ -47,6 +47,8 @@ export async function createApplication({document,window,content,signal}){
  function toast(message){ui('toast').textContent=message;ui('toast').hidden=false;toastUntil=window.performance.now()+3200;}
  function open(html){world.stop();drag=null;ui('modalContent').innerHTML=html;if(!dialog.open)dialog.showModal();}
  function close(){if(dialog.open)dialog.close();}
+ const clinicalUI=createClinicalInterface({document,session:()=>guardSession,open,close,send:submitText,notify:toast,
+  onTalk:uid=>selectRecipient('patient',uid)});
  function line(name,text,system=false){
   history.push({name,text,system});if(history.length>300)history.shift();
   const el=document.createElement('div');el.className='line'+(system?' system':'');
@@ -63,14 +65,14 @@ export async function createApplication({document,window,content,signal}){
    who.textContent=row.name+':';el.append(who,document.createTextNode(row.text));fragment.append(el);
   }
   ui('chatHistory').replaceChildren(fragment);ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
-  renderStudyOrders();renderClinicalPanels();
+  clinicalUI.render();
   if(progress.read().receipts.length!==savedRewardCount){
    try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));savedRewardCount=progress.read().receipts.length;}
    catch{toast('Progreso confirmado en esta sesión; no se pudo guardar en este dispositivo.');}
   }
   updateHud();
  }
- function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;line('ATRIA',message,true);}
+ function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;focusedPatientUid=null;line('ATRIA',message,true);}
  function advanceClinicalTo(now){
   now=Math.max(lastClinicalFrame??now,now);
   const previous=lastClinicalFrame;lastClinicalFrame=now;
@@ -89,7 +91,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function enterLobby(){
   advanceClinicalTo(window.performance.now());
-  guardSession?.dispose();guardSession=null;close();world.enterLobby();resetChat('El lobby está listo para hablar.');
+  guardSession?.dispose();guardSession=null;clinicalUI.reset();close();world.enterLobby();resetChat('El lobby está listo para hablar.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;updateHud();
  }
  function guardSetup(){
@@ -102,78 +104,42 @@ export async function createApplication({document,window,content,signal}){
    <p class="note">CIRR y APP-001: evaluación, estudios, tratamiento y cierre con XP. Otros casos: navegación y estudios. Tutor, voz y multijugador siguen en migración.</p>
    <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);
  }
- function selectRecipient(kind){
+ function selectRecipient(kind,patientUid=null){
   if(composition){deferredRecipient=kind;return;}
   focusedNpc=kind==='patient'?null:kind;
+  focusedPatientUid=kind==='patient'?patientUid:null;
   const text=input.value.replace(/^(?:(?:dr\.?\s*)?vega|enfermera|enfermero)\s*[,.:]?\s*/i,'');
   const prefix=kind==='nurse'?'Enfermera, ':kind==='vega'?'Vega, ':'';
   input.value=prefix+text;updateHud();input.focus({preventScroll:true});input.setSelectionRange(prefix.length,prefix.length);
  }
- function showPatient(patient){
-  const c=content.cases.find(c=>c.id===patient.caseId);if(!c)return;
-  const clinical=guardSession?.read(),complete=!!clinical?.patient.liveVitals;
-  open(`<h2>${esc(patient.bedId)} · Paciente</h2><p>${esc(c.demo)}</p><div class="note">${esc(c.chief)}</div>
-   ${complete?(c.id==='APP-001'?appPatientHTML(clinical.patient):cirrPatientHTML(clinical.patient)):'<p>Podés solicitar estudios a Enfermera. La atención completa de este caso sigue en migración.</p><div class="actions"><button data-action="studies">Estudios</button></div>'}
-   <div class="actions"><button data-action="patient-target">Hablar</button><button data-action="close">Cerrar</button></div>`);
-  renderClinicalPanels();
- }
- function showExamination(){
-  open('<h2>Examen físico</h2><div class="actions">'+Object.entries(examNames).map(([id,name])=>'<button data-exam-section="'+id+'">'+esc(name)+'</button>').join('')+'</div><div id="examResults"></div><p class="note">Un órgano sin hallazgo modelado queda sin dato; no equivale a un examen normal.</p>');renderClinicalPanels();
- }
- function showTreatment(){
-  const isApp=guardSession?.read().patient.caseId==='APP-001';
-  const placeholder=isApp?'colocar una vía, ceftriaxona 1 g y metronidazol 500 mg':'espironolactona 100 mg oral';
-  const note=isApp?'APP: confirmar vía; Ringer 500 ml, ceftriaxona 1 g y metronidazol 500 mg siguen la preparación original. Pedí interconsulta a cirugía; no se realiza apendicectomía en guardia.':
-   'CIRR: espironolactona 100 mg oral (o predeterminada), dieta sin sal y paracentesis terapéutica solo con orden.';
-  open('<h2>Tratamiento · Enfermería</h2><div id="therapyRecords"></div><label class="field">Orden<input id="therapyOrder" maxlength="200" placeholder="'+esc(placeholder)+'"></label><p class="note">'+esc(note)+'</p>'+
-   (isApp?'<div class="actions"><button data-action="request-surgery" class="primary">Solicitar interconsulta a cirugía</button></div>':'')+
-   '<div class="actions"><button data-action="order-therapy" class="primary">Indicar a Enfermera</button><button data-action="close">Cerrar</button></div>');renderClinicalPanels();
- }
- function renderClinicalPanels(){
-  if(!guardSession)return;const state=guardSession.read(),p=state.patient;if(!p.liveVitals)return;
-  if(ui('clinicalVitals'))ui('clinicalVitals').innerHTML=vitalsHTML(p);
-  if(ui('examResults'))ui('examResults').innerHTML=examHTML(p);
-  if(ui('therapyRecords'))ui('therapyRecords').innerHTML=therapyHTML(p);
-  if(ui('clinicalHistory'))ui('clinicalHistory').innerHTML=p.intentHistory.map(x=>'<p>'+esc(x.answer)+'</p>').join('')||'<p>Sin datos interrogados.</p>';
-  if(ui('caseReadiness'))ui('caseReadiness').textContent=p.caseEnded?'Atención cerrada.':state.closure?.ready?'Evaluación completa. Elegí cómo continúa el cuidado.':(state.closure?.missing||[]).join(' ');
-  if(ui('caseDestinations'))ui('caseDestinations').innerHTML=p.caseEnded?'':(p.caseId==='APP-001'?['quirofano']:['sala','observacion'])
-   .map(id=>'<button data-destination="'+id+'" '+(!state.closure?.ready?'disabled':'')+'>'+
-    (id==='quirofano'?'Derivar a quirófano':id==='sala'?'Internar en sala':'Dejar en observación')+'</button>').join('');
-  if(ui('caseResult'))ui('caseResult').innerHTML=p.closure?'<h3>Caso cerrado · '+p.closure.quality.score+'/100</h3><p>'+(p.closure.destination==='quirofano'?'Derivación a quirófano':p.closure.destination==='sala'?'Internación en sala':'Observación')+' · +'+p.closure.xp+' XP</p>':'';
- }
- function showStudies(){
-  if(!guardSession)return;
-  open(`<h2>Estudios solicitados</h2><p>Acercate al paciente y pedí el estudio a Enfermera. Un minuto real equivale a una hora clínica.</p>
-   <div id="studyOrders" class="data-list"></div><label class="field">Estudio<select id="studyChoice">${guardSession.catalog().map(s=>`<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('')}</select></label>
-   <div class="actions"><button data-action="request-study" class="primary">Pedir a Enfermera</button><button data-action="close">Cerrar</button></div>`);
-  renderStudyOrders();
- }
- function renderStudyOrders(){
-  const node=ui('studyOrders');if(!node||!guardSession)return;
-  const state=guardSession.read();node.innerHTML=state.patient.orders.length?state.patient.orders.map(order=>
-   `<div data-study="${esc(order.id)}" data-status="${order.status}"><b>${esc(order.label)}</b><small>${order.status==='done'?'Resultado disponible':
-    'Pendiente · '+Math.max(0,Math.ceil(order.readyAtMinute-state.clock.clinicalMinute))+' min clínicos'}</small>${order.status==='done'?'<p>'+esc(order.result)+'</p>':''}</div>`).join(''):'<p>Todavía no solicitaste estudios.</p>';
- }
- async function submitText(text){
+ async function submitText(text,{patientUid}={}){
   if(!text.trim())return;
   if(!guardSession){line(profile.name,text);return;}
   advanceClinicalTo(window.performance.now());
   const session=guardSession;
-  try{await session.post({id:'message-'+(++messageNumber),text});}
+  try{return await session.post({id:'message-'+(++messageNumber),text,...(patientUid?{targetPatientUid:patientUid}:{})});}
   catch{if(guardSession===session)toast('No pude confirmar el mensaje.');}
  }
  function canvasDown(event){
   if(world.snapshot().phase==='title')return;
-  const hit=renderer.hit(event.clientX,event.clientY);
+  const [x,y]=renderer.toWorld(event.clientX,event.clientY),hit=world.interactionAt(x,y);
   if(hit){
-   world.stop();
-   if(hit.kind==='patient')showPatient(hit);else selectRecipient(hit.kind);
+   const result=world.beginInteraction(hit.id);drag=null;
+   if(result.status==='ready')activateEntity(result.entity);
+   else if(result.status==='walking')toast('Acercándote al paciente…');
+   else toast('Acercate para interactuar.');
    return;
   }
   document.activeElement?.blur?.();close();
-  const [x,y]=renderer.toWorld(event.clientX,event.clientY);
   if(!world.target(x,y))toast('No hay una ruta disponible.');
   drag={id:event.pointerId,x:event.clientX,y:event.clientY};canvas.setPointerCapture?.(event.pointerId);
+ }
+ function activateEntity(entity){
+  world.stop();
+  if(entity.patientUid){
+   const p=world.snapshot().patients.find(p=>p.uid===entity.patientUid);if(!p)return;
+   if(entity.kind==='monitor')clinicalUI.showMonitor(p);else clinicalUI.showPatient(p);
+  }else selectRecipient(entity.kind);
  }
  function showProfile(){
   const s=world.snapshot();
@@ -189,45 +155,37 @@ export async function createApplication({document,window,content,signal}){
   world=createWorld(content,profile);enterLobby();
  });
  listen(ui('guardButton'),'click',()=>world.snapshot().phase==='guard'?enterLobby():guardSetup());
- listen(ui('peopleButton'),'click',()=>world.snapshot().phase==='guard'?showPatient(world.snapshot().patients[0]):
+ listen(ui('peopleButton'),'click',()=>world.snapshot().phase==='guard'?clinicalUI.showPatient(world.snapshot().patients.find(p=>p.uid===world.nearby())||world.snapshot().patients[0]):
   open('<h2>Personas</h2><p>Esta compilación funciona en modo local. La presencia, las invitaciones y las salas compartidas todavía no están conectadas.</p>'));
  listen(ui('profileButton'),'click',showProfile);listen(ui('modalClose'),'click',close);
  listen(dialog,'click',async event=>{
+  if(await clinicalUI.handle(event.target))return;
   const button=event.target.closest('button');if(!button)return;
   if(button.dataset.mode){draftMode=button.dataset.mode;guardSetup();}
   if(button.dataset.action==='close')close();
   if(button.dataset.action==='start-guard'){
-   guardSession?.dispose();world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});
+   guardSession?.dispose();clinicalUI.reset();world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});
    const s=world.snapshot(),roomId='guard-'+window.crypto.randomUUID();
    guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,progress,
-    patient:s.patients[0],content,resolveContext:()=>({patientUid:world.nearby(),focusedNpc}),
+    patient:s.patients[0],content,resolveContext:({targetPatientUid})=>({
+     patientUid:targetPatientUid!==undefined?world.patientInRange(targetPatientUid):focusedPatientUid?world.patientInRange(focusedPatientUid):world.nearby(),focusedNpc}),
     onChange:(_event,room)=>{if(guardSession?.read().room.roomId===room.roomId)renderGuardCommunication();}});
    lastClinicalFrame=window.performance.now();
    close();resetChat(['CIRR-001','APP-001'].includes(s.caseId)?'Guardia clínica. Evaluación, estudios, tratamiento y cierre disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
   }
-  if(button.dataset.action==='patient-target'){close();selectRecipient('patient');}
-  if(button.dataset.action==='studies')showStudies();
-  if(button.dataset.action==='examination')showExamination();
-  if(button.dataset.action==='treatment')showTreatment();
-  if(button.dataset.examSection){await submitText('/examen '+button.dataset.examSection);renderClinicalPanels();}
-  if(button.dataset.action==='record-vitals'){await submitText('/signos');renderClinicalPanels();}
-  if(button.dataset.action==='reassess'){await submitText('/reevaluar');renderClinicalPanels();}
-  if(button.dataset.action==='save-diagnosis'){await submitText('/diagnostico '+ui('diagnosisInput').value.trim());renderClinicalPanels();}
-  if(button.dataset.destination){await submitText('/disposicion '+button.dataset.destination);renderClinicalPanels();
-   if(guardSession?.read().patient.caseEnded)ui('caseResult')?.scrollIntoView({block:'nearest'});}
-  if(button.dataset.action==='request-surgery'){close();await submitText('/consulta cirugia');}
-  if(button.dataset.action==='order-therapy'){
-   const text=ui('therapyOrder').value.trim();if(text){close();await submitText(/^enfermer[ao]/i.test(text)?text:'Enfermera, '+text);}
-  }
-  if(button.dataset.action==='request-study'){
-   const study=guardSession?.catalog().find(s=>s.id===ui('studyChoice').value);
-   if(study){close();submitText('/estudio '+study.id);}
+  if(button.dataset.action==='patient-chart'){
+   const p=world.snapshot().patients.find(p=>p.uid===clinicalUI.patientUid());if(p)clinicalUI.showPatient(p);
   }
   if(button.dataset.action==='save-profile'){
    const next={name:ui('aliasChoice').value.trim().slice(0,32)||'Médico',scrubColor:ui('colorChoice').value};
    world.setAppearance(next);profile=next;
    try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
    close();updateHud();
+  }
+ });
+ listen(dialog,'keydown',event=>{
+  if(['Enter',' '].includes(event.key)&&event.target.matches('svg [data-exam-region]')){
+   event.preventDefault();clinicalUI.handle(event.target);
   }
  });
  listen(ui('recipientButton'),'click',()=>{
@@ -271,7 +229,8 @@ export async function createApplication({document,window,content,signal}){
   advanceClinicalTo(now);
   scheduler.tick(now,{simulate:dt=>{world.step(dt);presentation.advance(world.snapshot());},maintain:()=>{
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
-   if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();renderStudyOrders();renderClinicalPanels();}
+   const interaction=world.takeInteraction();if(interaction)activateEntity(interaction);
+   if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();clinicalUI.render();}
   },render:()=>drawWorld(now),isMobile:window.innerWidth<700});
   raf=window.requestAnimationFrame(frame);
  }

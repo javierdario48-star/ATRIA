@@ -27,6 +27,8 @@ jobs:
         run: node qa/v5/characterize-cirr-native.mjs
       - name: Characterize original APP dual antibiotics and fluid response (QA-only)
         run: node qa/v5/characterize-app-native.mjs
+      - name: Effective original CIRR and APP exam findings remain equivalent
+        run: node qa/v5/characterize-exam-native.mjs
       - name: Build independent V5 module distribution
         run: npm run build:v5-core
       - name: Build independent executable V5 game
@@ -83,6 +85,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/boot-focus-browser.mjs
+      - name: World patient and monitor taps, anatomical exam, Glasgow and known measurements
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/hospital-interactions-browser.mjs
       - name: Clinical deadlines survive a real long frame and preserve native typing pace
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright

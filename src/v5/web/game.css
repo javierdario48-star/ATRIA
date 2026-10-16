@@ -10,6 +10,23 @@ dialog{position:fixed;inset:0;margin:auto;width:min(94vw,560px);max-height:88dvh
 @media(max-height:500px){.splash-card{max-height:95dvh;overflow:auto;padding:12px}.splash-card h1{font-size:24px;margin:8px}.splash-card p{margin:8px}#chatHistory{max-height:55px}}
 .actions{flex-wrap:wrap}.clinical-section{border:1px solid #31545a;border-radius:10px;padding:10px;margin:8px 0;overflow-wrap:anywhere;font-size:12px}.clinical-section small{display:block;margin-top:5px}.clinical-section p{margin:6px 0}.field input{width:100%}#caseResult:empty{display:none}
 
+/* Clinical panels share spacing and typography; the hospital layout is unchanged. */
+.clinical-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}
+.clinical-actions button{text-align:left;padding:12px;min-height:46px;font-size:12px}
+.anatomy-layout{display:grid;grid-template-columns:minmax(95px,135px) minmax(0,1fr);gap:12px;align-items:center;margin:10px 0}
+.anatomy-body{width:100%;max-height:290px;overflow:visible}.body-outline{fill:#153c46;stroke:#41626b;stroke-width:1.4}
+.anatomy-body g{cursor:pointer;fill:#214b55;stroke:#6b969d;stroke-width:1;outline:none}
+.anatomy-body g text{fill:#d9eeec;stroke:none;font:10px system-ui;text-anchor:middle;pointer-events:none}
+.anatomy-body g.selected,.anatomy-body g:focus{fill:#347f7b;stroke:#a2eddd;stroke-width:2}
+.anatomy-regions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.anatomy-regions button{font-size:10px;min-height:42px;padding:7px 5px;line-height:1.25}
+.anatomy-regions button.selected{background:#1e5559;border-color:#98dacf;color:#d9fff4}
+.exam-techniques{border-top:1px solid #31545a;padding-top:2px}.exam-techniques h3{margin:8px 0}
+.exam-techniques button{min-height:44px;font-size:12px;flex:1 0 auto}
+.monitor-state{display:grid;gap:5px;padding:14px;border-radius:12px;border:1px solid #687a80;background:#102b34;margin-top:12px}
+.monitor-state.connected{border-color:#66b2a0;background:#123c3e}.monitor-state small{line-height:1.4}
+@media(max-width:360px){.anatomy-layout{grid-template-columns:85px minmax(0,1fr);gap:6px}.anatomy-regions button{font-size:9px}}
+
 
 /* ATRIA compact keyboard preview: proportional 4-row native chat input. */
 .atria-keyboard{

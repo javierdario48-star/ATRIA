@@ -40,6 +40,7 @@ try{
  await page.locator('#peopleButton').click();
  await page.locator('[data-action="examination"]').click();
  for(const section of ['general','inspection','auscultation','percussion','palpation']){
+  await page.locator('#examRegions [data-exam-region="'+(section==='general'?'general':'abdomen')+'"]').click();
   await page.locator('[data-exam-section="'+section+'"]').click();
   await page.waitForFunction(s=>!!atriaV5.snapshot().clinical.patient.exam[s],section);
  }

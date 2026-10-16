@@ -2,21 +2,12 @@ import {csAnamnesisFact} from '../../clinical/anamnesis-intents.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {initialCirrVitals,parseCirrDose,advanceCirrVitals} from './native-cirr.js';
 import {nativeCaseXP} from './progression.js';
+import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
+import {executeObservation,recordVitalMeasurement} from './observations.js';
 
 const copy=x=>structuredClone(x);
 const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
-export const CIRR_EXAM_NAMES=Object.freeze({general:'Impresión general',inspection:'Inspección',auscultation:'Auscultación',percussion:'Percusión',palpation:'Palpación'});
-const unspecified='Sin hallazgo específico modelado en este escenario.';
-// Native ns421-clinical-exam CIRR findings. Unmodeled organs are NOT normal.
-function examRows(section,v){
- const row=(organ,text)=>({organ,text:text||unspecified});
- if(section==='general')return [row('Aspecto general','Adelgazado.'),row('Consciencia y orientación','Alerta y orientado en esta evaluación.'),
-  row('Perfusión y respiración',v.sys<90?'Perfusión comprometida; requiere reevaluación inmediata.':v.spo2<90?'Compromiso de la oxigenación.':'Valorar en conjunto con los signos actuales.')];
- if(section==='inspection')return [row('Piel y mucosas','Arañas vasculares y eritema palmar.'),row('Tórax / patrón respiratorio',v.rr>=26?'Respiración rápida, '+Math.round(v.rr)+' por minuto.':null),row('Abdomen','Abdomen globoso, con distensión por líquido.'),row('Periné')];
- if(section==='auscultation')return [row('Intestino / abdomen'),row('Corazón'),row('Pulmones')];
- if(section==='percussion')return [row('Abdomen','Matidez compatible con líquido abdominal.'),row('Hígado'),row('Bazo'),row('Región renal')];
- return [row('Abdomen','Ascitis moderada; abdomen globoso.'),row('Hígado'),row('Bazo','Esplenomegalia.'),row('Pulsos periféricos',v.sys<90?'Pulso débil con compromiso de perfusión.':null)];
-}
+export const CIRR_EXAM_NAMES=EXAM_TECHNIQUES;
 export function closureSnapshot(p,c,destination){return {
  caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
  examDone:p.examDone,examRegionsCount:p.examDone?2:Object.keys(p.exam).length?1:0,vitalsKnown:!!p.lastVitalsKnown,reassessments:p.reassessments,
@@ -30,8 +21,9 @@ export function closureSnapshot(p,c,destination){return {
  */
 export function createCirrCare(p,c,{mode,defaultDoses,progress}){
  if(c.id!=='CIRR-001')throw Error('C2 care only supports CIRR-001');
- Object.assign(p,{liveVitals:initialCirrVitals(c),intentHistory:[],exam:{},examDone:false,lastVitalsKnown:null,
+ Object.assign(p,{liveVitals:initialCirrVitals(c),baselineVitals:initialCirrVitals(c),intentHistory:[],exam:{},examDone:false,lastVitalsKnown:null,
   diagnosis:'',reassessments:0,lastReassessment:null,pendingTreatments:[],administrationLog:[],procedures:{},caseEnded:false,closure:null});
+ initializeExamination(p);
  const pending=new Map();
  const rejected=(cmd,reason,message)=>({status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason,
   ...(message?{receipt:{eventId:cmd.eventId,patientUid:p.uid,message}}:{})});
@@ -63,17 +55,8 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
     if(historyId&&!p.intentHistory.some(x=>x.id===historyId))p.intentHistory.push({id:historyId,answer,source:exact?'case.intents.'+exact.id:fact.source,eventId:cmd.eventId});
     return executed(cmd,{answer,message:answer,historyId,source:exact?'case.intents.'+exact.id:fact?.source||'case.opening'});
    }
-   if(intent.kind==='exam.record'){
-    if(!CIRR_EXAM_NAMES[intent.id])return rejected(cmd,'unknown-exam');
-    const rows=examRows(intent.id,p.liveVitals);p.exam[intent.id]={rows,nativeMinute:clock.nativeMinute,eventId:cmd.eventId};
-    p.examDone=Object.keys(CIRR_EXAM_NAMES).every(id=>p.exam[id]);
-    return executed(cmd,{rows,message:CIRR_EXAM_NAMES[intent.id]+': '+rows.map(x=>x.organ+': '+x.text).join(' · ')});
-   }
-   if(intent.kind==='vitals.record'||intent.kind==='procedure.request'&&['vitals','monitor'].includes(intent.id)){
-    p.lastVitalsKnown={vitals:copy(p.liveVitals),nativeMinute:clock.nativeMinute,eventId:cmd.eventId};
-    if(intent.id==='monitor')p.procedures.monitor={eventId:cmd.eventId,patientUid:p.uid,connected:true};
-    return executed(cmd,{vitals:copy(p.liveVitals),message:'Signos registrados: '+Math.round(p.liveVitals.hr)+' lpm · PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+' · FR '+Math.round(p.liveVitals.rr)+' · SpO₂ '+Math.round(p.liveVitals.spo2)+'%.'});
-   }
+   const exam=executePhysicalExam(p,c,cmd,clock);if(exam)return exam;
+   const observation=executeObservation(p,cmd,clock);if(observation)return observation;
    if(intent.kind==='therapy.request'&&['espironolactona','sal_restriccion','paracentesis_ter'].includes(intent.id)){
     let dose=null;
     if(intent.id==='espironolactona'){try{dose=parseCirrDose(intent.clause||intent.sourceText,defaultDoses?.espironolactona);}catch(error){return rejected(cmd,error.message,'Dosis o vía no validada en C2. Esquema disponible: espironolactona 100 mg oral. No administrado.');}}
@@ -93,7 +76,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
    if(intent.kind==='patient.reassess'){
     p.reassessments++;p.lastReassessment={nativeMinute:clock.nativeMinute,eventId:cmd.eventId,vitals:copy(p.liveVitals),
      administrationEvents:p.administrationLog.map(t=>t.sourceEventId),interventionEvents:p.treatments.map(t=>t.sourceEventId)};
-    p.lastVitalsKnown={vitals:copy(p.liveVitals),nativeMinute:clock.nativeMinute,eventId:cmd.eventId};
+    recordVitalMeasurement(p,clock,cmd.eventId,'reassessment');
     return executed(cmd,{assessment:copy(p.lastReassessment),message:'Reevaluación registrada. PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+' · FC '+Math.round(p.liveVitals.hr)+'. Ascitis y respuesta diurética no tienen cinética modelada en la semilla original; continuar seguimiento.'});
    }
    if(intent.kind==='diagnosis.record'){

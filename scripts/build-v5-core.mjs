@@ -6,6 +6,7 @@ import {pathToFileURL} from 'node:url';
 const files=[
  'src/v5/index.js',
  'src/v5/core/speech-router.js',
+ 'src/v5/clinical/exam-contract.js',
  'src/v5/core/room-authority.js',
  'src/v5/core/replica.js',
  'src/v5/adapters/native-clinical-port.js',
