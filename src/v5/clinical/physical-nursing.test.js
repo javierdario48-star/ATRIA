@@ -447,3 +447,76 @@ test('C08c reject invalid oxygen flow/device, negations and questions without nu
  assert.equal(f.session.read().patient.procedures.oxygen,undefined);
  f.session.dispose();f.world.enterLobby();
 });
+
+
+test('C07e mixed oxygen, monitor, IV, fluid and ceftriaxone have separate bedside proofs',async()=>{
+ const f=fixture('APP-001');
+ const before=f.session.read().patient.liveVitals;
+ const cmd=await f.session.post({id:'full-combo',
+  text:'Enfermera oxigeno 4 L/min, monitor, dos vias, Ringer 500 ml y ceftriaxona 1 g'});
+ assert.deepEqual(cmd.clinical.map(x=>[x.id,x.status]),[
+  ['iv','pending'],['oxygen','pending'],['monitor','pending'],
+  ['fluid','pending'],['ceftriaxone','pending']]);
+ assert.equal(f.session.read().patient.venousAccessCount,0);
+ assert.equal(f.session.read().patient.procedures.oxygen,undefined);
+ assert.equal(f.session.read().patient.procedures.monitor?.connected??false,false);
+ assert.deepEqual(f.session.read().patient.administrationLog,[]);
+ const early=await f.session.post({id:'early-close',text:'/disposicion quirofano'});
+ assert.equal(early.clinical[0].reason,'nursing-work-in-progress');
+ let finished=false;
+ for(let n=0;n<3000;n++){
+  f.world.step(1/60);
+  f.session.finishNurseArrivals();
+  f.session.advance(1/60);
+  if(n%60===0)await f.session.flush();
+  const jobs=f.world.nurseJourneySnapshot();
+  if(jobs.length===5&&jobs.every(x=>x.stage==='confirmed')){
+   finished=true;break;
+  }
+ }
+ assert(finished,'all five tasks require travel and native completion');
+ await f.session.flush();
+ const patient=f.session.read().patient;
+ assert.equal(patient.venousAccessCount,2);
+ assert.equal(patient.procedures.monitor.connected,true);
+ assert.equal(patient.procedures.oxygen.flowLpm,4);
+ assert.deepEqual(patient.administrationLog.map(x=>x.id),['oxygen','fluid','ceftriaxone']);
+ assert.equal(patient.administrationLog.find(x=>x.id==='fluid').dose.amount,500);
+ assert.equal(patient.administrationLog.find(x=>x.id==='ceftriaxone').dose.amount,1000);
+ assert.equal(patient.liveVitals.spo2,before.spo2,'oxygen physical support does not boost native APP SpO2');
+ assert.equal(f.events.filter(e=>e.type==='clinical.completed').length,5);
+ assert.equal(new Set(f.events.filter(e=>e.type==='clinical.completed').map(e=>e.eventId)).size,5);
+ assert.equal(f.world.nurseJourneySnapshot().filter(x=>x.stage==='confirmed').length,5);
+ const prior=f.session.read().patient.administrationLog.map(x=>x.sourceEventId);
+ await f.session.post({id:'full-combo',
+  text:'Enfermera oxigeno 4 L/min, monitor, dos vias, Ringer 500 ml y ceftriaxona 1 g'});
+ assert.deepEqual(f.session.read().patient.administrationLog.map(x=>x.sourceEventId),prior);
+ f.session.dispose();f.world.enterLobby();
+});
+
+test('C07e an oxygen job and automatic IV medicines in parallel never share a fake receipt',async()=>{
+ const f=fixture('APP-001');
+ const oxygen=await f.session.post({id:'oxygen-first',text:'Enfermera oxigeno 4 L/min'});
+ assert.deepEqual(oxygen.clinical.map(x=>[x.id,x.status]),[['oxygen','pending']]);
+ const drugs=await f.session.post({id:'drugs',text:'Enfermera ceftriaxona 1 g y metronidazol 500 mg'});
+ assert.deepEqual(drugs.clinical.map(x=>[x.id,x.status]),
+  [['iv','pending'],['ceftriaxone','pending'],['metronidazole','pending']]);
+ assert.deepEqual(f.world.nurseJourneySnapshot().map(x=>x.kind),['oxygen','iv']);
+ assert.equal(f.session.read().patient.venousAccessCount,0);
+ assert.deepEqual(f.session.read().patient.administrationLog,[]);
+ let done=false;
+ for(let n=0;n<3000;n++){
+  f.world.step(1/60);f.session.finishNurseArrivals();f.session.advance(1/60);
+  if(n%60===0)await f.session.flush();
+  if(f.world.nurseJourneySnapshot().length===4&&
+     f.world.nurseJourneySnapshot().every(x=>x.stage==='confirmed')){done=true;break;}
+ }
+ assert(done,'oxygen and two antibiotics must have physical bedside proofs');
+ await f.session.flush();
+ const p=f.session.read().patient;
+ assert.equal(p.venousAccessCount,1);
+ assert.deepEqual(p.administrationLog.map(x=>x.id),['oxygen','ceftriaxone','metronidazole']);
+ assert.equal(f.events.filter(e=>e.type==='clinical.completed').length,4);
+ assert.equal(new Set(f.events.filter(e=>e.type==='clinical.completed').map(e=>e.eventId)).size,4);
+ f.session.dispose();f.world.enterLobby();
+});

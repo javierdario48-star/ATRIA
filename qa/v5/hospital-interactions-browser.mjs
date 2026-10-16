@@ -129,11 +129,13 @@ try{
  assert.match(await page.locator('#monitorOrderFeedback').innerText(),/Intervención confirmada/i);
  assert.match(await page.locator('#monitorMedicationHistory').innerText(),/Paracentesis terapéutica/i);
  assert.match(await page.locator('#monitorMedicationHistory').innerText(),/Administrado y confirmado/i);
- await page.locator('#monitorOrderInput').fill('oxigeno 4 L/min');
+ await page.locator('#monitorOrderInput').fill('oxigeno 4 L/min y una via');
  await page.locator('[data-action="monitor-order-submit"]').click();
  assert.equal(await page.locator('#monitorOrderFeedback').getAttribute('data-status'),'pending');
  assert.equal((await state()).patient.procedures.oxygen,undefined);
+ assert.equal((await state()).patient.venousAccessCount,0,'the second composite task also waits for the real nurse');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.oxygen?.active===true,null,{timeout:30000});
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.venousAccessCount===1,null,{timeout:30000});
  await page.waitForFunction(()=>document.querySelector('#monitorOrderFeedback')?.dataset.status==='executed',null,{timeout:15000});
  assert.equal((await state()).patient.procedures.oxygen.flowLpm,4);
  assert.match(await page.locator('#monitorMedicationHistory').innerText(),/Oxígeno suplementario/i);
