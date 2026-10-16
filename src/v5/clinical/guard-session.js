@@ -8,7 +8,7 @@ import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
 import {refreshMonitoring} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
-import {parseAppDose} from './native-app.js';
+import {isStandardIVMedicine,parseStandardIVDose} from './native-medications.js';
 import {parseCirrDose} from './native-cirr.js';
 
 const copy=value=>structuredClone(value);
@@ -42,25 +42,24 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   invoke:async({eventId,actorId,patientUid,intent})=>{
    if(nursing&&intent.kind==='case.close'&&(pendingNurseJobs.size||waitingForAccess.size))
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
-   const appIV=caseData.id==='APP-001'&&intent.kind==='therapy.request'&&
-    ['ceftriaxone','metronidazole','fluid'].includes(intent.id);
+   const ivMedicine=!!care&&intent.kind==='therapy.request'&&isStandardIVMedicine(intent.id);
    const cirrBedside=caseData.id==='CIRR-001'&&intent.kind==='therapy.request'&&
     ['espironolactona','paracentesis_ter'].includes(intent.id);
    const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor'].includes(intent.id)||
-    intent.kind==='monitor.set'&&intent.id==='connect'||appIV||cirrBedside);
+    intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||cirrBedside);
    if(physical){
     if(nativePatient.caseEnded)return {status:'rejected',patientUid,eventId,reason:'patient-not-active'};
     // Native case policy remains the only executor. These are the same
     // certified dose/route parsers that it calls, never a new catalog.
     try{
-     if(appIV)parseAppDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
+     if(ivMedicine)parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
      if(cirrBedside&&intent.id==='espironolactona')
       parseCirrDose(intent.clause||intent.sourceText,content.defaultDoses?.espironolactona);
     }catch(error){return {status:'rejected',patientUid,eventId,reason:error.message};}
-    // APP IV therapy can only start its original pharmacological preparation
+    // IV therapy can only start its native pharmacological preparation
     // once access exists. If a legitimate IV trip is in progress, wait for its
     // exact receipt before queueing the bedside medication.
-    if(appIV&&nativePatient.venousAccessCount<1){
+    if(ivMedicine&&nativePatient.venousAccessCount<1){
      if([...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv')){
       waitingForAccess.set(eventId,{eventId,actorId,patientUid,intent:copy(intent)});
       return {status:'pending',patientUid,eventId};
