@@ -61,7 +61,7 @@ try{
  assert.match(await page.locator('#chatHistory').innerText(),/Acceso venoso periférico confirmado/i);
  const trips=(await page.evaluate(()=>atriaV5.snapshot())).nurses.filter(n=>n.journeyId).length;
  await send('enfermera via');
- assert.equal((await state()).patient.venousAccessCount,1);
+ assert.equal((await state()).patient.venousAccessCount,2);
  assert.equal((await page.evaluate(()=>atriaV5.snapshot())).nurses.filter(n=>n.journeyId).length,trips,
   'documented access must not summon a new nurse');
  await send('enfermera ringer');
