@@ -25,7 +25,9 @@ test('connected monitoring tracks actual physiology with patient/event observati
   if(caseId==='CIRR-001')await f.send('Enfermera paracentesis terapéutica');
   else await f.send('Enfermera colocar una vía y Ringer 500 ml');
   f.s.advance(8);await f.s.flush();p=f.s.read().patient;
-  assert.equal(p.lastVitalsKnown.vitals.hr,p.liveVitals.hr);
+  assert(Math.abs(p.lastVitalsKnown.vitals.hr-p.liveVitals.hr)<=1.4);
+  assert(Math.abs(p.lastVitalsKnown.vitals.sys-p.liveVitals.sys)<=2.0);
+  assert(Math.abs(p.lastVitalsKnown.vitals.rr-p.liveVitals.rr)<=.8);
   assert.equal(p.lastVitalsKnown.eventId,connectionEvent);
   assert.match(monitorHTML(p),/Monitorización continua/);
   await f.send('/monitor desconectar');const measured=structuredClone(f.s.read().patient.lastVitalsKnown);
@@ -61,4 +63,29 @@ test('closing a monitored case presents the final known measurement instead of c
  f.s.advance(120);const html=monitorHTML(f.s.read().patient);
  assert.match(html,/cerrada|cierre/i);assert.doesNotMatch(html,/Monitorización continua|observaciones actuales/);
  assert.deepEqual(f.s.read().patient.lastVitalsKnown,final);f.s.dispose();
+});
+
+test('monitor reports subtle reproducible non-therapeutic variation while patient physiology remains owned by the case',async()=>{
+ const f=setup('CIRR-001');await f.send('/monitor conectar');
+ const before=f.s.read().patient.liveVitals;
+ const observed=[f.s.read().patient.lastVitalsKnown.vitals];
+ for(let i=0;i<12;i++){f.s.advance(2);observed.push(f.s.read().patient.lastVitalsKnown.vitals);}
+ const native=f.s.read().patient.liveVitals;
+ assert.deepEqual(native,before,'no monitor oscillation is allowed to modify native physiology');
+ for(const sample of observed){
+  assert(Math.abs(sample.hr-native.hr)<=1.4+1e-9);
+  assert(Math.abs(sample.rr-native.rr)<=.8+1e-9);
+  assert(Math.abs(sample.sys-native.sys)<=2+1e-9);
+  assert(Math.abs(sample.dia-native.dia)<=1.2+1e-9);
+  assert(Math.abs(sample.spo2-native.spo2)<=.32+1e-9);
+  assert(Math.abs(sample.temp-native.temp)<=.035+1e-9);
+ }
+ assert(new Set(observed.map(x=>x.hr.toFixed(3))).size>2,'FC should fluctuate smoothly');
+ assert(new Set(observed.map(x=>x.rr.toFixed(3))).size>2,'FR should fluctuate smoothly');
+ assert(new Set(observed.map(x=>x.sys.toFixed(3))).size>2,'BP should fluctuate smoothly');
+ await f.send('/monitor desconectar');
+ const frozen=f.s.read().patient.lastVitalsKnown;
+ f.s.advance(35);await f.s.flush();
+ assert.deepEqual(f.s.read().patient.lastVitalsKnown,frozen);
+ f.s.dispose();
 });

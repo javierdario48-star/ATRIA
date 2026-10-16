@@ -116,7 +116,11 @@ try{
  await page.locator('#keyboardToggleButton').click();await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds!==null);
  await page.waitForTimeout(400);await tapEntity('monitor');
  await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor?.connected);
- await page.waitForFunction(()=>{const p=atriaV5.snapshot().clinical.patient;return p.lastVitalsKnown.vitals.hr===p.liveVitals.hr;});
+ await page.waitForFunction(()=>{
+   const p=atriaV5.snapshot().clinical.patient;
+   return Math.abs(p.lastVitalsKnown.vitals.hr-p.liveVitals.hr)<=1.4 &&
+    Math.abs(p.lastVitalsKnown.vitals.sys-p.liveVitals.sys)<=2;
+  });
  await page.screenshot({path:out+'/bedside-monitor.png'});await page.locator('#modalClose').click();
  await page.setViewportSize({width:851,height:393});await page.locator('#keyboardToggleButton').click();
  await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);await tapEntity('patient');
