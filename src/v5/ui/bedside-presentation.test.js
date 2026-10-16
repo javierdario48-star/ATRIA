@@ -42,7 +42,8 @@ test('C05.d autocomplete never authorizes an order, filters by the active case a
  assert.deepEqual(monitorOrderExamples('APP-001'),[],'no unsolicited prescriptions before search or hint');
  const app=monitorOrderExamples('APP-001','ceftr');
  assert.equal(app.length,1);assert.equal(app[0].command,'ceftriaxona 1 g');
- assert.equal(monitorOrderExamples('CIRR-001','ceftr').length,0,'must not offer foreign-case antibiotic');
+ assert.equal(monitorOrderExamples('CIRR-001','ceftr')[0].command,'ceftriaxona 1 g',
+  'validated shared IV medicines must appear in both native cases');
  const cirr=monitorOrderExamples('CIRR-001','restricción');
  assert.deepEqual(cirr.map(x=>x.command),['restricción de sodio']);
  assert.equal(monitorOrderExamples('APP-001','rInGeR')[0].command,'Ringer 500 ml');
@@ -65,6 +66,8 @@ test('C05.d native APP crystalloid response changes measured rate and the displa
  const {refreshMonitoring}=await import('../clinical/observations.js');
  p.uid='P1';refreshMonitoring(p,{nativeMinute:20});
  const next=ecgPresentation(p);
- assert(next.hr<first.hr);assert(next.hr>95);
+ assert(next.hr<first.hr,'native APP fluid must reduce the measured heart rate');
+ assert(Math.abs(next.hr-p.liveVitals.hr)<=1.4,'display variation must stay inside monitor tolerance');
+ assert(p.liveVitals.hr>95,'native case evolution remains the same as before the monitoring feature');
  assert.notEqual(ecgPath({seconds:5,hr:next.hr,rhythm:next.rhythm}),before);
 });
