@@ -128,6 +128,12 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    (order.status==='done'?'<p>'+esc(order.result)+'</p>':'')+'</div>').join(''):'<p>Todavía no solicitaste estudios.</p>');
   if(!p.liveVitals)return;
   setHTML(ui('clinicalVitals'),vitalsHTML(p));
+  const ecg=ecgPresentation(p);
+  if(!ecg.connected||!ecg.measured&&!(ecg.rhythmSource==='case-rule'&&['asystole','ventricular_fibrillation'].includes(ecg.rhythm))){
+   // Disconnecting clears presentation history, not the clinical observations.
+   // Reconnecting must never replay a beat from before the disconnection.
+   ecgSweep.reset();lastEcgAt=-Infinity;
+  }
   setHTML(ui('bedsideMonitor'),monitorHTML(p));
   const monitorButton=document.querySelector('[data-action="toggle-monitor"]');
   if(monitorButton){monitorButton.textContent=p.procedures?.monitor?.connected?'Desconectar monitor':'Conectar monitor';monitorButton.disabled=p.caseEnded;}
