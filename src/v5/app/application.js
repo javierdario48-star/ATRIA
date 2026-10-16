@@ -178,7 +178,7 @@ export async function createApplication({document,window,content,signal}){
    guardSession?.dispose();clinicalUI.reset();patientWheel.hide();world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});
    const s=world.snapshot(),roomId='guard-'+window.crypto.randomUUID();
    guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,progress,
-    patient:s.patients[0],content,resolveContext:({targetPatientUid})=>({
+    patient:s.patients[0],content,nursing:{enqueue:task=>world.enqueueNurseJourney(task),takeArrivals:()=>world.takeNurseArrivals(),accept:result=>world.acceptNurseClinicalResult(result)},resolveContext:({targetPatientUid})=>({
      patientUid:targetPatientUid!==undefined?world.patientInRange(targetPatientUid):focusedPatientUid?world.patientInRange(focusedPatientUid):world.nearby(),focusedNpc}),
     onChange:(_event,room)=>{if(guardSession?.read().room.roomId===room.roomId)renderGuardCommunication();}});
    lastClinicalFrame=window.performance.now();
@@ -242,7 +242,7 @@ export async function createApplication({document,window,content,signal}){
  function frame(now){
   if(destroyed)return;raf=null;frames++;
   advanceClinicalTo(now);
-  scheduler.tick(now,{simulate:dt=>{world.step(dt);presentation.advance(world.snapshot());},maintain:()=>{
+  scheduler.tick(now,{simulate:dt=>{world.step(dt);presentation.advance(world.snapshot());},maintain:()=>{guardSession?.finishNurseArrivals();
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
    const interaction=world.takeInteraction();if(interaction)activateEntity(interaction);
    if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();clinicalUI.render();}
