@@ -9,6 +9,7 @@ import {createGuardClock} from './guard-clock.js';
 import {refreshMonitoring} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
 import {parseAppDose} from './native-app.js';
+import {parseCirrDose} from './native-cirr.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -41,29 +42,41 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   invoke:async({eventId,actorId,patientUid,intent})=>{
    if(nursing&&intent.kind==='case.close'&&(pendingNurseJobs.size||waitingForAccess.size))
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
+   const appIV=caseData.id==='APP-001'&&intent.kind==='therapy.request'&&
+    ['ceftriaxone','metronidazole','fluid'].includes(intent.id);
+   const cirrBedside=caseData.id==='CIRR-001'&&intent.kind==='therapy.request'&&
+    ['espironolactona','paracentesis_ter'].includes(intent.id);
    const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor'].includes(intent.id)||
-    intent.kind==='monitor.set'&&intent.id==='connect');
-   // Never mutate the clinical patient merely because a nurse received an
-   // instruction. A genuine world arrival later invokes the SAME case executor.
+    intent.kind==='monitor.set'&&intent.id==='connect'||appIV||cirrBedside);
    if(physical){
     if(nativePatient.caseEnded)return {status:'rejected',patientUid,eventId,reason:'patient-not-active'};
+    // Native case policy remains the only executor. These are the same
+    // certified dose/route parsers that it calls, never a new catalog.
+    try{
+     if(appIV)parseAppDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
+     if(cirrBedside&&intent.id==='espironolactona')
+      parseCirrDose(intent.clause||intent.sourceText,content.defaultDoses?.espironolactona);
+    }catch(error){return {status:'rejected',patientUid,eventId,reason:error.message};}
+    // APP IV therapy can only start its original pharmacological preparation
+    // once access exists. If a legitimate IV trip is in progress, wait for its
+    // exact receipt before queueing the bedside medication.
+    if(appIV&&nativePatient.venousAccessCount<1){
+     if([...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv')){
+      waitingForAccess.set(eventId,{eventId,actorId,patientUid,intent:copy(intent)});
+      return {status:'pending',patientUid,eventId};
+     }
+     return {status:'rejected',patientUid,eventId,reason:'venous-access-required'};
+    }
+    // Reconfirmed therapies reuse the native certificate, rather than send an
+    // NPC on a fictitious second administration after a finished treatment.
+    if(intent.kind==='therapy.request'&&nativePatient.treatments.some(t=>t.id===intent.id))
+     return care.execute({eventId,actorId,patientUid,intent},clock);
     const travel=nursing.enqueue({eventId,patientUid,kind:intent.id});
     if(['queued','travelling'].includes(travel.status)){
      pendingNurseJobs.set(eventId,{eventId,actorId,patientUid,intent:copy(intent)});
      return {status:'pending',patientUid,eventId};
     }
     return {status:'rejected',patientUid,eventId,reason:'nurse-'+travel.status};
-   }
-   // APP antibiotics and fluid ordered with a still-travelling IV must wait
-   // for its real native access receipt. Validate the dose *before* accepting
-   // a deferred job, and start normal pharmacological preparation only then.
-   const needsIV=nursing&&caseData.id==='APP-001'&&intent.kind==='therapy.request'&&
-    ['ceftriaxone','metronidazole','fluid'].includes(intent.id)&&nativePatient.venousAccessCount<1;
-   if(needsIV&&[...pendingNurseJobs.values()].some(job=>job.intent.kind==='procedure.request'&&job.intent.id==='iv')){
-    try{parseAppDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);}
-    catch(error){return {status:'rejected',patientUid,eventId,reason:error.message};}
-    waitingForAccess.set(eventId,{eventId,actorId,patientUid,intent:copy(intent)});
-    return {status:'pending',patientUid,eventId};
    }
    if(intent.kind==='study.request'){
     const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute});
@@ -120,7 +133,18 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(disposed)throw Error('guard session disposed');
    const before=clock;
    clock=guardClock.advance(deltaRealSeconds,typing);
-   for(const result of care?.advance(before,clock,deltaRealSeconds)||[])port.complete(result);
+   for(const result of care?.advance(before,clock,deltaRealSeconds)||[]){
+    // Once the ORIGINAL case preparation clock completes, publish its native
+    // receipt and only then release the spatial bedside job.
+    port.complete(result);
+    if(pendingNurseJobs.has(result.eventId)){
+     const ack=nursing.accept({eventId:result.eventId,patientUid:result.patientUid,
+      status:result.status,receipt:result.receipt});
+     if(ack.status!==(result.status==='executed'?'confirmed':'rejected'))
+      throw Error('physical therapy completion mismatch');
+     pendingNurseJobs.delete(result.eventId);
+    }
+   }
    refreshMonitoring(nativePatient,clock);
    const ready=studies.advance(nativePatient,clock.clinicalMinute);
    for(const order of ready){
@@ -145,24 +169,29 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     if(!task||task.patientUid!==arrival.patientUid)continue;
     const result=care?.execute(task,clock)??{
      status:'rejected',patientUid:task.patientUid,eventId:task.eventId,reason:'clinical-action-not-migrated'};
-    if(result.status==='pending')throw Error('physical procedure cannot remain pending after arrival');
+    if(result.status==='pending'){
+     // The nurse is physically at the bedside, supervising the existing
+     // preparation. care.advance() alone will issue the terminal receipt.
+     results.push(copy(result));continue;
+    }
     port.complete(result);
     pendingNurseJobs.delete(arrival.eventId);
-    // The original native procedure now owns the IV state. Only after its
-    // executed receipt exists do dependent drugs enter their normal executor.
+    const spatial=nursing.accept({eventId:arrival.eventId,patientUid:arrival.patientUid,
+     status:result.status,receipt:result.receipt});
+    if(spatial.status!==(result.status==='executed'?'confirmed':'rejected'))
+     throw Error('nursing spatial acknowledgment mismatch');
     if(task.intent.kind==='procedure.request'&&task.intent.id==='iv'){
      for(const [id,waiting] of waitingForAccess){
       waitingForAccess.delete(id);
-      const outcome=result.status==='executed'?
-       care.execute(waiting,clock):
-       {status:'rejected',patientUid:waiting.patientUid,eventId:id,reason:'venous-access-unavailable'};
-      if(outcome.status!=='pending')port.complete(outcome);
+      if(result.status==='executed'){
+       const next=nursing.enqueue({eventId:id,patientUid:waiting.patientUid,kind:waiting.intent.id});
+       if(['queued','travelling'].includes(next.status))
+        pendingNurseJobs.set(id,waiting);
+       else port.complete({status:'rejected',eventId:id,patientUid:waiting.patientUid,reason:'nurse-'+next.status});
+      }else port.complete({status:'rejected',eventId:id,patientUid:waiting.patientUid,
+       reason:'venous-access-unavailable'});
      }
     }
-    const spatial=nursing.accept({eventId:arrival.eventId,patientUid:arrival.patientUid,
-     status:result.status,receipt:result.receipt});
-    if(spatial.status!==('executed'===result.status?'confirmed':'rejected'))
-     throw Error('nursing spatial acknowledgment mismatch');
     results.push(copy(result));
    }
    return results;
