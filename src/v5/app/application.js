@@ -2,6 +2,7 @@ import {FrameScheduler} from '../../app/frame-scheduler.js';
 import {Lifecycle} from '../../app/lifecycle.js';
 import {createWorld} from './world.js';
 import {createHospitalRenderer} from '../render/hospital.js';
+import {createPresentationTimeline} from '../render/presentation-timeline.js';
 import {createGuardSession} from '../clinical/guard-session.js';
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
@@ -29,16 +30,17 @@ export async function createApplication({document,window,content,signal}){
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
  const renderer=await createHospitalRenderer(canvas,content,{signal,window});
  const scheduler=new FrameScheduler({mobileRenderHz:60}),listeners=[];
+ const presentation=createPresentationTimeline(world.snapshot());
  const atriaKeyboard=createAtriaKeyboard({document,window,input,host:ui('chatDock'),
   onSubmit:()=>{if(composition)return;const message=input.value.trim();if(message){input.value='';submitText(message);}},
   onRecipient:()=>ui('recipientButton').click()});
- function drawWorld(now=window.performance.now()){
+ function drawWorld(now=window.performance.now(),alpha=scheduler.presentationAlpha()){
   if(atriaKeyboard.isOpen()&&!ui('chatDock').hidden&&!ui('hud').hidden){
    const origin=canvas.getBoundingClientRect().top;
    renderer.setPlayableBounds({top:ui('hud').getBoundingClientRect().bottom-origin+7,
     bottom:ui('chatDock').getBoundingClientRect().top-origin-5});
   }else renderer.setPlayableBounds(null);
-  renderer.draw(world.snapshot(),now);
+  renderer.draw(presentation.sample(world.snapshot(),alpha),now);
  }
  const history=[];
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
@@ -267,14 +269,14 @@ export async function createApplication({document,window,content,signal}){
  function frame(now){
   if(destroyed)return;raf=null;frames++;
   advanceClinicalTo(now);
-  scheduler.tick(now,{simulate:dt=>world.step(dt),maintain:()=>{
+  scheduler.tick(now,{simulate:dt=>{world.step(dt);presentation.advance(world.snapshot());},maintain:()=>{
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
    if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();renderStudyOrders();renderClinicalPanels();}
   },render:()=>drawWorld(now),isMobile:window.innerWidth<700});
   raf=window.requestAnimationFrame(frame);
  }
  function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
-  clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);raf=window.requestAnimationFrame(frame);}}
+  clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);presentation.reset(world.snapshot());raf=window.requestAnimationFrame(frame);}}
  function pause(){advanceClinicalTo(window.performance.now());lastClinicalFrame=null;if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
  function destroy(){if(destroyed)return;destroyed=true;guardSession?.dispose();guardSession=null;pause();close();atriaKeyboard.destroy();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
