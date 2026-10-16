@@ -82,3 +82,50 @@ test('C08b independent monitor and IV requests serialize per patient without dup
  assert.equal(new Set(f.events.filter(x=>x.type==='clinical.completed').map(x=>x.eventId)).size,2);
  f.session.dispose();f.world.enterLobby();
 });
+
+test('C08b compound APP IV, monitor and medications await real access before native drug preparation',async()=>{
+ const f=fixture('APP-001');
+ const ack=await f.session.post({id:'combined',text:'Enfermera dos vías, monitor, Ringer 500 ml, ceftriaxona 1 g y metronidazol 500 mg'});
+ assert.deepEqual(ack.clinical.map(x=>[x.id,x.status]),[
+  ['iv','pending'],['monitor','pending'],['fluid','pending'],
+  ['ceftriaxone','pending'],['metronidazole','pending']
+ ]);
+ assert.equal(f.session.read().patient.venousAccessCount,0);
+ assert.equal(f.session.read().patient.procedures.monitor?.connected??false,false);
+ assert.deepEqual(f.session.read().patient.pendingTreatments,[]);
+ f.session.advance(8);await f.session.flush();
+ assert.equal(f.session.read().patient.administrationLog.length,0,'time alone cannot execute deferred drugs');
+ await walkToCompletion(f);
+ assert.equal(f.session.read().patient.venousAccessCount,2);
+ assert.equal(f.session.read().patient.procedures.monitor.connected,true);
+ assert.equal(f.session.read().patient.administrationLog.length,0);
+ assert.deepEqual(f.session.read().patient.pendingTreatments.map(x=>x.id).sort(),
+  ['ceftriaxone','fluid','metronidazole']);
+ const now=f.session.read().clock.clinicalMinute;
+ assert(f.session.read().patient.pendingTreatments.every(x=>x.readyAtRealSecond>now));
+ f.session.advance(.79);await f.session.flush();
+ assert.equal(f.session.read().patient.administrationLog.length,0);
+ f.session.advance(.02);await f.session.flush();
+ assert.deepEqual(f.session.read().patient.administrationLog.map(x=>x.id),['fluid']);
+ f.session.advance(.69);await f.session.flush();
+ assert.deepEqual(f.session.read().patient.administrationLog.map(x=>x.id),['fluid','ceftriaxone','metronidazole']);
+ assert.equal(f.events.filter(x=>x.type==='clinical.completed').length,5);
+ assert.equal(new Set(f.events.filter(x=>x.type==='clinical.completed').map(x=>x.eventId)).size,5);
+ const original=f.session.read().patient.administrationLog.map(x=>x.sourceEventId);
+ await f.session.post({id:'combined',text:'Enfermera dos vías, monitor, Ringer 500 ml, ceftriaxona 1 g y metronidazol 500 mg'});
+ assert.deepEqual(f.session.read().patient.administrationLog.map(x=>x.sourceEventId),original);
+ f.session.dispose();f.world.enterLobby();
+});
+test('C08b malformed dose while IV travels is rejected immediately with no pending fake administration',async()=>{
+ const f=fixture('APP-001');
+ await f.session.post({id:'iv',text:'Enfermera una vía'});
+ const invalid=await f.session.post({id:'bad-dose',text:'Enfermera ceftriaxona 2 g'});
+ assert.equal(invalid.clinical[0].status,'rejected');
+ assert.equal(invalid.clinical[0].reason,'unsupported-dose');
+ assert.equal(f.session.read().patient.administrationLog.length,0);
+ await walkToCompletion(f);
+ assert.equal(f.session.read().patient.venousAccessCount,1);
+ assert.equal(f.session.read().patient.pendingTreatments.length,0);
+ assert.equal(f.session.read().patient.administrationLog.length,0);
+ f.session.dispose();f.world.enterLobby();
+});
