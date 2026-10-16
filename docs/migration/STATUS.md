@@ -6,6 +6,7 @@
 **Interfaz aprobada y congelada para comparación:** `atria-5.0-compact-keyboard-preview` @ `0b36884fa4a879d49c588fa8f3f262a535dd3070`.
 **C01 — Consolidación:** fast-forward no forzado de `646a0ab` a `0b36884`, por compare 29 ahead/0 behind y lease de SHA anterior; código fuente CI 38836248252, 3/3 success. Informe [STEP_01_HANDOFF.md](STEP_01_HANDOFF.md). Los commits posteriores son documentación; consultar HEAD de rama antes de reanudar.
 **Prioridad vigente:** sistemas primero; NO añadir los once casos restantes.
+**Continuación tras Work:** C07.a protege dosis/vía y recibos de APP en órdenes repetidas: informe [STEP_07_HANDOFF.md](STEP_07_HANDOFF.md). C07/C08 completos siguen pendientes; ver CI exacta del HEAD.
 **C02:** inventario técnico completado; [matriz](PARITY_MATRIX.md), 73 módulos
 clasificados con hashes; [informe](STEP_02_HANDOFF.md).
 **Últimos cambios funcionales publicados:** C04/C05.a en
@@ -27,7 +28,7 @@ monitor 16 comparaciones efectivas. UI Chromium móvil y cierres CIRR/APP aproba
 | C04 | Examen físico original por segmentos | IMPLEMENTADO CIRR/APP — regiones, técnicas, Glasgow, UI; [informe](STEP_04_HANDOFF.md) |
 | C05 | Historia, monitor, estudios, paneles | PARCIAL C05.a/b — pacientes, pantallas reales del monitor, signos conocidos, historia; faltan ECG/controles/transporte; [informe](STEP_05_HANDOFF.md) |
 | C06 | Diálogo y anamnesis de pacientes | PARCIAL C06.a — CIRR/APP, ALiCIA, contexto y antecedentes; [informe](STEP_06_HANDOFF.md) |
-| C07 | Parser/órdenes combinadas enfermería | PENDIENTE |
+| C07 | Parser/órdenes combinadas enfermería | PARCIAL C07.a — validación de dosis/vía antes de reutilizar comprobantes APP y prueba de orden combinada; [informe](STEP_07_HANDOFF.md). C07 completo pendiente |
 | C08 | Enfermería física y administración nativa | PENDIENTE |
 | C09 | Vega y tutor Aprendiz | PENDIENTE |
 | C10 | Voz sobre comandos únicos | PENDIENTE |
