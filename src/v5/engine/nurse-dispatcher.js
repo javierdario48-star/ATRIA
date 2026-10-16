@@ -83,7 +83,7 @@ export function createNurseDispatcher({navigation,nurses,patients}={}){
    if(disposed)return {status:'disposed'};
    const task=tasks.get(eventId);
    if(!task||task.patientUid!==patientUid)return {status:'unknown-task'};
-   if(task.stage==='confirmed'||task.stage==='rejected')return {status:'already-final'};
+   if(['confirmed','rejected','cancelled'].includes(task.stage))return {status:'already-final'};
    if(status==='executed'){
     if(task.stage!=='at-bed')return {status:'nurse-not-at-bed'};
     if(receipt?.eventId!==eventId||receipt?.patientUid!==patientUid)return {status:'invalid-receipt'};
