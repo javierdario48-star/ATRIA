@@ -27,6 +27,8 @@ jobs:
         run: node qa/v5/characterize-cirr-native.mjs
       - name: Characterize original APP dual antibiotics and fluid response (QA-only)
         run: node qa/v5/characterize-app-native.mjs
+      - name: Executable V4 clinical harm-and-exposure parity gate (QA-only)
+        run: node qa/v5/clinical-parity-gate.mjs
       - name: Effective original CIRR and APP exam findings remain equivalent
         run: node qa/v5/characterize-exam-native.mjs
       - name: Visible monitor screens match the effective final original scene

@@ -43,3 +43,7 @@ La primera implementación de C12 no debe agregar diez efectos genéricos a `nat
 Fuentes internas: `docs/ATRIA_50_MIGRATION_MASTER_PLAN.md`, `qa/ATRIA_487_PHYSIOLOGY_TRANSITION_RESULTS.md`, `qa/ATRIA_487_RESCUE_OWNERSHIP_RESULTS.md`, `src/clinical/critical-rescue-487.js`, `src/clinical/grace-survival-487.js`, `src/clinical/physiology-pilot-487.js`, `src/v5/clinical/native-app.js`, `src/v5/clinical/native-cirr.js`.
 
 Último cambio técnico C11.c antes de esta puerta: `62f12407c4bfd2653ba435a37ef25a2ac321f6f2`; [CI](https://github.com/javierdario48-star/ATRIA/actions/runs/38983745788) **pendiente al redactar**.
+
+## Puerta automatizada incorporada
+
+El comando `node qa/v5/clinical-parity-gate.mjs` usa exclusivamente el VM QA del build efectivo de 4.8.7 (no se importa al juego) para ejecutar APP, CIRR y un caso dinámico de sepsis existente (`PERI-SEC-001`). Compara exposición sin tratamiento, 500 ml y 3000 ml; exige administración real y registra signos y toxicidad sin convertir el comportamiento viejo en política clínica nueva. Clasifica explícitamente qué subsistemas siguen NO MIGRADOS. Se ejecuta en el job `clean-core-contract`, y solo produce un reporte en logs; no edita fixtures ni fuentes del motor previo. Pueden existir defectos históricos: que la referencia produzca un signo no prueba que sea seguro o correcto copiar su algoritmo.
