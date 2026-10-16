@@ -14,6 +14,10 @@ export function createNurseDispatcher({navigation,nurses,patients}={}){
  const tasks=new Map(),arrivals=[],byUid=new Map(patients.map(p=>[p.uid,p]));
  let disposed=false;
  function assignment(task){
+  // One bedside intervention per patient. Other nurses may work in other boxes,
+  // but several NPCs must not pile onto the same patient for a compound order.
+  if([...tasks.values()].some(other=>other!==task&&other.patientUid===task.patientUid&&
+    (other.stage==='travelling'||other.stage==='at-bed')))return false;
   const patient=byUid.get(task.patientUid);
   if(!patient||!Array.isArray(patient.approach))return false;
   const goal=navigation.nearest(...patient.approach,8);
