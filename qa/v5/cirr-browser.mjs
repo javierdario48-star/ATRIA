@@ -24,7 +24,7 @@ try{
  await page.locator('#dieInput').blur();
  for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){
   const t=await page.evaluate(()=>({p:atriaV5.snapshot().player,r:atriaV5.diagnostics().renderer}));
-  await page.locator('#game').click({position:{x:(x-t.p.x)*t.r.scale+t.r.width/2,y:(y-t.p.y)*t.r.scale+t.r.height/2}});
+  await page.locator('#game').click({position:{x:(x-t.r.camera.x)*t.r.scale+t.r.anchorX,y:(y-t.r.camera.y)*t.r.scale+t.r.anchorY}});
   await page.waitForFunction(()=>atriaV5.snapshot().player.moving);await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
  }
  await send('¿Desde cuándo empezó la hinchazón?');await send('¿Toma alcohol?');
