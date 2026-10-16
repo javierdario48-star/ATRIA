@@ -3,10 +3,20 @@
  * This is not a clinical interpreter and cannot execute or prescribe treatment.
  * Additional cases may register their own tested phrase sets later.
  */
+// Clinical authority validates all three in both native cases. This array is
+// presentation-only: one shared autocomplete list, no dosage or action rules.
+const SHARED_IV=Object.freeze([
+ ['iv1','Una vía periférica','una vía'],
+ ['iv2','Dos vías periféricas','dos vías'],
+ ['fluid','Ringer lactato 500 ml','Ringer 500 ml'],
+ ['ceftriaxone','Ceftriaxona IV 1 g','ceftriaxona 1 g'],
+ ['metronidazole','Metronidazol IV 500 mg','metronidazol 500 mg']
+]);
 const ORDERS=Object.freeze({
  'CIRR-001':[
   ['monitor','Conectar monitor','monitor'],
   ['vitals','Registrar signos vitales','signos'],
+  ...SHARED_IV,
   ['sodium','Restricción de sodio','restricción de sodio'],
   ['spironolactone','Espironolactona 100 mg oral','espironolactona 100 mg oral'],
   ['paracentesis','Paracentesis terapéutica','paracentesis terapéutica']
@@ -14,11 +24,7 @@ const ORDERS=Object.freeze({
  'APP-001':[
   ['monitor','Conectar monitor','monitor'],
   ['vitals','Registrar signos vitales','signos'],
-  ['iv1','Una vía periférica','una vía'],
-  ['iv2','Dos vías periféricas','dos vías'],
-  ['fluid','Ringer lactato 500 ml','Ringer 500 ml'],
-  ['ceftriaxone','Ceftriaxona IV 1 g','ceftriaxona 1 g'],
-  ['metronidazole','Metronidazol IV 500 mg','metronidazol 500 mg'],
+  ...SHARED_IV,
   ['npo','Nada por boca','nada por boca'],
   ['consult','Interconsulta a cirugía','/consulta cirugia']
  ]
