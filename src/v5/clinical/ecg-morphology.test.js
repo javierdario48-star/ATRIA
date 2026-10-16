@@ -65,3 +65,13 @@ test('C05.d optional case ECG seed is explicit, validated and remains absent in 
  assert.notEqual(ecgPath({seconds:6,hr:0,rhythm:'asystole'}),'');
  assert.notEqual(ecgPath({seconds:6,hr:0,rhythm:'ventricular_fibrillation'}),'');
 });
+
+test('C05.d presentation beat phase is continuous across native treatment rate changes',async()=>{
+ const {advanceEcgPhase}=await import('./ecg-morphology.js');
+ let cycles=0;
+ cycles=advanceEcgPhase(cycles,1,120);assert.equal(cycles,2);
+ cycles=advanceEcgPhase(cycles,1,60);assert.equal(cycles,3);
+ const before=cycles;cycles=advanceEcgPhase(cycles,.05,90);
+ assert(Math.abs(cycles-before-.075)<1e-9);
+ assert.throws(()=>advanceEcgPhase(cycles,-1,90),/invalid/);
+});
