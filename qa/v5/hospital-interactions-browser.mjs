@@ -41,8 +41,15 @@ try{
    // scene. Do not click a position derived from the very hitbox under test.
    const [x,y]=kind==='monitor'?[48,361]:[e.x,e.y];
    return {x:(x-r.camera.x)*r.scale+r.anchorX,y:(y-r.camera.y)*r.scale+r.anchorY};},kind);
-  await page.locator('#game').click({position:point});await page.waitForFunction(()=>document.querySelector('#modal').open);
-  assert.equal(await page.locator('#modalContent').getAttribute('data-patient-uid'),uid);
+  await page.locator('#game').click({position:point});
+  if(kind==='monitor'){
+   await page.waitForFunction(()=>document.querySelector('#modal').open);
+   assert.equal(await page.locator('#modalContent').getAttribute('data-patient-uid'),uid);
+  }else{
+   await page.locator('#patientWheel').waitFor({state:'visible'});
+   assert.equal(await page.locator('#patientWheel').getAttribute('data-patient-uid'),uid);
+   assert.equal(await page.locator('#modal').evaluate(x=>x.open),false,'touch shows world menu, not a blocking panel');
+  }
  };
  await tapEntity('monitor');assert.match(await page.locator('#modalContent').innerText(),/Monitor · B1/);
  assert.match(await page.locator('#bedsideMonitor').innerText(),/desconectado/);assert(!(await state()).patient.lastVitalsKnown);
@@ -50,7 +57,11 @@ try{
  assert.match(await page.locator('#bedsideMonitor').innerText(),/108\/68/);
  await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>!atriaV5.snapshot().clinical.patient.procedures.monitor.connected);
  const measured=(await state()).patient.lastVitalsKnown;
- await page.locator('#modalClose').click();await tapEntity('patient');await page.locator('[data-action="examination"]').click();
+ await page.locator('#modalClose').click();await tapEntity('patient');
+ const wheel=page.locator('#patientWheel');
+ assert.equal(await wheel.locator('button').count(),6);
+ await page.screenshot({path:out+'/contextual-patient-wheel.png'});
+ await wheel.locator('[data-patient-action="examination"]').click();
  const choose=async region=>page.locator('#examRegions [data-exam-region="'+region+'"]').click();
  await page.locator('svg [data-exam-region="abdomen"]').click();assert.deepEqual((await state()).patient.examFindings,{});
  await page.locator('[data-exam-section="palpation"]').click();await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings.abdomen?.palpation);
@@ -80,12 +91,14 @@ try{
  await page.screenshot({path:out+'/bedside-monitor.png'});await page.locator('#modalClose').click();
  await page.setViewportSize({width:851,height:393});await page.locator('#keyboardToggleButton').click();
  await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);await tapEntity('patient');
- assert.match(await page.locator('#modalContent').innerText(),/B1/);await page.locator('#modalClose').click();
+ assert.match(await page.locator('#patientWheel').getAttribute('data-patient-uid'),new RegExp(uid));
+ await page.locator('#patientWheel [data-patient-action="history"]').click();
+ await page.locator('#fullClinicalHistory').waitFor();await page.locator('#modalClose').click();
  await page.locator('#guardButton').click();assert.equal(await state(),null);
  const report={test:'hospital-interactions',realBrowser:true,physicalAndroid:false,androidEmulated:true,
   url:page.url(),worldHitboxes:true,visibleNativeMonitorScreen:true,explicitPatientUid:true,unknownMonitorNoLeak:true,spotAndContinuousMeasurement:true,
   anatomyAndTechniques:true,partialExamDoesNotComplete:true,glasgowByComponents:true,historyAcquiredEvidence:true,
-  keyboardOpenAndClosed:true,periodicRefreshPreservesFocusAndPress:true,rotated:true,cleanLobbyReturn:true,errors};
+  keyboardOpenAndClosed:true,worldAnchoredPatientActions:true,deviceMonitorReadout:true,periodicRefreshPreservesFocusAndPress:true,rotated:true,cleanLobbyReturn:true,errors};
  assert.deepEqual(errors,[]);await fs.writeFile(out+'/hospital-interactions-summary.json',JSON.stringify(report,null,2));
  console.log('HOSPITAL INTERACTIONS REAL UI PASS',JSON.stringify(report));await context.close();
 }catch(error){if(page){await page.screenshot({path:out+'/hospital-interactions-failure.png'}).catch(()=>{});
