@@ -71,7 +71,7 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
  toggle?.addEventListener('click',onToggle);
  host.append(root);
  setOpen(!!(window.matchMedia?.('(pointer: coarse)').matches||window.innerWidth<=700));
- return Object.freeze({isOpen:()=>open,setOpen,element:root,destroy(){
+ return Object.freeze({isOpen:()=>open,setOpen,element:root,listenerCount:()=>disposed?0:(toggle?3:2),destroy(){
   if(disposed)return;disposed=true;
   root.removeEventListener('pointerdown',suppressBlur);root.removeEventListener('click',onKey);
   toggle?.removeEventListener('click',onToggle);root.remove();
