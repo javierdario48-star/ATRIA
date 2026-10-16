@@ -6,6 +6,7 @@
 **Interfaz aprobada y congelada para comparación:** `atria-5.0-compact-keyboard-preview` @ `0b36884fa4a879d49c588fa8f3f262a535dd3070`.
 **C01 — Consolidación:** fast-forward no forzado de `646a0ab` a `0b36884`, por compare 29 ahead/0 behind y lease de SHA anterior; código fuente CI 38836248252, 3/3 success. Informe [STEP_01_HANDOFF.md](STEP_01_HANDOFF.md). Los commits posteriores son documentación; consultar HEAD de rama antes de reanudar.
 **Prioridad vigente:** sistemas primero; NO añadir los once casos restantes.
+**C08.a:** [planificador espacial sin efectos médicos ficticios](STEP_08A_HANDOFF.md). Siguiente C08.b: puerta clínica de llegada y comprobantes.
 **C05.e/C09.a:** [barrido ECG limpio y auditoría de arquitectura](STEP_05E_HANDOFF.md) · [Vega en chat global](STEP_09A_HANDOFF.md). Próximo: C07/C08 enfermería física, C09 avanzado, voz y multijugador. Consultar CURRENT_HANDOFF.
 **Continuación tras Work:** C07.a protege dosis/vía y recibos de APP en órdenes repetidas: informe [STEP_07_HANDOFF.md](STEP_07_HANDOFF.md). C07/C08 completos siguen pendientes; ver CI exacta del HEAD.
 **C02:** inventario técnico completado; [matriz](PARITY_MATRIX.md), 73 módulos
@@ -30,7 +31,7 @@ monitor 16 comparaciones efectivas. UI Chromium móvil y cierres CIRR/APP aproba
 | C05 | Historia, monitor, estudios, paneles | PARCIAL C05.a–e — barrido ECG de 4,5 s /125 Hz con muestras conservadas y QRS de duración representable; monitor y búsqueda funcionales. ECG diagnóstico/activación de arritmias y transporte pendientes. [C05.d](STEP_05D_HANDOFF.md) · [C05.e](STEP_05E_HANDOFF.md) |
 | C06 | Diálogo y anamnesis de pacientes | PARCIAL C06.a — CIRR/APP, ALiCIA, contexto y antecedentes; [informe](STEP_06_HANDOFF.md) |
 | C07 | Parser/órdenes combinadas enfermería | PARCIAL C07.a/b — veracidad de dosis/vía y prueba de cinco acciones en una sola indicación (dos vías, monitor, cristaloides y dos antibióticos); C07 y C08 físicos no completos. [C07.a](STEP_07_HANDOFF.md) · [C07.b](STEP_05C_HANDOFF.md) |
-| C08 | Enfermería física y administración nativa | PENDIENTE |
+| C08 | Enfermería física y administración nativa | PARCIAL C08.a — planificador de trayectos usando 6 NPC existentes, rutas/colisiones reales, FIFO por paciente, llegada validada, sin ejecución clínica por movimiento. **C08.b conexión a puerto nativo pendiente**. [Informe](STEP_08A_HANDOFF.md) |
 | C09 | Vega y tutor Aprendiz | PARCIAL C09.a — respuestas progresivas por el mismo chat global, sin administración ni motor paralelo. Docencia avanzada/rescate físico pendiente. [Informe](STEP_09A_HANDOFF.md) |
 | C10 | Voz sobre comandos únicos | PENDIENTE |
 | C11 | Tratamiento y farmacología transversal | PENDIENTE |
