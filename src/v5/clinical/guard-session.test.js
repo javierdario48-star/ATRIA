@@ -81,3 +81,27 @@ test('explicit study selection retains its catalog ID through the same chat auth
  assert.equal(bad.status,'received-not-executed');assert.deepEqual(session.read().patient.treatments,[]);
  session.dispose();
 });
+
+test('C09 Vega response belongs to the unique global utterance, with no clinical execution',async()=>{
+ const {createGuardSession}=await import('./guard-session.js');
+ const fs=await import('node:fs');
+ const read=x=>JSON.parse(fs.readFileSync(new URL('../content/'+x+'.json',import.meta.url)));
+ const content={cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')};
+ for(const mode of ['solo','apprentice']){
+  const s=createGuardSession({roomId:'mentor-'+mode,mode,actorId:'doctor',actorName:'Jugador',
+   patient:{uid:'B1',caseId:'APP-001'},content,resolveContext:()=>({patientUid:'B1'})});
+  const before=s.read().patient;
+  const ack=await s.post({id:'vega-1',text:'Vega, dame una pista'});
+  assert.equal(ack.recipient,'vega');
+  assert.deepEqual(ack.clinical,[]);
+  assert.equal(s.read().messages.length,2);
+  assert.equal(s.read().messages.at(-1).name,'Dr. Vega');
+  assert.match(s.read().messages.at(-1).text,/signos vitales/);
+  assert.deepEqual(s.read().patient,before);
+  const retry=await s.post({id:'vega-1',text:'Vega, dame una pista'});
+  assert.deepEqual(retry,ack);
+  assert.equal(s.read().messages.length,2);
+  assert.equal(s.read().room.revision,1);
+  s.dispose();
+ }
+});
