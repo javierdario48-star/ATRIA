@@ -104,6 +104,15 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    return copy(ready);
   },
   flush:()=>authority.flush(),
+  // Minimal read-only projection for 30Hz ECG paint; never clone room events or
+  // recalculate closure from the presentation loop. Authority owns all writes.
+  monitorRead(uid){
+   if(disposed||uid!==nativePatient.uid)return null;
+   return {uid:nativePatient.uid,caseEnded:!!nativePatient.caseEnded,
+    ecg:nativePatient.ecg?copy(nativePatient.ecg):null,
+    procedures:{monitor:{connected:!!nativePatient.procedures?.monitor?.connected}},
+    lastVitalsKnown:nativePatient.lastVitalsKnown?{vitals:copy(nativePatient.lastVitalsKnown.vitals)}:null};
+  },
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    closure:care?copy(care.readiness(caseData.id==='APP-001'?'quirofano':'sala')):null};},
   dispose(){if(disposed)return;disposed=true;pendingStudyRequests.clear();care?.dispose();authority.dispose();}
