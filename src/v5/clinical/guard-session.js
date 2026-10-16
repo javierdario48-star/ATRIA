@@ -54,7 +54,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     // certified dose/route parsers that it calls, never a new catalog.
     try{
      if(ivMedicine)parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
-     if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText);
+     if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
      if(cirrBedside&&intent.id==='espironolactona')
       parseCirrDose(intent.clause||intent.sourceText,content.defaultDoses?.espironolactona);
     }catch(error){return {status:'rejected',patientUid,eventId,reason:error.message};}
@@ -63,7 +63,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      if(intent.kind==='therapy.stop'&&!active?.active)
       return {status:'rejected',patientUid,eventId,reason:'oxygen-not-active'};
      if(intent.kind==='therapy.request'&&active?.active&&
-        active.flowLpm===parseNasalOxygenFlow(intent.clause||intent.sourceText).amount)
+        active.flowLpm===parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText).amount)
       return care.execute({eventId,actorId,patientUid,intent},clock);
     }
     // IV therapy can only start its native pharmacological preparation
@@ -83,7 +83,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      return care.execute({eventId,actorId,patientUid,intent},clock);
     // Reconfirmed therapies reuse the native certificate, rather than send an
     // NPC on a fictitious second administration after a finished treatment.
-    if(intent.kind==='therapy.request'&&nativePatient.treatments.some(t=>t.id===intent.id))
+    if(intent.kind==='therapy.request'&&!oxygenAction&&nativePatient.treatments.some(t=>t.id===intent.id))
      return care.execute({eventId,actorId,patientUid,intent},clock);
     const travel=nursing.enqueue({eventId,patientUid,kind:intent.id});
     if(['queued','travelling'].includes(travel.status)){

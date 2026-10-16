@@ -64,9 +64,9 @@ export function executeVenousAccess(p,cmd){
 /** C08c: nasal oxygen is a real bedside intervention, not a generic SpO2 buff.
  * V4 verifies 2 and 4 L/min but its hypoxemic PERI-SEC physiology is deferred.
  */
-export function parseNasalOxygenFlow(text,reference={amount:4}){
+export function parseNasalOxygenFlow(text,reference={amount:4},originalText=text){
  const raw=String(text||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/,/g,'.');
- if(/\b(?:oral|intravenos\w*|endovenos\w*|mascara|mask|reservorio|alto flujo|venturi)\b/.test(raw))
+ if(/\b(?:oral|intravenos\w*|endovenos\w*|mascara|mask|reservorio|alto flujo|venturi)\b/.test(String(originalText||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')))
   throw Error('unsupported-oxygen-device');
  const matches=[...raw.matchAll(/\b(\d+(?:\.\d+)?)\s*(?:l\s*(?:\/\s*|\s+por\s+|\s+)min|lpm)\b/g)];
  let leftover=raw;for(const match of matches)leftover=leftover.replace(match[0],' ');
@@ -82,7 +82,7 @@ export function executeOxygenSupport(p,cmd,clock){
  const stop=intent.kind==='therapy.stop',prior=p.procedures.oxygen;
  let dose=null;
  if(!stop){
-  try{dose=parseNasalOxygenFlow(intent.clause||intent.sourceText);}
+  try{dose=parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);}
   catch(error){return {status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason:error.message};}
  }
  if(stop&&!prior?.active)return {status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason:'oxygen-not-active'};
