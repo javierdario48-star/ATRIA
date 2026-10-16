@@ -6,7 +6,7 @@
 - Rama exclusiva: `atria-5.0-core-rebuild-experimental`. No se modificó `main`, V4, producción ni `vendor/atria-4.8.6/**`.
 - HEAD de partida y baseline aprobado: `7362495b56f84f931ca814d13f0e4d0176125927`, CI [38908595448](https://github.com/javierdario48-star/ATRIA/actions/runs/38908595448), **3/3 success**.
 - SHA del último código funcional y QA **antes de este informe**: `9ea89e005c422cef82fab6cc9506e78ab0d886a1`.
-- CI de dicho SHA: [38923169786](https://github.com/javierdario48-star/ATRIA/actions/runs/38923169786). Verificar conclusión de los tres trabajos; la CI seguía en marcha al iniciar esta documentación. El HEAD final documental será descendiente de ese SHA. **No declarar 3/3 sin revisar el run exacto**.
+- CI de dicho SHA: [38923169786](https://github.com/javierdario48-star/ATRIA/actions/runs/38923169786), **completed/success 3/3**: contratos del núcleo, recorrido completo Chromium (CIRR/APP) y regresión histórica preservada. El HEAD final documental será descendiente de ese SHA. **No declarar 3/3 sin revisar el run exacto**.
 
 ## Implementación real
 
@@ -25,7 +25,7 @@
 - `qa/v5/clinical-clock-browser.mjs`: una pausa de 1,2 s en el hilo de render antes de enviar una orden no puede acortar el viaje ni adelantar la preparación; exige aceptación `pending`, NPC en movimiento y cero administraciones antes de llegar.
 - En el primer intento CI el test antiguo de IV esperaba administración tras 1,6 s incluso sin traslado; se corrigió la **aserción** para exigir llegada real, sin reducir seguridad. El navegador antiguo también esperaba `pendingTreatments` inmediatamente: ahora esa colección solo se llena cuando `care.execute` empieza efectivamente la preparación en la cama.
 - `scripts/audit-v5-boundary.mjs` sigue impidiendo parches HTML legacy, imports del ejecutor desde UI, segundos RAF o temporizadores.
-- CI exacta: [38923169786](https://github.com/javierdario48-star/ATRIA/actions/runs/38923169786). Repetir/verificar antes de declarar gate final.
+- CI exacta verificada: [38923169786](https://github.com/javierdario48-star/ATRIA/actions/runs/38923169786), **3/3 success** para el SHA funcional.
 - Preview funcional correspondiente al SHA de código `9ea89e`: https://night-shift-clinical-dpufwmxxc-javierdario4878-7324.vercel.app (Vercel informó READY). Esto **no acredita prueba física en Android** ni asegura que el SHA documental se haya desplegado.
 
 ## Paridad deliberadamente pendiente
