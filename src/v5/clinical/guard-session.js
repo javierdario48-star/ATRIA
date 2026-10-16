@@ -100,6 +100,19 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   resolveSpeechContext:({envelope})=>({...resolveContext({targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions}),
   respondNpc:({patientUid,text,mode})=>vegaGuidance(patientUid===nativePatient.uid?nativePatient:null,caseData,text,{mode}),
   time:()=>clock.clinicalMinute,emit:(event,snapshot)=>onChange(copy(event),copy(snapshot))});
+ function resultText(item,label){
+  if(item.status==='unconfirmed')
+   return label+': ejecución no confirmada; comprobá el estado del paciente antes de repetir.';
+  if(item.status!=='rejected')return null;
+  if(item.receipt?.message)return 'No ejecutado: '+item.receipt.message;
+  if(item.reason==='clinical-action-not-migrated')
+   return item.kind==='therapy.request'?
+    label+': no hay una regla de tratamiento validada para '+caseData.id+'. No administrado.':
+    label+': este procedimiento no está implementado para '+caseData.id+'. No ejecutado.';
+  if(item.reason==='venous-access-required')
+   return label+': necesitás una vía venosa confirmada antes de administrarlo.';
+  return label+': no ejecutado ('+(item.reason||'sin autorización')+').';
+ }
  function messages(room){
   const rows=[],announcedResults=new Set();
   for(const event of room.events){
@@ -114,10 +127,14 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     for(let i=0;i<event.clinical.length;i++){
      const item=event.clinical[i],label=labels.get(item.id)||item.id;
      const nativeText=item.receipt?.message;
-     rows.push({id:'ack:'+message.id+':'+i,name:item.kind==='history.ask'?'Paciente':'Enfermera',role:item.kind==='history.ask'?'patient':'nurse',text:nativeText?
-      (item.status==='executed'||item.kind==='history.ask'?nativeText:'No ejecutado: '+nativeText):item.status==='pending'?(item.kind==='study.request'?label+': solicitado; pendiente de resultado.':label+': indicado; en preparación, todavía no ejecutado.'):
-      item.reason==='clinical-action-not-migrated'?'Esta intervención todavía no está habilitada en la versión experimental.':
-       item.status==='executed'?label+': resultado ya disponible.':label+': no ejecutado ('+(item.reason||item.status)+').'});
+     const feedback=resultText(item,label)||
+      (nativeText|| (item.status==='pending'?
+       item.kind==='study.request'?label+': solicitado; pendiente de resultado.':
+        label+': orden recibida; pendiente de enfermería o preparación, todavía no ejecutada.':
+       label+': resultado disponible.'));
+     rows.push({id:'ack:'+message.id+':'+i,
+      name:item.kind==='history.ask'?'Paciente':'Enfermera',
+      role:item.kind==='history.ask'?'patient':'nurse',text:feedback});
     }
     if(event.npcReply?.role==='mentor')
      rows.push({id:'npc:'+message.id,name:event.npcReply.name,role:'mentor',text:event.npcReply.text});
@@ -125,7 +142,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     for(const item of event.clinical){
      const source=item.receipt?.sourceEventId||event.eventId;if(announcedResults.has(source))continue;
      announcedResults.add(source);rows.push({id:'completion:'+source,name:'Enfermera',role:'nurse',
-      text:item.status==='executed'&&item.receipt?.message?item.receipt.message:(labels.get(item.id)||item.id)+(item.status==='executed'?': resultado disponible.':': sin confirmación de resultado.')});
+      text:resultText(item,labels.get(item.id)||item.id)||
+       (item.receipt?.message||(labels.get(item.id)||item.id)+': resultado disponible.')});
     }
    }
   }
