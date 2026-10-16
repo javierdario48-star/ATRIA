@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
+import {walkVisibleRoute} from './visible-navigation.mjs';
 const h=await browserHarness(),out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results';await fs.mkdir(out,{recursive:true});
 let inspectedPage;
 try{
@@ -22,15 +23,7 @@ try{
  await send('Hola antes de enfermería');await send('Enfermera espironolactona');
  assert.equal((await state()).patient.treatments.length,0,'range rejects treatment even though chat works');
  await page.locator('#dieInput').blur();
- for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){
-  await page.waitForFunction(()=>{
-   const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
-   return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;
-  });
-  const t=await page.evaluate(()=>({p:atriaV5.snapshot().player,r:atriaV5.diagnostics().renderer}));
-  await page.locator('#game').click({position:{x:(x-t.r.camera.x)*t.r.scale+t.r.anchorX,y:(y-t.r.camera.y)*t.r.scale+t.r.anchorY}});
-  await page.waitForFunction(()=>atriaV5.snapshot().player.moving);await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
- }
+ await walkVisibleRoute(page,[[496,1060],[496,800],[400,580],[250,470],[144,420]]);
  await send('¿Desde cuándo empezó la hinchazón?');await send('¿Toma alcohol?');
  assert.match(await page.locator('#chatHistory').innerText(),/varias semanas/);
  assert.match(await page.locator('#chatHistory').innerText(),/muchos años|durante años/);
@@ -89,15 +82,7 @@ try{
  // changes too. It is not automatically added to the completed CIRR regimen.
  await page.locator('#guardButton').click();await page.locator('#caseChoice').selectOption('CIRR-001');await page.locator('[data-action="start-guard"]').click();
  assert.notEqual((await state()).patient.uid,closed.patient.uid,'new guard after reload has a different persistent patient identity');
- for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){
-  await page.waitForFunction(()=>{
-   const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
-   return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;
-  });
-  const a=await page.evaluate(()=>({p:atriaV5.snapshot().player,r:atriaV5.diagnostics().renderer}));
-  await page.locator('#game').click({position:{x:(x-a.p.x)*a.r.scale+a.r.width/2,y:(y-a.p.y)*a.r.scale+a.r.height/2}});
-  await page.waitForFunction(()=>atriaV5.snapshot().player.moving);await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
- }
+ await walkVisibleRoute(page,[[496,1060],[496,800],[400,580],[250,470],[144,420]]);
  await page.locator('#peopleButton').click();await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('paracentesis terapéutica');await page.locator('[data-action="order-therapy"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.liveVitals.hr<93.9&&atriaV5.snapshot().clinical.patient.liveVitals.rr<19.9);
