@@ -53,7 +53,9 @@ try{
  };
  await tapEntity('monitor');assert.match(await page.locator('#modalContent').innerText(),/Monitor · B1/);
  assert.match(await page.locator('#bedsideMonitor').innerText(),/desconectado/);assert(!(await state()).patient.lastVitalsKnown);
- await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor.connected);
+ await page.locator('[data-action="toggle-monitor"]').click();
+ assert.equal((await state()).patient.procedures.monitor?.connected??false,false,'nurse has not yet connected the monitor');
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor?.connected===true);
  assert((await page.locator('#bedsideMonitor').innerText()).includes('108/68'));
  await page.waitForFunction(()=>document.querySelector('#monitorEcgPath')?.getAttribute('d')?.length>500);
  const initialEcg=await page.locator('#monitorEcgPath').getAttribute('d');
@@ -61,10 +63,10 @@ try{
  assert.notEqual(await page.locator('#monitorEcgPath').getAttribute('d'),initialEcg,
   'ECG must sweep with the authoritative measured heart rate');
  await page.locator('[data-action="toggle-monitor"]').click();
- await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor.connected===false);
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor?.connected===false);
  assert.equal(await page.locator('#monitorEcgPath').count(),0,'disconnect must remove continuous ECG');
  await page.locator('[data-action="toggle-monitor"]').click();
- await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor.connected===true);
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor?.connected===true);
  await page.waitForFunction(()=>document.querySelector('#monitorEcgPath')?.getAttribute('d')?.length>10);
 
  await page.locator('#monitorOrderInput').fill('espiron');
@@ -77,7 +79,7 @@ try{
  await page.locator('#monitorOrderInput').fill('');
  await page.locator('[data-action="monitor-hint"]').click();
  assert(await page.locator('#monitorOrderSuggestions button').count()>1,'hints accessible on demand');
- await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>!atriaV5.snapshot().clinical.patient.procedures.monitor.connected);
+ await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>!atriaV5.snapshot().clinical.patient.procedures.monitor?.connected);
  const measured=(await state()).patient.lastVitalsKnown;
  await page.locator('#modalClose').click();await tapEntity('patient');
  const wheel=page.locator('#patientWheel');
@@ -113,7 +115,7 @@ try{
  // Reproject after opening the approved keyboard; do not change hitboxes or world coordinates.
  await page.locator('#keyboardToggleButton').click();await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds!==null);
  await page.waitForTimeout(400);await tapEntity('monitor');
- await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor.connected);
+ await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor?.connected);
  await page.waitForFunction(()=>{const p=atriaV5.snapshot().clinical.patient;return p.lastVitalsKnown.vitals.hr===p.liveVitals.hr;});
  await page.screenshot({path:out+'/bedside-monitor.png'});await page.locator('#modalClose').click();
  await page.setViewportSize({width:851,height:393});await page.locator('#keyboardToggleButton').click();
