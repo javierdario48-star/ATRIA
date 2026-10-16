@@ -1,7 +1,7 @@
 import {patientHTML,vitalsHTML,therapyHTML,monitorHTML,historyHTML,esc} from './clinical-panels.js';
 import {examinationHTML,renderExamination} from './examination-panel.js';
 import {setHTML} from './render-content.js';
-import {ecgPath,ecgPresentation} from '../clinical/ecg-morphology.js';
+import {ecgPath,ecgPresentation,advanceEcgPhase} from '../clinical/ecg-morphology.js';
 import {monitorOrderExamples} from './monitor-order-suggestions.js';
 
 /** UI state only. Every clinical action keeps its explicit UID and uses send().
@@ -9,7 +9,7 @@ import {monitorOrderExamples} from './monitor-order-suggestions.js';
  */
 export function createClinicalInterface({document,session,open,close,send,onTalk,notify}){
  const ui=id=>document.getElementById(id);
- let patientUid=null,regionId='general',showOrderHints=false,lastEcgAt=-Infinity;
+ let patientUid=null,regionId='general',showOrderHints=false,lastEcgAt=-Infinity,ecgCycles=0;
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
  const post=text=>send(text,{patientUid});
  function showPatient(patient){
@@ -23,7 +23,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  function showMonitor(patient){
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid||!s.patient.liveVitals){notify('Monitor clínico todavía no disponible para este caso.');return;}
   patientUid=patient.uid;
-  showOrderHints=false;lastEcgAt=-Infinity;
+  showOrderHints=false;lastEcgAt=-Infinity;ecgCycles=0;
   open('<div class="bedside-monitor-header"><span class="monitor-device-led" aria-hidden="true"></span><div><h2>Monitor · '+esc(patient.bedId)+'</h2><small>PANTALLA DE CABECERA · '+esc(patient.bedId)+'</small></div></div>'+
    '<div id="bedsideMonitor" class="bedside-monitor-screen"></div>'+
    '<section class="monitor-prescription" aria-label="Indicaciones desde el monitor">'+
@@ -99,9 +99,13 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const snapshot=state();
   if(!snapshot)return;
   const presentation=ecgPresentation(snapshot.patient);
+  const delta=lastEcgAt===-Infinity?0:Math.max(0,Math.min(.2,(now-lastEcgAt)/1000));
   lastEcgAt=now;
   if(!presentation.connected||!presentation.measured&&!(presentation.rhythmSource==='case-rule'&&['asystole','ventricular_fibrillation'].includes(presentation.rhythm)))return;
-  path.setAttribute('d',ecgPath({seconds:now/1000,hr:presentation.hr,rhythm:presentation.rhythm}));
+  const hr=presentation.hr??0;
+  ecgCycles=advanceEcgPhase(ecgCycles,delta,hr);
+  const visualSeconds=hr>0?ecgCycles*60/hr:now/1000;
+  path.setAttribute('d',ecgPath({seconds:visualSeconds,hr,rhythm:presentation.rhythm}));
  }
  function showStudies(){
   const s=state();if(!s)return;
