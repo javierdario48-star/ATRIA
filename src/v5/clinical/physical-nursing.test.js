@@ -385,3 +385,65 @@ test('C07d a second IV medicine reuses an already pending access, not a second c
  assert.deepEqual(f.world.nurseJourneySnapshot().map(x=>x.kind),['iv']);
  f.session.dispose();f.world.enterLobby();
 });
+
+test('C08c real oxygen arrival and idempotence in both native cases',async()=>{
+ for(const caseId of ['APP-001','CIRR-001']){
+  const f=fixture(caseId),before=f.session.read().patient.liveVitals;
+  const first=await f.session.post({id:'oxy',text:'Enfermera oxigeno 4 L/min'});
+  assert.deepEqual(first.clinical.map(x=>[x.id,x.status]),[['oxygen','pending']]);
+  assert.equal(f.world.nurseJourneySnapshot()[0].kind,'oxygen');
+  f.session.advance(5);await f.session.flush();
+  assert.equal(f.session.read().patient.procedures.oxygen,undefined);
+  assert.deepEqual(f.session.read().patient.administrationLog,[]);
+  await walkToCompletion(f);
+  const pt=f.session.read().patient;
+  assert.equal(pt.procedures.oxygen.flowLpm,4);
+  assert.equal(pt.administrationLog[0].sourceEventId,'C08-B1:doctor:oxy:0');
+  assert.deepEqual(pt.liveVitals,before);
+  assert.equal(f.events.filter(x=>x.type==='clinical.completed')[0].clinical[0].receipt.therapyId,'oxygen');
+  const trips=f.world.nurseJourneySnapshot().length;
+  const again=await f.session.post({id:'oxy-again',text:'Enfermera oxigeno 4 L/min'});
+  assert.equal(again.clinical[0].status,'executed');
+  assert.equal(f.world.nurseJourneySnapshot().length,trips);
+  assert.equal(f.session.read().patient.administrationLog.length,1);
+  f.session.dispose();f.world.enterLobby();
+ }
+});
+test('C08c titration and oxygen suspension use distinct physical trips',async()=>{
+ const f=fixture('CIRR-001');
+ await f.session.post({id:'start',text:'Enfermera oxigeno 4 L/min'});
+ await walkToCompletion(f);
+ const change=await f.session.post({id:'change',text:'Enfermera oxigeno 2 L/min'});
+ assert.equal(change.clinical[0].status,'pending');
+ assert.equal(f.session.read().patient.procedures.oxygen.flowLpm,4);
+ await walkToCompletion(f);
+ assert.equal(f.session.read().patient.procedures.oxygen.flowLpm,2);
+ const stop=await f.session.post({id:'stop',text:'Enfermera suspender oxigeno'});
+ assert.deepEqual(stop.clinical.map(x=>[x.kind,x.status]),[['therapy.stop','pending']]);
+ assert.equal(f.session.read().patient.procedures.oxygen.active,true);
+ await walkToCompletion(f);
+ const pt=f.session.read().patient;
+ assert.equal(pt.procedures.oxygen.flowLpm,0);
+ assert.deepEqual(pt.administrationLog.map(t=>t.action),['start','setRate','stop']);
+ assert.equal(f.world.nurseJourneySnapshot().filter(t=>t.stage==='confirmed').length,3);
+ assert.equal(f.events.filter(x=>x.type==='clinical.completed').length,3);
+ const before=f.world.nurseJourneySnapshot().length;
+ const duplicate=await f.session.post({id:'stop-again',text:'Enfermera suspender oxigeno'});
+ assert.equal(duplicate.clinical[0].reason,'oxygen-not-active');
+ assert.equal(f.world.nurseJourneySnapshot().length,before);
+ f.session.dispose();f.world.enterLobby();
+});
+test('C08c reject invalid oxygen flow/device, negations and questions without nurse movement',async()=>{
+ const f=fixture('APP-001');
+ for(const [id,text] of [['invalid','Enfermera oxigeno 20 L/min'],
+  ['device','Enfermera oxigeno mascara 4 L/min'],
+  ['ambiguous','Enfermera oxigeno 2 L/min y 4 L/min']]){
+  const ack=await f.session.post({id,text});
+  assert.notEqual(ack.clinical[0]?.status,'pending',text);
+ }
+ await f.session.post({id:'negative',text:'Enfermera no oxigeno'});
+ await f.session.post({id:'question',text:'Enfermera oxigeno?'});
+ assert.equal(f.world.nurseJourneySnapshot().length,0);
+ assert.equal(f.session.read().patient.procedures.oxygen,undefined);
+ f.session.dispose();f.world.enterLobby();
+});

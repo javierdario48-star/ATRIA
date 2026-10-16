@@ -39,3 +39,12 @@ test('patient isolation and native administration history survive truncated chat
  assert.equal(administeredTreatmentHistory(p).length,1);
  assert.equal(latestMonitorOrderState([], 'unknown'),null);
 });
+
+test('oxygen suspension follows the same pending-to-terminal receipt ledger',()=>{
+ const room={roomId:'R',events:[{type:'chat.posted',message:{id:'stop',actorId:'doc',patientUid:'P'},
+  clinical:[{kind:'therapy.stop',id:'oxygen',status:'pending'}]}]};
+ assert.equal(latestMonitorOrderState(monitorOrderLedger(room,{uid:'P'}),'stop').status,'pending');
+ room.events.push({type:'clinical.completed',patientUid:'P',eventId:'R:doc:stop:0',commandId:'stop',
+  clinical:[{kind:'therapy.stop',id:'oxygen',status:'executed',receipt:{eventId:'R:doc:stop:0',patientUid:'P'}}]});
+ assert.equal(latestMonitorOrderState(monitorOrderLedger(room,{uid:'P'}),'stop').status,'executed');
+});
