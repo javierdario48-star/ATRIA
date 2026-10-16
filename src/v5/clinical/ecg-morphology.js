@@ -37,8 +37,9 @@ export function ecgBeatAt(seconds,hr,rhythm='sinus'){
  return null;
 }
 export function ecgAmplitude(seconds,{hr=80,rhythm='sinus'}={}){
- if(!ECG_RHYTHMS[rhythm]||!Number.isFinite(hr)||hr<=0||!Number.isFinite(seconds))return 0;
+ if(!ECG_RHYTHMS[rhythm]||!Number.isFinite(seconds))return 0;
  const morph=ECG_RHYTHMS[rhythm];
+ if(morph.category!=='flat'&&morph.category!=='chaotic'&&(!Number.isFinite(hr)||hr<=0))return 0;
  if(morph.category==='flat')return 0;
  if(morph.category==='chaotic'){
   // Deterministic coarse waveform, deliberately without identifiable PQRST.
@@ -58,7 +59,7 @@ export function ecgAmplitude(seconds,{hr=80,rhythm='sinus'}={}){
  return y;
 }
 export function ecgPath({seconds=0,hr=80,rhythm='sinus',width=560,height=76,windowSeconds=4.5,samples=224}={}){
- if(!Number.isFinite(hr)||hr<=0||!ECG_RHYTHMS[rhythm])return '';
+ if(!ECG_RHYTHMS[rhythm]||(!['asystole','ventricular_fibrillation'].includes(rhythm)&&(!Number.isFinite(hr)||hr<=0)))return '';
  const out=[],baseline=height*.65,gain=height*.43;
  for(let i=0;i<=samples;i++){
   const x=i*width/samples,time=seconds-windowSeconds+(x/width)*windowSeconds;
@@ -71,11 +72,11 @@ export function ecgPath({seconds=0,hr=80,rhythm='sinus',width=560,height=76,wind
 export function ecgPresentation(patient){
  const connected=!!patient?.procedures?.monitor?.connected&&!patient.caseEnded;
  const vitals=patient?.lastVitalsKnown?.vitals;
- const hr=Number(vitals?.hr);
+ const hr=vitals&&Number.isFinite(vitals.hr)?vitals.hr:null;
  const explicit=patient?.ecg?.rhythm;
  const rhythm=explicit&&ECG_RHYTHMS[explicit]?explicit:'sinus';
- return Object.freeze({connected,measured:Number.isFinite(hr)&&hr>0,
-  hr:Number.isFinite(hr)&&hr>0?hr:null,rhythm,
+ return Object.freeze({connected,measured:hr!==null,
+  hr,rhythm,
   rhythmSource:explicit&&ECG_RHYTHMS[explicit]?'case-rule':'baseline-illustration',
   label:ECG_RHYTHMS[rhythm].label});
 }
