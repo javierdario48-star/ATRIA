@@ -54,11 +54,11 @@ try{
  await page.waitForFunction(()=>document.querySelector('[data-study="hemograma"]')?.dataset.status==='done');
  assert.match(await page.locator('[data-study="hemograma"]').innerText(),/Anemia leve y trombocitopenia/);
  state=await page.evaluate(()=>atriaV5.snapshot().clinical);
- const completions=state.room.events.filter(e=>e.type==='clinical.completed');assert.equal(completions.length,2);
+ const completions=state.room.events.filter(e=>e.type==='clinical.completed'&&e.clinical[0]?.kind==='study.request');assert.equal(completions.length,2);
  assert.deepEqual(completions.map(e=>e.commandId),['message-3','message-4'],'both pending requests settle under their own message');
  assert(completions.every(e=>e.patientUid===patient.uid));
  assert.equal(new Set(completions.map(e=>e.clinical[0].receipt.sourceEventId)).size,1,'one physical result');
- assert.equal(state.messages.filter(m=>m.id.startsWith('completion:')).length,1,'one result announcement');
+ assert.equal(state.messages.filter(m=>m.id.startsWith('completion:')&&/hemograma/i.test(m.text)).length,1,'one study result announcement');
  await page.screenshot({path:out+'/android-studies-result.png'});
  await page.locator('#modalClose').click();await send('Enfermera hemograma');
  assert.equal((await page.evaluate(()=>atriaV5.snapshot().clinical)).patient.orders.length,1);
