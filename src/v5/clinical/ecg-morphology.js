@@ -14,6 +14,15 @@ export const ECG_RHYTHMS=Object.freeze({
  asystole:Object.freeze({id:'asystole',label:'Asistolia',category:'flat',p:false,qrs:'none',st:0}),
  st_elevation:Object.freeze({id:'st_elevation',label:'Elevación del segmento ST (patrón ilustrativo)',category:'organized',p:true,qrs:'narrow',st:0.24})
 });
+/** Declarative case ECG seed, intentionally separate from dynamic physiology.
+ * Future case rules may update patient.ecg, but the monitor never does so.
+ */
+export function initialCaseEcg(c){
+ if(c?.ecg==null)return null;
+ if(typeof c.ecg!=='object'||!ECG_RHYTHMS[c.ecg.rhythm])
+  throw Error('invalid case ECG rhythm');
+ return {rhythm:c.ecg.rhythm};
+}
 const gaussian=(x,c,w)=>Math.exp(-.5*((x-c)/w)**2);
 const fract=x=>x-Math.floor(x);
 const AF_PATTERN=Object.freeze([.7,1.3,.85,1.15,1.4,.65,1.1,.85]);
