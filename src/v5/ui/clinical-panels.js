@@ -7,11 +7,33 @@ export function vitalsHTML(patient){
  const v=patient.lastVitalsKnown.vitals;
  return '<small>'+(patient.caseEnded?'Última medición al cierre':patient.procedures?.monitor?.connected?'Monitorización continua':'Última medición registrada')+'</small><b>PA '+Math.round(v.sys)+'/'+Math.round(v.dia)+'</b> · FC '+Math.round(v.hr)+' lpm · FR '+Math.round(v.rr)+' · SpO₂ '+Math.round(v.spo2)+'% · '+v.temp.toFixed(1)+' °C';
 }
+/** Bedside device view: read-only snapshot. No ECG diagnosis or fabricated live data.
+ * Animated pulse trace is a presentation cue, NOT a derived ECG measurement.
+ */
 export function monitorHTML(patient){
  const connected=!!patient.procedures?.monitor?.connected&&!patient.caseEnded;
- return '<div class="monitor-state '+(connected?'connected':'')+'"><b>'+(patient.caseEnded?'Atención cerrada':connected?'Monitorización continua':'Monitor desconectado')+'</b>'+
-  (patient.caseEnded?'<small>Registro final de la atención · sin monitorización continua.</small>':connected?'<small>Paciente conectado · observaciones actuales</small>':'<small>Conectá el monitor o registrá una medición puntual.</small>')+'</div>'+
-  '<div class="clinical-section">'+vitalsHTML(patient)+'</div>';
+ const measured=patient.lastVitalsKnown?.vitals||null;
+ const shown=(name,format)=>measured&&Number.isFinite(measured[name])?format(measured[name]):'—';
+ const status=patient.caseEnded?'ATENCIÓN FINALIZADA':connected?'MONITORIZACIÓN ACTIVA':'MONITOR DESCONECTADO';
+ const note=patient.caseEnded?'Registro final · sin vigilancia continua':
+  connected?'Valores medidos · seguimiento continuo':'Última lectura disponible · sin vigilancia continua';
+ const trace=connected&&measured;
+ const metric=(name,value,unit,className)=>'<div class="device-value '+className+'"><span>'+name+'</span><strong>'+value+
+  '</strong><small>'+unit+'</small></div>';
+ return '<div class="device-top"><span class="device-indicator '+(connected?'active':'')+'"></span><span>'+status+
+  '</span><span class="device-patient">PACIENTE · '+esc(patient.uid)+'</span></div>'+
+  '<div class="device-readings" aria-label="Última medición conocida">'+
+  metric('FC',shown('hr',Math.round),'lpm','heart')+
+  metric('SPO₂',shown('spo2',Math.round),'%','oxygen')+
+  metric('PRESIÓN ARTERIAL',measured?shown('sys',Math.round)+'/'+shown('dia',Math.round):'—','mmHg','pressure')+
+  metric('FR',shown('rr',Math.round),'rpm','breath')+
+  metric('TEMPERATURA',shown('temp',n=>n.toFixed(1)),'°C','temperature')+'</div>'+
+  '<div class="device-trace '+(trace?'live':'idle')+'" aria-label="'+
+   (trace?'Trazo visual de actividad; no representa un ECG diagnóstico':'Sin señal continua disponible')+'">'+
+  (trace?'<svg viewBox="0 0 560 75" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 H66 L79 34 L87 40 L98 40 L106 55 L116 7 L125 61 L137 40 H202 L215 34 L223 40 L234 40 L242 55 L252 7 L261 61 L273 40 H338 L351 34 L359 40 L370 40 L378 55 L388 7 L397 61 L409 40 H474 L487 34 L495 40 L506 40 L514 55 L524 7 L533 61 L545 40 H560"/></svg>':
+  '<div class="device-no-signal">SIN TRAZADO CONTINUO</div>')+'</div>'+
+  '<div class="device-bottom"><span>'+note+'</span><span>'+
+  (trace?'TRAZO ILUSTRATIVO · NO ECG':'SIN DATOS ELECTROCARDIOGRÁFICOS')+'</span></div>';
 }
 export function examHTML(patient){return Object.entries(patient.exam||{}).map(([id,data])=>
  '<section class="clinical-section"><b>'+esc(examNames[id])+'</b>'+data.rows.map(row=>'<p><strong>'+esc(row.organ)+':</strong> '+esc(row.text)+'</p>').join('')+'</section>').join('')||'<p>Elegí una técnica para explorar al paciente.</p>';}
