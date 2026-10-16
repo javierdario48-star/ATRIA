@@ -65,7 +65,7 @@ Al ejecutar CI sobre el HEAD documental, el recorrido CIRR encontró un tap de Q
 
 - SHA final de modificación de QA (sin cambios funcionales): `08b6b4bd65dfa4dbfd4db3f8bed66fd0ed991bd7`.
 - Comparación con código aprobado `0b36884...`: **13 commits ahead, 0 behind**; archivos distintos solo `docs/**` y `qa/v5/{app,cirr,studies,keyboard-camera}-browser.mjs`.
-- Última CI que incorpora toda la corrección QA: [38840488381](https://github.com/javierdario48-star/ATRIA/actions/runs/38840488381). Consultar su estado final: el trabajo `clean-core-contract` y el `independent-game-browser` se verificaron `success`; la regresión histórica seguía `in_progress` durante esta actualización, sin fallos reportados entonces. No declarar 3/3 hasta comprobar el resultado final.
+- Última CI que incorpora toda la corrección QA: [38840488381](https://github.com/javierdario48-star/ATRIA/actions/runs/38840488381). **Verificada terminada: `status=completed`, `conclusion=success`, los tres trabajos `clean-core-contract`, `independent-game-browser` y `preserved-historical-regression` concluyeron `success` (3/3).**
 - El código funcional se mantiene **idéntico** al de la preview aprobada; la CI completa de ese código `0b36884...` ya había aprobado 3/3 en [38836248252](https://github.com/javierdario48-star/ATRIA/actions/runs/38836248252).
 - Los despliegues posteriores del mismo proyecto desde esta rama pueden tener SHAs documentales o de QA diferentes; no afirmar que se probó físicamente esa URL si solo está READY en Vercel.
 
