@@ -1,5 +1,11 @@
 # ATRIA 5.0 — C08.d: signos vitales físicos y monitor sin visitas innecesarias
 
+## Certificación posterior al checkpoint
+
+**CI definitiva del ejecutable C07.e/C08.d:** [38976811507](https://github.com/javierdario48-star/ATRIA/actions/runs/38976811507) **completed/success 3/3**, commit `d32440a657537dce81288791ce0ebf847eb47d05`. Núcleo **206/206 V5 + 39/39 core**, navegador completo Chromium móvil y regresión histórica V4 aprobados. Los commits siguientes hasta el presente handoff solo son documentales. Sin preview READY matching comprobada; Android físico no probado.
+
+Esta actualización sustituye las advertencias de CI pendiente que figuraban al redactar el informe inicialmente. Los antiguos resultados RED se mantienen como trazabilidad; no representan fallos abiertos del ejecutable verificado.
+
 ## Recuperación y autoridad
 - Repositorio `javierdario48-star/ATRIA`; rama única `atria-5.0-core-rebuild-experimental`.
 - Baseline previo: `9995fd34e8e3d051a546a8bded2879708378075f`, CI [38973439498](https://github.com/javierdario48-star/ATRIA/actions/runs/38973439498) **3/3 success**.
