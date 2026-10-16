@@ -24,7 +24,12 @@ try{
   await page.screenshot({path:out+'/'+name+'-title.png'});
   await page.locator('#enterButton').click();
   assert.equal((await page.evaluate(()=>atriaV5.snapshot())).phase,'lobby');
+  // The artwork comparator expects the original center. Close the preview
+  // keyboard for that specific control screenshot, then restore it for play.
+  const opened=await page.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true';
+  if(opened){await page.locator('#keyboardToggleButton').click();await page.waitForTimeout(1000);}
   await page.screenshot({path:out+'/'+name+'-lobby.png'});
+  if(opened)await page.locator('#keyboardToggleButton').click();
   const initial=await page.evaluate(()=>({s:atriaV5.snapshot(),d:atriaV5.diagnostics(),r:resourceMetrics()}));
   assert.equal(initial.d.renderer.images,13);assert.equal(initial.d.raf,1);assert.equal(initial.r.timers,0);
   // Real canvas pointer events, not direct world mutations.
