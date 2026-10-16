@@ -138,7 +138,17 @@ try{
   [['oxygen','pending'],['iv','pending']],
   'both oxygen and IV have distinct real pending nurse jobs');
  await page.waitForFunction(()=>document.querySelector('#monitorOrderFeedback')?.dataset.status==='pending',null,{timeout:10000});
- assert.equal((await state()).patient.procedures.oxygen,undefined);
+ const initialOxygen=await state();
+ if(initialOxygen.patient.procedures.oxygen?.active){
+  // Spatial NPC movement may finish during Playwright's async DOM inspection.
+  // Confirm native authorization, not a particular wall-clock snapshot instant.
+  await page.waitForFunction(uid=>{
+   const c=atriaV5.snapshot().clinical;
+   return c.room.events.some(e=>e.type==='clinical.completed'&&e.clinical.some(x=>
+    x.id==='oxygen'&&x.status==='executed'&&x.receipt?.patientUid===uid&&
+    x.receipt?.eventId===e.eventId));
+  },uid,{timeout:10000});
+ }
  const afterSubmit=await state();
  if(afterSubmit.patient.venousAccessCount){
   // Other bedside nurses can confirm access before this browser read.
