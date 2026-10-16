@@ -61,22 +61,25 @@ try{
  await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('ceftriaxona 1 g y metronidazol 500 mg');
  await page.locator('[data-action="order-therapy"]').click();
- assert.equal((await state()).patient.administrationLog.length,0,'IV access required, not a fake administration');
- await send('Enfermera una vía y monitor');
+ const autoOrder=(await state()).room.events.filter(e=>e.type==='chat.posted').at(-1);
+ assert.deepEqual(autoOrder.clinical.map(x=>[x.id,x.status]),
+  [['iv','pending'],['ceftriaxone','pending'],['metronidazole','pending']],
+  'medication-only order must visibly request a line before either medicine');
+ assert.equal((await state()).patient.venousAccessCount,0,'access remains pending during nurse travel');
+ assert.equal((await state()).patient.administrationLog.length,0);
+ await send('Enfermera monitor');
  const bedsidePending=await page.evaluate(()=>atriaV5.snapshot());
  assert.equal(bedsidePending.clinical.patient.venousAccessCount,0,
   'nursing orders remain pending while the real NPC travels');
  assert.equal(bedsidePending.clinical.patient.procedures.monitor?.connected??false,false);
  assert(bedsidePending.nurses.some(n=>n.journeyId),'nurse must begin a physical hospital path');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.venousAccessCount===1);
- await page.locator('#peopleButton').click();
- await page.locator('[data-action="treatment"]').click();
- await page.locator('#therapyOrder').fill('ceftriaxona 1 g y metronidazol 500 mg');
- await page.locator('[data-action="order-therapy"]').click();
  const pending=await state();
  assert.equal(pending.patient.pendingTreatments.length,0,'no medicine is preparing before an NPC arrives');
  assert.equal(pending.patient.administrationLog.length,0);
  assert((await page.evaluate(()=>atriaV5.snapshot())).nurses.some(n=>n.journeyId),'two antibiotics require nursing work');
+ assert.equal((await state()).room.events.filter(e=>e.type==='clinical.completed'&&e.clinical[0]?.id==='iv').length,1,
+  'automatic IV is only performed once');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.administrationLog.length===2);
  const delivered=await state();
  assert.deepEqual(delivered.patient.administrationLog.map(x=>x.id),['ceftriaxone','metronidazole']);
