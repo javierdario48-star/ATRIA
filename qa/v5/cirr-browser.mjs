@@ -59,7 +59,9 @@ try{
  assert.equal((await state()).patient.treatments.length,0,'uncertified dose has no hidden default administration');
  await page.locator('#peopleButton').click();await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('espironolactona 100 mg oral');await page.locator('[data-action="order-therapy"]').click();
- const pending=await state();assert.equal(pending.patient.treatments.length,0);assert.equal(pending.patient.pendingTreatments.length,1);
+ const pending=await state();assert.equal(pending.patient.treatments.length,0);
+ assert.equal(pending.patient.pendingTreatments.length,0,'preparation cannot start before nurse reaches B1');
+ assert((await page.evaluate(()=>atriaV5.snapshot())).nurses.some(n=>n.journeyId),'nurse must physically take the medicine');
  await send('Enfermera espironolactona 100 mg oral');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.administrationLog.length===1);
  const administered=await state(),t=administered.patient.administrationLog[0];
