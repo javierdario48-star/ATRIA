@@ -19,7 +19,7 @@ const routeReason={
 /** Local authoritative clinical composition. C1 studies and C2 native CIRR
  * care mutate the same owned patient through one port; UI never mutates it.
  */
-export function createGuardSession({roomId,mode,actorId,actorName,patient,content,resolveContext,onChange=()=>{},progress=createProgressionLedger()}){
+export function createGuardSession({roomId,mode,actorId,actorName,patient,content,resolveContext,onChange=()=>{},progress=createProgressionLedger(),nursing=null}){
  if(!['solo','apprentice'].includes(mode)||typeof resolveContext!=='function')throw Error('local clinical mode/context required');
  const caseData=content.cases.find(c=>c.id===patient.caseId);if(!caseData)throw Error('unknown patient case');
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[]};
@@ -28,7 +28,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   caseData.id==='APP-001'?createAppCare(nativePatient,caseData,options):null;
  const studies=createStudyService(content.cases),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
  const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))];
- const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map();
+ const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map();
+ if(nursing&&(!['enqueue','takeArrivals','accept'].every(k=>typeof nursing[k]==='function')))
+  throw Error('nursing adapter needs enqueue, takeArrivals and accept');
  for(const item of [...content.therapies,...caseData.interventions])labels.set(item.id,item.label);
  const guardClock=createGuardClock(actorId);let clock=guardClock.read(),disposed=false;
  const credentials=Object.freeze({roomId,actorId,nonce:Symbol('local-room')});
@@ -36,6 +38,19 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   validateReceipt:assertMatchingClinicalReceipt,
   withPatient:async(uid,fn)=>{if(uid!==nativePatient.uid)throw Error('patient not in this room');return fn(nativePatient);},
   invoke:async({eventId,actorId,patientUid,intent})=>{
+   const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor'].includes(intent.id)||
+    intent.kind==='monitor.set'&&intent.id==='connect');
+   // Never mutate the clinical patient merely because a nurse received an
+   // instruction. A genuine world arrival later invokes the SAME case executor.
+   if(physical){
+    if(nativePatient.caseEnded)return {status:'rejected',patientUid,eventId,reason:'patient-not-active'};
+    const travel=nursing.enqueue({eventId,patientUid,kind:intent.id});
+    if(['queued','travelling'].includes(travel.status)){
+     pendingNurseJobs.set(eventId,{eventId,actorId,patientUid,intent:copy(intent)});
+     return {status:'pending',patientUid,eventId};
+    }
+    return {status:'rejected',patientUid,eventId,reason:'nurse-'+travel.status};
+   }
    if(intent.kind==='study.request'){
     const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute});
     if(result.status==='pending'){
@@ -104,6 +119,29 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    return copy(ready);
   },
   flush:()=>authority.flush(),
+  /** Drain ONLY arrivals issued by the existing spatial world. The UI cannot
+   * fabricate an arrival, execute a native intervention or mint its receipt.
+   * Completion is committed through the original port and room authority.
+   */
+  finishNurseArrivals(){
+   if(disposed||!nursing)return [];
+   const results=[];
+   for(const arrival of nursing.takeArrivals()){
+    const task=pendingNurseJobs.get(arrival.eventId);
+    if(!task||task.patientUid!==arrival.patientUid)continue;
+    const result=care?.execute(task,clock)??{
+     status:'rejected',patientUid:task.patientUid,eventId:task.eventId,reason:'clinical-action-not-migrated'};
+    if(result.status==='pending')throw Error('physical procedure cannot remain pending after arrival');
+    port.complete(result);
+    pendingNurseJobs.delete(arrival.eventId);
+    const spatial=nursing.accept({eventId:arrival.eventId,patientUid:arrival.patientUid,
+     status:result.status,receipt:result.receipt});
+    if(spatial.status!==('executed'===result.status?'confirmed':'rejected'))
+     throw Error('nursing spatial acknowledgment mismatch');
+    results.push(copy(result));
+   }
+   return results;
+  },
   // Minimal read-only projection for 30Hz ECG paint; never clone room events or
   // recalculate closure from the presentation loop. Authority owns all writes.
   monitorRead(uid){
@@ -115,6 +153,6 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   },
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    closure:care?copy(care.readiness(caseData.id==='APP-001'?'quirofano':'sala')):null};},
-  dispose(){if(disposed)return;disposed=true;pendingStudyRequests.clear();care?.dispose();authority.dispose();}
+  dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }
