@@ -22,7 +22,7 @@ try{
  await page.locator('#dieInput').blur();
  async function walkTo(x,y){
   const state=await page.evaluate(()=>({s:atriaV5.snapshot(),r:atriaV5.diagnostics().renderer}));
-  const px=(x-state.s.player.x)*state.r.scale+state.r.width/2,py=(y-state.s.player.y)*state.r.scale+state.r.height/2;
+  const px=(x-state.r.camera.x)*state.r.scale+state.r.anchorX,py=(y-state.r.camera.y)*state.r.scale+state.r.anchorY;
   assert(px>=0&&px<state.r.width&&py>65&&py<state.r.height-60,'waypoint is a real visible canvas point');
   await page.locator('#game').click({position:{x:px,y:py}});
   await page.waitForFunction(()=>atriaV5.snapshot().player.moving);
