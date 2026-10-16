@@ -125,3 +125,48 @@ test('no wrong-patient action or later work after disposal',async()=>{
  f.s.dispose();assert.throws(()=>f.s.advance(3),/disposed/);
  assert.equal(f.s.read().patient.administrationLog.length,0);
 });
+
+test('C07 invalid repeat doses and routes cannot attach to an APP nursing job already preparing',async()=>{
+ const f=fixture();
+ await f.send('Enfermera una vía');
+ const initial=await f.send('Enfermera ceftriaxona 1 g','correct');
+ assert.equal(initial.clinical[0].status,'pending');
+ for(const [text,reason] of [
+  ['Enfermera ceftriaxona 2 g','unsupported-dose'],
+  ['Enfermera ceftriaxona 1 g oral','unsupported-dose-route']
+ ]){
+  const r=await f.send(text);
+  assert.equal(r.clinical.length,1,text+' must be parsed as a real nursing order');
+  assert.equal(r.clinical[0].status,'rejected',text+' must not join the pending administration');
+  assert.equal(r.clinical[0].reason,reason);
+ }
+ assert.equal(f.s.read().patient.pendingTreatments.length,1,'only original preparation remains');
+ f.s.advance(1.6);await f.s.flush();
+ const p=f.s.read().patient;
+ assert.equal(p.administrationLog.length,1);
+ assert.equal(p.administrationLog[0].dose.amount,1000);
+ assert.equal(p.administrationLog[0].sourceEventId,'APP-ROOM:doctor:correct:0');
+ assert.equal(f.s.read().messages.filter(x=>x.id.startsWith('completion:')).length,1,
+  'exactly one successful nursing completion');
+ f.s.dispose();
+});
+test('C07 post-administration wrong-dose repeat never claims the existing APP receipt',async()=>{
+ const f=fixture();
+ await f.send('Enfermera una vía');
+ await f.send('Enfermera ceftriaxona 1 g','correct');
+ f.s.advance(1.6);await f.s.flush();
+ const p=f.s.read().patient;
+ assert.equal(p.administrationLog.length,1);
+ for(const text of ['Enfermera ceftriaxona 2 g','Enfermera ceftriaxona 1 g oral']){
+  const r=await f.send(text);
+  assert.equal(r.clinical.length,1);
+  assert.equal(r.clinical[0].status,'rejected',text);
+  assert.equal(r.clinical[0].receipt?.therapyId,undefined,'invalid dose cannot be reused');
+ }
+ const valid=await f.send('Enfermera ceftriaxona 1 g','valid-repeat');
+ assert.equal(valid.clinical[0].status,'executed');
+ assert.equal(valid.clinical[0].receipt.reused,true);
+ assert.equal(valid.clinical[0].receipt.sourceEventId,'APP-ROOM:doctor:correct:0');
+ assert.equal(f.s.read().patient.administrationLog.length,1);
+ f.s.dispose();
+});
