@@ -33,6 +33,8 @@ jobs:
         run: node qa/v5/characterize-monitor-native.mjs
       - name: Native patient profiles, compound pain questions and follow-ups remain equivalent
         run: node qa/v5/characterize-dialogue-native.mjs
+      - name: Enforce V5 architectural boundary, no legacy patchers or parallel animation loops
+        run: node scripts/audit-v5-boundary.mjs
       - name: Build independent V5 module distribution
         run: npm run build:v5-core
       - name: Build independent executable V5 game
