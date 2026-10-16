@@ -3,7 +3,7 @@ import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {initialCirrVitals,parseCirrDose,advanceCirrVitals} from './native-cirr.js';
 import {nativeCaseXP} from './progression.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
-import {executeObservation,recordVitalMeasurement} from './observations.js';
+import {executeObservation,executeVenousAccess,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 
 const copy=x=>structuredClone(x);
@@ -22,7 +22,7 @@ export function closureSnapshot(p,c,destination){return {
 export function createCirrCare(p,c,{mode,defaultDoses,progress}){
  if(c.id!=='CIRR-001')throw Error('C2 care only supports CIRR-001');
  Object.assign(p,{liveVitals:initialCirrVitals(c),baselineVitals:initialCirrVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,lastVitalsKnown:null,
-  diagnosis:'',reassessments:0,lastReassessment:null,pendingTreatments:[],administrationLog:[],procedures:{},caseEnded:false,closure:null});
+  diagnosis:'',reassessments:0,lastReassessment:null,pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,caseEnded:false,closure:null});
  initializeExamination(p);
  const pending=new Map();
  const rejected=(cmd,reason,message)=>({status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason,
@@ -49,6 +49,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
    const dialogue=executePatientDialogue(p,c,cmd,clock);if(dialogue)return dialogue;
    const exam=executePhysicalExam(p,c,cmd,clock);if(exam)return exam;
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
+   const access=executeVenousAccess(p,cmd);if(access)return access;
    if(intent.kind==='therapy.request'&&['espironolactona','sal_restriccion','paracentesis_ter'].includes(intent.id)){
     let dose=null;
     if(intent.id==='espironolactona'){try{dose=parseCirrDose(intent.clause||intent.sourceText,defaultDoses?.espironolactona);}catch(error){return rejected(cmd,error.message,'Dosis o vía no validada en C2. Esquema disponible: espironolactona 100 mg oral. No administrado.');}}
