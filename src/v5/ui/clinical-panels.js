@@ -1,5 +1,6 @@
 // Presentation only: accepts confirmed snapshots and emits markup. No executor.
 import {EXAM_TECHNIQUES} from '../clinical/physical-exam.js';
+import {ecgPresentation} from '../clinical/ecg-morphology.js';
 export const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const examNames=EXAM_TECHNIQUES;
 export function vitalsHTML(patient){
@@ -17,7 +18,8 @@ export function monitorHTML(patient){
  const status=patient.caseEnded?'Atención cerrada':connected?'Monitorización continua':'Monitor desconectado';
  const note=patient.caseEnded?'Registro final · sin vigilancia continua':
   connected?'Valores medidos · seguimiento continuo':'Última lectura disponible · sin vigilancia continua';
- const trace=connected&&measured;
+ const ecg=ecgPresentation(patient);
+ const trace=ecg.connected&&(ecg.measured||['asystole','ventricular_fibrillation'].includes(ecg.rhythm)&&ecg.rhythmSource==='case-rule');
  const metric=(name,value,unit,className)=>'<div class="device-value '+className+'"><span>'+name+'</span><strong>'+value+
   '</strong><small>'+unit+'</small></div>';
  return '<div class="device-top"><span class="device-indicator '+(connected?'active':'')+'"></span><span>'+status+
@@ -29,11 +31,12 @@ export function monitorHTML(patient){
   metric('FR',shown('rr',Math.round),'rpm','breath')+
   metric('TEMPERATURA',shown('temp',n=>n.toFixed(1)),'°C','temperature')+'</div>'+
   '<div class="device-trace '+(trace?'live':'idle')+'" aria-label="'+
-   (trace?'Trazo visual de actividad; no representa un ECG diagnóstico':'Sin señal continua disponible')+'">'+
-  (trace?'<svg viewBox="0 0 560 75" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 H66 L79 34 L87 40 L98 40 L106 55 L116 7 L125 61 L137 40 H202 L215 34 L223 40 L234 40 L242 55 L252 7 L261 61 L273 40 H338 L351 34 L359 40 L370 40 L378 55 L388 7 L397 61 L409 40 H474 L487 34 L495 40 L506 40 L514 55 L524 7 L533 61 L545 40 H560"/></svg>':
-  '<div class="device-no-signal">SIN TRAZADO CONTINUO</div>')+'</div>'+
+   (trace?'ECG simulado a partir del ritmo autorizado para este paciente; no es un registro diagnóstico':'Sin señal continua disponible')+'">'+
+  (trace?'<svg viewBox="0 0 560 76" preserveAspectRatio="none" aria-hidden="true"><path id="monitorEcgPath" d=""/></svg>':
+   '<div class="device-no-signal">SIN TRAZADO CONTINUO</div>')+'</div>'+
   '<div class="device-bottom"><span>'+note+'</span><span>'+
-  (trace?'TRAZO ILUSTRATIVO · NO ECG':'SIN DATOS ELECTROCARDIOGRÁFICOS')+'</span></div>';
+  (trace?esc(ecg.label)+' · '+(ecg.rhythmSource==='case-rule'?'PATRÓN DEL CASO':'MODELO SINUSAL')+' · SIMULACIÓN, NO ECG DIAGNÓSTICO':
+   'SIN DATOS ELECTROCARDIOGRÁFICOS')+'</span></div>';
 }
 export function examHTML(patient){return Object.entries(patient.exam||{}).map(([id,data])=>
  '<section class="clinical-section"><b>'+esc(examNames[id])+'</b>'+data.rows.map(row=>'<p><strong>'+esc(row.organ)+':</strong> '+esc(row.text)+'</p>').join('')+'</section>').join('')||'<p>Elegí una técnica para explorar al paciente.</p>';}
