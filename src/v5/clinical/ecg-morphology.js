@@ -67,6 +67,13 @@ export function ecgAmplitude(seconds,{hr=80,rhythm='sinus'}={}){
  if(morph.st)y+=morph.st*(1/(1+Math.exp(-(t-.342)/.008))-1/(1+Math.exp(-(t-.447)/.009)));
  return y;
 }
+/** Integrated presentation-only beat phase avoids a temporal jump when a treatment
+ * changes measured HR. Never changes the clinical heart rate itself.
+ */
+export function advanceEcgPhase(cycles,dt,hr){
+ if(!Number.isFinite(cycles)||!Number.isFinite(dt)||dt<0||!Number.isFinite(hr)||hr<0)throw Error('invalid ECG presentation clock');
+ return cycles+dt*hr/60;
+}
 export function ecgPath({seconds=0,hr=80,rhythm='sinus',width=560,height=76,windowSeconds=4.5,samples=224}={}){
  if(!ECG_RHYTHMS[rhythm]||(!['asystole','ventricular_fibrillation'].includes(rhythm)&&(!Number.isFinite(hr)||hr<=0)))return '';
  const out=[],baseline=height*.65,gain=height*.43;
