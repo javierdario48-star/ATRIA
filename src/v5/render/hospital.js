@@ -54,7 +54,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   anchorY=pixel(anchorY===null?desiredY:anchorY+(desiredY-anchorY)*(1-Math.exp(-dt/.10)));
   // Snap the camera origin to device pixels. Otherwise canvas texture
   // resampling produces the shimmer visible during subpixel walks on mobile.
-  camera={x:pixel(world.player.x*scale)/scale,y:pixel(world.player.y*scale)/scale};
+  camera=valid?{x:pixel(world.player.x*scale)/scale,y:pixel(world.player.y*scale)/scale}:{x:world.player.x,y:world.player.y};
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
   const tile=512*scale,left=camera.x-anchorX/scale,top=camera.y-anchorY/scale;
   const sx=-((left*scale)%tile+tile)%tile,sy=-((top*scale)%tile+tile)%tile;
