@@ -559,3 +559,20 @@ test('C08d direct physician vitals remain immediate without a fictitious nursing
  assert.equal(f.world.nurseJourneySnapshot().length,0);
  f.session.dispose();f.world.enterLobby();
 });
+
+test('C08d repeated confirmed monitor order never creates a redundant bedside trip',async()=>{
+ const f=fixture('APP-001');
+ const first=await f.session.post({id:'monitor-1',text:'Enfermera monitor'});
+ assert.equal(first.clinical[0].status,'pending');
+ await walkToCompletion(f);
+ const old=f.session.read().patient.procedures.monitor.eventId;
+ const journeys=f.world.nurseJourneySnapshot().length;
+ const second=await f.session.post({id:'monitor-2',text:'Enfermera monitor'});
+ assert.equal(second.clinical[0].status,'executed');
+ assert.equal(second.clinical[0].receipt.connected,true);
+ assert.equal(f.world.nurseJourneySnapshot().length,journeys);
+ assert.equal(f.session.read().patient.procedures.monitor.eventId,old);
+ assert.equal(f.session.read().patient.venousAccessCount,0);
+ assert.deepEqual(f.session.read().patient.administrationLog,[]);
+ f.session.dispose();f.world.enterLobby();
+});

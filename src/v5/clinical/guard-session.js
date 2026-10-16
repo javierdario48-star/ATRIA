@@ -76,6 +76,12 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      }
      return {status:'rejected',patientUid,eventId,reason:'venous-access-required'};
     }
+    // An already connected bedside monitor is an existing verified setup,
+    // not a reason to send a second nurse to connect the same cables.
+    if((intent.kind==='procedure.request'&&intent.id==='monitor'||
+        intent.kind==='monitor.set'&&intent.id==='connect')&&
+       nativePatient.procedures.monitor?.connected)
+     return care.execute({eventId,actorId,patientUid,intent},clock);
     // Repeated requests for access that already exists should not schedule
     // fictitious second cannulation; two requested lines still need two.
     if(intent.kind==='procedure.request'&&intent.id==='iv'&&
