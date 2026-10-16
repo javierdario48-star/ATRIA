@@ -520,3 +520,42 @@ test('C07e an oxygen job and automatic IV medicines in parallel never share a fa
  assert.equal(new Set(f.events.filter(e=>e.type==='clinical.completed').map(e=>e.eventId)).size,4);
  f.session.dispose();f.world.enterLobby();
 });
+
+
+test('C08d nurse spot-vitals are measured only after reaching the bedside',async()=>{
+ for(const caseId of ['APP-001','CIRR-001']){
+  const f=fixture(caseId),base=f.session.read().patient.liveVitals;
+  const ack=await f.session.post({id:'nurse-vitals',text:'Enfermera signos vitales'});
+  assert.deepEqual(ack.clinical.map(x=>[x.kind,x.id,x.status]),[['procedure.request','vitals','pending']]);
+  assert.equal(f.session.read().patient.lastVitalsKnown,null);
+  assert.equal(f.world.nurseJourneySnapshot()[0].kind,'vitals');
+  f.session.advance(6);await f.session.flush();
+  assert.equal(f.session.read().patient.lastVitalsKnown,null,'clinical time alone cannot fabricate nurse measurement');
+  assert.equal(f.events.filter(e=>e.type==='clinical.completed').length,0);
+  await walkToCompletion(f);
+  const measured=f.session.read().patient;
+  assert.equal(measured.lastVitalsKnown.source,'spot');
+  assert.equal(measured.lastVitalsKnown.eventId,'C08-B1:doctor:nurse-vitals:0');
+  assert.equal(measured.lastVitalsKnown.patientUid,f.patient.uid);
+  assert.deepEqual(measured.lastVitalsKnown.vitals,measured.liveVitals);
+  assert.deepEqual(measured.liveVitals,base,'observation does not write native physiology');
+  assert.equal(measured.procedures.monitor?.connected??false,false);
+  assert.deepEqual(measured.administrationLog,[]);
+  assert.equal(f.events.filter(e=>e.type==='clinical.completed').length,1);
+  const receipt=f.events.find(e=>e.type==='clinical.completed').clinical[0].receipt;
+  assert.equal(receipt.kind,'procedure.request');
+  assert.equal(receipt.id,'vitals');
+  assert.equal(receipt.patientUid,f.patient.uid);
+  assert.equal(receipt.eventId,measured.lastVitalsKnown.eventId);
+  f.session.dispose();f.world.enterLobby();
+ }
+});
+test('C08d direct physician vitals remain immediate without a fictitious nursing trip',async()=>{
+ const f=fixture('CIRR-001');
+ const measurement=await f.session.post({id:'doctor-vitals',text:'/signos'});
+ assert.equal(measurement.clinical[0].status,'executed');
+ assert.equal(f.session.read().patient.lastVitalsKnown.source,'spot');
+ assert.equal(f.session.read().patient.lastVitalsKnown.eventId,'C08-B1:doctor:doctor-vitals:0');
+ assert.equal(f.world.nurseJourneySnapshot().length,0);
+ f.session.dispose();f.world.enterLobby();
+});

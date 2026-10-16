@@ -46,7 +46,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    const oxygenAction=!!care&&intent.id==='oxygen'&&['therapy.request','therapy.stop'].includes(intent.kind);
    const cirrBedside=caseData.id==='CIRR-001'&&intent.kind==='therapy.request'&&
     ['espironolactona','paracentesis_ter'].includes(intent.id);
-   const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor'].includes(intent.id)||
+   const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor','vitals'].includes(intent.id)||
     intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||cirrBedside||oxygenAction);
    if(physical){
     if(nativePatient.caseEnded)return {status:'rejected',patientUid,eventId,reason:'patient-not-active'};
