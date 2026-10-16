@@ -1,4 +1,4 @@
-import {csAnamnesisFact} from '../../clinical/anamnesis-intents.js';
+import {executePatientDialogue} from './patient-dialogue.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,recordVitalMeasurement} from './observations.js';
@@ -6,7 +6,6 @@ import {nativeCaseXP} from './progression.js';
 import {initialAppVitals,parseAppDose,advanceAppVitals,APP_NATIVE_PREPARATION_SECONDS} from './native-app.js';
 
 const copy=x=>structuredClone(x);
-const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
 export function appClosureSnapshot(p,c,destination){
  return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,
   historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
@@ -59,17 +58,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
    if(cmd.patientUid!==p.uid)return rejected(cmd,'wrong-patient');
    if(p.caseEnded)return rejected(cmd,'patient-not-active');
    const {intent}=cmd;
-   if(intent.kind==='history.ask'){
-    const text=norm(intent.sourceText),fact=csAnamnesisFact(c,intent.sourceText);
-    const matching=c.intents.filter(i=>i.keys.some(k=>(' '+text+' ').includes(' '+norm(k)+' ')))
-     .sort((a,b)=>Math.max(...b.keys.map(k=>norm(k).length))-Math.max(...a.keys.map(k=>norm(k).length)))[0];
-    const historyId=matching?.id||(fact?.text?'anamnesis:'+fact.intent:null);
-    const answer=matching?.answers?.[0]||fact?.text||(/^hola\b|^buenas\b/.test(text)?c.opening:null);
-    if(!answer)return rejected(cmd,'unknown-question','Preguntame por el inicio, migración, apetito o síntomas.');
-    if(historyId&&!p.intentHistory.some(x=>x.id===historyId))
-     p.intentHistory.push({id:historyId,answer,eventId:cmd.eventId,source:matching?'case.intents.'+matching.id:fact.source});
-    return executed(cmd,{answer,message:answer,historyId,source:matching?'case.intents.'+matching.id:fact?.source||'case.opening'});
-   }
+   const dialogue=executePatientDialogue(p,c,cmd,clock);if(dialogue)return dialogue;
    const exam=executePhysicalExam(p,c,cmd,clock);if(exam)return exam;
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
    if(intent.kind==='procedure.request'&&intent.id==='iv'){

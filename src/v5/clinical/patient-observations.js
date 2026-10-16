@@ -1,7 +1,7 @@
 // Read-only observations from effective ns421-clinical-state/patient-dialogue.
 // This is a presentation trend over actual native signs, NOT a physiology or
 // medication model. It never advances time or decides treatment/closure/XP.
-const painIntensity=Object.freeze({'CIRR-001':3,'APP-001':7});
+import {PATIENT_PROFILES} from './patient-profiles.js';
 export function readNeurologicalState(p){
  if(p.neurology)return {...p.neurology};
  const impaired=Number(p.hypoperfusionNativeMinutes||0);
@@ -17,7 +17,7 @@ export function readPatientObservations(p,caseId=p.caseId){
  const neuro=readNeurologicalState(p),initial=observationIndex(p.baselineVitals||p.liveVitals,{eye:4,verbal:5,motor:6}),
   delta=observationIndex(p.liveVitals,neuro)-initial;
  const trend=delta>.8?'worse':delta<-.8?'better':'unchanged';
- const intensity=painIntensity[caseId];
+ const intensity=PATIENT_PROFILES[caseId]?.intensity;
  // Neither migrated case has an executed analgesic or source-control operation.
  // IV antibiotics and spironolactone are not assigned invented pain relief.
  return {neuro,trend,pain:Number.isFinite(intensity)?Math.min(10,intensity+(trend==='worse'?1:0)):null};

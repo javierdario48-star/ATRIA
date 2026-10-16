@@ -15,3 +15,9 @@ test('patient presentation is shared without rewriting HTML by string replacemen
  assert.match(html,/&lt;script&gt;bad/);assert.match(html,/data-action="clinical-history"/);
  assert.doesNotMatch(html,/ascitis|<script>/);
 });
+test('contextual pain interview and subjective response are acquired history, not a measured reassessment',()=>{
+ const p={intentHistory:[],exam:{},orders:[],treatments:[],pendingTreatments:[],interview:{
+  dimensions:{place:{answer:'Abajo a la derecha.'},onset:{answer:'Hace ocho horas.'}},subjective:{answer:'Sigo parecido.'}}};
+ const html=historyHTML(p);assert.match(html,/ALiCIA/);assert.match(html,/Localización/);
+ assert.match(html,/ocho horas/);assert.match(html,/Sigo parecido/);assert.match(html,/todavía no se registraron/);
+});

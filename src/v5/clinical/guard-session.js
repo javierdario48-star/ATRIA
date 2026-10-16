@@ -66,7 +66,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      const item=event.clinical[i],label=labels.get(item.id)||item.id;
      const nativeText=item.receipt?.message;
      rows.push({id:'ack:'+message.id+':'+i,name:item.kind==='history.ask'?'Paciente':'Enfermera',role:item.kind==='history.ask'?'patient':'nurse',text:nativeText?
-      (item.status==='executed'?nativeText:'No ejecutado: '+nativeText):item.status==='pending'?(item.kind==='study.request'?label+': solicitado; pendiente de resultado.':label+': indicado; en preparación, todavía no ejecutado.'):
+      (item.status==='executed'||item.kind==='history.ask'?nativeText:'No ejecutado: '+nativeText):item.status==='pending'?(item.kind==='study.request'?label+': solicitado; pendiente de resultado.':label+': indicado; en preparación, todavía no ejecutado.'):
       item.reason==='clinical-action-not-migrated'?'Esta intervención todavía no está habilitada en la versión experimental.':
        item.status==='executed'?label+': resultado ya disponible.':label+': no ejecutado ('+(item.reason||item.status)+').'});
     }

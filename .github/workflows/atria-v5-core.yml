@@ -29,6 +29,8 @@ jobs:
         run: node qa/v5/characterize-app-native.mjs
       - name: Effective original CIRR and APP exam findings remain equivalent
         run: node qa/v5/characterize-exam-native.mjs
+      - name: Native patient profiles, compound pain questions and follow-ups remain equivalent
+        run: node qa/v5/characterize-dialogue-native.mjs
       - name: Build independent V5 module distribution
         run: npm run build:v5-core
       - name: Build independent executable V5 game
@@ -95,6 +97,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/clinical-clock-browser.mjs
+      - name: Natural patient dialogue, acquired history, symptom context and one global transcript
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/patient-dialogue-browser.mjs
       - name: Real study requests, original results, pending duplicates and case selection
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright

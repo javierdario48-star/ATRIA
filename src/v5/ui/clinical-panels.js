@@ -30,6 +30,10 @@ export function historyHTML(p){
    '<p>Total: '+(p.glasgow.total??'incompleto o no evaluable')+'</p>':'<p>Todavía no evaluado.</p>'],
   ['Estudios y resultados',(p.orders||[]).map(o=>'<p><b>'+esc(o.label)+'</b> · '+(o.status==='done'?'Resultado disponible: '+esc(o.result):'Pendiente')+'</p>').join('')||'<p>No solicitados.</p>'],
   ['Tratamiento y consultas',therapyHTML(p)]];
+ const interview=p.interview,labels={place:'Localización',onset:'Antigüedad',radiation:'Irradiación / desplazamiento',character:'Carácter',intensity:'Intensidad',worse:'Agravantes',relief:'Atenuantes'};
+ if(Object.keys(interview?.dimensions||{}).length)sections.splice(1,0,['ALiCIA · datos obtenidos',
+  Object.entries(interview.dimensions).map(([id,data])=>'<p><strong>'+esc(labels[id])+':</strong> '+esc(data.answer)+'</p>').join('')]);
+ if(interview?.subjective)sections.push(['Última respuesta subjetiva','<p>'+esc(interview.subjective.answer)+'</p>']);
  return sections.map(([title,body])=>'<section class="clinical-section"><h3>'+title+'</h3>'+body+'</section>').join('');
 }
 export function patientHTML(p){return `
