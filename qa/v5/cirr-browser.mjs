@@ -23,6 +23,10 @@ try{
  assert.equal((await state()).patient.treatments.length,0,'range rejects treatment even though chat works');
  await page.locator('#dieInput').blur();
  for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){
+  await page.waitForFunction(()=>{
+   const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
+   return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;
+  });
   const t=await page.evaluate(()=>({p:atriaV5.snapshot().player,r:atriaV5.diagnostics().renderer}));
   await page.locator('#game').click({position:{x:(x-t.r.camera.x)*t.r.scale+t.r.anchorX,y:(y-t.r.camera.y)*t.r.scale+t.r.anchorY}});
   await page.waitForFunction(()=>atriaV5.snapshot().player.moving);await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
@@ -86,6 +90,10 @@ try{
  await page.locator('#guardButton').click();await page.locator('#caseChoice').selectOption('CIRR-001');await page.locator('[data-action="start-guard"]').click();
  assert.notEqual((await state()).patient.uid,closed.patient.uid,'new guard after reload has a different persistent patient identity');
  for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){
+  await page.waitForFunction(()=>{
+   const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
+   return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;
+  });
   const a=await page.evaluate(()=>({p:atriaV5.snapshot().player,r:atriaV5.diagnostics().renderer}));
   await page.locator('#game').click({position:{x:(x-a.p.x)*a.r.scale+a.r.width/2,y:(y-a.p.y)*a.r.scale+a.r.height/2}});
   await page.waitForFunction(()=>atriaV5.snapshot().player.moving);await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
