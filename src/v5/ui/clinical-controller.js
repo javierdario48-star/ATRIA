@@ -67,7 +67,8 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(hint)hint.setAttribute('aria-pressed',String(showOrderHints));
  }
  function onInput(target){if(target?.id!=='monitorOrderInput')return false;
-  showOrderHints=false;renderOrderSuggestions();return true;
+  showOrderHints=false;const feedback=ui('monitorOrderFeedback');if(feedback)feedback.hidden=true;
+  renderOrderSuggestions();return true;
  }
  async function sendMonitorOrder(){
   const input=ui('monitorOrderInput'),feedback=ui('monitorOrderFeedback');
@@ -168,6 +169,6 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   }
   render();return true;
  }
- return Object.freeze({showPatient,showMonitor,openSection,render,animate,onInput,handle,patientUid:()=>patientUid,
+ return Object.freeze({showPatient,showMonitor,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
   reset(){patientUid=null;regionId='general';delete ui('modalContent').dataset.patientUid;}});
 }
