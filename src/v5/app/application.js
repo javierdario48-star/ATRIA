@@ -222,9 +222,10 @@ export async function createApplication({document,window,content,signal}){
    if(study){close();submitText('/estudio '+study.id);}
   }
   if(button.dataset.action==='save-profile'){
-   profile={name:ui('aliasChoice').value.trim().slice(0,32)||'Médico',scrubColor:ui('colorChoice').value};
+   const next={name:ui('aliasChoice').value.trim().slice(0,32)||'Médico',scrubColor:ui('colorChoice').value};
+   world.setAppearance(next);profile=next;
    try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
-   world=createWorld(content,profile);enterLobby();
+   close();updateHud();
   }
  });
  listen(ui('recipientButton'),'click',()=>{
