@@ -67,7 +67,8 @@ test('C08a unknown patient, cancellation and disposal cannot produce phantom cli
  assert.equal(f.dispatcher.snapshot()[0].stage,'cancelled');
  assert.equal(f.dispatcher.cancel('valid'),false);
  assert.equal(f.dispatcher.acceptClinicalResult({eventId:'valid',patientUid:'P1',status:'executed',
-  receipt:{eventId:'valid',patientUid:'P1'}}).status,'nurse-not-at-bed');
+  receipt:{eventId:'valid',patientUid:'P1'}}).status,'already-final');
+ assert.equal(f.dispatcher.snapshot()[0].stage,'cancelled','late receipt cannot revive cancelled work');
  f.dispatcher.dispose();f.dispatcher.dispose();
  assert.deepEqual(f.dispatcher.snapshot(),[]);
  assert.deepEqual(f.dispatcher.takeArrivals(),[]);
