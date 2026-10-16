@@ -53,6 +53,20 @@ try{
   await page.locator('#studyChoice').selectOption(study);await page.locator('[data-action="request-study"]').click();
   await page.waitForFunction(id=>atriaV5.snapshot().clinical.patient.orders.some(o=>o.id===id),study);
  }
+ // Android reproduction: native nurse IV must complete on CIRR and
+ // unsupported Ringer cannot pretend to be an unconfirmed cannulation.
+ await send('enfermera vias');
+ assert.equal((await state()).patient.venousAccessCount,0,'no early venous access');
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.venousAccessCount===1);
+ assert.match(await page.locator('#chatHistory').innerText(),/Acceso venoso periférico confirmado/i);
+ const trips=(await page.evaluate(()=>atriaV5.snapshot())).nurses.filter(n=>n.journeyId).length;
+ await send('enfermera via');
+ assert.equal((await state()).patient.venousAccessCount,1);
+ assert.equal((await page.evaluate(()=>atriaV5.snapshot())).nurses.filter(n=>n.journeyId).length,trips,
+  'documented access must not summon a new nurse');
+ await send('enfermera ringer');
+ assert.equal((await state()).patient.treatments.some(t=>t.id==='fluid'),false);
+ assert.match(await page.locator('#chatHistory').innerText(),/no hay una regla de tratamiento validada/i);
  await send('Enfermera no administres albúmina');await send('Enfermera ceftriaxona');
  await page.locator('#peopleButton').click();await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('espironolactona 50 mg');await page.locator('[data-action="order-therapy"]').click();
