@@ -25,3 +25,16 @@ export function executeObservation(p,cmd,clock){
 export function refreshMonitoring(p,clock){
  if(p.procedures?.monitor?.connected&&!p.caseEnded)recordVitalMeasurement(p,clock,p.procedures.monitor.eventId,'monitor');
 }
+
+/** Peripheral IV access is a bedside procedure, not a drug effect.
+ * The case executor calls this only after the assigned nurse reaches the bed.
+ */
+export function executeVenousAccess(p,cmd){
+ if(cmd.intent.kind!=='procedure.request'||cmd.intent.id!=='iv')return null;
+ const requested=cmd.intent.count===2?2:1,previous=p.venousAccessCount??0;
+ p.venousAccessCount=Math.max(previous,requested);
+ p.procedures.iv={eventId:cmd.eventId,patientUid:p.uid,count:p.venousAccessCount};
+ return executed(p,cmd,{count:p.venousAccessCount,
+  message:previous>=requested?'Acceso venoso ya confirmado: '+p.venousAccessCount+'.':
+   'Acceso venoso periférico confirmado: '+p.venousAccessCount+'.'});
+}
