@@ -1,5 +1,15 @@
 # ATRIA 5.0 — Plan maestro de migración y criterios de salida
 
+> **Prioridad vigente, 2026-10-16:** el usuario autorizó implementación autónoma
+> de sistemas sobre C01. **No incorporar los once casos de C13–C17.** Conservar
+> datos y referencias, validar todo mediante CIRR/APP. Orden: interacción/examen/
+> monitor/historia → comunicación/enfermería/Vega → contratos farmacológicos y
+> fisiología específica → voz/guardia/progresión → multijugador. Las aprobaciones
+> visuales genéricas antiguas no bloquean este alcance ya solicitado; sí se deja
+> pendiente cualquier decisión estética importante o cambio clínico sin referencia.
+> C02: [matriz por sistemas](migration/PARITY_MATRIX.md) e inventario con hashes.
+> Ejecución de Fase A: [contrato](migration/PHASE_A_IMPLEMENTATION.md).
+
 **Fuente técnica:** 4.8.7, preservada como control; rama de trabajo `atria-5.0-core-rebuild-experimental`.
 **Punto funcional consolidado:** `0b36884fa4a879d49c588fa8f3f262a535dd3070` (teclado compacto, cámara de zona jugable, interpolación, apariencia sin teletransporte, CIRR y APP).
 **Alcance:** 25 checkpoints numerados, incluido C01. Son puertas verificables de entrega, NO una promesa de plazo ni de un único commit por fase.

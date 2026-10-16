@@ -1,0 +1,445 @@
+{
+  "schema": "atria-legacy-inventory/v1",
+  "base": "7dff1e82bb27f3e381c757c8f41f7fe3faf924aa",
+  "scope": "Production JavaScript in src/{app,clinical,integration,social,voice,render,ui}; tests excluded, protected HTML referenced separately. Classification is not certification.",
+  "modules": [
+    {
+      "path": "src/app/boot-guard.js",
+      "sha256": "3acfb88b9d8230c464a3b90bb9600014f54de29aa1926eb7845befec7dfea824",
+      "decision": "reconstruir",
+      "reason": "Integrar responsabilidad en lifecycle/UI/mundo canónicos; preservar comportamiento y arte."
+    },
+    {
+      "path": "src/app/frame-scheduler.js",
+      "sha256": "3c9b4dc35e0926cb9f7b0067a38b77d12a99397dfe93af1e170da1753af73966",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/app/lifecycle.js",
+      "sha256": "9e05e4001c7e3178c65d79688748ff9d6dffe2b44f298abee18830cd4c470bf4",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/clinical/anamnesis-intents.js",
+      "sha256": "1017299f943ad576977b4dabb6722a554fc249195f50b3c11b12aea69e638850",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/clinical/case-completion-487.js",
+      "sha256": "12b23c50ad85991a4b6fce279c89b1d381bd83d3d9ca4d5d3adcb5dcb2459f0e",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/clinical/clinical-clock-487.js",
+      "sha256": "60613ffae22c6adff08c6d3230c3516bfa09d7c7cfd571e9ad34210ed04e0a09",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/clinical/contextual-study-results.js",
+      "sha256": "a45061e84473c6fd69052fc09c3e5448973f5e18c944f578c77b1d2456e15775",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/clinical/critical-rescue-487.js",
+      "sha256": "11185265d33b9bfdfc26c0542a3e795bce17113961a79f22bbc63a544d78b949",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/diagnostic-impression-487.js",
+      "sha256": "4ab5959777426a6880cb325906f2b12018e19df82a788ce135caacda72c4cece",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/dialogue-router.js",
+      "sha256": "9b8cb45ad785b7158d78f6802a114c3ea6fd28b7aaa244e3550293a3b07a2db4",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/clinical/general-therapy-487.js",
+      "sha256": "d2ddf8fd75b6f0658822c715f768e4d3e180e16939f90f5380e4540f2d1587b5",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/grace-survival-487.js",
+      "sha256": "27a514b94a8d0322d7922e1646c3c811bdfb0c089ddf41d4de20a25d4a5a3adc",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/history.js",
+      "sha256": "45209cdc0a2f22f293d0afa23647121432081a6eea5ace90ef8fc950da8b3694",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/mentor-policy.js",
+      "sha256": "c082d8a28b365a976d01f23144654a337d238e8efbe6e73294ad732662ccadd2",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/natural-study-orders.js",
+      "sha256": "43e887589b4e809b96d848e4f0ad2d4dc840d292734c3c3ae8031f90f30d78b1",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/nurse-scanner-487.js",
+      "sha256": "c1bcd3587b4bf2b41c67ee03fd13023cdd922ccb0e69fc5b728e22a83cbc8251",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/clinical/patient-state.js",
+      "sha256": "0be164945a3cb6ba0882ab5ba721ec4ab209775c6b486c5f2ada775eadabdd30",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/peritonitis-pathways.js",
+      "sha256": "dcf164d9ef483dc62e1a93d0846706999992de07b827385ddb38eca6685b9bc6",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/pharmacology-content-487.js",
+      "sha256": "87cf77f8909e47d9e5808ab383b6642f1e390390be8ccf242de4be05bd0abfde",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/pharmacology-coverage-487.js",
+      "sha256": "46b2bba2f812783a32a158a308ab2bad86a04f117d8991fb6c002a91be788c9f",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/pharmacology-mechanisms-487.js",
+      "sha256": "8692e3ec3aef70d0bf712035bf7f3695f10dfc42c6327338daabfc7ea95eddca",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/pharmacology-mechanisms-b1-487.js",
+      "sha256": "e1b31b75a56e5d1286df72d245a167746c1416c6be742c7caf1c4cdc49b7d811",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/pharmacology-outcomes-487.js",
+      "sha256": "dc55f61b7902487f5608b65a616e3076a7a1de192882450afbf9d77977207d38",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/pharmacology-registry-487.js",
+      "sha256": "1f750c443661f3d07bd1bcc10f587029dc4735d8cff69f51082c458024bd58b4",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/physical-exam.js",
+      "sha256": "f9158682ba0cfefd2d5d4e4481e5944d93da259c621746bdf0128e1fc154383e",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/physiology-pilot-487.js",
+      "sha256": "7ee23c9a313952fb70151367ae92f17c2ae9fcdf76b694deb2495f6fbb4013fa",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/physiology-pilot-cases-487.js",
+      "sha256": "305d42b7af39cbd25e07ef7f3875247cb282aa3a8b162367a792823d096b64d8",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/physiology-pilot-definitions-487.js",
+      "sha256": "93fe72e0460bd58e973aaa2fecb3c75e08549394519ea3f3d5bbbf7d895ba47c",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/secondary-sepsis-bridge-487.js",
+      "sha256": "be707ad20186d8b35782172c0e024d6adb40dcb857101135e70ed820ec351a39",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/study-contract.js",
+      "sha256": "4d19ddb2f7262969d3d6eeb9fc6353a2db0246c66cabcfad13fb9e1909cea3b8",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/study-registry.js",
+      "sha256": "8ec9d6d4d79a02fd6095de6876ee3664ea9e24a6a68f5c7adfa6f06925dda355",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/clinical/surgical-review-487.js",
+      "sha256": "b5b20a4d619e19f39aa56eeb934f25fbe574b5c54e80f71169efccfb72990eff",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/treatment-state.js",
+      "sha256": "10e1c0d2bfc31f097f5608381a34164839a2c6c11b542bca7060a2cbbeebd2a1",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/clinical/urgent-care-487.js",
+      "sha256": "64ef59e75405280bcef9439b7d5d0299f07081be0fa1be817397635095ef821b",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/integration/apply-487.js",
+      "sha256": "675d5bf5c33f76d06d4cb9660725d2aef8566fc42b9d583dfbfaaf6374336573",
+      "decision": "descartar obsoleto",
+      "reason": "Conservar como control/QA histórico; prohibido como estrategia o dependencia del ejecutable V5."
+    },
+    {
+      "path": "src/integration/case-completion-487.js",
+      "sha256": "8f9a7094c23491b5ca87a3adbcca19beb4b2855a6ea8017c9229539bc4fbbbe5",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/integration/chat-recipient-487.js",
+      "sha256": "dfc26e6f2e7a841511c457e42712ff11e01ca438c421861c2c559cb079543e34",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/clinical-confirmations-487.js",
+      "sha256": "23f5f31b048ed5e4dd3a15a2636b2905dc82e076dbf5b9e532f8f4f0345fc80b",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/critical-rescue-487.js",
+      "sha256": "14551e7619289ffd49a50d4e7b5fd8957a525071513afc9d936e06b0c1a5f61e",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/diagnostic-autocomplete-487.js",
+      "sha256": "9a957ead74fd6436d747af3a376746f081a52856d6bdef92c9bfc3d83c8b25b7",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/grace-survival-487.js",
+      "sha256": "0641f5ef412a26f5d260632512da5aaf9bdd59b588fa7359b6246f77381e169b",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/guard-scoreboard-487.js",
+      "sha256": "b6f9cf31d54d7fb870508c0ca2e220da2053f5e4c1598e239c22af2a14864fc4",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/manual-monitor-iv-487.js",
+      "sha256": "dae11e65e84c952b316f8c760dfe5138d5fae8c7be82c48c38dd0eadb8a3286b",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/morphine-487.js",
+      "sha256": "2397133eb161dcf89a883c91eea4c8668e70b4a925e48e81c29b8657fb195659",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/multiplayer-stabilization-487.js",
+      "sha256": "aae3bec338cce86c85a318e8726971653b1a20e1712ed9e76fc4e58b0774091e",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/nurse-execution-487.js",
+      "sha256": "86e7bbafbafba578c7c4782fe3b31dfd2e41ec1a1020aa0cca01335379fd8a82",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/nurse-voice-487.js",
+      "sha256": "7ec40e96505c01f95d2c2ac30673151cd5b17642aeee6a33125df21a8b05a2fa",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/peritonitis-487.js",
+      "sha256": "1d0005c6e5f4070afe55e15330a0025b741e054f0cccc5651c77d137d165622c",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/pharmacology-487.js",
+      "sha256": "0ce1ad6144e1fe23db5a5f99a8ba57724fc87905200c8158c81d25873092a7fa",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/pharmacology-receipts-487.js",
+      "sha256": "818579c2b31a02e35330c85c82b0545347ca187b55fd20ac8d2c5da510e00333",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/physiology-qa-bootstrap-487.js",
+      "sha256": "a0c7c4bec7be4cc4c6f89bdc266f8641fb48bbb20e0d33ab65f37207bdae95d5",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/physiology-qa-observer-487.js",
+      "sha256": "2c1efc976378818413d2e7678283166abbe30276fe8f0a57407d63092ebe383e",
+      "decision": "descartar obsoleto",
+      "reason": "Conservar como control/QA histórico; prohibido como estrategia o dependencia del ejecutable V5."
+    },
+    {
+      "path": "src/integration/physiology-ringer-owner-487.js",
+      "sha256": "67d186bcfa698bd9008fa0c8e04f6b8996018ac11f05594b725f10b4c8d88df3",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/physiology-shadow-487.js",
+      "sha256": "4d0ca14e48c5de222da7967d86f874d0eee7806e684d96d39211a8164e44a52a",
+      "decision": "descartar obsoleto",
+      "reason": "Conservar como control/QA histórico; prohibido como estrategia o dependencia del ejecutable V5."
+    },
+    {
+      "path": "src/integration/remote-motion-487.js",
+      "sha256": "c992c69c6b214b92a6dd772b5611d5f4487e3717d4c65ad7a44451750fefa846",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/secondary-sepsis-bridge-487.js",
+      "sha256": "ff4e91fb334b2d989f451a29df68a2b665a7400fbb3f9c1561b1c89b5ae8f1fb",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/surgical-nursing-487.js",
+      "sha256": "91e33a362bc442c49a96273e812bf61d453cb7aa28045f9717ad4c721efc6d56",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/urgent-care-487.js",
+      "sha256": "b5348b66799d65b757161f472d5bba370ff306419bd9cc61f5c7408fb31bafdf",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/vega-concise-consult-487.js",
+      "sha256": "70d9cc11c6479f87e5311a454d99861794013447b5a6de5ee04e6c677e2e4022",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/integration/vega-step-coach-487.js",
+      "sha256": "9a85e4ed73c1337e4f75d0b3a2e3c9edd1eb0cceff440f934811567f2ff91c06",
+      "decision": "extraer",
+      "reason": "Extraer responsabilidad y pruebas; no transportar wrappers, HTML ni reemplazos."
+    },
+    {
+      "path": "src/social/competitive-clock.js",
+      "sha256": "9deb65a065833e600314c8688f5851ef45a37ea86abe8d752b70e4ae86b002cc",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/social/friends-store.js",
+      "sha256": "977bfafbf4605c7ae33847b3b219bceade7b83f26dc0485e44618e4ffa895cf4",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/social/network-scheduler.js",
+      "sha256": "9a346f41e5e1cdc04fddb3d936838a1aee4ded4feb6638aad3dd9162c66e9150",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/social/party-payload.js",
+      "sha256": "ef6c9d2c2be9355b15a53f160068b1d682eb113ebb3b02583fe0a6f3ba0205e5",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/social/party-transport.js",
+      "sha256": "f7cea13e095b4423fa2736df3e671614dce91ce314ee7b4361d9833eacdbe596",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/social/qa-social-server.js",
+      "sha256": "ae02dfb56a3876df595cc03dc8d7cbbe203afeffe61f95bb59bb3e3d32e37934",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/social/remote-motion.js",
+      "sha256": "923152c73faccdee42c9b32f28695406a5393862b5b7bb38d56d7815f92c2e20",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/social/room-state.js",
+      "sha256": "5ba7e4a96b40db8e9e1e92eb5a7d38f6e40e3d2b53f4070d78b61ac263c7e365",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/social/voice-session.js",
+      "sha256": "d457e907e8587aebb8a3b01dfea1b2477b07f29d8fb7e3c43fac303c328069f4",
+      "decision": "pendiente deliberado",
+      "reason": "Contenido o mecanismo original conservado; requiere caracterización y adaptación antes de habilitarse en V5."
+    },
+    {
+      "path": "src/voice/revision-buffer.js",
+      "sha256": "fe3a1afd8595b085555a0954d40ce94496c5efdc7a68bbcd6e2a6e91c7bcf6b5",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/voice/transcript-normalizer.js",
+      "sha256": "104dc9ddc66aba391d64c98c0dd423769e9fe61acb32df1163018c6e9074ba5a",
+      "decision": "reutilizar puro",
+      "reason": "Conservar contrato y adaptar entradas al motor/autoridad V5; confirmar integración por sistema."
+    },
+    {
+      "path": "src/render/adaptive-policy.js",
+      "sha256": "9224bce0293a8a745a91a80519f4e4b499059aae9dee8f591ab1ae7db83c6735",
+      "decision": "reconstruir",
+      "reason": "Integrar responsabilidad en lifecycle/UI/mundo canónicos; preservar comportamiento y arte."
+    },
+    {
+      "path": "src/ui/mobile-chat.js",
+      "sha256": "7a2a39b9de00e52c6e77a529fdedeca635948d046263d5e518d5ec5673bd9b0f",
+      "decision": "reconstruir",
+      "reason": "Integrar responsabilidad en lifecycle/UI/mundo canónicos; preservar comportamiento y arte."
+    }
+  ]
+}

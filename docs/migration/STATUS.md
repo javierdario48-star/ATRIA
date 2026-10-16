@@ -5,14 +5,18 @@
 **Recuperación C3a antes del primer merge:** `atria-5.0-recovery-before-approved-ui` @ `646a0ab3f19991ce4e4c4239760db6bfb17c18a1`.
 **Interfaz aprobada y congelada para comparación:** `atria-5.0-compact-keyboard-preview` @ `0b36884fa4a879d49c588fa8f3f262a535dd3070`.
 **C01 — Consolidación:** fast-forward no forzado de `646a0ab` a `0b36884`, por compare 29 ahead/0 behind y lease de SHA anterior; código fuente CI 38836248252, 3/3 success. Informe [STEP_01_HANDOFF.md](STEP_01_HANDOFF.md). Los commits posteriores son documentación; consultar HEAD de rama antes de reanudar.
-**C02–C25:** PENDIENTES. No se han certificado ni empezado como implementación V5 por este checkpoint.
+**Prioridad vigente:** sistemas primero; NO añadir los once casos restantes.
+**C02:** inventario técnico completado; [matriz](PARITY_MATRIX.md), 73 módulos
+clasificados con hashes; [informe](STEP_02_HANDOFF.md).
+**Sesión actual:** implementación C04/C05.a en curso. Consultar [CURRENT_HANDOFF](CURRENT_HANDOFF.md)
+para el último estado publicado; no interpretar trabajo local como código remoto.
 
 ## Tabla de etapas
 
 | Paso | Objetivo | Estado |
 | --- | --- | --- |
 | C01 | Consolidación de UI aprobada y estabilización | IMPLEMENTADO — CI fuente verde |
-| C02 | Matriz exhaustiva de paridad del legado | PENDIENTE |
+| C02 | Matriz de equivalencia e inventario del legado | COMPLETO — inventario, no certificación de paridad |
 | C03 | Portada, menú, perfil, HUD | PENDIENTE |
 | C04 | Examen físico original por segmentos | PENDIENTE |
 | C05 | Historia, monitor, estudios, paneles | PENDIENTE |
@@ -23,11 +27,11 @@
 | C10 | Voz sobre comandos únicos | PENDIENTE |
 | C11 | Tratamiento y farmacología transversal | PENDIENTE |
 | C12 | Fisiología, complicaciones y rescate | PENDIENTE |
-| C13 | Casos PANC/CROHN/COLON | PENDIENTE |
-| C14 | Casos HDA/ILEO | PENDIENTE |
-| C15 | Casos CHOLE/CHOLANG | PENDIENTE |
-| C16 | Caso MESI | PENDIENTE |
-| C17 | Tres peritonitis PBE/SEC/TER | PENDIENTE |
+| C13 | Casos PANC/CROHN/COLON | DIFERIDO — no implementar |
+| C14 | Casos HDA/ILEO | DIFERIDO — no implementar |
+| C15 | Casos CHOLE/CHOLANG | DIFERIDO — no implementar |
+| C16 | Caso MESI | DIFERIDO — no implementar |
+| C17 | Tres peritonitis PBE/SEC/TER | DIFERIDO — no implementar |
 | C18 | Guardia continua multi-paciente | PENDIENTE |
 | C19 | Carrera, niveles, XP, persistencia | PENDIENTE |
 | C20 | Lobby social, amigos, salas | PENDIENTE |
@@ -37,9 +41,13 @@
 | C24 | Optimización y Android/iOS físico | PENDIENTE |
 | C25 | Paridad, limpieza y promoción aprobada | PENDIENTE |
 
-## Próxima acción autorizable
+## Secuencia autorizada
 
-**C02:** hacer caracterización funcional profunda del original, crear matriz de equivalencia y registrar evidencias y prioridades. No intentar C03/C04 en paralelo sin contrato de C02. Mantener intactos CIRR/APP, teclado y cámara. Para cambio visible, pedir aceptación humana.
+Implementar C04/C05 de Fase A según [contrato](PHASE_A_IMPLEMENTATION.md), luego
+comunicación/enfermería, contratos clínicos extensibles, voz/guardia/progresión y red.
+No reconstruir la base aprobada. C03 completo no es prerrequisito de C04.
+El usuario autorizó continuar autónomamente mientras haya pruebas aprobadas y no
+aparezca una decisión estética importante o un cambio clínico sin referencia.
 
 ## Plantilla obligatoria de informe por checkpoint
 
