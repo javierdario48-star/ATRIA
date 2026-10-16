@@ -39,6 +39,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   validateReceipt:assertMatchingClinicalReceipt,
   withPatient:async(uid,fn)=>{if(uid!==nativePatient.uid)throw Error('patient not in this room');return fn(nativePatient);},
   invoke:async({eventId,actorId,patientUid,intent})=>{
+   if(nursing&&intent.kind==='case.close'&&(pendingNurseJobs.size||waitingForAccess.size))
+    return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
    const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor'].includes(intent.id)||
     intent.kind==='monitor.set'&&intent.id==='connect');
    // Never mutate the clinical patient merely because a nurse received an
