@@ -57,7 +57,7 @@ try{
  // unsupported Ringer cannot pretend to be an unconfirmed cannulation.
  await send('enfermera vias');
  assert.equal((await state()).patient.venousAccessCount,0,'no early venous access');
- await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.venousAccessCount===1);
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.venousAccessCount===2);
  assert.match(await page.locator('#chatHistory').innerText(),/Acceso venoso periférico confirmado/i);
  const trips=(await page.evaluate(()=>atriaV5.snapshot())).nurses.filter(n=>n.journeyId).length;
  await send('enfermera via');
