@@ -218,8 +218,9 @@ test('C08 bedside IV is a real shared CIRR procedure with a verified nurse recei
  assert.equal(f.session.read().patient.venousAccessCount,0);
  await walkToCompletion(f);
  const patient=f.session.read().patient;
- assert.equal(patient.venousAccessCount,1);
+ assert.equal(patient.venousAccessCount,2);
  assert.equal(patient.procedures.iv.patientUid,patient.uid);
+ assert.equal(patient.procedures.iv.count,2,'plural vías must mean two native accesses');
  const completions=f.events.filter(e=>e.type==='clinical.completed');
  assert.equal(completions.length,1);
  assert.equal(completions[0].clinical[0].receipt.eventId,'C08-B1:doctor:user-vias:0');
@@ -228,7 +229,7 @@ test('C08 bedside IV is a real shared CIRR procedure with a verified nurse recei
  const again=await f.session.post({id:'again',text:'enfermera via'});
  assert.equal(again.clinical[0].status,'executed','documented access is immediately verified');
  assert.equal(f.world.nurseJourneySnapshot().length,originalTasks,'no fictitious second nursing trip');
- assert.equal(f.session.read().patient.venousAccessCount,1);
+ assert.equal(f.session.read().patient.venousAccessCount,2);
  f.session.dispose();f.world.enterLobby();
 });
 test('C08 case-specific Ringer rejection is clearly explained, not called a missing nurse receipt',async()=>{
