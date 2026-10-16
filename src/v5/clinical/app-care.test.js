@@ -37,7 +37,7 @@ test('APP does not administer either IV antibiotic without real confirmed access
  assert.deepEqual(f.s.read().patient.pendingTreatments,[]);
  f.s.dispose();
 });
-test('one venous access then a dual order gives two distinct delayed native receipts only once',async()=>{
+test('one venous access plus two independent dual prescriptions gives four native doses; one retry gives none',async()=>{
  const f=fixture(),iv=await f.send('Enfermera una vía');
  assert.equal(iv.clinical[0].status,'executed');
  assert.equal(f.s.read().patient.venousAccessCount,1);
@@ -49,15 +49,19 @@ test('one venous access then a dual order gives two distinct delayed native rece
  assert.equal(f.s.read().patient.administrationLog.length,0);
  f.s.advance(.02);await f.s.flush();
  const p=f.s.read().patient;
- assert.deepEqual(p.administrationLog.map(x=>x.id),['ceftriaxone','metronidazole']);
- assert.deepEqual(p.administrationLog.map(x=>x.dose.amount),[1000,500]);
+ assert.deepEqual(p.administrationLog.map(x=>x.id),
+  ['ceftriaxone','metronidazole','ceftriaxone','metronidazole']);
+ assert.deepEqual(p.administrationLog.map(x=>x.dose.amount),[1000,500,1000,500]);
+ assert.deepEqual(p.administrationLog.map(x=>x.sourceEventId),[
+  'APP-ROOM:doctor:dual:0','APP-ROOM:doctor:dual:1',
+  'APP-ROOM:doctor:duplicate-other:0','APP-ROOM:doctor:duplicate-other:1']);
  for(let i=0;i<2;i++){
   const a=await f.send('Enfermera ceftriaxona 1 g y metronidazol 500 mg','dual');
   assert.equal(a.clinical[i].status,'executed');
   assert.equal(a.clinical[i].receipt.therapyId,p.administrationLog[i].id);
   assert.equal(a.clinical[i].receipt.sourceEventId,'APP-ROOM:doctor:dual:'+i);
  }
- assert.equal(p.administrationLog.length,2);
+ assert.equal(p.administrationLog.length,4);
  f.s.dispose();
 });
 test('real Ringer action changes APP physiology only after native 800ms delay',async()=>{
@@ -164,10 +168,17 @@ test('C07 post-administration wrong-dose repeat never claims the existing APP re
   assert.equal(r.clinical[0].receipt?.therapyId,undefined,'invalid dose cannot be reused');
  }
  const valid=await f.send('Enfermera ceftriaxona 1 g','valid-repeat');
- assert.equal(valid.clinical[0].status,'executed');
- assert.equal(valid.clinical[0].receipt.reused,true);
- assert.equal(valid.clinical[0].receipt.sourceEventId,'APP-ROOM:doctor:correct:0');
- assert.equal(f.s.read().patient.administrationLog.length,1);
+ assert.equal(valid.clinical[0].status,'pending','new clinical intent prepares another administration');
+ assert.equal(f.s.read().patient.administrationLog.length,1,'pending order is not yet a dose');
+ f.s.advance(1.51);await f.s.flush();
+ const repeated=f.s.read().patient.administrationLog;
+ assert.equal(repeated.length,2);
+ assert.equal(repeated[1].sourceEventId,'APP-ROOM:doctor:valid-repeat:0');
+ assert.equal(repeated[1].dose.amount,1000);
+ const onceMore=await f.send('Enfermera ceftriaxona 1 g','valid-repeat');
+ assert.equal(onceMore.clinical[0].status,'executed','transport retry reads original receipt');
+ assert.equal(onceMore.clinical[0].receipt.reused,false);
+ assert.equal(f.s.read().patient.administrationLog.length,2);
  f.s.dispose();
 });
 
