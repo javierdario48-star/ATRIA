@@ -139,7 +139,16 @@ try{
   'both oxygen and IV have distinct real pending nurse jobs');
  await page.waitForFunction(()=>document.querySelector('#monitorOrderFeedback')?.dataset.status==='pending',null,{timeout:10000});
  assert.equal((await state()).patient.procedures.oxygen,undefined);
- assert.equal((await state()).patient.venousAccessCount,0,'the second composite task also waits for the real nurse');
+ const afterSubmit=await state();
+ if(afterSubmit.patient.venousAccessCount){
+  // Other bedside nurses can confirm access before this browser read.
+  // Never conflate an already authentic IV receipt with premature placement.
+  assert.equal(afterSubmit.patient.venousAccessCount,1);
+  assert(afterSubmit.room.events.some(e=>e.type==='clinical.completed'&&
+   e.clinical.some(a=>a.id==='iv'&&a.status==='executed'&&
+     a.receipt?.patientUid===uid&&a.receipt?.eventId===e.eventId)),
+   'visible access is only valid with matching authorized native receipt');
+ }
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.oxygen?.active===true,null,{timeout:30000});
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.venousAccessCount===1,null,{timeout:30000});
  await page.waitForFunction(()=>document.querySelector('#monitorOrderFeedback')?.dataset.status==='executed',null,{timeout:15000});
