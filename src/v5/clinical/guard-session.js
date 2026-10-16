@@ -74,3 +74,38 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     }
     if(event.npcReply?.role==='mentor')
      rows.push({id:'npc:'+message.id,name:event.npcReply.name,role:'mentor',text:event.npcReply.text});
+   }else if(event.type==='clinical.completed'){
+    for(const item of event.clinical){
+     const source=item.receipt?.sourceEventId||event.eventId;if(announcedResults.has(source))continue;
+     announcedResults.add(source);rows.push({id:'completion:'+source,name:'Enfermera',role:'nurse',
+      text:item.status==='executed'&&item.receipt?.message?item.receipt.message:(labels.get(item.id)||item.id)+(item.status==='executed'?': resultado disponible.':': sin confirmación de resultado.')});
+    }
+   }
+  }
+  return rows;
+ }
+ return Object.freeze({
+  catalog:()=>copy(orderedStudies),
+  post:envelope=>disposed?Promise.resolve({status:'rejected',reason:'room-disposed'}):authority.dispatch({kind:'chat.post',...envelope},credentials),
+  advance(deltaRealSeconds,{typing=false}={}){
+   if(disposed)throw Error('guard session disposed');
+   const before=clock;
+   clock=guardClock.advance(deltaRealSeconds,typing);
+   for(const result of care?.advance(before,clock,deltaRealSeconds)||[])port.complete(result);
+   refreshMonitoring(nativePatient,clock);
+   const ready=studies.advance(nativePatient,clock.clinicalMinute);
+   for(const order of ready){
+    for(const eventId of pendingStudyRequests.get(order.sourceEventId)||[order.sourceEventId])
+     port.complete({eventId,patientUid:nativePatient.uid,status:'executed',
+      receipt:{eventId,patientUid:nativePatient.uid,studyId:order.id,sourceEventId:order.sourceEventId,
+       actorId:order.actorId,result:order.result,resultSource:order.resultSource}});
+    pendingStudyRequests.delete(order.sourceEventId);
+   }
+   return copy(ready);
+  },
+  flush:()=>authority.flush(),
+  read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
+   closure:care?copy(care.readiness(caseData.id==='APP-001'?'quirofano':'sala')):null};},
+  dispose(){if(disposed)return;disposed=true;pendingStudyRequests.clear();care?.dispose();authority.dispose();}
+ });
+}
