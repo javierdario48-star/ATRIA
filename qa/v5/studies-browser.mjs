@@ -21,6 +21,10 @@ try{
  assert.equal((await page.evaluate(()=>atriaV5.snapshot().clinical)).patient.orders.length,0,'patient range is authoritative');
  await page.locator('#dieInput').blur();
  async function walkTo(x,y){
+  await page.waitForFunction(()=>{
+   const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
+   return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;
+  });
   const state=await page.evaluate(()=>({s:atriaV5.snapshot(),r:atriaV5.diagnostics().renderer}));
   const px=(x-state.r.camera.x)*state.r.scale+state.r.anchorX,py=(y-state.r.camera.y)*state.r.scale+state.r.anchorY;
   assert(px>=0&&px<state.r.width&&py>65&&py<state.r.height-60,'waypoint is a real visible canvas point');
