@@ -75,9 +75,11 @@ try{
  assert(bedsidePending.nurses.some(n=>n.journeyId),'nurse must begin a physical hospital path');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.venousAccessCount===1);
  const pending=await state();
- assert.equal(pending.patient.pendingTreatments.length,0,'no medicine is preparing before an NPC arrives');
- assert.equal(pending.patient.administrationLog.length,0);
- assert((await page.evaluate(()=>atriaV5.snapshot())).nurses.some(n=>n.journeyId),'two antibiotics require nursing work');
+ assert.equal(pending.patient.venousAccessCount,1);
+ assert(pending.patient.pendingTreatments.every(t=>t.patientUid===pending.patient.uid),
+  'native preparation must be bound to this real patient');
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.room.events.filter(
+  e=>e.type==='clinical.completed'&&e.clinical[0]?.id==='iv').length===1);
  assert.equal((await state()).room.events.filter(e=>e.type==='clinical.completed'&&e.clinical[0]?.id==='iv').length,1,
   'automatic IV is only performed once');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.administrationLog.length===2);
