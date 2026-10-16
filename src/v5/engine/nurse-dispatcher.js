@@ -12,7 +12,7 @@ const copy=value=>structuredClone(value);
 export function createNurseDispatcher({navigation,nurses,patients}={}){
  if(!navigation||!Array.isArray(nurses)||!Array.isArray(patients))throw Error('nursing spatial context required');
  const tasks=new Map(),arrivals=[],byUid=new Map(patients.map(p=>[p.uid,p]));
- let disposed=false;
+ let disposed=false,queuedRetryTime=0;
  function assignment(task){
   // One bedside intervention per patient. Other nurses may work in other boxes,
   // but several NPCs must not pile onto the same patient for a compound order.
@@ -69,7 +69,11 @@ export function createNurseDispatcher({navigation,nurses,patients}={}){
     task.stage='at-bed';
     arrivals.push({eventId:task.eventId,patientUid:task.patientUid,kind:task.kind,nurseId:nurse.id});
    }
-   assignWaiting();
+   // A blocked path might require a full A* search. Retry at 1 Hz in
+   // simulation time (not another real-time timer or independent RAF).
+   // Fresh orders and completed nursing jobs still schedule immediately.
+   queuedRetryTime+=dt;
+   if(queuedRetryTime>=1){queuedRetryTime%=1;assignWaiting();}
   },
   takeArrivals(){if(disposed)return [];return copy(arrivals.splice(0));},
   /** Only a caller holding a native *matching receipt* may mark execution.
