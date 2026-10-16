@@ -59,3 +59,36 @@ test('scrub changes preserve actual position, path, level, and lobby identity',a
  assert.throws(()=>world.setAppearance({name:'x',scrubColor:'not-a-color'}),/invalid appearance/);
  assert.equal(world.snapshot().player.color,'teal');
 });
+
+test('C08a nurse traversal uses the actual ATRIA map and cannot confirm a procedure before arrival',async()=>{
+ const {createWorld}=await import('./world.js');
+ const content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
+ const world=createWorld(content,{name:'Javier',scrubColor:'navy'});
+ world.enterLobby();world.enterGuard({mode:'solo',caseId:'APP-001'});
+ const patient=world.snapshot().patients[0],before=world.snapshot().nurses;
+ const eventId='room:doctor:nursing:0';
+ const queued=world.enqueueNurseJourney({eventId,patientUid:patient.uid,kind:'iv'});
+ assert.equal(queued.status,'travelling','one of the actual guard nurses must reach B1');
+ assert.equal(world.acceptNurseClinicalResult({eventId,patientUid:patient.uid,status:'executed',
+  receipt:{eventId,patientUid:patient.uid}}).status,'nurse-not-at-bed');
+ let arrivals=[];
+ for(let frame=0;frame<1800&&!arrivals.length;frame++){
+  world.step(1/60);arrivals=world.takeNurseArrivals();
+ }
+ assert.equal(arrivals.length,1,'physically traversed nurse must signal actual B1 arrival');
+ assert.equal(arrivals[0].patientUid,patient.uid);
+ const selected=world.snapshot().nurses.find(n=>n.id===arrivals[0].nurseId);
+ const initial=before.find(n=>n.id===selected.id);
+ assert(Math.hypot(selected.x-initial.x,selected.y-initial.y)>25);
+ assert.equal(world.navigation.circleBlocked(selected.x,selected.y,selected.r),false);
+ assert.equal(world.nurseJourneySnapshot()[0].stage,'at-bed');
+ assert.equal(world.acceptNurseClinicalResult({eventId,patientUid:patient.uid,status:'executed',
+  receipt:{eventId,patientUid:patient.uid}}).status,'confirmed');
+ const completed=world.nurseJourneySnapshot();
+ assert.equal(completed[0].stage,'confirmed');
+ world.enterLobby();
+ assert.deepEqual(world.nurseJourneySnapshot(),[]);
+ assert.deepEqual(world.takeNurseArrivals(),[]);
+ world.enterGuard({mode:'solo',caseId:'CIRR-001'});
+ assert.equal(world.nurseJourneySnapshot().length,0,'new guard cannot inherit old nursing job');
+});
