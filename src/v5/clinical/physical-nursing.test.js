@@ -65,6 +65,15 @@ test('C08b IV stays pending during nurse travel and native APP access is only co
  const medication=await f.session.post({id:'abx',text:'Enfermera ceftriaxona 1 g'});
  assert.equal(medication.clinical[0].status,'pending');
  f.session.advance(1.6);await f.session.flush();
+ assert.deepEqual(f.session.read().patient.administrationLog,[],
+  'native antibiotic cannot administer before physical nurse arrival');
+ let reached=false;
+ for(let i=0;i<800&&!reached;i++){
+  f.world.step(1/60);f.session.finishNurseArrivals();
+  reached=f.session.read().patient.pendingTreatments.some(x=>x.id==='ceftriaxone');
+ }
+ assert.equal(reached,true);
+ f.session.advance(1.51);await f.session.flush();
  assert.deepEqual(f.session.read().patient.administrationLog.map(x=>x.id),['ceftriaxone']);
  f.session.dispose();f.world.enterLobby();
 });
