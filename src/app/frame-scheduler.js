@@ -11,6 +11,10 @@ export class FrameScheduler {
     this.acc=0; this.last=null; this.lastRender=0;
   }
   reset(now=performance.now()){this.acc=0;this.last=now;this.lastRender=0;}
+  /** Fraction of the next fixed simulation step, for presentation only.
+   * Consumers may interpolate snapshots; game logic always uses fixed steps.
+   */
+  presentationAlpha(){return Math.min(1,Math.max(0,this.acc/this.step));}
   tick(now,{simulate,maintain,render,isMobile=false}){
     if(this.last==null)this.last=now;
     const elapsed=Math.max(0,Math.min(.25,(now-this.last)/1000));
