@@ -33,7 +33,7 @@ export function monitorOrderLedger(room,patient){
 /** Medication history comes from native administration, not a chat receipt. */
 export function administeredTreatmentHistory(patient){
  return (patient?.administrationLog||[]).map(t=>({
-  eventId:t.sourceEventId,id:t.id,label:t.label||t.id,
+  eventId:t.sourceEventId,id:t.id,label:t.label||t.id,action:t.action||'administer',
   dose:t.dose?.display||null,time:t.administeredAtRealSecond??null,
   patientUid:t.patientUid
  }));

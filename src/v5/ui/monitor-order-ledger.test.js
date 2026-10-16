@@ -48,3 +48,14 @@ test('oxygen suspension follows the same pending-to-terminal receipt ledger',()=
   clinical:[{kind:'therapy.stop',id:'oxygen',status:'executed',receipt:{eventId:'R:doc:stop:0',patientUid:'P'}}]});
  assert.equal(latestMonitorOrderState(monitorOrderLedger(room,{uid:'P'}),'stop').status,'executed');
 });
+
+test('native oxygen start, rate change and stop remain distinct historical events',()=>{
+ const patient={administrationLog:[
+  {id:'oxygen',label:'Oxígeno suplementario',action:'start',sourceEventId:'one',patientUid:'P',dose:{display:'4 L/min'}},
+  {id:'oxygen',label:'Oxígeno suplementario',action:'setRate',sourceEventId:'two',patientUid:'P',dose:{display:'2 L/min'}},
+  {id:'oxygen',label:'Oxígeno suspendido',action:'stop',sourceEventId:'three',patientUid:'P',dose:{display:'0 L/min'}}
+ ]};
+ assert.deepEqual(administeredTreatmentHistory(patient).map(x=>[x.action,x.dose,x.eventId]),[
+  ['start','4 L/min','one'],['setRate','2 L/min','two'],['stop','0 L/min','three']
+ ]);
+});

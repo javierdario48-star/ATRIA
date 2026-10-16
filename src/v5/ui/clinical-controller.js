@@ -124,11 +124,11 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const orders=monitorOrderLedger(s.room,s.patient);
   const medicines=administeredTreatmentHistory(s.patient);
   const confirmed=ui('monitorMedicationHistory');
-  if(confirmed)setHTML(confirmed,'<h3>Administraciones registradas · '+medicines.length+'</h3>'+
+  if(confirmed)setHTML(confirmed,'<h3>Intervenciones registradas · '+medicines.length+'</h3>'+
    (medicines.length?medicines.slice().reverse().map(t=>
     '<div class="monitor-order-record" data-status="executed"><b>'+esc(t.label)+
-    '</b><small>Administrado y confirmado'+(t.dose?' · '+esc(t.dose):'')+'</small></div>').join(''):
-    '<p class="monitor-order-empty">Todavía no se administraron medicamentos.</p>'));
+    '</b><small>'+(t.action==='stop'?'Suspendido y confirmado':t.action==='setRate'?'Flujo ajustado y confirmado':'Administrado y confirmado')+(t.dose?' · '+esc(t.dose):'')+'</small></div>').join(''):
+    '<p class="monitor-order-empty">Todavía no se registraron intervenciones.</p>'));
   const history=ui('monitorOrderHistory');
   if(history)setHTML(history,'<h3>Órdenes y procedimientos recientes</h3>'+
    (orders.length?orders.slice(-16).reverse().map(item=>{
