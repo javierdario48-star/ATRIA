@@ -130,8 +130,14 @@ try{
  assert.match(await page.locator('#monitorMedicationHistory').innerText(),/Paracentesis terapéutica/i);
  assert.match(await page.locator('#monitorMedicationHistory').innerText(),/Administrado y confirmado/i);
  await page.locator('#monitorOrderInput').fill('oxigeno 4 L/min y una via');
+ const beforeCombo=(await state()).room.transcript.length;
  await page.locator('[data-action="monitor-order-submit"]').click();
- assert.equal(await page.locator('#monitorOrderFeedback').getAttribute('data-status'),'pending');
+ await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,beforeCombo);
+ const orderEvent=(await state()).room.events.filter(e=>e.type==='chat.posted').at(-1);
+ assert.deepEqual(orderEvent.clinical.map(x=>[x.id,x.status]),
+  [['oxygen','pending'],['iv','pending']],
+  'both oxygen and IV have distinct real pending nurse jobs');
+ await page.waitForFunction(()=>document.querySelector('#monitorOrderFeedback')?.dataset.status==='pending',null,{timeout:10000});
  assert.equal((await state()).patient.procedures.oxygen,undefined);
  assert.equal((await state()).patient.venousAccessCount,0,'the second composite task also waits for the real nurse');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.oxygen?.active===true,null,{timeout:30000});
