@@ -14,7 +14,11 @@ try{
  await page.goto(h.url);
  await page.waitForFunction(()=>document.body.dataset.boot==='ready');
  await page.locator('#enterButton').click();
- await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds!==null);
+ await page.waitForFunction(()=>{
+  const r=atriaV5.diagnostics().renderer,b=r.playableBounds;
+  if(!b)return false;
+  return Math.abs(r.anchorY-(b.top+(b.bottom-b.top)*.55))<2;
+ },null,{timeout:15000});
  const metrics=await page.evaluate(()=>{
   const k=document.getElementById('atriaKeyboard').getBoundingClientRect();
   const r=atriaV5.diagnostics().renderer;
