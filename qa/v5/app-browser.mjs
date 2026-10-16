@@ -74,8 +74,9 @@ try{
  await page.locator('#therapyOrder').fill('ceftriaxona 1 g y metronidazol 500 mg');
  await page.locator('[data-action="order-therapy"]').click();
  const pending=await state();
- assert.equal(pending.patient.pendingTreatments.length,2);
+ assert.equal(pending.patient.pendingTreatments.length,0,'no medicine is preparing before an NPC arrives');
  assert.equal(pending.patient.administrationLog.length,0);
+ assert((await page.evaluate(()=>atriaV5.snapshot())).nurses.some(n=>n.journeyId),'two antibiotics require nursing work');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.administrationLog.length===2);
  const delivered=await state();
  assert.deepEqual(delivered.patient.administrationLog.map(x=>x.id),['ceftriaxone','metronidazole']);
