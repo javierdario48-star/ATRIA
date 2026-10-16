@@ -4,7 +4,7 @@
 Repositorio `javierdario48-star/ATRIA`; **única rama de escritura** `atria-5.0-core-rebuild-experimental`.
 Baseline remoto `2c4c8031cc364ebcd6a374351f2202ecf5b037f0` con CI [38940082226](https://github.com/javierdario48-star/ATRIA/actions/runs/38940082226) completed/success.
 SHA funcional/test del último cambio antes de este informe: `82cb03f2b64dbd54ef146d38fdb6a537525bc01b`.
-La CI específica del SHA funcional se consulta en GitHub Actions; **no declarar 3/3 mientras el run siga en progreso**.
+CI del SHA funcional: [38943481536](https://github.com/javierdario48-star/ATRIA/actions/runs/38943481536), **completed/success 3/3**: núcleo, Chromium móvil con CIRR y APP completos, y regresión histórica íntegra.
 
 ## Problema real
 Android mostró `enfermera vías y ringer` con dos vías ejecutadas y rechazo de cristaloides por la ID del caso CIRR, aunque APP tenía una implementación farmacológica de Ringer. El antiguo `app-care.js` tenía su propio mapa de preparaciones y el `guard-session.js` autorizaba farmacología física exclusivamente para APP; CIRR seguía gestionando otro mapa de preparación para espironolactona/paracentesis.
@@ -24,7 +24,7 @@ Se prioriza migrar un conjunto **pequeño y verificable** antes de intentar repr
 
 - `src/v5/clinical/physical-nursing.test.js`: nueva prueba de orden **«enfermera vías y ringer»** en CIRR: acceso 2, infusión después de una segunda visita física, 500 ml comprobados, sin cambios ficticios de PA/FC/FR/SpO₂, y dos comprobantes terminales. Además: ceftriaxona 1 g IV, dosis 2 g inválida, Ringer 300 ml inválido, ruta oral rechazada, ninguna enfermera asignada para órdenes médicamente inválidas.
 - `qa/v5/cirr-browser.mjs`: preserva el recorrido CIRR original 100/100 y 133 XP sin agregarle fármacos ajenos; abre una guardia **separada** después para verificar la nueva orden desde la UI pública, con paciente nuevo y sin duplicación.
-- Los recorridos de APP, ECG, estudios, historia, Vega, teclado y bots V4 originales deben continuar verdes en `.github/workflows/atria-v5-core.yml`. Verificar el resultado de CI del último SHA funcional.
+- Los recorridos de APP, ECG, estudios, historia, Vega, teclado y bots V4 originales deben continuar verdes en `.github/workflows/atria-v5-core.yml`. [CI validada 3/3](https://github.com/javierdario48-star/ATRIA/actions/runs/38943481536), SHA `82cb03f2b64dbd54ef146d38fdb6a537525bc01b`. Preview coincidente READY: https://night-shift-clinical-nyhvdefzn-javierdario4878-7324.vercel.app (no implica Android físico probado).
 
 ## Alcance clínico y técnico que NO está terminado
 
