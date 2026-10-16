@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
-import {walkVisibleRoute} from './visible-navigation.mjs';
 
 const h=await browserHarness(),out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results';await fs.mkdir(out,{recursive:true});
 try{
@@ -21,7 +20,21 @@ try{
  await send('Enfermera hemograma');
  assert.equal((await page.evaluate(()=>atriaV5.snapshot().clinical)).patient.orders.length,0,'patient range is authoritative');
  await page.locator('#dieInput').blur();
- const approachPatient=()=>walkVisibleRoute(page,[[496,1060],[496,800],[400,580],[250,470],[144,420]]);
+ await page.locator('#keyboardToggleButton').click();
+ await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
+ async function walkTo(x,y){
+  await page.waitForFunction(()=>{
+   const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
+   return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;
+  });
+  const state=await page.evaluate(()=>({s:atriaV5.snapshot(),r:atriaV5.diagnostics().renderer}));
+  const px=(x-state.r.camera.x)*state.r.scale+state.r.anchorX,py=(y-state.r.camera.y)*state.r.scale+state.r.anchorY;
+  assert(px>=0&&px<state.r.width&&py>65&&py<state.r.height-60,'waypoint is a real visible canvas point');
+  await page.locator('#game').click({position:{x:px,y:py}});
+  await page.waitForFunction(()=>atriaV5.snapshot().player.moving);
+  await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
+ }
+ const approachPatient=async()=>{for(const point of [[496,1060],[496,800],[400,580],[250,470],[144,420]])await walkTo(...point);};
  await approachPatient();
  const patient=await page.evaluate(()=>atriaV5.snapshot().patients[0]),doctor=await page.evaluate(()=>atriaV5.snapshot().player);
  assert(Math.hypot(patient.x-doctor.x,patient.y-doctor.y)<=150);
