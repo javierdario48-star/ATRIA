@@ -55,8 +55,12 @@ try{
  await send('Enfermera signos vitales');
  const spotOrder=(await state()).room.events.filter(e=>e.type==='chat.posted').at(-1);
  assert.deepEqual(spotOrder.clinical.map(x=>[x.id,x.status]),[['vitals','pending']]);
- assert.equal((await state()).patient.lastVitalsKnown?.eventId,previousSpot,
-  'nursing has not yet returned a verified spot measurement');
+ const immediately=await state();
+ if(immediately.patient.lastVitalsKnown?.eventId!==previousSpot){
+  assert(immediately.room.events.some(e=>e.type==='clinical.completed'&&e.clinical.some(x=>
+   x.id==='vitals'&&x.status==='executed'&&x.receipt?.patientUid===immediately.patient.uid)),
+   'even a fast nurse must leave a true spot-vitals receipt');
+ }
  await page.waitForFunction(previous=>{
   const c=atriaV5.snapshot().clinical;
   return c.patient.lastVitalsKnown?.eventId!==previous&&c.patient.lastVitalsKnown?.source==='spot';
