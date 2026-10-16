@@ -66,3 +66,101 @@ body.atria-keyboard-open #chatHistory.expanded{max-height:min(33dvh,260px)}
  body.atria-keyboard-open #chatHistory{max-height:32px;min-height:24px}
 }
 @media(min-width:701px){.atria-key-row .atria-key{font-size:17px}}
+
+
+/* C05.c — world-anchored bedside actions, not a second clinical interface.
+   Only the small buttons intercept touches; the surrounding hospital is walkable. */
+.patient-wheel{
+ position:fixed;z-index:19;width:256px;height:252px;
+ transform:translate(-50%,-50%);pointer-events:none;
+ filter:drop-shadow(0 5px 10px #0007);
+}
+.patient-wheel-caption{
+ position:absolute;left:50%;top:51%;transform:translate(-50%,-50%);
+ background:#092933db;border:1px solid #9bd7db80;border-radius:12px;
+ padding:6px 10px;color:#e8ffff;font-size:10px;font-weight:800;
+ letter-spacing:.06em;pointer-events:none;white-space:nowrap;
+}
+.patient-wheel-controls{position:relative;width:100%;height:100%}
+.patient-wheel-action{
+ position:absolute;width:78px;min-height:62px;display:grid;justify-items:center;align-content:center;gap:3px;
+ border:0;border-radius:14px;background:none;box-shadow:none;pointer-events:auto;
+ color:#f0fffc;font-size:10px;font-weight:750;text-shadow:0 1px 4px #07131eff;
+ padding:0;transition:transform .11s ease;
+}
+.patient-wheel-action:active{transform:scale(.94)}
+.patient-wheel-glyph{
+ display:grid;place-items:center;width:44px;height:44px;
+ border:1px solid #83c9c8a6;border-radius:50%;
+ background:radial-gradient(circle at 35% 25%,#2b6269f7,#092732fa);
+ box-shadow:0 5px 16px #0009,inset 0 1px 3px #ddffff24;
+ font-size:21px;line-height:1;color:#d9f9f1;text-shadow:none;
+}
+.patient-wheel-action:focus-visible .patient-wheel-glyph{outline:2px solid #b1f2ed;outline-offset:2px}
+.action-talk{left:89px;top:0}
+.action-examination{left:178px;top:43px}
+.action-history{left:178px;top:139px}
+.action-studies{left:89px;top:188px}
+.action-treatment{left:0;top:139px}
+.action-patient{left:0;top:43px}
+@media(max-width:350px), (max-height:620px){
+ .patient-wheel{zoom:.82}
+}
+
+/* C05.c — dedicated non-diagnostic bedside monitor presentation.
+   Its status and all numbers are read from confirmed clinical snapshots. */
+dialog[data-panel="monitor"]{
+ width:min(96vw,660px);border-radius:20px;border:1px solid #42616b;
+ background:#06141b;color:#e7f7f5;
+ box-shadow:0 16px 70px #000b,inset 0 0 0 5px #172f36;
+}
+dialog[data-panel="monitor"] .panel{padding:16px 15px 18px}
+dialog[data-panel="monitor"] #modalClose{position:relative;z-index:2;margin:0 0 0 6px;color:#e7f7f5}
+.bedside-monitor-header{display:flex;align-items:center;gap:10px;margin:2px 0 13px}
+.bedside-monitor-header h2{font-size:18px;margin:0}
+.bedside-monitor-header small{font-size:9px;letter-spacing:.13em}
+.monitor-device-led{width:9px;height:9px;border-radius:50%;background:#5cb0af;box-shadow:0 0 9px #49c2b6}
+.bedside-monitor-screen{
+ border:2px solid #314953;border-radius:12px;padding:12px;
+ background:linear-gradient(125deg,#06121a,#091b26 60%,#061019);
+ box-shadow:inset 0 3px 24px #0008,0 0 0 4px #122730;
+ color:#deedf3;font-family:ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+.device-top,.device-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;
+ font-size:9px;letter-spacing:.075em;color:#8db7c0;line-height:1.4}
+.device-top{padding-bottom:10px;border-bottom:1px solid #24505b}
+.device-bottom{padding-top:9px;border-top:1px solid #24505b;letter-spacing:0;font-size:9px}
+.device-patient{max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.device-indicator{width:7px;height:7px;border-radius:50%;flex:0 0 auto;background:#536a74}
+.device-indicator.active{background:#6dffb4;box-shadow:0 0 9px #6dffb4}
+.device-readings{
+ display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding:14px 0 12px;
+}
+.device-value{min-width:0;padding:9px 8px;border-right:1px solid #1b3c44;grid-column:span 2;display:grid;gap:2px}
+.device-value:nth-child(3){border-right:0}
+.device-value:nth-child(n+4){grid-column:span 3;border-top:1px solid #1b3c44}
+.device-value:nth-child(5){border-right:0}
+.device-value>span{font-size:10px;letter-spacing:.08em;color:#83b9c0}
+.device-value strong{font:700 clamp(23px,6vw,39px)/1.15 ui-monospace,Consolas,monospace;letter-spacing:-.065em;white-space:nowrap}
+.device-value small{font-size:10px;color:#8db7c0}
+.device-value.heart strong{color:#86e7ae}
+.device-value.oxygen strong{color:#9be8ed}
+.device-value.pressure strong{color:#e7efff}
+.device-value.breath strong{color:#ebdb94}
+.device-value.temperature strong{color:#f6c59e}
+.device-trace{height:76px;position:relative;overflow:hidden;border:1px solid #224651;border-radius:6px;
+ background-image:linear-gradient(#1b425340 1px,transparent 1px),linear-gradient(90deg,#1b425340 1px,transparent 1px);
+ background-size:22px 22px;background-color:#07151c}
+.device-trace svg{width:100%;height:100%;display:block}
+.device-trace path{stroke:#65f0a4;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round;fill:none;
+ filter:drop-shadow(0 0 3px #50dfaa9c)}
+.device-no-signal{height:100%;display:grid;place-items:center;font-size:10px;color:#7498a0;letter-spacing:.12em}
+.bedside-monitor-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:16px}
+.bedside-monitor-toolbar button{min-height:44px;font-size:12px}
+@media(max-width:390px){
+ .bedside-monitor-screen{padding:8px}
+ .device-value{padding:9px 5px}
+ .device-value strong{font-size:clamp(20px,6vw,30px)}
+ .device-top,.device-bottom{font-size:8px}
+ .device-patient{max-width:30%}
+}
