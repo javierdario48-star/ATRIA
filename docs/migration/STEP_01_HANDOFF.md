@@ -56,3 +56,17 @@ Se eligió **fast-forward estricto** en vez de cherry-pick masivo, merge con res
 > Continúa ATRIA 5.0 en `javierdario48-star/ATRIA`, rama `atria-5.0-core-rebuild-experimental`. Lee `docs/migration/STATUS.md`, `docs/ATRIA_50_MIGRATION_MASTER_PLAN.md` y este `docs/migration/STEP_01_HANDOFF.md`. Verifica SHA remoto/CI antes de escribir. Próxima misión C02: elaborar matriz completa de comportamientos originales, dependencias y equivalencia funcional de los 13 casos y sistemas sociales/voz/enfermería/Vega, con fuentes y pruebas de referencia, sin reconstruir CIRR/APP ni tocar teclado/cámara/movimiento. Al acabar C02, crea `docs/migration/STEP_02_HANDOFF.md`, actualiza `STATUS.md`, verifica CI y preview cuando corresponda. Mantén producción y vendor intactos.
 
 **Siguiente checkpoint:** C02. **No se ha iniciado C02 como implementación.**
+
+## 7. Estabilización de QA después del fast-forward
+
+Al ejecutar CI sobre el HEAD documental, el recorrido CIRR encontró un tap de QA interceptado por el HUD: el punto del mundo quedaba fuera de la zona táctil disponible cuando estaba abierto el teclado. Era un defecto de las coordenadas de la prueba, no una modificación de motor, pacientes o cámara. Una primera alternativa de navegación genérica mediante puntos visibles se eliminó por introducir rutas intermedias no garantizadas.
+
+**Solución final simple y verificada:** los E2E extensos de estudios, CIRR y APP ocultan el teclado con el control público antes de sus recorridos por el mapa, conservando la proyección original ya certificada; la prueba separada `qa/v5/keyboard-camera-browser.mjs` conserva la verificación del teclado abierto, el paseo, la cámara adelantada y el cambio de ambo. Esta última prueba espera a que concluya la transición suave antes de medir la posición. No hay mocks de colisiones, comandos internos de movimiento ni cambios del código ejecutable.
+
+- SHA final de modificación de QA (sin cambios funcionales): `08b6b4bd65dfa4dbfd4db3f8bed66fd0ed991bd7`.
+- Comparación con código aprobado `0b36884...`: **13 commits ahead, 0 behind**; archivos distintos solo `docs/**` y `qa/v5/{app,cirr,studies,keyboard-camera}-browser.mjs`.
+- Última CI que incorpora toda la corrección QA: [38840488381](https://github.com/javierdario48-star/ATRIA/actions/runs/38840488381). Consultar su estado final: el trabajo `clean-core-contract` y el `independent-game-browser` se verificaron `success`; la regresión histórica seguía `in_progress` durante esta actualización, sin fallos reportados entonces. No declarar 3/3 hasta comprobar el resultado final.
+- El código funcional se mantiene **idéntico** al de la preview aprobada; la CI completa de ese código `0b36884...` ya había aprobado 3/3 en [38836248252](https://github.com/javierdario48-star/ATRIA/actions/runs/38836248252).
+- Los despliegues posteriores del mismo proyecto desde esta rama pueden tener SHAs documentales o de QA diferentes; no afirmar que se probó físicamente esa URL si solo está READY en Vercel.
+
+Este apartado supersede las afirmaciones antiguas de “archivos ejecutables integrados” únicamente para el estado de pruebas. La misión C02 y las condiciones de protección permanecen idénticas.
