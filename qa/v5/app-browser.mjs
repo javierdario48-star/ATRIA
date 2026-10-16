@@ -25,6 +25,10 @@ try{
  assert.equal((await state()).patient.administrationLog.length,0,'no treatment remotely from lobby position');
  await page.locator('#dieInput').blur();
  for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){
+  await page.waitForFunction(()=>{
+   const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
+   return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;
+  });
   const t=await page.evaluate(()=>({p:atriaV5.snapshot().player,r:atriaV5.diagnostics().renderer}));
   await page.locator('#game').click({position:{x:(x-t.r.camera.x)*t.r.scale+t.r.anchorX,y:(y-t.r.camera.y)*t.r.scale+t.r.anchorY}});
   await page.waitForFunction(()=>atriaV5.snapshot().player.moving);
