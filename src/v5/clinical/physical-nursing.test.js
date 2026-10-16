@@ -637,3 +637,17 @@ test('C11b single invalid medication keeps its precise native rejection',async()
  assert.equal(f.world.nurseJourneySnapshot().length,0);
  f.session.dispose();f.world.enterLobby();
 });
+
+
+test('C11b a compound oxygen stop cannot connect the monitor when oxygen is inactive',async()=>{
+ const f=fixture('APP-001');
+ const ack=await f.session.post({id:'no-oxygen',text:'Enfermera monitor y suspender oxigeno'});
+ assert.equal(ack.routeError,'unsafe-compound-order');
+ assert.deepEqual(ack.clinical,[]);
+ assert.equal(f.world.nurseJourneySnapshot().length,0);
+ assert.equal(f.session.read().patient.procedures.monitor?.connected??false,false);
+ const single=await f.session.post({id:'single-stop',text:'Enfermera suspender oxigeno'});
+ assert.equal(single.clinical[0].reason,'oxygen-not-active',
+  'the existing single-command native message is still available');
+ f.session.dispose();f.world.enterLobby();
+});

@@ -47,7 +47,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(!migratedTherapies.has(intent.id)||
       intent.kind==='therapy.stop'&&intent.id!=='oxygen')
     return 'unsafe-compound-order';
-   if(intent.kind==='therapy.stop')continue;
+   if(intent.kind==='therapy.stop'){
+    if(intent.id==='oxygen'&&!nativePatient.procedures.oxygen?.active)
+     return 'unsafe-compound-order';
+    continue;
+   }
    try{
     if(isStandardIVMedicine(intent.id))
      parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
