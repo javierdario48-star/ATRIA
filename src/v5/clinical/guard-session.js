@@ -15,7 +15,8 @@ const copy=value=>structuredClone(value);
 const routeReason={
  'no-patient-target':'Acercate al paciente para indicar el estudio.',
  'question-or-negation':'Pregunta o indicación negada: no ejecuté ninguna acción.',
- 'unknown-clause':'La indicación necesita una aclaración; no ejecuté acciones.'
+ 'unknown-clause':'La indicación necesita una aclaración; no ejecuté acciones.',
+ 'unsafe-compound-order':'Orden combinada no ejecutada: al menos una dosis, vía o intervención no está validada. Corregí la indicación completa.'
 };
 
 /** Local authoritative clinical composition. C1 studies and C2 native CIRR
@@ -34,6 +35,30 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  if(nursing&&(!['enqueue','takeArrivals','accept'].every(k=>typeof nursing[k]==='function')))
   throw Error('nursing adapter needs enqueue, takeArrivals and accept');
  for(const item of [...content.therapies,...caseData.interventions])labels.set(item.id,item.label);
+ // Read-only all-or-nothing preflight for *compound* nurse orders. Reuse the
+ // same native case formulary and dose/device parsers; never preview effects.
+ // Single orders still return their existing per-intervention rejection.
+ const migratedTherapies=new Set(['oxygen','fluid','ceftriaxone','metronidazole',
+  ...(caseData.id==='APP-001'?['npo']:['espironolactona','sal_restriccion','paracentesis_ter'])]);
+ function validateClinicalBatch(intents){
+  if(intents.length<2)return null;
+  for(const intent of intents){
+   if(!['therapy.request','therapy.stop'].includes(intent.kind))continue;
+   if(!migratedTherapies.has(intent.id)||
+      intent.kind==='therapy.stop'&&intent.id!=='oxygen')
+    return 'unsafe-compound-order';
+   if(intent.kind==='therapy.stop')continue;
+   try{
+    if(isStandardIVMedicine(intent.id))
+     parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
+    else if(intent.id==='oxygen')
+     parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
+    else if(intent.id==='espironolactona')
+     parseCirrDose(intent.clause||intent.sourceText,content.defaultDoses?.espironolactona);
+   }catch{return 'unsafe-compound-order';}
+  }
+  return null;
+ }
  const guardClock=createGuardClock(actorId);let clock=guardClock.read(),disposed=false;
  const credentials=Object.freeze({roomId,actorId,nonce:Symbol('local-room')});
  const port=createNativeClinicalPort({
@@ -114,7 +139,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   authenticate:token=>token===credentials?{id:actorId,roomId}:null,clinicalPort:port,
   resolveSpeechContext:({envelope})=>({...resolveContext({targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,
    ...(care&&nursing?{venousAccessCount:nativePatient.venousAccessCount??0,pendingIV:[...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv'),defaultDoses:content.defaultDoses}:{}),
-   studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions}),
+   studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions,
+   validateClinicalBatch}),
   respondNpc:({patientUid,text,mode})=>vegaGuidance(patientUid===nativePatient.uid?nativePatient:null,caseData,text,{mode}),
   time:()=>clock.clinicalMinute,emit:(event,snapshot)=>onChange(copy(event),copy(snapshot))});
  function resultText(item,label){

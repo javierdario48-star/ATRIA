@@ -372,3 +372,21 @@ test('an executor without completion subscriptions keeps the existing dispatch c
  authority.dispose();
  assert.equal((await authority.dispatch(command,'ok')).status,'rejected');
 });
+
+test('C11b batch preflight can reject before room authority calls any clinical port',async()=>{
+ const f=fixture();
+ const original=await f.send(1,'validated','Enfermera ceftriaxona y metronidazol');
+ assert.equal(original.clinical.length,2,'default rooms without V5 policy remain unchanged');
+ const port={execute:()=>{throw Error('preflight must prevent native effect');}};
+ const safe=createRoomAuthority({roomId:'batch-preflight',mode:'solo',
+  members:[{id:'doctor'}],patients:[{uid:'patient'}],
+  authenticate:()=>({id:'doctor',roomId:'batch-preflight'}),clinicalPort:port,
+  resolveSpeechContext:()=>({patientUid:'patient',therapies,studies,
+   validateClinicalBatch:items=>items.some(x=>x.id==='metronidazole')?'unsafe-compound-order':null})});
+ const result=await safe.dispatch({id:'bad',kind:'chat.post',text:'Enfermera ceftriaxona y metronidazol'},'ok');
+ assert.equal(result.status,'received-not-executed');
+ assert.equal(result.routeError,'unsafe-compound-order');
+ assert.deepEqual(result.clinical,[]);
+ assert.equal(safe.snapshot().transcript.length,1);
+ safe.dispose();
+});

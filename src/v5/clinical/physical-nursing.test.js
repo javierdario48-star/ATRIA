@@ -576,3 +576,64 @@ test('C08d repeated confirmed monitor order never creates a redundant bedside tr
  assert.deepEqual(f.session.read().patient.administrationLog,[]);
  f.session.dispose();f.world.enterLobby();
 });
+
+
+test('C11b invalid compound IV dose does not start a valid monitor or IV trip',async()=>{
+ for(const caseId of ['APP-001','CIRR-001']){
+  const f=fixture(caseId);
+  const bad=await f.session.post({id:'invalid-compound',
+   text:'Enfermera monitor y ceftriaxona 2 g'});
+  assert.equal(bad.routeError,'unsafe-compound-order');
+  assert.deepEqual(bad.clinical,[]);
+  assert.equal(f.world.nurseJourneySnapshot().length,0);
+  assert.equal(f.session.read().patient.procedures.monitor?.connected??false,false);
+  assert.equal(f.session.read().patient.venousAccessCount,0);
+  assert.deepEqual(f.session.read().patient.pendingTreatments,[]);
+  assert.deepEqual(f.session.read().patient.administrationLog,[]);
+  assert(f.session.read().messages.some(x=>x.role==='nurse'&&/orden combinada no ejecutada/i.test(x.text)));
+  const retry=await f.session.post({id:'invalid-compound',text:'Enfermera monitor y ceftriaxona 2 g'});
+  assert.deepEqual(retry,bad);
+  f.session.dispose();f.world.enterLobby();
+ }
+});
+
+test('C11b valid first drug or IV cannot execute before a later invalid compound drug',async()=>{
+ const f=fixture('APP-001');
+ for(const [id,text] of [
+  ['fluid-dose','Enfermera Ringer 500 ml y ceftriaxona 2 g'],
+  ['other-dose','Enfermera dos vias, Ringer 300 ml y monitor'],
+  ['unsupported','Enfermera monitor y morfina 4 mg'],
+  ['oxygen-device','Enfermera monitor y oxigeno mascara 4 L/min']
+ ]){
+  const ack=await f.session.post({id,text});
+  assert.equal(ack.routeError,'unsafe-compound-order',text);
+  assert.deepEqual(ack.clinical,[]);
+ }
+ assert.equal(f.world.nurseJourneySnapshot().length,0);
+ assert.equal(f.session.read().patient.venousAccessCount,0);
+ assert.equal(f.session.read().patient.procedures.oxygen,undefined);
+ assert.deepEqual(f.session.read().patient.pendingTreatments,[]);
+ assert.deepEqual(f.session.read().patient.administrationLog,[]);
+ f.session.dispose();f.world.enterLobby();
+});
+
+test('C11b valid compound still creates real native access and independent medicine tasks',async()=>{
+ const f=fixture('APP-001');
+ const order=await f.session.post({id:'valid-combo',
+  text:'Enfermera Ringer 500 ml y ceftriaxona 1 g y metronidazol 500 mg'});
+ assert.deepEqual(order.clinical.map(x=>[x.id,x.status]),[
+  ['iv','pending'],['fluid','pending'],['ceftriaxone','pending'],['metronidazole','pending']]);
+ assert.equal(order.routeError,null);
+ assert.equal(f.world.nurseJourneySnapshot().length,1);
+ f.session.dispose();f.world.enterLobby();
+});
+
+test('C11b single invalid medication keeps its precise native rejection',async()=>{
+ const f=fixture('APP-001');
+ const ack=await f.session.post({id:'single-bad',text:'Enfermera ceftriaxona 2 g'});
+ assert.equal(ack.routeError,null);
+ assert.equal(ack.clinical[0].status,'rejected');
+ assert.equal(ack.clinical[0].reason,'unsupported-dose');
+ assert.equal(f.world.nurseJourneySnapshot().length,0);
+ f.session.dispose();f.world.enterLobby();
+});

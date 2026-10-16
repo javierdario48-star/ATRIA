@@ -71,7 +71,12 @@ export function routeWardSpeech(text,context={}){
   intents.push({kind,id:item.id,sourceText:original,clause:item.text,count:item.count||1});
  }
  const planned=planNursingIVAccess(intents,context);
- return {recipient,patientUid,intents:planned,original,
+ // A compound command is one clinical intention. Never start its monitor,
+ // IV placement or first drug when another clause fails native validation.
+ const batchError=planned.length>1&&typeof context.validateClinicalBatch==='function'?
+  context.validateClinicalBatch(planned):null;
+ return {recipient,patientUid,intents:batchError?[]:planned,original,
+  ...(batchError?{error:batchError}:{}),
   ...(parsed.items.length>12||planned.length>12?{error:'too-many-actions',intents:[]}:{}),
   ...(planned.length===0?{error:'no-recognized-action'}:{})};
 }
