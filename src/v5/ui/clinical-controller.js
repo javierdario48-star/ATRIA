@@ -4,13 +4,14 @@ import {setHTML} from './render-content.js';
 import {ecgPresentation} from '../clinical/ecg-morphology.js';
 import {createEcgSweep} from './ecg-sweep.js';
 import {monitorOrderExamples} from './monitor-order-suggestions.js';
+import {monitorOrderLedger,administeredTreatmentHistory,latestMonitorOrderState} from './monitor-order-ledger.js';
 
 /** UI state only. Every clinical action keeps its explicit UID and uses send().
  * The app owns the dialog and event listener; this controller owns neither timers nor listeners.
  */
 export function createClinicalInterface({document,session,open,close,send,onTalk,notify}){
  const ui=id=>document.getElementById(id);
- let patientUid=null,regionId='general',showOrderHints=false,lastEcgAt=-Infinity;
+ let patientUid=null,regionId='general',showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null;
  const ecgSweep=createEcgSweep();
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
  const post=text=>send(text,{patientUid});
@@ -25,7 +26,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  function showMonitor(patient){
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid||!s.patient.liveVitals){notify('Monitor clínico todavía no disponible para este caso.');return;}
   patientUid=patient.uid;
-  showOrderHints=false;lastEcgAt=-Infinity;ecgSweep.reset();
+  showOrderHints=false;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();
   open('<div class="bedside-monitor-header"><span class="monitor-device-led" aria-hidden="true"></span><div><h2>Monitor · '+esc(patient.bedId)+'</h2><small>PANTALLA DE CABECERA · '+esc(patient.bedId)+'</small></div></div>'+
    '<div id="bedsideMonitor" class="bedside-monitor-screen"></div>'+
    '<section class="monitor-prescription" aria-label="Indicaciones desde el monitor">'+
@@ -39,6 +40,8 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
     '<p id="monitorOrderFeedback" class="monitor-feedback" role="status" hidden></p>'+
     '<small>Las sugerencias no administran nada: cada orden pasa por enfermería y el motor clínico.</small>'+
    '</section>'+
+   '<details class="monitor-order-history" open><summary>Historial de intervenciones y medicamentos</summary>'+
+    '<div id="monitorMedicationHistory"></div><div id="monitorOrderHistory"></div></details>'+
    '<div class="bedside-monitor-toolbar" aria-label="Controles del monitor">'+
    '<button data-action="toggle-monitor" class="primary"></button><button data-action="record-vitals">Medir ahora</button>'+
    '<button data-action="patient-chart">Historia</button></div>','monitor');
@@ -69,7 +72,8 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(hint)hint.setAttribute('aria-pressed',String(showOrderHints));
  }
  function onInput(target){if(target?.id!=='monitorOrderInput')return false;
-  showOrderHints=false;const feedback=ui('monitorOrderFeedback');if(feedback)feedback.hidden=true;
+  showOrderHints=false;lastMonitorOrderId=null;
+  const feedback=ui('monitorOrderFeedback');if(feedback)feedback.hidden=true;
   renderOrderSuggestions();return true;
  }
  async function sendMonitorOrder(){
@@ -79,16 +83,11 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   // Order never mutates patient from UI. The same room authority decides pending,
   // executed or rejected; no visual confirmation implies administration.
   const reply=await post(/^enfermer[ao]\b/i.test(text)||text.startsWith('/')?text:'Enfermera, '+text);
-  if(feedback){
-   const statuses=reply?.clinical?.map(x=>x.status)||[];
-   feedback.hidden=false;
-   feedback.dataset.status=statuses.some(x=>x==='rejected')?'rejected':
-    statuses.some(x=>x==='pending')?'pending':
-    statuses.some(x=>x==='executed')?'executed':'unknown';
-   feedback.textContent=feedback.dataset.status==='rejected'?'No ejecutado. Revisá la aclaración de Enfermería en el chat.':
-    feedback.dataset.status==='pending'?'Orden recibida; intervención aún pendiente.':
-    feedback.dataset.status==='executed'?'Acción confirmada por el motor clínico.':
-    'Orden enviada; consultá la respuesta en el chat.';
+  lastMonitorOrderId=reply?.clinical?.length?reply.commandId:null;
+  if(feedback&&!lastMonitorOrderId){
+   feedback.hidden=false;feedback.dataset.status='rejected';
+   feedback.textContent=reply?.routeError?'Orden no reconocida. Revisá el chat de enfermería.':
+    'No se confirmó ninguna indicación clínica. Revisá el chat.';
   }
   renderOrderSuggestions();render();
  }
@@ -121,6 +120,44 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    '<div class="actions"><button data-action="order-therapy" class="primary">Indicar a Enfermera</button><button data-action="patient-chart">Volver</button></div>');render();
  }
  function showHistory(){if(!state())return;open('<h2>Historia clínica</h2><div id="fullClinicalHistory"></div><div class="actions"><button data-action="patient-chart">Volver al paciente</button></div>');render();}
+ function renderMonitorRecords(s){
+  const orders=monitorOrderLedger(s.room,s.patient);
+  const medicines=administeredTreatmentHistory(s.patient);
+  const confirmed=ui('monitorMedicationHistory');
+  if(confirmed)setHTML(confirmed,'<h3>Administraciones registradas · '+medicines.length+'</h3>'+
+   (medicines.length?medicines.slice().reverse().map(t=>
+    '<div class="monitor-order-record" data-status="executed"><b>'+esc(t.label)+
+    '</b><small>Administrado y confirmado'+(t.dose?' · '+esc(t.dose):'')+'</small></div>').join(''):
+    '<p class="monitor-order-empty">Todavía no se administraron medicamentos.</p>'));
+  const history=ui('monitorOrderHistory');
+  if(history)setHTML(history,'<h3>Órdenes y procedimientos recientes</h3>'+
+   (orders.length?orders.slice(-16).reverse().map(item=>{
+    const medicine=s.patient.administrationLog?.find(t=>t.sourceEventId===item.eventId);
+    const label=medicine?.label||s.patient.treatments?.find(t=>t.sourceEventId===item.eventId)?.label||
+     ({iv:'Acceso venoso',monitor:'Monitor',connect:'Conexión de monitor',disconnect:'Desconexión de monitor',
+      fluid:'Ringer / cristaloides',ceftriaxone:'Ceftriaxona',metronidazole:'Metronidazol',
+      paracentesis_ter:'Paracentesis terapéutica',espironolactona:'Espironolactona'}[item.id]||item.id);
+    const stage=item.status==='executed'?'Confirmado':item.status==='pending'?'Pendiente':
+     item.status==='rejected'?'No ejecutado':'Sin confirmar';
+    const note=item.status==='executed'&&item.receipt?.message?item.receipt.message:
+     item.status==='rejected'?(item.receipt?.message||item.reason||'Orden rechazada'):
+     item.status==='pending'?'Enfermería o preparación en curso':'Consultar el chat';
+    return '<div class="monitor-order-record" data-status="'+esc(item.status)+'"><b>'+esc(label)+
+     '</b><small>'+esc(stage)+' · '+esc(note)+'</small></div>';
+   }).join(''):'<p class="monitor-order-empty">Todavía no se registraron órdenes.</p>'));
+  const feedback=ui('monitorOrderFeedback');
+  if(feedback&&lastMonitorOrderId){
+   const status=latestMonitorOrderState(orders,lastMonitorOrderId);
+   if(status){
+    feedback.hidden=false;feedback.dataset.status=status.status;
+    feedback.textContent=status.status==='pending'?
+     'En curso · '+status.completed+'/'+status.total+' intervenciones confirmadas.':
+     status.status==='executed'?'Intervención confirmada · '+status.completed+'/'+status.total+' completadas.':
+      'No ejecutado o parcialmente rechazado · '+status.completed+'/'+status.total+
+      ' confirmadas. Consultá el detalle y el chat.';
+   }
+  }
+ }
  function render(){
   const s=state();if(!s)return;const p=s.patient;
   setHTML(ui('studyOrders'),p.orders.length?p.orders.map(order=>'<div data-study="'+esc(order.id)+'" data-status="'+order.status+'"><b>'+esc(order.label)+'</b><small>'+
@@ -135,6 +172,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    ecgSweep.reset();lastEcgAt=-Infinity;
   }
   setHTML(ui('bedsideMonitor'),monitorHTML(p));
+  renderMonitorRecords(s);
   const monitorButton=document.querySelector('[data-action="toggle-monitor"]');
   if(monitorButton){monitorButton.textContent=p.procedures?.monitor?.connected?'Desconectar monitor':'Conectar monitor';monitorButton.disabled=p.caseEnded;}
   setHTML(ui('fullClinicalHistory'),historyHTML(p));
@@ -179,5 +217,5 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   render();return true;
  }
  return Object.freeze({showPatient,showMonitor,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
-  reset(){patientUid=null;regionId='general';lastEcgAt=-Infinity;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
+  reset(){patientUid=null;regionId='general';lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }
