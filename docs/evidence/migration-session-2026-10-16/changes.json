@@ -1,0 +1,86 @@
+{
+  "C02": {
+    "start": "7dff1e82bb27f3e381c757c8f41f7fe3faf924aa",
+    "end": "0bb0c7fa2e56b803c2ebc248482f5f61bd9aa239",
+    "files": [
+      "M\tdocs/ATRIA_50_MIGRATION_MASTER_PLAN.md",
+      "A\tdocs/migration/CURRENT_HANDOFF.md",
+      "A\tdocs/migration/PARITY_MATRIX.md",
+      "A\tdocs/migration/PHASE_A_IMPLEMENTATION.md",
+      "M\tdocs/migration/STATUS.md",
+      "A\tdocs/migration/STEP_02_HANDOFF.md",
+      "A\tdocs/migration/legacy-module-inventory.json"
+    ]
+  },
+  "C04_C05a": {
+    "start": "0bb0c7fa2e56b803c2ebc248482f5f61bd9aa239",
+    "end": "6e75b18d26dc1dcd3bf3ffa08af177f20efe01fe",
+    "files": [
+      "M\t.github/workflows/atria-v5-core.yml",
+      "M\tpackage.json",
+      "M\tqa/v5/app-browser.mjs",
+      "A\tqa/v5/characterize-exam-native.mjs",
+      "M\tqa/v5/cirr-browser.mjs",
+      "M\tqa/v5/clinical-clock-browser.mjs",
+      "A\tqa/v5/hospital-interactions-browser.mjs",
+      "M\tscripts/build-v5-core.mjs",
+      "M\tsrc/v5/app/application.js",
+      "M\tsrc/v5/app/build.test.js",
+      "M\tsrc/v5/app/world.js",
+      "M\tsrc/v5/clinical/app-care.js",
+      "M\tsrc/v5/clinical/cirr-care.js",
+      "A\tsrc/v5/clinical/exam-contract.js",
+      "M\tsrc/v5/clinical/guard-session.js",
+      "A\tsrc/v5/clinical/history-presentation.test.js",
+      "A\tsrc/v5/clinical/monitor.test.js",
+      "A\tsrc/v5/clinical/observations.js",
+      "A\tsrc/v5/clinical/patient-observations.js",
+      "A\tsrc/v5/clinical/physical-exam.js",
+      "A\tsrc/v5/clinical/physical-exam.test.js",
+      "A\tsrc/v5/content/migration-inventory.test.js",
+      "M\tsrc/v5/core/room-authority.js",
+      "M\tsrc/v5/core/speech-router.js",
+      "A\tsrc/v5/engine/interactions.js",
+      "A\tsrc/v5/engine/interactions.test.js",
+      "M\tsrc/v5/render/hospital.js",
+      "A\tsrc/v5/ui/clinical-controller.js",
+      "M\tsrc/v5/ui/clinical-panels.js",
+      "A\tsrc/v5/ui/examination-panel.js",
+      "A\tsrc/v5/ui/render-content.js",
+      "M\tsrc/v5/web/game.css"
+    ]
+  },
+  "C06a": {
+    "start": "6e75b18d26dc1dcd3bf3ffa08af177f20efe01fe",
+    "end": "3ea74db7f788bd174cb341d0a4be7fa82c021e71",
+    "files": [
+      "M\t.github/workflows/atria-v5-core.yml",
+      "A\tqa/v5/characterize-dialogue-native.mjs",
+      "A\tqa/v5/patient-dialogue-browser.mjs",
+      "M\tsrc/v5/clinical/app-care.js",
+      "M\tsrc/v5/clinical/cirr-care.js",
+      "M\tsrc/v5/clinical/guard-session.js",
+      "M\tsrc/v5/clinical/history-presentation.test.js",
+      "A\tsrc/v5/clinical/patient-dialogue.js",
+      "A\tsrc/v5/clinical/patient-dialogue.test.js",
+      "M\tsrc/v5/clinical/patient-observations.js",
+      "A\tsrc/v5/clinical/patient-profiles.js",
+      "M\tsrc/v5/core/speech-router.js",
+      "M\tsrc/v5/ui/clinical-panels.js"
+    ]
+  },
+  "C05b": {
+    "start": "3ea74db7f788bd174cb341d0a4be7fa82c021e71",
+    "end": "52055441920d5e40291c9d0aaec4521a2acfe50c",
+    "files": [
+      "M\t.github/workflows/atria-v5-core.yml",
+      "A\tqa/v5/characterize-monitor-native.mjs",
+      "M\tqa/v5/hospital-interactions-browser.mjs",
+      "M\tsrc/v5/app/world.js",
+      "A\tsrc/v5/engine/bedside-layout.js",
+      "M\tsrc/v5/engine/interactions.js",
+      "M\tsrc/v5/engine/interactions.test.js",
+      "M\tsrc/v5/render/hospital.js"
+    ]
+  }
+}

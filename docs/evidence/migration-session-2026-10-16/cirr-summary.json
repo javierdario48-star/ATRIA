@@ -1,0 +1,60 @@
+{
+  "realBrowser": true,
+  "androidEmulated": true,
+  "physicalAndroid": false,
+  "url": "http://127.0.0.1:45075/",
+  "caseId": "CIRR-001",
+  "authenticHistory": true,
+  "allFiveExamTechniques": true,
+  "actualNativeAdministration": {
+    "id": "espironolactona",
+    "label": "Espironolactona",
+    "dose": {
+      "defaultApplied": false,
+      "amount": 100,
+      "unit": "mg",
+      "display": "100 mg"
+    },
+    "sourceEventId": "guard-459d1c54-14ae-4bbb-b429-8a91d0ea5766:local-player:message-19:0",
+    "patientUid": "db8c772b-9e80-44ab-bb1a-7ffccfb77a7a:patient-2",
+    "actorId": "local-player",
+    "administeredAtRealSecond": 11.383000000000001,
+    "administeredAtNativeMinute": 1.3122030000000002
+  },
+  "realElapsedStudies": true,
+  "nativeSpironolactoneVitalEffects": "none (characterized original model)",
+  "closure": {
+    "kind": "clinical.closure",
+    "eventId": "guard-459d1c54-14ae-4bbb-b429-8a91d0ea5766:local-player:message-26:0",
+    "patientUid": "db8c772b-9e80-44ab-bb1a-7ffccfb77a7a:patient-2",
+    "actorId": "local-player",
+    "caseId": "CIRR-001",
+    "destination": "sala",
+    "quality": {
+      "score": 100,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 25,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0
+    },
+    "xp": 133,
+    "closed": true
+  },
+  "nativeProcedureResponse": {
+    "temp": 37.2,
+    "hr": 93.84237173683726,
+    "rr": 19.894914491224846,
+    "sys": 108,
+    "dia": 68,
+    "spo2": 96
+  },
+  "explicitNativeProcedure": true,
+  "exactlyOnceXP": true,
+  "persistedAfterReload": true,
+  "cleanReturnToLobby": true,
+  "errors": []
+}

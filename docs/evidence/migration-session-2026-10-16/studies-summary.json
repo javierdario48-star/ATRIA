@@ -1,0 +1,15 @@
+{
+  "realBrowser": true,
+  "androidEmulated": true,
+  "physicalAndroid": false,
+  "realElapsedStudyClock": true,
+  "caseId": "CIRR-001",
+  "nativeHemogramResult": true,
+  "rangeValidation": true,
+  "medicationsAdministered": 0,
+  "originalCompletionCommandId": "message-3",
+  "pendingDuplicateAcknowledgements": 2,
+  "selectedStudyPreservesNativeCase": true,
+  "exactlyOnceResult": true,
+  "cleanReturnToLobby": true
+}

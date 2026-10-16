@@ -11,7 +11,7 @@ Inventario de **cada módulo de producción** de los siete dominios originales:
 | ID | Referencia efectiva y prueba existente | Destino V5 / decisión | Contrato positivo y negativo | Estado al recuperar C01 |
 |---|---|---|---|---|
 | W01 | `navigation.js` V5; `qa/v5/navigation-browser.mjs` | Conservar mundo/navegación | Ocho camas alcanzables; bloquear paredes/puertas | Implementado |
-| W02 | `handleGameTap`, `v40Navigate`, `v40MonitorPoint` en HTML original | Extraer entidades/hitboxes a `engine/interactions.js` | Toque elige UID/cama; lejano navega sin ejecutar clínica | Pendiente |
+| W02 | `handleGameTap`, `v40Navigate`, última capa `cs413-monitor-walk-v4_1_3` en original efectivo | Extraer entidades/hitboxes a `engine/interactions.js` | Toque elige UID/cama; lejano navega sin ejecutar clínica; pantalla real, no punto v40 sustituido | Pendiente |
 | W03 | `FrameScheduler`, `Lifecycle`, timeline V5 | Reutilizar puro | Un RAF, listeners destruidos; suspender/reanudar sin saltos | Implementado local |
 | U01 | Teclado/cámara de rama aprobada; `keyboard-camera-browser` | Conservar | Cuatro filas, caret, ocultar, rotar, ambo sin teletransporte | Implementado |
 | U02 | `ns421-clinical-panels`, `historyHTML`, `monitorHTML` | Reconstruir componentes presentacionales | Evidencia obtenida visible; no filtrar signos/examen/resultados desconocidos | Parcial |
@@ -80,3 +80,20 @@ clasifican para extraer responsabilidades; su HTML generado no se copiará al ju
 El original conserva toda su suite y datos. El orden aprobado es A interacción,
 B comunicación/enfermería, C mecanismos/contratos, D voz/guardia/progresión y E red.
 Los informes STEP y STATUS registran la implementación efectiva posterior a esta matriz.
+
+## Avance comprobado posterior al inventario
+
+La columna anterior conserva el estado de recuperación de C01. Para el estado
+vigente leer STATUS y CURRENT_HANDOFF. C04/C05.a y C06.a ya se publicaron, y C05.b
+corrige la extracción de monitores con referencia efectiva final, no con una capa
+antigua que el propio original reemplaza.
+
+| Contratos | Avance | Límite conservado |
+|---|---|---|
+| W02 | Paciente/monitor con UID, hitbox del mundo y aproximación; ocho pantallas comparadas | Un paciente activo en la UI; guardia continua pendiente |
+| U02/E01/E02 | Historia obtenida, examen por región/técnica y Glasgow, controles estables | CIRR/APP; no valida automáticamente once casos diferidos |
+| M01 | Abrir, medir, conectar, desconectar y registro final, sin filtrar desconocidos | ECG/ondas/controles originales completos pendientes |
+| C01 | ALiCIA/antecedentes/síntomas/contexto, subjetivo real y una conversación | Variantes fuera de contratos requieren caracterización |
+| C02/N01/N02/V01 | Enrutamiento explícito y base anterior conservados | C07/C08 y tutor Vega completos todavía pendientes |
+
+Informes: STEP_04, STEP_05 (incluye corrección C05.b), STEP_06 y CURRENT_HANDOFF.

@@ -1,0 +1,79 @@
+{
+  "caseId": "APP-001",
+  "browser": true,
+  "mobileEmulation": true,
+  "physicalAndroid": false,
+  "confirmedVenousAccess": true,
+  "antibiotics": [
+    {
+      "id": "ceftriaxone",
+      "label": "Ceftriaxona IV",
+      "dose": {
+        "amount": 1000,
+        "unit": "mg",
+        "display": "1 g",
+        "defaultApplied": false
+      },
+      "sourceEventId": "guard-27748ef9-e622-4917-a904-62ffa7c2a789:local-player:message-15:0",
+      "actorId": "local-player",
+      "patientUid": "13dec308-5abc-498c-934d-6e3808821a63:patient-2",
+      "administeredAtRealSecond": 11.7744,
+      "administeredAtNativeMinute": 1.3727249999999998
+    },
+    {
+      "id": "metronidazole",
+      "label": "Metronidazol IV",
+      "dose": {
+        "amount": 500,
+        "unit": "mg",
+        "display": "500 mg",
+        "defaultApplied": false
+      },
+      "sourceEventId": "guard-27748ef9-e622-4917-a904-62ffa7c2a789:local-player:message-15:1",
+      "actorId": "local-player",
+      "patientUid": "13dec308-5abc-498c-934d-6e3808821a63:patient-2",
+      "administeredAtRealSecond": 11.7744,
+      "administeredAtNativeMinute": 1.3727249999999998
+    }
+  ],
+  "fluidVitalResponse": {
+    "temp": 38.1,
+    "hr": 107.926584,
+    "rr": 19.993882,
+    "sys": 118.085652,
+    "dia": 72.042826,
+    "spo2": 98
+  },
+  "surgeryConsult": {
+    "id": "cirugia",
+    "status": "done",
+    "accepted": true,
+    "patientUid": "13dec308-5abc-498c-934d-6e3808821a63:patient-2",
+    "sourceEventId": "guard-27748ef9-e622-4917-a904-62ffa7c2a789:local-player:message-18:0"
+  },
+  "disposition": "ED transfer to surgery, not performed appendectomy",
+  "closure": {
+    "kind": "clinical.closure",
+    "eventId": "guard-27748ef9-e622-4917-a904-62ffa7c2a789:local-player:message-21:0",
+    "patientUid": "13dec308-5abc-498c-934d-6e3808821a63:patient-2",
+    "actorId": "local-player",
+    "caseId": "APP-001",
+    "destination": "quirofano",
+    "quality": {
+      "score": 100,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 25,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0
+    },
+    "xp": 133,
+    "closed": true
+  },
+  "exactlyOnceXP": true,
+  "persistedAfterReload": true,
+  "errors": []
+}

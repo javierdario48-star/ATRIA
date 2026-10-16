@@ -1,0 +1,152 @@
+{
+  "repository": "javierdario48-star/ATRIA",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "functionalHead": "52055441920d5e40291c9d0aaec4521a2acfe50c",
+  "tree": "859a15b6a6143c0aeda78d0b5ce9ef1fb04fd51b",
+  "local": {
+    "unit": {
+      "passed": 137,
+      "failed": 0,
+      "skipped": 0
+    },
+    "core": {
+      "passed": 39,
+      "failed": 0
+    },
+    "gameBuildFiles": 68,
+    "coreBuildValidatedModules": 9,
+    "nativeExamComparisons": 40,
+    "nativeDialogueComparisons": 20,
+    "nativePatientProfiles": 2,
+    "nativeMonitorComparisons": 16,
+    "nativeCirrScenarios": 4,
+    "nativeAppScenarios": 5,
+    "fullHistoricalCommand": "npm test",
+    "fullHistoricalExitCode": 0,
+    "historicalLocalExecutionScope": "during Phase A; full historical regression also retained on every published source CI",
+    "clinicalJourneysSource": "3ea74db7f788bd174cb341d0a4be7fa82c021e71",
+    "cirr": {
+      "score": 100,
+      "xp": 133,
+      "administrations": 1
+    },
+    "app": {
+      "score": 100,
+      "xp": 133,
+      "administrations": 3
+    },
+    "browserDriver": "Playwright 1.58.2",
+    "browser": "Chromium 153.0.8010.0",
+    "androidEmulated": true,
+    "physicalAndroid": false,
+    "newMonitorScreenBrowserSource": "52055441920d5e40291c9d0aaec4521a2acfe50c",
+    "monitorBrowser": "passed independent visible B1 screen; keyboard open/closed; spot/continuous/frozen measurement",
+    "fullHistoricalCiFinalSource": "completed/success in 38848167010"
+  },
+  "review": {
+    "phaseA": "3 findings reproduced and fixed: stable controls, final monitor label, real native observation characterization",
+    "dialogue": "3 findings reproduced and fixed: symptom duration wording, greeting clauses, appetite keyword precedence",
+    "monitorCorrection": "bounded review approved: positions/fallback/UID/range/renderer"
+  },
+  "protected": {
+    "legacyModulesUnchanged": 73,
+    "goldenMasterTest": "passed",
+    "approvedRef": "0b36884fa4a879d49c588fa8f3f262a535dd3070",
+    "recoveryRef": "646a0ab3f19991ce4e4c4239760db6bfb17c18a1",
+    "refsRecheckedInGitHub": true
+  },
+  "scope": {
+    "newCases": 0,
+    "newDrugs": 0,
+    "runtimeHistoricalHtmlDependencies": false,
+    "parallelClinicalEngine": false,
+    "multiPatientRuntimeComplete": false,
+    "multiplayerIndependentClientsTestedV5": false
+  },
+  "publishedCi": [
+    {
+      "sha": "0bb0c7fa2e56b803c2ebc248482f5f61bd9aa239",
+      "run": 38844274519,
+      "status": "completed",
+      "conclusion": "success",
+      "jobsPassed": 3
+    },
+    {
+      "sha": "6e75b18d26dc1dcd3bf3ffa08af177f20efe01fe",
+      "run": 38845430021,
+      "status": "completed",
+      "conclusion": "success",
+      "jobsPassed": 3
+    },
+    {
+      "sha": "3ea74db7f788bd174cb341d0a4be7fa82c021e71",
+      "run": 38847059492,
+      "status": "completed",
+      "conclusion": "success",
+      "jobsPassed": 3
+    },
+    {
+      "sha": "52055441920d5e40291c9d0aaec4521a2acfe50c",
+      "run": 38848167010,
+      "status": "completed",
+      "conclusion": "success",
+      "jobsPassed": 3
+    }
+  ],
+  "previews": [
+    {
+      "sha": "6e75b18d26dc1dcd3bf3ffa08af177f20efe01fe",
+      "url": "https://night-shift-clinical-bwfecjjv2-javierdario4878-7324.vercel.app/",
+      "state": "READY",
+      "publicChecks": [
+        "boot",
+        "lobby",
+        "guard",
+        "unknown-vitals",
+        "anatomical-selection",
+        "distant-exam-rejected",
+        "lobby-return"
+      ]
+    },
+    {
+      "sha": "3ea74db7f788bd174cb341d0a4be7fa82c021e71",
+      "url": "https://night-shift-clinical-17f62zm28-javierdario4878-7324.vercel.app/",
+      "state": "READY",
+      "publicChecks": [
+        "boot",
+        "lobby",
+        "guard",
+        "world-walking",
+        "far-patient-approach",
+        "explicit-B1-chart",
+        "greeting-alcohol-question",
+        "fever-denial-contextual-follow-up",
+        "acquired-history-no-exam-vitals-drugs",
+        "region-selection",
+        "abdominal-palpation-only"
+      ],
+      "knownFailure": "visible B1 monitor was missed; effective final native layout corrected in 5205544"
+    },
+    {
+      "sha": "52055441920d5e40291c9d0aaec4521a2acfe50c",
+      "url": "https://night-shift-clinical-2k0feclvl-javierdario4878-7324.vercel.app/",
+      "state": "READY",
+      "publicChecks": [
+        "boot",
+        "lobby",
+        "guard",
+        "world-walking",
+        "visible-B1-monitor-tap",
+        "far-monitor-approach",
+        "explicit-B1-monitor",
+        "initially-unknown-vitals",
+        "spot-measurement-without-connection",
+        "continuous-connection",
+        "disconnect-retains-known-measurement",
+        "lobby-return"
+      ],
+      "publicClinicalClosure": false,
+      "publicMedicationAdministration": false
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "test": "hospital-interactions",
+  "realBrowser": true,
+  "physicalAndroid": false,
+  "androidEmulated": true,
+  "url": "http://127.0.0.1:44453/",
+  "worldHitboxes": true,
+  "visibleNativeMonitorScreen": true,
+  "explicitPatientUid": true,
+  "unknownMonitorNoLeak": true,
+  "spotAndContinuousMeasurement": true,
+  "anatomyAndTechniques": true,
+  "partialExamDoesNotComplete": true,
+  "glasgowByComponents": true,
+  "historyAcquiredEvidence": true,
+  "keyboardOpenAndClosed": true,
+  "periodicRefreshPreservesFocusAndPress": true,
+  "rotated": true,
+  "cleanLobbyReturn": true,
+  "errors": []
+}

@@ -8,8 +8,14 @@
 **Prioridad vigente:** sistemas primero; NO añadir los once casos restantes.
 **C02:** inventario técnico completado; [matriz](PARITY_MATRIX.md), 73 módulos
 clasificados con hashes; [informe](STEP_02_HANDOFF.md).
-**Sesión actual:** implementación C04/C05.a en curso. Consultar [CURRENT_HANDOFF](CURRENT_HANDOFF.md)
-para el último estado publicado; no interpretar trabajo local como código remoto.
+**Últimos cambios funcionales publicados:** C04/C05.a en
+`6e75b18d26dc1dcd3bf3ffa08af177f20efe01fe` y C06.a en
+`3ea74db7f788bd174cb341d0a4be7fa82c021e71`; corrección C05.b del monitor visible
+en `52055441920d5e40291c9d0aaec4521a2acfe50c`. Consultar
+[CURRENT_HANDOFF](CURRENT_HANDOFF.md) para SHA/CI/preview y límites de cada entrega.
+**CI del último ejecutable:** [38848167010](https://github.com/javierdario48-star/ATRIA/actions/runs/38848167010),
+completed/success **3/3**. 137 contratos V5, 39 core; examen 40, diálogo 20 y
+monitor 16 comparaciones efectivas. UI Chromium móvil y cierres CIRR/APP aprobados.
 
 ## Tabla de etapas
 
@@ -18,9 +24,9 @@ para el último estado publicado; no interpretar trabajo local como código remo
 | C01 | Consolidación de UI aprobada y estabilización | IMPLEMENTADO — CI fuente verde |
 | C02 | Matriz de equivalencia e inventario del legado | COMPLETO — inventario, no certificación de paridad |
 | C03 | Portada, menú, perfil, HUD | PENDIENTE |
-| C04 | Examen físico original por segmentos | PENDIENTE |
-| C05 | Historia, monitor, estudios, paneles | PENDIENTE |
-| C06 | Diálogo y anamnesis de pacientes | PENDIENTE |
+| C04 | Examen físico original por segmentos | IMPLEMENTADO CIRR/APP — regiones, técnicas, Glasgow, UI; [informe](STEP_04_HANDOFF.md) |
+| C05 | Historia, monitor, estudios, paneles | PARCIAL C05.a/b — pacientes, pantallas reales del monitor, signos conocidos, historia; faltan ECG/controles/transporte; [informe](STEP_05_HANDOFF.md) |
+| C06 | Diálogo y anamnesis de pacientes | PARCIAL C06.a — CIRR/APP, ALiCIA, contexto y antecedentes; [informe](STEP_06_HANDOFF.md) |
 | C07 | Parser/órdenes combinadas enfermería | PENDIENTE |
 | C08 | Enfermería física y administración nativa | PENDIENTE |
 | C09 | Vega y tutor Aprendiz | PENDIENTE |
@@ -43,8 +49,10 @@ para el último estado publicado; no interpretar trabajo local como código remo
 
 ## Secuencia autorizada
 
-Implementar C04/C05 de Fase A según [contrato](PHASE_A_IMPLEMENTATION.md), luego
-comunicación/enfermería, contratos clínicos extensibles, voz/guardia/progresión y red.
+Continuar Fase B con C07/C08: caracterizar parser, dependencias y ejecución real
+de enfermería sobre la misma autoridad. Conservar C04/C05.a/C06.a y completar sus
+límites explícitos. Después Vega, contratos clínicos extensibles, voz/guardia/
+progresión y red, según el orden solicitado.
 No reconstruir la base aprobada. C03 completo no es prerrequisito de C04.
 El usuario autorizó continuar autónomamente mientras haya pruebas aprobadas y no
 aparezca una decisión estética importante o un cambio clínico sin referencia.

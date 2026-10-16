@@ -1,0 +1,1 @@
+{"test":"effective-original-monitor-placement","comparisons":16,"passed":true,"source":"cs413-monitor-walk-v4_1_3 (supersedes v40MonitorPoint)","scope":"8 original screens and 8 relocated fallbacks; no proximity/clinical rule change"}

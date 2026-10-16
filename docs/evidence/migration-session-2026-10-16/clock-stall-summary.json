@@ -1,0 +1,16 @@
+{
+  "wallSeconds": 1.2453000000002794,
+  "clinicalMinutes": 1.2333,
+  "nativeMinutes": 0.147996,
+  "typing": {
+    "wallSeconds": 1.249899999999907,
+    "clinicalMinutes": 1.2488000000000001,
+    "nativeMinutes": 0.037464
+  },
+  "commandBoundary": {
+    "elapsedAfterSubmission": 88.89999999990687,
+    "administered": 0,
+    "pending": 1
+  },
+  "physicalAndroid": false
+}

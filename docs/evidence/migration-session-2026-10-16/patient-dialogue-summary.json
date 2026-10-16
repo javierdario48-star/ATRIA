@@ -1,0 +1,18 @@
+{
+  "test": "contextual-patient-dialogue",
+  "realBrowser": true,
+  "androidEmulated": true,
+  "physicalAndroid": false,
+  "compoundQuestions": true,
+  "shortFollowUps": true,
+  "symptomBoundDuration": true,
+  "caseScopedContext": true,
+  "acquiredHistory": true,
+  "greetingQuestionPreserved": true,
+  "painKeywordCollisionCovered": true,
+  "oneGlobalTranscript": true,
+  "explicitNpcOverridesFocus": true,
+  "noFakeAssessmentOrMedication": true,
+  "cleanLobbyReturn": true,
+  "errors": []
+}

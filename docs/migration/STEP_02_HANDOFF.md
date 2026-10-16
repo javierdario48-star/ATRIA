@@ -22,6 +22,13 @@ GitHub confirmó HEAD y [CI 38841164329](https://github.com/javierdario48-star/A
 La preview aprobada de C01 sigue siendo la de `STEP_01_HANDOFF.md`; no se
 atribuye una prueba nueva de preview a este inventario documental.
 
+Publicación comprobada posteriormente: `0bb0c7fa2e56b803c2ebc248482f5f61bd9aa239`,
+árbol `c5771e509f0c44b21cadcfea6e16fca47a80f5a7`.
+[CI C02 38844274519](https://github.com/javierdario48-star/ATRIA/actions/runs/38844274519)
+**completed/success, 3/3 trabajos**. Preview exacta READY:
+https://night-shift-clinical-do98nns22-javierdario4878-7324.vercel.app/ .
+No se realizó un recorrido público de esa preview documental.
+
 ## Decisiones y pendientes
 
 Se reutilizan autoridad, puerto, reloj, navegación, teclado y dos políticas de caso.
