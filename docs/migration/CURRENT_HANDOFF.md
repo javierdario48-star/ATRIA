@@ -27,8 +27,10 @@ Vega completo, voz, guardia continua, carrera completa y red están pendientes.
 - Árbol funcional probado/publicado:
   `859a15b6a6143c0aeda78d0b5ce9ef1fb04fd51b`.
 
-Este informe y las evidencias se publican en un commit documental descendiente,
-sin cambios adicionales del ejecutable. El hash del propio documento se obtiene
+Este informe y las evidencias se publican como descendientes del ejecutable
+probado, sin cambios funcionales adicionales. La revisión final de integridad
+eliminó únicamente un espacio al final de una línea en `ui/clinical-controller.js`;
+no cambió expresiones, interfaz ni comportamiento. El hash del propio documento se obtiene
 con `git log -1 --format=%H -- docs/migration/CURRENT_HANDOFF.md`; el HEAD vigente
 se verifica en GitHub, nunca se presupone a partir de este texto. El chat de
 entrega también registra el SHA documental final comprobado. Las pruebas y la

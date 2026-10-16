@@ -21,7 +21,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid||!s.patient.liveVitals){notify('Monitor clínico todavía no disponible para este caso.');return;}
   patientUid=patient.uid;
   open('<h2>Monitor · '+esc(patient.bedId)+'</h2><div id="bedsideMonitor"></div><div class="actions">'+
-   '<button data-action="toggle-monitor" class="primary"></button><button data-action="record-vitals">Medir ahora</button>'+ 
+   '<button data-action="toggle-monitor" class="primary"></button><button data-action="record-vitals">Medir ahora</button>'+
    '<button data-action="treatment">Tratamiento</button><button data-action="patient-chart">Historia</button></div>');
   ui('modalContent').dataset.patientUid=patientUid;render();
  }
