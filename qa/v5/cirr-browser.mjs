@@ -64,10 +64,9 @@ try{
  assert.equal((await state()).patient.venousAccessCount,2);
  assert.equal((await page.evaluate(()=>atriaV5.snapshot())).nurses.filter(n=>n.journeyId).length,trips,
   'documented access must not summon a new nurse');
- await send('enfermera ringer');
- assert.equal((await state()).patient.treatments.some(t=>t.id==='fluid'),false);
- assert.match(await page.locator('#chatHistory').innerText(),/no hay una regla de tratamiento validada/i);
- await send('Enfermera no administres albúmina');await send('Enfermera ceftriaxona');
+ await send('Enfermera no administres albúmina');
+ await send('Enfermera ceftriaxona 2 g'); // an unsupported dose cannot leak into CIRR care
+ assert.equal((await state()).patient.treatments.some(t=>t.id==='ceftriaxone'),false);
  await page.locator('#peopleButton').click();await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('espironolactona 50 mg');await page.locator('[data-action="order-therapy"]').click();
  assert.equal((await state()).patient.treatments.length,0,'uncertified dose has no hidden default administration');
@@ -125,6 +124,17 @@ try{
  await page.locator('#therapyOrder').fill('paracentesis terapéutica');await page.locator('[data-action="order-therapy"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.liveVitals.hr<93.9&&atriaV5.snapshot().clinical.patient.liveVitals.rr<19.9);
  const procedure=await state();assert.deepEqual(procedure.patient.treatments.map(t=>t.id),['paracentesis_ter']);assert.equal(procedure.progress.xp,133);
+ // Separate second guard exercises user-reported IV + Ringer without changing
+ // the canonical 100/100 CIRR closing treatment path above.
+ await send('enfermera vias y ringer');
+ assert.equal((await state()).patient.administrationLog.some(t=>t.id==='fluid'),false);
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.administrationLog.some(t=>t.id==='fluid'),null,{timeout:30000});
+ const afterFluid=await state();
+ assert.equal(afterFluid.patient.venousAccessCount,2);
+ assert.equal(afterFluid.patient.administrationLog.find(t=>t.id==='fluid').dose.amount,500);
+ assert.match(await page.locator('#chatHistory').innerText(),/Administración confirmada: Cristaloides/i);
+ assert.equal(afterFluid.patient.treatments.some(t=>t.id==='ceftriaxone'),false);
+ assert.equal(afterFluid.progress.xp,133);
  await page.locator('#peopleButton').click();await page.locator('[data-action="record-vitals"]').click();
  await page.screenshot({path:out+'/cirr-native-procedure-response.png'});await page.locator('#modalClose').click();await page.locator('#guardButton').click();
  assert.deepEqual(errors,[]);
