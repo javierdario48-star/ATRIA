@@ -105,3 +105,25 @@ test('C09 Vega response belongs to the unique global utterance, with no clinical
   s.dispose();
  }
 });
+
+test('C05.e ECG monitor projection is UID-scoped, read-only and does not expose room transcript',async()=>{
+ const {session}=await setup();
+ assert.equal(session.monitorRead('wrong-uid'),null);
+ let model=session.monitorRead('P1');
+ assert.equal(model.procedures.monitor.connected,false);
+ assert.equal(model.lastVitalsKnown,null);
+ assert.equal(model.room,undefined);
+ assert.equal(model.events,undefined);
+ await session.post({id:'monitor-one',text:'Enfermera monitor'});
+ model=session.monitorRead('P1');
+ assert.equal(model.procedures.monitor.connected,true);
+ assert(Number.isFinite(model.lastVitalsKnown.vitals.hr));
+ const hr=model.lastVitalsKnown.vitals.hr;
+ model.lastVitalsKnown.vitals.hr=1;
+ model.procedures.monitor.connected=false;
+ const again=session.monitorRead('P1');
+ assert.equal(again.lastVitalsKnown.vitals.hr,hr);
+ assert.equal(again.procedures.monitor.connected,true);
+ session.dispose();
+ assert.equal(session.monitorRead('P1'),null);
+});
