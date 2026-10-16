@@ -100,7 +100,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(!snapshot)return;
   const presentation=ecgPresentation(snapshot.patient);
   lastEcgAt=now;
-  if(!presentation.connected||!presentation.measured)return;
+  if(!presentation.connected||!presentation.measured&&!(presentation.rhythmSource==='case-rule'&&['asystole','ventricular_fibrillation'].includes(presentation.rhythm)))return;
   path.setAttribute('d',ecgPath({seconds:now/1000,hr:presentation.hr,rhythm:presentation.rhythm}));
  }
  function showStudies(){
