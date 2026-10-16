@@ -35,8 +35,13 @@ try{
  await page.locator('#peopleButton').click();await page.locator('[data-action="clinical-history"]').click();
  const chart=await page.locator('#fullClinicalHistory').innerText();assert.match(chart,/ALiCIA/);assert.match(chart,/ocho horas/);assert.match(chart,/7 de 10/);
  await page.screenshot({path:out+'/contextual-patient-history.png'});await page.locator('#modalClose').click();
- await page.locator('#recipientButton').click();await send('Vega, dame una pista');
+ await page.locator('#recipientButton').click();
+ const prior=await state();reply=await send('Vega, dame una pista');
  assert.equal((await state()).room.transcript.at(-1).recipient,'vega','explicit Vega overrides nurse focus');
+ assert.equal(reply.role,'mentor','Vega must answer through the same global transcript');
+ assert.match(reply.text,/signos vitales|exploración|anamnesis|estudios/);
+ assert.deepEqual((await state()).patient.treatments,prior.patient.treatments,
+  'Vega reasoning may not administer therapies');
  await send('Enfermera, hemograma');assert.equal((await state()).room.transcript.at(-1).recipient,'nurse');
  assert.equal((await state()).patient.orders.length,1);assert.deepEqual((await state()).patient.treatments,[]);
  await page.locator('#recipientButton').click();await page.locator('#recipientButton').click();
