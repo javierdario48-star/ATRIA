@@ -1,5 +1,12 @@
 # ATRIA 5.0 — C08.c: oxígeno físico sin inventar la respuesta fisiológica
 
+## Actualización de verificación y seguimiento
+
+**C08.c — verificación posterior y última corrección visual, 16-10-2026.** El código C08.c con seguridad clínica y llegada espacial real `93d45c80a2dbaeeb9318c5bb601b7d7b300374c9` obtuvo CI **[38972668527](https://github.com/javierdario48-star/ATRIA/actions/runs/38972668527) completed/success 3/3**: 200/200 pruebas V5, 39/39 núcleo, Chromium móvil completo y regresión V4. Después se publicó el cambio **`1dda7350a81fa7337144ad294f37165f46c7094b`** (solo proyección/presentación del historial) para mostrar por separado `start`, `setRate` y `stop` de oxígeno como “Administrado”, “Flujo ajustado” y “Suspendido y confirmado”; sin modificaciones de ejecución clínica ni fisiología. CI exacta de este último código [38973192616](https://github.com/javierdario48-star/ATRIA/actions/runs/38973192616) **en ejecución al registrar esta nota**; requiere comprobación final antes de atribuirle 3/3. Vercel: comprobadas previews READY anteriores de `f3f65441` y `51bdf018`, ambas **anteriores a la corrección de titulación y validación**; el despliegue explícito del SHA corregido fue rechazado por `402 payment_required / api-deployments-free-per-day` (más de 100 despliegues diarios, `retryAfter=86400`). **No existe preview verificada matching el ejecutable corregido**. Sin prueba Android físico.
+
+El primer informe usa deliberadamente el SHA de base `93d45c...` como checkpoint de política de oxígeno. El SHA de código ejecutable posterior `1dda735...` modifica solamente la lectura/presentación del historial y su contrato unitario; no altera `guard-session`, `observations`, `app-care` ni `cirr-care`. La comprobación GREEN 3/3 del SHA `93d45c` **no debe extrapolarse** al sucesor sin leer CI `38973192616`.
+
+
 ## Recuperación exacta
 
 - Repositorio: `javierdario48-star/ATRIA`. Única rama de escritura: `atria-5.0-core-rebuild-experimental`.
