@@ -1,12 +1,15 @@
 import {patientHTML,vitalsHTML,therapyHTML,monitorHTML,historyHTML,esc} from './clinical-panels.js';
 import {examinationHTML,renderExamination} from './examination-panel.js';
 import {setHTML} from './render-content.js';
+import {ecgPath,ecgPresentation} from '../clinical/ecg-morphology.js';
+import {monitorOrderExamples} from './monitor-order-suggestions.js';
 
 /** UI state only. Every clinical action keeps its explicit UID and uses send().
  * The app owns the dialog and event listener; this controller owns neither timers nor listeners.
  */
 export function createClinicalInterface({document,session,open,close,send,onTalk,notify}){
- const ui=id=>document.getElementById(id);let patientUid=null,regionId='general';
+ const ui=id=>document.getElementById(id);
+ let patientUid=null,regionId='general',showOrderHints=false,lastEcgAt=-Infinity;
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
  const post=text=>send(text,{patientUid});
  function showPatient(patient){
@@ -20,12 +23,24 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  function showMonitor(patient){
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid||!s.patient.liveVitals){notify('Monitor clínico todavía no disponible para este caso.');return;}
   patientUid=patient.uid;
+  showOrderHints=false;lastEcgAt=-Infinity;
   open('<div class="bedside-monitor-header"><span class="monitor-device-led" aria-hidden="true"></span><div><h2>Monitor · '+esc(patient.bedId)+'</h2><small>PANTALLA DE CABECERA · '+esc(patient.bedId)+'</small></div></div>'+
    '<div id="bedsideMonitor" class="bedside-monitor-screen"></div>'+
+   '<section class="monitor-prescription" aria-label="Indicaciones desde el monitor">'+
+    '<div class="monitor-prescription-heading"><label for="monitorOrderInput">INDICAR A ENFERMERÍA</label>'+
+    '<button type="button" data-action="monitor-hint" aria-pressed="false">💡 Pistas</button></div>'+
+    '<div class="monitor-order-row"><input id="monitorOrderInput" type="text" autocomplete="off" maxlength="200" '+
+     'aria-label="Buscar o escribir orden de enfermería" aria-controls="monitorOrderSuggestions" '+
+     'placeholder="Buscar: Ringer, espironolactona…"/>'+
+    '<button type="button" class="primary" data-action="monitor-order-submit">Indicar</button></div>'+
+    '<div id="monitorOrderSuggestions" class="monitor-suggestions" aria-live="polite"></div>'+
+    '<p id="monitorOrderFeedback" class="monitor-feedback" role="status" hidden></p>'+
+    '<small>Las sugerencias no administran nada: cada orden pasa por enfermería y el motor clínico.</small>'+
+   '</section>'+
    '<div class="bedside-monitor-toolbar" aria-label="Controles del monitor">'+
    '<button data-action="toggle-monitor" class="primary"></button><button data-action="record-vitals">Medir ahora</button>'+
-   '<button data-action="treatment">Tratamiento</button><button data-action="patient-chart">Historia</button></div>','monitor');
-  ui('modalContent').dataset.patientUid=patientUid;render();
+   '<button data-action="patient-chart">Historia</button></div>','monitor');
+  ui('modalContent').dataset.patientUid=patientUid;render();renderOrderSuggestions();
  }
  /** Invoked by the world-anchored patient menu; clinical actions still use
   * the existing session, UID, room authority and panel handlers.
@@ -40,6 +55,52 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(section==='studies'){showStudies();return;}
   if(section==='treatment'){showTreatment();return;}
   if(section==='patient'){showPatient(patient);return;}
+ }
+ function renderOrderSuggestions(){
+  const input=ui('monitorOrderInput'),target=ui('monitorOrderSuggestions');
+  if(!input||!target)return;
+  const options=monitorOrderExamples(state()?.patient.caseId,input.value,{hint:showOrderHints});
+  setHTML(target,options.map(item=>
+   '<button type="button" data-action="monitor-suggestion" data-order="'+esc(item.command)+'">'+esc(item.label)+'</button>'
+  ).join(''));
+  const hint=document.querySelector('[data-action="monitor-hint"]');
+  if(hint)hint.setAttribute('aria-pressed',String(showOrderHints));
+ }
+ function onInput(target){if(target?.id!=='monitorOrderInput')return false;
+  showOrderHints=false;renderOrderSuggestions();return true;
+ }
+ async function sendMonitorOrder(){
+  const input=ui('monitorOrderInput'),feedback=ui('monitorOrderFeedback');
+  const text=input?.value.trim();
+  if(!text||!state()||state().patient.caseEnded)return;
+  // Order never mutates patient from UI. The same room authority decides pending,
+  // executed or rejected; no visual confirmation implies administration.
+  const reply=await post(/^enfermer[ao]\b/i.test(text)||text.startsWith('/')?text:'Enfermera, '+text);
+  if(feedback){
+   const statuses=reply?.clinical?.map(x=>x.status)||[];
+   feedback.hidden=false;
+   feedback.dataset.status=statuses.some(x=>x==='rejected')?'rejected':
+    statuses.some(x=>x==='pending')?'pending':
+    statuses.some(x=>x==='executed')?'executed':'unknown';
+   feedback.textContent=feedback.dataset.status==='rejected'?'No ejecutado. Revisá la aclaración de Enfermería en el chat.':
+    feedback.dataset.status==='pending'?'Orden recibida; intervención aún pendiente.':
+    feedback.dataset.status==='executed'?'Acción confirmada por el motor clínico.':
+    'Orden enviada; consultá la respuesta en el chat.';
+  }
+  renderOrderSuggestions();render();
+ }
+ /** Animation is advanced only from the existing application RAF.
+  * It never alters patient status, clinical clock or frame scheduler.
+  */
+ function animate(now){
+  const path=ui('monitorEcgPath');
+  if(!path||!Number.isFinite(now)||now-lastEcgAt<55)return;
+  const snapshot=state();
+  if(!snapshot)return;
+  const presentation=ecgPresentation(snapshot.patient);
+  lastEcgAt=now;
+  if(!presentation.connected||!presentation.measured)return;
+  path.setAttribute('d',ecgPath({seconds:now/1000,hr:presentation.hr,rhythm:presentation.rhythm}));
  }
  function showStudies(){
   const s=state();if(!s)return;
@@ -84,6 +145,12 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(b.dataset.glasgow){await post('/glasgow '+b.dataset.glasgow);render();return true;}
   if(b.dataset.destination){await post('/disposicion '+b.dataset.destination);render();ui('caseResult')?.scrollIntoView({block:'nearest'});return true;}
   switch(b.dataset.action){
+   case 'monitor-hint':showOrderHints=!showOrderHints;renderOrderSuggestions();return true;
+   case 'monitor-suggestion':{
+    const field=ui('monitorOrderInput');if(field){field.value=b.dataset.order||'';showOrderHints=false;renderOrderSuggestions();field.focus({preventScroll:true});}
+    return true;
+   }
+   case 'monitor-order-submit':await sendMonitorOrder();return true;
    case 'patient-target':close();onTalk(patientUid);return true;
    case 'patient-chart':return false; // World supplies the current identity and spatial metadata.
    case 'clinical-history':showHistory();return true;
@@ -101,6 +168,6 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   }
   render();return true;
  }
- return Object.freeze({showPatient,showMonitor,openSection,render,handle,patientUid:()=>patientUid,
+ return Object.freeze({showPatient,showMonitor,openSection,render,animate,onInput,handle,patientUid:()=>patientUid,
   reset(){patientUid=null;regionId='general';delete ui('modalContent').dataset.patientUid;}});
 }
