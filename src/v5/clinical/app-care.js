@@ -1,7 +1,7 @@
 import {executePatientDialogue} from './patient-dialogue.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {initializeExamination,executePhysicalExam} from './physical-exam.js';
-import {executeObservation,recordVitalMeasurement} from './observations.js';
+import {executeObservation,executeVenousAccess,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
 import {initialAppVitals,parseAppDose,advanceAppVitals,APP_NATIVE_PREPARATION_SECONDS} from './native-app.js';
@@ -62,13 +62,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
    const dialogue=executePatientDialogue(p,c,cmd,clock);if(dialogue)return dialogue;
    const exam=executePhysicalExam(p,c,cmd,clock);if(exam)return exam;
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
-   if(intent.kind==='procedure.request'&&intent.id==='iv'){
-    const requested=intent.count===2?2:1,previous=p.venousAccessCount;
-    p.venousAccessCount=Math.max(previous,requested);
-    p.procedures.iv={eventId:cmd.eventId,patientUid:p.uid,count:p.venousAccessCount};
-    return executed(cmd,{count:p.venousAccessCount,
-     message:previous?'Acceso venoso ya confirmado.':'Acceso venoso periférico confirmado: '+p.venousAccessCount+'.'});
-   }
+   const access=executeVenousAccess(p,cmd);if(access)return access;
    if(intent.kind==='consult.request'||intent.kind==='procedure.request'&&intent.id==='cirugia'){
     const prior=p.consults.find(x=>x.id==='cirugia'&&x.status==='done');
     if(prior)return executed(cmd,{message:'Cirugía ya confirmó recepción del paciente.',accepted:true,consultId:'cirugia'});
