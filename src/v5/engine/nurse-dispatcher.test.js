@@ -90,3 +90,19 @@ test('C08a closed door prevents misleading arrival even if a task was queued',()
  assert.equal(ev[0].eventId,'door-task');
  assert.equal(d.snapshot()[0].stage,'at-bed');
 });
+
+test('C08a compound order never floods one patient with multiple nurse sprites',()=>{
+ const nav=createNavigation(openMap());
+ const nurses=[actor(nav,'N1',1,1),actor(nav,'N2',1,2)];
+ const p={uid:'P1',approach:[6,6]};
+ const dispatcher=createNurseDispatcher({navigation:nav,nurses,patients:[p]});
+ assert.equal(dispatcher.enqueue({eventId:'monitor-1',patientUid:'P1',kind:'monitor'}).status,'travelling');
+ assert.equal(dispatcher.enqueue({eventId:'iv-2',patientUid:'P1',kind:'iv'}).status,'queued');
+ assert.equal(nurses.filter(n=>n.journeyId).length,1);
+ assert.deepEqual(arrive(dispatcher).map(x=>x.eventId),['monitor-1']);
+ assert.equal(nurses.filter(n=>n.journeyId).length,1,'arrived nurse retains one bedside lock');
+ assert.equal(dispatcher.acceptClinicalResult({eventId:'monitor-1',patientUid:'P1',status:'executed',
+  receipt:{eventId:'monitor-1',patientUid:'P1'}}).status,'confirmed');
+ assert.equal(dispatcher.snapshot().find(x=>x.eventId==='iv-2').stage,'travelling');
+ assert.deepEqual(arrive(dispatcher).map(x=>x.eventId),['iv-2']);
+});
