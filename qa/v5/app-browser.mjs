@@ -2,7 +2,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
-import {walkVisibleRoute} from './visible-navigation.mjs';
 const out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results',h=await browserHarness();
 await fs.mkdir(out,{recursive:true});
 let page;
@@ -25,7 +24,18 @@ try{
  await send('Enfermera ceftriaxona 1 g');
  assert.equal((await state()).patient.administrationLog.length,0,'no treatment remotely from lobby position');
  await page.locator('#dieInput').blur();
- await walkVisibleRoute(page,[[496,1060],[496,800],[400,580],[250,470],[144,420]]);
+ await page.locator('#keyboardToggleButton').click();
+ await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
+ for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){
+  await page.waitForFunction(()=>{
+   const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
+   return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;
+  });
+  const t=await page.evaluate(()=>({p:atriaV5.snapshot().player,r:atriaV5.diagnostics().renderer}));
+  await page.locator('#game').click({position:{x:(x-t.r.camera.x)*t.r.scale+t.r.anchorX,y:(y-t.r.camera.y)*t.r.scale+t.r.anchorY}});
+  await page.waitForFunction(()=>atriaV5.snapshot().player.moving);
+  await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
+ }
  for(const question of ['¿desde cuando empezo?','¿se movio el dolor?','¿tiene apetito?'])await send(question);
  await page.locator('#peopleButton').click();
  await page.locator('[data-action="examination"]').click();
