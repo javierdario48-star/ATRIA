@@ -31,3 +31,31 @@ test('one world owns lobby and guard navigation; repeated transitions reset rath
  assert.throws(()=>world.enterGuard({mode:'competitive',caseId:'CIRR-001'}),/not migrated/);
  const external=world.snapshot();external.player.x=-999;assert.notEqual(world.snapshot().player.x,-999);
 });
+
+test('scrub changes preserve actual position, path, level, and lobby identity',async()=>{
+ const {createWorld}=await import('./world.js');
+ const world=createWorld({map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')},
+  {name:'Javier',scrubColor:'navy'});
+ world.enterLobby();
+ const current=world.snapshot().player;
+ const goal=world.navigation.center(15,40);
+ assert(world.target(goal.x,goal.y));
+ for(let i=0;i<80;i++)world.step(1/60);
+ world.setLevel(12);
+ const before=world.snapshot();
+ assert(Math.hypot(before.player.x-current.x,before.player.y-current.y)>1);
+ world.setAppearance({name:'Dr. Torres',scrubColor:'teal'});
+ const after=world.snapshot();
+ assert.equal(after.player.color,'teal');assert.equal(after.player.name,'Dr. Torres');
+ for(const key of ['x','y','path','pathIndex','target','walkPhase','level']){
+  assert.deepEqual(after.player[key],before.player[key],'appearance must not change '+key);
+ }
+ assert.equal(after.generation,before.generation);
+ assert.equal(after.phase,'lobby');
+ assert.deepEqual(after.nurses,before.nurses);
+ assert.deepEqual(after.patients,before.patients);
+ world.step(1/60);
+ assert.notDeepEqual(world.snapshot().player.pathIndex,undefined);
+ assert.throws(()=>world.setAppearance({name:'x',scrubColor:'not-a-color'}),/invalid appearance/);
+ assert.equal(world.snapshot().player.color,'teal');
+});
