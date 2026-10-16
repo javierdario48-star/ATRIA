@@ -93,6 +93,10 @@ test('C08b compound APP IV, monitor and medications await real access before nat
  assert.equal(f.session.read().patient.venousAccessCount,0);
  assert.equal(f.session.read().patient.procedures.monitor?.connected??false,false);
  assert.deepEqual(f.session.read().patient.pendingTreatments,[]);
+ const premature=await f.session.post({id:'close-early',text:'/disposicion quirofano'});
+ assert.equal(premature.clinical[0].status,'rejected');
+ assert.equal(premature.clinical[0].reason,'nursing-work-in-progress',
+  'uncompleted bedside work must prevent premature closure');
  f.session.advance(8);await f.session.flush();
  assert.equal(f.session.read().patient.administrationLog.length,0,'time alone cannot execute deferred drugs');
  await walkToCompletion(f);
