@@ -246,3 +246,67 @@ test('C08 case-specific Ringer rejection is clearly explained, not called a miss
  assert.doesNotMatch(nurse.text,/sin confirmación de resultado/i);
  f.session.dispose();f.world.enterLobby();
 });
+
+test('C11 shared formulary executes CIRR Ringer only after IV and bedside preparation without fabricated BP response',async()=>{
+ const f=fixture('CIRR-001');
+ const before=f.session.read().patient.liveVitals;
+ const cmd=await f.session.post({id:'cirr-iv-fluid',text:'enfermera vias y ringer'});
+ assert.deepEqual(cmd.clinical.map(x=>[x.id,x.status]),[['iv','pending'],['fluid','pending']]);
+ assert.equal(f.session.read().patient.venousAccessCount,0);
+ assert.equal(f.session.read().patient.pendingTreatments.length,0);
+ let connected=false;
+ for(let i=0;i<900&&!connected;i++){
+  f.world.step(1/60);f.session.finishNurseArrivals();
+  connected=f.session.read().patient.venousAccessCount===2;
+ }
+ assert(connected,'both IVs need an actual clinical receipt');
+ assert.equal(f.session.read().patient.administrationLog.length,0);
+ let preparing=false;
+ for(let i=0;i<900&&!preparing;i++){
+  f.world.step(1/60);f.session.finishNurseArrivals();
+  preparing=f.session.read().patient.pendingTreatments.some(x=>x.id==='fluid');
+ }
+ assert(preparing,'Ringer must reach the patient after IV placement');
+ f.session.advance(.79);await f.session.flush();
+ assert.equal(f.session.read().patient.administrationLog.length,0);
+ f.session.advance(.02);await f.session.flush();
+ const p=f.session.read().patient;
+ assert.deepEqual(p.administrationLog.map(x=>x.id),['fluid']);
+ assert.equal(p.administrationLog[0].dose.amount,500);
+ assert.equal(p.venousAccessCount,2);
+ assert.deepEqual(p.liveVitals,before,
+  'the APP-specific crystalloid hemodynamic rescue is not valid in stable CIRR');
+ assert.equal(f.events.filter(e=>e.type==='clinical.completed').length,2);
+ assert.equal(f.world.nurseJourneySnapshot().filter(t=>t.stage==='confirmed').length,2);
+ const log=f.session.read().messages.map(x=>x.text).join(' ');
+ assert.match(log,/Administración confirmada: Cristaloides/i);
+ f.session.dispose();f.world.enterLobby();
+});
+test('C11 shared IV formulary validates route and dose in CIRR before any nurse trip',async()=>{
+ const f=fixture('CIRR-001');
+ await f.session.post({id:'access',text:'enfermera vias'});
+ await walkToCompletion(f);
+ const previous=f.world.nurseJourneySnapshot().length;
+ for(const [id,text] of [
+  ['bad-route','enfermera ceftriaxona oral 1 g'],
+  ['bad-dose','enfermera ceftriaxona 2 g'],
+  ['bad-fluid','enfermera ringer 300 ml']]){
+  const cmd=await f.session.post({id,text});
+  assert.equal(cmd.clinical[0].status,'rejected',text);
+  assert.equal(f.world.nurseJourneySnapshot().length,previous);
+ }
+ const confirmed=await f.session.post({id:'cef-cirr',text:'enfermera ceftriaxona 1 g IV'});
+ assert.equal(confirmed.clinical[0].status,'pending');
+ let waiting=false;
+ for(let i=0;i<900&&!waiting;i++){
+  f.world.step(1/60);f.session.finishNurseArrivals();
+  waiting=f.session.read().patient.pendingTreatments.some(x=>x.id==='ceftriaxone');
+ }
+ assert(waiting);
+ f.session.advance(1.51);await f.session.flush();
+ assert.deepEqual(f.session.read().patient.administrationLog.map(x=>x.id),['ceftriaxone']);
+ assert.equal(f.session.read().patient.administrationLog[0].dose.amount,1000);
+ assert.equal(f.session.read().patient.venousAccessCount,2);
+ assert.equal(f.session.read().patient.treatments.some(x=>x.id==='metronidazole'),false);
+ f.session.dispose();f.world.enterLobby();
+});
