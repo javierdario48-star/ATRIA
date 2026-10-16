@@ -119,15 +119,26 @@ try{
  assert.deepEqual(delivered.patient.administrationLog.map(x=>x.id),['ceftriaxone','metronidazole']);
  assert.deepEqual(delivered.patient.administrationLog.map(x=>x.dose.amount),[1000,500]);
  assert.equal(delivered.patient.venousAccessCount,1);
+ // C11.c: a fresh chat message is a new prescription, not a replay
+ // of the previous administration. Confirm each real bedside receipt.
  await send('Enfermera ceftriaxona y metronidazol');
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.administrationLog.length===4);
+ const repeated=await state();
+ assert.deepEqual(repeated.patient.administrationLog.map(x=>x.id),
+  ['ceftriaxone','metronidazole','ceftriaxone','metronidazole']);
+ assert.equal(new Set(repeated.patient.administrationLog.map(x=>x.sourceEventId)).size,4,
+  'four real administrations require four distinct native eventIds');
+ assert.deepEqual(repeated.patient.administrationLog.map(x=>x.dose.amount),[1000,500,1000,500]);
+ assert.equal(repeated.patient.venousAccessCount,1,
+  'new doses reuse physical access, never the previous drug receipt');
  await page.locator('#peopleButton').click();
  await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('Ringer 500 ml');
  await page.locator('[data-action="order-therapy"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.liveVitals.sys>118.01);
  const afterFluid=await state();
- assert.equal(afterFluid.patient.administrationLog.length,3);
- assert.equal(afterFluid.patient.administrationLog[2].id,'fluid');
+ assert.equal(afterFluid.patient.administrationLog.length,5);
+ assert.equal(afterFluid.patient.administrationLog[4].id,'fluid');
  assert(afterFluid.patient.liveVitals.hr<108);
  await page.locator('#peopleButton').click();
  await page.locator('[data-action="treatment"]').click();
@@ -150,14 +161,14 @@ try{
  assert.equal(closed.patient.closure.quality.score,100);
  assert.equal(closed.progress.xp,133);
  assert.equal(closed.progress.receipts.length,1);
- assert.equal(closed.patient.administrationLog.length,3);
+ assert.equal(closed.patient.administrationLog.length,5);
  assert.equal(closed.patient.treatments.some(x=>x.id==='source_control'),false);
  assert.match(await page.locator('#caseResult').innerText(),/100\/100/);
  await page.screenshot({path:out+'/app-surgical-handoff.png'});
  await page.locator('#modalClose').click();
  await send('/disposicion quirofano');await send('Enfermera ceftriaxona');
  assert.equal((await state()).progress.xp,133);
- assert.equal((await state()).patient.administrationLog.length,3);
+ assert.equal((await state()).patient.administrationLog.length,5);
  await page.locator('#guardButton').click();
  await page.reload();await page.waitForFunction(()=>document.body.dataset.boot==='ready');
  await page.locator('#enterButton').click();
