@@ -28,6 +28,8 @@ monitor 16 comparaciones efectivas. UI Chromium móvil y cierres CIRR/APP aproba
 
 **CI definitiva del ejecutable C07.e/C08.d:** [38976811507](https://github.com/javierdario48-star/ATRIA/actions/runs/38976811507) **completed/success 3/3**, commit `d32440a657537dce81288791ce0ebf847eb47d05`. Núcleo **206/206 V5 + 39/39 core**, navegador completo Chromium móvil y regresión histórica V4 aprobados. Los commits siguientes hasta el presente handoff solo son documentales. Sin preview READY matching comprobada; Android físico no probado.
 
+**C11.b — prevalidación completa de órdenes farmacológicas compuestas (16-10-2026):** ejecutable `56fc352d4c2f0f95056834dd5c7eeed8632fed7f` publicado exclusivamente en `atria-5.0-core-rebuild-experimental`. Validación pura antes de la primera acción clínica, reutiliza `parseStandardIVDose`, `parseCirrDose`, `parseNasalOxygenFlow` y el listado de terapias implementadas por caso; rechazo `unsafe-compound-order` con feedback claro, cero tareas, recibos o efectos parciales. Incluye estado de oxígeno activo para `therapy.stop`; las órdenes simples mantienen sus causas nativas. Pruebas V5 de rechazo y éxito, autoridad, reintentos, móvil Chromium APP y V4 sin modificar. CI del ejecutable [38979412510](https://github.com/javierdario48-star/ATRIA/actions/runs/38979412510) **en ejecución al documentar**. Sin preview matching verificada ni prueba Android físico. [STEP_11B_HANDOFF.md](STEP_11B_HANDOFF.md).
+
 ## Tabla de etapas
 
 | Paso | Objetivo | Estado |
@@ -42,7 +44,7 @@ monitor 16 comparaciones efectivas. UI Chromium móvil y cierres CIRR/APP aproba
 | C08 | Enfermería física y administración nativa | PARCIAL C08.a–d — vías, monitor, IV, tratamientos y oxígeno nasal por viaje físico; **toma de signos solicitada a enfermería también espera llegada**, con observación puntual y comprobante, sin conectar monitor ni alterar fisiología. `/signos` médico inmediato se conserva. Monitor conectado no envía otro NPC innecesariamente. [C08.d](STEP_08D_HANDOFF.md) · [C08.c](STEP_08C_HANDOFF.md) |
 | C09 | Vega y tutor Aprendiz | PARCIAL C09.a — respuestas progresivas por el mismo chat global, sin administración ni motor paralelo. Docencia avanzada/rescate físico pendiente. [Informe](STEP_09A_HANDOFF.md) |
 | C10 | Voz sobre comandos únicos | PENDIENTE |
-| C11 | Tratamiento y farmacología transversal | PARCIAL C11.a — formulario IV compartido para Ringer 500 ml, ceftriaxona 1 g y metronidazol 500 mg; dosis y vía estrictas, trabajo físico, preparación y recibos nativos en APP/CIRR. Fisiología sigue específica: APP responde a cristaloides; CIRR no inventa respuesta. Falta catálogo amplio, otras dosis, contraindicaciones, eventos adversos y evaluación por indicación. [Informe](STEP_11A_HANDOFF.md) |
+| C11 | Tratamiento y farmacología transversal | PARCIAL C11.a–b — formulario IV nativo C11.a y **prevalidación atómica C11.b de órdenes compuestas** para dosis/vía/dispositivo y tratamiento no implementado; un componente inválido impide activar monitor, vías o administrar fármacos. También rechaza suspender oxígeno inexistente dentro de la combinación. No se inventaron alergias, interacciones, contraindicaciones fisiológicas ni nuevas formulaciones. Faltan evidencias de contraindicaciones por caso. [C11.b](STEP_11B_HANDOFF.md) · [C11.a](STEP_11A_HANDOFF.md) |
 | C12 | Fisiología, complicaciones y rescate | PENDIENTE |
 | C13 | Casos PANC/CROHN/COLON | DIFERIDO — no implementar |
 | C14 | Casos HDA/ILEO | DIFERIDO — no implementar |

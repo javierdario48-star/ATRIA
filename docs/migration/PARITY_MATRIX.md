@@ -22,7 +22,7 @@ Inventario de **cada módulo de producción** de los siete dominios originales:
 | S01 | `study-registry`, `contextual-study-results`, `studies.js` | Reutilizar puros | Catálogo/demoras/UID exactos; alias duplicado comparte pedido | Implementado |
 | S02 | Transporte a imágenes y materiales en `v40IsTransportStudy` | Extraer luego de guardia continua | Traslado vinculado; pedido no equivale a resultado | Pendiente espacial |
 | C01 | `anamnesis-intents`, `ns421-patient-dialogue` | Reutilizar clasificador, extraer diálogo | Preguntas y relacionadas por caso; negación/ambigüedad sin tratamiento | Parcial CIRR/APP |
-| C02 | `nurse-scanner-487`, matrices de habla/combinaciones | Reutilizar puro | Dosis/vía/cláusula/negación/orden; no ejecución por reconocimiento | Parcial |
+| C02 | `nurse-scanner-487`, matrices de habla/combinaciones | Reutilizar puro; C11.b valida con los parsers nativos antes del primer efecto de lote | Dosis/vía/cláusula/negación/orden; lote inválido no inicia ninguna acción, no ejecución por reconocimiento | Parcial — C11.b, solo CIRR/APP |
 | N01 | `nurse-execution`, `nurse-native-journey`, receipts históricos | Extraer cola/procedimientos (C07/C08) | Viaje/preparación/dependencia y recibo paciente; no confirmación anticipada | Preparación clínica, sin trabajo físico |
 | N02 | `manual-monitor-iv-487`, `nurse-receipt-veracity-487.test` | Extraer retención de orden pendiente de acceso | Administrar solo tras vía real; cero dosis por tarea reconocida | APP requiere vía; cola completa pendiente |
 | V01 | `mentor-policy`, `vega-step-coach`, `vega-native-flow` | Extraer tutor sobre autoridad (C09) | Orientar/ayudar/delegar distintos; estable sin actuación por inactividad | Pendiente |
