@@ -60,6 +60,13 @@ try{
  await page.waitForTimeout(225);
  assert.notEqual(await page.locator('#monitorEcgPath').getAttribute('d'),initialEcg,
   'ECG must sweep with the authoritative measured heart rate');
+ await page.locator('[data-action="toggle-monitor"]').click();
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor.connected===false);
+ assert.equal(await page.locator('#monitorEcgPath').count(),0,'disconnect must remove continuous ECG');
+ await page.locator('[data-action="toggle-monitor"]').click();
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor.connected===true);
+ await page.waitForFunction(()=>document.querySelector('#monitorEcgPath')?.getAttribute('d')?.length>10);
+
  await page.locator('#monitorOrderInput').fill('espiron');
  const candidates=page.locator('#monitorOrderSuggestions [data-action="monitor-suggestion"]');
  assert.equal(await candidates.count(),1);
