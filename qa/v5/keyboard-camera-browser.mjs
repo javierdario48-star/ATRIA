@@ -44,6 +44,28 @@ try{
  assert.equal(await page.locator('#dieInput').inputValue(),'');
  await page.screenshot({path:out+'/atria-keyboard-portrait.png'});
 
+ // Real UI regression: profile is presentation only, not a world reset.
+ const spawn=await page.evaluate(()=>atriaV5.snapshot().player);
+ const cameraBefore=await page.evaluate(()=>atriaV5.diagnostics().renderer);
+ await page.locator('#game').click({position:{x:cameraBefore.anchorX,y:cameraBefore.anchorY-96}});
+ await page.waitForFunction(p=>Math.hypot(atriaV5.snapshot().player.x-p.x,atriaV5.snapshot().player.y-p.y)>25,spawn);
+ await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
+ const located=await page.evaluate(()=>atriaV5.snapshot());
+ await page.locator('#profileButton').click();
+ await page.locator('#aliasChoice').fill('Dr. Torres');
+ await page.locator('#colorChoice').selectOption('teal');
+ await page.locator('[data-action="save-profile"]').click();
+ const afterProfile=await page.evaluate(()=>atriaV5.snapshot());
+ assert.equal(afterProfile.phase,located.phase);
+ assert.equal(afterProfile.generation,located.generation,'profile must not start a new room');
+ assert.equal(afterProfile.player.x,located.player.x,'scrub change cannot teleport x');
+ assert.equal(afterProfile.player.y,located.player.y,'scrub change cannot teleport y');
+ assert.equal(afterProfile.player.color,'teal');
+ assert.equal(afterProfile.player.name,'Dr. Torres');
+ assert(await page.locator('#chatHistory').innerText().then(s=>s.includes('hola')),'chat remains intact');
+ assert.equal(await page.locator('#modal').evaluate(x=>x.open),false);
+ await page.screenshot({path:out+'/atria-scrubs-preserve-location.png'});
+
  // A new message in the guard uses the same authority, never a second chat.
  await page.locator('#guardButton').click();await page.locator('[data-action="start-guard"]').click();
  for(const key of ['h','o','l','a'])await page.locator('#atriaKeyboard [data-key="'+key+'"]').click();
