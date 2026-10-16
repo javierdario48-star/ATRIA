@@ -33,11 +33,11 @@ test('C08b monitor is not connected until real bed arrival and one native receip
  const f=fixture('CIRR-001');
  const ack=await f.session.post({id:'monitor',text:'Enfermera monitor'});
  assert.deepEqual(ack.clinical.map(x=>x.status),['pending']);
- assert.equal(f.session.read().patient.procedures.monitor.connected,false);
+ assert.equal(f.session.read().patient.procedures.monitor?.connected??false,false);
  assert.equal(f.session.read().patient.lastVitalsKnown,null);
  assert.equal(f.world.nurseJourneySnapshot()[0].stage,'travelling');
  f.world.step(1/60);f.session.finishNurseArrivals();
- assert.equal(f.session.read().patient.procedures.monitor.connected,false);
+ assert.equal(f.session.read().patient.procedures.monitor?.connected??false,false);
  await walkToCompletion(f);
  const patient=f.session.read().patient;
  assert.equal(patient.procedures.monitor.connected,true);
@@ -73,7 +73,7 @@ test('C08b independent monitor and IV requests serialize per patient without dup
  const ack=await f.session.post({id:'multiple',text:'Enfermera una vía y monitor'});
  assert.deepEqual(ack.clinical.map(x=>x.status),['pending','pending']);
  assert.equal(f.session.read().patient.venousAccessCount,0);
- assert.equal(f.session.read().patient.procedures.monitor.connected,false);
+ assert.equal(f.session.read().patient.procedures.monitor?.connected??false,false);
  assert.deepEqual(f.world.nurseJourneySnapshot().map(x=>x.stage),['travelling','queued']);
  await walkToCompletion(f);
  assert.equal(f.session.read().patient.venousAccessCount,1);
