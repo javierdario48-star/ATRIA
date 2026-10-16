@@ -196,3 +196,34 @@ test('C07 a combined nurse instruction preserves IV-first dependency and drug-sp
  assert.equal(f.s.read().messages.filter(x=>x.id.startsWith('completion:')).length,2);
  f.s.dispose();
 });
+
+test('C07 six clinical effects in one nurse message share native patient and preserve distinct waiting times',async()=>{
+ const f=fixture();
+ const order='Enfermera dos vías, monitor, Ringer 500 ml, ceftriaxona 1 g y metronidazol 500 mg';
+ const reply=await f.send(order,'nursing-shift');
+ assert.deepEqual(reply.clinical.map(x=>[x.id,x.status]),[
+  ['iv','executed'],['monitor','executed'],
+  ['fluid','pending'],['ceftriaxone','pending'],['metronidazole','pending']
+ ]);
+ let p=f.s.read().patient;
+ assert.equal(p.venousAccessCount,2);
+ assert.equal(p.procedures.monitor.connected,true);
+ assert.equal(p.lastVitalsKnown.patientUid,p.uid);
+ assert.equal(p.administrationLog.length,0);
+ f.s.advance(.79);await f.s.flush();
+ assert.equal(f.s.read().patient.administrationLog.length,0,'Ringer not given early');
+ f.s.advance(.02);await f.s.flush();
+ p=f.s.read().patient;
+ assert.deepEqual(p.administrationLog.map(x=>x.id),['fluid']);
+ assert(p.liveVitals.sys>p.baselineVitals.sys,'only executed fluid can affect APP pressure');
+ f.s.advance(.69);await f.s.flush();
+ p=f.s.read().patient;
+ assert.deepEqual(p.administrationLog.map(x=>x.id),['fluid','ceftriaxone','metronidazole']);
+ assert.deepEqual(p.administrationLog.map(x=>x.sourceEventId),[
+  'APP-ROOM:doctor:nursing-shift:2','APP-ROOM:doctor:nursing-shift:3','APP-ROOM:doctor:nursing-shift:4'
+ ]);
+ await f.send(order,'nursing-shift');
+ assert.equal(f.s.read().patient.administrationLog.length,3);
+ assert.equal(f.s.read().messages.filter(x=>x.id.startsWith('completion:')).length,3);
+ f.s.dispose();
+});
