@@ -36,3 +36,12 @@ La regresión histórica V4 ejecuta scripts existentes y caracterizados: `qa/fou
 ## Instrucción para otro agente
 
 Recuperá HEAD remoto/CI de `atria-5.0-core-rebuild-experimental` y lee `STATUS.md`, `CURRENT_HANDOFF.md`, `STEP_05E_HANDOFF.md` y `STEP_09A_HANDOFF.md`. Preservá ECG con barrido de 4,5s a 125 Hz y sin reescritura retrospectiva; no interpretes 560px como 25mm/s. El guard de CI `audit-v5-boundary.mjs` prohíbe mecanismos de parcheo y RAF/timers adicionales. No agregar casos. Continuar sistemas pendientes sobre autoridad clínica única y registrar SHAs/CI/preview exactos.
+
+## 7. Refinamientos posteriores de continuidad y rendimiento (sin motores adicionales)
+
+Después de documentar el primer barrido, detectamos dos condiciones que no deben perderse en el traspaso:
+- **Reconexión del monitor**: `src/v5/ui/clinical-controller.js` reinicia las muestras de presentación al desconectar, sin borrar la última medición clínica. `qa/v5/hospital-interactions-browser.mjs` comprueba desconectar y reconectar desde el control público; jamás deben reaparecer latidos viejos.
+- **Coste de la animación**: el bucle de ECG no debe llamar `guardSession.read()` 30 veces/s porque esa lectura clona transcript, historial de eventos y evaluación de cierre. `src/v5/clinical/guard-session.js` ahora expone un `monitorRead(uid)` pequeño, inmutable respecto a la fuente, restringido por UID y capaz de devolver `null` tras dispose. `clinical-controller.animate` consume exclusivamente ese snapshot. Contrato nuevo `src/v5/clinical/guard-session.test.js` verifica aislamiento, medición real y que mutar la proyección no toca la fuente.
+- SHA funcional/QA más reciente antes de este último ajuste documental: `ea7b5ac84a433a7806bd7709b503c2a167f21f11`. CI específica [38862268981](https://github.com/javierdario48-star/ATRIA/actions/runs/38862268981), confirmar conclusión final. No dar por certificado 3/3 basándose en una CI de un SHA anterior.
+
+Estas mejoras siguen siendo lectura y presentación; no se cambió la respuesta de CIRR ni APP a tratamientos.
