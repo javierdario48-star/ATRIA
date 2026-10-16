@@ -60,3 +60,46 @@ export function executeVenousAccess(p,cmd){
   message:previous>=requested?'Acceso venoso ya confirmado: '+p.venousAccessCount+'.':
    'Acceso venoso periférico confirmado: '+p.venousAccessCount+'.'});
 }
+
+/** C08c: nasal oxygen is a real bedside intervention, not a generic SpO2 buff.
+ * V4 verifies 2 and 4 L/min but its hypoxemic PERI-SEC physiology is deferred.
+ */
+export function parseNasalOxygenFlow(text,reference={amount:4}){
+ const raw=String(text||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/,/g,'.');
+ if(/\b(?:oral|intravenos\w*|endovenos\w*|mascara|mask|reservorio|alto flujo|venturi)\b/.test(raw))
+  throw Error('unsupported-oxygen-device');
+ const matches=[...raw.matchAll(/\b(\d+(?:\.\d+)?)\s*(?:l\s*(?:\/\s*|\s+por\s+|\s+)min|lpm)\b/g)];
+ let leftover=raw;for(const match of matches)leftover=leftover.replace(match[0],' ');
+ if(matches.length>1||/\d/.test(leftover))throw Error('ambiguous-oxygen-flow');
+ const amount=matches.length?Number(matches[0][1]):reference.amount;
+ if(![2,4].includes(amount))throw Error('unsupported-oxygen-flow');
+ return {amount,unit:'L/min',display:amount+' L/min',device:'nasal-cannula',
+  defaultApplied:matches.length===0};
+}
+export function executeOxygenSupport(p,cmd,clock){
+ const {intent}=cmd;
+ if(intent.id!=='oxygen'||!['therapy.request','therapy.stop'].includes(intent.kind))return null;
+ const stop=intent.kind==='therapy.stop',prior=p.procedures.oxygen;
+ let dose=null;
+ if(!stop){
+  try{dose=parseNasalOxygenFlow(intent.clause||intent.sourceText);}
+  catch(error){return {status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason:error.message};}
+ }
+ if(stop&&!prior?.active)return {status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason:'oxygen-not-active'};
+ const unchanged=!stop&&prior?.active&&prior.flowLpm===dose.amount;
+ const action=stop?'stop':prior?.active?'setRate':'start';
+ if(!unchanged){
+  p.procedures.oxygen={patientUid:p.uid,active:!stop,flowLpm:stop?0:dose.amount,
+   device:'nasal-cannula',sourceEventId:cmd.eventId};
+  const administered={id:'oxygen',label:stop?'Oxígeno suspendido':'Oxígeno suplementario',
+   action,dose:stop?{amount:0,unit:'L/min',display:'0 L/min'}:dose,
+   sourceEventId:cmd.eventId,actorId:cmd.actorId,patientUid:p.uid,
+   administeredAtRealSecond:clock.clinicalMinute,administeredAtNativeMinute:clock.nativeMinute};
+  p.administrationLog.push(administered);p.treatments.push(administered);
+ }
+ return executed(p,cmd,{...(stop?{}:{therapyId:'oxygen'}),
+  action,flowLpm:stop?0:dose.amount,reused:unchanged,
+  message:unchanged?'Oxígeno nasal ya confirmado a '+dose.display+'.':
+   stop?'Oxígeno nasal suspendido y comprobado.':
+   'Oxígeno nasal '+dose.display+' confirmado en cama. Sin efecto fisiológico modelado para este caso.'});
+}

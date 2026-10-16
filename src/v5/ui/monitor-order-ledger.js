@@ -4,7 +4,7 @@
  * The event stream is bounded; the patient's native administrationLog remains
  * the durable in-session source for actually delivered treatments.
  */
-const clinicalKinds=new Set(['therapy.request','procedure.request','monitor.set','consult.request']);
+const clinicalKinds=new Set(['therapy.request','therapy.stop','procedure.request','monitor.set','consult.request']);
 const copy=x=>structuredClone(x);
 export function monitorOrderLedger(room,patient){
  if(!room||!patient)return [];

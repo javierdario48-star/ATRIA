@@ -4,7 +4,7 @@ import {initialCirrVitals,parseCirrDose,advanceCirrVitals} from './native-cirr.j
 import {nativeCaseXP} from './progression.js';
 import {createIVAdministration} from './native-medications.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
-import {executeObservation,executeVenousAccess,recordVitalMeasurement} from './observations.js';
+import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 
 const copy=x=>structuredClone(x);
@@ -52,6 +52,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
    const exam=executePhysicalExam(p,c,cmd,clock);if(exam)return exam;
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
    const access=executeVenousAccess(p,cmd);if(access)return access;
+   const oxygen=executeOxygenSupport(p,cmd,clock);if(oxygen)return oxygen;
    const iv=ivMedicines.request(cmd,clock);if(iv)return iv;
    if(intent.kind==='therapy.request'&&['espironolactona','sal_restriccion','paracentesis_ter'].includes(intent.id)){
     let dose=null;

@@ -6,7 +6,7 @@ import {createAppCare} from './app-care.js';
 import {createProgressionLedger} from './progression.js';
 import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
-import {refreshMonitoring} from './observations.js';
+import {refreshMonitoring,parseNasalOxygenFlow} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
 import {isStandardIVMedicine,parseStandardIVDose} from './native-medications.js';
 import {parseCirrDose} from './native-cirr.js';
@@ -43,19 +43,29 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(nursing&&intent.kind==='case.close'&&(pendingNurseJobs.size||waitingForAccess.size))
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
    const ivMedicine=!!care&&intent.kind==='therapy.request'&&isStandardIVMedicine(intent.id);
+   const oxygenAction=!!care&&intent.id==='oxygen'&&['therapy.request','therapy.stop'].includes(intent.kind);
    const cirrBedside=caseData.id==='CIRR-001'&&intent.kind==='therapy.request'&&
     ['espironolactona','paracentesis_ter'].includes(intent.id);
    const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor'].includes(intent.id)||
-    intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||cirrBedside);
+    intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||cirrBedside||oxygenAction);
    if(physical){
     if(nativePatient.caseEnded)return {status:'rejected',patientUid,eventId,reason:'patient-not-active'};
     // Native case policy remains the only executor. These are the same
     // certified dose/route parsers that it calls, never a new catalog.
     try{
      if(ivMedicine)parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
+     if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText);
      if(cirrBedside&&intent.id==='espironolactona')
       parseCirrDose(intent.clause||intent.sourceText,content.defaultDoses?.espironolactona);
     }catch(error){return {status:'rejected',patientUid,eventId,reason:error.message};}
+    if(oxygenAction){
+     const active=nativePatient.procedures.oxygen;
+     if(intent.kind==='therapy.stop'&&!active?.active)
+      return {status:'rejected',patientUid,eventId,reason:'oxygen-not-active'};
+     if(intent.kind==='therapy.request'&&active?.active&&
+        active.flowLpm===parseNasalOxygenFlow(intent.clause||intent.sourceText).amount)
+      return care.execute({eventId,actorId,patientUid,intent},clock);
+    }
     // IV therapy can only start its native pharmacological preparation
     // once access exists. If a legitimate IV trip is in progress, wait for its
     // exact receipt before queueing the bedside medication.
@@ -112,6 +122,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    return item.kind==='therapy.request'?
     label+': no hay una regla de tratamiento validada para '+caseData.id+'. No administrado.':
     label+': este procedimiento no está implementado para '+caseData.id+'. No ejecutado.';
+  if(item.reason==='oxygen-not-active')return label+': no hay oxígeno activo que suspender.';
   if(item.reason==='venous-access-required')
    return label+': necesitás una vía venosa confirmada antes de administrarlo.';
   return label+': no ejecutado ('+(item.reason||'sin autorización')+').';

@@ -1,7 +1,7 @@
 import {executePatientDialogue} from './patient-dialogue.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {initializeExamination,executePhysicalExam} from './physical-exam.js';
-import {executeObservation,executeVenousAccess,recordVitalMeasurement} from './observations.js';
+import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
 import {initialAppVitals,advanceAppVitals} from './native-app.js';
@@ -67,6 +67,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
    const exam=executePhysicalExam(p,c,cmd,clock);if(exam)return exam;
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
    const access=executeVenousAccess(p,cmd);if(access)return access;
+   const oxygen=executeOxygenSupport(p,cmd,clock);if(oxygen)return oxygen;
    if(intent.kind==='consult.request'||intent.kind==='procedure.request'&&intent.id==='cirugia'){
     const prior=p.consults.find(x=>x.id==='cirugia'&&x.status==='done');
     if(prior)return executed(cmd,{message:'Cirugía ya confirmó recepción del paciente.',accepted:true,consultId:'cirugia'});
