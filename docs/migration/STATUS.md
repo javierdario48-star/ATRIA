@@ -26,9 +26,9 @@ monitor 16 comparaciones efectivas. UI Chromium móvil y cierres CIRR/APP aproba
 | C02 | Matriz de equivalencia e inventario del legado | COMPLETO — inventario, no certificación de paridad |
 | C03 | Portada, menú, perfil, HUD | PENDIENTE |
 | C04 | Examen físico original por segmentos | IMPLEMENTADO CIRR/APP — regiones, técnicas, Glasgow, UI; [informe](STEP_04_HANDOFF.md) |
-| C05 | Historia, monitor, estudios, paneles | PARCIAL C05.a/b — pacientes, pantallas reales del monitor, signos conocidos, historia; faltan ECG/controles/transporte; [informe](STEP_05_HANDOFF.md) |
+| C05 | Historia, monitor, estudios, paneles | PARCIAL C05.a/b/c — pacientes, hitboxes, historia; menú contextual y presentación de monitor tipo dispositivo. ECG/controles/transporte siguen pendientes; [C05 original](STEP_05_HANDOFF.md) · [C05.c](STEP_05C_HANDOFF.md) |
 | C06 | Diálogo y anamnesis de pacientes | PARCIAL C06.a — CIRR/APP, ALiCIA, contexto y antecedentes; [informe](STEP_06_HANDOFF.md) |
-| C07 | Parser/órdenes combinadas enfermería | PARCIAL C07.a — validación de dosis/vía antes de reutilizar comprobantes APP y prueba de orden combinada; [informe](STEP_07_HANDOFF.md). C07 completo pendiente |
+| C07 | Parser/órdenes combinadas enfermería | PARCIAL C07.a/b — veracidad de dosis/vía y prueba de cinco acciones en una sola indicación (dos vías, monitor, cristaloides y dos antibióticos); C07 y C08 físicos no completos. [C07.a](STEP_07_HANDOFF.md) · [C07.b](STEP_05C_HANDOFF.md) |
 | C08 | Enfermería física y administración nativa | PENDIENTE |
 | C09 | Vega y tutor Aprendiz | PENDIENTE |
 | C10 | Voz sobre comandos únicos | PENDIENTE |
