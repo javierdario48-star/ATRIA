@@ -5,7 +5,8 @@
 - Repositorio: `javierdario48-star/ATRIA`; **única rama modificada**: `atria-5.0-core-rebuild-experimental`.
 - SHA inicial comprobado: `ce829f29837fde923e39f181fc010a26eebf370a`, CI [38855005951](https://github.com/javierdario48-star/ATRIA/actions/runs/38855005951) final success 3/3.
 - Último SHA funcional/QA anterior a la documentación de este checkpoint: `aa344f7affedc50de145076130670b1c22b3d258`. **No suponer que es el HEAD actual**: confirmar branch ref y CI al retomar.
-- CI del último SHA código: consultar corrida asociada por la rama. La prueba intermedia [38856749587](https://github.com/javierdario48-star/ATRIA/actions/runs/38856749587) verificó los contratos del núcleo; revisar terminación de navegador, caso APP/CIRR, comparación mapa y regresión histórica. La CI del SHA documental será distinta y se verifica separadamente.
+- Preview **READY** con SHA coincidente con código funcional: https://night-shift-clinical-ki0whqzld-javierdario4878-7324.vercel.app — no hay prueba de Android físico en esta sesión.
+- **CI del último SHA código funcional**: [38856997681](https://github.com/javierdario48-star/ATRIA/actions/runs/38856997681) **completed/success, 3/3** (clean-core-contract, independent-game-browser y preserved-historical-regression). Incluye el navegador clínico CIRR/APP, búsqueda/ECG y referencia visual. La CI del SHA documental será distinta y se verifica por separado.
 
 ## 2. Qué se implementó realmente
 
