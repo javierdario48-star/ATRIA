@@ -1,3 +1,5 @@
+> **Actualización 2026-10-15 — continuación posterior a C3a:** este archivo conserva los checkpoints históricos C1/C2. La referencia *actual* de migración es [docs/migration/STATUS.md](migration/STATUS.md), el plan completo de **25 checkpoints** está en [ATRIA_50_MIGRATION_MASTER_PLAN.md](ATRIA_50_MIGRATION_MASTER_PLAN.md), y el primer informe reproducible es [docs/migration/STEP_01_HANDOFF.md](migration/STEP_01_HANDOFF.md). C01 consolidó por fast-forward la interfaz móvil aprobada desde `atria-5.0-compact-keyboard-preview` con código `0b36884fa4a879d49c588fa8f3f262a535dd3070`. **No continuar desde el antiguo HEAD de este archivo sin leer STATUS.md.**
+
 # ATRIA 5.0 — transferencia técnica
 
 ## Estado recuperable
