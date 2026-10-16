@@ -96,7 +96,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  });
  const authority=createRoomAuthority({roomId,mode,members:[{id:actorId}],patients:[{uid:patient.uid}],
   authenticate:token=>token===credentials?{id:actorId,roomId}:null,clinicalPort:port,
-  resolveSpeechContext:({envelope})=>({...resolveContext({targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions}),
+  resolveSpeechContext:({envelope})=>({...resolveContext({targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,
+   ...(care?{venousAccessCount:nativePatient.venousAccessCount??0,pendingIV:[...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv'),defaultDoses:content.defaultDoses}:{}),
+   studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions}),
   respondNpc:({patientUid,text,mode})=>vegaGuidance(patientUid===nativePatient.uid?nativePatient:null,caseData,text,{mode}),
   time:()=>clock.clinicalMinute,emit:(event,snapshot)=>onChange(copy(event),copy(snapshot))});
  function resultText(item,label){

@@ -1,5 +1,6 @@
 import {csNurseScan487} from '../../clinical/nurse-scanner-487.js';
 import {EXAM_TECHNIQUES,GLASGOW_COMPONENTS,validExamSelection} from '../clinical/exam-contract.js';
+import {planNursingIVAccess} from '../clinical/nursing-access-plan.js';
 
 const nurseAddress=/^(?:enfermera|enfermero|enfermeria)\b|(?:\b(?:enfermera|enfermero|enfermeria))\s*[,!.]?\s*$/i;
 const vegaAddress=/^(?:(?:dr|doctor)\.?\s*)?vega\b/i;
@@ -69,7 +70,8 @@ export function routeWardSpeech(text,context={}){
   else continue;
   intents.push({kind,id:item.id,sourceText:original,clause:item.text,count:item.count||1});
  }
- return {recipient,patientUid,intents,original,
-  ...(parsed.items.length>12?{error:'too-many-actions',intents:[]}:{}),
-  ...(intents.length===0?{error:'no-recognized-action'}:{})};
+ const planned=planNursingIVAccess(intents,context);
+ return {recipient,patientUid,intents:planned,original,
+  ...(parsed.items.length>12||planned.length>12?{error:'too-many-actions',intents:[]}:{}),
+  ...(planned.length===0?{error:'no-recognized-action'}:{})};
 }
