@@ -2,7 +2,7 @@ name: ATRIA 5 Experimental Game
 
 on:
   push:
-    branches: [atria-5.0-core-rebuild-experimental]
+    branches: [atria-5.0-core-rebuild-experimental, atria-5.0-compact-keyboard-preview]
   workflow_dispatch:
 
 permissions:
@@ -21,6 +21,8 @@ jobs:
         run: npm run test:v5-core
       - name: Canonical content, navigation, study and independent game contracts
         run: npm run test:v5
+      - name: Native compact ATRIA keyboard editing contracts
+        run: node --test src/v5/ui/atria-keyboard.test.js
       - name: Original CIRR dose, preparation and physiological trajectories remain equivalent
         run: node qa/v5/characterize-cirr-native.mjs
       - name: Characterize original APP dual antibiotics and fluid response (QA-only)
@@ -71,6 +73,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: npm run qa:v5-browser
+      - name: Compact ATRIA keyboard, camera alignment, typing, guard and rotation
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/keyboard-camera-browser.mjs
       - name: Boot failures, saved appearance, focus and rotation regressions
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
