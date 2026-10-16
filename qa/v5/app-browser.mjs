@@ -70,6 +70,17 @@ try{
   x.id==='vitals'&&x.status==='executed'&&x.receipt?.patientUid===currentSpot.patient.uid&&
   x.receipt?.eventId===currentSpot.patient.lastVitalsKnown.eventId)));
  assert.equal(currentSpot.patient.procedures.monitor?.connected??false,false);
+ // C11b: never partially execute a valid monitor before rejecting an invalid dose.
+ const beforeUnsafe=(await state()).room.transcript.length;
+ await send('Enfermera monitor y ceftriaxona 2 g');
+ const afterUnsafe=await state();
+ assert.equal(afterUnsafe.room.transcript.length,beforeUnsafe+1);
+ const unsafe=afterUnsafe.room.events.filter(e=>e.type==='chat.posted').at(-1);
+ assert.equal(unsafe.routeError,'unsafe-compound-order');
+ assert.deepEqual(unsafe.clinical,[]);
+ assert.equal(afterUnsafe.patient.procedures.monitor?.connected??false,false);
+ assert.deepEqual(afterUnsafe.patient.administrationLog,[]);
+ assert.match(await page.locator('#chatLog').innerText(),/orden combinada no ejecutada/i);
 
  for(const id of ['app_cbc','app_us']){
   await page.locator('#peopleButton').click();
