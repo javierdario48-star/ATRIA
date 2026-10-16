@@ -2,6 +2,7 @@ import {executePatientDialogue} from './patient-dialogue.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {initialCirrVitals,parseCirrDose,advanceCirrVitals} from './native-cirr.js';
 import {nativeCaseXP} from './progression.js';
+import {createIVAdministration} from './native-medications.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,executeVenousAccess,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
@@ -32,6 +33,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
  const txReceipt=(cmd,t,reused=false)=>executed(cmd,{therapyId:t.id,sourceEventId:t.sourceEventId,dose:copy(t.dose),
   administeredAtRealSecond:t.administeredAtRealSecond,administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
   message:(reused?'Ya ejecutado por la indicación original: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
+ const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected});
  function readiness(destination){
   const out=csEvaluateClosure487(closureSnapshot(p,c,destination));
   if(p.pendingTreatments.length){out.ready=false;out.action=null;out.missing.push('Esperar la ejecución o resolución de las intervenciones en preparación.');}
@@ -50,6 +52,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
    const exam=executePhysicalExam(p,c,cmd,clock);if(exam)return exam;
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
    const access=executeVenousAccess(p,cmd);if(access)return access;
+   const iv=ivMedicines.request(cmd,clock);if(iv)return iv;
    if(intent.kind==='therapy.request'&&['espironolactona','sal_restriccion','paracentesis_ter'].includes(intent.id)){
     let dose=null;
     if(intent.id==='espironolactona'){try{dose=parseCirrDose(intent.clause||intent.sourceText,defaultDoses?.espironolactona);}catch(error){return rejected(cmd,error.message,'Dosis o vía no validada en C2. Esquema disponible: espironolactona 100 mg oral. No administrado.');}}
@@ -91,18 +94,28 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
    // Split at the original 550ms preparation boundary. An order does not
    // contribute to physiology before the native administration actually occurs.
    let cursor=clockBefore.clinicalMinute;
-   const due=[...pending.values()].filter(t=>t.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9).sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond);
+   const due=[
+    ...[...pending.values()].filter(t=>t.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9),
+    ...ivMedicines.due(clockBefore,clockAfter)
+   ].sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond);
    for(const task of due){
     const at=Math.max(cursor,task.readyAtRealSecond);advanceCirrVitals(p,c,at-cursor);cursor=at;
     const fraction=dt>0?(at-clockBefore.clinicalMinute)/dt:0;
-    const t={id:task.id,label:task.label,dose:copy(task.dose),sourceEventId:task.sourceEventId,patientUid:p.uid,actorId:task.actorId,
-     administeredAtRealSecond:at,administeredAtNativeMinute:clockBefore.nativeMinute+(clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction};
-    p.treatments.push(t);p.administrationLog.push(copy(t));pending.delete(task.id);
-    p.pendingTreatments=p.pendingTreatments.filter(x=>x.sourceEventId!==task.sourceEventId);
-    for(const cmd of task.commands)completions.push(txReceipt(cmd,t));
+    const nativeMinute=clockBefore.nativeMinute+
+      (clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction;
+    if(ivMedicines.owns(task)){
+     completions.push(...ivMedicines.finish(task,at,nativeMinute));
+    }else{
+     const t={id:task.id,label:task.label,dose:copy(task.dose),sourceEventId:task.sourceEventId,
+      patientUid:p.uid,actorId:task.actorId,administeredAtRealSecond:at,
+      administeredAtNativeMinute:nativeMinute};
+     p.treatments.push(t);p.administrationLog.push(copy(t));pending.delete(task.id);
+     p.pendingTreatments=p.pendingTreatments.filter(x=>x.sourceEventId!==task.sourceEventId);
+     for(const cmd of task.commands)completions.push(txReceipt(cmd,t));
+    }
    }
    advanceCirrVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor));return completions;
   },
-  dispose(){pending.clear();p.pendingTreatments=[];}
+  dispose(){pending.clear();ivMedicines.dispose();p.pendingTreatments=[];}
  });
 }
