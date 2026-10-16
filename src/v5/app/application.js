@@ -194,7 +194,11 @@ export async function createApplication({document,window,content,signal}){
    close();updateHud();
   }
  });
+ listen(dialog,'input',event=>clinicalUI.onInput(event.target));
  listen(dialog,'keydown',event=>{
+  if(event.target?.id==='monitorOrderInput'&&event.key==='Enter'){
+   event.preventDefault();clinicalUI.submitMonitorOrder();return;
+  }
   if(['Enter',' '].includes(event.key)&&event.target.matches('svg [data-exam-region]')){
    event.preventDefault();clinicalUI.handle(event.target);
   }
@@ -242,7 +246,7 @@ export async function createApplication({document,window,content,signal}){
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
    const interaction=world.takeInteraction();if(interaction)activateEntity(interaction);
    if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();clinicalUI.render();}
-  },render:()=>drawWorld(now),isMobile:window.innerWidth<700});
+  },render:()=>{drawWorld(now);clinicalUI.animate(now);},isMobile:window.innerWidth<700});
   raf=window.requestAnimationFrame(frame);
  }
  function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
