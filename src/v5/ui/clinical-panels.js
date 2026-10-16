@@ -14,7 +14,7 @@ export function monitorHTML(patient){
  const connected=!!patient.procedures?.monitor?.connected&&!patient.caseEnded;
  const measured=patient.lastVitalsKnown?.vitals||null;
  const shown=(name,format)=>measured&&Number.isFinite(measured[name])?format(measured[name]):'—';
- const status=patient.caseEnded?'ATENCIÓN FINALIZADA':connected?'MONITORIZACIÓN ACTIVA':'MONITOR DESCONECTADO';
+ const status=patient.caseEnded?'Atención cerrada':connected?'Monitorización continua':'Monitor desconectado';
  const note=patient.caseEnded?'Registro final · sin vigilancia continua':
   connected?'Valores medidos · seguimiento continuo':'Última lectura disponible · sin vigilancia continua';
  const trace=connected&&measured;
