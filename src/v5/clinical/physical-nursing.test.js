@@ -232,14 +232,14 @@ test('C08 bedside IV is a real shared CIRR procedure with a verified nurse recei
  assert.equal(f.session.read().patient.venousAccessCount,2);
  f.session.dispose();f.world.enterLobby();
 });
-test('C11 CIRR medicine without an IV is correctly rejected before any nurse travel',async()=>{
+test('C07d isolated Ringer request in a physical guard queues one authorized IV first',async()=>{
  const f=fixture('CIRR-001');
- const action=await f.session.post({id:'ringer-no-iv',text:'enfermera ringer'});
- assert.deepEqual(action.clinical.map(x=>[x.id,x.status]),[['fluid','rejected']]);
- assert.equal(action.clinical[0].reason,'venous-access-required');
- assert.equal(f.session.read().patient.treatments.length,0);
- assert.equal(f.world.nurseJourneySnapshot().length,0);
- assert.match(f.session.read().messages.at(-1).text,/vía venosa confirmada/i);
+ const action=await f.session.post({id:'ringer-auto-iv',text:'enfermera ringer'});
+ assert.deepEqual(action.clinical.map(x=>[x.id,x.status]),[['iv','pending'],['fluid','pending']]);
+ assert.equal(f.session.read().patient.venousAccessCount,0);
+ assert.equal(f.world.nurseJourneySnapshot().length,1);
+ assert.equal(f.world.nurseJourneySnapshot()[0].kind,'iv');
+ assert.equal(f.session.read().patient.administrationLog.length,0);
  f.session.dispose();f.world.enterLobby();
 });
 test('C11 shared formulary executes CIRR Ringer only after IV and bedside preparation without fabricated BP response',async()=>{
