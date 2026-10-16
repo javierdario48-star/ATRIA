@@ -651,3 +651,91 @@ test('C11b a compound oxygen stop cannot connect the monitor when oxygen is inac
   'the existing single-command native message is still available');
  f.session.dispose();f.world.enterLobby();
 });
+
+
+async function arriveAndAdministerIV(f,medicine,eventId){
+ let started=false;
+ for(let i=0;i<2000&&!started;i++){
+  f.world.step(1/60);f.session.finishNurseArrivals();
+  started=f.session.read().patient.pendingTreatments.some(x=>x.id===medicine&&x.sourceEventId===eventId);
+ }
+ assert.equal(started,true,'real bedside nurse must initiate '+eventId);
+ const seconds=medicine==='fluid'?.8:1.5;
+ f.session.advance(seconds-.01);await f.session.flush();
+ assert.equal(f.session.read().patient.administrationLog.some(x=>x.sourceEventId===eventId),false,
+  'clinical preparation cannot be skipped');
+ f.session.advance(.02);await f.session.flush();
+ assert.equal(f.session.read().patient.administrationLog.some(x=>x.sourceEventId===eventId),true);
+}
+
+test('C11c new IV prescription really administers again; transport replay does not',async()=>{
+ for(const caseId of ['APP-001','CIRR-001']){
+  const f=fixture(caseId);
+  const access=await f.session.post({id:'access',text:'Enfermera una vía'});
+  assert.equal(access.clinical[0].status,'pending');
+  await walkToCompletion(f);
+  const first=await f.session.post({id:'fluid-1',text:'Enfermera Ringer 500 ml'});
+  assert.equal(first.clinical[0].status,'pending');
+  await arriveAndAdministerIV(f,'fluid','C08-B1:doctor:fluid-1:0');
+  const singleDose=f.session.read().patient.administrationLog.filter(x=>x.id==='fluid');
+  assert.equal(singleDose.length,1);
+  assert.equal(singleDose[0].dose.amount,500);
+  const previousJourneys=f.world.nurseJourneySnapshot().length;
+  const replay=await f.session.post({id:'fluid-1',text:'Enfermera Ringer 500 ml'});
+  assert.equal(replay.clinical[0].status,'executed');
+  assert.equal(f.world.nurseJourneySnapshot().length,previousJourneys);
+  assert.equal(f.session.read().patient.administrationLog.filter(x=>x.id==='fluid').length,1);
+  const repeated=await f.session.post({id:'fluid-2',text:'Enfermera Ringer 500 ml'});
+  assert.equal(repeated.clinical[0].status,'pending','fresh prescription must not be a certificate reuse');
+  assert.equal(f.world.nurseJourneySnapshot().length,previousJourneys+1,'new dose needs a new physical trip');
+  assert.equal(f.session.read().patient.administrationLog.filter(x=>x.id==='fluid').length,1,
+   'requesting another dose is not administration');
+  await arriveAndAdministerIV(f,'fluid','C08-B1:doctor:fluid-2:0');
+  const records=f.session.read().patient.administrationLog.filter(x=>x.id==='fluid');
+  assert.deepEqual(records.map(x=>x.sourceEventId),[
+   'C08-B1:doctor:fluid-1:0','C08-B1:doctor:fluid-2:0']);
+  assert.equal(records.reduce((sum,x)=>sum+x.dose.amount,0),1000,
+   'exposure is derived from actual distinct native administrations');
+  assert.equal(f.events.filter(x=>x.type==='clinical.completed'&&x.clinical[0].id==='fluid').length,2);
+  f.session.dispose();f.world.enterLobby();
+ }
+});
+
+test('C11c two independent antibiotic prescriptions cannot coalesce by drug ID',async()=>{
+ const f=fixture('APP-001');
+ await f.session.post({id:'access',text:'Enfermera una vía'});
+ await walkToCompletion(f);
+ const one=await f.session.post({id:'abx-one',text:'Enfermera ceftriaxona 1 g'});
+ const two=await f.session.post({id:'abx-two',text:'Enfermera ceftriaxona 1 g'});
+ assert.deepEqual([one.clinical[0].status,two.clinical[0].status],['pending','pending']);
+ assert.equal(f.world.nurseJourneySnapshot().filter(x=>x.kind==='ceftriaxone').length,2);
+ await arriveAndAdministerIV(f,'ceftriaxone','C08-B1:doctor:abx-one:0');
+ await arriveAndAdministerIV(f,'ceftriaxone','C08-B1:doctor:abx-two:0');
+ const records=f.session.read().patient.administrationLog.filter(x=>x.id==='ceftriaxone');
+ assert.equal(records.length,2);
+ assert.equal(new Set(records.map(x=>x.sourceEventId)).size,2);
+ assert.equal(records[0].dose.amount+records[1].dose.amount,2000);
+ const replay=await f.session.post({id:'abx-two',text:'Enfermera ceftriaxona 1 g'});
+ assert.equal(replay.clinical[0].status,'executed');
+ assert.equal(f.session.read().patient.administrationLog.filter(x=>x.id==='ceftriaxone').length,2);
+ f.session.dispose();f.world.enterLobby();
+});
+
+test('C11c repeated IV doses preserve APP native baseline effect without fake accumulation',async()=>{
+ const f=fixture('APP-001'),baseline=f.session.read().patient.liveVitals;
+ await f.session.post({id:'access',text:'Enfermera una vía'});
+ await walkToCompletion(f);
+ await f.session.post({id:'one',text:'Enfermera Ringer 500 ml'});
+ await arriveAndAdministerIV(f,'fluid','C08-B1:doctor:one:0');
+ f.session.advance(3);await f.session.flush();
+ const first=f.session.read().patient.liveVitals;
+ await f.session.post({id:'two',text:'Enfermera Ringer 500 ml'});
+ await arriveAndAdministerIV(f,'fluid','C08-B1:doctor:two:0');
+ f.session.advance(3);await f.session.flush();
+ const second=f.session.read().patient.liveVitals;
+ assert(first.sys>baseline.sys);
+ assert(second.sys<baseline.sys+14.01,
+  'do not invent cumulative blood pressure increases before physiology C12 migration');
+ assert.equal(f.session.read().patient.administrationLog.filter(x=>x.id==='fluid').length,2);
+ f.session.dispose();f.world.enterLobby();
+});

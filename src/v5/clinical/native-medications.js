@@ -41,16 +41,18 @@ export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected})
   let dose;
   try{dose=parseStandardIVDose(cmd.intent.clause||cmd.intent.sourceText,doses?.[id]);}
   catch(error){return rejected(cmd,error.message,'Dosis o vía IV no validada. No administrado.');}
-  const existing=p.treatments.find(t=>t.id===id);
-  if(existing)return proof(cmd,existing,true);
-  const job=tasks.get(id);
-  if(job){job.commands.push(copy(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
+  // A fresh clinical order is another exposure, even to the same drug.
+  // Only replay of the SAME eventId may share an execution (room authority
+  // already deduplicates transport retries by actor+commandId).
+  if(tasks.has(cmd.eventId))return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
+  if(p.administrationLog.some(t=>t.sourceEventId===cmd.eventId))
+   return proof(cmd,p.administrationLog.find(t=>t.sourceEventId===cmd.eventId),true);
   if((p.venousAccessCount??0)<1)
    return rejected(cmd,'venous-access-required','Primero confirmar al menos una vía venosa periférica. No administrado.');
   const task={id,label:labels(id)||IV_MEDICINES[id].label,dose,sourceEventId:cmd.eventId,
    actorId:cmd.actorId,patientUid:p.uid,
    readyAtRealSecond:clock.clinicalMinute+IV_MEDICINES[id].seconds,commands:[copy(cmd)]};
-  tasks.set(id,task);
+  tasks.set(cmd.eventId,task);
   p.pendingTreatments.push({id,sourceEventId:task.sourceEventId,patientUid:p.uid,
    readyAtRealSecond:task.readyAtRealSecond});
   return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
@@ -59,14 +61,14 @@ export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected})
   return [...tasks.values()].filter(t=>t.readyAtRealSecond<=after.clinicalMinute+1e-9);
  }
  function finish(task,at,nativeMinute){
-  if(tasks.get(task.id)!==task)throw Error('unknown medicine preparation');
+  if(tasks.get(task.sourceEventId)!==task)throw Error('unknown medicine preparation');
   const t={id:task.id,label:task.label,dose:copy(task.dose),sourceEventId:task.sourceEventId,
    actorId:task.actorId,patientUid:p.uid,administeredAtRealSecond:at,
    administeredAtNativeMinute:nativeMinute};
-  p.treatments.push(t);p.administrationLog.push(copy(t));tasks.delete(task.id);
+  p.treatments.push(t);p.administrationLog.push(copy(t));tasks.delete(task.sourceEventId);
   p.pendingTreatments=p.pendingTreatments.filter(x=>x.sourceEventId!==task.sourceEventId);
   return task.commands.map(cmd=>proof(cmd,t));
  }
- return Object.freeze({request,due,finish,owns:task=>tasks.get(task.id)===task,
+ return Object.freeze({request,due,finish,owns:task=>tasks.get(task.sourceEventId)===task,
   dispose(){tasks.clear();}});
 }

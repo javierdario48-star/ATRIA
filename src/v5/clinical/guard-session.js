@@ -118,7 +118,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      return care.execute({eventId,actorId,patientUid,intent},clock);
     // Reconfirmed therapies reuse the native certificate, rather than send an
     // NPC on a fictitious second administration after a finished treatment.
-    if(intent.kind==='therapy.request'&&!oxygenAction&&nativePatient.treatments.some(t=>t.id===intent.id))
+    if(intent.kind==='therapy.request'&&!oxygenAction&&!ivMedicine&&nativePatient.treatments.some(t=>t.id===intent.id))
      return care.execute({eventId,actorId,patientUid,intent},clock);
     const travel=nursing.enqueue({eventId,patientUid,kind:intent.id});
     if(['queued','travelling'].includes(travel.status)){
