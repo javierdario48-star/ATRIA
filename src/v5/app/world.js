@@ -53,6 +53,13 @@ export function createWorld(content,profile){
  }
  const snapshot=()=>structuredClone({phase,mode,caseId,generation,player,nurses,patients,expert});
  return Object.freeze({navigation,enterLobby,enterGuard,step,snapshot,
+  /** Appearance is an actor property, never a reason to recreate the room. */
+  setAppearance({name,scrubColor}){
+   if(typeof name!=='string'||!name.trim()||name.length>32||
+      !['navy','green','gray','pink','teal'].includes(scrubColor))throw Error('invalid appearance');
+   profile={...profile,name,scrubColor};
+   player.name=name;player.color=scrubColor;
+  },
   setLevel(level){if(!Number.isSafeInteger(level)||level<1)throw Error('invalid player level');player.level=level;},
   target:(x,y)=>phase!=='title'&&navigation.target(player,x,y),
   stop(){player.path=[];player.pathIndex=0;player.target=null;player.moving=false;},
