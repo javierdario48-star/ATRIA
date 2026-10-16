@@ -54,7 +54,22 @@ try{
  await tapEntity('monitor');assert.match(await page.locator('#modalContent').innerText(),/Monitor · B1/);
  assert.match(await page.locator('#bedsideMonitor').innerText(),/desconectado/);assert(!(await state()).patient.lastVitalsKnown);
  await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor.connected);
- assert.match(await page.locator('#bedsideMonitor').innerText(),/108\/68/);
+ assert.match(await page.locator('#bedsideMonitor').innerText(),/108\\/68/);
+ await page.waitForFunction(()=>document.querySelector('#monitorEcgPath')?.getAttribute('d')?.length>500);
+ const initialEcg=await page.locator('#monitorEcgPath').getAttribute('d');
+ await page.waitForTimeout(225);
+ assert.notEqual(await page.locator('#monitorEcgPath').getAttribute('d'),initialEcg,
+  'ECG must sweep with the authoritative measured heart rate');
+ await page.locator('#monitorOrderInput').fill('espiron');
+ const candidates=page.locator('#monitorOrderSuggestions [data-action="monitor-suggestion"]');
+ assert.equal(await candidates.count(),1);
+ assert.equal(await candidates.first().getAttribute('data-order'),'espironolactona 100 mg oral');
+ assert.equal((await state()).patient.treatments.length,0,'autocomplete selection never executes a prescription');
+ await candidates.first().click();
+ assert.equal(await page.locator('#monitorOrderInput').inputValue(),'espironolactona 100 mg oral');
+ await page.locator('#monitorOrderInput').fill('');
+ await page.locator('[data-action="monitor-hint"]').click();
+ assert(await page.locator('#monitorOrderSuggestions button').count()>1,'hints accessible on demand');
  await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>!atriaV5.snapshot().clinical.patient.procedures.monitor.connected);
  const measured=(await state()).patient.lastVitalsKnown;
  await page.locator('#modalClose').click();await tapEntity('patient');
@@ -80,7 +95,12 @@ try{
  await page.screenshot({path:out+'/regional-examination.png'});
  await page.locator('[data-action="patient-chart"]').click();await page.locator('[data-action="clinical-history"]').click();
  assert.match(await page.locator('#fullClinicalHistory').innerText(),/Esplenomegalia/);assert.match(await page.locator('#fullClinicalHistory').innerText(),/15/);
- await page.locator('#modalClose').click();await send('Enfermera paracentesis terapéutica');
+ await page.locator('#modalClose').click();await tapEntity('monitor');
+ await page.locator('#monitorOrderInput').fill('paracentesis');
+ await page.locator('#monitorOrderSuggestions [data-action="monitor-suggestion"]').first().click();
+ await page.locator('[data-action="monitor-order-submit"]').click();
+ assert.match(await page.locator('#monitorOrderFeedback').innerText(),/pendiente|confirmada/i);
+ await page.locator('#modalClose').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.liveVitals.hr<93.8);
  assert.deepEqual((await state()).patient.lastVitalsKnown,measured,'disconnected monitor does not update a prior measurement');
  // Reproject after opening the approved keyboard; do not change hitboxes or world coordinates.
