@@ -54,7 +54,7 @@ try{
  await tapEntity('monitor');assert.match(await page.locator('#modalContent').innerText(),/Monitor · B1/);
  assert.match(await page.locator('#bedsideMonitor').innerText(),/desconectado/);assert(!(await state()).patient.lastVitalsKnown);
  await page.locator('[data-action="toggle-monitor"]').click();await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor.connected);
- assert.match(await page.locator('#bedsideMonitor').innerText(),/108\\/68/);
+ assert((await page.locator('#bedsideMonitor').innerText()).includes('108/68'));
  await page.waitForFunction(()=>document.querySelector('#monitorEcgPath')?.getAttribute('d')?.length>500);
  const initialEcg=await page.locator('#monitorEcgPath').getAttribute('d');
  await page.waitForTimeout(225);
