@@ -101,9 +101,9 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   // At most 30 paint operations per second; the sweep itself samples at 125 Hz
   // against elapsed real time and preserves already drawn intervals.
   if(now-lastEcgAt<33)return;
-  const snapshot=state();if(!snapshot)return;
+  const monitor=session()?.monitorRead(patientUid);if(!monitor)return;
   lastEcgAt=now;
-  path.setAttribute('d',ecgSweep.update(now,ecgPresentation(snapshot.patient)));
+  path.setAttribute('d',ecgSweep.update(now,ecgPresentation(monitor)));
  }
 
  function showStudies(){
