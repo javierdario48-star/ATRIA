@@ -2,6 +2,7 @@ import {executePatientDialogue} from './patient-dialogue.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,recordVitalMeasurement} from './observations.js';
+import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
 import {initialAppVitals,parseAppDose,advanceAppVitals,APP_NATIVE_PREPARATION_SECONDS} from './native-app.js';
 
@@ -26,7 +27,7 @@ export function appClosureSnapshot(p,c,destination){
  */
 export function createAppCare(p,c,{mode,defaultDoses,progress}){
  if(c.id!=='APP-001')throw Error('C3a APP policy requires APP-001');
- Object.assign(p,{liveVitals:initialAppVitals(c),baselineVitals:initialAppVitals(c),intentHistory:[],exam:{},examDone:false,
+ Object.assign(p,{liveVitals:initialAppVitals(c),baselineVitals:initialAppVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,
   lastVitalsKnown:null,diagnosis:'',reassessments:0,lastReassessment:null,
   pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,
   consults:[],pendingConsults:[],caseEnded:false,closure:null});
