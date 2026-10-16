@@ -80,7 +80,7 @@ try{
  assert.deepEqual(unsafe.clinical,[]);
  assert.equal(afterUnsafe.patient.procedures.monitor?.connected??false,false);
  assert.deepEqual(afterUnsafe.patient.administrationLog,[]);
- assert.match(await page.locator('#chatLog').innerText(),/orden combinada no ejecutada/i);
+ assert.match(await page.locator('#chatHistory').innerText(),/orden combinada no ejecutada/i);
 
  for(const id of ['app_cbc','app_us']){
   await page.locator('#peopleButton').click();
