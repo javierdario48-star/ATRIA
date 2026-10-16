@@ -60,9 +60,12 @@ export function ecgAmplitude(seconds,{hr=80,rhythm='sinus'}={}){
  let y=0;
  if(morph.p)y+=.13*gaussian(t,.115,.024);
  if(!morph.p)y+=.016*Math.sin(seconds*17.3);
- y-=.16*gaussian(t,.254,.012);
- y+=1.04*gaussian(t,.285,.008);
- y-=.29*gaussian(t,.313,.013);
+ // A human QRS spans roughly 80–110 ms. Keep peak widths based on
+ // physical seconds, not a fixed percentage that shrinks at high HR.
+ const qrsWidth=.016*hr/60;
+ y-=.16*gaussian(t,.254,qrsWidth);
+ y+=1.04*gaussian(t,.285,qrsWidth);
+ y-=.29*gaussian(t,.313,qrsWidth);
  y+=.30*gaussian(t,.52,.063);
  if(morph.st)y+=morph.st*(1/(1+Math.exp(-(t-.342)/.008))-1/(1+Math.exp(-(t-.447)/.009)));
  return y;
