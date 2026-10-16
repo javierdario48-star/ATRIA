@@ -20,10 +20,26 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  function showMonitor(patient){
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid||!s.patient.liveVitals){notify('Monitor clínico todavía no disponible para este caso.');return;}
   patientUid=patient.uid;
-  open('<h2>Monitor · '+esc(patient.bedId)+'</h2><div id="bedsideMonitor"></div><div class="actions">'+
+  open('<div class="bedside-monitor-header"><span class="monitor-device-led" aria-hidden="true"></span><div><h2>Monitor · '+esc(patient.bedId)+'</h2><small>PANTALLA DE CABECERA · '+esc(patient.bedId)+'</small></div></div>'+
+   '<div id="bedsideMonitor" class="bedside-monitor-screen"></div>'+
+   '<div class="bedside-monitor-toolbar" aria-label="Controles del monitor">'+
    '<button data-action="toggle-monitor" class="primary"></button><button data-action="record-vitals">Medir ahora</button>'+
-   '<button data-action="treatment">Tratamiento</button><button data-action="patient-chart">Historia</button></div>');
+   '<button data-action="treatment">Tratamiento</button><button data-action="patient-chart">Historia</button></div>','monitor');
   ui('modalContent').dataset.patientUid=patientUid;render();
+ }
+ /** Invoked by the world-anchored patient menu; clinical actions still use
+  * the existing session, UID, room authority and panel handlers.
+  */
+ function openSection(patient,section){
+  const s=session()?.read();
+  if(!s||s.patient.uid!==patient?.uid){notify('Paciente no disponible en esta guardia.');return;}
+  patientUid=patient.uid;
+  if(section==='talk'){onTalk(patient.uid);return;}
+  if(section==='examination'){regionId='general';open(examinationHTML());render();return;}
+  if(section==='history'){showHistory();return;}
+  if(section==='studies'){showStudies();return;}
+  if(section==='treatment'){showTreatment();return;}
+  if(section==='patient'){showPatient(patient);return;}
  }
  function showStudies(){
   const s=state();if(!s)return;
@@ -85,6 +101,6 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   }
   render();return true;
  }
- return Object.freeze({showPatient,showMonitor,render,handle,patientUid:()=>patientUid,
+ return Object.freeze({showPatient,showMonitor,openSection,render,handle,patientUid:()=>patientUid,
   reset(){patientUid=null;regionId='general';delete ui('modalContent').dataset.patientUid;}});
 }
