@@ -56,9 +56,23 @@ try{
  await page.locator('[data-action="toggle-monitor"]').click();
  assert.equal((await state()).patient.procedures.monitor?.connected??false,false,'nurse has not yet connected the monitor');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.procedures.monitor?.connected===true);
- assert((await page.locator('#bedsideMonitor').innerText()).includes('108/68'));
+ const initialVitals=(await state()).patient;
+ assert(Math.abs(initialVitals.lastVitalsKnown.vitals.sys-108)<=2);
+ assert(Math.abs(initialVitals.lastVitalsKnown.vitals.dia-68)<=1.2);
+ assert.match(await page.locator('#bedsideMonitor').innerText(),/Monitorización continua/i);
  await page.waitForFunction(()=>document.querySelector('#monitorEcgPath')?.getAttribute('d')?.length>500);
  const initialEcg=await page.locator('#monitorEcgPath').getAttribute('d');
+ const observedBefore=(await state()).patient.lastVitalsKnown.vitals;
+ const nativeBefore=(await state()).patient.liveVitals;
+ await page.waitForFunction(before=>{
+  const now=atriaV5.snapshot().clinical.patient.lastVitalsKnown?.vitals;
+  return now&&Math.abs(now.hr-before.hr)>.02&&Math.abs(now.sys-before.sys)>.02;
+ },observedBefore,{timeout:15000});
+ const after=(await state()).patient;
+ assert.deepEqual(after.liveVitals,nativeBefore,
+  'monitor measurement variation must not alter native case physiology');
+ assert(Math.abs(after.lastVitalsKnown.vitals.hr-after.liveVitals.hr)<=1.4);
+
  await page.waitForTimeout(225);
  assert.notEqual(await page.locator('#monitorEcgPath').getAttribute('d'),initialEcg,
   'ECG must sweep with the authoritative measured heart rate');
@@ -108,7 +122,13 @@ try{
  await page.locator('#monitorOrderInput').fill('paracentesis');
  await page.locator('#monitorOrderSuggestions [data-action="monitor-suggestion"]').first().click();
  await page.locator('[data-action="monitor-order-submit"]').click();
- assert.match(await page.locator('#monitorOrderFeedback').innerText(),/pendiente|confirmada/i);
+ assert.equal(await page.locator('#monitorOrderFeedback').getAttribute('data-status'),'pending',
+  'monitor cannot announce administration before actual nurse preparation');
+ assert.match(await page.locator('#monitorOrderHistory').innerText(),/Paracentesis terapéutica/i);
+ await page.waitForFunction(()=>document.querySelector('#monitorOrderFeedback')?.dataset.status==='executed',null,{timeout:30000});
+ assert.match(await page.locator('#monitorOrderFeedback').innerText(),/Intervención confirmada/i);
+ assert.match(await page.locator('#monitorMedicationHistory').innerText(),/Paracentesis terapéutica/i);
+ assert.match(await page.locator('#monitorMedicationHistory').innerText(),/Administrado y confirmado/i);
  await page.locator('#modalClose').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.liveVitals.hr<93.8);
  assert.deepEqual((await state()).patient.lastVitalsKnown,measured,'disconnected monitor does not update a prior measurement');
