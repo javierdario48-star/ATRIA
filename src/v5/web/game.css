@@ -164,3 +164,29 @@ dialog[data-panel="monitor"] #modalClose{position:relative;z-index:2;margin:0 0 
  .device-top,.device-bottom{font-size:8px}
  .device-patient{max-width:30%}
 }
+
+/* C05.d Bedside prescriptions: compact search on the instrument, no new modal. */
+.monitor-prescription{
+ margin-top:14px;border:1px solid #2b5a63;border-radius:12px;
+ background:linear-gradient(145deg,#091d27,#0b2730);
+ padding:10px;display:grid;gap:7px;
+}
+.monitor-prescription-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.monitor-prescription-heading label{font-size:10px;letter-spacing:.1em;color:#bee3e5;font-weight:800}
+.monitor-prescription-heading button{font-size:10px;padding:5px 9px;min-height:30px}
+.monitor-prescription-heading button[aria-pressed=true]{background:#235c5e;border-color:#92ded8}
+.monitor-order-row{display:flex;gap:6px;align-items:stretch}
+.monitor-order-row input{flex:1;width:0;min-width:0;min-height:44px;padding:8px;font-size:14px}
+.monitor-order-row button{min-height:44px;padding:7px 11px;font-size:12px;white-space:nowrap}
+.monitor-suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:120px;overflow:auto}
+.monitor-suggestions:empty{display:none}
+.monitor-suggestions button{font-size:11px;min-width:0;min-height:32px;padding:6px 8px;
+ border-radius:8px;background:#143b44;text-align:left;font-weight:600;line-height:1.25}
+.monitor-prescription>small{font-size:10px;line-height:1.4;color:#95b8be}
+.monitor-feedback{margin:0!important;padding:7px 9px;border:1px solid #417178;
+ border-radius:8px;background:#11303a;color:#c7f0e9!important;font-size:11px!important}
+.monitor-feedback[data-status=rejected]{border-color:#b37958;color:#ffe0bf!important}
+.monitor-feedback[data-status=pending]{border-color:#aa9651;color:#f6e7b1!important}
+.device-trace.live path{will-change:auto}
+@media(max-width:370px){.monitor-suggestions{grid-template-columns:1fr}.monitor-order-row button{padding:5px 8px}}
+@media(prefers-reduced-motion:reduce){.device-trace svg{transition:none}}
