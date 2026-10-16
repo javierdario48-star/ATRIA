@@ -51,7 +51,9 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   const desiredY=valid?playBounds.top+(playBounds.bottom-playBounds.top)*.55:height/2;
   const dt=lastAnchorTime===null?.1:Math.max(0,Math.min(.12,(now-lastAnchorTime)/1000));
   lastAnchorTime=now;
-  anchorY=pixel(anchorY===null?desiredY:anchorY+(desiredY-anchorY)*(1-Math.exp(-dt/.10)));
+  // Exact old centering is important for the reversible visual parity control.
+  // Smooth only into the keyboard layout; restore the original image on hide.
+  anchorY=!valid?height/2:pixel(anchorY===null?desiredY:anchorY+(desiredY-anchorY)*(1-Math.exp(-dt/.10)));
   // Snap the camera origin to device pixels. Otherwise canvas texture
   // resampling produces the shimmer visible during subpixel walks on mobile.
   camera=valid?{x:pixel(world.player.x*scale)/scale,y:pixel(world.player.y*scale)/scale}:{x:world.player.x,y:world.player.y};
