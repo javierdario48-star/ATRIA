@@ -21,5 +21,5 @@ test('backspace handles selections and surrogate pairs without corruption',()=>{
 test('maxlength is enforced for accented text and medical orders',()=>{
  assert.deepEqual(editKeyboardText('abcd',4,4,'x',4),{value:'abcd',cursor:4});
  assert.deepEqual(editKeyboardText('cef',3,3,'triaxona 1 g',50),
-  {value:'ceftriaxona 1 g',cursor:14});
+  {value:'ceftriaxona 1 g',cursor:15});
 });
