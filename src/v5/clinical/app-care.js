@@ -80,17 +80,20 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
     return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
    }
    if(intent.kind==='therapy.request'&&['ceftriaxone','metronidazole','fluid','npo'].includes(intent.id)){
+    // Every new instruction must validate its own dose and route *before*
+    // considering a matching pending or administered therapy. A different
+    // regimen cannot inherit the receipt of the already accepted one.
+    let dose=null;
+    if(intent.id!=='npo'){
+     try{dose=parseAppDose(intent.clause||intent.sourceText,defaultDoses?.[intent.id]);}
+     catch(error){return rejected(cmd,error.message,'Dosis o vía no validada para APP-001. No administrado.');}
+    }
     const existing=p.treatments.find(t=>t.id===intent.id);
     if(existing)return proof(cmd,existing,true);
     const job=pending.get(intent.id);
     if(job){job.commands.push(copy(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
     if(intent.id!=='npo'&&p.venousAccessCount<1)
      return rejected(cmd,'venous-access-required','Primero confirmar al menos una vía venosa periférica. No administrado.');
-    let dose=null;
-    if(intent.id!=='npo'){
-     try{dose=parseAppDose(intent.clause||intent.sourceText,defaultDoses?.[intent.id]);}
-     catch(error){return rejected(cmd,error.message,'Dosis o vía no validada para APP-001. No administrado.');}
-    }
     const label=c.interventions.find(i=>i.id===intent.id)?.label||intent.id;
     if(intent.id==='npo'){
      const t={id:'npo',label,dose,sourceEventId:cmd.eventId,actorId:cmd.actorId,
