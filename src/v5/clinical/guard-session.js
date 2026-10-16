@@ -67,6 +67,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      }
      return {status:'rejected',patientUid,eventId,reason:'venous-access-required'};
     }
+    // Repeated requests for access that already exists should not schedule
+    // fictitious second cannulation; two requested lines still need two.
+    if(intent.kind==='procedure.request'&&intent.id==='iv'&&
+       (nativePatient.venousAccessCount??0)>=(intent.count===2?2:1))
+     return care.execute({eventId,actorId,patientUid,intent},clock);
     // Reconfirmed therapies reuse the native certificate, rather than send an
     // NPC on a fictitious second administration after a finished treatment.
     if(intent.kind==='therapy.request'&&nativePatient.treatments.some(t=>t.id===intent.id))
