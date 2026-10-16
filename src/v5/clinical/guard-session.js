@@ -101,6 +101,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   respondNpc:({patientUid,text,mode})=>vegaGuidance(patientUid===nativePatient.uid?nativePatient:null,caseData,text,{mode}),
   time:()=>clock.clinicalMinute,emit:(event,snapshot)=>onChange(copy(event),copy(snapshot))});
  function resultText(item,label){
+  // An unanswered history question is a patient reply, not a failed nursing procedure.
+  if(item.kind==='history.ask')return null;
   if(item.status==='unconfirmed')
    return label+': ejecución no confirmada; comprobá el estado del paciente antes de repetir.';
   if(item.status!=='rejected')return null;
