@@ -11,7 +11,7 @@ const copy=x=>structuredClone(x);
  * One serial dispatch lane per room, one native clinical port.
  */
 export function createRoomAuthority({roomId,mode,members,patients,authenticate,clinicalPort,resolveSpeechContext,
- emit=()=>{},time=()=>0}={}){
+ respondNpc=null,emit=()=>{},time=()=>0}={}){
  if(!id(roomId)||!VALID_MODES.has(mode)||typeof authenticate!=='function'||
   typeof clinicalPort?.execute!=='function'||typeof resolveSpeechContext!=='function')
   throw Error('invalid authoritative room configuration');
@@ -120,8 +120,17 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
   const message={id:envelope.id,actorId:actor.id,text:envelope.text,recipient:routed.recipient,
    patientUid,at:time(),revision:revision+1};
   transcript.push(message);if(transcript.length>300)transcript.shift();
+  // An NPC reply is an immutable part of the same room event, not a second
+  // chat transport. It cannot invoke the clinical port or claim a patient.
+  let npcReply=null;
+  if(routed.recipient==='vega'&&typeof respondNpc==='function'){
+   try{
+    const response=respondNpc({actorId:actor.id,patientUid,text:envelope.text,mode});
+    if(typeof response==='string'&&response.length<=600)npcReply={role:'mentor',name:'Dr. Vega',text:response};
+   }catch{/* tutor failure cannot lose a user's original chat message */}
+  }
   const event={type:'chat.posted',message,clinical,routeError:routed.error??null,
-   revision:revision+1};
+   ...(npcReply?{npcReply}:{}),revision:revision+1};
   events.push(event);if(events.length>300)events.shift();
   revision++;
   const ack={commandId:envelope.id,status:routed.error?'received-not-executed':'received',
