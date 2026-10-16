@@ -4,6 +4,7 @@ import {initialCirrVitals,parseCirrDose,advanceCirrVitals} from './native-cirr.j
 import {nativeCaseXP} from './progression.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,recordVitalMeasurement} from './observations.js';
+import {initialCaseEcg} from './ecg-morphology.js';
 
 const copy=x=>structuredClone(x);
 export const CIRR_EXAM_NAMES=EXAM_TECHNIQUES;
@@ -20,7 +21,7 @@ export function closureSnapshot(p,c,destination){return {
  */
 export function createCirrCare(p,c,{mode,defaultDoses,progress}){
  if(c.id!=='CIRR-001')throw Error('C2 care only supports CIRR-001');
- Object.assign(p,{liveVitals:initialCirrVitals(c),baselineVitals:initialCirrVitals(c),intentHistory:[],exam:{},examDone:false,lastVitalsKnown:null,
+ Object.assign(p,{liveVitals:initialCirrVitals(c),baselineVitals:initialCirrVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,lastVitalsKnown:null,
   diagnosis:'',reassessments:0,lastReassessment:null,pendingTreatments:[],administrationLog:[],procedures:{},caseEnded:false,closure:null});
  initializeExamination(p);
  const pending=new Map();
