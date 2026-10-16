@@ -106,3 +106,28 @@ test('C08a compound order never floods one patient with multiple nurse sprites',
  assert.equal(dispatcher.snapshot().find(x=>x.eventId==='iv-2').stage,'travelling');
  assert.deepEqual(arrive(dispatcher).map(x=>x.eventId),['iv-2']);
 });
+
+test('C08a two distant beds may be served concurrently without leaking identity or receipts',()=>{
+ const nav=createNavigation(openMap(12,12));
+ const nurses=[actor(nav,'north',1,1),actor(nav,'south',10,10)];
+ const patients=[{uid:'P1',approach:[3,3]},{uid:'P2',approach:[8,8]}];
+ const work=createNurseDispatcher({navigation:nav,nurses,patients});
+ assert.equal(work.enqueue({eventId:'alpha',patientUid:'P1',kind:'monitor'}).status,'travelling');
+ assert.equal(work.enqueue({eventId:'beta',patientUid:'P2',kind:'iv'}).status,'travelling');
+ assert.equal(nurses.filter(n=>n.journeyId).length,2);
+ let arrived=[];
+ for(let i=0;i<400&&arrived.length<2;i++){
+  work.advance(1/60);arrived.push(...work.takeArrivals());
+ }
+ assert.deepEqual(new Set(arrived.map(a=>a.patientUid)),new Set(['P1','P2']));
+ assert.equal(work.acceptClinicalResult({eventId:'alpha',patientUid:'P2',status:'executed',
+  receipt:{eventId:'alpha',patientUid:'P2'}}).status,'unknown-task');
+ assert.equal(work.acceptClinicalResult({eventId:'alpha',patientUid:'P1',status:'executed',
+  receipt:{eventId:'alpha',patientUid:'P2'}}).status,'invalid-receipt');
+ assert.equal(work.snapshot().find(x=>x.eventId==='alpha').stage,'at-bed');
+ assert.equal(work.acceptClinicalResult({eventId:'beta',patientUid:'P2',status:'executed',
+  receipt:{eventId:'beta',patientUid:'P2'}}).status,'confirmed');
+ assert.equal(work.snapshot().find(x=>x.eventId==='alpha').stage,'at-bed',
+  'P2 confirmation cannot complete P1 work');
+ work.dispose();
+});
