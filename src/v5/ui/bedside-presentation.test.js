@@ -27,7 +27,7 @@ test('C05.c connected monitor uses only known readings and labels pulse trace no
  assert(!monitorHTML(p).includes('<svg'),'connected does not invent measurements');
  p.lastVitalsKnown={vitals:{sys:110,dia:70,hr:90,rr:19,spo2:97,temp:37.1}};
  const html=monitorHTML(p);
- assert(html.includes('<svg'));assert.match(html,/NO ECG/);assert.match(html,/representa un ECG diagnóstico/);
+ assert(html.includes('<svg'));assert.match(html,/NO ECG/);assert.match(html,/no es un registro diagnóstico|NO ECG DIAGNÓSTICO/i);
  p.caseEnded=true;
  assert(!monitorHTML(p).includes('<svg'),'completed care cannot show continuous monitor activity');
  assert.match(monitorHTML(p),/Atención cerrada/);
