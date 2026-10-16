@@ -55,3 +55,13 @@ test('C05.d model path is deterministic, bounded and read-only',()=>{
  assert.equal(input.hr,94);
  assert.equal(ecgPath({seconds:5,hr:80,rhythm:'unknown'}),'');
 });
+
+test('C05.d optional case ECG seed is explicit, validated and remains absent in current cases',async()=>{
+ const {initialCaseEcg}=await import('./ecg-morphology.js');
+ assert.equal(initialCaseEcg({id:'APP-001'}),null);
+ assert.deepEqual(initialCaseEcg({id:'APP-001',ecg:{rhythm:'st_elevation'}}),{rhythm:'st_elevation'});
+ assert.deepEqual(initialCaseEcg({id:'CIRR-001',ecg:{rhythm:'asystole'}}),{rhythm:'asystole'});
+ assert.throws(()=>initialCaseEcg({id:'APP-001',ecg:{rhythm:'unknown'}}),/invalid case ECG/);
+ assert.notEqual(ecgPath({seconds:6,hr:0,rhythm:'asystole'}),'');
+ assert.notEqual(ecgPath({seconds:6,hr:0,rhythm:'ventricular_fibrillation'}),'');
+});
