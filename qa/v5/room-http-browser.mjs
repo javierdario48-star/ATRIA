@@ -110,16 +110,28 @@ try{
    await Promise.all(clients.map(c=>c.page.evaluate(()=>window.guard.flush())));
    await host.poll();host.publish();await host.flush();
    await Promise.all(clients.map(c=>c.page.evaluate(()=>window.guard.poll())));
+   const executedActors=[];
    for(let i=0;i<clients.length;i++){
     const state=await clients[i].page.evaluate(({id})=>({
      ack:window.guard.acknowledgement(id),state:window.guard.snapshot()
     }),{id:'rx-'+i});
     assert(state.ack,'guest must receive actual host acknowledgement');
     assert.equal(state.ack.patientUid,'P1','the network request cannot select arbitrary patient');
-    assert.equal(state.ack.clinical[0].status,mode==='coop'||i===0?'executed':'rejected');
+    const result=state.ack.clinical[0];
+    if(result.status==='executed')executedActors.push(clients[i].id);
+    else{
+     assert.equal(mode,'competitive');
+     assert.equal(result.reason,'other-player-owns-patient');
+    }
     assert.equal(state.state.transcript.length,count-1);
    }
+   assert.equal(executedActors.length,mode==='coop'?count-1:1);
    assert.equal(clinicalCalls.length,mode==='coop'?count-1:1);
+   if(mode==='competitive'){
+    assert.equal(authority.snapshot().patients[0].ownerId,executedActors[0]);
+    assert.equal(clinicalCalls[0].actorId,executedActors[0],
+     'competitive ownership must follow first valid processed request, not browser array order');
+   }
    // Guest snapshot forgery is rejected at the actual HTTP boundary.
    const rejected=await clients[0].page.evaluate(async(roomId)=>{
      return fetch('/api/rooms/'+roomId+'/messages',{method:'POST',headers:{
