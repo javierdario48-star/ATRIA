@@ -157,6 +157,19 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
    return enqueue(()=>process(envelope,credentials));
   },
   flush:()=>sequence,
+  // Native authoritative outcome; cannot be invoked through chat commands.
+  reportPatientDeath({patientUid,cause,atNativeMinute}){
+   const patient=byPatient.get(patientUid);
+   if(disposed||!patient||patient.closed||
+      !['critical-hypoxemia','circulatory-collapse'].includes(cause)||
+      !Number.isFinite(atNativeMinute)||atNativeMinute<0)return false;
+   patient.closed=true;patient.died=true;patient.deathReason=cause;
+   const event={type:'clinical.patient-died',roomId,patientUid,cause,
+    atNativeMinute,revision:++revision,at:time()};
+   events.push(event);if(events.length>300)events.shift();
+   try{emit(copy(event),snapshot());}catch{/* subscribers cannot undo death */ }
+   return true;
+  },
   dispose(){
    if(disposed)return;
    disposed=true;pendingExecutions.clear();
