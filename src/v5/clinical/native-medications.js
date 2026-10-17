@@ -24,7 +24,7 @@ export function parseStandardIVDose(text,reference){
   throw Error('ambiguous-dose-qualifier');
  const unit=chosen[2],actual=Number(chosen[1])*(unit==='g'?1000:unit==='l'||unit.startsWith('litro')?1000:1);
  if((reference.unit==='mg'&&!['mg','g'].includes(unit))||
-  (reference.unit==='ml'&&!['ml','cc','l'].includes(unit))||
+  (reference.unit==='ml'&&!['ml','cc','l','litro','litros'].includes(unit))||
   !Number.isFinite(actual)||
   (reference.unit==='mg'?actual!==reference.amount:
    !(actual>=50&&actual<=40000&&Number.isInteger(actual/50))))
