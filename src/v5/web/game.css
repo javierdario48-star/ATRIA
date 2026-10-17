@@ -204,3 +204,16 @@ dialog[data-panel="monitor"] #modalClose{position:relative;z-index:2;margin:0 0 
 .monitor-order-record[data-status=rejected] small,.monitor-order-record[data-status=unconfirmed] small{color:#f4bca9}
 .monitor-order-empty{font-size:10px;color:#91adb3;margin:6px 0}
 .monitor-feedback[data-status=executed]{border-color:#4a977c;color:#8ce1af!important}
+
+/* C12.g result breakdown: compact, read-only rendering of the native receipt. */
+.case-scorecard{max-width:580px;margin:0 auto;color:#e7f3f2}
+.case-scorecard>h3{margin:0 0 3px;font-size:18px;letter-spacing:.1px}
+.case-scorecard>p{margin:0 0 12px;color:#b1d7d2;font-weight:700}
+.case-score-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.case-score-section{background:rgba(10,42,49,.75);border:1px solid rgba(127,193,183,.18);padding:9px;border-radius:12px;min-width:0}
+.case-score-section>h4{font-size:11px;text-transform:uppercase;letter-spacing:.7px;margin:0 0 6px;color:#a8d8ca}
+.case-score-row{display:flex;justify-content:space-between;gap:5px;padding:3px 0;font-size:12px;line-height:1.35}
+.case-score-row span{overflow-wrap:anywhere}.case-score-row b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.case-score-row .score-gain{color:#a7e4c7}.case-score-row .score-loss{color:#ffc2a5}
+.case-score-empty{font-size:12px;opacity:.6;margin:0}
+@media(max-width:480px){.case-score-grid{gap:5px}.case-score-section{padding:7px}.case-score-row{font-size:11px}.case-score-section>h4{font-size:10px}}

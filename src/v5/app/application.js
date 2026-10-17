@@ -7,6 +7,7 @@ import {createGuardSession} from '../clinical/guard-session.js';
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
+import {caseDebriefHTML} from '../ui/case-debrief.js';
 import {createPatientActionWheel} from '../ui/patient-actions.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -190,7 +191,16 @@ export async function createApplication({document,window,content,signal}){
    guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,progress,
     patient:s.patients[0],content,nursing:{enqueue:task=>world.enqueueNurseJourney(task),takeArrivals:()=>world.takeNurseArrivals(),accept:result=>world.acceptNurseClinicalResult(result)},resolveContext:({targetPatientUid})=>({
      patientUid:targetPatientUid!==undefined?world.patientInRange(targetPatientUid):focusedPatientUid?world.patientInRange(focusedPatientUid):world.nearby(),focusedNpc}),
-    onChange:(_event,room)=>{if(guardSession?.read().room.roomId===room.roomId)renderGuardCommunication();}});
+    onChange:(event,room)=>{
+     if(guardSession?.read().room.roomId!==room.roomId)return;
+     renderGuardCommunication();
+     // A native closure is the ONLY trigger. Chat messages that merely ask
+     // for admission, surgery or discharge must never display an XP outcome.
+     const receipt=event.type==='chat.posted'?
+      event.clinical.find(x=>x.status==='executed'&&x.kind==='case.close')?.receipt?.closure:null;
+     if(receipt?.closed===true&&receipt.patientUid===guardSession.read().patient.uid)
+      open(caseDebriefHTML(receipt)+'<div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button><button data-action="close">Seguir viendo el caso</button></div>','outcome');
+    }});
    lastClinicalFrame=window.performance.now();
    close();resetChat(['CIRR-001','APP-001'].includes(s.caseId)?'Guardia clínica. Evaluación, estudios, tratamiento y cierre disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
   }
