@@ -10,6 +10,8 @@ The parallel `nativeMinute` domain is distinct and deliberately runs at `.12` na
 
 C12.k exposes `clock.gameMinute` explicitly and has `guard-day-clock.test.js` enforcing the exact 60s/24min contract, including typed segments and checkpointed history. The HUD reads the game field. No change to native drug kinetics, nursing deadlines, study timing, grace/rescue or already-tested APP/CIRR behavior.
 
+The 6-trajectory adverse-clinical bot previously mislabeled `nativeMinute` as the *declared game minutes* and automatically reported `clock/24h` as failed despite the visible clock being correct. C12.k now compares `clock.gameMinute===1440` after 1440 real seconds while **separately validating** `nativeMinute===172.8` as the unchanged historical PK rate. It does NOT make kinetics faster or declare all drug PK calibrated; it repairs a false parity failure with explicit time domains.
+
 ## All 30 legacy formulary entries versus administrable medicines
 
 The original `PHARMA_RULES_487` and `csPharmResponse487` cover 29 entries; the 30th, anticoagulation, is a clearly marked `review-only` rule with NO invented mechanistic effects. V5 `pharmacology-catalog.js` already projected the V4 rule and case-sensitive efficacy/outcome for 30 x 13 = 390 case–drug combinations without administering them. `csPharmOutcomes487` recognizes FULL coverage regimens and renal injury virtual indices, not antibiotic benefit just because a drug exists.
