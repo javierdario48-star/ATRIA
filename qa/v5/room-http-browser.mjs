@@ -27,7 +27,10 @@ const server=createServer(async(req,res)=>{
     headers:req.headers,query:Object.fromEntries(url.searchParams),
     body:body?JSON.parse(body):{}});
    if(dropToken===req.headers.authorization&&req.method==='POST'&&response.status===200){
-    dropToken=null;dropCount++;res.destroy();return;
+    // The server has committed, but the client receives no success proof.
+    // A deterministic 503 models an ambiguous post-commit response in CI.
+    dropToken=null;dropCount++;res.writeHead(503,{'Content-Type':'application/json'});
+    res.end(JSON.stringify({error:'simulated-reply-loss-after-commit'}));return;
    }
    res.writeHead(response.status,{'Content-Type':'application/json'});
    res.end(JSON.stringify(response.body));return;
@@ -54,6 +57,7 @@ const setupGuest=async(page,{roomId,actorId,hostId,token})=>{
  await page.evaluate(async({roomId,actorId,hostId,token})=>{
   const [{createGuardRelayGuest},{createHttpRoomTransport}]=await Promise.all([
    import('/src/v5/social/room-gateway.js'),import('/src/v5/social/room-mailbox.js')]);
+  window.__qaToken=token;
   window.guard=createGuardRelayGuest({roomId,actorId,hostId,
    transport:createHttpRoomTransport({roomId,token})});
  },{roomId,actorId,hostId,token});
@@ -118,14 +122,13 @@ try{
    assert.equal(clinicalCalls.length,mode==='coop'?count-1:1);
    // Guest snapshot forgery is rejected at the actual HTTP boundary.
    const rejected=await clients[0].page.evaluate(async(roomId)=>{
-    const token=location.search; // no exposed server token is taken from this query
-    return fetch('/api/rooms/'+roomId+'/messages',{method:'POST',headers:{
+     return fetch('/api/rooms/'+roomId+'/messages',{method:'POST',headers:{
      'Content-Type':'application/json',Authorization:'Bearer '+window.__qaToken},
      body:JSON.stringify({message:{protocol:'atria.v5.room.1',roomId,
       kind:'room.snapshot',id:'forge',payload:{room:{revision:999}}}})}).then(r=>r.status);
    },roomId);
    // The negative case uses a token exposed only inside the isolated QA page.
-   assert.equal(rejected,401);
+   assert.equal(rejected,403,'authenticated rival cannot submit a host snapshot');
    const before=authority.snapshot().revision;
    await clients[0].page.evaluate(()=>window.guard.requestResync('cycle'));
    await clients[0].page.evaluate(()=>window.guard.flush());
