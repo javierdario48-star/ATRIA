@@ -27,7 +27,7 @@ Las pruebas RED reprodujeron la ausencia de administración, el aviso global des
 
 ## Validación local de publicación
 
-`npm run test:v5`:372/372; `npm run test:v5-core`:40/40. Ambos builds y boundary gate aprobados; juego97archivos y core14módulos. `npm test` completo aprobado, incluidas421 combinaciones de enfermería,131 cierres y39 escenarios perjudiciales. Las dos discrepancias antiguas de diuréticos se mantienen identificadas. La CI remota y la preview deben comprobarse para el SHA publicado antes de declararlas aprobadas.
+`npm run test:v5`:372/372; `npm run test:v5-core`:40/40. Ambos builds y boundary gate aprobados; juego97archivos y core14módulos. `npm test` completo aprobado, incluidas421 combinaciones de enfermería,131 cierres y39 escenarios perjudiciales. Las dos discrepancias antiguas de diuréticos se mantienen identificadas. SHA funcional `4a726fb6f80ec1976e5a7c667778673834e56024`: [CI V5 4/4 aprobada](https://github.com/javierdario48-star/ATRIA/actions/runs/39066451369), [censo F/G/I aprobado](https://github.com/javierdario48-star/ATRIA/actions/runs/39066451418). [Preview HTTP200,97/97 hashes](https://night-shift-clinical-4q3x6l3fp-javierdario4878-7324.vercel.app). Cuatro escenarios de morfina en navegador: SpO2=88.396→91.886 con soporte real; una complicación y5puntos de penalización; todos los viajes confirmados. Evidencia `docs/evidence/c2b/verification.json`. No se probó Android físico.
 
 ## Límites y continuación
 
@@ -36,3 +36,11 @@ Ahora hay15 entradas de medicación IV preparadas por el mismo ejecutor, **no30 
 C2 siguiente: albúmina por peso, infusión de noradrenalina, transfusión y demás formulaciones originales. Antes de migrar albúmina, reproducir la colisión de `Enfermera monitor y albumina 1.5 g/kg` con estudio hepático: el scanner actualmente puede elegir hepatograma; no certificar fármaco por tener alias. Anfotericina explícita mg/kg también requiere resolver la pérdida histórica de /kg, no copiarla.
 
 C3 sigue pendiente de conectar el motor peritoneal extraído con sus efectos inmediatos y reglas posteriores efectivas; no trasladarlo a APP/CIRR. C4 requiere los cierres propios de las tres peritonitis. C5 todavía no habilita multijugador clínico del producto: la CI2/3/4clientes prueba el protocolo real HTTP, no una guardia clínica completa.
+
+## C2.b.1 — Respuesta subjetiva y examen, corrección de integración
+
+La comprobación manual funcional reprodujo una omisión: APP seguía respondiendo7/10 después de4mg reales, pese a analgesia activa=.6193. El resultado fisiológico y el catálogo de C2.b funcionaban, pero `readPatientObservations` aún declaraba que no había ningún analgésico ejecutable.
+
+Ahora entrevista y examen pasan el minuto nativo del **mismo reloj autorizado** a la función pura de observaciones. La reducción usa los4puntos de `ns421 symptoms()` y el redondeo original, ponderados por la analgesia de la función efectiva final de morfina. No copia el alivio indefinido que el antiguo chip activo mantenía tras eliminarse el fármaco. Una orden pendiente no alivia; el dolor observado y referido concuerdan tras administración y reaparece al desaparecer el efecto. CIRR no obtiene analgesia ficticia de un caso sin indicación de dolor en el modelo recuperado.
+
+No se cambia fisiología, administración, autoridad, supervivencia ni XP. Los dos consumidores usan un instante explícito y la observación no avanza tiempo ni crea recibos. Dos pruebas nuevas RED/GREEN reproducen entrevista/examen/eliminación y una nueva administración con nuevo alivio en Solitario y Aprendiz. Validación local:374/374 V5,40/40 core, ambos builds, boundary y diff aprobados; revisión focalizada sin Important/Critical pendientes. El bot de navegador añade un ingreso APP independiente con vía/enfermera/dosis reales y evaluación antes/después/tras eliminación. Las20comparaciones originales de conversación y40de examen sin analgésico siguen iguales a V4. CI de esta corrección debe verificarse en su nuevo SHA; la CI del párrafo anterior identifica únicamente C2.b.

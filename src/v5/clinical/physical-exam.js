@@ -14,9 +14,9 @@ const findings={
 const row=(regionId,organ,text)=>({regionId,organ,text:text||unspecified});
 export function initializeExamination(p){Object.assign(p,{exam:{},examFindings:{},examLog:[],examDone:false,glasgow:null});}
 /** Pure observation of the authorized patient's present state. No clock or treatment writes. */
-export function physicalExamRows(caseId,p,technique,regionId=null){
+export function physicalExamRows(caseId,p,technique,regionId=null,atNativeMinute=0){
  const f=findings[caseId];if(!f)throw Error('exam-case-not-migrated');
- const v=p.liveVitals,observed=readPatientObservations(p,caseId),n=observed.neuro;let rows=[];
+ const v=p.liveVitals,observed=readPatientObservations(p,caseId,atNativeMinute),n=observed.neuro;let rows=[];
  if(technique==='general')rows=[row('general','Aspecto general',f.appearance),
   row('general','Consciencia y orientación',n.verbal==null?'Respuesta verbal no evaluable.':n.verbal<4?'Respuesta verbal muy limitada.':
    n.verbal===4?'Comunica frases, pero no está bien orientado; pregunta dónde está.':'Alerta y orientado en esta evaluación.'),
@@ -56,7 +56,7 @@ export function executePhysicalExam(p,c,cmd,clock){
  }
  const technique=intent.id,region=intent.regionId;
  if(!Object.hasOwn(EXAM_TECHNIQUES,technique)||region&&!validExamSelection(region,technique))return reject(p,cmd);
- const rows=physicalExamRows(c.id,p,technique,region);
+ const rows=physicalExamRows(c.id,p,technique,region,clock.nativeMinute);
  for(const id of new Set(rows.map(r=>r.regionId))){
   p.examFindings[id]??={};p.examFindings[id][technique]={rows:rows.filter(r=>r.regionId===id),
    patientUid:p.uid,eventId:cmd.eventId,nativeMinute:clock.nativeMinute};

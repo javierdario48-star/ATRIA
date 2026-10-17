@@ -122,6 +122,32 @@ test('fresh repeated opioid doses accumulate; replay does not redose and toxicit
   assert.equal(s.read().patient.administrationLog.length,2,'washout retains dose history');
  }finally{s.dispose();}
 });
+for(const mode of ['solo','apprentice'])test(mode+': actual analgesia reaches the patient answer and exam, then wears off',async()=>{
+ const {s,post}=fixture('APP-001',mode);
+ const intensity=async()=>{
+  const ack=await post('¿Cuánto le duele?');
+  const answer=ack.clinical[0].receipt.answer,number=answer.match(/(\d+) de 10/);
+  assert(number,'a real numerical patient answer is required');return Number(number[1]);
+ };
+ try{
+  const before=await intensity();assert.equal(before,7);
+  await post('Enfermera una vía');await post('Enfermera morfina 4 mg IV');
+  s.advance(.54);await s.flush();assert.equal(await intensity(),before,'pending medicine cannot relieve pain');
+  s.advance(19.46);await s.flush();
+  const after=await intensity();assert(after<before,'the actual analgesic response must reach the patient');
+  const exam=await post('/examen general');
+  const pain=exam.clinical[0].receipt.rows.find(x=>x.organ==='Dolor observado');
+  assert.equal(pain.text,'Refiere '+after+'/10 en este momento.','exam and interview must read the same present effect');
+  s.advance(340);await s.flush();
+  assert.equal(s.pharmacologyRead().drugs.find(x=>x.id==='morphine').kinetics.analgesia,0);
+  const afterWashout=await intensity();
+  assert(afterWashout>=before,'analgesia cannot become permanent after elimination');
+  assert.equal(s.read().patient.administrationLog.length,1,'observation never administers another dose');
+  await post('Enfermera morfina 4 mg IV');s.advance(20);await s.flush();
+  assert(await intensity()<afterWashout,'a new actual dose can relieve pain again after elimination');
+  assert.equal(s.read().patient.administrationLog.length,2);
+ }finally{s.dispose();}
+});
 test('pre-existing fluid hypoxemia alone cannot be relabeled opioid toxicity before an opioid oxygenation effect',async()=>{
  const {s,post}=fixture();
  try{

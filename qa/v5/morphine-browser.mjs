@@ -24,9 +24,10 @@ try{
      takeArrivals:()=>world.takeNurseArrivals(),accept:x=>world.acceptNurseClinicalResult(x)}});
    const check=(v,label)=>{if(!v)throw Error(label);};
    let id=0;const send=text=>s.post({id:'m'+(++id),text});
-   const tick=()=>{world.step(1/30);s.finishNurseArrivals();s.advance(1/30);};
-   const step=async seconds=>{for(let t=0;t<seconds-1e-9;t+=1/30)tick();await s.flush();};
-   const until=async(fn,label)=>{for(let i=0;i<1800&&!fn();i++)tick();await s.flush();check(fn(),label);};
+   const tick=(active=s)=>{world.step(1/30);active.finishNurseArrivals();active.advance(1/30);};
+   const step=async(seconds,active=s)=>{for(let t=0;t<seconds-1e-9;t+=1/30)tick(active);await active.flush();};
+   const until=async(fn,label,active=s)=>{for(let i=0;i<1800&&!fn();i++)tick(active);await active.flush();check(fn(),label);};
+   let app=null;
    try{
     const order={id:'actual-dose',text:'Enfermera monitor y morfina 12 mg IV'};
     const ack=await s.post(order);
@@ -50,11 +51,36 @@ try{
     const panel=document.createElement('section');panel.id='morphine-history';
     panel.style.cssText='position:fixed;inset:0;overflow:auto;background:#10212b;color:white;padding:20px;z-index:99999';
     panel.innerHTML=historyHTML(supported.patient);document.body.append(panel);
-    return {mode,impaired:impaired.patient.liveVitals,supported:supported.patient.liveVitals,
+    const report={mode,impaired:impaired.patient.liveVitals,supported:supported.patient.liveVitals,
      receipts:supported.patient.administrationLog.map(x=>({id:x.id,amount:x.dose.amount})),
      penalty:supported.closure.quality.penalty,complications:supported.patient.adverseEvents.length,
      journeys:world.nurseJourneySnapshot().map(x=>x.stage)};
-   }finally{s.dispose();}
+    // A separate admission tests the visible analgesic result through the same
+    // physical route. It never modifies the completed CIRR patient's state.
+    s.dispose();world.enterLobby();world.enterGuard({mode,caseId:'APP-001'});
+    const next=world.snapshot().patients[0];
+    app=createGuardSession({roomId:'browser-analgesia',mode,actorId:'doc',actorName:'Doctor',patient:next,content,
+     resolveContext:()=>({patientUid:next.uid}),nursing:{enqueue:x=>world.enqueueNurseJourney(x),
+      takeArrivals:()=>world.takeNurseArrivals(),accept:x=>world.acceptNurseClinicalResult(x)}});
+    let seq=0;const ask=text=>app.post({id:'a'+(++seq),text});
+    const pain=async()=>{
+     const reply=(await ask('¿Cuánto le duele?')).clinical[0].receipt.answer;
+     const value=reply.match(/(\d+) de 10/);check(value,'missing numerical pain answer');return Number(value[1]);
+    };
+    const before=await pain();check(before===7,'original APP pain changed');
+    await ask('Enfermera morfina 4 mg IV');
+    check(await pain()===before,'analgesia before actual administration');
+    await until(()=>app.read().patient.administrationLog.length===1,'physical analgesic receipt',app);
+    await step(20,app);
+    const after=await pain();check(after<before,'patient cannot feel actual analgesia');
+    const examination=await ask('/examen general');
+    check(examination.clinical[0].receipt.rows.some(x=>x.organ==='Dolor observado'&&x.text==='Refiere '+after+'/10 en este momento.'),
+     'pain exam differs from current patient answer');
+    await step(340,app);const afterWashout=await pain();
+    check(afterWashout>=before,'opioid analgesia became permanent');
+    check(app.read().patient.administrationLog.length===1,'observation redosed opioid');
+    return {...report,analgesia:{before,after,afterWashout,receipts:1}};
+   }finally{app?.dispose();s.dispose();}
   },{mode});
   assert.equal(errors.length,0,JSON.stringify(errors));
   await page.screenshot({path:out+'/morphine-'+mode+'-'+(mobile?'mobile':'desktop')+'.png'});

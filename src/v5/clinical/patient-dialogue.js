@@ -39,7 +39,7 @@ export function executePatientDialogue(p,c,cmd,clock){
  if(cmd.intent.kind!=='history.ask')return null;
  const profile=PATIENT_PROFILES[c.id];if(!profile)return null;
  p.interview??={lastSymptom:null,dimensions:{},symptoms:{},subjective:null};
- const context=p.interview,observed=readPatientObservations(p),answers=[];
+ const context=p.interview,observed=readPatientObservations(p,c.id,clock.nativeMinute),answers=[];
  function note(id,answer,source){
   const entry={id,answer:lay(answer),source,eventId:cmd.eventId,patientUid:p.uid,nativeMinute:clock.nativeMinute};
   if(id&&!p.intentHistory.some(x=>x.id===id))p.intentHistory.push(entry);
