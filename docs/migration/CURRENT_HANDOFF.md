@@ -1,5 +1,8 @@
 # ATRIA 5.0 — punto de continuación verificado
 
+> **CONTRATO CANÓNICO DE PRODUCTO:** [Manual maestro ATRIA 4.8.7 → 5.0](ATRIA_50_MANUAL_MAESTRO_FUNCIONAL.md) (22 secciones, 13 casos, flujo de diagnóstico/consulta/cierre, farmacología, multijugador, pruebas) y [orden para Work](WORK_CONTINUATION_FROM_MANUAL.md). **Si un informe previo discrepa del manual en libertad médica, destino o UX, prevalecen las decisiones expresas del creador sustentadas en la fuente V4 efectiva**. Los tests no implican que todas las funciones V5 estén completas.
+
+
 Actualizado: 17-10-2026. Repositorio `javierdario48-star/ATRIA`.
 **Única rama de implementación:** `atria-5.0-core-rebuild-experimental`.
 
