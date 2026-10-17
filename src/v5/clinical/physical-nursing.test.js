@@ -748,7 +748,12 @@ test('C12a exposure reads actual receipts, not pending intentions or copied trea
  const post=await f.session.post({id:'two-fluid',text:'Enfermera una vía y Ringer 500 ml'});
  assert.deepEqual(post.clinical.map(x=>x.status),['pending','pending']);
  assert.equal(f.session.read().exposure.confirmedCrystalloidMl,0);
- await walkToCompletion(f);
+ let access=false;
+ for(let i=0;i<900&&!access;i++){
+  f.world.step(1/60);f.session.finishNurseArrivals();
+  access=f.session.read().patient.venousAccessCount===1;
+ }
+ assert(access,'the physical IV must be placed before fluid travel');
  // The IV can be confirmed before the medicine's own physical journey,
  // but a catheter itself is never a crystalloid administration.
  assert.equal(f.session.read().exposure.confirmedCrystalloidMl,0);
