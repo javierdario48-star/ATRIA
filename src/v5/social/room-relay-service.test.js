@@ -12,7 +12,7 @@ const testkit=async({n=4,maxRetained=512,pageSize=128,maxHistoryIds=10000}={})=>
  const tokens=new Map(members.members.map(id=>['Bearer token-'+id,{id}]));
  const active=new Set(members.members);
  const service=createRoomRelayService({store,authenticate:header=>tokens.get(header)||null,
-  mayAccess:actorId=>active.has(actorId),maxRetained,pageSize,maxHistoryIds});
+  mayAccess:actorId=>active.has(actorId),maxRetained,pageSize:Math.min(pageSize,maxRetained),maxHistoryIds});
  const call=(member,method='GET',body={},after=0,roomId='Q')=>
   service.handle({method,path:'/api/rooms/'+roomId+'/messages',
    query:{after},body,headers:{authorization:'Bearer token-'+member}});
