@@ -16,3 +16,6 @@ No se modificó el juego visual, clínica, reglas de casos, farmacos, teclado, m
 
 ## Siguiente avance
 C21.c: adaptador duradero transaccional para identidad/parties/relay, preservar `senderId` asignado por el servidor; resolver re-sincronización al detectar gaps mediante snapshot de autoridad completo más reenvío de ACK; integrar 2/3/4 Chromium con rutas HTTP reales. Posteriormente C22/23 conectar `createGuardSession` a modes Coop/Competitivo con ACL y un único patient, luego UI. No introducir casos nuevos. Ver [ROADMAP_PRODUCT_V5.md](ROADMAP_PRODUCT_V5.md).
+
+## Hardening C21.b — tráfico malformado no bloquea la guardia
+El código `eae08910e2abdaca7930e129b94f0c8b7777fb7c` incluye la corrección de un riesgo de denegación de servicio: si un miembro autorizado envía un mensaje `chat.command` incompleto/malformado, el anfitrión **confirma rechazo sin ejecutar ni añadir chat** y continúa con los mensajes siguientes de los demás jugadores. Revalidación en `room-gateway.test.js`. [Ver CI del commit](https://github.com/javierdario48-star/ATRIA/commit/eae08910e2abdaca7930e129b94f0c8b7777fb7c/checks). Sigue pendiente una cuota/rate limit por actor desde el relay servidor y controles de tamaño por paquete. El protocolo no vuelve a escribir fisiología en el invitado.
