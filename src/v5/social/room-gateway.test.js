@@ -85,3 +85,21 @@ test('C21b explicit resync restores room snapshot without executing additional t
  assert.equal(f.drugs.length,1);
  f.dispose();
 });
+
+test('C21b malformed peer command is rejected and does not poison the room mailbox',async()=>{
+ const f=makeRoom(3,'coop');
+ await f.wire('player1').send({protocol:'atria.v5.room.1',roomId:f.roomId,
+  kind:'chat.command',id:'malformed',payload:{id:'bad',text:''}});
+ f.guests[1].post({id:'valid',text:'Enfermera ceftriaxona'});
+ await f.guests[1].flush();
+ const received=await f.host.poll();
+ assert.equal(received.applied,2,'host must consume invalid command without freezing shared sequence');
+ await f.host.flush();
+ await Promise.all(f.guests.map(g=>g.poll()));
+ assert.equal(f.guests[0].acknowledgement('bad').status,'rejected');
+ assert.equal(f.guests[1].acknowledgement('valid').clinical[0].status,'executed');
+ assert.equal(f.drugs.length,1);
+ assert.equal(f.authority.snapshot().transcript.length,1,
+  'malformed packet must not enter global chat');
+ f.dispose();
+});

@@ -19,13 +19,21 @@ export function createGuardRelayHost({
  roomId,hostId,authority,transport,authenticateSender
 }={}){
  if(!valid(roomId)||!valid(hostId)||typeof authority?.dispatch!=='function'||
-  typeof authority?.snapshot!=='function'||typeof authority?.authorize!=='function'||typeof authenticateSender!=='function')
+  typeof authority?.snapshot!=='function'||typeof authority?.authorize!=='function'||typeof authority?.readRevision!=='function'||typeof authenticateSender!=='function')
   throw Error('invalid-host-gateway');
  let lastPublished=-1,disposed=false;
  const mailbox=createRoomMailbox({roomId,transport,onMessage:async message=>{
   if(message.kind==='chat.command'){
    const credentials=await authenticateSender(message.senderId);
-   const ack=await authority.dispatch(command(message.payload),credentials);
+   let ack,requested;
+   try{requested=command(message.payload);}
+   catch{
+    // A malformed command from a valid party member must NOT poison the
+    // shared cursor or block every other doctor's messages.
+    ack={commandId:valid(message.payload?.id)?message.payload.id:null,
+     roomId,status:'rejected',reason:'invalid-command',revision:authority.readRevision()};
+   }
+   if(requested)ack=await authority.dispatch(requested,credentials);
    mailbox.queue('chat.ack',{to:message.senderId,ack},
     'ack:'+message.senderId+':'+message.id);
    publish();
