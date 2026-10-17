@@ -50,6 +50,7 @@ test('V4 finite rescue evidence earns protected time without indefinite immunity
   {id:'oxygen',action:'start',sourceEventId:'oxygen-on',patientUid:'P',
    dose:{amount:4,unit:'L/min'},administeredAtNativeMinute:2},
   dose('fluid','bolus-1')];
+ p.treatments.push(structuredClone(p.administrationLog[1]));
  advanceNativeSurvival(p,cirr,'solo',time(0,0),time(30,3.6));
  assert(p.survival.earnedCredit>0);
  assert(p.survival.releaseAtRealSecond>180);
@@ -58,9 +59,29 @@ test('V4 finite rescue evidence earns protected time without indefinite immunity
  advanceNativeSurvival(p,cirr,'solo',time(30,3.6),time(70,8.4));
  assert.equal(p.survival.rescueStartedAtSec,rescueStart);
  p.administrationLog.push(dose('fluid','bolus-2'));
+ p.treatments.push(structuredClone(p.administrationLog.at(-1)));
  advanceNativeSurvival(p,cirr,'solo',time(70,8.4),time(75,9));
  assert.equal(p.survival.rescueStartedAtSec,rescueStart,'another prescription cannot restart rescue');
  assert.equal(p.patientDied,undefined,'rescue and grace not immediate cure or death');
+});
+test('legacy bridge never accepts IV receipts without matching native delivered treatment or fake oxygen device',()=>{
+ const p=fixture();
+ const fake={id:'fluid',patientUid:'P',sourceEventId:'fake',dose:{amount:500,unit:'ml'},
+  administeredAtNativeMinute:1};
+ p.administrationLog.push(fake);
+ assert.throws(()=>advanceNativeSurvival(p,cirr,'solo',time(0,0),time(10,1.2)),
+  /unique native treatment receipt/);
+ p.treatments.push({...fake,sourceEventId:'different'});
+ assert.throws(()=>advanceNativeSurvival(p,cirr,'solo',time(0,0),time(10,1.2)),
+  /unique native treatment receipt/);
+ p.treatments[0].sourceEventId='fake';
+ advanceNativeSurvival(p,cirr,'solo',time(0,0),time(10,1.2));
+ assert(p.survival.earnedCredit>0,'one confirmed 500 ml bolus may earn legacy grace credit');
+ const oxygen={id:'oxygen',patientUid:'P',sourceEventId:'not-connected',action:'start',
+  dose:{amount:4,unit:'L/min'},administeredAtNativeMinute:1};
+ p.administrationLog.push(oxygen);
+ advanceNativeSurvival(p,cirr,'solo',time(10,1.2),time(11,1.32));
+ assert.equal(p.survival.rescueStartedAtSec,null,'unconnected oxygen cannot become rescue');
 });
 test('real session: stable untreated cirrhosis survives; fatal overload closes without XP or a false disposition',async()=>{
  const s=createGuardSession({roomId:'native-survival-qa',mode:'solo',actorId:'doctor',

@@ -5,6 +5,7 @@ import {csGraceState487} from '../../clinical/grace-survival-487.js';
 import {csCriticalRescueEvidence487,csCriticalRescueWindow487}
  from '../../clinical/critical-rescue-487.js';
 import {summarizeIVExposures} from './medication-exposure.js';
+import {IV_MEDICINES} from './native-medications.js';
 
 // Both constants come from the effective V4 irreversible transition and the
 // validated 65s rescue policy. Gameplay units, NOT clinical prognosis.
@@ -22,8 +23,22 @@ function confirmedView(p,mode,prior){
   if(row.patientUid!==p.uid||typeof row.sourceEventId!=='string'||!row.sourceEventId||
     idSet.has(row.sourceEventId))throw Error('invalid native survival administration');
   idSet.add(row.sourceEventId);
-  if(row.id==='oxygen'&&row.action==='stop')active.delete('oxygen');
-  else if(row.id!=='oxygen'||row.action==='start'||row.action==='setRate')active.set(row.id,{id:row.id});
+  if(Object.hasOwn(IV_MEDICINES,row.id)){
+   const matches=(p.treatments||[]).filter(t=>t.sourceEventId===row.sourceEventId&&t.id===row.id);
+   if(matches.length!==1||matches[0].patientUid!==p.uid||
+      matches[0].dose?.amount!==row.dose?.amount||
+      matches[0].administeredAtNativeMinute!==row.administeredAtNativeMinute)
+    throw Error('survival support requires unique native treatment receipt');
+  }
+  if(row.id==='oxygen'){
+   if(row.action==='stop'){active.delete('oxygen');continue;}
+   if(!['start','setRate'].includes(row.action))throw Error('invalid oxygen survival event');
+   const device=p.procedures?.oxygen;
+   if(device?.active&&device.sourceEventId===row.sourceEventId&&
+      device.flowLpm===row.dose?.amount&&row.dose?.unit==='L/min')
+    active.set('oxygen',{id:'oxygen'});
+   else active.delete('oxygen');
+  }else active.set(row.id,{id:row.id});
  }
  // Neither a pending order nor a copied treatment flag qualifies.
  const total=summarizeIVExposures(p).confirmedCrystalloidMl;
