@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node build.js",
     "build:v5": "node scripts/build-v5.mjs",
-    "test:v5": "node --test src/v5/app/*.test.js src/v5/content/*.test.js src/v5/engine/*.test.js src/v5/render/*.test.js src/v5/clinical/*.test.js src/v5/core/*.test.js src/v5/adapters/*.test.js src/v5/ui/*.test.js",
+    "test:v5": "node --test src/v5/app/*.test.js src/v5/content/*.test.js src/v5/engine/*.test.js src/v5/render/*.test.js src/v5/clinical/*.test.js src/v5/core/*.test.js src/v5/adapters/*.test.js src/v5/ui/*.test.js src/v5/social/*.test.js",
     "qa:v5-browser": "node qa/v5/navigation-browser.mjs",
     "build:v5-core": "node scripts/build-v5-core.mjs",
     "test:v5-core": "node --test src/v5/core/room-authority.test.js src/v5/adapters/native-clinical-port.test.js",
