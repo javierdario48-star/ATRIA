@@ -119,13 +119,13 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
     .sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond);
    for(const task of due){
     const at=Math.max(cursor,task.readyAtRealSecond);
-    advanceAppVitals(p,c,at-cursor);cursor=at;
+    advanceAppVitals(p,c,at-cursor,clockBefore.nativeMinute+(clockAfter.nativeMinute-clockBefore.nativeMinute)*(dt>0?(at-clockBefore.clinicalMinute)/dt:0));cursor=at;
     const fraction=dt>0?(at-clockBefore.clinicalMinute)/dt:0;
     const nativeMinute=clockBefore.nativeMinute+
       (clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction;
     results.push(...ivMedicines.finish(task,at,nativeMinute));
    }
-   advanceAppVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor));
+   advanceAppVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor),clockAfter.nativeMinute);
    for(const task of [...pendingConsults.values()].filter(x=>x.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9)){
     pendingConsults.delete(task.id);p.pendingConsults=p.pendingConsults.filter(x=>x.sourceEventId!==task.sourceEventId);
     p.consults.push({id:'cirugia',status:'done',accepted:true,patientUid:p.uid,sourceEventId:task.sourceEventId});

@@ -1,4 +1,5 @@
 import {crystalloidOverloadOffsets} from './crystalloid-overload.js';
+import {oxygenationTargetOffset} from './oxygen-physiology.js';
 // Original native CIRR vital model, migrated explicitly from 4.8.6/4.8.7.
 // See qa/v5/characterize-cirr-native.mjs. No severity helper or shadow engine.
 const keys=['temp','hr','rr','sys','dia','spo2'];
@@ -25,7 +26,7 @@ export function parseCirrDose(text,reference={amount:100,unit:'mg',display:'100 
  if(!Number.isFinite(amount)||amount<=0||amount!==reference.amount)throw Error('unsupported-dose');
  return {defaultApplied:false,amount,unit:'mg',display:amount>=1000?amount/1000+' g':amount+' mg'};
 }
-export function advanceCirrVitals(p,c,dt){
+export function advanceCirrVitals(p,c,dt,atNativeMinute){
  if(!Number.isFinite(dt)||dt<0)throw Error('invalid physiology delta');
  if(p.caseEnded)return;
  const target=initialCirrVitals(c),active=new Set(p.treatments.map(t=>t.id));
@@ -36,6 +37,7 @@ export function advanceCirrVitals(p,c,dt){
  // Respiratory fluid overload is independently evidenced by repeated dosing.
  const overload=crystalloidOverloadOffsets(p,c);
  target.rr+=overload.rr;target.spo2+=overload.spo2;
+ target.spo2+=oxygenationTargetOffset(p,c,atNativeMinute);
  const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
  // Exact closed form of repeated native 1/60-second Euler smoothing for a
  // constant target, plus its fractional final step. No unbounded catch-up loop.

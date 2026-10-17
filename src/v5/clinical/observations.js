@@ -61,8 +61,9 @@ export function executeVenousAccess(p,cmd){
    'Acceso venoso periférico confirmado: '+p.venousAccessCount+'.'});
 }
 
-/** C08c: nasal oxygen is a real bedside intervention, not a generic SpO2 buff.
- * V4 verifies 2 and 4 L/min but its hypoxemic PERI-SEC physiology is deferred.
+/** Nasal oxygen: real bedside receipt, shared native physiology response.
+ * The confirmed device/flow is read by the single case vital writer; never
+ * modify saturation in the order executor.
  */
 export function parseNasalOxygenFlow(text,reference={amount:4},originalText=text){
  const raw=String(text||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/,/g,'.');
@@ -101,5 +102,5 @@ export function executeOxygenSupport(p,cmd,clock){
   action,flowLpm:stop?0:dose.amount,reused:unchanged,
   message:unchanged?'Oxígeno nasal ya confirmado a '+dose.display+'.':
    stop?'Oxígeno nasal suspendido y comprobado.':
-   'Oxígeno nasal '+dose.display+' confirmado en cama. Sin efecto fisiológico modelado para este caso.'});
+   'Oxígeno nasal '+dose.display+' confirmado en cama. Reevaluar saturación tras la administración.'});
 }

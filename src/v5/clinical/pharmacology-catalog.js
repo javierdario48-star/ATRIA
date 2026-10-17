@@ -21,8 +21,8 @@ const REVIEW_ONLY=Object.freeze({
   hazards:['bleeding','hit'],onsetMin:null,peakMin:null})
 });
 const OWNER=Object.freeze({
- 'APP-001':Object.freeze({fluid:['sys','dia','hr','rr']}),
- 'CIRR-001':Object.freeze({fluid:['rr','spo2'],
+ 'APP-001':Object.freeze({fluid:['sys','dia','hr','rr'],oxygen:['spo2']}),
+ 'CIRR-001':Object.freeze({fluid:['rr','spo2'],oxygen:['spo2'],
   paracentesis_ter:['rr']})
 });
 function checkRule(id,rule){

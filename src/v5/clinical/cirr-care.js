@@ -100,7 +100,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
     ...ivMedicines.due(clockBefore,clockAfter)
    ].sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond);
    for(const task of due){
-    const at=Math.max(cursor,task.readyAtRealSecond);advanceCirrVitals(p,c,at-cursor);cursor=at;
+    const at=Math.max(cursor,task.readyAtRealSecond);advanceCirrVitals(p,c,at-cursor,clockBefore.nativeMinute+(clockAfter.nativeMinute-clockBefore.nativeMinute)*(dt>0?(at-clockBefore.clinicalMinute)/dt:0));cursor=at;
     const fraction=dt>0?(at-clockBefore.clinicalMinute)/dt:0;
     const nativeMinute=clockBefore.nativeMinute+
       (clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction;
@@ -115,7 +115,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
      for(const cmd of task.commands)completions.push(txReceipt(cmd,t));
     }
    }
-   advanceCirrVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor));return completions;
+   advanceCirrVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor),clockAfter.nativeMinute);return completions;
   },
   dispose(){pending.clear();ivMedicines.dispose();p.pendingTreatments=[];}
  });
