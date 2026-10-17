@@ -10,18 +10,18 @@ Este handoff reemplaza el resumen acumulativo anterior. Su contenido íntegro si
 
 ## Estado que sí está comprobado
 
-**D1 en validación remota:** [impresión diagnóstica y derivación contextual](STEP_13A_DIAGNOSIS_AND_SURGICAL_HANDOFF.md). Implementación inicial publicada en `b6d966e815bf7ca523f3deebb16f3ec05a6f44f4`: insignia flotante, vocabulario global original, guardar/borrar/reeditar, destinos por requisitos reales, aviso único de enfermería y respuestas quirúrgicas originales a 3,5 s. Corrección posterior: conservar los botones flotantes durante una actualización sin cambios, reutilizando `setHTML`; prueba RED→GREEN y **385/385 V5**, 40/40 core y 6/6 comparativas con el ejecutable efectivo V4. La regresión histórica completa pasó localmente; navegadores/HTTP y preview del SHA final se certificarán al concluir CI. **Hasta entonces el último ejecutable completamente verificado sigue siendo el siguiente**. C2.c y PERI-SEC siguen pendientes. No continuar por encima de un checkpoint remoto rojo.
+**D1 verificado:** [impresión diagnóstica y derivación contextual](STEP_13A_DIAGNOSIS_AND_SURGICAL_HANDOFF.md). Insignia flotante, vocabulario global original, guardar/borrar/reeditar, destinos por requisitos reales, aviso único de enfermería y respuestas quirúrgicas originales a 3,5 s en APP/CIRR. No exige una operación realizada ni un umbral de calidad de 70. El primer commit `b6d966e815bf7ca523f3deebb16f3ec05a6f44f4` falló solamente en el trayecto de escritorio del nuevo bot, corregido junto con la conservación de los botones durante actualizaciones sin cambios. La CI del SHA final inferior pasó completa.
 
-**Último código funcional verificado:** `26cc058a30485191749b6df485f2a5221c525676`.
+**Último código funcional verificado:** `8c9b2c1a9be1a47856a7025ec50663f4ad92c2da`.
 El commit posterior de entrega sólo actualiza documentación/evidencia; obtener su SHA con `git log -1 --format=%H`. Comprobar siempre el HEAD remoto antes de continuar.
 
-- [CI V5 completa, 4/4 aprobada](https://github.com/javierdario48-star/ATRIA/actions/runs/39067172420): 374/374 pruebas V5, 40/40 core, ambos builds, frontera arquitectónica, navegadores y regresión histórica completa.
-- [Censo histórico F/G/I aprobado](https://github.com/javierdario48-star/ATRIA/actions/runs/39067172416).
-- [Preview del mismo código](https://night-shift-clinical-kte3m974r-javierdario4878-7324.vercel.app): READY, HTTP200, los 97 hashes del manifiesto coinciden con el build local.
+- [CI V5 completa, 4/4 aprobada](https://github.com/javierdario48-star/ATRIA/actions/runs/39074212282): **385/385 V5**, 40/40 core, ambos builds, frontera arquitectónica, navegadores y regresión histórica completa.
+- [Censo histórico F/G/I aprobado](https://github.com/javierdario48-star/ATRIA/actions/runs/39074212283).
+- [Preview del mismo código](https://night-shift-clinical-pnvgtr9jy-javierdario4878-7324.vercel.app/): READY, HTTP200, los **101 hashes** del manifiesto coinciden con el build local. Verificación directa adicional de UI en escritorio: acercamiento desde la insignia, tres peritonitis, guardar/borrar/reeditar y rechazo quirúrgico por examen/signos pendientes.
 - Regresión original preservada: 421 combinaciones de enfermería, 131 escenarios de cierre y 39 de tratamiento perjudicial. Las dos discrepancias antiguas de diuréticos continúan identificadas y abiertas; verde no significa que se hayan resuelto.
 - APP/CIRR completan los recorridos de UI con 100/100 y 133 XP únicos. Escritorio y Pixel emulado; **Android físico no probado**.
 
-Evidencia exacta del último código: [docs/evidence/c2b1/verification.json](../evidence/c2b1/verification.json). Los logs y capturas se conservan en los artefactos de CI.
+Evidencia exacta del último código: [D1 verification.json](../evidence/d1/verification.json) y [comparativa quirúrgica efectiva V4/V5](../evidence/d1/surgery-native-parity.json). Logs, capturas y resultados de escritorio/Pixel: [artefacto de CI](https://github.com/javierdario48-star/ATRIA/actions/runs/39074212282/artifacts/12116397696).
 
 ## Checkpoints publicados en esta ejecución
 
@@ -31,6 +31,7 @@ Evidencia exacta del último código: [docs/evidence/c2b1/verification.json](../
 | C2.a | `833c8bc0a3f8dc45ce103de7e614bb4dd01e0c54` | Nueve antimicrobianos originales más por el mismo ejecutor IV; alternativas APP hasta cierre. |
 | C2.b | `4a726fb6f80ec1976e5a7c667778673834e56024` | Morfina efectiva: dosis, preparación, acumulación, eliminación, efectos respiratorios/hemodinámicos y consecuencias. |
 | C2.b.1 | `26cc058a30485191749b6df485f2a5221c525676` | Analgesia real también en la respuesta del paciente y el examen, con desaparición del efecto y nueva respuesta al redosificar. |
+| D1 | `8c9b2c1a9be1a47856a7025ec50663f4ad92c2da` | Diagnóstico flotante original, destinos automáticos mínimos, respuestas quirúrgicas contextualizadas, rechazo/corrección/aceptación y XP único. |
 
 Cada checkpoint anterior tiene CI V5 y censo histórico aprobados. Informes y enlaces individuales: [C1](C1_CLINICAL_FREEDOM.md), [C2.a](C2A_ANTIMICROBIAL_EXECUTION.md), [C2.b y corrección observacional](C2B_MORPHINE_EXECUTION.md). Evidencia estructurada en `docs/evidence/c1`, `c2a`, `c2b` y `c2b1`.
 

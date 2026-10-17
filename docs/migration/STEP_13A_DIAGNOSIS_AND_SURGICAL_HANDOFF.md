@@ -30,7 +30,8 @@
 - `node qa/v5/characterize-surgery-native.mjs`: **6/6** escenarios comparados contra el runtime efectivo generado de 4.8.7, incluidos sus wrappers válidos en el orden real y su temporizador original. Coinciden estado, aceptación y texto clínico, sin procedimiento realizado ni cierre inventado. [Resultado y hashes originales](../evidence/d1/surgery-native-parity.json).
 - Nuevas pruebas públicas de navegador en `qa/v5/diagnosis-browser.mjs` para escritorio/Pixel: impresión flotante, tres peritonitis, guardar/borrar/reeditar, Enter durante IME, rechazos y limpieza al salir.
 - APP de navegador ahora demuestra rechazo sin diagnóstico, corrección en la insignia, nueva aceptación y destino flotante, conservando administración física, 100/100, 133 XP y ausencia de cirugía realizada. CIRR y las demás regresiones siguen habilitadas.
-- CI completa, HTTP de 2/3/4 navegadores y preview del SHA: **pendientes de ejecución remota al publicar este commit**. No se declara probado un navegador local: falta el ejecutable Chromium. Android físico sigue sin probarse.
+- Código final: `8c9b2c1a9be1a47856a7025ec50663f4ad92c2da`. [CI V5 4/4 aprobada](https://github.com/javierdario48-star/ATRIA/actions/runs/39074212282), incluido HTTP de 2/3/4 navegadores independientes, regresión histórica completa, escritorio/Pixel, APP/CIRR y libertad clínica/morfina. [Censo histórico aprobado](https://github.com/javierdario48-star/ATRIA/actions/runs/39074212283).
+- [Preview exacta verificada](https://night-shift-clinical-pnvgtr9jy-javierdario4878-7324.vercel.app/): HTTP200 y los 101 hashes del manifiesto coinciden con el build local. Verificación directa de UI adicional en escritorio: acercamiento de la insignia, sugerencias globales, guardar/borrar/reeditar y respuesta quirúrgica por examen pendiente. No se declara Chromium local: falta el binario; Android físico sigue sin probarse. [Evidencia estructurada](../evidence/d1/verification.json).
 
 ## Frontera y continuación
 

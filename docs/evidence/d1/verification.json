@@ -1,0 +1,122 @@
+{
+  "checkpoint": "D1",
+  "status": "verified",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "baseDocumentSha": "b719162e1c2603202d6695c2dba98c732ce40755",
+  "functionalSha": "8c9b2c1a9be1a47856a7025ec50663f4ad92c2da",
+  "commits": [
+    "b6d966e815bf7ca523f3deebb16f3ec05a6f44f4",
+    "8c9b2c1a9be1a47856a7025ec50663f4ad92c2da"
+  ],
+  "local": {
+    "v5": {
+      "passed": 385,
+      "failed": 0
+    },
+    "core": {
+      "passed": 40,
+      "failed": 0
+    },
+    "fullLegacyRegression": true,
+    "builds": [
+      "v5",
+      "v5-core",
+      "legacy"
+    ],
+    "boundary": true,
+    "diffCheck": true,
+    "legacySourceModified": false
+  },
+  "ci": {
+    "v5": {
+      "id": 39074212282,
+      "conclusion": "success",
+      "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/39074212282",
+      "jobs": [
+        {
+          "id": 117517903902,
+          "name": "actual-http-multiplayer-browser",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117517903957,
+          "name": "independent-game-browser",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117517904010,
+          "name": "preserved-historical-regression",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "id": 117517904011,
+          "name": "clean-core-contract",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "legacyCensus": {
+      "id": 39074212283,
+      "conclusion": "success",
+      "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/39074212283"
+    }
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-pnvgtr9jy-javierdario4878-7324.vercel.app/",
+    "sha": "8c9b2c1a9be1a47856a7025ec50663f4ad92c2da",
+    "status": 200,
+    "allHashesMatch": true,
+    "manifestFiles": 101
+  },
+  "comparative": {
+    "reference": "effective generated V4 native runtime in actual source order",
+    "surgicalScenarios": 6,
+    "allMatched": true,
+    "responseRealSeconds": 3.5,
+    "originalNursingCombinations": 421,
+    "originalClosureScenarios": 131,
+    "originalHarmScenarios": 39
+  },
+  "browser": {
+    "desktopAndPixelDiagnosis": true,
+    "globalVocabulary": true,
+    "saveClearReedit": true,
+    "imeSafe": true,
+    "contextualRefusals": true,
+    "app": {
+      "score": 100,
+      "xp": 133,
+      "drugAdministrations": 5,
+      "noPerformedSurgery": true
+    },
+    "cirr": {
+      "score": 100,
+      "xp": 133
+    },
+    "httpIndependentBrowsers": [
+      2,
+      3,
+      4
+    ],
+    "allergyAndMorphineRegressions": true,
+    "additionalDirectPreviewCheck": true,
+    "physicalAndroid": false,
+    "artifactId": 12116397696
+  },
+  "initialFailure": {
+    "runId": 39073656775,
+    "reason": "new desktop QA route copied Pixel coordinates and clicked behind HUD",
+    "correctedWithoutForcedClicksOrStateInjection": true
+  },
+  "limits": [
+    "Only APP/CIRR are complete case executors",
+    "C2.c special formulations pending",
+    "Peritonitis physiology not yet integrated",
+    "Product coop/competitive rooms not yet integrated",
+    "Two historical diuretic discrepancies remain open"
+  ]
+}
