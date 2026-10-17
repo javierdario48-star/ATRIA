@@ -21,7 +21,7 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
  if(memberSet.size!==members.length||byPatient.size!==patients.length||
   [...byPatient.keys()].some(x=>!id(x))||[...memberSet].some(x=>!id(x)))throw Error('invalid room members/patients');
  let revision=0,sequence=Promise.resolve(),disposed=false,unsubscribeCompletion=null;
- const transcript=[],events=[],seen=new Map(),pendingExecutions=new Map(),complications=new Set();
+ const transcript=[],events=[],seen=new Map(),pendingExecutions=new Map(),complications=new Set(),readyDestinations=new Map();
  const snapshot=()=>copy({roomId,mode,revision,members:[...memberSet],
   patients:[...byPatient.values()],transcript,events});
  const rejection=(commandId,reason)=>({commandId,status:'rejected',reason,roomId,revision});
@@ -157,6 +157,24 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
    return enqueue(()=>process(envelope,credentials));
   },
   flush:()=>sequence,
+  // Native minimum-requirement transition, published to the same room stream.
+  // No chat/transport command can supply this proof or award experience.
+  reportCareReadiness({patientUid,destinations}){
+   const patient=byPatient.get(patientUid);
+   if(disposed||!patient||patient.closed||!Array.isArray(destinations)||destinations.length>6||
+    new Set(destinations).size!==destinations.length||
+    destinations.some(x=>!['sala','observacion','alta','uti','quirofano','procedimiento'].includes(x)))return false;
+   const key=destinations.join('|');if(readyDestinations.get(patientUid)===key)return false;
+   readyDestinations.set(patientUid,key);if(!destinations.length)return false;
+   const choices=[...destinations],at=time();
+   enqueue(()=>{
+    if(disposed||patient.closed)return;
+    const event={type:'clinical.care-ready',roomId,patientUid,destinations:choices,revision:++revision,at};
+    events.push(event);if(events.length>300)events.shift();
+    try{emit(copy(event),snapshot());}catch{/* presentation cannot alter eligibility */}
+   });
+   return true;
+  },
   // Trusted native owner only; no network/chat command exposes this capability.
   reportPatientComplication({patientUid,sourceEventId,kind,atNativeMinute,message}){
    const patient=byPatient.get(patientUid),key=patientUid+':'+sourceEventId+':'+kind;

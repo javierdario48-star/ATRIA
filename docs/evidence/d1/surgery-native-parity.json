@@ -1,0 +1,252 @@
+{
+  "reference": "effective generated V4 native runtime, original consultation and response timer",
+  "sourceHashes": [
+    {
+      "id": "native-normalization",
+      "sha256": "aec25bd006bcf26b01bbd9b8ef8996033c44860f4156752538c3a17958ecf3bd"
+    },
+    {
+      "id": "native-case-lookup",
+      "sha256": "2e9d160438155436df9965fa1d5c4d0106afbb780782cd679e8792553e89a217"
+    },
+    {
+      "id": "native-initial-state",
+      "sha256": "fd6e26acf90f429d551733fdf5c6fbb43c91fcec5886787137e558101211599f"
+    },
+    {
+      "id": "native-therapy",
+      "sha256": "2cdc142f1f01e4fbd12104809b362295abf79fd8cefb7ee0f450798d18d15fd7"
+    },
+    {
+      "id": "native-order-intervention",
+      "sha256": "f0856324742f3cc938279b993a6622774dd7d4885c35019a5d41906e49d11fe3"
+    },
+    {
+      "id": "native-tick",
+      "sha256": "8f029c94159b995bda2b007ce59dbf94881cdf83d171d67ebfb8f169d406bcae"
+    },
+    {
+      "id": "native-fatal-exposure",
+      "sha256": "190925d14bcde87661c6a66d3a14d1c3501ee29550c32b1babc52cfce6a2519c"
+    },
+    {
+      "id": "cs-safe-v0180-clinical",
+      "sha256": "2cb9cbb004da0403f065397cfe6376b72a8a5de685565113eff2ba1ffdbb4bde"
+    },
+    {
+      "id": "cs-safe-v0190-clinical",
+      "sha256": "4cb02bdd1bb43c0c9ec405b547ef2674c23f5c292dac901bbb38ef93844c0c6c"
+    },
+    {
+      "id": "cs-safe-v0203-binding",
+      "sha256": "bb5c37ac43ec08854ea95b8f4fbd08ea7738b44f6e03e75271fe523d6eecf003"
+    },
+    {
+      "id": "cs-rebase174-v3-clinical",
+      "sha256": "4c0c471761db2fcdc81a5d01aab4a77e0588e97d03ba7ad75e419da88b3a5fdd"
+    },
+    {
+      "id": "atria-peritonitis-487-disposition",
+      "sha256": "214a322dc763e9567161bfc490d5b4ee03ee70bc17f39873534279ca5e3f187a"
+    },
+    {
+      "id": "atria-surgical-nursing-487",
+      "sha256": "948707d387260248f03b8aaacd1f12c155f1f5dfc275c0c9eea3770d407e60be"
+    },
+    {
+      "id": "atria-manual-monitor-iv-487",
+      "sha256": "f203b30c4d88d6f146ecfca6d7e625802d63541ade9500bb5436d2dc6ef86d5e"
+    },
+    {
+      "id": "atria-grace-survival-487",
+      "sha256": "3394d71b1ce04dcd728af6cd1e5d0bd2d2819ffcd50f50dfd91e7160092a0484"
+    },
+    {
+      "id": "atria-secondary-sepsis-bridge-487",
+      "sha256": "c64b8ff301f891d0bd987d18c3b3e28139185db3b5eb2a0822df517782ca6f2f"
+    },
+    {
+      "id": "atria-critical-rescue-487",
+      "sha256": "f16c3caf80dd101d6ae8951d6757bb9d8ae75b6621a59aa6998df4cf9dba3a04"
+    },
+    {
+      "id": "atria-verified-clinical-chat-487",
+      "sha256": "9e2a822db648c4df1e869e17686830e3c8121758544e74e52eb028753d8ff095"
+    },
+    {
+      "id": "atria-case-aware-pharmacology-487",
+      "sha256": "62837cdbd5d84e9f03aec07333703d547e8b6220ac5d9aa5737eaa66b6ccc747"
+    },
+    {
+      "id": "cs-v412-monitor-recognition",
+      "sha256": "c345996f3cb888fb1d75952203ba9f13709e7ecad0f8e7827adf40c33382d6c1"
+    },
+    {
+      "id": "ns421-clinical-state",
+      "sha256": "f83b849ecb18bc224c5d45fc742a06d978755a8e7a7ccfd0226f3ed23b2a6cbd"
+    },
+    {
+      "id": "ns422-treatment-context",
+      "sha256": "31ed6e0d9bfd1da23a88653b916a3c5e387409d2c80ee3fb7de785ce02805901"
+    },
+    {
+      "id": "ns423-evolution",
+      "sha256": "f8c8f30ca9985b3913f49890130f6088e2f66f35bd8925702d21357ecb047b5f"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "missing-diagnosis",
+      "caseId": "APP-001",
+      "diagnosis": "",
+      "exam": false,
+      "original": {
+        "status": "rejected",
+        "requestedAt": 0,
+        "name": "Cirugía",
+        "origin": "nurse487",
+        "respondedAt": 0.4200000000000012,
+        "accepted": false,
+        "advice": "Falta registrar una impresión diagnóstica suficientemente específica para fundamentar el pedido."
+      },
+      "migrated": {
+        "id": "cirugia",
+        "patientUid": "P",
+        "sourceEventId": "surgery-parity:doctor:1:0",
+        "status": "rejected",
+        "accepted": false,
+        "reviewStatus": "missing-dx",
+        "advice": "Falta registrar una impresión diagnóstica suficientemente específica para fundamentar el pedido.",
+        "respondedAtRealSecond": 3.5
+      }
+    },
+    {
+      "id": "broad-diagnosis",
+      "caseId": "APP-001",
+      "diagnosis": "peritonitis",
+      "exam": true,
+      "original": {
+        "status": "rejected",
+        "requestedAt": 0,
+        "name": "Cirugía",
+        "origin": "nurse487",
+        "respondedAt": 0.4200000000000012,
+        "accepted": false,
+        "advice": "Falta registrar una impresión diagnóstica suficientemente específica para fundamentar el pedido."
+      },
+      "migrated": {
+        "id": "cirugia",
+        "patientUid": "P",
+        "sourceEventId": "surgery-parity:doctor:8:0",
+        "status": "rejected",
+        "accepted": false,
+        "reviewStatus": "missing-dx",
+        "advice": "Falta registrar una impresión diagnóstica suficientemente específica para fundamentar el pedido.",
+        "respondedAtRealSecond": 3.5
+      }
+    },
+    {
+      "id": "wrong-diagnosis",
+      "caseId": "APP-001",
+      "diagnosis": "cirrosis",
+      "exam": true,
+      "original": {
+        "status": "rejected",
+        "requestedAt": 0,
+        "name": "Cirugía",
+        "origin": "nurse487",
+        "respondedAt": 0.4200000000000012,
+        "accepted": false,
+        "advice": "La impresión registrada no concuerda suficientemente con la evaluación documentada para fundamentar esta indicación."
+      },
+      "migrated": {
+        "id": "cirugia",
+        "patientUid": "P",
+        "sourceEventId": "surgery-parity:doctor:8:0",
+        "status": "rejected",
+        "accepted": false,
+        "reviewStatus": "unsubstantiated",
+        "advice": "La impresión registrada no concuerda suficientemente con la evaluación documentada para fundamentar esta indicación.",
+        "respondedAtRealSecond": 3.5
+      }
+    },
+    {
+      "id": "missing-exam",
+      "caseId": "APP-001",
+      "diagnosis": "apendicitis aguda",
+      "exam": false,
+      "original": {
+        "status": "rejected",
+        "requestedAt": 0,
+        "name": "Cirugía",
+        "origin": "nurse487",
+        "respondedAt": 0.4200000000000012,
+        "accepted": false,
+        "advice": "La sospecha es razonable, pero faltan signos vitales y examen físico dirigido para valorar la indicación."
+      },
+      "migrated": {
+        "id": "cirugia",
+        "patientUid": "P",
+        "sourceEventId": "surgery-parity:doctor:2:0",
+        "status": "rejected",
+        "accepted": false,
+        "reviewStatus": "missing-exam",
+        "advice": "La sospecha es razonable, pero faltan signos vitales y examen físico dirigido para valorar la indicación.",
+        "respondedAtRealSecond": 3.5
+      }
+    },
+    {
+      "id": "accepted-team",
+      "caseId": "APP-001",
+      "diagnosis": "apendicitis aguda",
+      "exam": true,
+      "original": {
+        "status": "done",
+        "requestedAt": 0,
+        "name": "Cirugía",
+        "origin": "nurse487",
+        "respondedAt": 0.4200000000000012,
+        "accepted": true,
+        "advice": "La impresión diagnóstica y los hallazgos sustentan evaluación quirúrgica urgente. Aceptamos el traslado; mantener reanimación y soporte durante la preparación."
+      },
+      "migrated": {
+        "id": "cirugia",
+        "patientUid": "P",
+        "sourceEventId": "surgery-parity:doctor:8:0",
+        "status": "done",
+        "accepted": true,
+        "reviewStatus": "accepted",
+        "advice": "La impresión diagnóstica y los hallazgos sustentan evaluación quirúrgica urgente. Aceptamos el traslado; mantener reanimación y soporte durante la preparación.",
+        "respondedAtRealSecond": 3.5
+      }
+    },
+    {
+      "id": "medical-focus",
+      "caseId": "CIRR-001",
+      "diagnosis": "cirrosis",
+      "exam": true,
+      "original": {
+        "status": "rejected",
+        "requestedAt": 0,
+        "name": "Cirugía",
+        "origin": "nurse487",
+        "respondedAt": 0.4200000000000012,
+        "accepted": false,
+        "advice": "Con los hallazgos disponibles no hay una indicación de control quirúrgico inmediato. Continuar reevaluación del foco y la evolución."
+      },
+      "migrated": {
+        "id": "cirugia",
+        "patientUid": "P",
+        "sourceEventId": "surgery-parity:doctor:8:0",
+        "status": "rejected",
+        "accepted": false,
+        "reviewStatus": "review",
+        "advice": "Con los hallazgos disponibles no hay una indicación de control quirúrgico inmediato. Continuar reevaluación del foco y la evolución.",
+        "respondedAtRealSecond": 3.5
+      }
+    }
+  ],
+  "noPerformedSurgery": true,
+  "noAutomaticHandoff": true,
+  "allMatched": true
+}

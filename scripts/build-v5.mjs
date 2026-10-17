@@ -7,6 +7,7 @@ const allowedReuse=new Set(['src/app/frame-scheduler.js','src/app/lifecycle.js',
  'src/social/remote-motion.js','src/clinical/nurse-scanner-487.js','src/clinical/study-registry.js',
  'src/clinical/contextual-study-results.js','src/clinical/anamnesis-intents.js','src/clinical/clinical-clock-487.js',
  'src/clinical/case-completion-487.js',
+ 'src/clinical/surgical-review-487.js','src/clinical/diagnostic-impression-487.js',
  // Read-only, verified V4 pharmacology evaluators. Never import V4 HTML patchers.
  'src/clinical/pharmacology-registry-487.js','src/clinical/pharmacology-outcomes-487.js',
  // Effective V4 pure allergy/bleeding rules. Never the integration wrappers.

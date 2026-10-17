@@ -145,16 +145,36 @@ try{
  await page.locator('[data-action="request-surgery"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
  const consult=(await state()).patient.consults[0];
- assert.equal(consult.accepted,true);
+ assert.equal(consult.accepted,false,'an undocumented diagnosis must receive the original clinical refusal');
+ assert.equal(consult.reviewStatus,'missing-dx');
+ assert.match(await page.locator('#chatHistory').innerText(),/Falta registrar una impresión/i);
+ assert.equal(await page.locator('[data-patient-destination]').count(),0);
+ await page.locator('[data-patient-diagnosis]').click();
+ await page.locator('#diagnosisInput').fill('peritonitis');
+ const suggestions=await page.locator('#diagnosisSuggestions').innerText();
+ for(const term of ['Peritonitis secundaria','Peritonitis terciaria','Peritonitis bacteriana espontánea'])assert(suggestions.includes(term));
+ await page.locator('[data-action="save-diagnosis"]').click();
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='peritonitis');
+ await page.locator('[data-action="clear-diagnosis"]').click();
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='');
+ await page.locator('#diagnosisInput').fill('apendi');
+ await page.locator('[data-diagnosis="apendicitis aguda"]').click();
+ await page.locator('#diagnosisInput').press('Enter');
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='apendicitis aguda');
+ await page.locator('#modalClose').click();
+ await page.screenshot({path:out+'/app-floating-diagnosis.png'});
+ await send('/consulta cirugia');
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===2);
+ assert.equal((await state()).patient.consults[1].accepted,true,'corrected request is evaluated again');
+ assert.equal((await state()).eligibleDestinations.length,0,'accepted consultation still needs reassessment');
  assert.equal((await state()).patient.treatments.some(x=>x.id==='source_control'),false,'handoff is not performed surgery');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders.every(o=>o.status==='done'),null,{timeout:150000});
  await page.locator('#peopleButton').click();
  await page.locator('[data-action="reassess"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.reassessments>0);
- await page.locator('#diagnosisInput').fill('apendicitis aguda');
- await page.locator('[data-action="save-diagnosis"]').click();
- await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='apendicitis aguda');
- await page.locator('[data-destination="quirofano"]').click();
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.eligibleDestinations.includes('quirofano'));
+ await page.locator('#modalClose').click();
+ await page.locator('[data-patient-destination="quirofano"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
  const closed=await state();
  assert.equal(closed.patient.closure.destination,'quirofano');
@@ -176,7 +196,8 @@ try{
  assert.deepEqual(errors,[]);
  const report={caseId:'APP-001',browser:true,mobileEmulation:true,physicalAndroid:false,
   confirmedVenousAccess:true,antibiotics:delivered.patient.administrationLog,
-  fluidVitalResponse:afterFluid.patient.liveVitals,surgeryConsult:consult,
+  fluidVitalResponse:afterFluid.patient.liveVitals,surgeryRefusal:consult,surgeryConsult:closed.patient.consults.at(-1),
+  globalDiagnosticSuggestions:true,diagnosticClearAndEdit:true,floatingDestination:true,
   disposition:'ED transfer to surgery, not performed appendectomy',closure:closed.patient.closure,
   exactlyOnceXP:true,persistedAfterReload:true,errors};
  await fs.writeFile(out+'/app-summary.json',JSON.stringify(report,null,2));

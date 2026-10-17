@@ -2,7 +2,9 @@
 import {EXAM_TECHNIQUES} from '../clinical/physical-exam.js';
 import {ecgPresentation} from '../clinical/ecg-morphology.js';
 import {confirmedFluidFeedback,fluidFeedbackLabel} from '../clinical/fluid-feedback.js';
-export const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {diagnosisEditorHTML} from './diagnostic-impression.js';
+import {esc} from './render-content.js';
+export {esc} from './render-content.js';
 export const examNames=EXAM_TECHNIQUES;
 export function vitalsHTML(patient){
  if(!patient.lastVitalsKnown)return '<p>Los signos todavía no se registraron.</p>';
@@ -50,7 +52,8 @@ export function therapyHTML(patient){
  const confirmed=(patient.treatments||[]).map(t=>'<div class="clinical-section"><b>'+esc(t.label)+'</b><small>Ejecutado'+(t.dose?' · '+esc(t.dose.display)+(t.dose.defaultApplied?' · dosis predeterminada':''):'')+'</small></div>');
  const pending=(patient.pendingTreatments||[]).map(t=>'<div class="clinical-section"><b>'+esc(t.label||t.id)+'</b><small>Indicado · en preparación · aún no administrado</small></div>');
  const venous=patient.venousAccessCount?'<div class="clinical-section"><b>Vías venosas confirmadas</b><small>'+patient.venousAccessCount+'</small></div>':'';
- const consults=(patient.consults||[]).map(c=>'<div class="clinical-section"><b>Cirugía</b><small>Recepción confirmada · derivación pendiente</small></div>');
+ const consults=(patient.consults||[]).map(c=>'<div class="clinical-section" data-consult-status="'+esc(c.status)+'"><b>Cirugía · '+
+  (c.accepted?'Aceptada':'Rechazada')+'</b><small>'+esc(c.advice||'')+'</small></div>');
  const pendingConsults=(patient.pendingConsults||[]).map(c=>'<div class="clinical-section"><b>Cirugía</b><small>Respuesta pendiente · no aceptada aún</small></div>');
  return [venous,fluidRow,...pending,...pendingConsults,...confirmed,...consults].join('')||'<p>Sin intervenciones ejecutadas.</p>';
 }
@@ -69,13 +72,12 @@ export function historyHTML(p){
  if(interview?.subjective)sections.push(['Última respuesta subjetiva','<p>'+esc(interview.subjective.answer)+'</p>']);
  return sections.map(([title,body])=>'<section class="clinical-section"><h3>'+title+'</h3>'+body+'</section>').join('');
 }
-export function patientHTML(p){return `
+export function patientHTML(p,{readOnly=false}={}){return `
  <div id="clinicalVitals" class="clinical-section"></div>
  <div class="clinical-actions"><button data-action="examination">Examen físico</button><button data-action="clinical-history">Historia clínica</button><button data-action="record-vitals">Signos vitales</button><button data-action="studies">Estudios</button><button data-action="treatment">Tratamiento</button><button data-action="reassess">Reevaluar</button></div>
  <details><summary>Anamnesis registrada</summary><div id="clinicalHistory"></div></details>
  <details><summary>Intervenciones confirmadas</summary><div id="therapyRecords"></div></details>
- <label class="field">Impresión diagnóstica<input id="diagnosisInput" maxlength="200" value="${esc(p.diagnosis)}" placeholder="Escribí tu impresión diagnóstica"></label>
- <div class="actions"><button data-action="save-diagnosis">Registrar impresión</button></div>
+ ${diagnosisEditorHTML(p,{readOnly})}
  <p id="caseReadiness" class="note"></p><div id="caseDestinations" class="actions"></div><div id="caseResult" role="status"></div>
  <p class="note">${p.caseId==='APP-001'?'La derivación a quirófano requiere valoración quirúrgica y continuidad del cuidado; no acredita una apendicectomía realizada.':'La espironolactona no produce una reducción inmediata de ascitis en este escenario. Continuá el seguimiento.'}</p>`;}
 export const cirrPatientHTML=patientHTML,appPatientHTML=patientHTML;

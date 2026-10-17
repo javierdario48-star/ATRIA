@@ -27,6 +27,8 @@ jobs:
         run: node qa/v5/characterize-cirr-native.mjs
       - name: Characterize original APP dual antibiotics and fluid response (QA-only)
         run: node qa/v5/characterize-app-native.mjs
+      - name: Original surgical requests, delayed refusals and corrected acceptance remain equivalent
+        run: node qa/v5/characterize-surgery-native.mjs
       - name: Executable V4 clinical harm-and-exposure parity gate (QA-only)
         run: node qa/v5/clinical-parity-gate.mjs
       - name: Contrast rapid iatrogenic fluid response against untreated legacy control
@@ -76,7 +78,7 @@ jobs:
 
   independent-game-browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -131,6 +133,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/app-browser.mjs
+      - name: Floating diagnosis, global vocabulary, IME, clear and surgical refusals in desktop and Pixel
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/diagnosis-browser.mjs
       - name: Clinical freedom, actual allergic reaction, physical nursing and history in desktop and mobile
         # C1 tests the published ESM modules, physical nurse and clinical panels.
         # It creates an explicit allergy scenario; it does not alter live state.

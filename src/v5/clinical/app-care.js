@@ -9,6 +9,7 @@ import {createClosureDebrief} from './closure-debrief.js';
 import {initialAppVitals,advanceAppVitals} from './native-app.js';
 import {createIVAdministration} from './native-medications.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
+import {createSurgicalConsultation} from './surgical-consultation.js';
 
 const copy=x=>structuredClone(x);
 export function appClosureSnapshot(p,c,destination){
@@ -30,14 +31,13 @@ export function appClosureSnapshot(p,c,destination){
  * dispatch, identity, receipts and completion. No parallel drug executor.
  * Surgery is an accepted ED transfer after consultation, NEVER a performed operation.
  */
-export function createAppCare(p,c,{mode,defaultDoses,progress}){
+export function createAppCare(p,c,{mode,defaultDoses,progress,cases}){
  if(c.id!=='APP-001')throw Error('C3a APP policy requires APP-001');
  Object.assign(p,{liveVitals:initialAppVitals(c),baselineVitals:initialAppVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,
   lastVitalsKnown:null,diagnosis:'',reassessments:0,lastReassessment:null,
   pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,
   consults:[],pendingConsults:[],caseEnded:false,closure:null});
  initializeExamination(p);
- const pendingConsults=new Map();
  const rejected=(cmd,reason,message)=>({status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason,
   ...(message?{receipt:{eventId:cmd.eventId,patientUid:p.uid,message}}:{})});
  const executed=(cmd,data)=>({status:'executed',eventId:cmd.eventId,patientUid:p.uid,
@@ -50,6 +50,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
   proof,rejected});
+ const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness});
  function readiness(destination){
   const out=csEvaluateClosure487(appClosureSnapshot(p,c,destination));
   if(!out)return null;
@@ -72,17 +73,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
    const access=executeVenousAccess(p,cmd);if(access)return access;
    const oxygen=executeOxygenSupport(p,cmd,clock);if(oxygen)return oxygen;
-   if(intent.kind==='consult.request'||intent.kind==='procedure.request'&&intent.id==='cirugia'){
-    const prior=p.consults.find(x=>x.id==='cirugia'&&x.status==='done');
-    if(prior)return executed(cmd,{message:'Cirugía ya confirmó recepción del paciente.',accepted:true,consultId:'cirugia'});
-    const existing=pendingConsults.get('cirugia');
-    if(existing){existing.commands.push(copy(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
-    const task={id:'cirugia',actorId:cmd.actorId,sourceEventId:cmd.eventId,
-     readyAtRealSecond:clock.clinicalMinute+1.5,commands:[copy(cmd)]};
-    pendingConsults.set('cirugia',task);
-    p.pendingConsults.push({id:'cirugia',sourceEventId:cmd.eventId,readyAtRealSecond:task.readyAtRealSecond});
-    return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
-   }
+   const consult=surgery.request(cmd,clock);if(consult)return consult;
    const iv=ivMedicines.request(cmd,clock);if(iv)return iv;
    if(intent.kind==='therapy.request'&&intent.id==='npo'){
     const existing=p.treatments.find(t=>t.id==='npo');
@@ -102,7 +93,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
      message:'Reevaluación: FC '+Math.round(p.liveVitals.hr)+', PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+'. Se mantiene indicación de valoración quirúrgica.'});
    }
    if(intent.kind==='diagnosis.record'){
-    p.diagnosis=intent.value;return executed(cmd,{diagnosis:p.diagnosis,message:'Impresión diagnóstica: '+p.diagnosis+'.'});
+    p.diagnosis=intent.value;return executed(cmd,{diagnosis:p.diagnosis,message:p.diagnosis?'Impresión diagnóstica: '+p.diagnosis+'.':'Impresión diagnóstica borrada.'});
    }
    if(intent.kind==='case.close'){
     const evaluation=readiness(intent.id);
@@ -120,7 +111,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
   advance(clockBefore,clockAfter,dt){
    const results=[];if(p.caseEnded)return results;
    let cursor=clockBefore.clinicalMinute;
-   const due=ivMedicines.due(clockBefore,clockAfter)
+   const due=[...ivMedicines.due(clockBefore,clockAfter),...surgery.due(clockBefore,clockAfter)]
     .sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond);
    for(const task of due){
     const at=Math.max(cursor,task.readyAtRealSecond);
@@ -128,17 +119,11 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
     const fraction=dt>0?(at-clockBefore.clinicalMinute)/dt:0;
     const nativeMinute=clockBefore.nativeMinute+
       (clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction;
-    results.push(...ivMedicines.finish(task,at,nativeMinute));
+    results.push(...(surgery.owns(task)?surgery.finish(task,at):ivMedicines.finish(task,at,nativeMinute)));
    }
    advanceAppVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor),clockAfter.nativeMinute);
-   for(const task of [...pendingConsults.values()].filter(x=>x.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9)){
-    pendingConsults.delete(task.id);p.pendingConsults=p.pendingConsults.filter(x=>x.sourceEventId!==task.sourceEventId);
-    p.consults.push({id:'cirugia',status:'done',accepted:true,patientUid:p.uid,sourceEventId:task.sourceEventId});
-    for(const cmd of task.commands)results.push(executed(cmd,{consultId:'cirugia',accepted:true,
-     message:'Cirugía respondió y aceptó la derivación a quirófano (continuidad de cuidados; cirugía no realizada).'}));
-   }
    return results;
   },
-  dispose(){ivMedicines.dispose();pendingConsults.clear();p.pendingTreatments=[];p.pendingConsults=[];}
+  dispose(){ivMedicines.dispose();surgery.dispose();p.pendingTreatments=[];}
  });
 }

@@ -29,6 +29,29 @@ async function walkToCompletion(f,limit=1800){
  }
  assert.fail('nurse did not finish real spatial journey');
 }
+test('handoff choices and nurse readiness wait for the same real bedside jobs as the closure port',async()=>{
+ const f=fixture('CIRR-001');let sequence=0;
+ const send=text=>f.session.post({id:'handoff-'+(++sequence),text});
+ await send('/signos');
+ for(const technique of ['general','inspection','auscultation','percussion','palpation'])await send('/examen '+technique);
+ await send('¿Desde cuándo empezó la hinchazón?');await send('/diagnostico cirrosis');
+ await send('/estudio renal');await send('Enfermera espironolactona');
+ for(let i=0;i<1800&&!f.session.read().patient.treatments.length;i++){
+  f.world.step(1/60);f.session.finishNurseArrivals();f.session.advance(1/60);
+ }
+ await f.session.flush();assert.equal(f.session.read().patient.treatments.length,1);
+ f.session.advance(120);await f.session.flush();await send('/reevaluar');
+ assert.deepEqual(f.session.read().eligibleDestinations,['sala','observacion']);
+ const monitor=await send('Enfermera monitor');assert.equal(monitor.clinical[0].status,'pending');
+ assert.deepEqual(f.session.read().eligibleDestinations,[],'a real nurse still travelling prevents the offered handoff');
+ assert.equal(f.session.read().closure.ready,false);
+ assert.match(f.session.read().closure.missing.join(' '),/enfermería/i);
+ const denied=await send('/disposicion observacion');assert.equal(denied.clinical[0].reason,'nursing-work-in-progress');
+ await walkToCompletion(f);
+ assert.deepEqual(f.session.read().eligibleDestinations,['sala','observacion']);
+ const closed=await send('/disposicion observacion');assert.equal(closed.clinical[0].status,'executed');
+ f.session.dispose();f.world.enterLobby();
+});
 test('C08b monitor is not connected until real bed arrival and one native receipt',async()=>{
  const f=fixture('CIRR-001');
  const ack=await f.session.post({id:'monitor',text:'Enfermera monitor'});

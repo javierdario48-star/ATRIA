@@ -9,6 +9,7 @@ import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
+import {createSurgicalConsultation} from './surgical-consultation.js';
 
 const copy=x=>structuredClone(x);
 export const CIRR_EXAM_NAMES=EXAM_TECHNIQUES;
@@ -24,10 +25,10 @@ export function closureSnapshot(p,c,destination){return {
 /** One migrated native care executor, operating on the SAME patient as C1.
  * No UI, timers, global binding, pharmacology wrapper or alternate patient state.
  */
-export function createCirrCare(p,c,{mode,defaultDoses,progress}){
+export function createCirrCare(p,c,{mode,defaultDoses,progress,cases}){
  if(c.id!=='CIRR-001')throw Error('C2 care only supports CIRR-001');
  Object.assign(p,{liveVitals:initialCirrVitals(c),baselineVitals:initialCirrVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,lastVitalsKnown:null,
-  diagnosis:'',reassessments:0,lastReassessment:null,pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,caseEnded:false,closure:null});
+  diagnosis:'',reassessments:0,lastReassessment:null,pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,consults:[],pendingConsults:[],caseEnded:false,closure:null});
  initializeExamination(p);
  const pending=new Map();
  const rejected=(cmd,reason,message)=>({status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason,
@@ -38,9 +39,10 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
   administeredAtRealSecond:t.administeredAtRealSecond,administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
   message:(reused?'Ya ejecutado por la indicación original: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected});
+ const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness});
  function readiness(destination){
   const out=csEvaluateClosure487(closureSnapshot(p,c,destination));
-  if(p.pendingTreatments.length){out.ready=false;out.action=null;out.missing.push('Esperar la ejecución o resolución de las intervenciones en preparación.');}
+  if(p.pendingTreatments.length||p.pendingConsults.length){out.ready=false;out.action=null;out.missing.push('Esperar la ejecución o resolución de las intervenciones y consultas pendientes.');}
   if(p.treatments.some(t=>!p.lastReassessment?.interventionEvents?.includes(t.sourceEventId))){
    out.ready=false;out.action=null;out.missing.push('Reevaluar después de la última intervención efectivamente ejecutada.');
   }
@@ -57,6 +59,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
    const access=executeVenousAccess(p,cmd);if(access)return access;
    const oxygen=executeOxygenSupport(p,cmd,clock);if(oxygen)return oxygen;
+   const consult=surgery.request(cmd,clock);if(consult)return consult;
    const iv=ivMedicines.request(cmd,clock);if(iv)return iv;
    if(intent.kind==='therapy.request'&&['espironolactona','sal_restriccion','paracentesis_ter'].includes(intent.id)){
     let dose=null;
@@ -81,7 +84,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
     return executed(cmd,{assessment:copy(p.lastReassessment),message:'Reevaluación registrada. PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+' · FC '+Math.round(p.liveVitals.hr)+'. Ascitis y respuesta diurética no tienen cinética modelada en la semilla original; continuar seguimiento.'});
    }
    if(intent.kind==='diagnosis.record'){
-    p.diagnosis=intent.value;return executed(cmd,{diagnosis:p.diagnosis,message:'Impresión diagnóstica registrada: '+p.diagnosis+'.'});
+    p.diagnosis=intent.value;return executed(cmd,{diagnosis:p.diagnosis,message:p.diagnosis?'Impresión diagnóstica registrada: '+p.diagnosis+'.':'Impresión diagnóstica borrada.'});
    }
    if(intent.kind==='case.close'){
     const evaluation=readiness(intent.id);
@@ -102,14 +105,16 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
    let cursor=clockBefore.clinicalMinute;
    const due=[
     ...[...pending.values()].filter(t=>t.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9),
-    ...ivMedicines.due(clockBefore,clockAfter)
+    ...ivMedicines.due(clockBefore,clockAfter),...surgery.due(clockBefore,clockAfter)
    ].sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond);
    for(const task of due){
     const at=Math.max(cursor,task.readyAtRealSecond);advanceCirrVitals(p,c,at-cursor,clockBefore.nativeMinute+(clockAfter.nativeMinute-clockBefore.nativeMinute)*(dt>0?(at-clockBefore.clinicalMinute)/dt:0));cursor=at;
     const fraction=dt>0?(at-clockBefore.clinicalMinute)/dt:0;
     const nativeMinute=clockBefore.nativeMinute+
       (clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction;
-    if(ivMedicines.owns(task)){
+    if(surgery.owns(task)){
+     completions.push(...surgery.finish(task,at));
+    }else if(ivMedicines.owns(task)){
      completions.push(...ivMedicines.finish(task,at,nativeMinute));
     }else{
      const t={id:task.id,label:task.label,dose:copy(task.dose),sourceEventId:task.sourceEventId,
@@ -122,6 +127,6 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
    }
    advanceCirrVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor),clockAfter.nativeMinute);return completions;
   },
-  dispose(){pending.clear();ivMedicines.dispose();p.pendingTreatments=[];}
+  dispose(){pending.clear();ivMedicines.dispose();surgery.dispose();p.pendingTreatments=[];}
  });
 }

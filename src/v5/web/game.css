@@ -81,6 +81,16 @@ body.atria-keyboard-open #chatHistory.expanded{max-height:min(33dvh,260px)}
  padding:6px 10px;color:#e8ffff;font-size:10px;font-weight:800;
  letter-spacing:.06em;pointer-events:none;white-space:nowrap;
 }
+.patient-clinical-actions{position:fixed;z-index:18;transform:translateX(-50%);display:grid;gap:5px;width:max-content;max-width:min(320px,90vw);filter:drop-shadow(0 3px 7px #0008)}
+.patient-clinical-actions[hidden]{display:none}
+.patient-clinical-actions button{max-width:100%;white-space:normal;font-size:11px;min-height:36px;background:#10343cef;border-color:#80b9b6}
+.patient-destinations{display:grid;gap:4px}
+.patient-destinations:empty{display:none}
+.patient-destinations button{background:#195148;color:#d9fff0}
+.diagnosis-suggestions{display:flex;gap:5px;flex-wrap:wrap}
+.diagnosis-suggestions button{font-size:11px;min-height:36px;text-align:left}
+.diagnosis-tip{width:100%;margin:3px 0}
+dialog[data-panel="diagnosis"]{max-width:460px}
 .patient-wheel-controls{position:relative;width:100%;height:100%}
 .patient-wheel-action{
  position:absolute;width:78px;min-height:62px;display:grid;justify-items:center;align-content:center;gap:3px;

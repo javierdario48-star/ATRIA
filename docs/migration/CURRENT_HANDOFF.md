@@ -10,6 +10,8 @@ Este handoff reemplaza el resumen acumulativo anterior. Su contenido íntegro si
 
 ## Estado que sí está comprobado
 
+**D1 en validación remota:** [impresión diagnóstica y derivación contextual](STEP_13A_DIAGNOSIS_AND_SURGICAL_HANDOFF.md). Implementación APP/CIRR con insignia flotante, vocabulario global original, guardar/borrar/reeditar, destinos por requisitos reales, aviso único de enfermería y respuestas quirúrgicas originales a 3,5 s. Local: 384/384 V5, 40/40 core y 6/6 comparativas con el ejecutable efectivo V4. La regresión histórica completa, navegadores/HTTP y preview del nuevo SHA se certificarán al concluir CI; **hasta entonces el último ejecutable completamente verificado sigue siendo el siguiente**. C2.c y PERI-SEC siguen pendientes. No continuar por encima de un checkpoint remoto rojo.
+
 **Último código funcional verificado:** `26cc058a30485191749b6df485f2a5221c525676`.
 El commit posterior de entrega sólo actualiza documentación/evidencia; obtener su SHA con `git log -1 --format=%H`. Comprobar siempre el HEAD remoto antes de continuar.
 

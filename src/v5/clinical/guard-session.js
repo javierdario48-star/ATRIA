@@ -16,6 +16,7 @@ import {advanceNativeSurvival} from './survival-487-bridge.js';
 import {confirmedFluidFeedback,fluidFeedbackLabel} from './fluid-feedback.js';
 import {patientAllergyFacts487} from './medication-safety-487.js';
 import {documentMedicationComplications487} from './medication-harms-487.js';
+import {CASE_CLOSURE_RULES_487,CLOSURE_DEST_LABELS_487} from '../../clinical/case-completion-487.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -38,7 +39,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   nativePatient.allergyHistoryAnswer='Tengo alergia a '+nativePatient.allergies.map(id=>
    (labels.get(id)||id)+(nativePatient.severeAllergies.includes(id)?' (reacción grave)':'')).join(', ')+'.';
  }
- const options={mode,defaultDoses:content.defaultDoses,progress};
+ const options={mode,defaultDoses:content.defaultDoses,progress,cases:content.cases};
  // Every case inherits the validated global formulary (including cases that
  // do not yet have an active clinical executor). This is a PURE interpreter,
  // not a replacement for the native APP/CIRR physiological owner.
@@ -48,6 +49,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  const studies=createStudyService(content.cases),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
  const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))];
  const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map(),waitingForAccess=new Map();
+ const nursingWorkPending=()=>pendingNurseJobs.size>0||waitingForAccess.size>0;
  if(nursing&&(!['enqueue','takeArrivals','accept'].every(k=>typeof nursing[k]==='function')))
   throw Error('nursing adapter needs enqueue, takeArrivals and accept');
  for(const item of [...content.therapies,...caseData.interventions])labels.set(item.id,item.label);
@@ -86,7 +88,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   validateReceipt:assertMatchingClinicalReceipt,
   withPatient:async(uid,fn)=>{if(uid!==nativePatient.uid)throw Error('patient not in this room');return fn(nativePatient);},
   invoke:async({eventId,actorId,patientUid,intent})=>{
-   if(nursing&&intent.kind==='case.close'&&(pendingNurseJobs.size||waitingForAccess.size))
+   if(nursing&&intent.kind==='case.close'&&nursingWorkPending())
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
    const ivMedicine=!!care&&intent.kind==='therapy.request'&&isStandardIVMedicine(intent.id);
    const oxygenAction=!!care&&intent.id==='oxygen'&&['therapy.request','therapy.stop'].includes(intent.kind);
@@ -167,6 +169,18 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    validateClinicalBatch}),
   respondNpc:({patientUid,text,mode})=>vegaGuidance(patientUid===nativePatient.uid?nativePatient:null,caseData,text,{mode}),
   time:()=>clock.clinicalMinute,emit:(event,snapshot)=>onChange(copy(event),copy(snapshot))});
+ function closureReadiness(destination){
+  const out=care?.readiness(destination);if(!out)return null;
+  if(nursingWorkPending()){
+   out.ready=false;out.action=null;out.choices=[];
+   out.missing.push('Esperar la ejecución o resolución de las tareas físicas de enfermería pendientes.');
+  }
+  return out;
+ }
+ function eligibleDestinations(){
+  return care&&!nativePatient.caseEnded?(CASE_CLOSURE_RULES_487[caseData.id]?.destinations||[]).filter(id=>closureReadiness(id)?.ready):[];
+ }
+ const publishReadiness=()=>authority.reportCareReadiness({patientUid:nativePatient.uid,destinations:eligibleDestinations()});
  function resultText(item,label){
   // An unanswered history question is a patient reply, not a failed nursing procedure.
   if(item.kind==='history.ask')return null;
@@ -208,6 +222,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     }
     if(event.npcReply?.role==='mentor')
      rows.push({id:'npc:'+message.id,name:event.npcReply.name,role:'mentor',text:event.npcReply.text});
+   }else if(event.type==='clinical.care-ready'){
+    rows.push({id:'ready:'+event.patientUid+':'+event.revision,name:'Enfermera',role:'nurse',
+     text:'Se cumplen los requisitos mínimos para continuar el cuidado: '+event.destinations.map(id=>CLOSURE_DEST_LABELS_487[id]).join(' · ')+'. Podés elegir el destino junto al paciente.'});
    }else if(event.type==='clinical.complication'){
     rows.push({id:'complication:'+event.sourceEventId,name:'Enfermera',role:'nurse',text:event.message});
    }else if(event.type==='clinical.patient-died'){
@@ -228,7 +245,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  }
  return Object.freeze({
   catalog:()=>copy(orderedStudies),
-  post:envelope=>disposed?Promise.resolve({status:'rejected',reason:'room-disposed'}):authority.dispatch({kind:'chat.post',...envelope},credentials),
+  async post(envelope){
+   if(disposed)return {status:'rejected',reason:'room-disposed'};
+   const reply=await authority.dispatch({kind:'chat.post',...envelope},credentials);publishReadiness();return reply;
+  },
   advance:function advance(deltaRealSeconds,{typing=false}={}){
    if(disposed)throw Error('guard session disposed');
    if(!Number.isFinite(deltaRealSeconds)||deltaRealSeconds<0||deltaRealSeconds>86400)
@@ -296,7 +316,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
        actorId:order.actorId,result:order.result,resultSource:order.resultSource}});
     pendingStudyRequests.delete(order.sourceEventId);
    }
-   return copy(ready);
+   publishReadiness();return copy(ready);
   },
   flush:()=>authority.flush(),
   /** Drain ONLY arrivals issued by the existing spatial world. The UI cannot
@@ -338,7 +358,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     }
     results.push(copy(result));
    }
-   return results;
+   publishReadiness();return results;
   },
   // Minimal read-only projection for 30Hz ECG paint; never clone room events or
   // recalculate closure from the presentation loop. Authority owns all writes.
@@ -354,7 +374,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   pharmacologyRead:()=>pharmacology.evaluate(caseData.id,nativePatient,clock.nativeMinute),
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
-   closure:care?copy(care.readiness(caseData.id==='APP-001'?'quirofano':'sala')):null};},
+   eligibleDestinations:eligibleDestinations(),
+   closure:copy(closureReadiness(caseData.id==='APP-001'?'quirofano':'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }
