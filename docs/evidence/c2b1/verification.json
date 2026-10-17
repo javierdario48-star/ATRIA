@@ -1,0 +1,219 @@
+{
+  "schema": "atria.v5.c2b1.verification.v1",
+  "sha": "26cc058a30485191749b6df485f2a5221c525676",
+  "v5CI": {
+    "id": 39067172420,
+    "conclusion": "success",
+    "jobs": 4,
+    "v5Tests": 374,
+    "coreTests": 40
+  },
+  "legacyCensus": {
+    "id": 39067172416,
+    "conclusion": "success"
+  },
+  "historical": {
+    "nursingChecks": 421,
+    "closureScenarios": 131,
+    "harmScenarios": 39,
+    "knownUnresolvedDiureticScenarios": [
+      "PERI-SEC-001",
+      "CHOLANG-001"
+    ]
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-kte3m974r-javierdario4878-7324.vercel.app",
+    "sha": "26cc058a30485191749b6df485f2a5221c525676",
+    "files": 97,
+    "httpStatus": 200
+  },
+  "browser": {
+    "physicalAndroid": false,
+    "scenarios": [
+      {
+        "mobile": false,
+        "mode": "solo",
+        "impaired": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 11.912305431959206,
+          "sys": 102.96578135116903,
+          "dia": 65.4828906755845,
+          "spo2": 88.3961756215861
+        },
+        "supported": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 13.15281675752916,
+          "sys": 103.65647343433905,
+          "dia": 65.82823671716957,
+          "spo2": 91.88634228377929
+        },
+        "receipts": [
+          {
+            "id": "morphine",
+            "amount": 12
+          },
+          {
+            "id": "oxygen",
+            "amount": 4
+          }
+        ],
+        "penalty": 5,
+        "complications": 1,
+        "journeys": [
+          "confirmed",
+          "confirmed",
+          "confirmed",
+          "confirmed"
+        ],
+        "analgesia": {
+          "before": 7,
+          "after": 5,
+          "afterWashout": 7,
+          "receipts": 1
+        }
+      },
+      {
+        "mobile": false,
+        "mode": "apprentice",
+        "impaired": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 11.912305431959206,
+          "sys": 102.96578135116903,
+          "dia": 65.4828906755845,
+          "spo2": 88.3961756215861
+        },
+        "supported": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 13.15281675752916,
+          "sys": 103.65647343433905,
+          "dia": 65.82823671716957,
+          "spo2": 91.88634228377929
+        },
+        "receipts": [
+          {
+            "id": "morphine",
+            "amount": 12
+          },
+          {
+            "id": "oxygen",
+            "amount": 4
+          }
+        ],
+        "penalty": 5,
+        "complications": 1,
+        "journeys": [
+          "confirmed",
+          "confirmed",
+          "confirmed",
+          "confirmed"
+        ],
+        "analgesia": {
+          "before": 7,
+          "after": 5,
+          "afterWashout": 7,
+          "receipts": 1
+        }
+      },
+      {
+        "mobile": true,
+        "mode": "solo",
+        "impaired": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 11.912305431959206,
+          "sys": 102.96578135116903,
+          "dia": 65.4828906755845,
+          "spo2": 88.3961756215861
+        },
+        "supported": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 13.15281675752916,
+          "sys": 103.65647343433905,
+          "dia": 65.82823671716957,
+          "spo2": 91.88634228377929
+        },
+        "receipts": [
+          {
+            "id": "morphine",
+            "amount": 12
+          },
+          {
+            "id": "oxygen",
+            "amount": 4
+          }
+        ],
+        "penalty": 5,
+        "complications": 1,
+        "journeys": [
+          "confirmed",
+          "confirmed",
+          "confirmed",
+          "confirmed"
+        ],
+        "analgesia": {
+          "before": 7,
+          "after": 5,
+          "afterWashout": 7,
+          "receipts": 1
+        }
+      },
+      {
+        "mobile": true,
+        "mode": "apprentice",
+        "impaired": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 11.912305431959206,
+          "sys": 102.96578135116903,
+          "dia": 65.4828906755845,
+          "spo2": 88.3961756215861
+        },
+        "supported": {
+          "temp": 37.2,
+          "hr": 94,
+          "rr": 13.15281675752916,
+          "sys": 103.65647343433905,
+          "dia": 65.82823671716957,
+          "spo2": 91.88634228377929
+        },
+        "receipts": [
+          {
+            "id": "morphine",
+            "amount": 12
+          },
+          {
+            "id": "oxygen",
+            "amount": 4
+          }
+        ],
+        "penalty": 5,
+        "complications": 1,
+        "journeys": [
+          "confirmed",
+          "confirmed",
+          "confirmed",
+          "confirmed"
+        ],
+        "analgesia": {
+          "before": 7,
+          "after": 5,
+          "afterWashout": 7,
+          "receipts": 1
+        }
+      }
+    ]
+  },
+  "existingAPPAndCIRR": {
+    "score": 100,
+    "uniqueXP": 133
+  },
+  "productMultiplayer": false,
+  "executedIVEntries": 15,
+  "activeCaseExecutors": 2,
+  "protectedSourceChanges": []
+}
