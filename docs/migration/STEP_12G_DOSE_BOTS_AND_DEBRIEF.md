@@ -1,9 +1,11 @@
 # ATRIA 5.0 — C12.g: bots de Ringer, errores de medicación y resultados con XP
 
 Fecha: 2026-10-17. Rama exclusiva: atria-5.0-core-rebuild-experimental.
-SHA funcional: dc422ef85a5edca7373f4ddfef149f5e83c63289
-CI: https://github.com/javierdario48-star/ATRIA/actions/runs/39046800814
-Preview Vercel READY del SHA funcional: https://night-shift-clinical-34opq6au4-javierdario4878-7324.vercel.app
+SHA motor y bots: dc422ef85a5edca7373f4ddfef149f5e83c63289
+SHA corrección final de compatibilidad UI: db949e41688c36166a361d0ecdfce354c03b5d53
+CI código previo (núcleo/legado/HTTP aprobados; navegador falló por selector de la tabla): https://github.com/javierdario48-star/ATRIA/actions/runs/39046800814
+CI código UI corregido: https://github.com/javierdario48-star/ATRIA/actions/runs/39047156385 (confirmar 4/4 antes de proclamar aprobado).
+Preview Vercel READY del SHA funcional: https://night-shift-clinical-gaucqqa75-javierdario4878-7324.vercel.app
 
 ## Defecto real corregido
 Antes una orden UNICA 'Enfermera Ringer 4 litros' o 'Ringer 4000 ml' era rechazada porque el lector IV permitía exclusivamente 500 ml. Ahora reconoce volúmenes explícitos en múltiplos de 500 ml entre 500 y 40000 ml; cada orden requiere vía/recepción/preparación y produce un recibo único. Se mantienen rechazos para 300 ml, dobles dosis ambiguas, rutas incompatibles y dosis farmacológicas no homologadas. Un pedido pendiente jamás produce efectos.
@@ -25,6 +27,9 @@ El evaluador puro de V4 src/clinical/case-completion-487.js sigue siendo quien d
 Corregimos ambos snapshots V5 para que no envíen adverseCount=0 indiscriminadamente. src/v5/clinical/clinical-risk.js proyecta deterioro respiratorio confirmado y decisiones medicamentosas injustificadas a partir de eventos reales del paciente; no crea vitales. src/v5/clinical/closure-debrief.js reutiliza exactamente los subpuntajes del evaluador V4 y valida que sumas/descuentos equivalgan al total del recibo.
 src/v5/ui/case-debrief.js y application.js muestran AUTOMATICAMENTE tras case.close EJECUTADO cuatro apartados: lo que sumó, lo descontado, lo omitido y lo que no debía hacerse, con estilo compacto de dos columnas. Nunca mostrar este resultado por órdenes de cierre rechazadas. Seguimos usando el recibo único original, sin otorgar experiencia duplicada.
 APP-001 termina con pase a quirófano (NO cirugía realizada). CIRR-001 termina en sala u observación, no alta rutinaria. Fallecimiento cancela atenciones y no concede XP.
+
+En regresión histórica completa, la matriz de finalizador/XP del V4 ejecutó 131 escenarios: 42 cierres válidos con XP y 89 rechazos por requisitos/destino. El bot antiguo de 40L auditó 21 escenarios sin errores/warnings detectados, con sus limitaciones propias.
+El test de navegador CIRR-001 detectó inicialmente que la nueva mini tabla reemplazaba el selector #caseResult después del cierre; el caso seguía cerrado con 100/100 y 133 XP. Se corrigió en db949e416 conservando el mismo selector dentro del nuevo resultado. No relajar este test.
 
 ## Límites declarados
 Sólo APP y CIRR poseen ejecutores clínicos nativos completos en V5. Los 30 fármacos catalogados NO son todos administrables. Las pruebas de rechazo no equivalen a probar sus efectos.
