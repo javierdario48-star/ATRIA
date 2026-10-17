@@ -92,3 +92,24 @@ test('C21c packet size, malformed cursors and identity capacity are explicit err
  assert.equal(blocked.status,507);
  assert.equal((await f.send('doctor-1','a')).body.replayed,true);
 });
+
+test('C21c host checkpoints are read-only, sender-verified and permission scoped',async()=>{
+ const f=await testkit({maxRetained:3,pageSize:2});
+ assert.equal((await f.service.handle({method:'GET',path:'/api/rooms/Q/checkpoint',
+  headers:{authorization:'Bearer token-doctor-2'}})).status,409);
+ const approved=await f.send('doctor-0','state-1','room.snapshot',{
+  room:{roomId:'Q',revision:1,patients:[{uid:'P1'}]}});
+ assert.equal(approved.status,200);
+ const info=await f.service.handle({method:'GET',path:'/api/rooms/Q/checkpoint',
+  headers:{authorization:'Bearer token-doctor-2'}});
+ assert.equal(info.status,200);
+ assert.equal(info.body.checkpoint.userId,'doctor-0');
+ assert.equal(info.body.checkpoint.sequence,approved.body.sequence);
+ f.active.delete('doctor-2');
+ assert.equal((await f.service.handle({method:'GET',path:'/api/rooms/Q/checkpoint',
+  headers:{authorization:'Bearer token-doctor-2'}})).status,403);
+ assert.equal((await f.service.handle({method:'POST',path:'/api/rooms/Q/checkpoint',
+  headers:{authorization:'Bearer token-doctor-0'}})).status,404);
+ assert.equal((await f.send('doctor-1','fake','room.snapshot',
+  {room:{roomId:'Q',revision:900}})).status,403);
+});

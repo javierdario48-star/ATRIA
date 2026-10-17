@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {createGuardRelayHost,createGuardRelayGuest} from './room-gateway.js';
 import {createRoomAuthority} from '../core/room-authority.js';
 import {createNativeClinicalPort} from '../adapters/native-clinical-port.js';
+import {createRoomRelayService,createMemoryRoomRelayStore} from './room-relay-service.js';
+import {createHttpRoomTransport} from './room-mailbox.js';
 
 function makeRoom(count,mode){
  const names=Array.from({length:count},(_,i)=>'player'+i),roomId=mode+'-'+count;
@@ -102,4 +104,54 @@ test('C21b malformed peer command is rejected and does not poison the room mailb
  assert.equal(f.authority.snapshot().transcript.length,1,
   'malformed packet must not enter global chat');
  f.dispose();
+});
+
+test('C21c guest recovers a real authenticated host checkpoint after truncated HTTP history, never repeats ambiguous medicine',async()=>{
+ const roomId='recovery-room',store=createMemoryRoomRelayStore();
+ await store.create({roomId,hostId:'host',members:['host','guest']});
+ const service=createRoomRelayService({store,authenticate:header=>
+  ({'Bearer host-token':{id:'host'},'Bearer guest-token':{id:'guest'}})[header]||null,
+  maxRetained:4,pageSize:4});
+ const request=async(uri,options)=>{
+  const url=new URL(uri,'http://localhost');
+  const response=await service.handle({method:options.method,path:url.pathname,
+   headers:{authorization:options.headers.Authorization},
+   query:Object.fromEntries(url.searchParams),
+   body:options.body?JSON.parse(options.body):{}});
+  return {ok:response.status>=200&&response.status<300,status:response.status,
+   json:async()=>response.body};
+ };
+ const hostTransport=createHttpRoomTransport({roomId,token:'host-token',request});
+ const guestTransport=createHttpRoomTransport({roomId,token:'guest-token',request});
+ let executed=0;
+ const port=createNativeClinicalPort({withPatient:(uid,fn)=>fn({uid}),
+  invoke:({eventId,patientUid})=>{executed++;
+   return {status:'executed',eventId,patientUid,receipt:{eventId,patientUid}};}});
+ const authority=createRoomAuthority({roomId,mode:'coop',
+  members:[{id:'host'},{id:'guest'}],patients:[{uid:'P'}],
+  authenticate:credential=>['host','guest'].includes(credential)?{id:credential,roomId}:null,
+  clinicalPort:port,resolveSpeechContext:()=>({patientUid:'P',studies:[],
+   therapies:[{id:'ceftriaxone',label:'Ceftriaxona',aliases:['ceftriaxona']}]})});
+ const host=createGuardRelayHost({roomId,hostId:'host',authority,
+  transport:hostTransport,authenticateSender:id=>id});
+ const guest=createGuardRelayGuest({roomId,hostId:'host',actorId:'guest',transport:guestTransport});
+ host.publish();await host.flush();
+ guest.post({id:'drug-1',text:'Enfermera ceftriaxona'});
+ await guest.flush();await host.poll();await host.flush();
+ assert.equal(executed,1);
+ // A compacted relay drops the old acknowledgement, but NOT its execution.
+ for(let i=0;i<9;i++)await hostTransport.send({protocol:'atria.v5.room.1',roomId,
+  id:'fresh-snapshot-'+i,kind:'room.snapshot',payload:{room:authority.snapshot()}});
+ await assert.rejects(guest.poll(),/relay-history-expired/);
+ assert.equal(guest.snapshot(),null,'no partial out-of-order view');
+ const recovered=await guest.recover();
+ assert.deepEqual(recovered.unconfirmedCommands,['drug-1']);
+ assert.equal(recovered.requiresReceiptReview,true);
+ assert.equal(guest.snapshot().transcript.length,1);
+ assert.equal(guest.snapshot().transcript[0].actorId,'guest');
+ assert.equal(executed,1,'restoring a clinical view is never another drug administration');
+ assert.equal((await guest.poll()).applied,0);
+ assert.equal(guest.acknowledgement('drug-1'),null,
+  'lost ACK is never invented just because a snapshot contains a therapy');
+ guest.dispose();host.dispose();authority.dispose();
 });
