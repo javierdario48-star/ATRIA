@@ -86,8 +86,9 @@ test('C12d APP antibiotic regimen needs two confirmed medicines, timing and genu
  assert(covered.infectionBurdenIndex>0&&covered.infectionBurdenIndex<1);
  p.phys.sourceControlled=true;
  assert(catalog.evaluate(c.id,p,180).outcomes.infectionBurdenIndex<covered.infectionBurdenIndex);
- const early=catalog.evaluate(c.id,p,0);
- assert.equal(early.outcomes.coverageComplete,false);
+ const early=catalog.evaluate(c.id,p,6);
+ assert.equal(early.outcomes.coverageComplete,true);
+ assert.equal(early.outcomes.infectionBurdenIndex,1,'a confirmed antibiotic needs time to act');
 });
 test('C12d CIRR native fluid overload and APP fluid effects cannot be applied twice',()=>{
  const catalog=createCasePharmacology({cases,therapies});
