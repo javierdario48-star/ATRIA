@@ -4,6 +4,8 @@ Fecha: 2026-10-17. Rama única: atria-5.0-core-rebuild-experimental.
 Base C12.f0: e6a0d74a8ddf7662b945f4a7e596bf04c8347f1c (CI 39005400670 4/4).
 Código C12.f1a: dea9e9fde4cfdc63facdc5fbee978decd77f6b39.
 Corrección de contrato de build: c6c3330cf9ad8271dd8d653e3330fa847cacafde.
+Hardening de procedencia clínica: 63621730b377bcfbe9bb91bab551d3d30294497e.
+CI de este código: https://github.com/javierdario48-star/ATRIA/actions/runs/39007257603 (estado 4/4 verificar en el enlace).
 CI: https://github.com/javierdario48-star/ATRIA/actions/runs/39006930906
 
 ## Qué reutilizamos del legado (sin HTML)
@@ -15,14 +17,14 @@ CI: https://github.com/javierdario48-star/ATRIA/actions/runs/39006930906
 
 ## Implementación
 
-src/v5/clinical/survival-487-bridge.js adapta el registro nativo de administración (UID, sourceEventId, acciones start/stop) al contrato de lectura V4, con exposición de fluidos medida por summarizeIVExposures y estado activo de oxígeno. Mantiene un solo estado p.survival (crédito bancado, exposición fatal acumulada, ventana de rescate y causa). No establece otros timers ni otros escritores de liveVitals.
+src/v5/clinical/survival-487-bridge.js adapta el registro nativo de administración (UID, sourceEventId, acciones start/stop) al contrato de lectura V4, con exposición de fluidos medida por summarizeIVExposures, correspondencia 1:1 con tratamientos IV nativos y dispositivo de oxígeno activo comprobado (dosis, evento y paciente). Mantiene un solo estado p.survival (crédito bancado, exposición fatal acumulada, ventana de rescate y causa). No establece otros timers ni otros escritores de liveVitals.
 src/v5/clinical/guard-session.js llama al adaptador una vez por avance del único reloj, después de care.advance y antes de refreshMonitoring. src/v5/clinical/app-care.js y cirr-care.js leen patientDied real en la política de cierre, ya no 'dead:false'. Fallecimiento marca caseEnded, impide administraciones y cierres posteriores, y no concede XP.
 Los intervalos de gracia se calculan en segundos reales; exposición se acumula en minutos nativos, conforme al legado. Grandes saltos de reloj no atribuyen retrospectivamente exposición si el estado crítico apareció por primera vez durante ese salto. El soporte confirmado puede retrasar la fatalidad, pero no restaura por sí solo signos críticos.
 
 ## Pruebas y resultados
 
-src/v5/clinical/survival-487-bridge.test.js comprueba: protección inicial y muerte no instantánea, deterioro prolongado, evidencia auténtica, rechazo de UID falso, ventana de rescate no renovable, continuidad del caso estable y seis bots reales.
-CI clínica del código con allowlist: 287/287 pruebas V5, 40/40 core y cuatro verificaciones adicionales exitosas, build V5 exitoso. Consultar CI para estado final de navegador y regresión histórica.
+src/v5/clinical/survival-487-bridge.test.js comprueba también que un log IV sin tratamiento confirmado, o un log de oxígeno sin dispositivo activo, jamás conceden gracia ni rescate. El resto comprueba: protección inicial y muerte no instantánea, deterioro prolongado, evidencia auténtica, rechazo de UID falso, ventana de rescate no renovable, continuidad del caso estable y seis bots reales.
+CI de la versión de allowlist 39006930906: 287/287 V5, 40/40 core y 4/4 trabajos completos; build V5 aprobado. El hardening añade 1 test V5 (288) en la CI 39007257603. Consultar CI para estado final de navegador y regresión histórica.
 Bots positivos APP/CIRR: vivos, cierres quirófano/sala, 133 XP, no doble cierre.
 Bots perjudiciales (20 administraciones reales de cristaloide, 10.000 ml): APP SpO2 72.08%, FR42 y fallecimiento, CIRR SpO2 72%, FR42 y fallecimiento, ambos 0 XP. Muerte no es resultado automático de prescribir: requiere intervalo crítico posterior a la gracia.
 Bots de abandono: APP no empeora aún por evolución espontánea; CIRR estable permanece sin cambio. Gate estricto ahora señala 2 brechas, no 4: APP-001/untreated-disease y clock/24h.
