@@ -4,6 +4,8 @@ import {initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
+import {confirmedRespiratoryAdverse} from './clinical-risk.js';
+import {createClosureDebrief} from './closure-debrief.js';
 import {initialAppVitals,advanceAppVitals} from './native-app.js';
 import {createIVAdministration} from './native-medications.js';
 
@@ -19,7 +21,8 @@ export function appClosureSnapshot(p,c,destination){
   delivered:p.treatments.map(x=>x.id),consultsDone:p.consults.filter(x=>x.status==='done'&&x.accepted).map(x=>x.id),
   disposition:destination,sys:p.liveVitals.sys,hr:p.liveVitals.hr,spo2:p.liveVitals.spo2,
   rr:p.liveVitals.rr,initialSys:initialAppVitals(c).sys,
-  dead:!!p.patientDied,ended:p.caseEnded,adverseCount:0,autonomy:100,uid:p.uid};
+  dead:!!p.patientDied,ended:p.caseEnded,
+  adverseCount:confirmedRespiratoryAdverse(p,c).adverseCount,autonomy:100,uid:p.uid};
 }
 
 /** APP-001 case policy. The room authority and ONE native clinical port own
@@ -105,7 +108,8 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
     if(!evaluation?.ready)return rejected(cmd,'closure-not-ready',(evaluation?.missing||['Destino no disponible.']).join(' '));
     const xp=nativeCaseXP({score:evaluation.quality.score,mode});
     const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,
-     caseId:c.id,destination:intent.id,quality:copy(evaluation.quality),xp,closed:true};
+     caseId:c.id,destination:intent.id,quality:copy(evaluation.quality),
+     debrief:createClosureDebrief(p,c,evaluation.quality),xp,closed:true};
     progress.award(receipt);p.caseEnded=true;p.closure=copy(receipt);
     return executed(cmd,{closure:copy(receipt),
      message:'Derivación a quirófano confirmada; no es una apendicectomía realizada. '+evaluation.quality.score+'/100 · +'+xp+' XP.'});

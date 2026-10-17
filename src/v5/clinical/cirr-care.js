@@ -2,6 +2,8 @@ import {executePatientDialogue} from './patient-dialogue.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {initialCirrVitals,parseCirrDose,advanceCirrVitals} from './native-cirr.js';
 import {nativeCaseXP} from './progression.js';
+import {confirmedRespiratoryAdverse} from './clinical-risk.js';
+import {createClosureDebrief} from './closure-debrief.js';
 import {createIVAdministration} from './native-medications.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
@@ -15,7 +17,8 @@ export function closureSnapshot(p,c,destination){return {
  studiesDone:p.orders.filter(o=>o.status==='done').map(o=>o.id),extraStudies:p.orders.filter(o=>!c.keyStudies.includes(o.id)).map(o=>o.id),
  keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,delivered:p.treatments.map(t=>t.id),consultsDone:[],disposition:destination,
  sys:p.liveVitals.sys,hr:p.liveVitals.hr,spo2:p.liveVitals.spo2,rr:p.liveVitals.rr,initialSys:initialCirrVitals(c).sys,
- dead:!!p.patientDied,ended:p.caseEnded,adverseCount:0,autonomy:100,uid:p.uid};}
+ dead:!!p.patientDied,ended:p.caseEnded,
+  adverseCount:confirmedRespiratoryAdverse(p,c).adverseCount,autonomy:100,uid:p.uid};}
 
 /** One migrated native care executor, operating on the SAME patient as C1.
  * No UI, timers, global binding, pharmacology wrapper or alternate patient state.
@@ -84,7 +87,8 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
     if(!evaluation?.ready)return rejected(cmd,'closure-not-ready',(evaluation?.missing||['Destino no disponible.']).join(' '));
     const xp=nativeCaseXP({score:evaluation.quality.score,mode});
     const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,caseId:c.id,
-     destination:intent.id,quality:copy(evaluation.quality),xp,closed:true};
+     destination:intent.id,quality:copy(evaluation.quality),
+     debrief:createClosureDebrief(p,c,evaluation.quality),xp,closed:true};
     progress.award(receipt);p.caseEnded=true;p.closure=copy(receipt);
     return executed(cmd,{closure:copy(receipt),message:'Caso cerrado: '+(intent.id==='sala'?'internación en sala':'observación')+' · '+evaluation.quality.score+'/100 · +'+xp+' XP.'});
    }

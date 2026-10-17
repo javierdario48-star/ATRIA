@@ -2,6 +2,7 @@ import {patientHTML,vitalsHTML,therapyHTML,monitorHTML,historyHTML,esc} from './
 import {examinationHTML,renderExamination} from './examination-panel.js';
 import {setHTML} from './render-content.js';
 import {ecgPresentation} from '../clinical/ecg-morphology.js';
+import {caseDebriefHTML} from './case-debrief.js';
 import {createEcgSweep} from './ecg-sweep.js';
 import {monitorOrderExamples} from './monitor-order-suggestions.js';
 import {monitorOrderLedger,administeredTreatmentHistory,latestMonitorOrderState} from './monitor-order-ledger.js';
@@ -181,8 +182,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(ui('caseReadiness'))ui('caseReadiness').textContent=p.caseEnded?'Atención cerrada.':s.closure?.ready?'Evaluación completa. Elegí cómo continúa el cuidado.':(s.closure?.missing||[]).join(' ');
   setHTML(ui('caseDestinations'),p.caseEnded?'':(p.caseId==='APP-001'?['quirofano']:['sala','observacion'])
    .map(id=>'<button data-destination="'+id+'" '+(!s.closure?.ready?'disabled':'')+'>'+({quirofano:'Derivar a quirófano',sala:'Internar en sala',observacion:'Dejar en observación'}[id])+'</button>').join(''));
-  setHTML(ui('caseResult'),p.closure?'<h3>Caso cerrado · '+p.closure.quality.score+'/100</h3><p>'+
-   ({quirofano:'Derivación a quirófano',sala:'Internación en sala',observacion:'Observación'}[p.closure.destination])+' · +'+p.closure.xp+' XP</p>':'');
+  setHTML(ui('caseResult'),caseDebriefHTML(p.closure));
   renderExamination(document,p,regionId);
  }
  async function handle(target){

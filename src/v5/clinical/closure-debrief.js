@@ -1,0 +1,32 @@
+// Compact V4 scoring breakdown adapted to confirmed V5 closure receipts.
+// It NEVER computes or awards XP. The V4 quality evaluator remains the owner.
+import {confirmedRespiratoryAdverse} from './clinical-risk.js';
+const labels={diagnosis:'Impresión diagnóstica',history:'Anamnesis',
+ safety:'Evaluación y reevaluación',studies:'Estudios relevantes',
+ treatment:'Tratamiento y destino',efficiency:'Uso eficiente de recursos'};
+export function createClosureDebrief(p,c,q){
+ if(!q||!Number.isFinite(q.score))throw Error('confirmed quality required for debrief');
+ const earned=['diagnosis','history','safety','studies','treatment']
+  .map(id=>({label:labels[id],points:q[id]||0}));
+ earned.push({label:labels.efficiency,points:5});
+ const extraDeduction=Math.min(5,Math.max(0,q.extraStudies||0)*2);
+ const iatrogenicDeduction=Math.max(0,(q.penalty||0)-extraDeduction);
+ const deductions=[
+  ...(extraDeduction?[{label:'Estudios innecesarios',points:-extraDeduction}]:[]),
+  ...(iatrogenicDeduction?[{label:'Efectos adversos confirmados',points:-iatrogenicDeduction}]:[])];
+ const missing=[];
+ if((q.diagnosis||0)<15)missing.push('Precisar el diagnóstico presuntivo.');
+ if((q.history||0)<15)missing.push('Completar anamnesis relevante y antecedentes.');
+ if((q.safety||0)<25)missing.push('Completar examen, signos, reevaluación y destino.');
+ if((q.studies||0)<15)missing.push('Completar los estudios pertinentes del caso.');
+ if((q.treatment||0)<25)missing.push('Completar las intervenciones recomendadas.');
+ const adverse=confirmedRespiratoryAdverse(p,c);
+ const unnecessary=[
+  ...((q.extraStudies||0)>0?[q.extraStudies+' estudios ajenos a la indicación principal']:[]),
+  ...adverse.flags];
+ const computed=earned.reduce((sum,x)=>sum+x.points,0)+
+  deductions.reduce((sum,x)=>sum+x.points,0);
+ if(computed!==q.score)throw Error('debrief cannot disagree with native closure score');
+ return {schema:'atria.v5.closure-debrief.v1',score:q.score,
+  earned,deductions,missing,unnecessary};
+}
