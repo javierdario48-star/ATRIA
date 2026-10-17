@@ -6,6 +6,15 @@ export const IV_MEDICINES=Object.freeze({
  ceftriaxone:Object.freeze({id:'ceftriaxone',label:'Ceftriaxona IV',seconds:1.5}),
  metronidazole:Object.freeze({id:'metronidazole',label:'Metronidazol IV',seconds:1.5}),
  furosemide:Object.freeze({id:'furosemide',label:'Furosemida IV',seconds:1.5}),
+ imipenem:Object.freeze({id:'imipenem',label:'Imipenem IV',seconds:1.5}),
+ ceftazidime:Object.freeze({id:'ceftazidime',label:'Ceftazidima IV',seconds:.55}),
+ cefoperazone:Object.freeze({id:'cefoperazone',label:'Cefoperazona IV',seconds:.55}),
+ cefepime:Object.freeze({id:'cefepime',label:'Cefepime IV',seconds:.55}),
+ piptazo:Object.freeze({id:'piptazo',label:'Piperacilina/tazobactam IV',seconds:1.5}),
+ ampicillin:Object.freeze({id:'ampicillin',label:'Ampicilina IV',seconds:1.5}),
+ amikacin:Object.freeze({id:'amikacin',label:'Amikacina IV',seconds:1.5}),
+ gentamicin:Object.freeze({id:'gentamicin',label:'Gentamicina IV',seconds:1.5}),
+ fluconazole:Object.freeze({id:'fluconazole',label:'Fluconazol IV',seconds:1.5}),
  anticoagulation:Object.freeze({id:'anticoagulation',label:'Heparina IV',seconds:1.5,dose:HEPARIN_SIM_DOSE_487})
 });
 export const isStandardIVMedicine=id=>Object.hasOwn(IV_MEDICINES,id);

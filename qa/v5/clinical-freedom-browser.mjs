@@ -48,9 +48,15 @@ try{
     const panel=document.createElement('section');panel.id='freedom-history';
     panel.style.cssText='position:fixed;inset:0;overflow:auto;background:#10212b;color:white;padding:20px;z-index:99999';
     panel.innerHTML=historyHTML(state.patient);document.body.append(panel);
+    // The same bedside queue executes a migrated broad-spectrum alternative.
+    const alternative=await send('Enfermera piptazo 4.5 g');
+    check(alternative.clinical[0].status==='pending','alternative not prepared');
+    await step(12);
+    check(s.read().patient.administrationLog.some(x=>x.id==='piptazo'&&x.dose.amount===4500),
+     'alternative missing authentic bedside receipt');
     return {mode,sys:state.patient.liveVitals.sys,spo2:state.patient.liveVitals.spo2,
      receipts:state.patient.administrationLog.length,complications:state.patient.adverseEvents.length,
-     penalty:state.closure.quality.penalty,journeys:world.nurseJourneySnapshot().map(x=>x.stage)};
+     penalty:state.closure.quality.penalty,alternativeConfirmed:true,journeys:world.nurseJourneySnapshot().map(x=>x.stage)};
    }finally{s.dispose();}
   },{mode});
   assert.equal(errors.length,0,JSON.stringify(errors));

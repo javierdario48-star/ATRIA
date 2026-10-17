@@ -5,22 +5,27 @@
 //
 // Returns TARGET offsets only. advanceAppVitals remains the only vital writer.
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
+import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 const ZERO=Object.freeze({temp:0,hr:0,rr:0,sys:0,dia:0,spo2:0});
 const ramp=(v,from,to)=>Math.max(0,Math.min(1,(v-from)/(to-from)));
-const antibiotics=['ceftriaxone','metronidazole'];
-function coverageNativeMinute(p){
- const ages=[];
- for(const drugId of antibiotics){
-  if(matchesMedicationAllergy487(p,drugId))return null;
-  const administrations=(p?.administrationLog||[]).filter(a=>
-   a.id===drugId&&a.patientUid===p.uid&&
-   Number.isFinite(a.administeredAtNativeMinute)&&
-   (p.treatments||[]).some(t=>t.id===drugId&&t.patientUid===p.uid&&
-    t.sourceEventId===a.sourceEventId&&t.administeredAtNativeMinute===a.administeredAtNativeMinute));
-  if(!administrations.length)return null;
-  ages.push(Math.min(...administrations.map(a=>a.administeredAtNativeMinute)));
+function coverageNativeMinute(p,c){
+ const regimens=antimicrobialRegimens487(c);
+ const completed=[];
+ for(const regimen of regimens){
+  const ages=[];
+  for(const drugId of regimen){
+   if(matchesMedicationAllergy487(p,drugId))break;
+   const administrations=(p?.administrationLog||[]).filter(a=>
+    a.id===drugId&&a.patientUid===p.uid&&
+    Number.isFinite(a.administeredAtNativeMinute)&&
+    (p.treatments||[]).some(t=>t.id===drugId&&t.patientUid===p.uid&&
+     t.sourceEventId===a.sourceEventId&&t.administeredAtNativeMinute===a.administeredAtNativeMinute));
+   if(!administrations.length)break;
+   ages.push(Math.min(...administrations.map(a=>a.administeredAtNativeMinute)));
+  }
+  if(ages.length===regimen.length)completed.push(Math.max(...ages));
  }
- return Math.max(...ages);
+ return completed.length?Math.min(...completed):null;
 }
 /** At native min <20, APP matches its characterized legacy baseline exactly.
  * Uncontrolled appendicitis may slowly develop greater infection/volume risk.
@@ -32,7 +37,7 @@ export function appDiseaseTargetOffsets(p,c,atNativeMinute){
  if(c?.id!=='APP-001')throw Error('APP natural progression belongs only to APP-001');
  if(!Number.isFinite(atNativeMinute)||atNativeMinute<0)throw Error('invalid APP disease time');
  if(p?.caseEnded||atNativeMinute<=20)return ZERO;
- const coveredAt=coverageNativeMinute(p);
+ const coveredAt=coverageNativeMinute(p,c);
  const age=coveredAt!==null&&atNativeMinute>coveredAt?
   coveredAt+(atNativeMinute-coveredAt)*.45:atNativeMinute;
  const early=ramp(age,20,180),late=ramp(age,120,480),severe=ramp(age,480,720);

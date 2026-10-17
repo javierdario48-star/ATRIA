@@ -3,6 +3,7 @@
 // crystalloid dose or an independent heart/lung model.
 import {summarizeIVExposures} from './medication-exposure.js';
 import {crystalloidOverloadOffsets} from './crystalloid-overload.js';
+import {PHARMA_RULES_487,BASE_CASE_PHARMACOLOGY_487} from '../../clinical/pharmacology-registry-487.js';
 export function confirmedRespiratoryAdverse(patient,caseDef){
  if(!patient?.administrationLog?.some(x=>x.id==='fluid'))
   return {adverseCount:0,flags:[],confirmedFluidMl:0};
@@ -35,11 +36,13 @@ export function confirmedClinicalMissteps(patient,caseDef){
   if(['severe-drug-allergy','anticoagulant-bleeding'].includes(event.kind)&&event.patientUid===patient.uid&&
     (patient.administrationLog||[]).some(x=>x.sourceEventId===event.sourceEventId&&x.id===event.drugId))
    notes.push(event.message);
- if(caseDef?.id==='CIRR-001'){
-  if(exposures.ceftriaxone?.administrations)
-   notes.push('Ceftriaxona sin foco infeccioso identificado en CIRR-001');
-  if(exposures.metronidazole?.administrations)
-   notes.push('Metronidazol sin foco infeccioso identificado en CIRR-001');
+ const traits=caseDef?.pharmacology?.traits||BASE_CASE_PHARMACOLOGY_487[caseDef?.id]||[];
+ if(!traits.includes('infection')){
+  for(const [id,exposure] of Object.entries(exposures))
+   if(exposure.administrations&&['antibiotic','aminoglycoside','antifungal'].includes(PHARMA_RULES_487[id]?.classId)){
+    const label=patient.administrationLog.find(x=>x.id===id)?.label||id;
+    notes.push(label+' sin foco infeccioso identificado en '+caseDef?.id);
+   }
  }
  if(caseDef?.id==='APP-001'&&exposures.furosemide?.administrations&&
     lung.confirmedFluidMl<3000)

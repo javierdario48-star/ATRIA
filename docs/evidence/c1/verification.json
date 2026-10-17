@@ -1,0 +1,52 @@
+{
+  "schema": "atria.v5.c1.verification.v1",
+  "sha": "035ae6b0c8dca197574011d637c4276d3fb50b53",
+  "v5CI": {
+    "id": 39064274823,
+    "conclusion": "success",
+    "jobs": 4,
+    "v5Tests": 340,
+    "coreTests": 40
+  },
+  "legacyCensus": {
+    "id": 39064274804,
+    "conclusion": "success"
+  },
+  "historical": {
+    "nursingChecks": 421,
+    "closureScenarios": 131,
+    "harmScenarios": 39,
+    "knownUnresolvedDiureticScenarios": [
+      "PERI-SEC-001",
+      "CHOLANG-001"
+    ]
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-d72lc13dv-javierdario4878-7324.vercel.app",
+    "state": "READY",
+    "httpStatus": 200,
+    "all95ManifestFilesMatch": true
+  },
+  "browser": {
+    "scenarios": 4,
+    "desktop": true,
+    "androidEmulated": true,
+    "physicalAndroid": false,
+    "modes": [
+      "solo",
+      "apprentice"
+    ],
+    "afterAllergicAdministration": {
+      "sys": 88.01038581942639,
+      "spo2": 89.0031157458279,
+      "receipts": 2,
+      "complications": 1,
+      "qualityPenalty": 5
+    },
+    "existingAPPAndCIRR": {
+      "score": 100,
+      "xp": 133
+    }
+  },
+  "protectedSourceChanges": []
+}

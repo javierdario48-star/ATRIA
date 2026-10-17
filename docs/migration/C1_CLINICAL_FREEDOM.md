@@ -36,3 +36,9 @@ C2: reuse the prepared-medication pipeline for remaining original formulations/f
 C3: recover original immediate sepsis treatment plus effective secondary/rescue wrappers as pure functions; connect a single PERI owner to the already extracted longitudinal core. Do not apply sepsis progression to APP/CIRR. Migrate PERI closure under its own rules, not APP rules.
 
 Still missing: 11 case executors, full 30-treatment execution/PK/duration/overdose/interactions, both diuretic discrepancies, product multiplayer/lobby integration and durable transport, 2–4 browser gameplay, physical Android and all remaining case-specific closure/visual parity. This checkpoint is not full ATRIA 5.0 completion.
+
+## Published evidence
+
+Functional SHA: `035ae6b0c8dca197574011d637c4276d3fb50b53`. [V5 CI 4/4 success](https://github.com/javierdario48-star/ATRIA/actions/runs/39064274823). [Legacy gameplay census success](https://github.com/javierdario48-star/ATRIA/actions/runs/39064274804). 340/340 V5 and 40/40 core; full historical regression success. Two review defects were reproduced and corrected before publication: composed event IDs longer than 160, and causal ordering of completion/complication/death on the authoritative lane. Delayed events retain valid source identity and chronological order.
+
+[Exact C1 preview](https://night-shift-clinical-d72lc13dv-javierdario4878-7324.vercel.app): READY, SHA/ref match, HTTP200 and all 95 manifest entries match the local build. Browser CI verifies complete APP/CIRR100/100133XP, keyboard/rotation/studies, and four new desktop/Pixel×Solo/Aprendiz nursing scenarios: sys88.0104, SpO2 89.0031 after confirmed allergic administration, one documented episode and 5-point penalty. This is mobile emulation, not a physical Android test. Machine-readable evidence: [verification.json](../evidence/c1/verification.json).

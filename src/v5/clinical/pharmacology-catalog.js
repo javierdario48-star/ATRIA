@@ -6,6 +6,7 @@ import {PHARMA_RULES_487,BASE_CASE_PHARMACOLOGY_487,
  from '../../clinical/pharmacology-registry-487.js';
 import {csPharmOutcomes487} from '../../clinical/pharmacology-outcomes-487.js';
 import {medicationSafety487,matchesMedicationAllergy487} from './medication-safety-487.js';
+import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 
 const clone=x=>structuredClone(x);
 const VITALS=['temp','hr','rr','sys','dia','spo2'];
@@ -34,6 +35,7 @@ function checkRule(id,rule){
 }
 function normalizeCase(c){
  if(!valid(c?.id))throw Error('case pharmacology requires case id');
+ if(c.id==='APP-001')return {...c,pharmacology:{...c.pharmacology,coverageSets:antimicrobialRegimens487(c)}};
  if(BASE_CASE_PHARMACOLOGY_487[c.id]||c.pharmacology?.traits)return c;
  // New unknown case: react only to measured vital conditions and documented
  // exposures. A missing infection/etiology is NOT inferred from fever alone.
