@@ -96,7 +96,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard';
-  const minute=Math.floor(guardSession?.read().clock.clinicalMinute||0),total=8*60+15+minute;
+  const minute=Math.floor(guardSession?.read().clock.gameMinute||0),total=8*60+15+minute;
   ui('status').textContent=guard&&guardSession?.read().patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':'Lobby local · 5.0 experimental';
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
   ui('peopleButton').textContent=guard?'Historia':'Personas';
