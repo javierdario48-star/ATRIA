@@ -43,6 +43,17 @@ export function routeWardSpeech(text,context={}){
    intents:patientUid?[{kind:'consult.request',id:'cirugia',sourceText:original,clause:original}]:[],
    ...(!patientUid?{error:'no-patient-target'}:{})};
  }
+ // A transfer is a closure request, NOT evidence that surgery or discharge
+ // already happened. Only the native case evaluator may accept it.
+ const nurseTransfer=/^enfermer(?:a|o|ia)[,:]?\s+(?:(?:derivar|enviar|trasladar)\s+(?:a|al)\s+|internar\s+en\s+|dar\s+(?:de\s+)?)(cirugia|quirofano|sala|uti|observacion|alta)$/i.exec(normalized);
+ const nurseSurgery=/^enfermer(?:a|o|ia)[,:]?\s+(?:cirugia|quirofano)$/i.test(normalized);
+ const destination=nurseTransfer?.[1]==='cirugia'?'quirofano':nurseTransfer?.[1];
+ if(context.clinicalEvaluation&&(destination||nurseSurgery&&context.surgicalConsultDone)){
+  const patientUid=context.patientUid??null;
+  return {recipient:'nurse',patientUid,original,
+   intents:patientUid?[{kind:'case.close',id:destination||'quirofano',sourceText:original}]:[],
+   ...(!patientUid?{error:'no-patient-target'}:{})};
+ }
  const explicitStudy=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(original);
  if(explicitStudy){
   const patientUid=context.patientUid??null,study=(context.studies||[]).find(s=>s.id===explicitStudy[1]);

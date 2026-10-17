@@ -60,8 +60,8 @@ async function successful(caseId){
   await f.send('/reevaluar');
   const intended=CASE_CLOSURE_RULES_487[caseId].destinations[0];
   const wrong=await f.send('/disposicion '+(caseId==='APP-001'?'alta':'quirofano'));
-  const close=await f.send('/disposicion '+intended);
-  const closed=trajectory(f.session),after=await f.send('/disposicion '+intended);
+  const close=await f.send(caseId==='APP-001'?'Enfermera cirugía':'Enfermera internar en sala');
+  const closed=trajectory(f.session),after=await f.send(caseId==='APP-001'?'Enfermera cirugía':'Enfermera internar en sala');
   const repeat=trajectory(f.session);
   return {caseId,strategy:'competent',initial,closed,preRejected:premature.clinical[0]?.status==='rejected',
    pendingRejected:preCompletion.clinical[0]?.status==='rejected',
