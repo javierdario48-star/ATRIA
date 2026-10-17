@@ -105,6 +105,7 @@ test('real session: stable untreated cirrhosis survives; fatal overload closes w
   assert.equal(bad.terminal.deathReason,'critical-hypoxemia');
  }
  assert(!report.gaps.some(x=>x.key.endsWith('/fatal-transition')));
- assert(report.gaps.some(x=>x.key==='APP-001/untreated-disease'));
+ assert(!report.gaps.some(x=>x.key==='APP-001/untreated-disease'),
+  'APP natural-history progression now makes abandonment measurably worse');
  assert(report.gaps.some(x=>x.key==='clock/24h'));
 });

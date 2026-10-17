@@ -29,7 +29,7 @@ function coverageNativeMinute(p){
 export function appDiseaseTargetOffsets(p,c,atNativeMinute){
  if(c?.id!=='APP-001')throw Error('APP natural progression belongs only to APP-001');
  if(!Number.isFinite(atNativeMinute)||atNativeMinute<0)throw Error('invalid APP disease time');
- if(p?.caseEnded)return ZERO;
+ if(p?.caseEnded||atNativeMinute<=20)return ZERO;
  const coveredAt=coverageNativeMinute(p);
  const age=coveredAt!==null&&atNativeMinute>coveredAt?
   coveredAt+(atNativeMinute-coveredAt)*.45:atNativeMinute;

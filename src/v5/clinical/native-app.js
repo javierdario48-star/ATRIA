@@ -17,7 +17,7 @@ export function initialAppVitals(c){
 }
 // Backwards-compatible export for characterized APP dose contracts.
 export {parseStandardIVDose as parseAppDose} from './native-medications.js';
-export function advanceAppVitals(p,c,dt,atNativeMinute){
+export function advanceAppVitals(p,c,dt,atNativeMinute=0){
  if(!Number.isFinite(dt)||dt<0)throw Error('invalid APP physiology delta');
  if(p.caseEnded)return;
  const target=initialAppVitals(c);
