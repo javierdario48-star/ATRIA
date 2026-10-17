@@ -739,3 +739,34 @@ test('C11c repeated IV doses preserve APP native baseline effect without fake ac
  assert.equal(f.session.read().patient.administrationLog.filter(x=>x.id==='fluid').length,2);
  f.session.dispose();f.world.enterLobby();
 });
+
+
+test('C12a exposure reads actual receipts, not pending intentions or copied treatment flags',async()=>{
+ const f=fixture('APP-001');
+ assert.deepEqual(f.session.read().exposure,{
+  patientUid:f.patient.uid,confirmedIvEventCount:0,confirmedCrystalloidMl:0,byDrug:{}});
+ const post=await f.session.post({id:'two-fluid',text:'Enfermera una vía y Ringer 500 ml'});
+ assert.deepEqual(post.clinical.map(x=>x.status),['pending','pending']);
+ assert.equal(f.session.read().exposure.confirmedCrystalloidMl,0);
+ await walkToCompletion(f);
+ // The IV can be confirmed before the medicine's own physical journey,
+ // but a catheter itself is never a crystalloid administration.
+ assert.equal(f.session.read().exposure.confirmedCrystalloidMl,0);
+ await arriveAndAdministerIV(f,'fluid','C08-B1:doctor:two-fluid:1');
+ const before=f.session.read().exposure;
+ assert.equal(before.confirmedCrystalloidMl,500);
+ assert.deepEqual(before.byDrug.fluid.sourceEventIds,['C08-B1:doctor:two-fluid:1']);
+ const second=await f.session.post({id:'extra-fluid',text:'Enfermera Ringer 500 ml'});
+ assert.equal(second.clinical[0].status,'pending');
+ assert.equal(f.session.read().exposure.confirmedCrystalloidMl,500,
+  'second bolus not counted while nurse is travelling');
+ await arriveAndAdministerIV(f,'fluid','C08-B1:doctor:extra-fluid:0');
+ const after=f.session.read().exposure;
+ assert.equal(after.confirmedCrystalloidMl,1000);
+ assert.equal(after.confirmedIvEventCount,2);
+ assert.deepEqual(after.byDrug.fluid.sourceEventIds,[
+  'C08-B1:doctor:two-fluid:1','C08-B1:doctor:extra-fluid:0']);
+ await f.session.post({id:'extra-fluid',text:'Enfermera Ringer 500 ml'});
+ assert.deepEqual(f.session.read().exposure,after,'transport retry must not create exposure');
+ f.session.dispose();f.world.enterLobby();
+});

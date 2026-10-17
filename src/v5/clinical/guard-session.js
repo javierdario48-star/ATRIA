@@ -10,6 +10,7 @@ import {refreshMonitoring,parseNasalOxygenFlow} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
 import {isStandardIVMedicine,parseStandardIVDose} from './native-medications.js';
 import {parseCirrDose} from './native-cirr.js';
+import {summarizeIVExposures} from './medication-exposure.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -278,7 +279,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     procedures:{monitor:{connected:!!nativePatient.procedures?.monitor?.connected}},
     lastVitalsKnown:nativePatient.lastVitalsKnown?{vitals:copy(nativePatient.lastVitalsKnown.vitals)}:null};
   },
-  read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
+  read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    closure:care?copy(care.readiness(caseData.id==='APP-001'?'quirofano':'sala')):null};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
