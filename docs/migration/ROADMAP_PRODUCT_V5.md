@@ -40,7 +40,8 @@ Inventario detallado previo: [PARITY_MATRIX.md](PARITY_MATRIX.md) y [LEGACY_MULT
 ### P1 — Mensajería y conexión (C21.a/b/c)
 - **Implementado C21.a:** `room-mailbox.js` recibe mensajes tipados, sender asignado por relay autenticado, mensajes únicos, ACK, cursor con interrupción por gap, reintento sin pérdida silenciosa, HTTP de sala `/api/rooms/:id/messages`. No hay temporizadores ni WebRTC ornamental.
 - **Implementado C21.b:** `room-gateway.js` une la autoridad clínica host con réplica de lectura solamente, chat/comandos, ACK por destinatario, estados ordenados y resync **sin mensaje clínico espurio**. Core tests 2/3/4 actores, sin UI online.
-- **PENDIENTE C21.c:** adaptador servidor durable/atómico y autenticación de usuarios, pruebas concurrentes dos/tres/cuatro navegadores REALES, reconexión, hueco/snapshot truncado, host ausente, reingreso y aislamiento.
+- **PARCIAL C21.c [implementado protocolo + red QA]:** relé con transacciones por sala **solo en memoria de pruebas**, API HTTP real, host Node + 1/2/3 navegadores Chromium separados (2/3/4 participantes), snapshot auténtico/recuperación de vista y ACK no confirmado explícito. [C21.c](STEP_21C_HANDOFF.md).
+- **PENDIENTE C21.d:** almacenamiento compartido duradero y auténtica integración frontend/auth, caída del host, carga, reingreso y aislamiento entre conexiones reales; no presentar el relay de memoria de pruebas como backend desplegable.
 - DoD: dos navegadores independientes usando backend de prueba real, chat y ACK sin duplicación, expiración y reintentos reproducidos; backend sostiene concurrencia sin perder comandos.
 
 ### P2 — Conectar los cuatro modos jugables (C22/C23)
