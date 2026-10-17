@@ -47,6 +47,10 @@ function caseModifiers(c,id){
   throw Error('invalid case pharmacology warnings '+c.id+'/'+id);
  return {scale,warnings};
 }
+// Single validation path shared by previews and the native effect owner.
+export function caseDrugResponseScale(caseDef,drugId){
+ return caseModifiers(normalizeCase(caseDef),drugId).scale;
+}
 function checkVitals(v){
  if(!v||typeof v!=='object')throw Error('current vital signs required');
  for(const axis of VITALS)if(!Number.isFinite(v[axis]))

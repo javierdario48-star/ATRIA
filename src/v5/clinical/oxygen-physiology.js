@@ -2,6 +2,7 @@
 // Reuses the validated generic V4 pharmacology rule. No timers, no extra
 // physiological state, no direct writes and no reliance on textual orders.
 import {csPharmResponse487} from '../../clinical/pharmacology-registry-487.js';
+import {caseDrugResponseScale} from './pharmacology-catalog.js';
 
 export function oxygenationTargetOffset(patient,caseDef,atNativeMinute){
  const support=patient?.procedures?.oxygen;
@@ -26,5 +27,5 @@ export function oxygenationTargetOffset(patient,caseDef,atNativeMinute){
  // 2 L/min offers a smaller game-scale response than 4 L/min; neither changes
  // a normoxic 98% patient. Saturation remains clamped by the case's native
  // monitor bounds. No accumulated oxygen dose across rate changes.
- return Math.min(7,response)*(support.flowLpm===2?.65:1);
+ return Math.min(7,response)*(support.flowLpm===2?.65:1)*caseDrugResponseScale(caseDef,'oxygen');
 }

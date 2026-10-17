@@ -80,6 +80,23 @@ test('C12e forged active-device state without completed bedside receipt cannot a
  f.p.administrationLog[0].patientUid='P1';
  assert.throws(()=>oxygenationTargetOffset(f.p,f.c,2),/clock disagree/);
 });
+test('C12e case-specific oxygen response scale is honored by native vital owner without duplicating response',()=>{
+ const base=fixture('CIRR-001',84),tailored=fixture('CIRR-001',84);
+ tailored.c.pharmacology={overrides:{oxygen:{responseScale:.5}}};
+ executeOxygenSupport(base.p,command('base','therapy.request','oxigeno 4 L/min'),
+  {clinicalMinute:0,nativeMinute:1});
+ executeOxygenSupport(tailored.p,command('tailored','therapy.request','oxigeno 4 L/min'),
+  {clinicalMinute:0,nativeMinute:1});
+ const regular=oxygenationTargetOffset(base.p,base.c,5),scaled=oxygenationTargetOffset(tailored.p,tailored.c,5);
+ assert(regular>0);
+ assert(Math.abs(scaled-regular/2)<1e-10);
+ const before=structuredClone(tailored.p.liveVitals);
+ run(tailored.p,tailored.c,tailored.advance,2,5);
+ assert(tailored.p.liveVitals.spo2>before.spo2);
+ assert.throws(()=>oxygenationTargetOffset(tailored.p,{
+  ...tailored.c,pharmacology:{overrides:{oxygen:{responseScale:5}}}},5),
+ /invalid case response scale/);
+});
 test('C12e real physical nurse arrival is required before oxygen support begins to affect session',async()=>{
  const content={cases,therapies:data('therapies'),defaultDoses:data('default-doses'),
   map:data('hospital'),beds:data('beds')};
