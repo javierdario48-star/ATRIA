@@ -5,6 +5,7 @@ import {nativeCaseXP} from './progression.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {createClosureDebrief} from './closure-debrief.js';
 import {createIVAdministration} from './native-medications.js';
+import {medicationSafety487} from './medication-safety-487.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
@@ -36,7 +37,8 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
  const txReceipt=(cmd,t,reused=false)=>executed(cmd,{therapyId:t.id,sourceEventId:t.sourceEventId,dose:copy(t.dose),
   administeredAtRealSecond:t.administeredAtRealSecond,administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
   message:(reused?'Ya ejecutado por la indicación original: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
- const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected});
+ const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected,
+  safety:id=>medicationSafety487(c,p,id)});
  function readiness(destination){
   const out=csEvaluateClosure487(closureSnapshot(p,c,destination));
   if(p.pendingTreatments.length){out.ready=false;out.action=null;out.missing.push('Esperar la ejecución o resolución de las intervenciones en preparación.');}

@@ -5,6 +5,7 @@ import {PHARMA_RULES_487,BASE_CASE_PHARMACOLOGY_487,
  csValidateDrug487,csCasePharmProfile487,csPharmResponse487,REFERENCE_DOSES_487}
  from '../../clinical/pharmacology-registry-487.js';
 import {csPharmOutcomes487} from '../../clinical/pharmacology-outcomes-487.js';
+import {medicationSafety487} from './medication-safety-487.js';
 
 const clone=x=>structuredClone(x);
 const VITALS=['temp','hr','rr','sys','dia','spo2'];
@@ -108,12 +109,15 @@ function evaluate(c,p,atNativeMinute,catalog){
    ownedAxes.includes(axis)?0:clamp(changes.offsets[axis]*scale,-50,50)]));
   const rawOffsets=Object.fromEntries(VITALS.map(axis=>[axis,
    clamp(changes.offsets[axis]*scale,-50,50)]));
+  const safety=medicationSafety487(c,p,id);
   rows.push({id,classId:rule.classId,route:rule.route,mechanism:rule.mechanism,
    model:rule.mechanism==='unmodeled'?'review-only':'legacy-general',
    state:!last?'not-administered':last.action==='stop'?'stopped':'confirmed',
    sourceEventId:last?.sourceEventId??null,elapsedNativeMinutes:minutes,
    phase:received?changes.phase:0,beneficial:received&&changes.beneficial,
-   warnings:[...new Set([...changes.warnings,...warnings])],
+   warnings:[...new Set([...changes.warnings,...warnings,...safety.cautions])],
+   safety:{blocked:safety.blocked,reason:safety.reason,
+    nephrotoxic:safety.classifiedAsNephrotoxic,cautions:[...safety.cautions]},
    ownedAxes:[...ownedAxes],rawOffsets:received?rawOffsets:zero(),
    candidateOffsets:received?offsets:zero()});
  }

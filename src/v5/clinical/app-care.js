@@ -8,6 +8,7 @@ import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {createClosureDebrief} from './closure-debrief.js';
 import {initialAppVitals,advanceAppVitals} from './native-app.js';
 import {createIVAdministration} from './native-medications.js';
+import {medicationSafety487} from './medication-safety-487.js';
 
 const copy=x=>structuredClone(x);
 export function appClosureSnapshot(p,c,destination){
@@ -48,7 +49,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
    (t.dose?' · '+t.dose.display:'')+'.'});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
-  proof,rejected});
+  safety:id=>medicationSafety487(c,p,id),proof,rejected});
  function readiness(destination){
   const out=csEvaluateClosure487(appClosureSnapshot(p,c,destination));
   if(!out)return null;

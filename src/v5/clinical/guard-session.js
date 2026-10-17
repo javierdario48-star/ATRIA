@@ -14,6 +14,7 @@ import {summarizeIVExposures} from './medication-exposure.js';
 import {createCasePharmacology} from './pharmacology-catalog.js';
 import {advanceNativeSurvival} from './survival-487-bridge.js';
 import {confirmedFluidFeedback,fluidFeedbackLabel} from './fluid-feedback.js';
+import {normalizeDocumentedAllergies487,medicationSafety487} from './medication-safety-487.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -29,7 +30,8 @@ const routeReason={
 export function createGuardSession({roomId,mode,actorId,actorName,patient,content,resolveContext,onChange=()=>{},progress=createProgressionLedger(),nursing=null}){
  if(!['solo','apprentice'].includes(mode)||typeof resolveContext!=='function')throw Error('local clinical mode/context required');
  const caseData=content.cases.find(c=>c.id===patient.caseId);if(!caseData)throw Error('unknown patient case');
- const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[]};
+ const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[],
+  allergies:normalizeDocumentedAllergies487(patient.allergies??[])};
  const options={mode,defaultDoses:content.defaultDoses,progress};
  // Every case inherits the validated global formulary (including cases that
  // do not yet have an active clinical executor). This is a PURE interpreter,
@@ -61,8 +63,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     continue;
    }
    try{
-    if(isStandardIVMedicine(intent.id))
+    if(isStandardIVMedicine(intent.id)){
      parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
+     if(medicationSafety487(caseData,nativePatient,intent.id).blocked)return 'unsafe-compound-order';
+    }
     else if(intent.id==='oxygen')
      parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
     else if(intent.id==='espironolactona')
@@ -90,7 +94,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     // Native case policy remains the only executor. These are the same
     // certified dose/route parsers that it calls, never a new catalog.
     try{
-     if(ivMedicine)parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
+     if(ivMedicine){
+      parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
+      const verdict=medicationSafety487(caseData,nativePatient,intent.id);
+      if(verdict.blocked)return {status:'rejected',patientUid,eventId,reason:verdict.reason};
+     }
      if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
      if(cirrBedside&&intent.id==='espironolactona')
       parseCirrDose(intent.clause||intent.sourceText,content.defaultDoses?.espironolactona);

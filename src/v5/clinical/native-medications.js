@@ -37,7 +37,7 @@ export function parseStandardIVDose(text,reference){
 /** Scheduling and receipts for validated IV medicine: never changes vitals.
  * Calling care.advance() remains the only path to a true administration.
  */
-export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected}){
+export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected,safety=()=>({blocked:false})}){
  const tasks=new Map();
  const copy=x=>structuredClone(x);
  function request(cmd,clock){
@@ -46,6 +46,9 @@ export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected})
   let dose;
   try{dose=parseStandardIVDose(cmd.intent.clause||cmd.intent.sourceText,doses?.[id]);}
   catch(error){return rejected(cmd,error.message,'Dosis o vía IV no validada. No administrado.');}
+  const contraindication=safety(id);
+  if(contraindication.blocked)return rejected(cmd,contraindication.reason,
+   'Alergia documentada: medicamento no administrado.');
   // A fresh clinical order is another exposure, even to the same drug.
   // Only replay of the SAME eventId may share an execution (room authority
   // already deduplicates transport retries by actor+commandId).
