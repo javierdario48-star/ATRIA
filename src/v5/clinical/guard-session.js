@@ -44,7 +44,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // Read-only all-or-nothing preflight for *compound* nurse orders. Reuse the
  // same native case formulary and dose/device parsers; never preview effects.
  // Single orders still return their existing per-intervention rejection.
- const migratedTherapies=new Set(['oxygen','fluid','ceftriaxone','metronidazole',
+ const migratedTherapies=new Set(['oxygen','fluid','ceftriaxone','metronidazole','furosemide',
   ...(caseData.id==='APP-001'?['npo']:['espironolactona','sal_restriccion','paracentesis_ter'])]);
  function validateClinicalBatch(intents){
   if(intents.length<2)return null;

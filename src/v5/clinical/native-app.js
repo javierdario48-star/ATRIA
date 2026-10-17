@@ -1,6 +1,7 @@
 import {IV_MEDICINES} from './native-medications.js';
 import {crystalloidOverloadOffsets} from './crystalloid-overload.js';
 import {oxygenationTargetOffset} from './oxygen-physiology.js';
+import {applyConfirmedIVTargetOffsets} from './pharmacology-catalog.js';
 // Case-specific original APP-001 vitals/doses, characterized from the effective
 // 4.8.7 VM in qa/v5/fixtures/app-native-reference.json. Pure simulation only.
 const keys=['temp','hr','rr','sys','dia','spo2'];
@@ -25,6 +26,7 @@ export function advanceAppVitals(p,c,dt,atNativeMinute){
  const overload=crystalloidOverloadOffsets(p,c);
  target.rr+=overload.rr;target.spo2+=overload.spo2;
  target.spo2+=oxygenationTargetOffset(p,c,atNativeMinute);
+ applyConfirmedIVTargetOffsets(target,p,c,atNativeMinute);
  const steps=Math.floor(dt*60+1e-10),remaining=Math.max(0,dt-steps/60);
  for(const key of keys){
   target[key]=clamp(target[key],...bounds[key]);

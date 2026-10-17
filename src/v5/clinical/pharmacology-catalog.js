@@ -2,7 +2,7 @@
 // Reuses the effective pure V4 response and outcome functions; the clinical
 // executor of each case remains the sole owner of administration and vitals.
 import {PHARMA_RULES_487,BASE_CASE_PHARMACOLOGY_487,
- csValidateDrug487,csCasePharmProfile487,csPharmResponse487}
+ csValidateDrug487,csCasePharmProfile487,csPharmResponse487,REFERENCE_DOSES_487}
  from '../../clinical/pharmacology-registry-487.js';
 import {csPharmOutcomes487} from '../../clinical/pharmacology-outcomes-487.js';
 
@@ -21,9 +21,10 @@ const REVIEW_ONLY=Object.freeze({
   hazards:['bleeding','hit'],onsetMin:null,peakMin:null})
 });
 const OWNER=Object.freeze({
- 'APP-001':Object.freeze({fluid:['sys','dia','hr','rr'],oxygen:['spo2']}),
+ 'APP-001':Object.freeze({fluid:['sys','dia','hr','rr'],oxygen:['spo2'],
+  furosemide:['sys','dia','hr','rr','spo2']}),
  'CIRR-001':Object.freeze({fluid:['rr','spo2'],oxygen:['spo2'],
-  paracentesis_ter:['rr']})
+  paracentesis_ter:['rr'],furosemide:['sys','dia','hr','rr','spo2']})
 });
 function checkRule(id,rule){
  if(REVIEW_ONLY[id])return;
@@ -176,4 +177,48 @@ export function createCasePharmacology({cases,therapies}={}){
    return clone(evaluate(c,p,atNativeMinute,catalog));
   }
  });
+}
+
+// C12.e2: project confirmed IV effects into the native case target.
+// Only native-app/native-cirr may write liveVitals; no independent loop.
+const NATIVE_IV_EFFECT_IDS=Object.freeze(['furosemide']);
+export function applyConfirmedIVTargetOffsets(target,patient,caseDef,atNativeMinute){
+ for(const id of NATIVE_IV_EFFECT_IDS){
+  const doses=(patient?.administrationLog||[]).filter(row=>row.id===id);
+  if(!doses.length)continue;
+  if(!Number.isFinite(atNativeMinute)||atNativeMinute<0)throw Error('invalid IV physiological clock');
+  const seen=new Set();let first=Infinity;
+  for(const row of doses){
+   const treatment=(patient.treatments||[]).filter(t=>t.id===id&&t.sourceEventId===row.sourceEventId);
+   if(row.patientUid!==patient.uid||typeof row.sourceEventId!=='string'||!row.sourceEventId||
+      seen.has(row.sourceEventId)||row.dose?.unit!=='mg'||
+      row.dose?.amount!==REFERENCE_DOSES_487[id]||
+      !Number.isFinite(row.administeredAtNativeMinute)||
+      row.administeredAtNativeMinute<0||row.administeredAtNativeMinute>atNativeMinute+1e-9||
+      treatment.length!==1||treatment[0].patientUid!==patient.uid||
+      treatment[0].dose?.amount!==row.dose.amount||
+      treatment[0].administeredAtNativeMinute!==row.administeredAtNativeMinute)
+    throw Error('invalid or unconfirmed native IV administration');
+   seen.add(row.sourceEventId);
+   first=Math.min(first,row.administeredAtNativeMinute);
+  }
+  // First confirmed dose determines onset. Later legitimate doses are
+  // documented separately, but no unsupported accumulation is invented.
+  const response=csPharmResponse487(id,caseDef,patient,
+   Math.max(0,atNativeMinute-first),patient.liveVitals);
+  if(!response.known)throw Error('missing native IV pharmacology '+id);
+  const scale=caseDrugResponseScale(caseDef,id);
+  const offsets=Object.fromEntries(VITALS.map(axis=>[axis,response.offsets[axis]*scale]));
+  // No free improvement in an already normal SpO2/respiratory rate.
+  if(patient.liveVitals.spo2>=97&&offsets.spo2>0)offsets.spo2=0;
+  if(patient.liveVitals.rr<=14&&offsets.rr<0)offsets.rr=0;
+  for(const axis of VITALS)target[axis]+=offsets[axis];
+  // Harm from a diuretic in hypotension must lower the CURRENT target,
+  // not spuriously restore disease baseline pressure.
+  if(patient.liveVitals.sys<90&&offsets.sys<0){
+   target.sys=Math.min(target.sys,patient.liveVitals.sys+offsets.sys);
+   target.dia=Math.min(target.dia,patient.liveVitals.dia+offsets.dia);
+  }
+ }
+ return target;
 }
