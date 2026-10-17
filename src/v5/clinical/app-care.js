@@ -19,7 +19,7 @@ export function appClosureSnapshot(p,c,destination){
   delivered:p.treatments.map(x=>x.id),consultsDone:p.consults.filter(x=>x.status==='done'&&x.accepted).map(x=>x.id),
   disposition:destination,sys:p.liveVitals.sys,hr:p.liveVitals.hr,spo2:p.liveVitals.spo2,
   rr:p.liveVitals.rr,initialSys:initialAppVitals(c).sys,
-  dead:false,ended:p.caseEnded,adverseCount:0,autonomy:100,uid:p.uid};
+  dead:!!p.patientDied,ended:p.caseEnded,adverseCount:0,autonomy:100,uid:p.uid};
 }
 
 /** APP-001 case policy. The room authority and ONE native clinical port own

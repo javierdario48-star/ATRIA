@@ -15,7 +15,7 @@ export function closureSnapshot(p,c,destination){return {
  studiesDone:p.orders.filter(o=>o.status==='done').map(o=>o.id),extraStudies:p.orders.filter(o=>!c.keyStudies.includes(o.id)).map(o=>o.id),
  keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,delivered:p.treatments.map(t=>t.id),consultsDone:[],disposition:destination,
  sys:p.liveVitals.sys,hr:p.liveVitals.hr,spo2:p.liveVitals.spo2,rr:p.liveVitals.rr,initialSys:initialCirrVitals(c).sys,
- dead:false,ended:p.caseEnded,adverseCount:0,autonomy:100,uid:p.uid};}
+ dead:!!p.patientDied,ended:p.caseEnded,adverseCount:0,autonomy:100,uid:p.uid};}
 
 /** One migrated native care executor, operating on the SAME patient as C1.
  * No UI, timers, global binding, pharmacology wrapper or alternate patient state.

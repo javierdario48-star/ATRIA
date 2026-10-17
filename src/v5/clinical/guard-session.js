@@ -12,6 +12,7 @@ import {isStandardIVMedicine,parseStandardIVDose} from './native-medications.js'
 import {parseCirrDose} from './native-cirr.js';
 import {summarizeIVExposures} from './medication-exposure.js';
 import {createCasePharmacology} from './pharmacology-catalog.js';
+import {advanceNativeSurvival} from './survival-487-bridge.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -225,6 +226,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      pendingNurseJobs.delete(result.eventId);
     }
    }
+   // The existing authoritative guard clock drives the V4-proven pure survival
+   // policies AFTER the native case vital writer; no additional timer/loop.
+   if(care)advanceNativeSurvival(nativePatient,caseData,mode,before,clock);
    refreshMonitoring(nativePatient,clock);
    const ready=studies.advance(nativePatient,clock.clinicalMinute);
    for(const order of ready){
