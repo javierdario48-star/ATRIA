@@ -8,7 +8,9 @@ const allowedReuse=new Set(['src/app/frame-scheduler.js','src/app/lifecycle.js',
  'src/clinical/contextual-study-results.js','src/clinical/anamnesis-intents.js','src/clinical/clinical-clock-487.js',
  'src/clinical/case-completion-487.js',
  // Read-only, verified V4 pharmacology evaluators. Never import V4 HTML patchers.
- 'src/clinical/pharmacology-registry-487.js','src/clinical/pharmacology-outcomes-487.js']);
+ 'src/clinical/pharmacology-registry-487.js','src/clinical/pharmacology-outcomes-487.js',
+ // Pure V4.8.7 mortality gates, previously verified independently. Not wrappers.
+ 'src/clinical/grace-survival-487.js','src/clinical/critical-rescue-487.js']);
 export async function buildV5(output='out-v5'){
  const files=new Map(),queue=['src/v5/app/main.js','src/v5/index.js'];
  while(queue.length){
