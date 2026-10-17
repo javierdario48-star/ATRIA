@@ -1,5 +1,5 @@
 import {csDxSpecificity487,csDxCatalog487,csDxSuggest487} from '../../clinical/diagnostic-impression-487.js';
-import {esc} from './render-content.js';
+import {esc,setHTML} from './render-content.js';
 
 export const DESTINATION_LABELS=Object.freeze({quirofano:'Derivar a quirófano',sala:'Internar en sala',
  observacion:'Dejar en observación',uti:'Derivar a UTI',alta:'Dar el alta',procedimiento:'Derivar a procedimiento'});
@@ -40,7 +40,7 @@ export function createPatientClinicalOverlay({document,window,cases}){
    const html='<button type="button" data-patient-diagnosis aria-label="Editar impresión diagnóstica">'+
     esc(diagnosisBadgeLabel(cases,clinical.patient.diagnosis))+'</button>'+
     '<div class="patient-destinations">'+destinationButtonsHTML(clinical.canEdit===false?[]:clinical.eligibleDestinations,{floating:true})+'</div>';
-   if(root.innerHTML!==html)root.innerHTML=html;
+   setHTML(root,html);
   },
   position(renderer,hudBottom,dockTop,{obscured=false}={}){
    if(!patient||obscured){root.hidden=true;return;}

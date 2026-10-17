@@ -20,10 +20,12 @@
 3. No existía borrado por la autoridad ni impresión flotante con sugerencias globales.
 4. La ficha mostraba todos sus destinos deshabilitados y evaluaba un destino por defecto para todos. Cada opción ahora depende de su evaluación propia.
 5. La primera proyección nueva omitía enfermería en tránsito: podía ofrecer un cierre que el puerto rechazaba. Un test RED con mundo/enfermería espacial reales reproduce el caso; proyección, aviso y cierre comparten ahora el mismo gate físico.
+6. Comparar el HTML serializado por el navegador con el texto fuente recreaba los botones durante actualizaciones idénticas. Se reutilizó `setHTML` para conservar el nodo, el foco y el objetivo del toque. La nueva regresión verifica también que un cambio clínico real sí actualice su texto.
+7. La CI inicial `39073656775` completó APP/CIRR (100/100, 133 XP), pero el nuevo bot de diagnóstico copió un trayecto Pixel cuyo primer toque quedaba detrás del HUD en escritorio. Se corrigió **el recorrido del bot** con pasos cortos y una aserción de que cada toque cae en mapa expuesto; no se utiliza `force`, teletransporte ni mutación clínica. Ambas superficies y todas las comprobaciones diagnósticas siguen obligatorias en la CI siguiente.
 
 ## Evidencia y reproducción
 
-- `npm run test:v5`: **384/384** local, frente a 374 en la base.
+- `npm run test:v5`: **385/385** local, frente a 374 en la base (384 en el primer commit D1, `b6d966e815bf7ca523f3deebb16f3ec05a6f44f4`).
 - `npm run test:v5-core`: **40/40**; builds V5/core/antiguo y frontera arquitectónica aprobados localmente.
 - `node qa/v5/characterize-surgery-native.mjs`: **6/6** escenarios comparados contra el runtime efectivo generado de 4.8.7, incluidos sus wrappers válidos en el orden real y su temporizador original. Coinciden estado, aceptación y texto clínico, sin procedimiento realizado ni cierre inventado. [Resultado y hashes originales](../evidence/d1/surgery-native-parity.json).
 - Nuevas pruebas públicas de navegador en `qa/v5/diagnosis-browser.mjs` para escritorio/Pixel: impresión flotante, tres peritonitis, guardar/borrar/reeditar, Enter durante IME, rechazos y limpieza al salir.

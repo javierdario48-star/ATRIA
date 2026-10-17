@@ -5,10 +5,11 @@ import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
 const out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results',h=await browserHarness(),results=[];
 await fs.mkdir(out,{recursive:true});
+let page,stage='boot';
 try{
  for(const name of ['desktop','pixel']){
   const ctx=await h.browser.newContext(name==='pixel'?h.devices['Pixel 5']:{viewport:{width:1024,height:768}});
-  const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(20000);
+  page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(20000);
   await page.goto(process.env.V5_BROWSER_URL||h.url);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#enterButton').click();await page.locator('#guardButton').click();
   await page.locator('#caseChoice').selectOption('APP-001');await page.locator('[data-action="start-guard"]').click();
@@ -20,12 +21,19 @@ try{
    await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,n);
    await page.locator('#dieInput').blur();
   };
-  for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){
+  // Short visible steps work at BOTH desktop scale and the mobile scale.
+  // The previous copied Pixel route clicked behind the desktop HUD.
+  for(const [x,y] of [[496,1200],[496,1080],[496,960],[496,840],[496,720],[400,580],[250,470],[144,420]]){
+   stage=name+' walk '+x+','+y;
    await page.waitForFunction(()=>{const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;});
    const r=await page.evaluate(()=>atriaV5.diagnostics().renderer);
-   await page.locator('#game').click({position:{x:(x-r.camera.x)*r.scale+r.anchorX,y:(y-r.camera.y)*r.scale+r.anchorY}});
+   const point={x:(x-r.camera.x)*r.scale+r.anchorX,y:(y-r.camera.y)*r.scale+r.anchorY};
+   const hud=await page.locator('#hud').boundingBox(),dock=await page.locator('#chatDock').boundingBox();
+   assert(point.y>hud.y+hud.height+5&&point.y<dock.y-5,'waypoint must be an exposed map touch, never behind HUD/chat');
+   await page.locator('#game').click({position:point});
    await page.waitForFunction(()=>atriaV5.snapshot().player.moving);await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
   }
+  stage=name+' diagnosis and consultation';
   assert.equal(await page.locator('[data-patient-destination]').count(),0);
   await send('Enfermera cirugía');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
   assert.equal((await state()).patient.consults[0].accepted,false);
@@ -59,4 +67,11 @@ try{
  }
  await fs.writeFile(out+'/diagnosis-summary.json',JSON.stringify(results,null,2)+'\n');
  console.log('FLOATING DIAGNOSIS BROWSER PASS',JSON.stringify(results));
+}catch(error){
+ if(page&&!page.isClosed()){
+  await page.screenshot({path:out+'/diagnosis-failure.png'}).catch(()=>{});
+  const snapshot=await page.evaluate(()=>({state:globalThis.atriaV5?.snapshot(),modal:document.querySelector('#modalContent')?.innerText})).catch(()=>null);
+  await fs.writeFile(out+'/diagnosis-failure.json',JSON.stringify({stage,error:String(error),snapshot},null,2)+'\n');
+ }
+ throw error;
 }finally{await h.close();}

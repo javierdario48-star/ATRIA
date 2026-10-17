@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {diagnosisEditorHTML,diagnosisSuggestionsHTML,diagnosisBadgeLabel,destinationButtonsHTML} from './diagnostic-impression.js';
+import {diagnosisEditorHTML,diagnosisSuggestionsHTML,diagnosisBadgeLabel,destinationButtonsHTML,createPatientClinicalOverlay} from './diagnostic-impression.js';
 import {therapyHTML} from './clinical-panels.js';
 const cases=JSON.parse(fs.readFileSync(new URL('../content/cases.json',import.meta.url)));
 
@@ -38,4 +38,16 @@ test('consultation history distinguishes the actual specialist refusal from acce
  assert.match(html,/Aceptada.*Evaluación urgente/s);
  assert.match(html,/Respuesta pendiente/);
  assert(!html.includes('Recepción confirmada · derivación pendiente'));
+});
+test('an unchanged bedside projection preserves its existing buttons despite DOM attribute serialization',()=>{
+ let html='',writes=0;
+ const root={dataset:{},hidden:true};
+ // Browsers serialize a valueless data attribute with an empty string value.
+ Object.defineProperty(root,'innerHTML',{get:()=>html,set:value=>{writes++;html=value.replace('data-patient-diagnosis ','data-patient-diagnosis="" ');}});
+ const overlay=createPatientClinicalOverlay({document:{getElementById:()=>root},window:{},cases});
+ const world={uid:'P1',x:144,y:350},clinical={patient:{uid:'P1',diagnosis:'apendicitis'},eligibleDestinations:[]};
+ overlay.update(world,clinical);overlay.update(world,structuredClone(clinical));
+ assert.equal(writes,1,'an existing focus or pointer target must survive an identical maintenance update');
+ overlay.update(world,{...clinical,patient:{...clinical.patient,diagnosis:'apendicitis aguda'}});
+ assert.equal(writes,2,'changed clinical content still renders');
 });
