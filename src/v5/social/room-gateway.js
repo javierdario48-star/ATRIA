@@ -10,6 +10,8 @@ function command(value){
  if(!valid(value?.id)||typeof value?.text!=='string'||!value.text.trim()||
     value.text.length>500)throw Error('invalid-remote-clinical-command');
  // Never forward actorId, patientUid, claims, role or fabricated clinical receipts.
+ if(value.targetPatientUid!==undefined&&!valid(value.targetPatientUid))
+  throw Error('invalid-remote-patient-selection');
  return {id:value.id,kind:'chat.post',text:value.text,
   ...(value.targetPatientUid?{targetPatientUid:value.targetPatientUid}:{})};
 }
@@ -17,7 +19,7 @@ export function createGuardRelayHost({
  roomId,hostId,authority,transport,authenticateSender
 }={}){
  if(!valid(roomId)||!valid(hostId)||typeof authority?.dispatch!=='function'||
-  typeof authority?.snapshot!=='function'||typeof authenticateSender!=='function')
+  typeof authority?.snapshot!=='function'||typeof authority?.authorize!=='function'||typeof authenticateSender!=='function')
   throw Error('invalid-host-gateway');
  let lastPublished=-1,disposed=false;
  const mailbox=createRoomMailbox({roomId,transport,onMessage:async message=>{
@@ -29,11 +31,8 @@ export function createGuardRelayHost({
    publish();
   }else if(message.kind==='room.resync'){
    const credentials=await authenticateSender(message.senderId);
-   // Ask the room authority to authenticate before sending sensitive state.
-   // Replaying a benign request still must pass current membership checks.
-   const probe=await authority.dispatch({id:'sync-'+message.id,
-    kind:'chat.post',text:'[sync]' },credentials);
-   if(probe.status==='rejected')return;
+   // A read-only resync never creates chat, clinical intents or room ticks.
+   if(!await authority.authorize(credentials))return;
    mailbox.queue('room.snapshot',{room:authority.snapshot()},
     'resync:'+message.senderId+':'+message.id);
   }

@@ -143,6 +143,15 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
   return copy(ack);
  }
  return Object.freeze({
+  /** Side-effect-free membership check for resync and transport admission.
+   * The game backend, not a packet's actorId field, authenticates credentials.
+   */
+  async authorize(credentials){
+   if(disposed)return false;
+   let actor;
+   try{actor=await authenticate(credentials);}catch{return false;}
+   return !disposed&&id(actor?.id)&&memberSet.has(actor.id)&&actor.roomId===roomId;
+  },
   dispatch(envelope,credentials){
    if(disposed)return Promise.resolve(rejection(envelope?.id??null,'authority-disposed'));
    return enqueue(()=>process(envelope,credentials));

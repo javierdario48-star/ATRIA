@@ -80,8 +80,8 @@ test('C21b explicit resync restores room snapshot without executing additional t
  assert.equal(f.drugs.length,1);
  f.guests[0].requestResync('reconnect-1');await f.guests[0].flush();
  await f.host.poll();await f.host.flush();await f.guests[0].poll();
- assert.equal(f.guests[0].snapshot().transcript.length,2,
-  'sync signal is currently a room chat event until resync is separated');
+ assert.equal(f.guests[0].snapshot().transcript.length,1,
+  'resync must NEVER be represented as a clinician chat message');
  assert.equal(f.drugs.length,1);
  f.dispose();
 });
