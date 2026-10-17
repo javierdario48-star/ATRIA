@@ -8,7 +8,7 @@ import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
 import {refreshMonitoring,parseNasalOxygenFlow} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
-import {IV_MEDICINES,isStandardIVMedicine,parseStandardIVDose} from './native-medications.js';
+import {IV_MEDICINES,isStandardIVMedicine,parseIVMedicineDose} from './native-medications.js';
 import {parseCirrDose} from './native-cirr.js';
 import {summarizeIVExposures} from './medication-exposure.js';
 import {createCasePharmacology} from './pharmacology-catalog.js';
@@ -70,7 +70,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    try{
     if(isStandardIVMedicine(intent.id)){
-     parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose);
+     parseIVMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose);
     }
     else if(intent.id==='oxygen')
      parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
@@ -100,7 +100,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     // certified dose/route parsers that it calls, never a new catalog.
     try{
      if(ivMedicine){
-      parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose);
+      parseIVMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose);
      }
      if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
      if(cirrBedside&&intent.id==='espironolactona')
@@ -236,8 +236,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    // A long presentation frame must not jump over an entire allergic episode,
    // its rescue opportunity or fatal exposure. Subdivide ONLY this existing
    // clock/executor path for patients with explicit severe susceptibility.
-   if((nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>x.id==='anticoagulation')||
-     nativePatient.pendingTreatments?.some(x=>x.id==='anticoagulation'))&&deltaRealSeconds>.25){
+   if((nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>['anticoagulation','morphine'].includes(x.id))||
+     nativePatient.pendingTreatments?.some(x=>['anticoagulation','morphine'].includes(x.id)))&&deltaRealSeconds>.25){
     const ready=[];
     for(let elapsed=0;elapsed<deltaRealSeconds-1e-9;elapsed+=.25)
      ready.push(...advance(Math.min(.25,deltaRealSeconds-elapsed),{typing}));

@@ -33,7 +33,7 @@ export function confirmedClinicalMissteps(patient,caseDef){
  const exposures=summarizeIVExposures(patient).byDrug;
  const notes=[];
  for(const event of patient.adverseEvents||[])
-  if(['severe-drug-allergy','anticoagulant-bleeding'].includes(event.kind)&&event.patientUid===patient.uid&&
+  if(['severe-drug-allergy','anticoagulant-bleeding','opioid-respiratory-depression'].includes(event.kind)&&event.patientUid===patient.uid&&
     (patient.administrationLog||[]).some(x=>x.sourceEventId===event.sourceEventId&&x.id===event.drugId))
    notes.push(event.message);
  const traits=caseDef?.pharmacology?.traits||BASE_CASE_PHARMACOLOGY_487[caseDef?.id]||[];

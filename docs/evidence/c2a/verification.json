@@ -1,0 +1,44 @@
+{
+  "schema": "atria.v5.c2a.verification.v1",
+  "sha": "833c8bc0a3f8dc45ce103de7e614bb4dd01e0c54",
+  "v5CI": {
+    "id": 39065136115,
+    "conclusion": "success",
+    "jobs": 4,
+    "v5Tests": 349,
+    "coreTests": 40
+  },
+  "legacyCensus": {
+    "id": 39065136162,
+    "conclusion": "success"
+  },
+  "historical": {
+    "localFullRegression": "success",
+    "nursingChecks": 421,
+    "closureScenarios": 131,
+    "harmScenarios": 39,
+    "knownUnresolvedDiureticScenarios": [
+      "PERI-SEC-001",
+      "CHOLANG-001"
+    ]
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-pntgp6g6r-javierdario4878-7324.vercel.app",
+    "state": "READY",
+    "httpStatus": 200,
+    "all96ManifestFilesMatch": true
+  },
+  "executedIVEntries": 14,
+  "newOriginalFormulations": 9,
+  "appAlternativeClosures": {
+    "regimens": [
+      "piptazo",
+      "imipenem"
+    ],
+    "score": 100,
+    "uniqueXP": 133
+  },
+  "productMultiplayerEnabled": false,
+  "physicalAndroid": false,
+  "protectedSourceChanges": []
+}

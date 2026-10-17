@@ -16,7 +16,7 @@ Unnecessary antimicrobials are assessed from inherited class/case traits rather 
 
 `antimicrobial-execution.test.js` checks 36 actual APP/CIRR×Solo/Aprendiz administrations, all nine exact V4-versus-V5 doses/delivery times/early vital trajectories, two real alternative APP workups through accepted surgical consultation,100/100 closure and133 unique XP, and severe penicillin-class allergy after authentic piptazo delivery. The browser acceptance additionally sends piptazo through the actual spatial nursing queue in desktop/mobile and both local modes.
 
-RED reproduced unimplemented preparations and absent alternative coverage; GREEN implements only the inherited family and shared policy. `test:v5`:349/349; `test:v5-core`:40/40; both builds/boundary/diff checks locally approved. Full historical/remote CI results must be verified for the published SHA before marking this checkpoint complete.
+RED reproduced unimplemented preparations and absent alternative coverage; GREEN implements only the inherited family and shared policy. `test:v5`:349/349; `test:v5-core`:40/40; both builds/boundary/diff checks locally approved. Published code SHA `833c8bc0a3f8dc45ce103de7e614bb4dd01e0c54`: [V5 CI4/4 success](https://github.com/javierdario48-star/ATRIA/actions/runs/39065136115), [legacy F/G/I census success](https://github.com/javierdario48-star/ATRIA/actions/runs/39065136162), full local historical regression success. [Preview verified HTTP200 and all96 manifest hashes](https://night-shift-clinical-pntgp6g6r-javierdario4878-7324.vercel.app). Evidence: `docs/evidence/c2a/verification.json`.
 
 ## Remaining sequence
 

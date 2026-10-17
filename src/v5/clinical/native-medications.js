@@ -1,11 +1,13 @@
 // A small validated formulary. Drug identity, dose and preparation are
 // shared; disease-specific effects remain solely in native case physiology.
 import {HEPARIN_SIM_DOSE_487,csHeparinIssue487} from '../../clinical/urgent-care-487.js';
+import {parseMorphineIVDose487} from './morphine-487.js';
 export const IV_MEDICINES=Object.freeze({
  fluid:Object.freeze({id:'fluid',label:'Cristaloides / reposición de volumen',seconds:.8}),
  ceftriaxone:Object.freeze({id:'ceftriaxone',label:'Ceftriaxona IV',seconds:1.5}),
  metronidazole:Object.freeze({id:'metronidazole',label:'Metronidazol IV',seconds:1.5}),
  furosemide:Object.freeze({id:'furosemide',label:'Furosemida IV',seconds:1.5}),
+ morphine:Object.freeze({id:'morphine',label:'Morfina IV',seconds:.55}),
  imipenem:Object.freeze({id:'imipenem',label:'Imipenem IV',seconds:1.5}),
  ceftazidime:Object.freeze({id:'ceftazidime',label:'Ceftazidima IV',seconds:.55}),
  cefoperazone:Object.freeze({id:'cefoperazone',label:'Cefoperazona IV',seconds:.55}),
@@ -18,6 +20,12 @@ export const IV_MEDICINES=Object.freeze({
  anticoagulation:Object.freeze({id:'anticoagulation',label:'Heparina IV',seconds:1.5,dose:HEPARIN_SIM_DOSE_487})
 });
 export const isStandardIVMedicine=id=>Object.hasOwn(IV_MEDICINES,id);
+// One dose dispatcher for compound preflight, physical nursing and execution.
+// Morphine has a validated range in the original final wrapper, rather than a
+// fixed 4mg reference; medical excess within that range is allowed to execute.
+export function parseIVMedicineDose(id,text,reference){
+ return id==='morphine'?parseMorphineIVDose487(text,reference):parseStandardIVDose(text,reference);
+}
 export function parseStandardIVDose(text,reference){
  if(reference===HEPARIN_SIM_DOSE_487){
   const issue=csHeparinIssue487(text);
@@ -60,7 +68,7 @@ export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected})
   const id=cmd.intent.id;
   if(cmd.intent.kind!=='therapy.request'||!isStandardIVMedicine(id))return null;
   let dose;
-  try{dose=parseStandardIVDose(cmd.intent.clause||cmd.intent.sourceText,doses?.[id]??IV_MEDICINES[id]?.dose);}
+  try{dose=parseIVMedicineDose(id,cmd.intent.clause||cmd.intent.sourceText,doses?.[id]??IV_MEDICINES[id]?.dose);}
   catch(error){return rejected(cmd,error.message,'Dosis o vía IV no validada. No administrado.');}
   // A fresh clinical order is another exposure, even to the same drug.
   // Only replay of the SAME eventId may share an execution (room authority

@@ -9,6 +9,7 @@ const files=[
  'src/v5/clinical/exam-contract.js',
  'src/v5/clinical/nursing-access-plan.js',
  'src/v5/clinical/native-medications.js',
+ 'src/v5/clinical/morphine-487.js',
  'src/v5/core/room-authority.js',
  'src/v5/core/replica.js',
  'src/v5/adapters/native-clinical-port.js',

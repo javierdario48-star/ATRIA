@@ -602,7 +602,8 @@ test('C11b valid first drug or IV cannot execute before a later invalid compound
  for(const [id,text] of [
   ['fluid-dose','Enfermera Ringer 500 ml y ceftriaxona 2 g'],
   ['other-dose','Enfermera dos vias, Ringer 300 ml y monitor'],
-  ['unsupported','Enfermera monitor y morfina 4 mg'],
+  ['unsupported','Enfermera monitor y vasopresor'],
+  ['opioid-route','Enfermera monitor y morfina 4 mg oral'],
   ['oxygen-device','Enfermera monitor y oxigeno mascara 4 L/min']
  ]){
   const ack=await f.session.post({id,text});
@@ -626,6 +627,29 @@ test('C11b valid compound still creates real native access and independent medic
  assert.equal(order.routeError,null);
  assert.equal(f.world.nurseJourneySnapshot().length,1);
  f.session.dispose();f.world.enterLobby();
+});
+
+test('C2b monitor plus morphine retains automatic IV, real nurse travel and exactly one administration',async()=>{
+ const f=fixture('CIRR-001'),request={id:'opioid-combo',text:'Enfermera monitor y morfina 12 mg IV'};
+ try{
+  const ack=await f.session.post(request);
+  assert.equal(ack.routeError,null);
+  assert.deepEqual(ack.clinical.map(x=>[x.id,x.status]),[['iv','pending'],['monitor','pending'],['morphine','pending']]);
+  assert.equal(f.session.read().patient.administrationLog.length,0);
+  for(let i=0;i<3600;i++){
+   f.world.step(1/60);f.session.finishNurseArrivals();f.session.advance(1/60);
+   if(f.session.read().patient.administrationLog.length===1&&f.session.read().patient.procedures.monitor?.connected)break;
+  }
+  await f.session.flush();
+  const p=f.session.read().patient;
+  assert.equal(p.venousAccessCount,1);assert.equal(p.administrationLog.length,1);
+  assert.equal(p.administrationLog[0].id,'morphine');assert.equal(p.administrationLog[0].dose.amount,12);
+  assert(f.world.nurseJourneySnapshot().every(x=>x.stage==='confirmed'));
+  const journeys=f.world.nurseJourneySnapshot().length;
+  await f.session.post(request);f.session.advance(2);await f.session.flush();
+  assert.equal(f.world.nurseJourneySnapshot().length,journeys);
+  assert.equal(f.session.read().patient.administrationLog.length,1);
+ }finally{f.session.dispose();f.world.enterLobby();}
 });
 
 test('C11b single invalid medication keeps its precise native rejection',async()=>{

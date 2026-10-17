@@ -162,7 +162,7 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
    const patient=byPatient.get(patientUid),key=patientUid+':'+sourceEventId+':'+kind;
    if(disposed||!patient||patient.closed||complications.has(key)||
      typeof sourceEventId!=='string'||!sourceEventId||sourceEventId.length>512||
-     !['severe-drug-allergy','anticoagulant-bleeding'].includes(kind)||
+     !['severe-drug-allergy','anticoagulant-bleeding','opioid-respiratory-depression'].includes(kind)||
      !Number.isFinite(atNativeMinute)||atNativeMinute<0||
      typeof message!=='string'||!message||message.length>600)return false;
    complications.add(key);

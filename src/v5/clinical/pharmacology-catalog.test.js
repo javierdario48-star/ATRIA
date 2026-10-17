@@ -14,10 +14,11 @@ const baseVitals=c=>{const [sys,dia]=c.vitals.bp.split('/').map(Number);
 const fresh=(c,uid='P1')=>({uid,caseId:c.id,liveVitals:baseVitals(c),
  administrationLog:[],treatments:[],pendingTreatments:[],phys:{sourceControlled:false}});
 const give=(p,id,atNativeMinute,seq=1,action)=>{
- const dose=id==='oxygen'?{amount:4,unit:'L/min'}:{amount:500,unit:'mg'};
+ const dose=id==='oxygen'?{amount:4,unit:'L/min'}:{amount:id==='morphine'?4:500,unit:'mg'};
  const row={id,patientUid:p.uid,sourceEventId:'tx-'+seq,administeredAtNativeMinute:atNativeMinute,
   dose,...(action?{action}:{})};
  p.administrationLog.push(row);
+ if(id==='morphine')p.treatments.push(structuredClone(row));
  return row;
 };
 test('C12d all 30 global items and every existing case compile from inherited pure registry',()=>{

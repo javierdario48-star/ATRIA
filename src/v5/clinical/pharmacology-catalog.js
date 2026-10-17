@@ -7,11 +7,13 @@ import {PHARMA_RULES_487,BASE_CASE_PHARMACOLOGY_487,
 import {csPharmOutcomes487} from '../../clinical/pharmacology-outcomes-487.js';
 import {medicationSafety487,matchesMedicationAllergy487} from './medication-safety-487.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
+import {confirmedMorphineResponse487} from './morphine-487.js';
 
 const clone=x=>structuredClone(x);
 const VITALS=['temp','hr','rr','sys','dia','spo2'];
 const zero=()=>Object.fromEntries(VITALS.map(x=>[x,0]));
 const valid=x=>typeof x==='string'&&x.length>0&&x.length<=160;
+const validEvent=x=>typeof x==='string'&&x.length>0&&x.length<=512;
 const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 
 // The historical native evaluator has no certified rule for anticoagulation.
@@ -25,9 +27,9 @@ const REVIEW_ONLY=Object.freeze({
 });
 const OWNER=Object.freeze({
  'APP-001':Object.freeze({fluid:['sys','dia','hr','rr'],oxygen:['spo2'],
-  furosemide:['sys','dia','hr','rr','spo2']}),
+  furosemide:['sys','dia','hr','rr','spo2'],morphine:VITALS}),
  'CIRR-001':Object.freeze({fluid:['rr','spo2'],oxygen:['spo2'],
-  paracentesis_ter:['rr'],furosemide:['sys','dia','hr','rr','spo2']})
+  paracentesis_ter:['rr'],furosemide:['sys','dia','hr','rr','spo2'],morphine:VITALS})
 });
 function checkRule(id,rule){
  if(REVIEW_ONLY[id])return;
@@ -68,7 +70,7 @@ function normalizedPatient(p,c,atNativeMinute){
  checkVitals(p.liveVitals);
  const seen=new Set(),latest=new Map(),log=[];
  for(const row of p.administrationLog||[]){
-  if(!valid(row?.sourceEventId)||row.patientUid!==p.uid||
+  if(!validEvent(row?.sourceEventId)||row.patientUid!==p.uid||
    seen.has(row.sourceEventId))throw Error('invalid or duplicate confirmed administration');
   seen.add(row.sourceEventId);
   if(!Number.isFinite(row.administeredAtNativeMinute)||row.administeredAtNativeMinute<0||
@@ -99,13 +101,17 @@ function normalizedPatient(p,c,atNativeMinute){
 }
 function evaluate(c,p,atNativeMinute,catalog){
  const {legacyPatient,latest}=normalizedPatient(p,c,atNativeMinute),rows=[];
+ const opioid=confirmedMorphineResponse487(p,c,atNativeMinute);
  for(const item of catalog){
   const id=item.id,rule=item.rule,last=latest.get(id);
   const received=!!last&&last.action!=='stop';
   const minutes=received?Math.max(0,atNativeMinute-last.administeredAtNativeMinute):0;
-  const changes=rule.mechanism==='unmodeled'?{known:false,offsets:zero(),
+  let changes=rule.mechanism==='unmodeled'?{known:false,offsets:zero(),
    warnings:['needs-reviewed-effect'],phase:0,beneficial:false}:
    csPharmResponse487(id,c,legacyPatient,minutes,p.liveVitals);
+  if(id==='morphine')changes={...changes,offsets:opioid?.offsets??zero(),
+   phase:clamp(opioid?.load??0,0,1),beneficial:(opioid?.analgesia??0)>0,
+   warnings:[...changes.warnings,...(opioid?.respiratoryRisk?['opioid-respiratory-depression-risk']:[])]};
   if(!changes.known&&rule.mechanism!=='unmodeled')throw Error('missing inherited drug evaluation '+id);
   const {scale,warnings}=caseModifiers(c,id),ownedAxes=OWNER[c.id]?.[id]||[];
   // A native case-specific writer keeps its already verified axes. This is a
@@ -116,7 +122,7 @@ function evaluate(c,p,atNativeMinute,catalog){
    clamp(changes.offsets[axis]*scale,-50,50)]));
   const safety=medicationSafety487(c,p,id);
   rows.push({id,classId:rule.classId,route:rule.route,mechanism:rule.mechanism,
-   model:rule.mechanism==='unmodeled'?'review-only':'legacy-general',
+   model:id==='morphine'?'legacy-morphine-487':rule.mechanism==='unmodeled'?'review-only':'legacy-general',
    state:!last?'not-administered':last.action==='stop'?'stopped':'confirmed',
    sourceEventId:last?.sourceEventId??null,elapsedNativeMinutes:minutes,
    phase:received?changes.phase:0,beneficial:received&&changes.beneficial,
@@ -124,14 +130,20 @@ function evaluate(c,p,atNativeMinute,catalog){
    safety:{blocked:safety.blocked,contraindicated:safety.contraindicated,reason:safety.reason,
     nephrotoxic:safety.classifiedAsNephrotoxic,cautions:[...safety.cautions]},
    ownedAxes:[...ownedAxes],rawOffsets:received?rawOffsets:zero(),
-   candidateOffsets:received?offsets:zero()});
+   candidateOffsets:received?offsets:zero(),...(id==='morphine'?{kinetics:clone(opioid)}:{})});
  }
+ // Replace the old indefinite opioid strength in the virtual pain index with
+ // the recovered, dose-dependent analgesia. The original .65 index coefficient
+ // remains a game outcome; it is never a pain score measured from the patient.
+ const outcomePatient={...legacyPatient,monitorTherapies:new Map(legacyPatient.monitorTherapies)};
+ outcomePatient.monitorTherapies.delete('morphine');
+ const outcomes=csPharmOutcomes487(c,outcomePatient,
+  catalog.filter(x=>x.rule.mechanism!=='unmodeled').map(x=>({id:x.id,pharmacology:{...x.rule}})));
+ if(opioid)outcomes.painIndex=clamp(outcomes.painIndex-.65*opioid.analgesia,0,1);
+ outcomes.noActiveTherapy=!legacyPatient.monitorTherapies.size;
  return {caseId:c.id,patientUid:p.uid,atNativeMinute,
   profile:clone(csCasePharmProfile487(c)),
-  outcomes:clone(csPharmOutcomes487(c,legacyPatient,
-   catalog.filter(x=>x.rule.mechanism!=='unmodeled').map(x=>({
-    id:x.id,pharmacology:{...x.rule}
-   })))),
+  outcomes:clone(outcomes),
   drugs:rows};
 }
 /** Compile once per game data set, not once per paint frame.
