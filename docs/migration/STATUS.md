@@ -60,7 +60,7 @@ ATRIA es un RPG de simulación médica con libertad para **equivocarse**: las de
 | C18 | Guardia continua multi-paciente | PENDIENTE |
 | C19 | Carrera, niveles, XP, persistencia | PENDIENTE |
 | C20 | Lobby social, amigos, salas | **PARCIAL C20.a**: directorio autorizado de presencia y movimiento, búsqueda espacial, invitaciones, grupos y ciclo de guardia 2–4, sesiones/expiración/reconexión. Probado 600 actores virtuales sin construir red; amigos/presencia pública real/servidor WebSocket aún PENDIENTES. [C20.a](STEP_20A_HANDOFF.md) |
-| C21 | Chat global, remotos, reconexión | **PARCIAL contratos**: `room-authority` y pruebas integradas C20.a para chat único, miembros autenticados, reintentos y aislamiento. Transporte efectivo, replicación remota, cámara remota y reingreso por conexión PENDIENTES |
+| C21 | Chat global, remotos, reconexión | **PARCIAL C21.a/b**: adaptador HTTP de mensajes de sala, mailbox con retransmisión/ACK, detección de gap y dedupe; gateway host clínico único y clientes solo lectura, autenticación y resync sin chat falso. Pruebas Node 2–4, pero **transporte desplegado durable, múltiples navegadores, presencia/movimiento, reingreso y UI online todavía PENDIENTES**. [C21](STEP_21_HANDOFF.md) |
 | C22 | Cooperativo 2–4 clientes | **PARCIAL autoridad**: C20.a pasa 2/3/4 actores autenticados sobre un solo puerto clínico, con intervenciones simultáneas; falta UI real, transporte y navegador multipestaña/multidispositivo |
 | C23 | Competitivo 2–4 clientes | **PARCIAL autoridad**: propietario único por primera interacción nativa válida y rivales observadores, chat global común; falta UI real, transporte y pruebas multipestaña/multidispositivo |
 | C24 | Optimización y Android/iOS físico | PENDIENTE |
