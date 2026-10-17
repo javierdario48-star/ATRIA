@@ -53,6 +53,28 @@ try{
  const after=(await h.snapshot())[0];
  const noMistakenDose=after.administrations.filter(x=>x.id==='fluid').length===count;
  record('negative nurse sentence',{pass:noMistakenDose});
+ // Explore the ORIGINAL visible native click targets without manufacturing
+ // clinical state. Record missing/blocked buttons explicitly, not as passes.
+ for(const [id,label] of [
+  ['csActionsBtn','clinical-actions'],['csDxBadge487','diagnostic-impression'],
+  ['nsWardBtn','ward-reception'],['nsMenuBtn','game-menu'],
+  ['chatLogBtn','chat-history'],['nsPlayerProfile','player-profile']
+ ]){
+  const locator=host.locator('#'+id);
+  if(!(await locator.count())){record('legacy-button:'+label,{status:'not-present'});continue;}
+  try{
+   await locator.click({timeout:2500});
+   await host.waitForTimeout(180);
+   evidence.cases.push(await discover(host,'expanded-'+label));
+   record('legacy-button:'+label,{pass:true,
+    visibleAfter:evidence.cases.at(-1).buttons.length});
+   await host.keyboard.press('Escape');
+  }catch(e){
+   record('legacy-button:'+label,{pass:false,
+    note:String(e.message||e).slice(0,180)});
+   try{await host.keyboard.press('Escape');}catch{}
+  }
+ }
  evidence.errors.push(...h.errors);
  const all=evidence.cases.flatMap(s=>s.buttons);
  const unique=new Map(all.map(x=>[(x.id||x.action||x.label)+'|'+x.tag,x]));
