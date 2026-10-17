@@ -29,6 +29,8 @@ jobs:
         run: node qa/v5/characterize-app-native.mjs
       - name: Original surgical requests, delayed refusals and corrected acceptance remain equivalent
         run: node qa/v5/characterize-surgery-native.mjs
+      - name: Original special support doses, respiratory harm, infusion titration and withdrawal remain equivalent
+        run: node qa/v5/characterize-special-support-native.mjs
       - name: Executable V4 clinical harm-and-exposure parity gate (QA-only)
         run: node qa/v5/clinical-parity-gate.mjs
       - name: Contrast rapid iatrogenic fluid response against untreated legacy control
@@ -88,6 +90,11 @@ jobs:
         run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
       - name: Build the game without historical HTML
         run: npm run build:v5
+      - name: Real albumin, blood, amphotericin and pressor receipts through spatial nursing in desktop and Pixel
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/special-support-browser.mjs
       - name: Desktop, Android emulation, landscape, transitions, IME and disposal
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright

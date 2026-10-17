@@ -52,6 +52,40 @@ test('handoff choices and nurse readiness wait for the same real bedside jobs as
  const closed=await send('/disposicion observacion');assert.equal(closed.clinical[0].status,'executed');
  f.session.dispose();f.world.enterLobby();
 });
+test('special formulations share real cannulation, bedside preparation and confirmed infusion stop',async()=>{
+ const f=fixture('CIRR-001');
+ const order='Enfermera monitor y albumina 1.5 g/kg y transfusion 1 unidad y anfotericina 0.7 mg/kg IV y noradrenalina 0.05 mcg/kg/min IV';
+ const ack=await f.session.post({id:'special',text:order});
+ assert.deepEqual(ack.clinical.map(x=>[x.id,x.status]),[
+  ['iv','pending'],['monitor','pending'],['albumin','pending'],['transfusion','pending'],['amphotericin','pending'],['vasopressor','pending']]);
+ f.session.advance(5);await f.session.flush();
+ assert.equal(f.session.read().patient.venousAccessCount,0);
+ assert.equal(f.session.read().patient.administrationLog.length,0,'elapsed time cannot manufacture bedside arrival');
+ for(let i=0;i<3600&&f.session.read().patient.administrationLog.length<4;i++){
+  f.world.step(1/60);f.session.finishNurseArrivals();f.session.advance(1/60);
+ }
+ await f.session.flush();const p=f.session.read().patient;
+ assert.equal(p.venousAccessCount,1);assert.equal(p.procedures.monitor.connected,true);
+ assert.deepEqual(p.administrationLog.map(x=>[x.id,x.dose.amount,x.dose.unit]),[
+  ['albumin',1.5,'g/kg'],['transfusion',1,'unidad'],['amphotericin',.7,'mg/kg'],['vasopressor',.05,'µg/kg/min']]);
+ assert.equal(p.orders.length,0,'a real albumin infusion never orders a hepatogram');
+ assert(f.world.nurseJourneySnapshot().every(x=>x.stage==='confirmed'));
+ const stop=await f.session.post({id:'stop-special',text:'Enfermera suspender noradrenalina'});
+ assert.equal(stop.clinical[0].status,'pending');
+ f.session.advance(3);await f.session.flush();
+ assert.equal(f.session.read().patient.procedures.vasopressor.active,true,'pending transport must preserve active infusion');
+ for(let i=0;i<1800&&f.session.read().patient.procedures.vasopressor.active;i++){
+  f.world.step(1/60);f.session.finishNurseArrivals();f.session.advance(1/60);
+ }
+ await f.session.flush();
+ const final=f.session.read().patient,last=final.administrationLog.at(-1);
+ assert.equal(final.procedures.vasopressor.active,false);assert.equal(last.action,'stop');
+ assert.equal(last.sourceEventId,'C08-B1:doctor:stop-special:0');
+ assert.equal(last.dose,undefined);assert.equal(final.administrationLog.length,5);
+ assert.equal(f.session.read().exposure.byDrug.vasopressor.administrations,1);
+ assert(f.events.some(x=>x.type==='clinical.completed'&&x.eventId===last.sourceEventId&&x.clinical[0].receipt.action==='stop'));
+ f.session.dispose();f.world.enterLobby();
+});
 test('C08b monitor is not connected until real bed arrival and one native receipt',async()=>{
  const f=fixture('CIRR-001');
  const ack=await f.session.post({id:'monitor',text:'Enfermera monitor'});

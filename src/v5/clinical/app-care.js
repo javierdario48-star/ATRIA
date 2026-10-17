@@ -44,8 +44,9 @@ export function createAppCare(p,c,{mode,defaultDoses,progress,cases}){
   receipt:{eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,...data}});
  const proof=(cmd,t,reused=false)=>executed(cmd,{therapyId:t.id,sourceEventId:t.sourceEventId,
   dose:copy(t.dose),administeredAtRealSecond:t.administeredAtRealSecond,
+  ...(t.action?{action:t.action,route:t.route,previousDose:copy(t.previousDose)}:{}),
   administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
-  message:(reused?'Ya confirmado por la orden original: ':t.id==='npo'?'Conducta registrada: ':'Administración confirmada: ')+t.label+
+  message:(reused?'Ya confirmado por la orden original: ':t.action==='stop'?'Suspensión confirmada: ':t.id==='npo'?'Conducta registrada: ':'Administración confirmada: ')+t.label+
    (t.dose?' · '+t.dose.display:'')+'.'});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,

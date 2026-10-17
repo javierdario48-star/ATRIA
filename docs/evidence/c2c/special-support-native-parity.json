@@ -1,0 +1,866 @@
+{
+  "schema": "atria-c2c-native-support-parity/v1",
+  "testOnly": true,
+  "allMatched": true,
+  "reference": "effective apply487 native runtime including nursing, morphine and final urgent-care wrappers; experimental PHARMA owner not installed",
+  "sourceHashes": [
+    {
+      "id": "qa-native-nursing",
+      "sha256": "ce45bf3cbaaca402ba225782ca11d8c8393fb511a1ed69b8b147172d6c4f4827"
+    },
+    {
+      "id": "native-normalization",
+      "sha256": "aec25bd006bcf26b01bbd9b8ef8996033c44860f4156752538c3a17958ecf3bd"
+    },
+    {
+      "id": "native-case-lookup",
+      "sha256": "2e9d160438155436df9965fa1d5c4d0106afbb780782cd679e8792553e89a217"
+    },
+    {
+      "id": "native-initial-state",
+      "sha256": "fd6e26acf90f429d551733fdf5c6fbb43c91fcec5886787137e558101211599f"
+    },
+    {
+      "id": "native-therapy",
+      "sha256": "2cdc142f1f01e4fbd12104809b362295abf79fd8cefb7ee0f450798d18d15fd7"
+    },
+    {
+      "id": "native-order-intervention",
+      "sha256": "f0856324742f3cc938279b993a6622774dd7d4885c35019a5d41906e49d11fe3"
+    },
+    {
+      "id": "native-tick",
+      "sha256": "8f029c94159b995bda2b007ce59dbf94881cdf83d171d67ebfb8f169d406bcae"
+    },
+    {
+      "id": "native-fatal-exposure",
+      "sha256": "190925d14bcde87661c6a66d3a14d1c3501ee29550c32b1babc52cfce6a2519c"
+    },
+    {
+      "id": "cs-safe-v0180-clinical",
+      "sha256": "e2c28b6a9a1346418057c48ecf9c98779e6e95b364cf85531b0b19eabc585cc8"
+    },
+    {
+      "id": "cs-safe-v0190-clinical",
+      "sha256": "506338a0a8ee0e14d2050904c60dd32e1dbbfd5ed0c4dfc6aad404b62cec83a0"
+    },
+    {
+      "id": "cs-safe-v0203-binding",
+      "sha256": "bb5c37ac43ec08854ea95b8f4fbd08ea7738b44f6e03e75271fe523d6eecf003"
+    },
+    {
+      "id": "cs-rebase174-v3-clinical",
+      "sha256": "4c0c471761db2fcdc81a5d01aab4a77e0588e97d03ba7ad75e419da88b3a5fdd"
+    },
+    {
+      "id": "atria-phase4-composite-orders",
+      "sha256": "1a8486362d5a2148283bad01aeaa90f971cecf8b33593de4716b691edafd9795"
+    },
+    {
+      "id": "atria-phase7-nursing-receipts",
+      "sha256": "1f51be923832b983292032b18c194986935f6c5693114bf0544b101faac2da84"
+    },
+    {
+      "id": "atria-peritonitis-487-disposition",
+      "sha256": "214a322dc763e9567161bfc490d5b4ee03ee70bc17f39873534279ca5e3f187a"
+    },
+    {
+      "id": "atria-surgical-nursing-487",
+      "sha256": "948707d387260248f03b8aaacd1f12c155f1f5dfc275c0c9eea3770d407e60be"
+    },
+    {
+      "id": "atria-nurse-voice-routing-487",
+      "sha256": "830041ecd7091b0a0b509c541ce2b7b0eae2c808505d56badc483dd98d175e94"
+    },
+    {
+      "id": "atria-nurse-execution-487",
+      "sha256": "c017bb1c6c0ea221e7c20b7c09607e1174b9b168460dab6b44cbaaeb398a0266"
+    },
+    {
+      "id": "atria-manual-monitor-iv-487",
+      "sha256": "f203b30c4d88d6f146ecfca6d7e625802d63541ade9500bb5436d2dc6ef86d5e"
+    },
+    {
+      "id": "atria-grace-survival-487",
+      "sha256": "3394d71b1ce04dcd728af6cd1e5d0bd2d2819ffcd50f50dfd91e7160092a0484"
+    },
+    {
+      "id": "atria-secondary-sepsis-bridge-487",
+      "sha256": "c64b8ff301f891d0bd987d18c3b3e28139185db3b5eb2a0822df517782ca6f2f"
+    },
+    {
+      "id": "atria-critical-rescue-487",
+      "sha256": "f16c3caf80dd101d6ae8951d6757bb9d8ae75b6621a59aa6998df4cf9dba3a04"
+    },
+    {
+      "id": "atria-verified-clinical-chat-487",
+      "sha256": "9e2a822db648c4df1e869e17686830e3c8121758544e74e52eb028753d8ff095"
+    },
+    {
+      "id": "atria-case-aware-pharmacology-487",
+      "sha256": "62837cdbd5d84e9f03aec07333703d547e8b6220ac5d9aa5737eaa66b6ccc747"
+    },
+    {
+      "id": "cs-v412-monitor-recognition",
+      "sha256": "c345996f3cb888fb1d75952203ba9f13709e7ecad0f8e7827adf40c33382d6c1"
+    },
+    {
+      "id": "ns421-clinical-state",
+      "sha256": "f83b849ecb18bc224c5d45fc742a06d978755a8e7a7ccfd0226f3ed23b2a6cbd"
+    },
+    {
+      "id": "ns422-treatment-context",
+      "sha256": "31ed6e0d9bfd1da23a88653b916a3c5e387409d2c80ee3fb7de785ce02805901"
+    },
+    {
+      "id": "ns423-evolution",
+      "sha256": "f8c8f30ca9985b3913f49890130f6088e2f66f35bd8925702d21357ecb047b5f"
+    },
+    {
+      "id": "atria-morphine-487",
+      "sha256": "de6ffc1c8774951e6fc5bc7a382b85b8e59ce12c2a128712ad115932d0fb90c2"
+    },
+    {
+      "id": "atria-urgent-care-487",
+      "sha256": "16e189b07143c970bf6b37c3b07ce5df65101caac86b1a5b3085c6ef01c5a88c"
+    },
+    {
+      "id": "atria-case-completion-487",
+      "sha256": "e8bcf739e7fa8ecc6d126b87da8cde0f921267babeddf0cf1d7fc08a1369742f"
+    }
+  ],
+  "scope": "APP/CIRR physiological owners; other case executors and peritonitis immediate volume/renal state remain C3",
+  "intentionalCorrections": [
+    "explicit albumin g/kg is medication instead of a hepatogram",
+    "amphotericin receipt retains mg/kg"
+  ],
+  "scenarios": [
+    {
+      "caseId": "APP-001",
+      "id": "albumin",
+      "legacy": {
+        "receipt": {
+          "m": 0.09599999999999999,
+          "id": "albumin",
+          "label": "Albúmina IV",
+          "doseDisplay": "1.5 g/kg",
+          "defaultApplied": false,
+          "raw": "albumina 1.5 g/kg",
+          "count": 1
+        },
+        "dose": {
+          "defaultApplied": false,
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg"
+        }
+      },
+      "migrated": {
+        "id": "albumin",
+        "label": "Albúmina IV",
+        "dose": {
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "support-parity:doctor:2:0",
+        "actorId": "doctor",
+        "patientUid": "P",
+        "route": "iv",
+        "administeredAtRealSecond": 0.8,
+        "administeredAtNativeMinute": 0.096
+      },
+      "expected": {
+        "temp": 0,
+        "hr": -3,
+        "rr": 0,
+        "sys": 5,
+        "dia": 3,
+        "spo2": 0
+      },
+      "actual": {
+        "temp": 0,
+        "hr": -3,
+        "rr": 0,
+        "sys": 5,
+        "dia": 3,
+        "spo2": 0
+      },
+      "legacyVitals": {
+        "temp": 38.1,
+        "hr": 105.01337272829603,
+        "rr": 20,
+        "sys": 122.97771211950653,
+        "dia": 74.98662727170397,
+        "spo2": 98
+      },
+      "v5Vitals": {
+        "temp": 38.1,
+        "hr": 105.01337272829608,
+        "rr": 20,
+        "sys": 122.97771211950652,
+        "dia": 74.98662727170392,
+        "spo2": 98
+      },
+      "drift": {
+        "temp": 0,
+        "hr": 4.263256414560601e-14,
+        "rr": 0,
+        "sys": -1.4210854715202004e-14,
+        "dia": -4.263256414560601e-14,
+        "spo2": 0
+      }
+    },
+    {
+      "caseId": "APP-001",
+      "id": "transfusion",
+      "legacy": {
+        "receipt": {
+          "m": 0.3120000000000008,
+          "id": "transfusion",
+          "label": "Transfusión",
+          "doseDisplay": "2 unidades",
+          "defaultApplied": false,
+          "raw": "transfusion 2 unidades",
+          "count": 1
+        },
+        "dose": {
+          "defaultApplied": false,
+          "amount": 2,
+          "unit": "unidad",
+          "display": "2 unidades"
+        }
+      },
+      "migrated": {
+        "id": "transfusion",
+        "label": "Transfusión",
+        "dose": {
+          "amount": 2,
+          "unit": "unidad",
+          "display": "2 unidades",
+          "defaultApplied": false
+        },
+        "sourceEventId": "support-parity:doctor:2:0",
+        "actorId": "doctor",
+        "patientUid": "P",
+        "route": "iv",
+        "administeredAtRealSecond": 2.6,
+        "administeredAtNativeMinute": 0.31200000000000006
+      },
+      "expected": {
+        "temp": 0,
+        "hr": -9,
+        "rr": 0,
+        "sys": 10,
+        "dia": 5,
+        "spo2": 0
+      },
+      "actual": {
+        "temp": 0,
+        "hr": -9,
+        "rr": 0,
+        "sys": 10,
+        "dia": 5,
+        "spo2": 0
+      },
+      "legacyVitals": {
+        "temp": 38.1,
+        "hr": 99.07967890805058,
+        "rr": 20,
+        "sys": 127.91146787994388,
+        "dia": 76.95573393997194,
+        "spo2": 98
+      },
+      "v5Vitals": {
+        "temp": 38.1,
+        "hr": 99.07967890805051,
+        "rr": 20,
+        "sys": 127.91146787994388,
+        "dia": 76.95573393997194,
+        "spo2": 98
+      },
+      "drift": {
+        "temp": 0,
+        "hr": -7.105427357601002e-14,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      }
+    },
+    {
+      "caseId": "APP-001",
+      "id": "vasopressor",
+      "legacy": {
+        "receipt": {
+          "m": 0.09599999999999999,
+          "id": "vasopressor",
+          "label": "Noradrenalina / vasopresor",
+          "doseDisplay": "1 µg/kg/min",
+          "defaultApplied": false,
+          "raw": "noradrenalina 1 mcg/kg/min IV",
+          "count": 1
+        },
+        "dose": {
+          "defaultApplied": false,
+          "amount": 1,
+          "unit": "µg/kg/min",
+          "display": "1 µg/kg/min"
+        }
+      },
+      "migrated": {
+        "id": "vasopressor",
+        "label": "Noradrenalina IV",
+        "dose": {
+          "amount": 1,
+          "unit": "µg/kg/min",
+          "display": "1 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "support-parity:doctor:2:0",
+        "actorId": "doctor",
+        "patientUid": "P",
+        "route": "iv",
+        "administeredAtRealSecond": 0.8,
+        "action": "start",
+        "moleculeId": "norepinephrine",
+        "administeredAtNativeMinute": 0.096
+      },
+      "expected": {
+        "temp": 0,
+        "hr": 14,
+        "rr": 0,
+        "sys": 52,
+        "dia": 30,
+        "spo2": 0
+      },
+      "actual": {
+        "temp": 0,
+        "hr": 14,
+        "rr": 0,
+        "sys": 52,
+        "dia": 30,
+        "spo2": 0
+      },
+      "legacyVitals": {
+        "temp": 38.1,
+        "hr": 121.9375939346183,
+        "rr": 20,
+        "sys": 169.7682060428681,
+        "dia": 101.86627271703921,
+        "spo2": 98
+      },
+      "v5Vitals": {
+        "temp": 38.1,
+        "hr": 121.9375939346183,
+        "rr": 20,
+        "sys": 169.768206042868,
+        "dia": 101.86627271703924,
+        "spo2": 98
+      },
+      "drift": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": -8.526512829121202e-14,
+        "dia": 2.842170943040401e-14,
+        "spo2": 0
+      }
+    },
+    {
+      "caseId": "APP-001",
+      "id": "amphotericin",
+      "legacy": {
+        "receipt": {
+          "m": 0.1800000000000002,
+          "id": "amphotericin",
+          "label": "Anfotericina B IV",
+          "doseDisplay": "0.7 mg",
+          "defaultApplied": false,
+          "raw": "anfotericina 0.7 mg/kg IV",
+          "count": 1
+        },
+        "dose": {
+          "defaultApplied": false,
+          "amount": 0.7,
+          "unit": "mg",
+          "display": "0.7 mg"
+        }
+      },
+      "migrated": {
+        "id": "amphotericin",
+        "label": "Anfotericina B IV",
+        "dose": {
+          "amount": 0.7,
+          "unit": "mg/kg",
+          "display": "0.7 mg/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "support-parity:doctor:2:0",
+        "actorId": "doctor",
+        "patientUid": "P",
+        "route": "iv",
+        "administeredAtRealSecond": 1.5,
+        "administeredAtNativeMinute": 0.18
+      },
+      "expected": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      },
+      "actual": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      },
+      "legacyVitals": {
+        "temp": 38.1,
+        "hr": 108,
+        "rr": 20,
+        "sys": 118,
+        "dia": 72,
+        "spo2": 98
+      },
+      "v5Vitals": {
+        "temp": 38.1,
+        "hr": 108,
+        "rr": 20,
+        "sys": 118,
+        "dia": 72,
+        "spo2": 98
+      },
+      "drift": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      },
+      "intentionalCorrection": "original receipt lost /kg; V5 retains the prescribed mg/kg"
+    },
+    {
+      "caseId": "CIRR-001",
+      "id": "albumin",
+      "legacy": {
+        "receipt": {
+          "m": 0.09599999999999999,
+          "id": "albumin",
+          "label": "Albúmina IV",
+          "doseDisplay": "1.5 g/kg",
+          "defaultApplied": false,
+          "raw": "albumina 1.5 g/kg",
+          "count": 1
+        },
+        "dose": {
+          "defaultApplied": false,
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg"
+        }
+      },
+      "migrated": {
+        "id": "albumin",
+        "label": "Albúmina IV",
+        "dose": {
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "support-parity:doctor:2:0",
+        "actorId": "doctor",
+        "patientUid": "P",
+        "route": "iv",
+        "administeredAtRealSecond": 0.8,
+        "administeredAtNativeMinute": 0.096
+      },
+      "expected": {
+        "temp": 0,
+        "hr": -3,
+        "rr": 0,
+        "sys": 5,
+        "dia": 3,
+        "spo2": 0
+      },
+      "actual": {
+        "temp": 0,
+        "hr": -3,
+        "rr": 0,
+        "sys": 5,
+        "dia": 3,
+        "spo2": 0
+      },
+      "legacyVitals": {
+        "temp": 37.2,
+        "hr": 91.01337272829603,
+        "rr": 20,
+        "sys": 112.97771211950653,
+        "dia": 70.98662727170397,
+        "spo2": 96
+      },
+      "v5Vitals": {
+        "temp": 37.2,
+        "hr": 91.01337272829608,
+        "rr": 20,
+        "sys": 112.97771211950652,
+        "dia": 70.98662727170392,
+        "spo2": 96
+      },
+      "drift": {
+        "temp": 0,
+        "hr": 4.263256414560601e-14,
+        "rr": 0,
+        "sys": -1.4210854715202004e-14,
+        "dia": -4.263256414560601e-14,
+        "spo2": 0
+      }
+    },
+    {
+      "caseId": "CIRR-001",
+      "id": "transfusion",
+      "legacy": {
+        "receipt": {
+          "m": 0.3120000000000008,
+          "id": "transfusion",
+          "label": "Transfusión",
+          "doseDisplay": "2 unidades",
+          "defaultApplied": false,
+          "raw": "transfusion 2 unidades",
+          "count": 1
+        },
+        "dose": {
+          "defaultApplied": false,
+          "amount": 2,
+          "unit": "unidad",
+          "display": "2 unidades"
+        }
+      },
+      "migrated": {
+        "id": "transfusion",
+        "label": "Transfusión",
+        "dose": {
+          "amount": 2,
+          "unit": "unidad",
+          "display": "2 unidades",
+          "defaultApplied": false
+        },
+        "sourceEventId": "support-parity:doctor:2:0",
+        "actorId": "doctor",
+        "patientUid": "P",
+        "route": "iv",
+        "administeredAtRealSecond": 2.6,
+        "administeredAtNativeMinute": 0.31200000000000006
+      },
+      "expected": {
+        "temp": 0,
+        "hr": -9,
+        "rr": 0,
+        "sys": 10,
+        "dia": 5,
+        "spo2": 0
+      },
+      "actual": {
+        "temp": 0,
+        "hr": -9,
+        "rr": 0,
+        "sys": 10,
+        "dia": 5,
+        "spo2": 0
+      },
+      "legacyVitals": {
+        "temp": 37.2,
+        "hr": 85.07967890805058,
+        "rr": 20,
+        "sys": 117.91146787994388,
+        "dia": 72.95573393997194,
+        "spo2": 96
+      },
+      "v5Vitals": {
+        "temp": 37.2,
+        "hr": 85.07967890805051,
+        "rr": 20,
+        "sys": 117.91146787994388,
+        "dia": 72.95573393997194,
+        "spo2": 96
+      },
+      "drift": {
+        "temp": 0,
+        "hr": -7.105427357601002e-14,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      }
+    },
+    {
+      "caseId": "CIRR-001",
+      "id": "vasopressor",
+      "legacy": {
+        "receipt": {
+          "m": 0.09599999999999999,
+          "id": "vasopressor",
+          "label": "Noradrenalina / vasopresor",
+          "doseDisplay": "1 µg/kg/min",
+          "defaultApplied": false,
+          "raw": "noradrenalina 1 mcg/kg/min IV",
+          "count": 1
+        },
+        "dose": {
+          "defaultApplied": false,
+          "amount": 1,
+          "unit": "µg/kg/min",
+          "display": "1 µg/kg/min"
+        }
+      },
+      "migrated": {
+        "id": "vasopressor",
+        "label": "Noradrenalina IV",
+        "dose": {
+          "amount": 1,
+          "unit": "µg/kg/min",
+          "display": "1 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "support-parity:doctor:2:0",
+        "actorId": "doctor",
+        "patientUid": "P",
+        "route": "iv",
+        "administeredAtRealSecond": 0.8,
+        "action": "start",
+        "moleculeId": "norepinephrine",
+        "administeredAtNativeMinute": 0.096
+      },
+      "expected": {
+        "temp": 0,
+        "hr": 14,
+        "rr": 0,
+        "sys": 52,
+        "dia": 30,
+        "spo2": 0
+      },
+      "actual": {
+        "temp": 0,
+        "hr": 14,
+        "rr": 0,
+        "sys": 52,
+        "dia": 30,
+        "spo2": 0
+      },
+      "legacyVitals": {
+        "temp": 37.2,
+        "hr": 107.9375939346183,
+        "rr": 20,
+        "sys": 159.7682060428681,
+        "dia": 97.86627271703921,
+        "spo2": 96
+      },
+      "v5Vitals": {
+        "temp": 37.2,
+        "hr": 107.9375939346183,
+        "rr": 20,
+        "sys": 159.768206042868,
+        "dia": 97.86627271703924,
+        "spo2": 96
+      },
+      "drift": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": -8.526512829121202e-14,
+        "dia": 2.842170943040401e-14,
+        "spo2": 0
+      }
+    },
+    {
+      "caseId": "CIRR-001",
+      "id": "amphotericin",
+      "legacy": {
+        "receipt": {
+          "m": 0.1800000000000002,
+          "id": "amphotericin",
+          "label": "Anfotericina B IV",
+          "doseDisplay": "0.7 mg",
+          "defaultApplied": false,
+          "raw": "anfotericina 0.7 mg/kg IV",
+          "count": 1
+        },
+        "dose": {
+          "defaultApplied": false,
+          "amount": 0.7,
+          "unit": "mg",
+          "display": "0.7 mg"
+        }
+      },
+      "migrated": {
+        "id": "amphotericin",
+        "label": "Anfotericina B IV",
+        "dose": {
+          "amount": 0.7,
+          "unit": "mg/kg",
+          "display": "0.7 mg/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "support-parity:doctor:2:0",
+        "actorId": "doctor",
+        "patientUid": "P",
+        "route": "iv",
+        "administeredAtRealSecond": 1.5,
+        "administeredAtNativeMinute": 0.18
+      },
+      "expected": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      },
+      "actual": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      },
+      "legacyVitals": {
+        "temp": 37.2,
+        "hr": 94,
+        "rr": 20,
+        "sys": 108,
+        "dia": 68,
+        "spo2": 96
+      },
+      "v5Vitals": {
+        "temp": 37.2,
+        "hr": 94,
+        "rr": 20,
+        "sys": 108,
+        "dia": 68,
+        "spo2": 96
+      },
+      "drift": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      },
+      "intentionalCorrection": "original receipt lost /kg; V5 retains the prescribed mg/kg"
+    },
+    {
+      "caseId": "CIRR-001",
+      "id": "six-confirmed-albumin-doses",
+      "receipts": 6,
+      "expected": {
+        "temp": 0,
+        "hr": -3,
+        "rr": 8,
+        "sys": 5,
+        "dia": 3,
+        "spo2": -7
+      },
+      "actual": {
+        "temp": 0,
+        "hr": -3,
+        "rr": 8,
+        "sys": 5,
+        "dia": 3,
+        "spo2": -7
+      },
+      "legacyVitals": {
+        "temp": 37.2,
+        "hr": 91.00209711755572,
+        "rr": 27.982522670933047,
+        "sys": 112.99650480407396,
+        "dia": 70.99790288244428,
+        "spo2": 89.01420395438471
+      },
+      "v5Vitals": {
+        "temp": 37.2,
+        "hr": 91.00209711755565,
+        "rr": 27.982522670933058,
+        "sys": 112.99650480407391,
+        "dia": 70.99790288244435,
+        "spo2": 89.01420395438466
+      },
+      "drift": {
+        "temp": 0,
+        "hr": -7.105427357601002e-14,
+        "rr": 1.0658141036401503e-14,
+        "sys": -5.684341886080802e-14,
+        "dia": 7.105427357601002e-14,
+        "spo2": -5.684341886080802e-14
+      }
+    },
+    {
+      "caseId": "CIRR-001",
+      "id": "absolute-rates-and-confirmed-stop",
+      "doses": 2,
+      "events": 3,
+      "expected": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      },
+      "actual": {
+        "temp": 0,
+        "hr": 0,
+        "rr": 0,
+        "sys": 0,
+        "dia": 0,
+        "spo2": 0
+      },
+      "legacyStop": {
+        "m": 0.458800000000001,
+        "id": "vasopressor",
+        "label": "Noradrenalina / vasopresor",
+        "raw": "suspender noradrenalina",
+        "count": 2,
+        "doseDisplay": "Suspensión confirmada",
+        "action": "stop",
+        "eventType": "suspension",
+        "status": "administered",
+        "eventId": "native-reference-CIRR-001:native-stop:1",
+        "patientId": "native-reference-CIRR-001",
+        "route": "iv",
+        "previousDose": {
+          "defaultApplied": false,
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min"
+        }
+      },
+      "migratedStop": {
+        "id": "vasopressor",
+        "label": "Noradrenalina suspendida",
+        "sourceEventId": "support-parity:doctor:4:0",
+        "actorId": "doctor",
+        "patientUid": "P",
+        "route": "iv",
+        "administeredAtRealSecond": 3.8,
+        "action": "stop",
+        "moleculeId": "norepinephrine",
+        "previousDose": {
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min",
+          "defaultApplied": false
+        },
+        "administeredAtNativeMinute": 0.45599999999999996
+      }
+    }
+  ]
+}

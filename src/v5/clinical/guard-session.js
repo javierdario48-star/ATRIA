@@ -19,6 +19,7 @@ import {documentMedicationComplications487} from './medication-harms-487.js';
 import {CASE_CLOSURE_RULES_487,CLOSURE_DEST_LABELS_487} from '../../clinical/case-completion-487.js';
 
 const copy=value=>structuredClone(value);
+const survivalSensitiveIV=new Set(['anticoagulation','morphine','albumin','transfusion','vasopressor']);
 const routeReason={
  'no-patient-target':'Acercate al paciente para indicar el estudio.',
  'question-or-negation':'Pregunta o indicación negada: no ejecuté ninguna acción.',
@@ -63,16 +64,18 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   for(const intent of intents){
    if(!['therapy.request','therapy.stop'].includes(intent.kind))continue;
    if(!migratedTherapies.has(intent.id)||
-      intent.kind==='therapy.stop'&&intent.id!=='oxygen')
+      intent.kind==='therapy.stop'&&!['oxygen','vasopressor'].includes(intent.id))
     return 'unsafe-compound-order';
    if(intent.kind==='therapy.stop'){
-    if(intent.id==='oxygen'&&!nativePatient.procedures.oxygen?.active)
+    if(intent.id==='oxygen'&&!nativePatient.procedures?.oxygen?.active)
+     return 'unsafe-compound-order';
+    if(intent.id==='vasopressor'&&!nativePatient.procedures?.vasopressor?.active)
      return 'unsafe-compound-order';
     continue;
    }
    try{
     if(isStandardIVMedicine(intent.id)){
-     parseIVMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose);
+     parseIVMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose,intent.sourceText);
     }
     else if(intent.id==='oxygen')
      parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
@@ -91,23 +94,26 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(nursing&&intent.kind==='case.close'&&nursingWorkPending())
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
    const ivMedicine=!!care&&intent.kind==='therapy.request'&&isStandardIVMedicine(intent.id);
+   const infusionStop=!!care&&intent.kind==='therapy.stop'&&IV_MEDICINES[intent.id]?.continuous;
    const oxygenAction=!!care&&intent.id==='oxygen'&&['therapy.request','therapy.stop'].includes(intent.kind);
    const cirrBedside=caseData.id==='CIRR-001'&&intent.kind==='therapy.request'&&
     ['espironolactona','paracentesis_ter'].includes(intent.id);
    const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor','vitals'].includes(intent.id)||
-    intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||cirrBedside||oxygenAction);
+    intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||infusionStop||cirrBedside||oxygenAction);
    if(physical){
     if(nativePatient.caseEnded)return {status:'rejected',patientUid,eventId,reason:'patient-not-active'};
     // Native case policy remains the only executor. These are the same
     // certified dose/route parsers that it calls, never a new catalog.
     try{
      if(ivMedicine){
-      parseIVMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose);
+      parseIVMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose,intent.sourceText);
      }
      if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
      if(cirrBedside&&intent.id==='espironolactona')
       parseCirrDose(intent.clause||intent.sourceText,content.defaultDoses?.espironolactona);
     }catch(error){return {status:'rejected',patientUid,eventId,reason:error.message};}
+    if(infusionStop&&!nativePatient.procedures[intent.id]?.active)
+     return {status:'rejected',patientUid,eventId,reason:'infusion-not-active'};
     if(oxygenAction){
      const active=nativePatient.procedures.oxygen;
      if(intent.kind==='therapy.stop'&&!active?.active)
@@ -253,11 +259,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(disposed)throw Error('guard session disposed');
    if(!Number.isFinite(deltaRealSeconds)||deltaRealSeconds<0||deltaRealSeconds>86400)
     throw Error('invalid guard delta');
-   // A long presentation frame must not jump over an entire allergic episode,
-   // its rescue opportunity or fatal exposure. Subdivide ONLY this existing
-   // clock/executor path for patients with explicit severe susceptibility.
-   if((nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>['anticoagulation','morphine'].includes(x.id))||
-     nativePatient.pendingTreatments?.some(x=>['anticoagulation','morphine'].includes(x.id)))&&deltaRealSeconds>.25){
+   // A long presentation frame must preserve adverse episodes, support changes
+   // and fatal exposure in the SAME clock/executor path. A pending medicine
+   // only selects time resolution; effects still require actual administration.
+   if((nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
+     nativePatient.pendingTreatments?.some(x=>survivalSensitiveIV.has(x.id)))&&deltaRealSeconds>.25){
     const ready=[];
     for(let elapsed=0;elapsed<deltaRealSeconds-1e-9;elapsed+=.25)
      ready.push(...advance(Math.min(.25,deltaRealSeconds-elapsed),{typing}));

@@ -36,8 +36,9 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases}){
  const executed=(cmd,data)=>({status:'executed',eventId:cmd.eventId,patientUid:p.uid,
   receipt:{eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,...data}});
  const txReceipt=(cmd,t,reused=false)=>executed(cmd,{therapyId:t.id,sourceEventId:t.sourceEventId,dose:copy(t.dose),
+  ...(t.action?{action:t.action,route:t.route,previousDose:copy(t.previousDose)}:{}),
   administeredAtRealSecond:t.administeredAtRealSecond,administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
-  message:(reused?'Ya ejecutado por la indicación original: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
+  message:(reused?'Ya ejecutado por la indicación original: ':t.action==='stop'?'Suspensión confirmada: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected});
  const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness});
  function readiness(destination){

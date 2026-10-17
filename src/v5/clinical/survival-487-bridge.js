@@ -30,6 +30,7 @@ function confirmedView(p,mode,prior){
       matches[0].administeredAtNativeMinute!==row.administeredAtNativeMinute)
     throw Error('survival support requires unique native treatment receipt');
   }
+  if(row.action==='stop'){active.delete(row.id);continue;}
   if(row.id==='oxygen'){
    if(row.action==='stop'){active.delete('oxygen');continue;}
    if(!['start','setRate'].includes(row.action))throw Error('invalid oxygen survival event');

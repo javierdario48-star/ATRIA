@@ -3,6 +3,7 @@ import {oxygenationTargetOffset} from './oxygen-physiology.js';
 import {applyConfirmedIVTargetOffsets} from './pharmacology-catalog.js';
 import {applyMedicationHarmTargets487} from './medication-harms-487.js';
 import {applyConfirmedMorphineTargetOffsets487} from './morphine-487.js';
+import {applyConfirmedNativeSupportTargets487} from './native-support-487.js';
 // Original native CIRR vital model, migrated explicitly from 4.8.6/4.8.7.
 // See qa/v5/characterize-cirr-native.mjs. No severity helper or shadow engine.
 const keys=['temp','hr','rr','sys','dia','spo2'];
@@ -44,6 +45,7 @@ export function advanceCirrVitals(p,c,dt,atNativeMinute=0){
  applyConfirmedIVTargetOffsets(target,p,c,atNativeMinute);
  applyMedicationHarmTargets487(target,p,c,atNativeMinute);
  applyConfirmedMorphineTargetOffsets487(target,p,c,atNativeMinute);
+ applyConfirmedNativeSupportTargets487(target,p,c,atNativeMinute);
  const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
  // Exact closed form of repeated native 1/60-second Euler smoothing for a
  // constant target, plus its fractional final step. No unbounded catch-up loop.

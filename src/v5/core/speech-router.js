@@ -1,6 +1,7 @@
 import {csNurseScan487} from '../../clinical/nurse-scanner-487.js';
 import {EXAM_TECHNIQUES,GLASGOW_COMPONENTS,validExamSelection} from '../clinical/exam-contract.js';
 import {planNursingIVAccess} from '../clinical/nursing-access-plan.js';
+import {nursingFormulationVocabulary487} from '../clinical/iv-dose-contracts-487.js';
 
 const nurseAddress=/^(?:enfermera|enfermero|enfermeria)\b|(?:\b(?:enfermera|enfermero|enfermeria))\s*[,!.]?\s*$/i;
 const vegaAddress=/^(?:(?:dr|doctor)\.?\s*)?vega\b/i;
@@ -73,7 +74,8 @@ export function routeWardSpeech(text,context={}){
  const patientUid=context.patientUid??null;
  if(recipient!=='nurse')return {recipient,patientUid,intents:context.clinicalEvaluation&&recipient==='patient'&&patientUid?
   [{kind:'history.ask',id:'dialogue',sourceText:original}]:[],original};
- const parsed=csNurseScan487(original,context.studies||[],context.therapies||[],context.interventions||[]);
+ const vocabulary=nursingFormulationVocabulary487(original,context);
+ const parsed=csNurseScan487(vocabulary.text,vocabulary.studies,vocabulary.therapies,context.interventions||[]);
  if(!parsed.active)return {recipient,patientUid,intents:[],original,error:'question-or-negation'};
  if(parsed.unknown.length)return {recipient,patientUid,intents:[],original,error:'unknown-clause',unknown:parsed.unknown};
  if(!patientUid)return {recipient,patientUid,intents:[],original,error:'no-patient-target'};

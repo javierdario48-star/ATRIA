@@ -8,7 +8,7 @@ export function planNursingIVAccess(intents,{venousAccessCount,pendingIV,default
  if(!Number.isInteger(venousAccessCount)||venousAccessCount<0)return intents;
  const validIV=intents.filter(item=>{
   if(item.kind!=='therapy.request'||!isStandardIVMedicine(item.id))return false;
-  try{parseIVMedicineDose(item.id,item.clause||item.sourceText,defaultDoses?.[item.id]??IV_MEDICINES[item.id]?.dose);return true;}
+  try{parseIVMedicineDose(item.id,item.clause||item.sourceText,defaultDoses?.[item.id]??IV_MEDICINES[item.id]?.dose,item.sourceText);return true;}
   catch{return false;}
  });
  if(!validIV.length)return intents;

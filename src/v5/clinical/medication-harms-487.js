@@ -4,6 +4,7 @@ import {csSevereDrugReaction487} from '../../clinical/general-therapy-487.js';
 import {csHeparinHarm487} from '../../clinical/urgent-care-487.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {confirmedMorphineResponse487} from './morphine-487.js';
+import {confirmedNativeSupportEffects487} from './native-support-487.js';
 const axes=['temp','hr','rr','sys','dia','spo2'];
 const zero=()=>Object.fromEntries(axes.map(k=>[k,0]));
 function confirmedRows(p,atNativeMinute){
@@ -74,6 +75,13 @@ export function documentMedicationComplications487(p,c,clock){
    sourceEventId:previousOpioid?.sourceEventId??opioid.sourceEventId,
    severity:(previousOpioid?opioid?.respiratoryRisk:observed)?1:0});
  }
+ const albumin=confirmedNativeSupportEffects487(p,c,clock.nativeMinute).drugs.albumin;
+ const previousAlbumin=p.adverseEvents.find(x=>x.kind==='albumin-respiratory-overload'&&x.status==='active');
+ if(previousAlbumin||albumin?.toxicity.spo2<0&&p.liveVitals.spo2<94){
+  reactions.push({kind:'albumin-respiratory-overload',patientUid:p.uid,drugId:'albumin',
+   sourceEventId:previousAlbumin?.sourceEventId??albumin.sourceEventId,
+   severity:albumin?.toxicity.spo2<0?1:0});
+ }
  for(const r of reactions){
   const previous=p.adverseEvents.find(x=>x.kind===r.kind&&x.sourceEventId===r.sourceEventId);
   if(previous){
@@ -87,7 +95,9 @@ export function documentMedicationComplications487(p,c,clock){
   const event={kind:r.kind,sourceEventId:r.sourceEventId,patientUid:p.uid,
    drugId:r.drugId,atNativeMinute:clock.nativeMinute,atRealSecond:clock.clinicalMinute,
    peakSeverity:r.severity,status:'active',
-   message:r.kind==='opioid-respiratory-depression'?
+   message:r.kind==='albumin-respiratory-overload'?
+    'Sobrecarga respiratoria tras dosis repetidas de albúmina: deterioro de la saturación. Reevaluar el soporte y las nuevas administraciones.':
+    r.kind==='opioid-respiratory-depression'?
     'Depresión respiratoria tras morfina: deterioro respiratorio observado con exposición opioide activa. Reevaluar y estabilizar.':r.kind==='severe-drug-allergy'?
     'Reacción alérgica grave tras '+r.label+': deterioro respiratorio y hemodinámico. Reevaluar y estabilizar.':
     'Sangrado agravado tras heparina: taquicardia e hipotensión por pérdida sanguínea. Priorizar estabilización.'};

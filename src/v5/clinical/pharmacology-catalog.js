@@ -8,6 +8,7 @@ import {csPharmOutcomes487} from '../../clinical/pharmacology-outcomes-487.js';
 import {medicationSafety487,matchesMedicationAllergy487} from './medication-safety-487.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 import {confirmedMorphineResponse487} from './morphine-487.js';
+import {confirmedNativeSupportEffects487} from './native-support-487.js';
 
 const clone=x=>structuredClone(x);
 const VITALS=['temp','hr','rr','sys','dia','spo2'];
@@ -27,9 +28,9 @@ const REVIEW_ONLY=Object.freeze({
 });
 const OWNER=Object.freeze({
  'APP-001':Object.freeze({fluid:['sys','dia','hr','rr'],oxygen:['spo2'],
-  furosemide:['sys','dia','hr','rr','spo2'],morphine:VITALS}),
+  furosemide:['sys','dia','hr','rr','spo2'],morphine:VITALS,albumin:VITALS,transfusion:VITALS,vasopressor:VITALS}),
  'CIRR-001':Object.freeze({fluid:['rr','spo2'],oxygen:['spo2'],
-  paracentesis_ter:['rr'],furosemide:['sys','dia','hr','rr','spo2'],morphine:VITALS})
+  paracentesis_ter:['rr'],furosemide:['sys','dia','hr','rr','spo2'],morphine:VITALS,albumin:VITALS,transfusion:VITALS,vasopressor:VITALS})
 });
 function checkRule(id,rule){
  if(REVIEW_ONLY[id])return;
@@ -102,6 +103,7 @@ function normalizedPatient(p,c,atNativeMinute){
 function evaluate(c,p,atNativeMinute,catalog){
  const {legacyPatient,latest}=normalizedPatient(p,c,atNativeMinute),rows=[];
  const opioid=confirmedMorphineResponse487(p,c,atNativeMinute);
+ const support=confirmedNativeSupportEffects487(p,c,atNativeMinute);
  for(const item of catalog){
   const id=item.id,rule=item.rule,last=latest.get(id);
   const received=!!last&&last.action!=='stop';
@@ -112,6 +114,8 @@ function evaluate(c,p,atNativeMinute,catalog){
   if(id==='morphine')changes={...changes,offsets:opioid?.offsets??zero(),
    phase:clamp(opioid?.load??0,0,1),beneficial:(opioid?.analgesia??0)>0,
    warnings:[...changes.warnings,...(opioid?.respiratoryRisk?['opioid-respiratory-depression-risk']:[])]};
+  if(['albumin','transfusion','vasopressor'].includes(id))changes={...changes,
+   offsets:support.drugs[id]?.offsets??zero(),phase:support.drugs[id]?.active?1:0};
   if(!changes.known&&rule.mechanism!=='unmodeled')throw Error('missing inherited drug evaluation '+id);
   const {scale,warnings}=caseModifiers(c,id),ownedAxes=OWNER[c.id]?.[id]||[];
   // A native case-specific writer keeps its already verified axes. This is a
@@ -122,7 +126,7 @@ function evaluate(c,p,atNativeMinute,catalog){
    clamp(changes.offsets[axis]*scale,-50,50)]));
   const safety=medicationSafety487(c,p,id);
   rows.push({id,classId:rule.classId,route:rule.route,mechanism:rule.mechanism,
-   model:id==='morphine'?'legacy-morphine-487':rule.mechanism==='unmodeled'?'review-only':'legacy-general',
+   model:id==='morphine'?'legacy-morphine-487':['albumin','transfusion','vasopressor'].includes(id)?'legacy-native-support-487':rule.mechanism==='unmodeled'?'review-only':'legacy-general',
    state:!last?'not-administered':last.action==='stop'?'stopped':'confirmed',
    sourceEventId:last?.sourceEventId??null,elapsedNativeMinutes:minutes,
    phase:received?changes.phase:0,beneficial:received&&changes.beneficial,

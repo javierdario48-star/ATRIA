@@ -10,7 +10,10 @@ const SHARED_IV=Object.freeze([
  ['iv2','Dos vías periféricas','dos vías'],
  ['fluid','Ringer lactato 500 ml','Ringer 500 ml'],
  ['ceftriaxone','Ceftriaxona IV 1 g','ceftriaxona 1 g'],
- ['metronidazole','Metronidazol IV 500 mg','metronidazol 500 mg']
+ ['metronidazole','Metronidazol IV 500 mg','metronidazol 500 mg'],
+ ['albumin','Albúmina IV 1.5 g/kg','albumina 1.5 g/kg'],
+ ['transfusion','Transfusión 1 unidad','transfusion 1 unidad'],
+ ['vasopressor','Noradrenalina IV 0.05 µg/kg/min','noradrenalina 0.05 mcg/kg/min IV']
 ]);
 const ORDERS=Object.freeze({
  'CIRR-001':[

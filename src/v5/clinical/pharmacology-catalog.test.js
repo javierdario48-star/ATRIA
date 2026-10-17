@@ -12,13 +12,22 @@ const baseVitals=c=>{const [sys,dia]=c.vitals.bp.split('/').map(Number);
  return {sys,dia,hr:c.vitals.hr,rr:c.vitals.rr,spo2:c.vitals.spo2,temp:c.vitals.temp};
 };
 const fresh=(c,uid='P1')=>({uid,caseId:c.id,liveVitals:baseVitals(c),
- administrationLog:[],treatments:[],pendingTreatments:[],phys:{sourceControlled:false}});
+ administrationLog:[],treatments:[],pendingTreatments:[],procedures:{},
+ phys:{sourceControlled:false,effectiveVolume:Number(c.physiology?.effectiveVolume??1)}});
 const give=(p,id,atNativeMinute,seq=1,action)=>{
- const dose=id==='oxygen'?{amount:4,unit:'L/min'}:{amount:id==='morphine'?4:500,unit:'mg'};
+ // Native support now validates real formulations and a paired treatment,
+ // just as morphine already did. A fictitious 500mg albumin/pressor/blood
+ // row is not a legitimate fixture for the recovered execution contract.
+ const support={albumin:{amount:1.5,unit:'g/kg'},transfusion:{amount:1,unit:'unidad'},
+  vasopressor:{amount:.05,unit:'µg/kg/min'}};
+ const dose=support[id]||(id==='oxygen'?{amount:4,unit:'L/min'}:{amount:id==='morphine'?4:500,unit:'mg'});
+ if(id==='vasopressor'&&!action)action='start';
  const row={id,patientUid:p.uid,sourceEventId:'tx-'+seq,administeredAtNativeMinute:atNativeMinute,
-  dose,...(action?{action}:{})};
+  dose,...(action?{action}:{}),...(support[id]?{route:'iv'}:{})};
  p.administrationLog.push(row);
- if(id==='morphine')p.treatments.push(structuredClone(row));
+ if(id==='morphine'||support[id])p.treatments.push(structuredClone(row));
+ if(id==='vasopressor')p.procedures.vasopressor={patientUid:p.uid,active:action!=='stop',
+  moleculeId:'norepinephrine',sourceEventId:row.sourceEventId,dose:structuredClone(dose)};
  return row;
 };
 test('C12d all 30 global items and every existing case compile from inherited pure registry',()=>{
