@@ -21,8 +21,8 @@ function bot(caseId,mode='solo'){
 }
 function trajectory(s){
  const state=s.read(),p=state.patient;
- return {atRealSeconds:state.clock.clinicalMinute,atNativeMinutes:state.clock.nativeMinute,
-  vitals:Object.fromEntries(vitalKeys.map(id=>[id:Number(p.liveVitals[id].toFixed(3))])),
+ return {atRealMinutes:state.clock.clinicalMinute,atNativeMinutes:state.clock.nativeMinute,
+  vitals:Object.fromEntries(vitalKeys.map(id=>[id,Number(p.liveVitals[id].toFixed(3))])),
   caseEnded:!!p.caseEnded,died:!!p.patientDied,deathReason:p.deathReason??null,
   closeDestination:p.closure?.destination??null,xp:state.progress.xp,
   administrations:p.administrationLog.map(x=>({id:x.id,event:x.sourceEventId,
