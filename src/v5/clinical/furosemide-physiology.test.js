@@ -70,9 +70,11 @@ test('C12.e2 diuretic improves CIRR congestion slowly, without false BP or normo
 });
 test('C12.e2 APP hypotension worsens if furosemide is prescribed despite no indication',()=>{
  const f=fixture('APP-001'),control=fixture('APP-001');
+ deliver(f);
+ // This is an acute hypotensive state AT administration, not before the
+ // preparation period (when the baseline physiology would restore pressure).
  f.p.liveVitals.sys=75;f.p.liveVitals.dia=42;
  control.p.liveVitals.sys=75;control.p.liveVitals.dia=42;
- deliver(f);
  f.advance(f.p,f.c,35,36.51);
  control.advance(control.p,control.c,36.51,36.51);
  assert(f.p.liveVitals.sys<control.p.liveVitals.sys-1);
