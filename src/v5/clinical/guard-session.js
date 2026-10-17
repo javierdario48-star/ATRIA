@@ -13,6 +13,7 @@ import {parseCirrDose} from './native-cirr.js';
 import {summarizeIVExposures} from './medication-exposure.js';
 import {createCasePharmacology} from './pharmacology-catalog.js';
 import {advanceNativeSurvival} from './survival-487-bridge.js';
+import {confirmedFluidFeedback,fluidFeedbackLabel} from './fluid-feedback.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -220,6 +221,13 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    const before=clock;
    clock=guardClock.advance(deltaRealSeconds,typing);
    for(const result of care?.advance(before,clock,deltaRealSeconds)||[]){
+    // Actual bedside IV completion, never an order or a repeated transport ACK.
+    // Reuse V4 clinical traits, but preserve the unique V5 fluid/vital owners.
+    if(result.status==='executed'&&result.receipt?.therapyId==='fluid'&&!result.receipt?.reused){
+     const status=confirmedFluidFeedback(nativePatient,caseData);
+     result.receipt.message=(result.receipt.message||'Administración confirmada.')+
+      ' '+fluidFeedbackLabel(status);
+    }
     // Once the ORIGINAL case preparation clock completes, publish its native
     // receipt and only then release the spatial bedside job.
     port.complete(result);

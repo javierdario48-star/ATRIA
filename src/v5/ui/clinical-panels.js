@@ -1,6 +1,7 @@
 // Presentation only: accepts confirmed snapshots and emits markup. No executor.
 import {EXAM_TECHNIQUES} from '../clinical/physical-exam.js';
 import {ecgPresentation} from '../clinical/ecg-morphology.js';
+import {confirmedFluidFeedback,fluidFeedbackLabel} from '../clinical/fluid-feedback.js';
 export const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const examNames=EXAM_TECHNIQUES;
 export function vitalsHTML(patient){
@@ -41,12 +42,17 @@ export function monitorHTML(patient){
 export function examHTML(patient){return Object.entries(patient.exam||{}).map(([id,data])=>
  '<section class="clinical-section"><b>'+esc(examNames[id])+'</b>'+data.rows.map(row=>'<p><strong>'+esc(row.organ)+':</strong> '+esc(row.text)+'</p>').join('')+'</section>').join('')||'<p>Elegí una técnica para explorar al paciente.</p>';}
 export function therapyHTML(patient){
+ const fluid=patient.uid&&patient.caseId?
+  confirmedFluidFeedback(patient,{id:patient.caseId,vitals:patient.baselineVitals}):null;
+ const fluidRow=fluid?.administrations?'<div class="clinical-section" data-fluid-total-ml="'+fluid.totalMl+
+  '"><b>Ringer acumulado, realmente administrado</b><small>'+
+  esc(fluidFeedbackLabel(fluid))+'</small></div>':'';
  const confirmed=(patient.treatments||[]).map(t=>'<div class="clinical-section"><b>'+esc(t.label)+'</b><small>Ejecutado'+(t.dose?' · '+esc(t.dose.display)+(t.dose.defaultApplied?' · dosis predeterminada':''):'')+'</small></div>');
  const pending=(patient.pendingTreatments||[]).map(t=>'<div class="clinical-section"><b>'+esc(t.label||t.id)+'</b><small>Indicado · en preparación · aún no administrado</small></div>');
  const venous=patient.venousAccessCount?'<div class="clinical-section"><b>Vías venosas confirmadas</b><small>'+patient.venousAccessCount+'</small></div>':'';
  const consults=(patient.consults||[]).map(c=>'<div class="clinical-section"><b>Cirugía</b><small>Recepción confirmada · derivación pendiente</small></div>');
  const pendingConsults=(patient.pendingConsults||[]).map(c=>'<div class="clinical-section"><b>Cirugía</b><small>Respuesta pendiente · no aceptada aún</small></div>');
- return [venous,...pending,...pendingConsults,...confirmed,...consults].join('')||'<p>Sin intervenciones ejecutadas.</p>';
+ return [venous,fluidRow,...pending,...pendingConsults,...confirmed,...consults].join('')||'<p>Sin intervenciones ejecutadas.</p>';
 }
 export function historyHTML(p){
  const sections=[['Anamnesis adquirida',p.intentHistory?.map(x=>'<p>'+esc(x.answer)+'</p>').join('')||'<p>Todavía no interrogado.</p>'],
