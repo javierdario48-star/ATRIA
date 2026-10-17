@@ -2,7 +2,7 @@ import {executePatientDialogue} from './patient-dialogue.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {initialCirrVitals,parseCirrDose,advanceCirrVitals} from './native-cirr.js';
 import {nativeCaseXP} from './progression.js';
-import {confirmedRespiratoryAdverse} from './clinical-risk.js';
+import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {createClosureDebrief} from './closure-debrief.js';
 import {createIVAdministration} from './native-medications.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
@@ -18,7 +18,7 @@ export function closureSnapshot(p,c,destination){return {
  keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,delivered:p.treatments.map(t=>t.id),consultsDone:[],disposition:destination,
  sys:p.liveVitals.sys,hr:p.liveVitals.hr,spo2:p.liveVitals.spo2,rr:p.liveVitals.rr,initialSys:initialCirrVitals(c).sys,
  dead:!!p.patientDied,ended:p.caseEnded,
-  adverseCount:confirmedRespiratoryAdverse(p,c).adverseCount,autonomy:100,uid:p.uid};}
+  adverseCount:confirmedClinicalMissteps(p,c).adverseCount,autonomy:100,uid:p.uid};}
 
 /** One migrated native care executor, operating on the SAME patient as C1.
  * No UI, timers, global binding, pharmacology wrapper or alternate patient state.

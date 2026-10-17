@@ -20,3 +20,28 @@ export function confirmedRespiratoryAdverse(patient,caseDef){
    demonstrated?['Sobrecarga IV con deterioro respiratorio medible']:[],
   confirmedFluidMl:ml};
 }
+
+/** Documented game-case mismatches. These are scored as potentially unsafe
+ * clinical decisions, not falsely described as observed organ toxicity.
+ * Reviewed separately from pharmacodynamic effects, which still require a
+ * native case-specific writer.
+ */
+export function confirmedClinicalMissteps(patient,caseDef){
+ const lung=confirmedRespiratoryAdverse(patient,caseDef);
+ if(!patient?.administrationLog?.length)return lung;
+ const exposures=summarizeIVExposures(patient).byDrug;
+ const notes=[];
+ if(caseDef?.id==='CIRR-001'){
+  if(exposures.ceftriaxone?.administrations)
+   notes.push('Ceftriaxona sin foco infeccioso identificado en CIRR-001');
+  if(exposures.metronidazole?.administrations)
+   notes.push('Metronidazol sin foco infeccioso identificado en CIRR-001');
+ }
+ if(caseDef?.id==='APP-001'&&exposures.furosemide?.administrations&&
+    lung.confirmedFluidMl<3000)
+  notes.push('Furosemida sin sobrecarga demostrada en APP-001');
+ if((exposures.furosemide?.totalAmount??0)>160)
+  notes.push('Dosis acumuladas de furosemida superiores a la pauta del caso');
+ return {...lung,adverseCount:Math.min(4,lung.adverseCount+notes.length),
+  flags:[...lung.flags,...notes]};
+}

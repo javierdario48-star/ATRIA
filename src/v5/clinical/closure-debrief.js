@@ -1,6 +1,6 @@
 // Compact V4 scoring breakdown adapted to confirmed V5 closure receipts.
 // It NEVER computes or awards XP. The V4 quality evaluator remains the owner.
-import {confirmedRespiratoryAdverse} from './clinical-risk.js';
+import {confirmedClinicalMissteps} from './clinical-risk.js';
 const labels={diagnosis:'Impresión diagnóstica',history:'Anamnesis',
  safety:'Evaluación y reevaluación',studies:'Estudios relevantes',
  treatment:'Tratamiento y destino',efficiency:'Uso eficiente de recursos'};
@@ -20,7 +20,7 @@ export function createClosureDebrief(p,c,q){
  if((q.safety||0)<25)missing.push('Completar examen, signos, reevaluación y destino.');
  if((q.studies||0)<15)missing.push('Completar los estudios pertinentes del caso.');
  if((q.treatment||0)<25)missing.push('Completar las intervenciones recomendadas.');
- const adverse=confirmedRespiratoryAdverse(p,c);
+ const adverse=confirmedClinicalMissteps(p,c);
  const unnecessary=[
   ...((q.extraStudies||0)>0?[q.extraStudies+' estudios ajenos a la indicación principal']:[]),
   ...adverse.flags];

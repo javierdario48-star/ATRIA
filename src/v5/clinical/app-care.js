@@ -4,7 +4,7 @@ import {initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
-import {confirmedRespiratoryAdverse} from './clinical-risk.js';
+import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {createClosureDebrief} from './closure-debrief.js';
 import {initialAppVitals,advanceAppVitals} from './native-app.js';
 import {createIVAdministration} from './native-medications.js';
@@ -22,7 +22,7 @@ export function appClosureSnapshot(p,c,destination){
   disposition:destination,sys:p.liveVitals.sys,hr:p.liveVitals.hr,spo2:p.liveVitals.spo2,
   rr:p.liveVitals.rr,initialSys:initialAppVitals(c).sys,
   dead:!!p.patientDied,ended:p.caseEnded,
-  adverseCount:confirmedRespiratoryAdverse(p,c).adverseCount,autonomy:100,uid:p.uid};
+  adverseCount:confirmedClinicalMissteps(p,c).adverseCount,autonomy:100,uid:p.uid};
 }
 
 /** APP-001 case policy. The room authority and ONE native clinical port own
