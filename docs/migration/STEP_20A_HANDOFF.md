@@ -20,6 +20,11 @@ Prioridad del usuario: terminar sistemas y **los cuatro modos**, lobby donde con
 4. `src/v5/social/lobby-to-guard.test.js` — une la especificación real de grupo al `createRoomAuthority` y al **único puerto `createNativeClinicalPort`**. Simula 2/3/4 actores autenticados y dos grupos independientes, demuestra que Coop permite intervenir a todos, Competitivo reclama paciente con primera acción válida, rivales no lo tratan, chat sigue global, replay no repite tratamiento, dos salas no comparten paciente.
 5. `package.json`: `npm run test:v5` incluye `src/v5/social/*.test.js` para que el contrato social sea gate CI permanente.
 
+## Endurecimiento posterior del mismo checkpoint
+- Seguridad `6edb3f4aa7bf512f24eb6ba07e4ab526dc2bdca1`: `guardActor` vuelve a autenticar por **credencial + sesión actual + pertenencia activa a la sala** en cada orden. Salir del grupo, caducar, volver al lobby o reconectar con sesión nueva revoca el acceso anterior; `room-authority` rechaza solicitudes de antiguas credenciales aunque el actor figure en el roster original. Probado en `lobby-to-guard.test.js`. Es un contrato de integración hacia la futura puerta de red; no afirma que actualmente haya autenticación online.
+- Rendimiento `280adcf6ed502341937a298cf0c9cef3eb010246`: `move` y `heartbeat` actualizan el directorio espacial tras autorización sin esperar toda la cola global de invitaciones y creación de salas. La transición en JS sigue siendo sincrónica tras resolver la credencial. **Sin benchmark masivo de red** ni promesa de concurrencia de 10.000 clientes.
+- CI del último código: [buscar ejecución por SHA](https://github.com/javierdario48-star/ATRIA/commit/280adcf6ed502341937a298cf0c9cef3eb010246/checks); verificar antes de confirmar 3/3. `src/v5/social/*.test.js` permanece en la suite obligatoria.
+
 ## Límites técnicos y seguridad
 - No hay transport físico actual en esta rama, cuenta online real, perfiles globales, amigos, presencia masiva replicada, conexión entre móviles ni persistencia multi-nodo. NO habilitar Coop/Competitivo aún.
 - Faltan autoridad de credenciales real y servidor durable/transaccional. El `qa-social-server.js` viejo se declara **QA con KV efímero**, no apto como infraestructura productiva global sin una reingeniería y pruebas bajo concurrencia multiinstancia.
