@@ -80,8 +80,20 @@ export function createLobbyCoordinator({
  async function mutation(credentials,fn){
   return enqueue(async()=>{
    if(disposed)throw Error('lobby-disposed');
-   expire();return fn(await auth(credentials));
+   const userId=await auth(credentials);
+   if(disposed)throw Error('lobby-disposed');
+   expire();return fn(userId);
   });
+ }
+ // High-frequency presence does not queue behind slow party authentication
+ // or thousands of other players' motion. Once credentials resolve, JS makes
+ // the session check and the spatial-index update in one synchronous turn.
+ async function presenceMutation(credentials,fn){
+  if(disposed)throw Error('lobby-disposed');
+  const userId=await auth(credentials);
+  if(disposed)throw Error('lobby-disposed');
+  expire();
+  return fn(userId);
  }
  return Object.freeze({
   join(credentials,{name,color='navy',x=0,y=0,level=1}={}){
@@ -99,7 +111,7 @@ export function createLobbyCoordinator({
    });
   },
   move(credentials,{sessionId,seq,x,y,dir='S',moving=false}={}){
-   return mutation(credentials,userId=>{
+   return presenceMutation(credentials,userId=>{
     const p=session(userId,sessionId);
     if(!Number.isSafeInteger(seq)||seq<1||!clamp(x,0,10000)||!clamp(y,0,10000)||
        !DIRECTIONS.has(dir)||typeof moving!=='boolean')throw Error('invalid-lobby-motion');
@@ -109,7 +121,7 @@ export function createLobbyCoordinator({
    });
   },
   heartbeat(credentials,{sessionId}={}){
-   return mutation(credentials,userId=>{const p=session(userId,sessionId);
+   return presenceMutation(credentials,userId=>{const p=session(userId,sessionId);
     p.lastSeen=clock();return {ok:true};});
   },
   disconnect(credentials,{sessionId}={}){
