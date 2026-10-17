@@ -26,6 +26,16 @@ test('C12f six real bots: correct care closes APP/CIRR; incompetent care harms w
   assert(bad.terminal.vitals.spo2<bad.initial.vitals.spo2-10);
   assert.equal(bad.refusedUnqualifiedClosure,true);
  }
+ console.log('ATRIA_BOT_TRAJECTORIES='+JSON.stringify(report.rows.map(r=>({
+  caseId:r.caseId,strategy:r.strategy,
+  initialVitals:r.initial.vitals,
+  finalVitals:(r.closed||r.terminal).vitals,
+  delta:r.delta??null,
+  died:(r.closed||r.terminal).died,
+  destination:r.closed?.closeDestination??null,
+  xp:r.closed?.xp??0,
+  verifiedFluidMl:r.totalConfirmedFluidMl??0
+ }))));
  console.log('ATRIA_BOT_GAPS='+JSON.stringify(report.gaps));
  // Do not assert mortality passes: characterization records it as unresolved.
  assert.equal(typeof report.parityAchieved,'boolean');
