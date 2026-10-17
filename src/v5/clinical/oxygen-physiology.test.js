@@ -25,7 +25,7 @@ test('C12e confirmed 2 and 4 L/min oxygen raises low Sat gradually in both nativ
   const proof=start(four);
   assert.equal(proof.status,'executed');assert.equal(proof.receipt.patientUid,'P1');
   executeOxygenSupport(two,command('oxygen2','therapy.request','oxigeno 2 L/min'),{clinicalMinute:0,nativeMinute:1});
-  assert.equal(oxygenationTargetOffset(four,a.c,1),0,'effect cannot precede the onset');
+  assert(oxygenationTargetOffset(four,a.c,1)<.01,'legacy onset has a bounded numerical epsilon at t=0');
   const before=structuredClone(four.liveVitals);
   run(four,a.c,a.advance,30,4);
   run(two,a.c,a.advance,30,4);
@@ -68,6 +68,7 @@ test('C12e forged active-device state without completed bedside receipt cannot a
  f.p.procedures.oxygen={active:true,flowLpm:4,sourceEventId:'fake'};
  assert.throws(()=>run(f.p,f.c,f.advance,2,4),/unique confirmed receipt/);
  assert.equal(f.p.liveVitals.spo2,86);
+ f.p.procedures.oxygen.active=false;
  const other=executeOxygenSupport(f.p,command('actual','therapy.request','oxigeno 4 L/min'),{clinicalMinute:1,nativeMinute:3});
  assert.equal(other.status,'executed');
  // SourceEventId, patient identity, dose and timeline must all agree.

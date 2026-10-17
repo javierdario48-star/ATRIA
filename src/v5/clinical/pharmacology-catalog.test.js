@@ -71,7 +71,8 @@ test('C12d unadministered intent does not change state; oxygen stop actually sto
  p.liveVitals.spo2=85;
  give(p,'oxygen',1,1,'start');
  const active=catalog.evaluate(c.id,p,5).drugs.find(d=>d.id==='oxygen');
- assert(active.candidateOffsets.spo2>0);
+ assert(active.rawOffsets.spo2>0,'the inherited clinical response remains observable');
+ assert.equal(active.candidateOffsets.spo2,0,'the native case owns the SpO2 writer');
  const stopped=give(p,'oxygen',6,2,'stop');stopped.dose.amount=0;
  const noLonger=catalog.evaluate(c.id,p,20).drugs.find(d=>d.id==='oxygen');
  assert.equal(noLonger.state,'stopped');
