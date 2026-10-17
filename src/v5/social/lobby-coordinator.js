@@ -117,6 +117,18 @@ export function createLobbyCoordinator({
     if(!p||p.sessionId!==sessionId)return {disconnected:false};
     remove(userId);return {disconnected:true};});
   },
+  async guardActor(credentials,{sessionId,roomId}={}){
+   if(disposed)return null;
+   let userId;
+   try{userId=await auth(credentials);}catch{return null;}
+   const user=players.get(userId),party=parties.get(roomId);
+   if(!user||!identity(sessionId)||user.sessionId!==sessionId||
+    clock()-user.lastSeen>=idleMs||user.partyId!==roomId||
+    !party||party.phase!=='active'||!party.members.has(userId))return null;
+   // A room never trusts its founding roster without confirming current
+   // authorization. Leaving, expiry, host disband and return to lobby revoke it.
+   return {id:userId,roomId};
+  },
   async nearby(credentials,{sessionId,radius=360,limit=48}={}){
    if(disposed)throw Error('lobby-disposed');
    const id=await auth(credentials);

@@ -26,9 +26,11 @@ async function fixture(n,mode,serial=0){
    patientUid:request.patientUid,receipt:{eventId:request.eventId,patientUid:request.patientUid}};}});
  const room=createRoomAuthority({roomId:roomTicket.roomId,mode:roomTicket.mode,
   members:roomTicket.members.map(id=>({id})),patients:[{uid:'patient-1'}],
-  authenticate:t=>{const a=tokens.get(t);return a&&{...a,roomId:roomTicket.roomId};},
+  authenticate:credentials=>hub.guardActor(credentials.token,{
+   sessionId:credentials.sessionId,roomId:roomTicket.roomId}),
   clinicalPort:port,resolveSpeechContext:()=>({patientUid:'patient-1',therapies,studies:[]})});
- const send=(i,id,text)=>room.dispatch({id,kind:'chat.post',text},'token-'+i);
+ const send=(i,id,text)=>room.dispatch({id,kind:'chat.post',text},
+  {token:'token-'+i,sessionId:sessions[i]});
  return {hub,room,ticket:roomTicket,sessions,calls,send};
 }
 test('C20a lobby grants 2/3/4 authenticated members the same clinical engine with mode-specific permissions',async()=>{
@@ -57,6 +59,10 @@ test('C20a lobby grants 2/3/4 authenticated members the same clinical engine wit
   assert.equal((await f.hub.finish('token-0',{sessionId:f.sessions[0],partyId:f.ticket.roomId})).finished,true);
   assert.equal((await f.hub.nearby('token-0',{sessionId:f.sessions[0]})).length,n-1);
   assert.equal(f.hub.diagnostics().parties,0);
+  const revoked=await f.send(0,'after-return','Enfermera ceftriaxona');
+  assert.equal(revoked.status,'rejected');
+  assert.equal(revoked.reason,'unauthenticated-or-not-member',
+   'return to lobby must revoke clinical authority for the former party');
   f.room.dispose();f.hub.dispose();
  }
 });
@@ -69,7 +75,27 @@ test('C20a different accepted parties never share a clinical room or patient',as
  await second.send(0,'rx','Enfermera metronidazol');
  assert.equal(second.calls.length,1);assert.equal(first.calls.length,1);
  const wrong=await first.room.dispatch({id:'wrong',kind:'chat.post',
-  text:'Enfermera ceftriaxona',actorId:'actor-1',patientUid:'patient-other'},'wrong-token');
+  text:'Enfermera ceftriaxona',actorId:'actor-1',patientUid:'patient-other'},
+  {token:'wrong-token',sessionId:'forged'});
  assert.equal(wrong.reason,'unauthenticated-or-not-member');
  first.room.dispose();second.room.dispose();first.hub.dispose();second.hub.dispose();
+});
+
+test('C20a party leave/reconnect revokes stale clinical tokens without discarding global chat',async()=>{
+ const f=await fixture(3,'coop');
+ assert.equal((await f.send(1,'first','Enfermera ceftriaxona')).clinical[0].status,'executed');
+ await f.hub.leave('token-1',{sessionId:f.sessions[1]});
+ const denied=await f.send(1,'after-leave','Enfermera ceftriaxona');
+ assert.equal(denied.status,'rejected');assert.equal(denied.reason,'unauthenticated-or-not-member');
+ assert.equal(f.calls.length,1);
+ assert.equal(f.room.snapshot().transcript.length,1);
+ const reconnected=await f.hub.join('token-2',{name:'Dr 2'});
+ const stale=await f.send(2,'old-session','Enfermera ceftriaxona');
+ assert.equal(stale.status,'rejected');
+ const resumed=await f.room.dispatch({id:'new-session',kind:'chat.post',text:'Enfermera ceftriaxona'},
+  {token:'token-2',sessionId:reconnected.sessionId});
+ assert.equal(resumed.clinical[0].status,'executed',
+  're-authenticated still-active party member retains legitimate guard access');
+ assert.equal(f.calls.length,2);
+ f.room.dispose();f.hub.dispose();
 });
