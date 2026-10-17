@@ -22,5 +22,6 @@ export function crystalloidOverloadOffsets(patient,caseDef){
   return {rr:0,spo2:0};
  const totalMl=summarizeIVExposures(patient).confirmedCrystalloidMl;
  const excessLiters=Math.max(0,totalMl-threshold)/1000;
+ if(excessLiters===0)return {rr:0,spo2:0};
  return {rr:RR_PER_LITER*excessLiters,spo2:SPO2_PER_LITER*excessLiters};
 }

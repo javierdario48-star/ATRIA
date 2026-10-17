@@ -12,15 +12,16 @@ const patient=(caseId,ml=0)=>({uid:'p-'+caseId,caseId,
 const config=(id,overloadThresholdMl)=>({id,vitals:id==='APP-001'?
  {bp:'118/72',temp:38.1,hr:108,rr:20,spo2:98}:
  {bp:'108/68',temp:37.2,hr:94,rr:20,spo2:96},
- ...(overloadThresholdMl===undefined?{}:{physiology:{fluidOverloadThresholdMl}})});
+ ...(overloadThresholdMl===undefined?{}:{physiology:{fluidOverloadThresholdMl:overloadThresholdMl}})});
 test('C12b doses 500-2500 ml preserve existing native physiology; first overload dose causes modest harm',()=>{
  for(const id of ['APP-001','CIRR-001']){
   const c=config(id);
   for(const ml of [0,500,1000,2500]){
    const p=patient(id,ml);assert.deepEqual(crystalloidOverloadOffsets(p,c),{rr:0,spo2:0});
   }
-  assert.deepEqual(crystalloidOverloadOffsets(patient(id,3000),c),{
-   rr:.88,spo2:-.72});
+  const offsets=crystalloidOverloadOffsets(patient(id,3000),c);
+  assert(Math.abs(offsets.rr-.88)<1e-9);
+  assert(Math.abs(offsets.spo2+.72)<1e-9);
  }
 });
 test('C12b dose-response at 4 liters reproduces the LEGACY respiratory target without copying legacy circulation errors',()=>{
@@ -51,8 +52,9 @@ test('C12b pending, fabricated treatment flag, other patient and drug-only admin
 });
 test('C12b case threshold may be explicitly declared but invalid values fail closed',()=>{
  const p=patient('CIRR-001',2000);
- assert.deepEqual(crystalloidOverloadOffsets(p,config('CIRR-001',1800)),{
-  rr:.88,spo2:-.72});
+ const offsets=crystalloidOverloadOffsets(p,config('CIRR-001',1800));
+ assert(Math.abs(offsets.rr-.88)<1e-9);
+ assert(Math.abs(offsets.spo2+.72)<1e-9);
  for(const threshold of [0,-1,NaN,Infinity,30000])
   assert.throws(()=>crystalloidOverloadOffsets(p,config('CIRR-001',threshold)),/threshold/);
 });
