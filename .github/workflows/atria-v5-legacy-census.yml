@@ -1,0 +1,32 @@
+name: ATRIA 4.8.7 Legacy Gameplay Census
+
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  legacy-gameplay-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Browse genuine generated 4.8.7 UI with two independent clients
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/legacy-gameplay-surface-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-legacy-gameplay-control-census
+          path: qa/v5-audit-results/legacy-browser-control-census.json
+          retention-days: 14
