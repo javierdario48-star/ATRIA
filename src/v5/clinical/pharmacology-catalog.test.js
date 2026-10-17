@@ -2,6 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createCasePharmacology} from './pharmacology-catalog.js';
+import {createGuardSession} from './guard-session.js';
 import {PHARMA_RULES_487} from '../../clinical/pharmacology-registry-487.js';
 
 const read=id=>JSON.parse(readFileSync(new URL('../content/'+id+'.json',import.meta.url)));
@@ -136,4 +137,52 @@ test('C12d repeated receipt identities, mismatched patient IDs or future timesta
  assert.throws(()=>catalog.evaluate(c.id,p,2),/duplicate confirmed administration/);
  p.administrationLog.pop();p.administrationLog[0].patientUid='different';
  assert.throws(()=>catalog.evaluate(c.id,p,2),/invalid or duplicate/);
+});
+
+test('C12d live solo APP uses the same inherited drug catalogue but only confirmed native treatments count',async()=>{
+ const content={cases,therapies,defaultDoses:read('default-doses')};
+ const session=createGuardSession({roomId:'pharm-APP',mode:'solo',actorId:'doctor',
+  actorName:'Doctor',patient:{uid:'P1',caseId:'APP-001'},content,
+  resolveContext:()=>({patientUid:'P1'})});
+ try{
+  assert.equal(session.pharmacologyRules().drugs.length,30);
+  let state=session.pharmacologyRead();
+  assert.equal(state.outcomes.coverageComplete,false);
+  assert.equal(state.drugs.filter(d=>d.state==='confirmed').length,0);
+  await session.post({id:'iv',text:'Enfermera dos vías'});
+  const order=await session.post({id:'antibiotics',
+   text:'Enfermera ceftriaxona 1 g y metronidazol 500 mg'});
+  assert.deepEqual(order.clinical.map(x=>x.status),['pending','pending']);
+  state=session.pharmacologyRead();
+  assert.equal(state.outcomes.coverageComplete,false,'a prescription is not a drug exposure');
+  session.advance(1.51);await session.flush();
+  state=session.pharmacologyRead();
+  assert.equal(state.drugs.find(d=>d.id==='ceftriaxone').state,'confirmed');
+  assert.equal(state.drugs.find(d=>d.id==='metronidazole').state,'confirmed');
+  assert.equal(state.outcomes.coverageComplete,true);
+  assert.equal(state.outcomes.infectionBurdenIndex,1,'antibiotic effects cannot be instantaneous');
+  assert.equal(session.read().patient.administrationLog.length,2);
+  await session.post({id:'antibiotics',text:'Enfermera ceftriaxona 1 g y metronidazol 500 mg'});
+  assert.equal(session.read().patient.administrationLog.length,2);
+  assert.equal(session.pharmacologyRead().drugs.find(d=>d.id==='ceftriaxone').sourceEventId,
+   state.drugs.find(d=>d.id==='ceftriaxone').sourceEventId);
+ }finally{session.dispose();}
+});
+test('C12d solo CIRR exposes every inherited medication without authorizing unimplemented ones',async()=>{
+ const content={cases,therapies,defaultDoses:read('default-doses')};
+ const session=createGuardSession({roomId:'pharm-CIRR',mode:'solo',actorId:'doctor',
+  actorName:'Doctor',patient:{uid:'P2',caseId:'CIRR-001'},content,
+  resolveContext:()=>({patientUid:'P2'})});
+ try{
+  assert.equal(session.pharmacologyRules().drugs.length,30);
+  const attempted=await session.post({id:'unsupported',text:'Enfermera vasopresor'});
+  assert.equal(attempted.clinical[0].status,'rejected');
+  assert.equal(session.pharmacologyRead().drugs.find(d=>d.id==='vasopressor').state,'not-administered');
+  const first=await session.post({id:'oxygen',text:'Enfermera oxígeno 4 L/min'});
+  assert.equal(first.clinical[0].status,'executed');
+  assert.equal(session.pharmacologyRead().drugs.find(d=>d.id==='oxygen').state,'confirmed');
+  const stopped=await session.post({id:'stopoxygen',text:'Enfermera suspender oxígeno'});
+  assert.equal(stopped.clinical[0].status,'executed');
+  assert.equal(session.pharmacologyRead().drugs.find(d=>d.id==='oxygen').state,'stopped');
+ }finally{session.dispose();}
 });
