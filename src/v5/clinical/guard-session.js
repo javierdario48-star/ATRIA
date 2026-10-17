@@ -70,7 +70,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   }
   return null;
  }
- const guardClock=createGuardClock(actorId);let clock=guardClock.read(),disposed=false;
+ const guardClock=createGuardClock(actorId);let clock=guardClock.read(),disposed=false,deathPublished=false;
  const credentials=Object.freeze({roomId,actorId,nonce:Symbol('local-room')});
  const port=createNativeClinicalPort({
   validateReceipt:assertMatchingClinicalReceipt,
@@ -196,6 +196,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     }
     if(event.npcReply?.role==='mentor')
      rows.push({id:'npc:'+message.id,name:event.npcReply.name,role:'mentor',text:event.npcReply.text});
+   }else if(event.type==='clinical.patient-died'){
+    rows.push({id:'death:'+event.patientUid+':'+event.revision,name:'ATRIA',
+     role:'system',text:'El paciente falleció por '+(event.cause==='critical-hypoxemia'?
+      'hipoxemia crítica sostenida':'colapso circulatorio sostenido')+
+      '. Caso finalizado sin XP.'});
    }else if(event.type==='clinical.completed'){
     for(const item of event.clinical){
      const source=item.receipt?.sourceEventId||event.eventId;if(announcedResults.has(source))continue;
@@ -229,7 +234,23 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    // The existing authoritative guard clock drives the V4-proven pure survival
    // policies AFTER the native case vital writer; no additional timer/loop.
    if(care)advanceNativeSurvival(nativePatient,caseData,mode,before,clock);
+   if(nativePatient.patientDied&&!deathPublished){
+    deathPublished=true;
+    care.dispose(); // cancel native medication and consultation preparations
+    const reject=eventId=>port.complete({eventId,patientUid:nativePatient.uid,
+     status:'rejected',reason:'patient-not-active'});
+    for(const ids of pendingStudyRequests.values())for(const eventId of ids)reject(eventId);
+    pendingStudyRequests.clear();
+    for(const eventId of waitingForAccess.keys())reject(eventId);
+    waitingForAccess.clear();
+    for(const eventId of pendingNurseJobs.keys())reject(eventId);
+    // A nurse already walking to the bed must still report rejected arrival.
+    if(!authority.reportPatientDeath({patientUid:nativePatient.uid,
+       cause:nativePatient.deathReason,atNativeMinute:clock.nativeMinute}))
+     throw Error('native death/room authority disagreement');
+   }
    refreshMonitoring(nativePatient,clock);
+   if(deathPublished)return [];
    const ready=studies.advance(nativePatient,clock.clinicalMinute);
    for(const order of ready){
     for(const eventId of pendingStudyRequests.get(order.sourceEventId)||[order.sourceEventId])
@@ -251,8 +272,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    for(const arrival of nursing.takeArrivals()){
     const task=pendingNurseJobs.get(arrival.eventId);
     if(!task||task.patientUid!==arrival.patientUid)continue;
-    const result=care?.execute(task,clock)??{
-     status:'rejected',patientUid:task.patientUid,eventId:task.eventId,reason:'clinical-action-not-migrated'};
+    const result=nativePatient.caseEnded?
+     {status:'rejected',patientUid:task.patientUid,eventId:task.eventId,reason:'patient-not-active'}:
+     care?.execute(task,clock)??{
+      status:'rejected',patientUid:task.patientUid,eventId:task.eventId,reason:'clinical-action-not-migrated'};
     if(result.status==='pending'){
      // The nurse is physically at the bedside, supervising the existing
      // preparation. care.advance() alone will issue the terminal receipt.
