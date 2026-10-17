@@ -107,5 +107,9 @@ test('real session: stable untreated cirrhosis survives; fatal overload closes w
  assert(!report.gaps.some(x=>x.key.endsWith('/fatal-transition')));
  assert(!report.gaps.some(x=>x.key==='APP-001/untreated-disease'),
   'APP natural-history progression now makes abandonment measurably worse');
- assert(report.gaps.some(x=>x.key==='clock/24h'));
+ assert(!report.gaps.some(x=>x.key==='clock/24h'),
+  'the 24h visible game clock must not be confused with slower native V4 pharmacodynamics');
+ assert(!report.gaps.some(x=>x.key==='clock/native-v4'));
+ assert.equal(report.rows.find(x=>x.caseId==='APP-001'&&x.strategy==='neglect')
+  .declaredGameMinutesFor24RealMinutes,1440);
 });

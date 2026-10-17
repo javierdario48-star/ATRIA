@@ -21,7 +21,8 @@ function bot(caseId,mode='solo'){
 }
 function trajectory(s){
  const state=s.read(),p=state.patient;
- return {atRealMinutes:state.clock.clinicalMinute,atNativeMinutes:state.clock.nativeMinute,
+ return {atRealMinutes:state.clock.clinicalMinute,atGameMinutes:state.clock.gameMinute,
+  atNativeMinutes:state.clock.nativeMinute,
   vitals:Object.fromEntries(vitalKeys.map(id=>[id,Number(p.liveVitals[id].toFixed(3))])),
   caseEnded:!!p.caseEnded,died:!!p.patientDied,deathReason:p.deathReason??null,
   closeDestination:p.closure?.destination??null,xp:state.progress.xp,
@@ -82,7 +83,8 @@ async function neglected(caseId){
   return {caseId,strategy:'neglect',initial,terminal,delta:delta(initial,terminal),
    refusal:refusal.clinical[0]?.status,
    autoProgressed:vitalKeys.some(k=>Math.abs(terminal.vitals[k]-initial.vitals[k])>=1),
-   declaredGameMinutesFor24RealMinutes:terminal.atNativeMinutes};
+   declaredGameMinutesFor24RealMinutes:terminal.atGameMinutes,
+   nativePharmacodynamicMinutesFor24RealMinutes:terminal.atNativeMinutes};
  }finally{f.session.dispose();}
 }
 async function harmful(caseId){
@@ -140,7 +142,13 @@ export async function runClinicalBotMatrix(){
  }
  const minutes=rows.find(r=>r.caseId==='APP-001'&&r.strategy==='neglect').declaredGameMinutesFor24RealMinutes;
  if(Math.abs(minutes-1440)>1)
-  gaps.push(gap('clock/24h','24 real minutes advance '+Number(minutes.toFixed(2))+' simulated minutes, not 1440'));
+  gaps.push(gap('clock/24h','24 real minutes advance '+Number(minutes.toFixed(2))+' DISPLAY game minutes, not 1440'));
+ const nativeMinutes=rows.find(r=>r.caseId==='APP-001'&&r.strategy==='neglect')
+  .nativePharmacodynamicMinutesFor24RealMinutes;
+ // Legacy native pharmacodynamics uses .12 min/real second, separate from
+ // the 24h/24m HUD. Catch accidental multiplication of drug/death kinetics.
+ if(Math.abs(nativeMinutes-172.8)>1e-6)
+  gaps.push(gap('clock/native-v4','legacy native pharmacodynamic rate unexpectedly changed'));
  return {schema:'atria.v5.clinical-bots.v1',source:'real createGuardSession/APP-CIRR native policies',
   legacyDestinations:Object.fromEntries(clinicalCases.map(id=>[id,CASE_CLOSURE_RULES_487[id].destinations])),
   rows,gaps,parityAchieved:gaps.length===0};
