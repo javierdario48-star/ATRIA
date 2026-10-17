@@ -13,7 +13,7 @@ export function parseStandardIVDose(text,reference){
   .replace(/[\u0300-\u036f]/g,'').replace(/,/g,'.');
  if(/\b(oral|po|im|intramuscular|subcutane\w*|sc|nasal)\b/.test(raw))
   throw Error('unsupported-dose-route');
- const matches=[...raw.matchAll(/(?:^|\s)([+-]?(?:\d+(?:\.\d+)?|\.\d+))\s*(mg|g|ml|cc|l)\b/g)];
+ const matches=[...raw.matchAll(/(?:^|\s)([+-]?(?:\d+(?:\.\d+)?|\.\d+))\s*(mg|g|ml|cc|litros?|l)\b/g)];
  if(matches.length===0){
   if(/\d|\b(mcg|ug|gramos?|miligramos?|litros?)\b/.test(raw))throw Error('invalid-dose');
   return {...reference,defaultApplied:true};
@@ -22,12 +22,16 @@ export function parseStandardIVDose(text,reference){
  const chosen=matches[0],rest=raw.slice(0,chosen.index)+raw.slice(chosen.index+chosen[0].length);
  if(/\d|\b(mcg|ug|mg|g|ml|cc|litros?|microgramos?)\b/.test(rest))
   throw Error('ambiguous-dose-qualifier');
- const unit=chosen[2],actual=Number(chosen[1])*(unit==='g'?1000:unit==='l'?1000:1);
+ const unit=chosen[2],actual=Number(chosen[1])*(unit==='g'?1000:unit==='l'||unit.startsWith('litro')?1000:1);
  if((reference.unit==='mg'&&!['mg','g'].includes(unit))||
   (reference.unit==='ml'&&!['ml','cc','l'].includes(unit))||
-  !Number.isFinite(actual)||actual!==reference.amount)
+  !Number.isFinite(actual)||
+  (reference.unit==='mg'?actual!==reference.amount:
+   !(actual>=50&&actual<=40000&&Number.isInteger(actual/50))))
   throw Error('unsupported-dose');
- return {...reference,defaultApplied:false};
+ return {...reference,amount:actual,display:reference.unit==='ml'?
+  (actual%1000===0?actual/1000+' l':actual+' ml'):reference.display,
+  defaultApplied:false};
 }
 
 /** Scheduling and receipts for validated IV medicine: never changes vitals.
