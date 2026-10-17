@@ -2,8 +2,9 @@
 
 Date 2026-10-17. Branch: atria-5.0-core-rebuild-experimental. Production/main/V4/golden master untouched.
 Baseline fully green: 35adf2a8c44167fa3d9fc47ae9d24735916b5321.
-Functional code checkpoint: 3fdd993f1c32418388ad443b732e40ac687d9ed8.
-Code CI: https://github.com/javierdario48-star/ATRIA/actions/runs/39039358606 . Clean-core-contract passed 294/294 V5, 40/40 core, four other core tests, and standalone builds; HTTP multiplayer job also succeeded. Confirm the independent browser and historic regression jobs complete before declaring 4/4.
+Functional game code checkpoint: 3fdd993f1c32418388ad443b732e40ac687d9ed8.
+QA reinforcement: 8ad077c1a466a5fbd3a0752a6da76a1c87418831.
+Current CI: https://github.com/javierdario48-star/ATRIA/actions/runs/39039627949 . Clean-core-contract passed 295/295 V5, 40/40 core, four extra core tests and standalone builds; HTTP browser job succeeded. Confirm the independent browser and historic regression jobs complete before declaring 4/4.
 Preview deployment for exact code SHA (Vercel READY): https://night-shift-clinical-ocnmzi7yq-javierdario4878-7324.vercel.app
 
 ## Changes
@@ -18,6 +19,7 @@ src/v5/app/application.js displays a one-time in-game 'Guardia finalizada' panel
 
 src/v5/clinical/app-disease-progression.test.js: long-horizon progression, stable CIRR, delivery provenance, no false early divergence from the legacy.
 src/v5/clinical/native-death-room.test.js: actual native session, 20 individually verified Ringer administrations, death reflected by room authority exactly once, no postmortem medications/disposition or XP.
+src/v5/clinical/postmortem-nursing.test.js: nurse arrives after death; pending monitor work is rejected in authority and by the spatial nurse, never administered. Verifies one death event and no extra IV exposure.
 src/v5/clinical/clinical-rescue-paths.test.js: severe initial hypoxemia with confirmed IV fluid, active matching oxygen delivery and improved actual measurements survives; after confirmed irreversible death, later interventions do not revive the case.
 Existing six clinical bots remain positive: expert APP closes OR and expert CIRR closes ward; harmful 10-L bots die from critical hypoxemia without XP; APP untreated now shows natural worsening; CIRR stable remains stable.
 
@@ -27,6 +29,6 @@ Death UI is currently a simple final panel, not a separate animated patient spri
 ## Next
 
 1. Verify existing CI jobs 4/4 and Android preview manually; review death-panel UI on the actual screen.
-2. Harden pending physical nurse and study cancellation tests at death with spatial checkpoints. Inspect and isolate any postmortem callback.
+2. Continue browser-level physical nurse journey death checks and study cancellation; the session-level fake-nurse checkpoint is in CI.
 3. Fix native clock 24h/24min with coordinated updates to pharmacodynamic timelines and tests, preserving real-time 180-480s grace and 65s rescue.
 4. Continue C12/f with stress bots varying frame step, harmful treatment, resuscitation and surgery handoff. No new cases or medication families yet.
