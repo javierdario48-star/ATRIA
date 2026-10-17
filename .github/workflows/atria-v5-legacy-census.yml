@@ -30,3 +30,39 @@ jobs:
           name: atria-legacy-gameplay-control-census
           path: qa/v5-audit-results/legacy-browser-control-census.json
           retention-days: 14
+
+
+  legacy-multiplayer-characterization:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: F
+            players: 2
+          - scenario: G
+            players: 2
+          - scenario: I
+            players: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Exercise original independent-client chat, nurse and competitive ownership
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          CLINICAL_STAGE: ${{ matrix.scenario }}
+          CLINICAL_PLAYERS: ${{ matrix.players }}
+          CLINICAL_OUTPUT: ${{ runner.temp }}/atria-487-characterization
+        run: node qa/clinical-room-browser-487.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v487-native-multiplayer-${{ matrix.scenario }}-${{ matrix.players }}
+          path: ${{ runner.temp }}/atria-487-characterization/
+          retention-days: 14
