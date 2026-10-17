@@ -27,7 +27,7 @@ export function parseStandardIVDose(text,reference){
   (reference.unit==='ml'&&!['ml','cc','l','litro','litros'].includes(unit))||
   !Number.isFinite(actual)||
   (reference.unit==='mg'?actual!==reference.amount:
-   !(actual>=50&&actual<=40000&&Number.isInteger(actual/50))))
+   !(actual>=500&&actual<=40000&&Number.isInteger(actual/500))))
   throw Error('unsupported-dose');
  return {...reference,amount:actual,display:reference.unit==='ml'?
   (actual%1000===0?actual/1000+' l':actual+' ml'):reference.display,
