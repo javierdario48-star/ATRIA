@@ -65,7 +65,7 @@ export function createGuardRelayGuest({
  roomId,hostId,actorId,transport
 }={}){
  if(!valid(roomId)||!valid(hostId)||!valid(actorId))throw Error('invalid-guest-gateway');
- const replica=createRoomReplica(roomId),acks=new Map();
+ const replica=createRoomReplica(roomId),acks=new Map(),posted=new Set();
  const mailbox=createRoomMailbox({roomId,transport,onMessage:async event=>{
   // The HTTP service must assign senderId from authenticated credentials.
   // A guest (including an opponent) cannot author snapshot or ACK.
@@ -78,13 +78,35 @@ export function createGuardRelayGuest({
  }});
  return Object.freeze({
   post(value){const c=command(value);
-   return mailbox.queue('chat.command',c,'command:'+c.id);},
+   const result=mailbox.queue('chat.command',c,'command:'+c.id);
+   posted.add(c.id);return result;},
   poll:()=>mailbox.poll(),flush:()=>mailbox.flush(),
   snapshot:()=>replica.snapshot(),
   acknowledgement:id=>acks.has(id)?copy(acks.get(id)):null,
   requestResync(id){if(!valid(id))throw Error('invalid-resync-id');
    return mailbox.queue('room.resync',{requestedRevision:replica.revision()},'resync-request:'+id);},
+  /** Authenticated host snapshot recovery after truncated relay history.
+   * Never auto-repeat an unacknowledged medicine; require receipt review.
+   */
+  async recover(){
+   if(typeof transport?.checkpoint!=='function')throw Error('checkpoint-transport-unavailable');
+   const response=await transport.checkpoint(),entry=response?.checkpoint,p=entry?.data;
+   if(response?.roomId!==roomId||entry?.userId!==hostId||
+    p?.protocol!=='atria.v5.room.1'||p.roomId!==roomId||
+    p.kind!=='room.snapshot'||!p.payload?.room||
+    !Number.isSafeInteger(entry.sequence)||!Number.isSafeInteger(response.firstRetained)||
+    entry.sequence<response.firstRetained-1)
+    throw Error('invalid-or-expired-host-checkpoint');
+   if(entry.sequence<mailbox.status().cursor)throw Error('checkpoint-older-than-client');
+   const applied=replica.apply(p.payload.room);
+   if(!applied.applied&&applied.reason!=='stale-or-duplicate')
+    throw Error('invalid-host-recovery-snapshot');
+   const reset=mailbox.rebaseFromVerifiedCheckpoint(entry.sequence);
+   const unconfirmed=[...posted].filter(id=>!acks.has(id));
+   return {cursor:reset.cursor,revision:replica.revision(),
+    unconfirmedCommands:unconfirmed,requiresReceiptReview:unconfirmed.length>0};
+  },
   status:()=>mailbox.status(),
-  dispose(){mailbox.dispose();acks.clear();}
+  dispose(){mailbox.dispose();acks.clear();posted.clear();}
  });
 }

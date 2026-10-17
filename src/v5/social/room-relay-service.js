@@ -48,9 +48,10 @@ export function createRoomRelayService({
   throw Error('invalid-relay-service-config');
 
  async function handle({method,path,query={},headers={},body={}}={}){
-  const found=/^\/api\/rooms\/([A-Za-z0-9_-]{1,160})\/messages$/.exec(path||'');
-  if(!found||!['GET','POST'].includes(method))return reply(404,{error:'unknown-relay-route'});
-  const roomId=found[1];
+  const found=/^\/api\/rooms\/([A-Za-z0-9_-]{1,160})\/(messages|checkpoint)$/.exec(path||'');
+  if(!found||!['GET','POST'].includes(method)||found[2]==='checkpoint'&&method!=='GET')
+   return reply(404,{error:'unknown-relay-route'});
+  const roomId=found[1],checkpointRoute=found[2]==='checkpoint';
   let actor;
   try{actor=await authenticate(headers?.authorization||headers?.Authorization||'');}
   catch{return reply(401,{error:'not-authenticated'});}
@@ -58,13 +59,18 @@ export function createRoomRelayService({
   const text=method==='POST'?asJson(body):'';
   if(method==='POST'&&(typeof text!=='string'||text.length>maxPacketBytes+512))
    return reply(413,{error:'relay-packet-too-large'});
-  const cursor=method==='GET'?Number(query.after):0;
-  if(method==='GET'&&(!Number.isSafeInteger(cursor)||cursor<0))
+  const cursor=method==='GET'&&!checkpointRoute?Number(query.after):0;
+  if(method==='GET'&&!checkpointRoute&&(!Number.isSafeInteger(cursor)||cursor<0))
    return reply(400,{error:'invalid-relay-cursor'});
   try{
    const outcome=await store.transact(roomId,async state=>{
     if(!state.members.includes(actor.id)||!await mayAccess(actor.id,state,actor))
      return reply(403,{error:'not-room-member'});
+    if(checkpointRoute){
+     if(!state.checkpoint)return reply(409,{error:'room-checkpoint-unavailable'});
+     return reply(200,{roomId,checkpoint:copy(state.checkpoint),
+      latest:state.sequence,firstRetained:state.firstRetained});
+    }
     if(method==='GET'){
      if(cursor<state.firstRetained-1)
       return reply(409,{error:'relay-history-expired',cursor,
@@ -93,7 +99,10 @@ export function createRoomRelayService({
     // emulate exactly-once with two separate cache get/set operations.
     const seq=state.sequence+1;
     state.sequence=seq;state.identity[key]={signature,sequence:seq};
-    state.records.push({sequence:seq,userId:actor.id,data:copy(value)});
+    const entry={sequence:seq,userId:actor.id,data:copy(value)};
+    state.records.push(entry);
+    // Trusted host checkpoints survive ordinary relay log compaction.
+    if(value.kind==='room.snapshot')state.checkpoint=copy(entry);
     while(state.records.length>maxRetained)state.records.shift();
     state.firstRetained=state.records[0]?.sequence??seq+1;
     return reply(200,{ok:true,sequence:seq,replayed:false});

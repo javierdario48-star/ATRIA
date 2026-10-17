@@ -92,6 +92,14 @@ export function createRoomMailbox({roomId,transport,onMessage,maxPending=128,max
   try{return await task}finally{if(polling===task)polling=null}
  }
  return Object.freeze({queue,flush,poll,
+  /** Read-only guest checkpoint recovery only. Never invoke on clinical host. */
+  rebaseFromVerifiedCheckpoint(sequence){
+   if(disposed)throw Error('mailbox-disposed');
+   if(!Number.isSafeInteger(sequence)||sequence<cursor)throw Error('invalid-mailbox-rebase');
+   if(polling)throw Error('mailbox-rebase-during-poll');
+   cursor=sequence;seen.clear();
+   return {cursor,needsAckReview:outgoing.size>0};
+  },
   status:()=>({roomId,cursor,pending:outgoing.size,seen:seen.size,disposed}),
   dispose(){disposed=true;outgoing.clear();completed.clear();seen.clear();}
  });
@@ -127,6 +135,7 @@ export function createHttpRoomTransport({roomId,token,request=globalThis.fetch,b
   async poll(after){
    if(!Number.isSafeInteger(after)||after<0)throw Error('invalid-room-cursor');
    return api('GET',url+'?after='+after);
-  }
+  },
+  checkpoint:()=>api('GET',url.replace(/\/messages$/,'/checkpoint'))
  });
 }
