@@ -33,6 +33,8 @@ jobs:
         run: node qa/v5/characterize-rapid-harm.mjs
       - name: Characterize all eight consecutive Ringer doses against effective V4 and recorded V5 monitor
         run: node qa/v5/fluid-eight-bolus-comparison.mjs
+      - name: Separate V4 dose-response from elapsed-time smoothing across 0 1 2 4 8 fluid boluses
+        run: node qa/v5/fluid-matched-dose-counterfactual.mjs
       - name: Effective original CIRR and APP exam findings remain equivalent
         run: node qa/v5/characterize-exam-native.mjs
       - name: Visible monitor screens match the effective final original scene
