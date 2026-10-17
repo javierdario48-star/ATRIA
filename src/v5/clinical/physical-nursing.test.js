@@ -775,3 +775,34 @@ test('C12a exposure reads actual receipts, not pending intentions or copied trea
  assert.deepEqual(f.session.read().exposure,after,'transport retry must not create exposure');
  f.session.dispose();f.world.enterLobby();
 });
+
+
+test('C12b physical repeat fluid develops respiratory toxicity only after dose confirmation',async()=>{
+ const f=fixture('CIRR-001'),base=f.session.read().patient.liveVitals;
+ await f.session.post({id:'access',text:'Enfermera una vía'});
+ await walkToCompletion(f);
+ for(let i=0;i<8;i++){
+  const id='ringer-'+i,old=f.session.read().patient.administrationLog.length;
+  const response=await f.session.post({id,text:'Enfermera Ringer 500 ml'});
+  assert.equal(response.clinical[0].status,'pending');
+  assert.equal(f.session.read().exposure.confirmedCrystalloidMl,i*500,
+   'an ordered dose cannot affect exposure until bed and preparation');
+  await arriveAndAdministerIV(f,'fluid','C08-B1:doctor:'+id+':0');
+  assert.equal(f.session.read().patient.administrationLog.length,old+1);
+  assert.equal(f.session.read().exposure.confirmedCrystalloidMl,(i+1)*500);
+  f.session.advance(2.7);await f.session.flush();
+  if(i<5)assert.equal(f.session.read().patient.liveVitals.spo2,base.spo2,
+   'no fluid injury below the characterized threshold');
+ }
+ f.session.advance(24);await f.session.flush();
+ const after=f.session.read().patient;
+ assert(after.liveVitals.spo2<base.spo2-3,'genuine repeated dose can lower oxygenation');
+ assert(after.liveVitals.rr>base.rr+3,'overload raises respiratory work');
+ assert.equal(after.liveVitals.sys,base.sys,'stable CIRR has no fabricated positive fluid BP response');
+ assert.equal(after.administrationLog.filter(t=>t.id==='fluid').length,8);
+ assert.equal(new Set(after.administrationLog.filter(t=>t.id==='fluid').map(t=>t.sourceEventId)).size,8);
+ const repeat=await f.session.post({id:'ringer-7',text:'Enfermera Ringer 500 ml'});
+ assert.equal(repeat.clinical[0].status,'executed');
+ assert.equal(f.session.read().exposure.confirmedCrystalloidMl,4000);
+ f.session.dispose();f.world.enterLobby();
+});

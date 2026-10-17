@@ -1,3 +1,4 @@
+import {crystalloidOverloadOffsets} from './crystalloid-overload.js';
 // Original native CIRR vital model, migrated explicitly from 4.8.6/4.8.7.
 // See qa/v5/characterize-cirr-native.mjs. No severity helper or shadow engine.
 const keys=['temp','hr','rr','sys','dia','spo2'];
@@ -31,6 +32,10 @@ export function advanceCirrVitals(p,c,dt){
  // Native spironolactone/sodium restriction effects are empty. CIRR has no
  // peritonitis engine, shock progression or modeled ascites/diuresis kinetics.
  if(active.has('paracentesis_ter')){target.hr-=3;target.rr-=2;}
+ // No unsupported positive Ringer blood-pressure response in stable CIRR.
+ // Respiratory fluid overload is independently evidenced by repeated dosing.
+ const overload=crystalloidOverloadOffsets(p,c);
+ target.rr+=overload.rr;target.spo2+=overload.spo2;
  const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
  // Exact closed form of repeated native 1/60-second Euler smoothing for a
  // constant target, plus its fractional final step. No unbounded catch-up loop.
