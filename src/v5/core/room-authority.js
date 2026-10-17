@@ -21,7 +21,7 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
  if(memberSet.size!==members.length||byPatient.size!==patients.length||
   [...byPatient.keys()].some(x=>!id(x))||[...memberSet].some(x=>!id(x)))throw Error('invalid room members/patients');
  let revision=0,sequence=Promise.resolve(),disposed=false,unsubscribeCompletion=null;
- const transcript=[],events=[],seen=new Map(),pendingExecutions=new Map();
+ const transcript=[],events=[],seen=new Map(),pendingExecutions=new Map(),complications=new Set();
  const snapshot=()=>copy({roomId,mode,revision,members:[...memberSet],
   patients:[...byPatient.values()],transcript,events});
  const rejection=(commandId,reason)=>({commandId,status:'rejected',reason,roomId,revision});
@@ -157,6 +157,27 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
    return enqueue(()=>process(envelope,credentials));
   },
   flush:()=>sequence,
+  // Trusted native owner only; no network/chat command exposes this capability.
+  reportPatientComplication({patientUid,sourceEventId,kind,atNativeMinute,message}){
+   const patient=byPatient.get(patientUid),key=patientUid+':'+sourceEventId+':'+kind;
+   if(disposed||!patient||patient.closed||complications.has(key)||
+     typeof sourceEventId!=='string'||!sourceEventId||sourceEventId.length>512||
+     !['severe-drug-allergy','anticoagulant-bleeding'].includes(kind)||
+     !Number.isFinite(atNativeMinute)||atNativeMinute<0||
+     typeof message!=='string'||!message||message.length>600)return false;
+   complications.add(key);
+   const at=time();
+   // Preserve the native completion -> complication -> death order even when
+   // a long frame produces all three before JavaScript yields.
+   enqueue(()=>{
+    if(disposed)return;
+    const event={type:'clinical.complication',roomId,patientUid,sourceEventId,kind,
+     atNativeMinute,message,revision:++revision,at};
+    events.push(event);if(events.length>300)events.shift();
+    try{emit(copy(event),snapshot());}catch{/* presentation cannot undo clinical harm */}
+   });
+   return true;
+  },
   // Native authoritative outcome; cannot be invoked through chat commands.
   reportPatientDeath({patientUid,cause,atNativeMinute}){
    const patient=byPatient.get(patientUid);
@@ -164,10 +185,14 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
       !['critical-hypoxemia','circulatory-collapse'].includes(cause)||
       !Number.isFinite(atNativeMinute)||atNativeMinute<0)return false;
    patient.closed=true;patient.died=true;patient.deathReason=cause;
-   const event={type:'clinical.patient-died',roomId,patientUid,cause,
-    atNativeMinute,revision:++revision,at:time()};
-   events.push(event);if(events.length>300)events.shift();
-   try{emit(copy(event),snapshot());}catch{/* subscribers cannot undo death */ }
+   const at=time();
+   enqueue(()=>{
+    if(disposed)return;
+    const event={type:'clinical.patient-died',roomId,patientUid,cause,
+     atNativeMinute,revision:++revision,at};
+    events.push(event);if(events.length>300)events.shift();
+    try{emit(copy(event),snapshot());}catch{/* subscribers cannot undo death */ }
+   });
    return true;
   },
   dispose(){

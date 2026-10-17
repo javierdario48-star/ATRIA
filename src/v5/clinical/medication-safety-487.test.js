@@ -27,36 +27,36 @@ test('actual V4 renal hazard profiles distinguish nephrotoxicity from routine an
  assert(medicationSafety487(c('PERI-SEC-001'),p,'furosemide').cautions.includes('case-avoid'));
 });
 test('exact patient allergies and explicit class allergies; no invented cross reactivity',()=>{
- assert(medicationSafety487(c('APP-001'),{allergies:['penicillin']},'ampicillin').blocked);
- assert(medicationSafety487(c('APP-001'),{allergies:['penicillin']},'piptazo').blocked);
+ assert(medicationSafety487(c('APP-001'),{allergies:['penicillin']},'ampicillin').contraindicated);
+ assert(medicationSafety487(c('APP-001'),{allergies:['penicillin']},'piptazo').contraindicated);
  assert.equal(medicationSafety487(c('APP-001'),{allergies:['penicillin']},'ceftriaxone').blocked,false);
  assert.deepEqual(normalizeDocumentedAllergies487(['ceftriaxone','ceftriaxone']),['ceftriaxone']);
  assert.throws(()=>normalizeDocumentedAllergies487(['bogus']),/unknown documented/);
 });
-test('documented ceftriaxone allergy rejects an otherwise valid native dose without suppressing alternatives',async()=>{
+test('documented ceftriaxone allergy permits a valid dose and preserves alternatives',async()=>{
  const uid='P1',s=createGuardSession({roomId:'safety1',mode:'solo',actorId:'doc',actorName:'Doc',
   patient:{uid,caseId:'APP-001',allergies:['ceftriaxone']},content,resolveContext:()=>({patientUid:uid})});
  let i=0;const post=text=>s.post({id:'s'+(++i),text});
  try{
   await post('Enfermera una vía');
   const bad=await post('Enfermera ceftriaxona 1 g');
-  assert.equal(bad.clinical[0].status,'rejected');
-  assert.equal(bad.clinical[0].reason,'documented-drug-allergy');
+  assert.equal(bad.clinical[0].status,'pending');
   s.advance(10);await s.flush();
-  assert(!s.read().patient.administrationLog.some(x=>x.id==='ceftriaxone'));
+  assert(s.read().patient.administrationLog.some(x=>x.id==='ceftriaxone'));
   const ok=await post('Enfermera metronidazol 500 mg');
   assert.equal(ok.clinical[0].status,'pending');
   s.advance(1.6);await s.flush();
   assert(s.read().patient.administrationLog.some(x=>x.id==='metronidazole'));
  }finally{s.dispose();}
 });
-test('allergen in a compound order rejects the entire order without partial IV delivery',async()=>{
+test('allergen in a technically valid compound order is administered with the other drug',async()=>{
  const uid='P2',s=createGuardSession({roomId:'safety2',mode:'solo',actorId:'doc',actorName:'Doc',
   patient:{uid,caseId:'APP-001',allergies:['ceftriaxone']},content,resolveContext:()=>({patientUid:uid})});
  try{
+  await s.post({id:'iv',text:'Enfermera una vía'});
   const answer=await s.post({id:'pair',text:'Enfermera ceftriaxona 1 g y metronidazol 500 mg'});
-  assert.equal(answer.routeError,'unsafe-compound-order');
+  assert.equal(answer.routeError,null);
   s.advance(10);await s.flush();
-  assert.equal(s.read().patient.administrationLog.length,0);
+  assert.deepEqual(s.read().patient.administrationLog.map(x=>x.id),['ceftriaxone','metronidazole']);
  }finally{s.dispose();}
 });

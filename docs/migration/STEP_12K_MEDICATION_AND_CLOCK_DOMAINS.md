@@ -2,6 +2,8 @@
 
 Date: 2026-10-17. Exclusive branch: `atria-5.0-core-rebuild-experimental`.
 
+> **Correction C1, 2026-10-17:** preventive allergy blocking below was an incorrect design decision, superseded by [C1_CLINICAL_FREEDOM.md](C1_CLINICAL_FREEDOM.md). Medical contraindications do not reject technically executable orders. Real administrations drive inherited adverse physiology and scoring. Clock findings remain valid.
+
 ## Verified original clock contract (do not introduce a second clock)
 
 The current V5 `createGuardClock` deliberately uses the pure V4 `createClinicalClock487`: `clinicalMinute` grows at one *game/display minute per real second*. 1 real minute = 60 game/display minutes, and 24 real minutes = 24 game/display hours. The V5 UI already displayed `8:15 + clinicalMinute`; it was NOT a bug in the displayed clock.
@@ -18,7 +20,7 @@ The original `PHARMA_RULES_487` and `csPharmResponse487` cover 29 entries; the 3
 
 This checkpoint adds `medication-safety-487.js`, a pure common safety assessment for 30 drugs x 13 original cases: inherited flags from V4 physiology. It distinguishes true nephrotoxic agents (amikacin, gentamicin, amphotericin) from drugs that merely require renal-dose review, includes the per-case `avoid` list, evaluates congestion risk and the absence of a documented infectious indication. Warnings are not instant physiological toxicity or XP penalties.
 
-Optional documented allergies are accepted per patient and normalized; they apply to exact drug IDs and explicitly supplied drug classes (penicillin, cephalosporin, carbapenem and aminoglycoside), without inventing cross-reactivity between different classes. No allergy is assumed when it has not been provided. For the 4 currently executable IV medications, a documented allergy is a hard contraindication in the shared native administration path and preflight, including all-or-nothing combined orders and physical nursing. No pill, drug or venous dose is delivered for a rejected order. Existing safe alternative medications remain available.
+Optional documented allergies are accepted per patient and normalized; they apply to exact drug IDs and explicitly supplied drug classes (penicillin, cephalosporin, carbapenem and aminoglycoside), without inventing cross-reactivity between different classes. No allergy is assumed when it has not been provided. C1 removes the preventive administration/preflight block: a technically valid IV order is prepared and delivered even with a known allergy. Explicit severe allergy triggers the inherited reaction only after a real receipt. Medical risks remain distinct from dose/route/identity errors. Actual allergy facts are disclosed through patient questioning, not automatic preflight warnings.
 
 The common `pharmacology-catalog` now projects these safety results alongside effective inherited response/warnings, but remains a **read-only interpreter**. DO NOT call 30/30 drugs 'playable' or 'fully implemented' until native executors, genuine receipts, timing/route/dose, effects and closure conditions are migrated and tested.
 
@@ -26,11 +28,11 @@ The common `pharmacology-catalog` now projects these safety results alongside ef
 
 Existing per-case `keyInterventions` and pure V4 closing (`csEvaluateClosure487`) define appropriate treatment and destination. For example, APP has ceftriaxone, metronidazole and accepted source-control/handoff requirements; PERI-SEC has ceftriaxone, metronidazole, source control and peritonitis-specific rules. Appropriate antibiotics contribute to required intervention **only after actual confirmed delivery**, not from mere chat text or as universal XP buffs. Complete regimens may reduce virtual infection only with case-defined coverage; source control remains separate.
 
-Wrong antibiotic/no infection is a risk/quality problem, nephrotoxic medications require renal sensitivity, patient allergy forbids that verified administration. There is NO new universal antibiotic-driven vital improvement, and currently unadministerable case antibiotics do not secretly count toward closing.
+Wrong antibiotic/no infection is a risk/quality problem, nephrotoxic medications require renal sensitivity, patient allergy makes that administration inappropriate, with modeled consequences rather than a preventive rejection. There is NO new universal antibiotic-driven vital improvement, and currently unadministerable case antibiotics do not secretly count toward closing.
 
 ## What is done, and what is NOT
 
-- Done: V4 clock ratio exposed and tested; 390 case–drug safety evaluations, explicit/documented allergy gate for active IV; no second writer; all old tests included in GitHub CI.
+- Done: V4 clock ratio exposed and tested; 390 case–drug safety evaluations, allergy classification for active IV (preventive gate superseded by C1); no second writer; all old tests included in GitHub CI.
 - Already done before this step: pure V4 longitudinal peritonitis/sepsis physiology extracted and compared numerically with generated 4.8.7 in all three peritonitis cases, but NOT yet an active care executor.
 - Not done: 26+ remaining full medicine executors, case-aware routes/PK and toxic overdoses, the rest of native case owners (11/13 missing), matching delayed pharmacodynamics to the 24-hour game display, multiplayer guard Coop/Competitivo activation, and end-to-end old death/closure visual comparison. No false completeness claim.
 

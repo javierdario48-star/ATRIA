@@ -5,7 +5,7 @@ import {PHARMA_RULES_487,BASE_CASE_PHARMACOLOGY_487,
  csValidateDrug487,csCasePharmProfile487,csPharmResponse487,REFERENCE_DOSES_487}
  from '../../clinical/pharmacology-registry-487.js';
 import {csPharmOutcomes487} from '../../clinical/pharmacology-outcomes-487.js';
-import {medicationSafety487} from './medication-safety-487.js';
+import {medicationSafety487,matchesMedicationAllergy487} from './medication-safety-487.js';
 
 const clone=x=>structuredClone(x);
 const VITALS=['temp','hr','rr','sys','dia','spo2'];
@@ -15,7 +15,8 @@ const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 
 // The historical native evaluator has no certified rule for anticoagulation.
 // It is a supported catalog item but intentionally has NO invented vital buff,
-// dose, onset or anticoagulant efficacy. Its executor is not yet migrated.
+// therapeutic efficacy. Native execution and inherited bleeding are handled by
+// native-medications/medication-harms; this general projection adds no second effect.
 const REVIEW_ONLY=Object.freeze({
  anticoagulation:Object.freeze({classId:'anticoagulant',route:'iv',
   mechanism:'unmodeled',indications:['mesentericIschemia'],
@@ -79,6 +80,8 @@ function normalizedPatient(p,c,atNativeMinute){
  const active=new Map();
  for(const [id,row] of latest){
   if(row.action==='stop')continue;
+  // Exposure stays real, but contraindicated drugs cannot fulfill coverage.
+  if(matchesMedicationAllergy487(p,id))continue;
   if(row.action==='setRate'&&row.dose?.amount===0)continue;
   active.set(id,{id,startedAt:row.administeredAtNativeMinute});
  }
@@ -116,7 +119,7 @@ function evaluate(c,p,atNativeMinute,catalog){
    sourceEventId:last?.sourceEventId??null,elapsedNativeMinutes:minutes,
    phase:received?changes.phase:0,beneficial:received&&changes.beneficial,
    warnings:[...new Set([...changes.warnings,...warnings,...safety.cautions])],
-   safety:{blocked:safety.blocked,reason:safety.reason,
+   safety:{blocked:safety.blocked,contraindicated:safety.contraindicated,reason:safety.reason,
     nephrotoxic:safety.classifiedAsNephrotoxic,cautions:[...safety.cautions]},
    ownedAxes:[...ownedAxes],rawOffsets:received?rawOffsets:zero(),
    candidateOffsets:received?offsets:zero()});

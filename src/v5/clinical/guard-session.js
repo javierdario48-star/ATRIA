@@ -8,13 +8,14 @@ import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
 import {refreshMonitoring,parseNasalOxygenFlow} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
-import {isStandardIVMedicine,parseStandardIVDose} from './native-medications.js';
+import {IV_MEDICINES,isStandardIVMedicine,parseStandardIVDose} from './native-medications.js';
 import {parseCirrDose} from './native-cirr.js';
 import {summarizeIVExposures} from './medication-exposure.js';
 import {createCasePharmacology} from './pharmacology-catalog.js';
 import {advanceNativeSurvival} from './survival-487-bridge.js';
 import {confirmedFluidFeedback,fluidFeedbackLabel} from './fluid-feedback.js';
-import {normalizeDocumentedAllergies487,medicationSafety487} from './medication-safety-487.js';
+import {patientAllergyFacts487} from './medication-safety-487.js';
+import {documentMedicationComplications487} from './medication-harms-487.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -31,7 +32,12 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  if(!['solo','apprentice'].includes(mode)||typeof resolveContext!=='function')throw Error('local clinical mode/context required');
  const caseData=content.cases.find(c=>c.id===patient.caseId);if(!caseData)throw Error('unknown patient case');
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[],
-  allergies:normalizeDocumentedAllergies487(patient.allergies??[])};
+  ...patientAllergyFacts487(patient),adverseEvents:[]};
+ if(nativePatient.allergies.length){
+  const labels=new Map(content.therapies.map(x=>[x.id,x.label]));
+  nativePatient.allergyHistoryAnswer='Tengo alergia a '+nativePatient.allergies.map(id=>
+   (labels.get(id)||id)+(nativePatient.severeAllergies.includes(id)?' (reacción grave)':'')).join(', ')+'.';
+ }
  const options={mode,defaultDoses:content.defaultDoses,progress};
  // Every case inherits the validated global formulary (including cases that
  // do not yet have an active clinical executor). This is a PURE interpreter,
@@ -48,7 +54,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // Read-only all-or-nothing preflight for *compound* nurse orders. Reuse the
  // same native case formulary and dose/device parsers; never preview effects.
  // Single orders still return their existing per-intervention rejection.
- const migratedTherapies=new Set(['oxygen','fluid','ceftriaxone','metronidazole','furosemide',
+ const migratedTherapies=new Set(['oxygen',...Object.keys(IV_MEDICINES),
   ...(caseData.id==='APP-001'?['npo']:['espironolactona','sal_restriccion','paracentesis_ter'])]);
  function validateClinicalBatch(intents){
   if(intents.length<2)return null;
@@ -64,8 +70,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    try{
     if(isStandardIVMedicine(intent.id)){
-     parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
-     if(medicationSafety487(caseData,nativePatient,intent.id).blocked)return 'unsafe-compound-order';
+     parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose);
     }
     else if(intent.id==='oxygen')
      parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
@@ -95,9 +100,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     // certified dose/route parsers that it calls, never a new catalog.
     try{
      if(ivMedicine){
-      parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]);
-      const verdict=medicationSafety487(caseData,nativePatient,intent.id);
-      if(verdict.blocked)return {status:'rejected',patientUid,eventId,reason:verdict.reason};
+      parseStandardIVDose(intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose);
      }
      if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
      if(cirrBedside&&intent.id==='espironolactona')
@@ -205,6 +208,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     }
     if(event.npcReply?.role==='mentor')
      rows.push({id:'npc:'+message.id,name:event.npcReply.name,role:'mentor',text:event.npcReply.text});
+   }else if(event.type==='clinical.complication'){
+    rows.push({id:'complication:'+event.sourceEventId,name:'Enfermera',role:'nurse',text:event.message});
    }else if(event.type==='clinical.patient-died'){
     rows.push({id:'death:'+event.patientUid+':'+event.revision,name:'ATRIA',
      role:'system',text:'El paciente falleció por '+(event.cause==='critical-hypoxemia'?
@@ -224,8 +229,20 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  return Object.freeze({
   catalog:()=>copy(orderedStudies),
   post:envelope=>disposed?Promise.resolve({status:'rejected',reason:'room-disposed'}):authority.dispatch({kind:'chat.post',...envelope},credentials),
-  advance(deltaRealSeconds,{typing=false}={}){
+  advance:function advance(deltaRealSeconds,{typing=false}={}){
    if(disposed)throw Error('guard session disposed');
+   if(!Number.isFinite(deltaRealSeconds)||deltaRealSeconds<0||deltaRealSeconds>86400)
+    throw Error('invalid guard delta');
+   // A long presentation frame must not jump over an entire allergic episode,
+   // its rescue opportunity or fatal exposure. Subdivide ONLY this existing
+   // clock/executor path for patients with explicit severe susceptibility.
+   if((nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>x.id==='anticoagulation')||
+     nativePatient.pendingTreatments?.some(x=>x.id==='anticoagulation'))&&deltaRealSeconds>.25){
+    const ready=[];
+    for(let elapsed=0;elapsed<deltaRealSeconds-1e-9;elapsed+=.25)
+     ready.push(...advance(Math.min(.25,deltaRealSeconds-elapsed),{typing}));
+    return ready;
+   }
    const before=clock;
    clock=guardClock.advance(deltaRealSeconds,typing);
    for(const result of care?.advance(before,clock,deltaRealSeconds)||[]){
@@ -249,7 +266,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    // The existing authoritative guard clock drives the V4-proven pure survival
    // policies AFTER the native case vital writer; no additional timer/loop.
-   if(care)advanceNativeSurvival(nativePatient,caseData,mode,before,clock);
+   if(care){
+    for(const event of documentMedicationComplications487(nativePatient,caseData,clock))
+     authority.reportPatientComplication(event);
+    advanceNativeSurvival(nativePatient,caseData,mode,before,clock);
+   }
    if(nativePatient.patientDied&&!deathPublished){
     deathPublished=true;
     care.dispose(); // cancel native medication and consultation preparations

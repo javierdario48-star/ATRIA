@@ -9,6 +9,8 @@ const allowedReuse=new Set(['src/app/frame-scheduler.js','src/app/lifecycle.js',
  'src/clinical/case-completion-487.js',
  // Read-only, verified V4 pharmacology evaluators. Never import V4 HTML patchers.
  'src/clinical/pharmacology-registry-487.js','src/clinical/pharmacology-outcomes-487.js',
+ // Effective V4 pure allergy/bleeding rules. Never the integration wrappers.
+ 'src/clinical/general-therapy-487.js','src/clinical/urgent-care-487.js',
  // Pure V4.8.7 mortality gates, previously verified independently. Not wrappers.
  'src/clinical/grace-survival-487.js','src/clinical/critical-rescue-487.js']);
 export async function buildV5(output='out-v5'){

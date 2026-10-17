@@ -60,7 +60,9 @@ export function historyHTML(p){
   ['Glasgow',p.glasgow?Object.entries(p.glasgow).filter(([k])=>['eye','verbal','motor'].includes(k)).map(([,v])=>'<p>'+esc(v.text)+' · '+(v.score??'NT')+'</p>').join('')+
    '<p>Total: '+(p.glasgow.total??'incompleto o no evaluable')+'</p>':'<p>Todavía no evaluado.</p>'],
   ['Estudios y resultados',(p.orders||[]).map(o=>'<p><b>'+esc(o.label)+'</b> · '+(o.status==='done'?'Resultado disponible: '+esc(o.result):'Pendiente')+'</p>').join('')||'<p>No solicitados.</p>'],
-  ['Tratamiento y consultas',therapyHTML(p)]];
+  ['Tratamiento y consultas',therapyHTML(p)],
+  ...((p.adverseEvents||[]).length?[['Complicaciones documentadas',p.adverseEvents.map(x=>
+   '<p>'+esc(x.message)+' · '+(x.status==='resolved'?'Resuelta':'En seguimiento')+'</p>').join('')]]:[])];
  const interview=p.interview,labels={place:'Localización',onset:'Antigüedad',radiation:'Irradiación / desplazamiento',character:'Carácter',intensity:'Intensidad',worse:'Agravantes',relief:'Atenuantes'};
  if(Object.keys(interview?.dimensions||{}).length)sections.splice(1,0,['ALiCIA · datos obtenidos',
   Object.entries(interview.dimensions).map(([id,data])=>'<p><strong>'+esc(labels[id])+':</strong> '+esc(data.answer)+'</p>').join('')]);

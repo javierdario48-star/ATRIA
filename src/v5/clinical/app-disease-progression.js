@@ -4,12 +4,14 @@
 // transplant of V4 sepsis/peritonitis physiology.
 //
 // Returns TARGET offsets only. advanceAppVitals remains the only vital writer.
+import {matchesMedicationAllergy487} from './medication-safety-487.js';
 const ZERO=Object.freeze({temp:0,hr:0,rr:0,sys:0,dia:0,spo2:0});
 const ramp=(v,from,to)=>Math.max(0,Math.min(1,(v-from)/(to-from)));
 const antibiotics=['ceftriaxone','metronidazole'];
 function coverageNativeMinute(p){
  const ages=[];
  for(const drugId of antibiotics){
+  if(matchesMedicationAllergy487(p,drugId))return null;
   const administrations=(p?.administrationLog||[]).filter(a=>
    a.id===drugId&&a.patientUid===p.uid&&
    Number.isFinite(a.administeredAtNativeMinute)&&

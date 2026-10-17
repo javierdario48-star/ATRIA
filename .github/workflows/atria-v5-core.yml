@@ -131,6 +131,13 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/app-browser.mjs
+      - name: Clinical freedom, actual allergic reaction, physical nursing and history in desktop and mobile
+        # C1 tests the published ESM modules, physical nurse and clinical panels.
+        # It creates an explicit allergy scenario; it does not alter live state.
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/clinical-freedom-browser.mjs
       - name: Capture unchanged original lobby as a visual control
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright

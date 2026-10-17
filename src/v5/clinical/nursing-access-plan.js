@@ -1,4 +1,4 @@
-import {isStandardIVMedicine,parseStandardIVDose} from './native-medications.js';
+import {IV_MEDICINES,isStandardIVMedicine,parseStandardIVDose} from './native-medications.js';
 
 /** Small read-only dependency planner, used AFTER the legacy nurse scanner.
  * Real IV placement remains an ordinary visible, authorized room action and
@@ -8,7 +8,7 @@ export function planNursingIVAccess(intents,{venousAccessCount,pendingIV,default
  if(!Number.isInteger(venousAccessCount)||venousAccessCount<0)return intents;
  const validIV=intents.filter(item=>{
   if(item.kind!=='therapy.request'||!isStandardIVMedicine(item.id))return false;
-  try{parseStandardIVDose(item.clause||item.sourceText,defaultDoses?.[item.id]);return true;}
+  try{parseStandardIVDose(item.clause||item.sourceText,defaultDoses?.[item.id]??IV_MEDICINES[item.id]?.dose);return true;}
   catch{return false;}
  });
  if(!validIV.length)return intents;

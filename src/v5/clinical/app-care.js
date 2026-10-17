@@ -8,7 +8,7 @@ import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {createClosureDebrief} from './closure-debrief.js';
 import {initialAppVitals,advanceAppVitals} from './native-app.js';
 import {createIVAdministration} from './native-medications.js';
-import {medicationSafety487} from './medication-safety-487.js';
+import {matchesMedicationAllergy487} from './medication-safety-487.js';
 
 const copy=x=>structuredClone(x);
 export function appClosureSnapshot(p,c,destination){
@@ -19,7 +19,7 @@ export function appClosureSnapshot(p,c,destination){
   studiesDone:p.orders.filter(x=>x.status==='done').map(x=>x.id),
   extraStudies:p.orders.filter(x=>!c.keyStudies.includes(x.id)).map(x=>x.id),
   keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,
-  delivered:p.treatments.map(x=>x.id),consultsDone:p.consults.filter(x=>x.status==='done'&&x.accepted).map(x=>x.id),
+  delivered:p.treatments.filter(x=>!matchesMedicationAllergy487(p,x.id)).map(x=>x.id),consultsDone:p.consults.filter(x=>x.status==='done'&&x.accepted).map(x=>x.id),
   disposition:destination,sys:p.liveVitals.sys,hr:p.liveVitals.hr,spo2:p.liveVitals.spo2,
   rr:p.liveVitals.rr,initialSys:initialAppVitals(c).sys,
   dead:!!p.patientDied,ended:p.caseEnded,
@@ -49,7 +49,7 @@ export function createAppCare(p,c,{mode,defaultDoses,progress}){
    (t.dose?' · '+t.dose.display:'')+'.'});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
-  safety:id=>medicationSafety487(c,p,id),proof,rejected});
+  proof,rejected});
  function readiness(destination){
   const out=csEvaluateClosure487(appClosureSnapshot(p,c,destination));
   if(!out)return null;

@@ -5,7 +5,7 @@ import {nativeCaseXP} from './progression.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {createClosureDebrief} from './closure-debrief.js';
 import {createIVAdministration} from './native-medications.js';
-import {medicationSafety487} from './medication-safety-487.js';
+import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
 import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
@@ -16,7 +16,7 @@ export function closureSnapshot(p,c,destination){return {
  caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
  examDone:p.examDone,examRegionsCount:p.examDone?2:Object.keys(p.exam).length?1:0,vitalsKnown:!!p.lastVitalsKnown,reassessments:p.reassessments,
  studiesDone:p.orders.filter(o=>o.status==='done').map(o=>o.id),extraStudies:p.orders.filter(o=>!c.keyStudies.includes(o.id)).map(o=>o.id),
- keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,delivered:p.treatments.map(t=>t.id),consultsDone:[],disposition:destination,
+ keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,delivered:p.treatments.filter(t=>!matchesMedicationAllergy487(p,t.id)).map(t=>t.id),consultsDone:[],disposition:destination,
  sys:p.liveVitals.sys,hr:p.liveVitals.hr,spo2:p.liveVitals.spo2,rr:p.liveVitals.rr,initialSys:initialCirrVitals(c).sys,
  dead:!!p.patientDied,ended:p.caseEnded,
   adverseCount:confirmedClinicalMissteps(p,c).adverseCount,autonomy:100,uid:p.uid};}
@@ -37,8 +37,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress}){
  const txReceipt=(cmd,t,reused=false)=>executed(cmd,{therapyId:t.id,sourceEventId:t.sourceEventId,dose:copy(t.dose),
   administeredAtRealSecond:t.administeredAtRealSecond,administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
   message:(reused?'Ya ejecutado por la indicación original: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
- const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected,
-  safety:id=>medicationSafety487(c,p,id)});
+ const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected});
  function readiness(destination){
   const out=csEvaluateClosure487(closureSnapshot(p,c,destination));
   if(p.pendingTreatments.length){out.ready=false;out.action=null;out.missing.push('Esperar la ejecución o resolución de las intervenciones en preparación.');}

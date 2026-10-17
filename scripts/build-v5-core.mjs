@@ -13,6 +13,8 @@ const files=[
  'src/v5/core/replica.js',
  'src/v5/adapters/native-clinical-port.js',
  'src/clinical/nurse-scanner-487.js',
+ 'src/clinical/urgent-care-487.js',
+ 'src/clinical/pharmacology-registry-487.js',
  'src/social/room-state.js',
  'src/app/frame-scheduler.js'
 ];

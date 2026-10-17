@@ -84,7 +84,8 @@ export function executePatientDialogue(p,c,cmd,clock){
    // before older case keyword scoring (for example, medication history).
    if(!named.length&&fact?.text&&!['onset','radiation','location','features','intensity','otherSymptoms','reason'].includes(fact.intent)){
     const id=exact?.id===fact.intent?exact.id:'anamnesis:'+fact.intent;
-    answers.push(note(id,fact.text,fact.source).answer);context.lastSymptom=fact.intent;continue;
+    const actual=fact.intent==='allergies'&&p.allergyHistoryAnswer?p.allergyHistoryAnswer:fact.text;
+    answers.push(note(id,actual,fact.intent==='allergies'&&p.allergyHistoryAnswer?'patient.allergies':fact.source).answer);context.lastSymptom=fact.intent;continue;
    }
    if(named.length){for(const [id] of named)symptom(id,duration);if(!explicitPain)continue;}
    let matches=dimensions.filter(([,re])=>re.test(clause));

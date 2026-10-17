@@ -16,8 +16,9 @@ export function summarizeIVExposures(patient){
   if(entry.patientUid!==uid||typeof entry.sourceEventId!=='string'||!entry.sourceEventId||
      seen.has(entry.sourceEventId)||
      !Number.isFinite(entry.dose?.amount)||entry.dose.amount<=0||
-     !['mg','ml'].includes(entry.dose.unit)||
-     (entry.id==='fluid'?entry.dose.unit!=='ml':entry.dose.unit!=='mg'))
+     !['mg','ml','protocolo'].includes(entry.dose.unit)||
+     (entry.id==='anticoagulation'?entry.dose.unit!=='protocolo'||entry.dose.amount!==1:
+      entry.id==='fluid'?entry.dose.unit!=='ml':entry.dose.unit!=='mg'))
    throw Error('unconfirmed or duplicate IV exposure record');
   seen.add(entry.sourceEventId);
   const total=byDrug[entry.id]??={unit:entry.dose.unit,totalAmount:0,

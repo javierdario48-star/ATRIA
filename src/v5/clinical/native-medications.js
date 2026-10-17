@@ -1,13 +1,20 @@
 // A small validated formulary. Drug identity, dose and preparation are
 // shared; disease-specific effects remain solely in native case physiology.
+import {HEPARIN_SIM_DOSE_487,csHeparinIssue487} from '../../clinical/urgent-care-487.js';
 export const IV_MEDICINES=Object.freeze({
  fluid:Object.freeze({id:'fluid',label:'Cristaloides / reposición de volumen',seconds:.8}),
  ceftriaxone:Object.freeze({id:'ceftriaxone',label:'Ceftriaxona IV',seconds:1.5}),
  metronidazole:Object.freeze({id:'metronidazole',label:'Metronidazol IV',seconds:1.5}),
- furosemide:Object.freeze({id:'furosemide',label:'Furosemida IV',seconds:1.5})
+ furosemide:Object.freeze({id:'furosemide',label:'Furosemida IV',seconds:1.5}),
+ anticoagulation:Object.freeze({id:'anticoagulation',label:'Heparina IV',seconds:1.5,dose:HEPARIN_SIM_DOSE_487})
 });
 export const isStandardIVMedicine=id=>Object.hasOwn(IV_MEDICINES,id);
 export function parseStandardIVDose(text,reference){
+ if(reference===HEPARIN_SIM_DOSE_487){
+  const issue=csHeparinIssue487(text);
+  if(issue)throw Error('unsupported-heparin-dose-route');
+  return {...reference};
+ }
  if(!Number.isFinite(reference?.amount)||!['mg','ml'].includes(reference.unit))throw Error('IV formulation missing');
  const raw=String(text||'').toLowerCase().normalize('NFD')
   .replace(/[\u0300-\u036f]/g,'').replace(/,/g,'.');
@@ -37,18 +44,15 @@ export function parseStandardIVDose(text,reference){
 /** Scheduling and receipts for validated IV medicine: never changes vitals.
  * Calling care.advance() remains the only path to a true administration.
  */
-export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected,safety=()=>({blocked:false})}){
+export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected}){
  const tasks=new Map();
  const copy=x=>structuredClone(x);
  function request(cmd,clock){
   const id=cmd.intent.id;
   if(cmd.intent.kind!=='therapy.request'||!isStandardIVMedicine(id))return null;
   let dose;
-  try{dose=parseStandardIVDose(cmd.intent.clause||cmd.intent.sourceText,doses?.[id]);}
+  try{dose=parseStandardIVDose(cmd.intent.clause||cmd.intent.sourceText,doses?.[id]??IV_MEDICINES[id]?.dose);}
   catch(error){return rejected(cmd,error.message,'Dosis o vía IV no validada. No administrado.');}
-  const contraindication=safety(id);
-  if(contraindication.blocked)return rejected(cmd,contraindication.reason,
-   'Alergia documentada: medicamento no administrado.');
   // A fresh clinical order is another exposure, even to the same drug.
   // Only replay of the SAME eventId may share an execution (room authority
   // already deduplicates transport retries by actor+commandId).

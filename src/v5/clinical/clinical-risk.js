@@ -31,6 +31,10 @@ export function confirmedClinicalMissteps(patient,caseDef){
  if(!patient?.administrationLog?.length)return lung;
  const exposures=summarizeIVExposures(patient).byDrug;
  const notes=[];
+ for(const event of patient.adverseEvents||[])
+  if(['severe-drug-allergy','anticoagulant-bleeding'].includes(event.kind)&&event.patientUid===patient.uid&&
+    (patient.administrationLog||[]).some(x=>x.sourceEventId===event.sourceEventId&&x.id===event.drugId))
+   notes.push(event.message);
  if(caseDef?.id==='CIRR-001'){
   if(exposures.ceftriaxone?.administrations)
    notes.push('Ceftriaxona sin foco infeccioso identificado en CIRR-001');
