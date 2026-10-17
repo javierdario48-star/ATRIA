@@ -11,6 +11,7 @@ import {vegaGuidance} from './vega-guidance.js';
 import {isStandardIVMedicine,parseStandardIVDose} from './native-medications.js';
 import {parseCirrDose} from './native-cirr.js';
 import {summarizeIVExposures} from './medication-exposure.js';
+import {createCasePharmacology} from './pharmacology-catalog.js';
 
 const copy=value=>structuredClone(value);
 const routeReason={
@@ -28,6 +29,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  const caseData=content.cases.find(c=>c.id===patient.caseId);if(!caseData)throw Error('unknown patient case');
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[]};
  const options={mode,defaultDoses:content.defaultDoses,progress};
+ // Every case inherits the validated global formulary (including cases that
+ // do not yet have an active clinical executor). This is a PURE interpreter,
+ // not a replacement for the native APP/CIRR physiological owner.
+ const pharmacology=createCasePharmacology({cases:content.cases,therapies:content.therapies});
  const care=caseData.id==='CIRR-001'?createCirrCare(nativePatient,caseData,options):
   caseData.id==='APP-001'?createAppCare(nativePatient,caseData,options):null;
  const studies=createStudyService(content.cases),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
@@ -279,6 +284,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     procedures:{monitor:{connected:!!nativePatient.procedures?.monitor?.connected}},
     lastVitalsKnown:nativePatient.lastVitalsKnown?{vitals:copy(nativePatient.lastVitalsKnown.vitals)}:null};
   },
+  // On-demand projection: only confirmed receipts count, all catalogue drugs
+  // available for each case; monitor paint never recalculates pharmacology.
+  pharmacologyRead:()=>pharmacology.evaluate(caseData.id,nativePatient,clock.nativeMinute),
+  pharmacologyRules:()=>pharmacology.forCase(caseData.id),
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    closure:care?copy(care.readiness(caseData.id==='APP-001'?'quirofano':'sala')):null};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
