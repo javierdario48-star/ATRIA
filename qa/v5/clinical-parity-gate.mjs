@@ -31,7 +31,7 @@ for(const {caseId,id,order} of scenarios){
  const at05=advanceNativeReference487(runtime,.06);
  const at20=advanceNativeReference487(runtime,.24);
  const at05min=advanceNativeReference487(runtime,.6);
- const expectedMl=order?Number(/(\\d+) ml/.exec(order)[1]):0;
+ const expectedMl=order?Number(/([0-9]+) ml/.exec(order)[1]):0;
  assert.equal(at05.administrationCount,order?0:0,'an acknowledged order is never a dose');
  assert.equal(at20.administrationCount,order?1:0,'native preparation must produce exactly one receipt');
  assert.equal(at05min.fluidMl,expectedMl,'native cumulative volume follows administered milliliters');
