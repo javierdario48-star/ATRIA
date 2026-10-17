@@ -34,7 +34,7 @@ for(const id of ['PERI-PBE-001','PERI-SEC-001','PERI-TER-001']){
 test('fail closed for other diagnoses, skipped time, malicious coverage and reversed clock',()=>{
  const c=cases.find(x=>x.id==='PERI-SEC-001');
  const p=initialLegacySepsisPhysiology487(c);
- assert.throws(()=>initialLegacySepsisPhysiology487(cases.find(x=>x.id==='APP-001')),/sepsis\\/peritonitis/);
+ assert.throws(()=>initialLegacySepsisPhysiology487(cases.find(x=>x.id==='APP-001')),/legacy sepsis physiology/);
  assert.throws(()=>advanceLegacySepsisPhysiology487(p,c,5),/bounded native clock/);
  assert.throws(()=>advanceLegacySepsisPhysiology487(p,c,-1),/nonmonotonic/);
  assert.throws(()=>advanceLegacySepsisPhysiology487(p,c,0.2,{coverageScore:2}),/verified antimicrobial/);
