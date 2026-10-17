@@ -1,0 +1,138 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createCasePharmacology} from './pharmacology-catalog.js';
+import {PHARMA_RULES_487} from '../../clinical/pharmacology-registry-487.js';
+
+const read=id=>JSON.parse(readFileSync(new URL('../content/'+id+'.json',import.meta.url)));
+const cases=read('cases'),therapies=read('therapies');
+const caseBy=id=>cases.find(c=>c.id===id);
+const baseVitals=c=>{const [sys,dia]=c.vitals.bp.split('/').map(Number);
+ return {sys,dia,hr:c.vitals.hr,rr:c.vitals.rr,spo2:c.vitals.spo2,temp:c.vitals.temp};
+};
+const fresh=(c,uid='P1')=>({uid,caseId:c.id,liveVitals:baseVitals(c),
+ administrationLog:[],treatments:[],pendingTreatments:[],phys:{sourceControlled:false}});
+const give=(p,id,atNativeMinute,seq=1,action)=>{
+ const dose=id==='oxygen'?{amount:4,unit:'L/min'}:{amount:500,unit:'mg'};
+ const row={id,patientUid:p.uid,sourceEventId:'tx-'+seq,administeredAtNativeMinute:atNativeMinute,
+  dose,...(action?{action}:{})};
+ p.administrationLog.push(row);
+ return row;
+};
+test('C12d all 30 global items and every existing case compile from inherited pure registry',()=>{
+ const catalog=createCasePharmacology({cases,therapies});
+ assert.equal(catalog.caseIds().length,13);
+ assert.equal(catalog.drugs().length,30);
+ assert.equal(Object.keys(PHARMA_RULES_487).length,29);
+ for(const c of cases){
+  const view=catalog.forCase(c.id);
+  assert.equal(view.drugs.length,30,c.id);
+  for(const r of view.drugs){
+   assert.equal(typeof r.route,'string');
+   assert(Array.isArray(r.hazards)&&Array.isArray(r.indications));
+   if(r.mechanism!=='unmodeled')assert(r.onsetMin<=r.peakMin);
+  }
+ }
+ const unknown=catalog.drugs().find(d=>d.id==='anticoagulation');
+ assert.equal(unknown.mechanism,'unmodeled');
+ assert.equal(unknown.onsetMin,null);
+});
+test('C12d each case has default sign/time reactions to every known drug without mutating vitals',()=>{
+ const catalog=createCasePharmacology({cases,therapies});
+ let pairs=0;
+ for(const c of cases)for(const drug of therapies){
+  for(const state of [
+   {sys:76,dia:43,spo2:83,hr:137,rr:31,temp:38.6},
+   {sys:122,dia:78,spo2:98,hr:87,rr:17,temp:37.0},
+   {sys:108,dia:67,spo2:92,hr:113,rr:25,temp:37.9}
+  ])for(const time of [0,30,240]){
+   const p=fresh(c);p.liveVitals={...state};
+   give(p,drug.id,0,1);
+   const original=structuredClone(p);
+   const response=catalog.evaluate(c.id,p,time);
+   const r=response.drugs.find(x=>x.id===drug.id);
+   assert(r&&r.state==='confirmed');
+   for(const [axis,v] of Object.entries(r.candidateOffsets)){
+    assert(Number.isFinite(v)&&Math.abs(v)<=50,c.id+'/'+drug.id+'/'+axis);
+    if(r.ownedAxes.includes(axis))assert.equal(v,0,'native-writer double count prevented');
+   }
+   assert.deepEqual(p,original,'catalogue must be PURE and never administer/change vitals');
+   pairs++;
+  }
+ }
+ assert.equal(pairs,cases.length*therapies.length*3*3);
+});
+test('C12d unadministered intent does not change state; oxygen stop actually stops projection',()=>{
+ const catalog=createCasePharmacology({cases,therapies}),c=caseBy('APP-001'),p=fresh(c);
+ const all=catalog.evaluate(c.id,p,0);
+ assert.equal(all.drugs.filter(d=>d.state==='confirmed').length,0);
+ assert(all.drugs.every(d=>Object.values(d.candidateOffsets).every(n=>n===0)));
+ p.liveVitals.spo2=85;
+ give(p,'oxygen',1,1,'start');
+ const active=catalog.evaluate(c.id,p,5).drugs.find(d=>d.id==='oxygen');
+ assert(active.candidateOffsets.spo2>0);
+ const stopped=give(p,'oxygen',6,2,'stop');stopped.dose.amount=0;
+ const noLonger=catalog.evaluate(c.id,p,20).drugs.find(d=>d.id==='oxygen');
+ assert.equal(noLonger.state,'stopped');
+ assert.equal(noLonger.candidateOffsets.spo2,0);
+});
+test('C12d APP antibiotic regimen needs two confirmed medicines, timing and genuine source control',()=>{
+ const catalog=createCasePharmacology({cases,therapies}),c=caseBy('APP-001'),p=fresh(c);
+ give(p,'ceftriaxone',5,1);
+ assert.equal(catalog.evaluate(c.id,p,100).outcomes.coverageComplete,false);
+ give(p,'metronidazole',6,2);
+ const covered=catalog.evaluate(c.id,p,180).outcomes;
+ assert.equal(covered.coverageComplete,true);
+ assert(covered.infectionBurdenIndex>0&&covered.infectionBurdenIndex<1);
+ p.phys.sourceControlled=true;
+ assert(catalog.evaluate(c.id,p,180).outcomes.infectionBurdenIndex<covered.infectionBurdenIndex);
+ const early=catalog.evaluate(c.id,p,0);
+ assert.equal(early.outcomes.coverageComplete,false);
+});
+test('C12d CIRR native fluid overload and APP fluid effects cannot be applied twice',()=>{
+ const catalog=createCasePharmacology({cases,therapies});
+ for(const name of ['APP-001','CIRR-001']){
+  const c=caseBy(name),p=fresh(c);
+  give(p,'fluid',0);
+  const fluid=catalog.evaluate(name,p,240).drugs.find(r=>r.id==='fluid');
+  assert(fluid.ownedAxes.length>=2);
+  assert(fluid.ownedAxes.every(k=>fluid.candidateOffsets[k]===0));
+ }
+});
+test('C12d future cases get conservative fallback, allow explicit traits/coverage and bounded case modifiers',()=>{
+ const unknown={id:'FUTURE-001',vitals:{bp:'87/48',spo2:84,hr:122,rr:27,temp:38.5},interventions:[]};
+ const catalog=createCasePharmacology({cases:[...cases,unknown],therapies});
+ const base=catalog.forCase('FUTURE-001');
+ assert.deepEqual(base.profile.traits,['undifferentiated']);
+ const p=fresh(unknown);
+ give(p,'oxygen',0,1);
+ const oxygen=catalog.evaluate('FUTURE-001',p,30).drugs.find(x=>x.id==='oxygen');
+ assert(oxygen.candidateOffsets.spo2>0,'responsive to measured hypoxemia');
+ assert.equal(catalog.evaluate('FUTURE-001',p,30).outcomes.infectionBurdenIndex,0,
+  'no invented infection for unknown case');
+ const tailored={...unknown,id:'FUTURE-INFECTION',pharmacology:{
+  traits:['infection','uncontrolledSource','pain'],coverageSets:[['ceftriaxone','metronidazole']],
+  overrides:{morphine:{responseScale:.5,extraWarnings:['risk-of-hypotension']}}
+ }};
+ const tailoredCatalog=createCasePharmacology({cases:[tailored],therapies});
+ assert.equal(tailoredCatalog.forCase(tailored.id).drugs.find(x=>x.id==='morphine').scale,.5);
+ const t=fresh(tailored);give(t,'ceftriaxone',0,1);give(t,'metronidazole',0,2);
+ assert.equal(tailoredCatalog.evaluate(tailored.id,t,180).outcomes.coverageComplete,true);
+ assert.throws(()=>createCasePharmacology({cases:[{...tailored,pharmacology:{traits:['infection']}}],therapies}),/coverageSets/);
+});
+test('C12d unknown catalog entries, missing legacy drug, invalid overrides and duplicate case IDs fail closed',()=>{
+ assert.throws(()=>createCasePharmacology({cases,therapies:[...therapies,{id:'miracle',label:'Miracle'}]}),/unreviewed global treatment/);
+ assert.throws(()=>createCasePharmacology({cases,therapies:therapies.filter(t=>t.id!=='morphine')}),/missing inherited pharmacology/);
+ assert.throws(()=>createCasePharmacology({cases:[...cases,cases[0]],therapies}),/duplicate case pharmacology/);
+ assert.throws(()=>createCasePharmacology({cases:[{...cases[0],pharmacology:{overrides:{oxygen:{responseScale:20}}}}],therapies}),/invalid case response scale/);
+ assert.throws(()=>createCasePharmacology({cases:[{...cases[0],pharmacology:{overrides:{unknown:{responseScale:1}}}}],therapies}),/unknown case drug override/);
+});
+test('C12d repeated receipt identities, mismatched patient IDs or future timestamp cannot manufacture drug effects',()=>{
+ const catalog=createCasePharmacology({cases,therapies}),c=caseBy('CIRR-001'),p=fresh(c);
+ give(p,'fluid',1,1);
+ assert.throws(()=>catalog.evaluate(c.id,p,0),/outside native time/);
+ p.administrationLog.push({...p.administrationLog[0]});
+ assert.throws(()=>catalog.evaluate(c.id,p,2),/duplicate confirmed administration/);
+ p.administrationLog.pop();p.administrationLog[0].patientUid='different';
+ assert.throws(()=>catalog.evaluate(c.id,p,2),/invalid or duplicate/);
+});
