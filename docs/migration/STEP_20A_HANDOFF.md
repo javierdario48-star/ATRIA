@@ -39,3 +39,7 @@ Prioridad del usuario: terminar sistemas y **los cuatro modos**, lobby donde con
 
 ## Comandos
 `npm run test:v5`, `npm run test:v5-core`, `npm run build:v5`, `npm test`, `npm run qa:v5-browser`.
+
+## Auditoría correctiva: transporte efectivo viejo
+
+La reconstrucción del lobby no requiere un servidor dedicado de simulación. La implementación V4 sí dependía de API serverless Vercel para identidad/presencia/rooms/mensajes/señalización. El lobby aceleraba movimiento con WebRTC real, pero Coop/Competitivo 2–4 usaban una interfaz `dc` virtual sostenida por `POST/GET /api/rooms/{id}/messages` y host autoritativo. No confundir con la demo manual WebRTC 1:1; no copiar el cache QA no transaccional como producción. Antes de decidir C20.b leer [LEGACY_MULTIPLAYER_TRANSPORT_AUDIT.md](LEGACY_MULTIPLAYER_TRANSPORT_AUDIT.md). Prioridad: adaptar ese transporte híbrido a V5, no inventar servidor central de juego.
