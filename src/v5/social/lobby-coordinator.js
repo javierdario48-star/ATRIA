@@ -121,6 +121,8 @@ export function createLobbyCoordinator({
    if(disposed)throw Error('lobby-disposed');
    const id=await auth(credentials);
    const p=session(id,sessionId);
+   // Active guard actors are no longer spatial residents of the public lobby.
+   if(p.partyId&&parties.get(p.partyId)?.phase==='active')return [];
    if(!clamp(radius,1,2000)||!Number.isSafeInteger(limit)||limit<1||limit>64)
     throw Error('invalid-visibility-window');
    const out=[],r2=radius*radius;
@@ -129,7 +131,8 @@ export function createLobbyCoordinator({
    for(let ix=minX;ix<=maxX;ix++)for(let iy=minY;iy<=maxY;iy++)
     for(const uid of grid.get(ix+':'+iy)||[]){
      const other=players.get(uid);
-     if(!other||uid===id||clock()-other.lastSeen>=idleMs)continue;
+     if(!other||uid===id||clock()-other.lastSeen>=idleMs||
+      (other.partyId&&parties.get(other.partyId)?.phase==='active'))continue;
      const dist2=(p.x-other.x)**2+(p.y-other.y)**2;
      if(dist2<=r2)out.push({dist2,other});
     }
@@ -190,6 +193,19 @@ export function createLobbyCoordinator({
    return mutation(credentials,userId=>{const p=session(userId,sessionId);
     if(!p.partyId)return {left:false};
     leaveParty(userId);return {left:true};
+   });
+  },
+  finish(credentials,{sessionId,partyId}={}){
+   return mutation(credentials,userId=>{
+    const p=ownedParty(userId,sessionId,partyId,{hostOnly:true});
+    if(p.phase!=='active')throw Error('party-not-active');
+    for(const uid of p.members){
+     const member=players.get(uid);
+     if(member?.partyId===partyId)member.partyId=null;
+    }
+    parties.delete(partyId);
+    notify('party.finished',{partyId});
+    return {finished:true,partyId};
    });
   },
   party(credentials,{sessionId,partyId}={}){
