@@ -37,7 +37,7 @@ Inventario de **cada módulo de producción** de los siete dominios originales:
 | R01 | `room-state`, `room-authority`, `replica`, `native-clinical-port` | Conservar contratos | Actor autenticado/UID/recibo; rechazar propietario ajeno/forja/replay | Contratos, transporte no integrado |
 | R02 | `chat-protocol`, `chat-recipient`, `multiplayer-stabilization` | Extraer transporte compartido (C21) | Global, cercano por defecto, mención NPC, confirmación/dedupe | Local; no 2–4 clientes |
 | R03 | `remote-motion`, timeline, continuity/generation tests | Reutilizar puros, adaptar transporte | 2/3/4 Chromium independientes, reconexión y salas aisladas | Pendiente V5 |
-| R04 | `party-transport`, presencia/amigos/lobby | Adaptar interfaces estables (C20) | Identidades y salida limpias; fallo visible, no fantasmas | Pendiente |
+| R04 | `party-transport`, presencia/amigos/lobby | Adaptar interfaces estables (C20) | Identidades y salida limpias; fallo visible, no fantasmas | Contratos C20.a, servidor pendiente |
 | R05 | Coop/competitivo originales; `multimode-combinatorial` | Un solo motor/autoridad (C22/C23) | Coop atiende todos; competitivo primera acción válida/rival observa | Deshabilitados en UI |
 | B01 | `apply-487`, bootstrap HTML/wrappers históricos | Descartar como estrategia V5 | Build sin vendor/integration/QA ni reemplazos/eval | Independiente desde B1 |
 

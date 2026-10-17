@@ -59,10 +59,10 @@ ATRIA es un RPG de simulación médica con libertad para **equivocarse**: las de
 | C17 | Tres peritonitis PBE/SEC/TER | DIFERIDO — no implementar |
 | C18 | Guardia continua multi-paciente | PENDIENTE |
 | C19 | Carrera, niveles, XP, persistencia | PENDIENTE |
-| C20 | Lobby social, amigos, salas | PENDIENTE |
-| C21 | Chat global, remotos, reconexión | PENDIENTE |
-| C22 | Cooperativo 2–4 clientes | PENDIENTE |
-| C23 | Competitivo 2–4 clientes | PENDIENTE |
+| C20 | Lobby social, amigos, salas | **PARCIAL C20.a**: directorio autorizado de presencia y movimiento, búsqueda espacial, invitaciones, grupos y ciclo de guardia 2–4, sesiones/expiración/reconexión. Probado 600 actores virtuales sin construir red; amigos/presencia pública real/servidor WebSocket aún PENDIENTES. [C20.a](STEP_20A_HANDOFF.md) |
+| C21 | Chat global, remotos, reconexión | **PARCIAL contratos**: `room-authority` y pruebas integradas C20.a para chat único, miembros autenticados, reintentos y aislamiento. Transporte efectivo, replicación remota, cámara remota y reingreso por conexión PENDIENTES |
+| C22 | Cooperativo 2–4 clientes | **PARCIAL autoridad**: C20.a pasa 2/3/4 actores autenticados sobre un solo puerto clínico, con intervenciones simultáneas; falta UI real, transporte y navegador multipestaña/multidispositivo |
+| C23 | Competitivo 2–4 clientes | **PARCIAL autoridad**: propietario único por primera interacción nativa válida y rivales observadores, chat global común; falta UI real, transporte y pruebas multipestaña/multidispositivo |
 | C24 | Optimización y Android/iOS físico | PENDIENTE |
 | C25 | Paridad, limpieza y promoción aprobada | PENDIENTE |
 
