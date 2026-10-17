@@ -144,6 +144,22 @@ jobs:
             qa/v5-reference-results/reference-title.png
           retention-days: 14
 
+  actual-http-multiplayer-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Independent Chromium processes for 2/3/4 users and real HTTP clinical relay
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/room-http-browser.mjs
+
   preserved-historical-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 20
