@@ -55,7 +55,7 @@ test('allergen in a compound order rejects the entire order without partial IV d
   patient:{uid,caseId:'APP-001',allergies:['ceftriaxone']},content,resolveContext:()=>({patientUid:uid})});
  try{
   const answer=await s.post({id:'pair',text:'Enfermera ceftriaxona 1 g y metronidazol 500 mg'});
-  assert(answer.clinical.some(x=>x.status==='rejected'));
+  assert.equal(answer.routeError,'unsafe-compound-order');
   s.advance(10);await s.flush();
   assert.equal(s.read().patient.administrationLog.length,0);
  }finally{s.dispose();}
