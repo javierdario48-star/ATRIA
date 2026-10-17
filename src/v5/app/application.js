@@ -27,7 +27,8 @@ export async function createApplication({document,window,content,signal}){
  let savedRewardCount=progress.read().receipts.length;
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
-  guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false;
+  guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
+  announcedDeathUid=null;
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
  const renderer=await createHospitalRenderer(canvas,content,{signal,window});
  const scheduler=new FrameScheduler({mobileRenderHz:60}),listeners=[];
@@ -82,12 +83,20 @@ export async function createApplication({document,window,content,signal}){
  function advanceClinicalTo(now){
   now=Math.max(lastClinicalFrame??now,now);
   const previous=lastClinicalFrame;lastClinicalFrame=now;
-  if(guardSession&&previous!==null)guardSession.advance(Math.max(0,(now-previous)/1000),{typing:clinicalTyping});
+  if(guardSession&&previous!==null){
+   guardSession.advance(Math.max(0,(now-previous)/1000),{typing:clinicalTyping});
+   const p=guardSession.read().patient;
+   if(p.patientDied&&announcedDeathUid!==p.uid){
+    announcedDeathUid=p.uid;world.stop();patientWheel.hide();
+    open('<h2>Guardia finalizada</h2><p>El paciente falleció tras una alteración crítica sostenida de sus signos vitales. Se cancelaron las intervenciones pendientes.</p><p>No se otorgó experiencia por este caso.</p><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button></div>');
+    updateHud();
+   }
+  }
  }
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard';
   const minute=Math.floor(guardSession?.read().clock.clinicalMinute||0),total=8*60+15+minute;
-  ui('status').textContent=guard?(s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':'Lobby local · 5.0 experimental';
+  ui('status').textContent=guard&&guardSession?.read().patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':'Lobby local · 5.0 experimental';
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
   ui('peopleButton').textContent=guard?'Historia':'Personas';
   const career=progress.read();ui('playerProgress').textContent='Nivel '+career.level+' · '+(career.xp%200)+'/200 XP';world.setLevel(career.level);
@@ -97,7 +106,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function enterLobby(){
   advanceClinicalTo(window.performance.now());
-  guardSession?.dispose();guardSession=null;clinicalUI.reset();patientWheel.hide();close();world.enterLobby();resetChat('El lobby está listo para hablar.');
+  guardSession?.dispose();guardSession=null;announcedDeathUid=null;clinicalUI.reset();patientWheel.hide();close();world.enterLobby();resetChat('El lobby está listo para hablar.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;updateHud();
  }
  function guardSetup(){
@@ -174,8 +183,9 @@ export async function createApplication({document,window,content,signal}){
   const button=event.target.closest('button');if(!button)return;
   if(button.dataset.mode){draftMode=button.dataset.mode;guardSetup();}
   if(button.dataset.action==='close')close();
+  if(button.dataset.action==='return-lobby'){enterLobby();return;}
   if(button.dataset.action==='start-guard'){
-   guardSession?.dispose();clinicalUI.reset();patientWheel.hide();world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});
+   guardSession?.dispose();announcedDeathUid=null;clinicalUI.reset();patientWheel.hide();world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});
    const s=world.snapshot(),roomId='guard-'+window.crypto.randomUUID();
    guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,progress,
     patient:s.patients[0],content,nursing:{enqueue:task=>world.enqueueNurseJourney(task),takeArrivals:()=>world.takeNurseArrivals(),accept:result=>world.acceptNurseClinicalResult(result)},resolveContext:({targetPatientUid})=>({
