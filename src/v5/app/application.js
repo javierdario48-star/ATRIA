@@ -199,7 +199,7 @@ export async function createApplication({document,window,content,signal}){
      const receipt=event.type==='chat.posted'?
       event.clinical.find(x=>x.status==='executed'&&x.kind==='case.close')?.receipt?.closure:null;
      if(receipt?.closed===true&&receipt.patientUid===guardSession.read().patient.uid)
-      open(caseDebriefHTML(receipt)+'<div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button><button data-action="close">Seguir viendo el caso</button></div>','outcome');
+      open('<div id="caseResult">'+caseDebriefHTML(receipt)+'</div><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button><button data-action="close">Seguir viendo el caso</button></div>','outcome');
     }});
    lastClinicalFrame=window.performance.now();
    close();resetChat(['CIRR-001','APP-001'].includes(s.caseId)?'Guardia clínica. Evaluación, estudios, tratamiento y cierre disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
