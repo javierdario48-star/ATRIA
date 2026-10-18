@@ -1,0 +1,98 @@
+{
+  "sha": "6f59d202f4265ce7047eda0873f5f400d3b50eda",
+  "v5CI": {
+    "run": 39119167313,
+    "conclusion": "success",
+    "jobs": 10
+  },
+  "legacyCI": {
+    "run": 39119167353,
+    "conclusion": "success",
+    "jobs": 4
+  },
+  "local": {
+    "v5Tests": 438,
+    "coreTests": 40,
+    "builds": [
+      "v5",
+      "v5-core"
+    ],
+    "boundaryModules": 74,
+    "oneRAF": true,
+    "parallelClinicalEngineAdded": false
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-cw5pkyzvb-javierdario4878-7324.vercel.app/",
+    "http": 200,
+    "manifestFiles": 114,
+    "entireManifestEqualToLocalBuild": true
+  },
+  "browserArtifacts": [
+    {
+      "players": 2,
+      "id": 12133876515,
+      "sha256": "be12086a6ce1b7c1c871693811606e273edfbee71272e658cd086318d9989096",
+      "report": "two-doctor-repeated-browser.json",
+      "verified": true
+    },
+    {
+      "players": 3,
+      "id": 12133418206,
+      "sha256": "f3378f0b8777ff84f2965e45d67c01afd4591c94fa74d36fdc312abb2faef669",
+      "report": "team-3-browser.json",
+      "verified": true
+    },
+    {
+      "players": 4,
+      "id": 12134095139,
+      "sha256": "426084f3dd08182881e8202eb61417913969003f1299410b1bc5e4034783a443",
+      "report": "team-4-browser.json",
+      "verified": true
+    }
+  ],
+  "clinicalBrowserProcesses": [
+    2,
+    3,
+    4
+  ],
+  "realWebRTC": true,
+  "publicUI": true,
+  "network": "Independent Chromium processes on one CI machine; historical authenticated social backend with injected QA cache, loopback HTTP;35/70/110ms HTTP delays. No WAN certification.",
+  "sharedCare": {
+    "case": "PERI-PBE-001",
+    "score": 100,
+    "xpPerDoctor": 111,
+    "oneAuthorityReceipt": true,
+    "onePersonalReceiptPerDoctor": true,
+    "ordersRemainPendingUntilActualNurseExecution": true,
+    "studiesActuallyCompleted": true,
+    "guestReloadWithoutRepeatingAdministration": true,
+    "initialTerminalSnapshotAfterReload": true,
+    "explicitGuestDepartureWithoutPatientReset": true
+  },
+  "adverseBrowserScope": {
+    "players": 2,
+    "case": "PERI-TER-001",
+    "realMorphineAndFluidAdministration": true,
+    "sameComplicationAndSustainedDeath": true,
+    "xp": 0
+  },
+  "casesFullyPlayable": [
+    "CIRR-001",
+    "APP-001",
+    "PERI-SEC-001",
+    "PERI-PBE-001",
+    "PERI-TER-001"
+  ],
+  "protectedLegacyPathsUnchanged": true,
+  "limitations": [
+    "Host tab must remain open and visible; no host migration or durable recovery.",
+    "A colleague missing the final receipt must reconnect or explicitly leave before normal host departure.",
+    "Original social backend is regional ephemeral QA cache, not durable transactional storage.",
+    "Ward chat is shared; lobby chat still uses the local V5 route.",
+    "No WAN, TURN or physical Android certification.",
+    "Native typing pace still follows the host.",
+    "Competitive remains disabled.",
+    "Eight original case executors and remaining pharmacology mechanisms are pending."
+  ]
+}

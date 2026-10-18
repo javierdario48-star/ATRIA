@@ -1,0 +1,143 @@
+{
+  "players": 3,
+  "browserProcesses": 3,
+  "apiLatencyMs": 70,
+  "physicalAndroid": false,
+  "patientUid": "dc6ff056-40e0-4e27-b021-b01921c6dee5:patient",
+  "closure": {
+    "kind": "clinical.closure",
+    "eventId": "dc6ff056-40e0-4e27-b021-b01921c6dee5:qa_80039ebea464817b4f6358cae16d44:message-204d1f2c-c640-4659-a1a5-5b447a91750f-12:0",
+    "patientUid": "dc6ff056-40e0-4e27-b021-b01921c6dee5:patient",
+    "actorId": "qa_80039ebea464817b4f6358cae16d44",
+    "caseId": "PERI-PBE-001",
+    "destination": "sala",
+    "quality": {
+      "score": 100,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 25,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "debrief": {
+      "schema": "atria.v5.closure-debrief.v1",
+      "score": 100,
+      "earned": [
+        {
+          "label": "Impresión diagnóstica",
+          "points": 15
+        },
+        {
+          "label": "Anamnesis",
+          "points": 15
+        },
+        {
+          "label": "Evaluación y reevaluación",
+          "points": 25
+        },
+        {
+          "label": "Estudios relevantes",
+          "points": 15
+        },
+        {
+          "label": "Tratamiento y destino",
+          "points": 25
+        },
+        {
+          "label": "Uso eficiente de recursos",
+          "points": 5
+        }
+      ],
+      "deductions": [],
+      "missing": [],
+      "unnecessary": []
+    },
+    "xp": 111,
+    "closed": true
+  },
+  "administrations": [
+    {
+      "id": "ceftriaxone",
+      "label": "Ceftriaxona IV",
+      "dose": {
+        "amount": 1000,
+        "unit": "mg",
+        "display": "1 g",
+        "defaultApplied": false
+      },
+      "sourceEventId": "dc6ff056-40e0-4e27-b021-b01921c6dee5:qa_25ddebf128b082adb5618430f1291f:message-5b97f55b-87b0-4105-b202-8f0ef63e849a-2:1",
+      "actorId": "qa_25ddebf128b082adb5618430f1291f",
+      "patientUid": "dc6ff056-40e0-4e27-b021-b01921c6dee5:patient",
+      "route": "iv",
+      "administeredAtRealSecond": 13.1354,
+      "administeredAtNativeMinute": 1.5525509999999998
+    },
+    {
+      "id": "albumin",
+      "label": "Albúmina IV",
+      "dose": {
+        "amount": 1.5,
+        "unit": "g/kg",
+        "display": "1.5 g/kg",
+        "defaultApplied": false
+      },
+      "sourceEventId": "dc6ff056-40e0-4e27-b021-b01921c6dee5:qa_22cacb4256191f7cbef0cf5794aa7b:message-839c7a5c-7778-417d-863f-b4ca2a2491db-2:0",
+      "actorId": "qa_22cacb4256191f7cbef0cf5794aa7b",
+      "patientUid": "dc6ff056-40e0-4e27-b021-b01921c6dee5:patient",
+      "route": "iv",
+      "administeredAtRealSecond": 13.952,
+      "administeredAtNativeMinute": 1.6505429999999999
+    }
+  ],
+  "studies": [
+    {
+      "id": "pbe_paracentesis",
+      "label": "Paracentesis diagnóstica + PMN",
+      "type": "procedure",
+      "patientUid": "dc6ff056-40e0-4e27-b021-b01921c6dee5:patient",
+      "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³.",
+      "resultSource": "native",
+      "nativeResult": true,
+      "universalFallback": false,
+      "status": "done",
+      "requestedAtMinute": 14.8019,
+      "readyAtMinute": 54.8019,
+      "sourceEventId": "dc6ff056-40e0-4e27-b021-b01921c6dee5:qa_25ddebf128b082adb5618430f1291f:message-5b97f55b-87b0-4105-b202-8f0ef63e849a-5:0",
+      "actorId": "qa_25ddebf128b082adb5618430f1291f"
+    },
+    {
+      "id": "pbe_renal",
+      "label": "Función renal + ionograma",
+      "type": "lab",
+      "patientUid": "dc6ff056-40e0-4e27-b021-b01921c6dee5:patient",
+      "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal.",
+      "resultSource": "native",
+      "nativeResult": true,
+      "universalFallback": false,
+      "status": "done",
+      "requestedAtMinute": 15.1686,
+      "readyAtMinute": 60.1686,
+      "sourceEventId": "dc6ff056-40e0-4e27-b021-b01921c6dee5:qa_22cacb4256191f7cbef0cf5794aa7b:message-839c7a5c-7778-417d-863f-b4ca2a2491db-5:0",
+      "actorId": "qa_22cacb4256191f7cbef0cf5794aa7b"
+    }
+  ],
+  "terminalReload": {
+    "samePatient": true,
+    "hostDepartureWaited": true,
+    "allPersonalReceiptsPersistedOnce": true
+  },
+  "guestDeparture": {
+    "patientPreserved": true,
+    "avatarRemoved": true,
+    "remainingPeersAgree": true
+  },
+  "errors": [],
+  "realUi": true,
+  "realWebRTC": true,
+  "oneClinicalAuthority": true
+}

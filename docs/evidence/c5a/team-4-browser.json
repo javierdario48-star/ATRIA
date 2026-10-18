@@ -1,0 +1,160 @@
+{
+  "players": 4,
+  "browserProcesses": 4,
+  "apiLatencyMs": 110,
+  "physicalAndroid": false,
+  "patientUid": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:patient",
+  "closure": {
+    "kind": "clinical.closure",
+    "eventId": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:qa_99ae6a65a9f91aee465256bb1cdd0c:message-55b051c6-9c23-48a7-b7fa-79058bd60242-11:0",
+    "patientUid": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:patient",
+    "actorId": "qa_99ae6a65a9f91aee465256bb1cdd0c",
+    "caseId": "PERI-PBE-001",
+    "destination": "sala",
+    "quality": {
+      "score": 100,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 25,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "debrief": {
+      "schema": "atria.v5.closure-debrief.v1",
+      "score": 100,
+      "earned": [
+        {
+          "label": "Impresión diagnóstica",
+          "points": 15
+        },
+        {
+          "label": "Anamnesis",
+          "points": 15
+        },
+        {
+          "label": "Evaluación y reevaluación",
+          "points": 25
+        },
+        {
+          "label": "Estudios relevantes",
+          "points": 15
+        },
+        {
+          "label": "Tratamiento y destino",
+          "points": 25
+        },
+        {
+          "label": "Uso eficiente de recursos",
+          "points": 5
+        }
+      ],
+      "deductions": [],
+      "missing": [],
+      "unnecessary": []
+    },
+    "xp": 111,
+    "closed": true
+  },
+  "administrations": [
+    {
+      "id": "oxygen",
+      "label": "Oxígeno suplementario",
+      "action": "start",
+      "dose": {
+        "amount": 2,
+        "unit": "L/min",
+        "display": "2 L/min",
+        "device": "nasal-cannula",
+        "defaultApplied": false
+      },
+      "sourceEventId": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:qa_d78bcd8c26c6cc7710c8228857b953:message-cf518079-8e53-410e-bf83-80220c6e8102-2:0",
+      "actorId": "qa_d78bcd8c26c6cc7710c8228857b953",
+      "patientUid": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:patient",
+      "administeredAtRealSecond": 12.4612,
+      "administeredAtNativeMinute": 1.483068
+    },
+    {
+      "id": "ceftriaxone",
+      "label": "Ceftriaxona IV",
+      "dose": {
+        "amount": 1000,
+        "unit": "mg",
+        "display": "1 g",
+        "defaultApplied": false
+      },
+      "sourceEventId": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:qa_b175d1b1bf25f29314ec1990b8b070:message-a75afc1a-cd41-425b-ae9b-4663a66241cb-2:1",
+      "actorId": "qa_b175d1b1bf25f29314ec1990b8b070",
+      "patientUid": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:patient",
+      "route": "iv",
+      "administeredAtRealSecond": 14.0112,
+      "administeredAtNativeMinute": 1.669068
+    },
+    {
+      "id": "albumin",
+      "label": "Albúmina IV",
+      "dose": {
+        "amount": 1.5,
+        "unit": "g/kg",
+        "display": "1.5 g/kg",
+        "defaultApplied": false
+      },
+      "sourceEventId": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:qa_3dae14474f0c72be8d9e4351408fca:message-a4787e3d-a9cd-4717-9129-5e3efc180340-2:0",
+      "actorId": "qa_3dae14474f0c72be8d9e4351408fca",
+      "patientUid": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:patient",
+      "route": "iv",
+      "administeredAtRealSecond": 14.8612,
+      "administeredAtNativeMinute": 1.7710679999999999
+    }
+  ],
+  "studies": [
+    {
+      "id": "pbe_paracentesis",
+      "label": "Paracentesis diagnóstica + PMN",
+      "type": "procedure",
+      "patientUid": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:patient",
+      "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³.",
+      "resultSource": "native",
+      "nativeResult": true,
+      "universalFallback": false,
+      "status": "done",
+      "requestedAtMinute": 14.5445,
+      "readyAtMinute": 54.5445,
+      "sourceEventId": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:qa_b175d1b1bf25f29314ec1990b8b070:message-a75afc1a-cd41-425b-ae9b-4663a66241cb-5:0",
+      "actorId": "qa_b175d1b1bf25f29314ec1990b8b070"
+    },
+    {
+      "id": "pbe_renal",
+      "label": "Función renal + ionograma",
+      "type": "lab",
+      "patientUid": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:patient",
+      "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal.",
+      "resultSource": "native",
+      "nativeResult": true,
+      "universalFallback": false,
+      "status": "done",
+      "requestedAtMinute": 14.8944,
+      "readyAtMinute": 59.8944,
+      "sourceEventId": "5c6282a3-96ec-42f9-9b69-582bc592b6c8:qa_d78bcd8c26c6cc7710c8228857b953:message-cf518079-8e53-410e-bf83-80220c6e8102-5:0",
+      "actorId": "qa_d78bcd8c26c6cc7710c8228857b953"
+    }
+  ],
+  "terminalReload": {
+    "samePatient": true,
+    "hostDepartureWaited": true,
+    "allPersonalReceiptsPersistedOnce": true
+  },
+  "guestDeparture": {
+    "patientPreserved": true,
+    "avatarRemoved": true,
+    "remainingPeersAgree": true
+  },
+  "errors": [],
+  "realUi": true,
+  "realWebRTC": true,
+  "oneClinicalAuthority": true
+}
