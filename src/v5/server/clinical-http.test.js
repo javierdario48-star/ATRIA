@@ -16,3 +16,11 @@ test('recovery identity survives social-cache loss; only the durable membership 
  assert.equal(response.status,200);assert.equal(f.calls[0].actorId,actorId);
  assert.equal((await f.http({method:'POST',body:{action:'sync',clientKey:'short',roomId:'room'}})).status,401);
 });
+
+test('a storage probe failure is diagnosable server-side without exposing backend details to clients',async()=>{
+ let observed;const error=Object.assign(Error('storage detail'),{name:'BlobError'});
+ const route=createClinicalHttp({authority:{},verifiedRoom:async()=>null,probe:async()=>{throw error;},onUnavailable:(cause,action)=>observed={cause,action}});
+ const response=await route({method:'POST',body:{clientKey:key,action:'capability'}});
+ assert.equal(response.status,503);assert.equal(response.body.error,'private-durable-clinical-store-unavailable');
+ assert.equal(observed.cause,error);assert.equal(observed.action,'capability');
+});

@@ -7,7 +7,7 @@ const statusFor={forbidden:403,missing:404,exists:409,busy:409,fenced:409,incomp
 /** The transport verifies initial social invitation once. Thereafter the
  * durable roster and possession of the existing device secret suffice, even
  * if the ephemeral social cache or original host has disappeared. */
-export function createClinicalHttp({authority,verifiedRoom,probe}){
+export function createClinicalHttp({authority,verifiedRoom,probe,onUnavailable=()=>{}}){
  return async function route({method,headers={},body={}}){
   if(method!=='POST')return {status:405,body:{error:'POST required'}};
   let actorId;try{actorId=clinicalActorId(body.clientKey);}catch{return {status:401,body:{error:'invalid recovery credential'}};}
@@ -25,6 +25,9 @@ export function createClinicalHttp({authority,verifiedRoom,probe}){
    const result=await authority.transact({roomId:body.roomId,actorId,commands:body.commands??[],motion:body.motion??null,
     typing:body.typing??null,confirmation:body.confirmation??null});
    return {status:200,body:result};
-  }catch(error){return {status:statusFor[error.code]??503,body:{error:statusFor[error.code]?error.message:'private-durable-clinical-store-unavailable',code:error.code??'unavailable'}};}
+  }catch(error){
+   if(!statusFor[error.code])try{onUnavailable(error,body.action);}catch{/* diagnostics cannot publish or retry a clinical effect */}
+   return {status:statusFor[error.code]??503,body:{error:statusFor[error.code]?error.message:'private-durable-clinical-store-unavailable',code:error.code??'unavailable'}};
+  }
  };
 }

@@ -8,6 +8,8 @@ import {clinicalContent} from '../src/v5/server/content.js';
 const store=createPrivateBlobGuardStore(blob),authority=createDurableGuardAuthority({store,content:clinicalContent});
 const social=createQaSocialServer(getCache(undefined,'atria-social-qa-v1',':'));
 const route=createClinicalHttp({authority,
+ onUnavailable(error,action){if(action==='capability')console.error('ATRIA durable storage capability failed',
+  error?.name||'Error',String(error?.message||'').replace(/vercel_blob_[a-z_]+_[A-Za-z0-9_-]+/gi,'[redacted]').slice(0,400));},
  async verifiedRoom(headers,roomId,actorId){
   const me=await social.route({method:'GET',path:'/api/me',headers});if(me.status!==200||me.body.user.id!==actorId)return null;
   const result=await social.route({method:'GET',path:'/api/rooms/'+roomId+'/messages',headers,query:{after:0}});
