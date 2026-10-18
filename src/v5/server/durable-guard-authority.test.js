@@ -88,8 +88,16 @@ test('closing while a colleague is offline durably awards each doctor once acros
   await f.call('a',{commands:[{id:'reassess',text:'/reevaluar'}]});
   const closed=await f.call('a',{commands:[{id:'close',text:'/disposicion sala'}]});assert(closed.clinical.patient.caseEnded);
   assert.equal(closed.claims.length,2);assert(closed.claims.every(([,r])=>r.xp===111));assert.equal(closed.clinical.progress.receipts.length,1);
+  const wrong=await f.call('b',{confirmation:{revision:closed.clinical.room.revision,outcomeId:'another-patient-close'}});
+  assert.equal(wrong.confirmationAccepted,false);assert.deepEqual(wrong.deliveries,[]);
+  const later=await f.call('a',{commands:[{id:'after-close',text:'Completamos la derivación'}]});
+  await f.call('b',{confirmation:{revision:later.clinical.room.revision,outcomeId:null}});
+  const received=await f.call('b',{confirmation:{revision:closed.clinical.room.revision,outcomeId:closed.clinical.patient.closure.eventId}});
+  assert.equal(received.confirmationAccepted,true);assert.equal(received.deliveries[0][1].outcomeId,closed.clinical.patient.closure.eventId);
+  const generalAck=await f.call('b',{confirmation:{revision:closed.clinical.room.revision,outcomeId:null}});
+  assert.equal(generalAck.deliveries[0][1].outcomeId,closed.clinical.patient.closure.eventId,'generic ACK cannot erase a confirmed outcome');
   for(let n=0;n<3;n++){await f.restart();const recovered=await f.call('b',{commands:[{id:'close-again',text:'/disposicion sala'}]});
-   assert.deepEqual(recovered.claims,closed.claims);assert.equal(recovered.clinical.progress.xp,111);
+   assert.deepEqual(recovered.claims,closed.claims);assert.equal(recovered.clinical.progress.xp,111);assert.deepEqual(recovered.deliveries,received.deliveries);
    assert.equal(recovered.acknowledgements[0].clinical[0].status,'rejected');
   }
  }finally{f.dispose();}

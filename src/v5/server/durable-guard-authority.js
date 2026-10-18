@@ -31,18 +31,18 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
   try{
    runtime=await createGuardRuntime({content,roomId,nowMs:at,checkpoint:fenced.runtime});
    const recovery=await runtime.advanceTo(Math.max(at,Math.ceil(fenced.runtime.lastWallMs)),{maxSteps});
-   const acknowledgements=[];
+   const acknowledgements=[];let confirmationAccepted=null;
    if(!recovery.recovering){
     if(motion)runtime.motion(actorId,motion);
     if(typeof typing==='boolean')runtime.typing(actorId,typing,at);
-    if(confirmation)runtime.confirm(actorId,confirmation.revision,confirmation.outcomeId);
+    if(confirmation)confirmationAccepted=runtime.confirm(actorId,confirmation.revision,confirmation.outcomeId);
     for(const command of commands)acknowledgements.push(await runtime.post(actorId,command));
    }
    const next={schemaVersion:1,roomId,epoch,lease:null,runtime:await runtime.checkpoint()};
    // Every external effect is clinical data in this aggregate. A stale worker
    // can calculate privately but cannot publish, ACK or execute a second dose.
    if(now()>=lease.untilMs||!await store.compareAndSwap(roomId,acquired,next))throw fail('fenced','previous clinical authority fenced');
-   return {epoch,recovering:recovery.recovering,acknowledgements,...runtime.view()};
+   return {epoch,recovering:recovery.recovering,acknowledgements,confirmationAccepted,...runtime.view()};
   }finally{runtime?.dispose();}
  }
  return Object.freeze({bootstrap,transact});

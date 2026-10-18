@@ -1,6 +1,7 @@
 import {createWorld} from '../app/world.js';
 import {createGuardSession} from './guard-session.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {outcomeId} from '../social/cooperative-lifecycle.js';
 
 export const CLINICAL_RUNTIME_VERSION='atria-guard-runtime-1';
 const STEP=1/60;
@@ -68,9 +69,13 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,n
   // Preserve the legacy host keyboard domain with finite expiry. A vanished
   // browser cannot leave the room permanently at the typing rate.
   typing(actorId,active,atMs){if(actorId===hostId)typingUntilMs=active?atMs+5000:0;},
-  confirm(actorId,revision,outcomeId){
-   if(!members.some(x=>x.id===actorId)||!Number.isSafeInteger(revision)||revision<0||revision>session.read().room.revision)throw Error('invalid delivery confirmation');
-   const prior=deliveries.get(actorId);if(!prior||revision>=prior.revision)deliveries.set(actorId,{revision,outcomeId:outcomeId??null});
+  confirm(actorId,revision,eventId){
+   const state=session.read();
+   if(!members.some(x=>x.id===actorId)||!Number.isSafeInteger(revision)||revision<0||revision>state.room.revision||
+    eventId!=null&&eventId!==outcomeId(state.patient))return false;
+   const prior=deliveries.get(actorId);
+   deliveries.set(actorId,{revision:Math.max(revision,prior?.revision??0),outcomeId:eventId??prior?.outcomeId??null});
+   return true;
   },
   view(){const s=world.snapshot();return clone({clinical:session.read(),catalog:session.catalog(),
    spatial:{nurses:s.nurses,doctors:[{...s.player,id:hostId,kind:'doctor'},...s.others]},claims:[...claims],deliveries:[...deliveries]});},
