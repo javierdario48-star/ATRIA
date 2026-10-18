@@ -35,7 +35,9 @@ export function confirmedSepsisView487(p,atNativeMinute){
   if(row.action==='stop'){active.delete(row.id);continue;}
   counts.set(row.id,(counts.get(row.id)||0)+1);
   if(!matchesMedicationAllergy487(p,row.id))active.set(row.id,{...row,m:row.administeredAtNativeMinute,
-   startedAt:row.administeredAtNativeMinute});
+   // V4 preserves the first active exposure while recording each new dose.
+   // Repeating an antibiotic must not restart its already achieved ramp.
+   startedAt:active.get(row.id)?.startedAt??row.administeredAtNativeMinute});
  }
  return {...p,gameMinute:atNativeMinute,monitorTherapies:active,counts,
   administrationLog:p.administrationLog.map(row=>({...row,m:row.administeredAtNativeMinute})),

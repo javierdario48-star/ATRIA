@@ -1,5 +1,9 @@
 // Effective ns421-patient-dialogue profiles. Only existing complete V5 cases.
 export const PATIENT_PROFILES=Object.freeze({
+ 'PERI-TER-001':{place:'Me sigue doliendo toda la panza.',onset:'Desde las operaciones no terminé de mejorar.',
+  radiation:'Me duele en toda la panza, no en un solo lugar.',character:'Es un dolor continuo que no termina de aflojar.',intensity:7,
+  worse:'Moverme y que me toquen me molesta.',relief:'No encontré algo que lo alivie del todo.',
+  symptoms:'Desde las operaciones sigo con fiebre, dolor de panza y cada vez menos fuerzas.'},
  'PERI-PBE-001':{place:'Me molesta toda la panza, que está muy hinchada.',
   onset:'Creo que desde ayer estoy peor… no me acuerdo bien.',radiation:'No sé señalar otro lugar; me molesta toda la panza.',
   character:'Es una molestia en toda la panza, no muy fuerte.',intensity:4,

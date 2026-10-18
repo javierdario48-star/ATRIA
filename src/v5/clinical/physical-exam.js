@@ -5,6 +5,8 @@ import {readNeurologicalState,readPatientObservations} from './patient-observati
 export {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
 const unspecified='Sin hallazgo específico modelado en este escenario.';
 const findings={
+ 'PERI-TER-001':{appearance:'Aspecto muy comprometido; múltiples operaciones previas.',
+  inspection:'Abdomen distendido; heridas quirúrgicas recientes.',palpation:'Dolor difuso; sin colección focal palpable.'},
  'PERI-PBE-001':{appearance:'Respuestas lentas al ingreso.',inspection:'Abdomen distendido por ascitis abundante.',
   palpation:'Molestia difusa leve; sin defensa ni Blumberg franco.',percussion:'Matidez por líquido abdominal.',
   neuro:'Atención enlentecida, sin focalidad neurológica modelada.'},

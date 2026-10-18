@@ -1,0 +1,196 @@
+{
+  "caseId": "PERI-TER-001",
+  "allMatched": true,
+  "sourceHashes": {
+    "base": "a3013bbb7c2fe657acd064e46ed56600830a09933ed63e1be439b04a9d8fa7ef",
+    "correction": "7eec1a3b98c136ba3e0df90c05c9d2c984cb8950469208f5787968e4b18316b2"
+  },
+  "scope": "Original numeric grading and career unchanged; native prerequisite records supplied; V5 uses actual interview, examination, study deadlines, administrations and consultation. No operation.",
+  "results": [
+    {
+      "id": "minimum",
+      "history": [
+        "surgery_history"
+      ],
+      "studies": [
+        "ter_cbc"
+      ],
+      "reassess": false,
+      "quality": {
+        "score": 84,
+        "diagnosis": 15,
+        "history": 10,
+        "safety": 22,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 115,
+      "nativeXp": 115,
+      "nativeQuality": {
+        "score": 84,
+        "diagnosis": 15,
+        "history": 10,
+        "safety": 22,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": true,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "noOperation": true
+    },
+    {
+      "id": "complete",
+      "history": [
+        "surgery_history",
+        "course",
+        "immuno"
+      ],
+      "studies": [
+        "ter_cbc",
+        "ter_ct"
+      ],
+      "reassess": true,
+      "quality": {
+        "score": 92,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 124,
+      "nativeXp": 124,
+      "nativeQuality": {
+        "score": 92,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": true,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "noOperation": true
+    },
+    {
+      "id": "excess-studies",
+      "history": [
+        "surgery_history",
+        "course",
+        "immuno"
+      ],
+      "studies": [
+        "ter_cbc",
+        "ter_ct",
+        "renal"
+      ],
+      "reassess": true,
+      "quality": {
+        "score": 91,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 4,
+        "penalty": 1,
+        "extraStudies": 1,
+        "extraStudyPenalty": 1,
+        "handoffCredit": 0
+      },
+      "xp": 123,
+      "nativeXp": 123,
+      "nativeQuality": {
+        "score": 91,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 4,
+        "penalty": 0,
+        "notes": [
+          "Eficiencia: 1 estudio(s) no prioritario(s) para esta semilla."
+        ],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": true,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "noOperation": true
+    },
+    {
+      "id": "alternative-coverage",
+      "history": [
+        "surgery_history",
+        "course",
+        "immuno"
+      ],
+      "studies": [
+        "ter_cbc",
+        "ter_ct"
+      ],
+      "reassess": true,
+      "alternative": true,
+      "quality": {
+        "score": 92,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 124,
+      "nativeXp": 124,
+      "nativeQuality": {
+        "score": 92,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": true,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "noOperation": true
+    }
+  ]
+}

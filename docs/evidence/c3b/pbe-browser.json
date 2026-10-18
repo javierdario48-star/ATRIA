@@ -1,0 +1,186 @@
+[
+  {
+    "name": "desktop",
+    "caseId": "PERI-PBE-001",
+    "realUi": true,
+    "physicalAndroid": false,
+    "initialGlasgow": 14,
+    "recoveredGlasgow": 15,
+    "receipts": [
+      {
+        "id": "ceftriaxone",
+        "label": "Ceftriaxona IV",
+        "dose": {
+          "amount": 1000,
+          "unit": "mg",
+          "display": "1 g",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-dc3f5b4a-2adf-437e-a5df-bd31925b5291:local-player:message-5:2",
+        "actorId": "local-player",
+        "patientUid": "02320c52-769b-4d17-b959-78dd8dcd81da:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 10.5989,
+        "administeredAtNativeMinute": 1.24071
+      },
+      {
+        "id": "albumin",
+        "label": "Albúmina IV",
+        "dose": {
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-dc3f5b4a-2adf-437e-a5df-bd31925b5291:local-player:message-5:3",
+        "actorId": "local-player",
+        "patientUid": "02320c52-769b-4d17-b959-78dd8dcd81da:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 11.4154,
+        "administeredAtNativeMinute": 1.33869
+      }
+    ],
+    "studies": [
+      {
+        "id": "pbe_paracentesis",
+        "label": "Paracentesis diagnóstica + PMN",
+        "type": "procedure",
+        "patientUid": "02320c52-769b-4d17-b959-78dd8dcd81da:patient-2",
+        "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 8.658,
+        "readyAtMinute": 48.658,
+        "sourceEventId": "guard-dc3f5b4a-2adf-437e-a5df-bd31925b5291:local-player:message-15:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "pbe_renal",
+        "label": "Función renal + ionograma",
+        "type": "lab",
+        "patientUid": "02320c52-769b-4d17-b959-78dd8dcd81da:patient-2",
+        "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 8.7787,
+        "readyAtMinute": 53.7787,
+        "sourceEventId": "guard-dc3f5b4a-2adf-437e-a5df-bd31925b5291:local-player:message-16:0",
+        "actorId": "local-player"
+      }
+    ],
+    "quality": {
+      "score": 100,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 25,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "xp": 133,
+    "oneAward": true,
+    "noOperation": true,
+    "persistedAfterReload": true,
+    "errors": []
+  },
+  {
+    "name": "pixel",
+    "caseId": "PERI-PBE-001",
+    "realUi": true,
+    "physicalAndroid": false,
+    "initialGlasgow": 14,
+    "recoveredGlasgow": 15,
+    "receipts": [
+      {
+        "id": "ceftriaxone",
+        "label": "Ceftriaxona IV",
+        "dose": {
+          "amount": 1000,
+          "unit": "mg",
+          "display": "1 g",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-830a3e82-f522-422f-bacf-02158b56e2d8:local-player:message-5:2",
+        "actorId": "local-player",
+        "patientUid": "be5389ee-0871-449a-8fb0-253f10344671:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 10.3526,
+        "administeredAtNativeMinute": 1.2152040000000002
+      },
+      {
+        "id": "albumin",
+        "label": "Albúmina IV",
+        "dose": {
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-830a3e82-f522-422f-bacf-02158b56e2d8:local-player:message-5:3",
+        "actorId": "local-player",
+        "patientUid": "be5389ee-0871-449a-8fb0-253f10344671:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 11.1692,
+        "administeredAtNativeMinute": 1.313196
+      }
+    ],
+    "studies": [
+      {
+        "id": "pbe_paracentesis",
+        "label": "Paracentesis diagnóstica + PMN",
+        "type": "procedure",
+        "patientUid": "be5389ee-0871-449a-8fb0-253f10344671:patient-2",
+        "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 8.2838,
+        "readyAtMinute": 48.2838,
+        "sourceEventId": "guard-830a3e82-f522-422f-bacf-02158b56e2d8:local-player:message-15:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "pbe_renal",
+        "label": "Función renal + ionograma",
+        "type": "lab",
+        "patientUid": "be5389ee-0871-449a-8fb0-253f10344671:patient-2",
+        "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 8.4334,
+        "readyAtMinute": 53.4334,
+        "sourceEventId": "guard-830a3e82-f522-422f-bacf-02158b56e2d8:local-player:message-16:0",
+        "actorId": "local-player"
+      }
+    ],
+    "quality": {
+      "score": 100,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 25,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "xp": 133,
+    "oneAward": true,
+    "noOperation": true,
+    "persistedAfterReload": true,
+    "errors": []
+  }
+]

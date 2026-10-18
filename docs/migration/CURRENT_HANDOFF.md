@@ -6,7 +6,9 @@
 Actualizado: 18-10-2026 UTC. Repositorio `javierdario48-star/ATRIA`.
 **Única rama de implementación:** `atria-5.0-core-rebuild-experimental`.
 
-**C3.b en validación:** [PBE en el ejecutor compartido](C3B_PBE.md). Se conectaron anamnesis/examen originales, convalecencia ns423, Glasgow14→15 condicionado, paracentesis40s/renal45s, albúmina/cobertura y daño renal reales, Sala/UTI y calidad/XP. Local:414V5,40core, PBE12/173 y calidad4 recorridos; PERI-SEC21/505 preservados. La certificación del SHA publicado requiere todavía navegador escritorio/Pixel y ambas CI; no presentar PBE como certificado antes de ese resultado. Después: **C3.c TER y C5.a Cooperativo clínico real antes de los otros ocho casos**.
+**C3.b certificado:** [PBE completa](C3B_PBE.md), código `33140e729989f626627aa43dba39577efb2b09bb`; [V5 6/6](https://github.com/javierdario48-star/ATRIA/actions/runs/39095114585), [histórica 4/4](https://github.com/javierdario48-star/ATRIA/actions/runs/39095114565). Escritorio/Pixel:100/100,133XP, Glasgow14→15 condicionado, dos dosis, para/renal reales, Sala y persistencia. Local414V5/40core; PBE12/173, calidad4; SEC21/505 preservados.
+
+**C3.c candidato en validación:** [TER completa y receptor](C3C_TERTIARY_PERITONITIS.md). Mismo ejecutor/propietario, sin nueva fisiología. TER13/187 y calidad4 comparativas, UTI/Cirugía con respuestas reales, cultivo tardío pendiente, cierre sin operación. Hasta CI/navegadores verdes no certificar este candidato. Después: **C5.a Cooperativo clínico real antes de los otros ocho casos**.
 
 Este handoff reemplaza el resumen acumulativo anterior. Su contenido íntegro sigue disponible en [la versión de 26cc058](https://github.com/javierdario48-star/ATRIA/blob/26cc058a30485191749b6df485f2a5221c525676/docs/migration/CURRENT_HANDOFF.md), además de los informes de cada paso. No se borró código funcional.
 

@@ -34,7 +34,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases},policy){
   const out=policy.evaluate(p,c,destination);
   if(!out)return null;
   if(p.pendingTreatments.length||p.pendingConsults.length){
-   out.ready=false;out.action=null;out.missing.push('Esperar las administraciones y las respuestas quirúrgicas pendientes.');
+   out.ready=false;out.action=null;out.missing.push('Esperar las administraciones y las respuestas del equipo receptor pendientes.');
   }
   if(policy.reassessmentRequired&&p.treatments.some(t=>!p.lastReassessment?.interventionEvents?.includes(t.sourceEventId))){
    out.ready=false;out.action=null;out.missing.push('Reevaluar tras las intervenciones realmente ejecutadas.');

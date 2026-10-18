@@ -8,7 +8,7 @@ import {apply487} from '../../src/integration/apply-487.js';
 import {createRealOutcomeJourney487} from '../native-xp-outcome-fixture-487.mjs';
 import {advanceNativeReference487} from '../physiology-pilot/native-reference-487.mjs';
 import {createGuardSession} from '../../src/v5/clinical/guard-session.js';
-export async function compareMedicalPeritonitisQuality({caseId,diagnosis,destination,questions,studies,orders,consult=false,reportName}){
+export async function compareMedicalPeritonitisQuality({caseId,diagnosis,destination,questions,studies,orders,consult=false,pendingStudies=[],reportName}){
  const generated=apply487(fs.readFileSync('vendor/atria-4.8.6/index.html','utf8'));
  const between=(s,a,b)=>{const i=s.indexOf(a),j=s.indexOf(b,i+a.length);assert(i>=0&&j>i);return s.slice(i,j);};
  const base=between(generated,'  const ESSENTIAL=','  function csEnsureCompetencies(');
@@ -30,15 +30,18 @@ export async function compareMedicalPeritonitisQuality({caseId,diagnosis,destina
   try{
    p.diagnosis=diagnosis;p.lastVitalsKnown=true;p.examDone=true;p.intentHistory=spec.history.map(id=>({id}));p.reassessments=Number(spec.reassess);
    for(const id of spec.studies)p.orders.set(id,{id,status:'done'});
+   for(const id of pendingStudies)p.orders.set(id,{id,status:'pending'});
    await send('/diagnostico '+diagnosis);await send('/signos');
    for(const technique of ['general','inspection','auscultation','percussion','palpation'])await send('/examen '+technique);
    for(const key of spec.history)await send(questions[key]);
    for(const key of spec.studies){const reply=await send('/estudio '+key);assert.equal(reply.clinical[0].status,'pending',key);}
+   for(const key of pendingStudies)assert.equal((await send('/estudio '+key)).clinical[0].status,'pending');
    if(consult){p.consults??=new Map();p.consults.set('cirugia',{status:'done',accepted:true});await send('Enfermera cirugía');}
    await send('Enfermera una vía');
    for(const text of orders(spec)){assert(ctx.addMonitorTherapy(text));await send('Enfermera '+text);}
    advanceNativeReference487(native,.42);
-   s.advance(Math.max(3.51,...s.read().patient.orders.map(o=>o.readyAtMinute)));await s.flush();
+   s.advance(Math.max(3.51,...s.read().patient.orders.filter(o=>spec.studies.includes(o.id)).map(o=>o.readyAtMinute)));await s.flush();
+   for(const key of pendingStudies)assert.equal(s.read().patient.orders.find(o=>o.id===key).status,'pending','late cultures never gate urgent transfer');
    if(spec.reassess)await send('/reevaluar');
    for(const key of spec.history)assert(s.read().patient.intentHistory.some(x=>x.id===key),spec.id+' acquired '+key);
    assert(ctx.window.csPeritonitisAssessment487().ready,spec.id+' native readiness');

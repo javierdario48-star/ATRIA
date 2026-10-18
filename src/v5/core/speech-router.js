@@ -43,11 +43,11 @@ export function routeWardSpeech(text,context={}){
    ...(regionId?{regionId}:{}),
    ...(action==='diagnostico'?{value}:{}),sourceText:original}],...(error?{error}:{})};
  }
- const consult=/^\/consulta\s+(cirugia)$/i.exec(normalized);
+ const consult=/^(?:\/consulta\s+|enfermer(?:a|o|ia)[,:]?\s+(?:interconsulta\s+(?:a\s+)?|consulta\s+(?:a\s+)?))(cirugia|uti|terapia intensiva|uci)[.!]?$/i.exec(normalized);
  if(consult&&context.clinicalEvaluation){
   const patientUid=context.patientUid??null;
   return {recipient:'nurse',patientUid,original,
-   intents:patientUid?[{kind:'consult.request',id:'cirugia',sourceText:original,clause:original}]:[],
+   intents:patientUid?[{kind:'consult.request',id:consult[1]==='cirugia'?'cirugia':'uti',sourceText:original,clause:original}]:[],
    ...(!patientUid?{error:'no-patient-target'}:{})};
  }
  // A transfer is a closure request, NOT evidence that surgery or discharge

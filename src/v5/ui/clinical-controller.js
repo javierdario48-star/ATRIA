@@ -142,10 +142,10 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  }
  function showTreatment(){
   const p=state()?.patient;if(!p)return;
-  const acute=['APP-001','PERI-SEC-001'].includes(p.caseId),placeholder=acute?'colocar una vía, ceftriaxona 1 g y metronidazol 500 mg':p.caseId==='PERI-PBE-001'?'ceftriaxona 1 g y albúmina 1.5 g/kg':'espironolactona 100 mg oral';
+  const acute=['APP-001','PERI-SEC-001'].includes(p.caseId),placeholder=acute?'colocar una vía, ceftriaxona 1 g y metronidazol 500 mg':p.caseId==='PERI-PBE-001'?'ceftriaxona 1 g y albúmina 1.5 g/kg':p.caseId==='PERI-TER-001'?'Ringer 1000 ml y piperacilina tazobactam 4.5 g':'espironolactona 100 mg oral';
   open('<h2>Tratamiento · Enfermería</h2><div id="therapyRecords"></div><label class="field">Orden<input id="therapyOrder" maxlength="200" placeholder="'+esc(placeholder)+'"></label>'+
    '<p class="note">Las indicaciones pendientes se distinguen de las intervenciones ejecutadas. Confirmá la preparación, la vía y la respuesta del paciente.</p>'+
-   '<div class="actions"><button data-action="request-surgery">Solicitar interconsulta a cirugía</button></div>'+
+   '<div class="actions"><button data-action="request-surgery">Solicitar interconsulta a cirugía</button><button data-action="request-icu">Solicitar interconsulta a UTI</button></div>'+
    '<div class="actions"><button data-action="order-therapy" class="primary">Indicar a Enfermera</button><button data-action="patient-chart">Volver</button></div>');render();
  }
  function showHistory(){if(!state())return;open('<h2>Historia clínica</h2><div id="fullClinicalHistory"></div><div class="actions"><button data-action="patient-chart">Volver al paciente</button></div>');render();}
@@ -241,6 +241,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
     const field=ui('diagnosisInput');if(field&&!field.readOnly){field.value=b.dataset.diagnosis;renderDiagnosisSuggestions();field.focus({preventScroll:true});}return true;
    }
    case 'request-surgery':close();await post('/consulta cirugia');break;
+   case 'request-icu':close();await post('/consulta uti');break;
    case 'order-therapy':{const text=ui('therapyOrder').value.trim();if(text){close();await post(/^enfermer[ao]/i.test(text)?text:'Enfermera, '+text);}break;}
    case 'request-study':{const study=session()?.catalog().find(s=>s.id===ui('studyChoice').value);if(study){close();await post('/estudio '+study.id);}break;}
    default:return false;

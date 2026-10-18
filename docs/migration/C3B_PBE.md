@@ -1,6 +1,6 @@
 # C3.b — PBE en el ejecutor clínico compartido
 
-Continúa `d0d7052d63c6decbbf4baea2944607d610d0ff1a`, exclusivamente en `atria-5.0-core-rebuild-experimental`. Candidato implementado; la certificación de navegador/CI se registra después de ejecutar el SHA publicado. No confundir pruebas locales con CI aprobada.
+Continúa `d0d7052d63c6decbbf4baea2944607d610d0ff1a`, exclusivamente en `atria-5.0-core-rebuild-experimental`. **Certificado:** `33140e729989f626627aa43dba39577efb2b09bb`. [CI V5 6/6](https://github.com/javierdario48-star/ATRIA/actions/runs/39095114585) y [censo histórico 4/4](https://github.com/javierdario48-star/ATRIA/actions/runs/39095114565) aprobados. [Preview del mismo SHA](https://night-shift-clinical-nm47oir1n-javierdario4878-7324.vercel.app/) HTTP200/110 hashes idénticos. [Verificación](../evidence/c3b/verification.json).
 
 ## Comportamiento recuperado
 
@@ -21,7 +21,7 @@ El evaluador original **csPeritonitisEvaluate487** ofrece Sala o UTI automática
 - PERI-SEC conserva21 escenarios/505 observaciones y tolerancias previas. Entrevista40 comparaciones/cuatro perfiles; examen80 comparaciones.
 - Seis pruebas de sesión: dosis pendientes, recuperación neurológica condicionada, para/renal con deadlines, Sala/UTI, daño renal y rescate con95/100 tras descuento5, muerte tras ventana sostenida y frames equivalentes, cierre único.
 - `node qa/v5/pbe-quality-parity.mjs`: [V19 real + corrección peritonitis + finalizador/carrera](../evidence/c3b/pbe-quality-parity.json). Mínima89/121XP; completa100/133; exceso99/132; alternativa imipenem95/128. La VM declara antecedentes/resultados como precondiciones; V5 los obtiene mediante acciones/estudios reales. La fórmula V19 antigua no penalizaba amikacina; la deducción V5 por decisión perjudicial se prueba aparte, sin afirmar igualdad de esa omisión histórica.
-- `qa/v5/pbe-browser.mjs` recorre UI pública de escritorio y Pixel hasta cierre/persistencia: movimiento, historia, examen, Glasgow14→15, dos dosis físicas, monitor, estudios reales, diagnóstico flotante, Sala100/133 y no duplicación. Debe pasar en CI antes de certificar este checkpoint. Pixel es emulación, no Android físico.
+- `qa/v5/pbe-browser.mjs` recorre UI pública de escritorio y Pixel hasta cierre/persistencia: movimiento, historia, examen, Glasgow14→15, dos dosis físicas, monitor, estudios reales, diagnóstico flotante, Sala100/133 y no duplicación. **Ambos recorridos aprobados en la CI del SHA certificado:** [recibos y resultados](../evidence/c3b/pbe-browser.json), [capturas/logs](https://github.com/javierdario48-star/ATRIA/actions/runs/39095114585/artifacts/12124585930). Pixel es emulación, no Android físico.
 
 La comparativa fisiológica está limitada a fenotipo típico y horizonte previo a muerte <=120s; no se sustituye el finalizador de la VM para afirmar paridad post mortem. Muerte y rescate son invariantes V5 y permanecen las regresiones originales. No se afirma PK completa de30tratamientos ni ejecución de los otros nueve casos.
 

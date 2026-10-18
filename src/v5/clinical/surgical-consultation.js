@@ -1,6 +1,22 @@
 import {csSurgicalReview487} from '../../clinical/surgical-review-487.js';
 import {csDxMatchesCase487} from '../../clinical/diagnostic-impression-487.js';
 
+/** Effective V19 mentorAcuity + csConsultAdvice('uti'). The original reply
+ * declines a critical bed while stable and accepts higher-complexity care
+ * otherwise. No diagnosis, treatment, operation or vital write is inferred.
+ */
+export function criticalCareReview487(v,{recentShock=false}={}){
+ const map=Math.round((v.sys+2*v.dia)/3);
+ const unstable=v.sys<95||map<65||v.spo2<93||v.hr>=130||v.rr>=30;
+ const critical=v.sys<80||map<55||v.spo2<90||v.hr>=155||v.rr>=36;
+ const accepted=unstable||critical||recentShock;
+ if(recentShock&&!unstable&&!critical)return {accepted:true,status:'accepted',reason:
+  'UTI evalúa: antecedente reciente de shock pese a la respuesta al soporte. Aceptamos el ingreso crítico; mantener reanimación y vigilancia durante el traslado.'};
+ return {accepted,status:accepted?'accepted':'stable',reason:accepted?
+  'UTI evalúa: cuadro con criterios de alta complejidad; mantener reanimación y preparar ingreso crítico.':
+  'UTI evalúa: por ahora no requiere cama crítica si mantiene estabilidad; reevaluar ante deterioro.'};
+}
+
 /** Specialist communication inside the existing care executor. It never
  * administers a procedure, changes vitals or approves a case closure.
  * The original 3500ms response uses the owned real-time clock domain.
@@ -15,21 +31,21 @@ export function surgicalReviewSnapshot(p,c,cases=[c]){
 export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness}){
  const pending=new Set();
  function receipt(cmd,consult,reused=false){
-  const missing=consult.accepted?(readiness('quirofano')?.missing||[]):[];
-  return executed(cmd,{consultId:'cirugia',sourceEventId:consult.sourceEventId,
+  const missing=consult.accepted?(readiness(consult.id==='uti'?'uti':'quirofano')?.missing||[]):[];
+  return executed(cmd,{consultId:consult.id,sourceEventId:consult.sourceEventId,
    accepted:consult.accepted,consultStatus:consult.status,reviewStatus:consult.reviewStatus,
    respondedAtRealSecond:consult.respondedAtRealSecond,reused,
-   message:'Cirugía: '+consult.advice+(missing.length?' Pendiente para la derivación: '+missing.join(' '):'')});
+   message:(consult.id==='uti'?'UTI: ':'Cirugía: ')+consult.advice+(missing.length?' Pendiente para la derivación: '+missing.join(' '):'')});
  }
  return Object.freeze({
   request(cmd,clock){
    const {intent}=cmd;
-   if(intent.id!=='cirugia'||!['consult.request','procedure.request'].includes(intent.kind))return null;
-   const prior=p.consults.find(x=>x.id==='cirugia'&&x.status==='done'&&x.accepted);
+   if(!['cirugia','uti'].includes(intent.id)||!['consult.request','procedure.request'].includes(intent.kind))return null;
+   const prior=p.consults.find(x=>x.id===intent.id&&x.status==='done'&&x.accepted);
    if(prior)return receipt(cmd,prior,true);
-   const existing=[...pending][0];
+   const existing=[...pending].find(t=>t.id===intent.id);
    if(existing){existing.commands.push(structuredClone(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
-   const task={id:'cirugia',sourceEventId:cmd.eventId,patientUid:p.uid,
+   const task={id:intent.id,sourceEventId:cmd.eventId,patientUid:p.uid,
     readyAtRealSecond:clock.clinicalMinute+3.5,commands:[structuredClone(cmd)]};
    pending.add(task);
    p.pendingConsults.push({id:task.id,sourceEventId:task.sourceEventId,
@@ -41,8 +57,8 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness}){
   finish(task,at){
    if(!pending.delete(task))return [];
    p.pendingConsults=p.pendingConsults.filter(x=>x.sourceEventId!==task.sourceEventId);
-   const review=csSurgicalReview487(surgicalReviewSnapshot(p,c,cases),c);
-   const consult={id:'cirugia',patientUid:p.uid,sourceEventId:task.sourceEventId,
+   const review=task.id==='uti'?criticalCareReview487(p.liveVitals,{recentShock:Number(String(c.vitals.bp).split('/')[0])<90}):csSurgicalReview487(surgicalReviewSnapshot(p,c,cases),c);
+   const consult={id:task.id,patientUid:p.uid,sourceEventId:task.sourceEventId,
     status:review.accepted?'done':'rejected',accepted:review.accepted,
     reviewStatus:review.status,advice:review.reason,respondedAtRealSecond:at};
    p.consults.push(consult);

@@ -41,6 +41,12 @@ jobs:
         run: node qa/v5/pbe-native-parity.mjs
       - name: Original PBE minimum, complete, excessive and alternative care retain graded quality and unique XP
         run: node qa/v5/pbe-quality-parity.mjs
+      - name: Original tertiary infection, repeated therapy, renal harm and timed rescue remain equivalent
+        run: node qa/v5/tertiary-native-parity.mjs
+      - name: Original tertiary graded quality and career with late cultures still pending
+        run: node qa/v5/tertiary-quality-parity.mjs
+      - name: Original critical-care clinical replies remain contextual
+        run: node qa/v5/characterize-icu-native.mjs
       - name: Executable V4 clinical harm-and-exposure parity gate (QA-only)
         run: node qa/v5/clinical-parity-gate.mjs
       - name: Contrast rapid iatrogenic fluid response against untreated legacy control
@@ -209,7 +215,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        journey: [peritonitis, pbe]
+        journey: [peritonitis, pbe, tertiary]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

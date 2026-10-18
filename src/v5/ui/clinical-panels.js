@@ -52,9 +52,9 @@ export function therapyHTML(patient){
  const confirmed=(patient.treatments||[]).map(t=>'<div class="clinical-section"><b>'+esc(t.label)+'</b><small>Ejecutado'+(t.dose?' · '+esc(t.dose.display)+(t.dose.defaultApplied?' · dosis predeterminada':''):'')+'</small></div>');
  const pending=(patient.pendingTreatments||[]).map(t=>'<div class="clinical-section"><b>'+esc(t.label||t.id)+'</b><small>Indicado · en preparación · aún no administrado</small></div>');
  const venous=patient.venousAccessCount?'<div class="clinical-section"><b>Vías venosas confirmadas</b><small>'+patient.venousAccessCount+'</small></div>':'';
- const consults=(patient.consults||[]).map(c=>'<div class="clinical-section" data-consult-status="'+esc(c.status)+'"><b>Cirugía · '+
+ const consults=(patient.consults||[]).map(c=>'<div class="clinical-section" data-consult-status="'+esc(c.status)+'"><b>'+(c.id==='uti'?'UTI':'Cirugía')+' · '+
   (c.accepted?'Aceptada':'Rechazada')+'</b><small>'+esc(c.advice||'')+'</small></div>');
- const pendingConsults=(patient.pendingConsults||[]).map(c=>'<div class="clinical-section"><b>Cirugía</b><small>Respuesta pendiente · no aceptada aún</small></div>');
+ const pendingConsults=(patient.pendingConsults||[]).map(c=>'<div class="clinical-section"><b>'+(c.id==='uti'?'UTI':'Cirugía')+'</b><small>Respuesta pendiente · no aceptada aún</small></div>');
  return [venous,fluidRow,...pending,...pendingConsults,...confirmed,...consults].join('')||'<p>Sin intervenciones ejecutadas.</p>';
 }
 export function historyHTML(p){
@@ -79,5 +79,5 @@ export function patientHTML(p,{readOnly=false}={}){return `
  <details><summary>Intervenciones confirmadas</summary><div id="therapyRecords"></div></details>
  ${diagnosisEditorHTML(p,{readOnly})}
  <p id="caseReadiness" class="note"></p><div id="caseDestinations" class="actions"></div><div id="caseResult" role="status"></div>
- <p class="note">${p.caseId==='APP-001'?'La derivación a quirófano requiere valoración quirúrgica y continuidad del cuidado; no acredita una apendicectomía realizada.':p.caseId==='PERI-SEC-001'?'La derivación requiere valoración quirúrgica y soporte confirmado. El control del foco se realizará en quirófano.':p.caseId==='PERI-PBE-001'?'La PBE requiere cobertura apropiada, albúmina y vigilancia renal. La paracentesis diagnóstica no acredita una cirugía.':'La espironolactona no produce una reducción inmediata de ascitis en este escenario. Continuá el seguimiento.'}</p>`;}
+ <p class="note">${p.caseId==='APP-001'?'La derivación a quirófano requiere valoración quirúrgica y continuidad del cuidado; no acredita una apendicectomía realizada.':p.caseId==='PERI-SEC-001'?'La derivación requiere valoración quirúrgica y soporte confirmado. El control del foco se realizará en quirófano.':p.caseId==='PERI-PBE-001'?'La PBE requiere cobertura apropiada, albúmina y vigilancia renal. La paracentesis diagnóstica no acredita una cirugía.':p.caseId==='PERI-TER-001'?'La infección persistente requiere soporte, cobertura y respuesta del receptor. El traslado no acredita una nueva operación.':'La espironolactona no produce una reducción inmediata de ascitis en este escenario. Continuá el seguimiento.'}</p>`;}
 export const cirrPatientHTML=patientHTML,appPatientHTML=patientHTML;
