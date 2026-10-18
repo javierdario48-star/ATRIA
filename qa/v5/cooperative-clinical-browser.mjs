@@ -37,7 +37,7 @@ async function study(p,id){await p.locator('#peopleButton').click();await p.loca
 try{
  for(const [i,browser] of [h.browser,second].entries()){
   const ctx=await browser.newContext(i===1?h.devices['Pixel 5']:{viewport:{width:1024,height:768}});contexts.push(ctx);
-  const p=await ctx.newPage();p.setDefaultTimeout(30000);p.on('pageerror',e=>errors.push({doctor:i,message:e.message}));pages.push(p);
+  const p=await ctx.newPage();p.setDefaultTimeout(30000);p.on('pageerror',e=>errors.push({doctor:i,message:e.message,stack:e.stack}));pages.push(p);
   await p.goto(process.env.V5_BROWSER_URL||h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
   await p.locator('#playerName').fill(i===0?'Dra. Ana':'Dr. Bruno');await p.locator('#enterButton').click();
   await p.locator('#peopleButton').click();await p.locator('#modalClose').click();

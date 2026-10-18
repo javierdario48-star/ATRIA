@@ -19,23 +19,32 @@ export function createWardPacketCodec(){
  * the same STUN configuration as V4. Polling is driven by the application RAF.
  */
 export function createWardPeer({RTCPeerConnection,initiator,signal,onMessage,onState=()=>{}}){
- const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]}),codec=createWardPacketCodec();
+ let pc,codec=createWardPacketCodec(),negotiationId=initiator?crypto.randomUUID():null;
  let channel=null,disposed=false,started=false,lastDescription='',sending=false,lastCandidates='';
  const candidates=[],remoteCandidates=new Map(),acceptedCandidates=new Set();
- pc.onicecandidate=event=>{if(!disposed&&event.candidate&&candidates.length<24)candidates.push(event.candidate.toJSON());};
+ function reset(){
+  channel?.close();pc?.close();channel=null;codec=createWardPacketCodec();lastDescription='';lastCandidates='';candidates.length=0;remoteCandidates.clear();acceptedCandidates.clear();
+  const owner=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});pc=owner;
+  owner.onicecandidate=event=>{if(!disposed&&pc===owner&&event.candidate&&candidates.length<24)candidates.push(event.candidate.toJSON());};
+  owner.ondatachannel=e=>{if(!disposed&&pc===owner)attach(e.channel,owner);};
+  owner.onconnectionstatechange=()=>{if(!disposed&&pc===owner)onState(owner.connectionState);};
+ }
  async function applyCandidates(){
   if(!pc.remoteDescription)return;
   for(const [key,candidate] of remoteCandidates)if(!acceptedCandidates.has(key)){
    try{await pc.addIceCandidate(candidate);acceptedCandidates.add(key);}catch{/* candidate from a retired SDP; a new authenticated poll replaces it */}
   }
  }
- function attach(value){channel=value;channel.onopen=()=>onState('open');channel.onclose=()=>onState('closed');
-  channel.onmessage=e=>{if(disposed)return;const value=typeof e.data==='string'?codec.decode(e.data):null;if(value)onMessage(value);};}
- pc.ondatachannel=e=>attach(e.channel);
- pc.onconnectionstatechange=()=>onState(pc.connectionState);
+ function attach(value,owner=pc){channel=value;channel.onopen=()=>onState('open');channel.onclose=()=>onState('closed');
+  channel.onmessage=e=>{if(disposed||pc!==owner)return;const value=typeof e.data==='string'?codec.decode(e.data):null;if(value)onMessage(value);};}
+ reset();
  return Object.freeze({
   async start(){if(started||disposed||!initiator)return;started=true;attach(pc.createDataChannel('atria-v5-coop',{ordered:true}));await pc.setLocalDescription(await pc.createOffer());},
   async receive(description){
+   if(disposed||typeof description?.negotiationId!=='string'||description.negotiationId.length>100)return;
+   if(description.type==='offer'&&!initiator){
+    if(negotiationId&&negotiationId!==description.negotiationId)reset();negotiationId=description.negotiationId;
+   }else if(description.negotiationId!==negotiationId)return;
    if(description?.type==='ice'){
     if(!disposed&&Array.isArray(description.candidates)&&description.candidates.length<=24){
      remoteCandidates.clear();for(const candidate of description.candidates)if(typeof candidate?.candidate==='string'&&candidate.candidate.length<2000)remoteCandidates.set(JSON.stringify(candidate),candidate);
@@ -50,13 +59,13 @@ export function createWardPeer({RTCPeerConnection,initiator,signal,onMessage,onS
   },
   async maintain(){
    if(disposed||sending||!pc.localDescription)return;
-   const description={type:pc.localDescription.type,sdp:pc.localDescription.sdp};
+   const description={type:pc.localDescription.type,sdp:pc.localDescription.sdp,negotiationId};
    // Publish SDP promptly; aggregate trickled candidates in the existing
    // authenticated ICE slot instead of waiting for an unreachable STUN host.
    const key=description.type+':'+/a=ice-ufrag:([^\r\n]+)/.exec(description.sdp)?.[1];
    sending=true;try{
-    if(key!==lastDescription){await signal(description);lastDescription=key;}
-    const encoded=JSON.stringify(candidates);if(candidates.length&&encoded!==lastCandidates){await signal({type:'ice',candidates:[...candidates]});lastCandidates=encoded;}
+    if(key!==lastDescription||channel?.readyState!=='open'){await signal(description);lastDescription=key;}
+    const encoded=JSON.stringify(candidates);if(candidates.length&&encoded!==lastCandidates){await signal({type:'ice',candidates:[...candidates],negotiationId});lastCandidates=encoded;}
    }finally{sending=false;}
   },
   send(value){if(disposed||channel?.readyState!=='open'||channel.bufferedAmount>1048576)return false;

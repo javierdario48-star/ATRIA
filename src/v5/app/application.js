@@ -115,7 +115,7 @@ export async function createApplication({document,window,content,signal}){
     if(value.clinical.room.revision!==lastRemoteRevision){lastRemoteRevision=value.clinical.room.revision;clinicalChanged();}
     const id=outcomeId(value.clinical.patient);if(id)social.send(sender,{kind:'outcome.received',eventId:id,patientUid:value.clinical.patient.uid});
    }});
-   guardSession=replica;clinicalUI.reset();close();resetChat('Guardia cooperativa conectada.');replica.apply(packet);renderGuardCommunication();lastClinicalFrame=window.performance.now();return;
+   replica.apply(packet);guardSession=replica;clinicalUI.reset();close();resetChat('Guardia cooperativa conectada.');renderGuardCommunication();lastClinicalFrame=window.performance.now();return;
   }
   if(!guardSession||!coopRoomId)return;
   if(social.isHost()){
@@ -168,7 +168,7 @@ export async function createApplication({document,window,content,signal}){
   const previous=lastClinicalFrame;lastClinicalFrame=now;
   if(guardSession&&previous!==null){
    guardSession.advance(Math.max(0,(now-previous)/1000),{typing:clinicalTyping});
-   const p=guardSession.read().patient;
+   const p=guardSession.read()?.patient;if(!p)return;
    if(p.patientDied&&announcedDeathUid!==p.uid){
     announcedDeathUid=p.uid;world.stop();patientWheel.hide();
     open('<h2>Guardia finalizada</h2><p>El paciente falleció tras una alteración crítica sostenida de sus signos vitales. Se cancelaron las intervenciones pendientes.</p><p>No se otorgó experiencia por este caso.</p><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button></div>');
@@ -219,7 +219,7 @@ export async function createApplication({document,window,content,signal}){
   if(!guardSession){line(profile.name,text);return;}
   advanceClinicalTo(window.performance.now());
   const session=guardSession;
-  try{return await session.post({id:'message-'+messageEpoch+'-'+(++messageNumber),text,...(patientUid?{targetPatientUid:patientUid}:{})});}
+  try{return await session.post({id:'message-'+(coopRoomId?messageEpoch+'-':'')+(++messageNumber),text,...(patientUid?{targetPatientUid:patientUid}:{})});}
   catch{if(guardSession===session)toast('No pude confirmar el mensaje.');}
  }
  function canvasDown(event){

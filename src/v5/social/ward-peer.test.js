@@ -14,3 +14,27 @@ test('large clinical snapshots reassemble once without mixing interrupted or mal
  const interrupted=a.encode({text:'x'.repeat(20000)});b.decode(interrupted[0]);
  const next=a.encode({patientUid:'Q',value:2});assert.deepEqual(b.decode(next[0]),{patientUid:'Q',value:2});
 });
+test('a fresh connection rejects cached answers and ICE from the retired negotiation',async()=>{
+ let pc;const signals=[];class Peer{
+  constructor(){pc=this;this.connectionState='new';}createDataChannel(){return {readyState:'connecting',close(){}};}
+  async createOffer(){return {type:'offer',sdp:'a=ice-ufrag:new'};}async setLocalDescription(x){this.localDescription=x;}
+  async setRemoteDescription(x){this.remoteDescription=x;}async addIceCandidate(){throw Error('stale candidate must not reach RTC');}close(){}
+ }
+ const link=createWardPeer({RTCPeerConnection:Peer,initiator:true,signal:async x=>signals.push(x),onMessage:()=>{}});await link.start();await link.maintain();
+ assert.equal(typeof signals[0].negotiationId,'string');
+ await link.receive({type:'answer',sdp:'old answer',negotiationId:'retired'});assert.equal(pc.remoteDescription,undefined);
+ await link.receive({type:'ice',candidates:[{candidate:'old'}],negotiationId:'retired'});
+ await link.receive({type:'answer',sdp:'fresh answer',negotiationId:signals[0].negotiationId});assert.equal(pc.remoteDescription.sdp,'fresh answer');link.dispose();
+});
+test('a resumed guest replaces its provisional old offer instead of mixing two RTC negotiations',async()=>{
+ const pcs=[],messages=[];class Peer{
+  constructor(){pcs.push(this);this.connectionState='new';}async setRemoteDescription(x){this.remoteDescription=x;}
+  async createAnswer(){return {type:'answer',sdp:'a=ice-ufrag:guest'};}async setLocalDescription(x){this.localDescription=x;}close(){this.closed=true;}
+ }
+ const link=createWardPeer({RTCPeerConnection:Peer,initiator:false,signal:async()=>{},onMessage:x=>messages.push(x)});
+ await link.receive({type:'offer',sdp:'old offer',negotiationId:'previous'});
+ const retired={close(){}};pcs[0].ondatachannel({channel:retired});
+ await link.receive({type:'offer',sdp:'new offer',negotiationId:'current'});
+ assert.equal(pcs.length,2);assert(pcs[0].closed);assert.equal(pcs[1].remoteDescription.sdp,'new offer');
+ retired.onmessage({data:createWardPacketCodec().encode({text:'stale command'})[0]});assert.equal(messages.length,0);link.dispose();
+});

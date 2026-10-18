@@ -28,7 +28,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   room=value;savedRoom=room.id;try{storage.setItem(ROOM_KEY,room.id);}catch{}onRoom(structuredClone(room),user);
  }
  function peer(member,initiator){
-  const entry={id:member.userId,roomId:room.id,peerId:member.peerId,lastAttempt:window.performance.now(),link:null};
+  const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roster.find(x=>x.userId===member.userId)?.motionSession,lastAttempt:window.performance.now(),link:null};
   entry.link=createWardPeer({RTCPeerConnection:window.RTCPeerConnection,initiator,
    signal:description=>api('',{signal:{type:description.type,fromUserId:user.id,fromPeerId:peerId,toPeerId:member.peerId,description}},true),
    onMessage:packet=>{if(!disposed&&peers.get(entry.id)===entry&&room?.id===entry.roomId&&packet.roomId===entry.roomId&&room.members.some(x=>x.userId===entry.id))onPacket(entry.id,packet);}});
@@ -55,6 +55,8 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   for(const member of remotes){
    if(!member.peerId)continue;
    let p=peers.get(member.userId);
+   const motionSession=roster.find(x=>x.userId===member.userId)?.motionSession;
+   if(p&&motionSession&&p.motionSession&&p.motionSession!==motionSession){p.link.dispose();peers.delete(member.userId);p=null;}
    if(p&&(['closed','failed','disconnected'].includes(p.link.state()))&&now-p.lastAttempt>6000){p.link.dispose();peers.delete(member.userId);p=null;}
    p??=peer(member,host);
    if(host)await p.link.start();
