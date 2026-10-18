@@ -2,6 +2,14 @@
 
 **Contrato obligatorio:** [Manual maestro](ATRIA_50_MANUAL_MAESTRO_FUNCIONAL.md) y [continuación](WORK_CONTINUATION_FROM_MANUAL.md). No reinterpretar reglas ni sustituir módulos funcionales. Actualizado18-10-2026 UTC. Repositorio `javierdario48-star/ATRIA`, única rama `atria-5.0-core-rebuild-experimental`.
 
+## C5.b.2 Supabase (checkpoint aislado; no activar guardia pública)
+
+**Nuevo proyecto creado:** Supabase Free `atria-clinical` (`hugqjejfyyilslbomsgi`, São Paulo, costo cotizado US$0/mes). La migración `atria_clinical_guard_atomic_cas` se aplicó con éxito a una base inicialmente vacía; RLS activado y privilegios de lectura y RPC sólo para `service_role`, **sin permisos anon/authenticated**. Prueba de escritura CAS real y de dos llamadas concurrentes: revisión 1 → 2 con un ganador y un conflicto, sin pérdida de estado; datos QA borrados. Advisor: INFO esperado "RLS Enabled No Policy" por acceso sólo servidor, sin hallazgos de exposición. No toca los otros dos proyectos Supabase.
+
+**Código adaptador:** `da14966a99d9d48db15c1f2b0504130a152932d0`, nuevo `src/v5/server/postgres-guard-store.js` + prueba, SQL reproducible y [documentación](C5B2_SUPABASE_STORE.md). `api/clinical.js` prioriza este adapter si están AMBAS `SUPABASE_URL` y `SUPABASE_SECRET_KEY`. `SUPABASE_URL` ya configurado en la preview Vercel; **falta que el propietario agregue la clave privada sb_secret_... por la interfaz Vercel** (no compartir por chat ni git). `enabled:false` permanece, y el host C5.a del navegador sigue igual.
+
+**No afirmar C5.b.2 terminado:** falta credencial, verificar RPC por Vercel, pruebas de recuperación WAN y migrar la UI de host/réplicas. No activar dos autoridades simultáneas. Los tests del adaptador fueron aprobados localmente; CI del commit `da149` emitida, verificar los resultados por SHA. No modificar main, V4, golden master ni los cinco casos.
+
 ## Retomar aquí
 
 **C3.b y C3.c certificados. Cinco casos completos: APP, CIRR, PERI-SEC, PERI-PBE y PERI-TER.** Ocho casos originales todavía sin ejecutor completo. No repetir extracciones, auditoría general ni investigación de farmacología ya validada.
