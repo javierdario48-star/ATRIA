@@ -1,11 +1,11 @@
 {
   "checkpoint": "C5.b.1",
   "baseSha": "980eeca10596ae678164e0a698c46922bd6cd874",
-  "codeSha": "8fc417799f5ae35585e831adf20907a5acc6da77",
+  "codeSha": "aaaeaddb57d25c9de1bb12e18bab631efde8f5ce",
   "scope": "operational checkpoint, reusable recovery authority, atomic adapters; public recovery client not integrated",
   "local": {
     "v5": {
-      "passed": 460,
+      "passed": 462,
       "failed": 0
     },
     "core": {
@@ -40,7 +40,7 @@
         "access/storage failure never silently falls back to public or memory"
       ]
     },
-    "historicalRegression": "npm test completed exit 0 on initial C5.b.1 clinical implementation; later changes server-only, exact final regression verified in CI",
+    "historicalRegression": "npm test completed exit 0 on initial C5.b.1 clinical implementation; later changes confined to V5/API, exact regression verified in CI",
     "buildV5Files": 114,
     "buildCoreModules": 15,
     "boundaryProductionModules": 79,
@@ -66,12 +66,12 @@
   },
   "ci": {
     "v5": {
-      "runId": 39139029892,
+      "runId": 39140911078,
       "status": "success",
       "jobs": 11
     },
     "historical": {
-      "runId": 39139029901,
+      "runId": 39140911067,
       "status": "success",
       "jobs": 4
     },
@@ -80,7 +80,8 @@
   "networkScope": {
     "sqlite": "real on-disk WAL and atomic transactions, reopened services and independent Node CAS contenders; not production storage on Vercel",
     "browserRegression": "existing C5.a public UI, separate Chromium processes 2/3/4, real WebRTC on CI loopback; no C5.b recovery UI claim",
-    "wan": "deployed API capability request only, failed closed with suspended Blob; no WAN clinical recovery or TURN claim"
+    "wan": "deployed API capability request only, failed closed with suspended Blob; no WAN clinical recovery or TURN claim",
+    "browserRegressionEvidence": "browser-regression.json"
   },
   "production": {
     "clinicalEnabled": false,
@@ -92,14 +93,14 @@
     }
   },
   "preview": {
-    "url": "https://night-shift-clinical-dy605rv50-javierdario4878-7324.vercel.app/",
+    "url": "https://night-shift-clinical-n4wu899id-javierdario4878-7324.vercel.app/",
     "manifestHttp": 200,
     "identicalFileHashes": 114,
     "browserSmoke": "actual final preview loaded and entered through public UI",
     "screenshot": "preview-lobby.jpg",
-    "screenshotGitBlob": "e3912baa73abe57482ff8579a7870ff3cfe711fc",
-    "codeSha": "8fc417799f5ae35585e831adf20907a5acc6da77",
-    "screenshotClientCodeSha": "0dd48f7ce6d595fb2dc824867e87a0f6aac04c00",
+    "screenshotGitBlob": "531301d7e032ab51270b4c8744a874c3906f8cc7",
+    "codeSha": "aaaeaddb57d25c9de1bb12e18bab631efde8f5ce",
+    "screenshotClientCodeSha": "aaaeaddb57d25c9de1bb12e18bab631efde8f5ce",
     "screenshotClientMatchesFinalManifest": true
   },
   "pending": [
@@ -108,5 +109,21 @@
     "persist per-device outbox and room reconnect route without relying on ephemeral social sessions",
     "exercise all 12 requested interruptions through public UI with 2 then 3 and 4 independent browsers",
     "lobby communication, WAN/NAT/TURN, then Competitive; no remaining case migration yet"
-  ]
+  ],
+  "clinicalCoreSha": "8fc417799f5ae35585e831adf20907a5acc6da77",
+  "additionalRegressionFix": {
+    "sha": "aaaeaddb57d25c9de1bb12e18bab631efde8f5ce",
+    "sourceFailureRun": 39139891706,
+    "sourceFailureArtifact": 12141068188,
+    "sourceFailureArchiveSha256": "217fc5076570395241736ad7901a5df1162a965643c0f3c9e7ab56c195a3ec2a",
+    "reproduced": "accepted invitation remains visible; delayed pre-accept /me can reinsert it",
+    "unitTests": 2,
+    "browserChange": "assert the publicly displayed invitation room ID equals the newly committed host room before acceptance; no increased timeouts or removed medical assertions"
+  },
+  "publicHostInterruption": {
+    "visibleOffline": "native local clinic can continue; guest state and ACKs wait for connection",
+    "hiddenOrSuspended": "existing RAF pauses the clinic; no elapsed hidden-time recovery",
+    "reloadOrClose": "no public durable recovery route yet; C5.a limitation remains",
+    "publicRecoveryCertified": false
+  }
 }

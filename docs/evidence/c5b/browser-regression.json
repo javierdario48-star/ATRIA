@@ -1,0 +1,560 @@
+{
+  "codeSha": "aaaeaddb57d25c9de1bb12e18bab631efde8f5ce",
+  "scope": "C5.a public UI and real WebRTC regression on CI loopback, not C5.b host recovery or WAN/TURN",
+  "twoDoctorRun": 39140911078,
+  "twoDoctorStatus": "success",
+  "teams": [
+    {
+      "artifactId": 12141597635,
+      "artifactUrl": "https://github.com/javierdario48-star/ATRIA/actions/runs/39140911078/artifacts/12141597635",
+      "archiveSha256": "deef15f0f9655df0ca3bc584869a9a8588576550f3d8fe0d98543913d4b42cce",
+      "verifiedSummary": {
+        "players": 3,
+        "browserProcesses": 3,
+        "apiLatencyMs": 70,
+        "physicalAndroid": false,
+        "invitationRounds": [
+          {
+            "caseId": "PERI-PBE-001",
+            "roomId": "2f4dff83-6c1f-4aae-9576-d8091fa36e25",
+            "accepted": [
+              {
+                "doctor": 1,
+                "roomId": "2f4dff83-6c1f-4aae-9576-d8091fa36e25"
+              },
+              {
+                "doctor": 2,
+                "roomId": "2f4dff83-6c1f-4aae-9576-d8091fa36e25"
+              }
+            ]
+          },
+          {
+            "caseId": "PERI-TER-001",
+            "roomId": "aba1d674-3a30-45aa-b205-138c9b94575d",
+            "accepted": [
+              {
+                "doctor": 1,
+                "roomId": "aba1d674-3a30-45aa-b205-138c9b94575d"
+              },
+              {
+                "doctor": 2,
+                "roomId": "aba1d674-3a30-45aa-b205-138c9b94575d"
+              }
+            ]
+          }
+        ],
+        "patientUid": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:patient",
+        "closure": {
+          "kind": "clinical.closure",
+          "eventId": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:qa_043dc83978d6e2569650984fb0808f:message-ce7f3545-dd8e-467d-9c01-fab6391b7eef-12:0",
+          "patientUid": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:patient",
+          "actorId": "qa_043dc83978d6e2569650984fb0808f",
+          "caseId": "PERI-PBE-001",
+          "destination": "sala",
+          "quality": {
+            "score": 100,
+            "diagnosis": 15,
+            "history": 15,
+            "safety": 25,
+            "studies": 15,
+            "treatment": 25,
+            "efficiency": 5,
+            "penalty": 0,
+            "extraStudies": 0,
+            "extraStudyPenalty": 0,
+            "handoffCredit": 0
+          },
+          "debrief": {
+            "schema": "atria.v5.closure-debrief.v1",
+            "score": 100,
+            "earned": [
+              {
+                "label": "Impresión diagnóstica",
+                "points": 15
+              },
+              {
+                "label": "Anamnesis",
+                "points": 15
+              },
+              {
+                "label": "Evaluación y reevaluación",
+                "points": 25
+              },
+              {
+                "label": "Estudios relevantes",
+                "points": 15
+              },
+              {
+                "label": "Tratamiento y destino",
+                "points": 25
+              },
+              {
+                "label": "Uso eficiente de recursos",
+                "points": 5
+              }
+            ],
+            "deductions": [],
+            "missing": [],
+            "unnecessary": []
+          },
+          "xp": 111,
+          "closed": true
+        },
+        "administrations": [
+          {
+            "id": "ceftriaxone",
+            "label": "Ceftriaxona IV",
+            "dose": {
+              "amount": 1000,
+              "unit": "mg",
+              "display": "1 g",
+              "defaultApplied": false
+            },
+            "sourceEventId": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:qa_5a36ddebefe4de56a2ce03d71f0cc3:message-5b0637c7-537e-4e89-af49-0e97d767c0ff-2:1",
+            "actorId": "qa_5a36ddebefe4de56a2ce03d71f0cc3",
+            "patientUid": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:patient",
+            "route": "iv",
+            "administeredAtRealSecond": 13.0081,
+            "administeredAtNativeMinute": 1.545348
+          },
+          {
+            "id": "albumin",
+            "label": "Albúmina IV",
+            "dose": {
+              "amount": 1.5,
+              "unit": "g/kg",
+              "display": "1.5 g/kg",
+              "defaultApplied": false
+            },
+            "sourceEventId": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:qa_6a7bd672a8d82c50f7e404d8e1fa63:message-5c62091d-dc07-4b59-a1fe-f8bcdaee23d4-2:0",
+            "actorId": "qa_6a7bd672a8d82c50f7e404d8e1fa63",
+            "patientUid": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:patient",
+            "route": "iv",
+            "administeredAtRealSecond": 13.8247,
+            "administeredAtNativeMinute": 1.63722
+          }
+        ],
+        "studies": [
+          {
+            "id": "pbe_paracentesis",
+            "label": "Paracentesis diagnóstica + PMN",
+            "type": "procedure",
+            "patientUid": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:patient",
+            "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³.",
+            "resultSource": "native",
+            "nativeResult": true,
+            "universalFallback": false,
+            "status": "done",
+            "requestedAtMinute": 13.358,
+            "readyAtMinute": 53.358000000000004,
+            "sourceEventId": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:qa_5a36ddebefe4de56a2ce03d71f0cc3:message-5b0637c7-537e-4e89-af49-0e97d767c0ff-5:0",
+            "actorId": "qa_5a36ddebefe4de56a2ce03d71f0cc3"
+          },
+          {
+            "id": "pbe_renal",
+            "label": "Función renal + ionograma",
+            "type": "lab",
+            "patientUid": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:patient",
+            "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal.",
+            "resultSource": "native",
+            "nativeResult": true,
+            "universalFallback": false,
+            "status": "done",
+            "requestedAtMinute": 13.6746,
+            "readyAtMinute": 58.6746,
+            "sourceEventId": "2f4dff83-6c1f-4aae-9576-d8091fa36e25:qa_6a7bd672a8d82c50f7e404d8e1fa63:message-5c62091d-dc07-4b59-a1fe-f8bcdaee23d4-5:0",
+            "actorId": "qa_6a7bd672a8d82c50f7e404d8e1fa63"
+          }
+        ],
+        "terminalReload": {
+          "samePatient": true,
+          "hostDepartureWaited": true,
+          "allPersonalReceiptsPersistedOnce": true
+        },
+        "guestDeparture": {
+          "patientPreserved": true,
+          "avatarRemoved": true,
+          "remainingPeersAgree": true
+        },
+        "errors": [],
+        "realUi": true,
+        "realWebRTC": true,
+        "oneClinicalAuthority": true
+      }
+    },
+    {
+      "artifactId": 12141860661,
+      "artifactUrl": "https://github.com/javierdario48-star/ATRIA/actions/runs/39140911078/artifacts/12141860661",
+      "archiveSha256": "dac71c68ddf34244258808c74f3b083ceb45085d777ef728ba677bbc1374c4f6",
+      "verifiedSummary": {
+        "players": 4,
+        "browserProcesses": 4,
+        "apiLatencyMs": 110,
+        "physicalAndroid": false,
+        "invitationRounds": [
+          {
+            "caseId": "PERI-PBE-001",
+            "roomId": "5322813c-186b-42b3-a171-fd6be3814628",
+            "accepted": [
+              {
+                "doctor": 1,
+                "roomId": "5322813c-186b-42b3-a171-fd6be3814628"
+              },
+              {
+                "doctor": 2,
+                "roomId": "5322813c-186b-42b3-a171-fd6be3814628"
+              },
+              {
+                "doctor": 3,
+                "roomId": "5322813c-186b-42b3-a171-fd6be3814628"
+              }
+            ]
+          },
+          {
+            "caseId": "PERI-TER-001",
+            "roomId": "718ceb5c-9677-4ef2-ad24-c5707b851f2a",
+            "accepted": [
+              {
+                "doctor": 1,
+                "roomId": "718ceb5c-9677-4ef2-ad24-c5707b851f2a"
+              },
+              {
+                "doctor": 2,
+                "roomId": "718ceb5c-9677-4ef2-ad24-c5707b851f2a"
+              },
+              {
+                "doctor": 3,
+                "roomId": "718ceb5c-9677-4ef2-ad24-c5707b851f2a"
+              }
+            ]
+          }
+        ],
+        "patientUid": "5322813c-186b-42b3-a171-fd6be3814628:patient",
+        "closure": {
+          "kind": "clinical.closure",
+          "eventId": "5322813c-186b-42b3-a171-fd6be3814628:qa_4595cad6c4bd083b74de44340cddd4:message-f7156e24-ee0e-4974-b027-76dff49e2358-11:0",
+          "patientUid": "5322813c-186b-42b3-a171-fd6be3814628:patient",
+          "actorId": "qa_4595cad6c4bd083b74de44340cddd4",
+          "caseId": "PERI-PBE-001",
+          "destination": "sala",
+          "quality": {
+            "score": 100,
+            "diagnosis": 15,
+            "history": 15,
+            "safety": 25,
+            "studies": 15,
+            "treatment": 25,
+            "efficiency": 5,
+            "penalty": 0,
+            "extraStudies": 0,
+            "extraStudyPenalty": 0,
+            "handoffCredit": 0
+          },
+          "debrief": {
+            "schema": "atria.v5.closure-debrief.v1",
+            "score": 100,
+            "earned": [
+              {
+                "label": "Impresión diagnóstica",
+                "points": 15
+              },
+              {
+                "label": "Anamnesis",
+                "points": 15
+              },
+              {
+                "label": "Evaluación y reevaluación",
+                "points": 25
+              },
+              {
+                "label": "Estudios relevantes",
+                "points": 15
+              },
+              {
+                "label": "Tratamiento y destino",
+                "points": 25
+              },
+              {
+                "label": "Uso eficiente de recursos",
+                "points": 5
+              }
+            ],
+            "deductions": [],
+            "missing": [],
+            "unnecessary": []
+          },
+          "xp": 111,
+          "closed": true
+        },
+        "administrations": [
+          {
+            "id": "oxygen",
+            "label": "Oxígeno suplementario",
+            "action": "start",
+            "dose": {
+              "amount": 2,
+              "unit": "L/min",
+              "display": "2 L/min",
+              "device": "nasal-cannula",
+              "defaultApplied": false
+            },
+            "sourceEventId": "5322813c-186b-42b3-a171-fd6be3814628:qa_7e306c52638045f4adff5c2fd20eaf:message-e38e2d87-76c0-494b-8c00-f10110a093c0-2:0",
+            "actorId": "qa_7e306c52638045f4adff5c2fd20eaf",
+            "patientUid": "5322813c-186b-42b3-a171-fd6be3814628:patient",
+            "administeredAtRealSecond": 12.5327,
+            "administeredAtNativeMinute": 1.486311
+          },
+          {
+            "id": "ceftriaxone",
+            "label": "Ceftriaxona IV",
+            "dose": {
+              "amount": 1000,
+              "unit": "mg",
+              "display": "1 g",
+              "defaultApplied": false
+            },
+            "sourceEventId": "5322813c-186b-42b3-a171-fd6be3814628:qa_724d4dd28af464f830b529061158e6:message-ce8c6315-8dd4-4ede-8c1a-d9af15589fcd-2:1",
+            "actorId": "qa_724d4dd28af464f830b529061158e6",
+            "patientUid": "5322813c-186b-42b3-a171-fd6be3814628:patient",
+            "route": "iv",
+            "administeredAtRealSecond": 14.0495,
+            "administeredAtNativeMinute": 1.668327
+          },
+          {
+            "id": "albumin",
+            "label": "Albúmina IV",
+            "dose": {
+              "amount": 1.5,
+              "unit": "g/kg",
+              "display": "1.5 g/kg",
+              "defaultApplied": false
+            },
+            "sourceEventId": "5322813c-186b-42b3-a171-fd6be3814628:qa_c34a6b203c5b1b4b8550c976f51bea:message-085d102e-bdcf-4ec7-8807-7b73923dece5-2:0",
+            "actorId": "qa_c34a6b203c5b1b4b8550c976f51bea",
+            "patientUid": "5322813c-186b-42b3-a171-fd6be3814628:patient",
+            "route": "iv",
+            "administeredAtRealSecond": 14.882800000000001,
+            "administeredAtNativeMinute": 1.768323
+          }
+        ],
+        "studies": [
+          {
+            "id": "pbe_paracentesis",
+            "label": "Paracentesis diagnóstica + PMN",
+            "type": "procedure",
+            "patientUid": "5322813c-186b-42b3-a171-fd6be3814628:patient",
+            "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³.",
+            "resultSource": "native",
+            "nativeResult": true,
+            "universalFallback": false,
+            "status": "done",
+            "requestedAtMinute": 16.9825,
+            "readyAtMinute": 56.9825,
+            "sourceEventId": "5322813c-186b-42b3-a171-fd6be3814628:qa_724d4dd28af464f830b529061158e6:message-ce8c6315-8dd4-4ede-8c1a-d9af15589fcd-5:0",
+            "actorId": "qa_724d4dd28af464f830b529061158e6"
+          },
+          {
+            "id": "pbe_renal",
+            "label": "Función renal + ionograma",
+            "type": "lab",
+            "patientUid": "5322813c-186b-42b3-a171-fd6be3814628:patient",
+            "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal.",
+            "resultSource": "native",
+            "nativeResult": true,
+            "universalFallback": false,
+            "status": "done",
+            "requestedAtMinute": 17.5326,
+            "readyAtMinute": 62.5326,
+            "sourceEventId": "5322813c-186b-42b3-a171-fd6be3814628:qa_7e306c52638045f4adff5c2fd20eaf:message-e38e2d87-76c0-494b-8c00-f10110a093c0-5:0",
+            "actorId": "qa_7e306c52638045f4adff5c2fd20eaf"
+          }
+        ],
+        "terminalReload": {
+          "samePatient": true,
+          "hostDepartureWaited": true,
+          "allPersonalReceiptsPersistedOnce": true
+        },
+        "guestDeparture": {
+          "patientPreserved": true,
+          "avatarRemoved": true,
+          "remainingPeersAgree": true
+        },
+        "errors": [],
+        "realUi": true,
+        "realWebRTC": true,
+        "oneClinicalAuthority": true
+      }
+    }
+  ],
+  "twoDoctorEvidence": {
+    "artifactId": 12141244492,
+    "artifactUrl": "https://github.com/javierdario48-star/ATRIA/actions/runs/39140911078/artifacts/12141244492",
+    "archiveSha256": "8688d12ee6eb84cb91d477bdd848233d10fe097c9429a02e2836b68d2a251cdc",
+    "verifiedSummary": {
+      "browserProcesses": 2,
+      "physicalAndroid": false,
+      "apiLatencyMs": 35,
+      "patientUid": "7252281b-4a6c-4fae-b35a-e2955009d8a0:patient",
+      "guestReload": {
+        "samePatient": true,
+        "sameAdministrations": true,
+        "clockContinued": true,
+        "previousClock": 11.9761,
+        "recoveredClock": 14.1593
+      },
+      "closureDelivery": {
+        "soleHostClosure": true,
+        "guestRuntimeStalled": true,
+        "hostDepartureWaited": true,
+        "guestReceiptPersisted": true
+      },
+      "closure": {
+        "kind": "clinical.closure",
+        "eventId": "7252281b-4a6c-4fae-b35a-e2955009d8a0:qa_97ca321bf987c4a9c8de07dcf32abe:message-c5051b44-813e-4589-8b32-fbc1e0c5c654-9:0",
+        "patientUid": "7252281b-4a6c-4fae-b35a-e2955009d8a0:patient",
+        "actorId": "qa_97ca321bf987c4a9c8de07dcf32abe",
+        "caseId": "PERI-PBE-001",
+        "destination": "sala",
+        "quality": {
+          "score": 100,
+          "diagnosis": 15,
+          "history": 15,
+          "safety": 25,
+          "studies": 15,
+          "treatment": 25,
+          "efficiency": 5,
+          "penalty": 0,
+          "extraStudies": 0,
+          "extraStudyPenalty": 0,
+          "handoffCredit": 0
+        },
+        "debrief": {
+          "schema": "atria.v5.closure-debrief.v1",
+          "score": 100,
+          "earned": [
+            {
+              "label": "Impresión diagnóstica",
+              "points": 15
+            },
+            {
+              "label": "Anamnesis",
+              "points": 15
+            },
+            {
+              "label": "Evaluación y reevaluación",
+              "points": 25
+            },
+            {
+              "label": "Estudios relevantes",
+              "points": 15
+            },
+            {
+              "label": "Tratamiento y destino",
+              "points": 25
+            },
+            {
+              "label": "Uso eficiente de recursos",
+              "points": 5
+            }
+          ],
+          "deductions": [],
+          "missing": [],
+          "unnecessary": []
+        },
+        "xp": 111,
+        "closed": true
+      },
+      "administrations": [
+        {
+          "id": "ceftriaxone",
+          "label": "Ceftriaxona IV",
+          "dose": {
+            "amount": 1000,
+            "unit": "mg",
+            "display": "1 g",
+            "defaultApplied": false
+          },
+          "sourceEventId": "7252281b-4a6c-4fae-b35a-e2955009d8a0:qa_5e404b737617437ba701a30549549a:message-ae7497f8-a1f8-461f-8508-a8cbc1f0f14c-1:2",
+          "actorId": "qa_5e404b737617437ba701a30549549a",
+          "patientUid": "7252281b-4a6c-4fae-b35a-e2955009d8a0:patient",
+          "route": "iv",
+          "administeredAtRealSecond": 11.1595,
+          "administeredAtNativeMinute": 1.31106
+        },
+        {
+          "id": "albumin",
+          "label": "Albúmina IV",
+          "dose": {
+            "amount": 1.5,
+            "unit": "g/kg",
+            "display": "1.5 g/kg",
+            "defaultApplied": false
+          },
+          "sourceEventId": "7252281b-4a6c-4fae-b35a-e2955009d8a0:qa_97ca321bf987c4a9c8de07dcf32abe:message-c5051b44-813e-4589-8b32-fbc1e0c5c654-2:0",
+          "actorId": "qa_97ca321bf987c4a9c8de07dcf32abe",
+          "patientUid": "7252281b-4a6c-4fae-b35a-e2955009d8a0:patient",
+          "route": "iv",
+          "administeredAtRealSecond": 11.976,
+          "administeredAtNativeMinute": 1.4090399999999998
+        }
+      ],
+      "studies": [
+        {
+          "id": "pbe_paracentesis",
+          "label": "Paracentesis diagnóstica + PMN",
+          "type": "procedure",
+          "patientUid": "7252281b-4a6c-4fae-b35a-e2955009d8a0:patient",
+          "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³.",
+          "resultSource": "native",
+          "nativeResult": true,
+          "universalFallback": false,
+          "status": "done",
+          "requestedAtMinute": 9.4261,
+          "readyAtMinute": 49.4261,
+          "sourceEventId": "7252281b-4a6c-4fae-b35a-e2955009d8a0:qa_5e404b737617437ba701a30549549a:message-ae7497f8-a1f8-461f-8508-a8cbc1f0f14c-8:0",
+          "actorId": "qa_5e404b737617437ba701a30549549a"
+        },
+        {
+          "id": "pbe_renal",
+          "label": "Función renal + ionograma",
+          "type": "lab",
+          "patientUid": "7252281b-4a6c-4fae-b35a-e2955009d8a0:patient",
+          "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal.",
+          "resultSource": "native",
+          "nativeResult": true,
+          "universalFallback": false,
+          "status": "done",
+          "requestedAtMinute": 9.6507,
+          "readyAtMinute": 54.6507,
+          "sourceEventId": "7252281b-4a6c-4fae-b35a-e2955009d8a0:qa_97ca321bf987c4a9c8de07dcf32abe:message-c5051b44-813e-4589-8b32-fbc1e0c5c654-7:0",
+          "actorId": "qa_97ca321bf987c4a9c8de07dcf32abe"
+        }
+      ],
+      "globalTranscriptMessages": 18,
+      "complications": [
+        {
+          "kind": "opioid-respiratory-depression",
+          "sourceEventId": "2b7d6afd-8a36-40fb-95b8-c173daa21f61:qa_97ca321bf987c4a9c8de07dcf32abe:message-c5051b44-813e-4589-8b32-fbc1e0c5c654-10:2",
+          "patientUid": "2b7d6afd-8a36-40fb-95b8-c173daa21f61:patient",
+          "drugId": "morphine",
+          "atNativeMinute": 1.189368,
+          "atRealSecond": 9.9366,
+          "peakSeverity": 1,
+          "status": "active",
+          "message": "Depresión respiratoria tras morfina: deterioro respiratorio observado con exposición opioide activa. Reevaluar y estabilizar."
+        }
+      ],
+      "death": {
+        "patientUid": "2b7d6afd-8a36-40fb-95b8-c173daa21f61:patient",
+        "cause": "critical-hypoxemia",
+        "atRealSecond": 302.2582,
+        "oneEvent": true,
+        "xp": 0
+      },
+      "errors": [],
+      "realUi": true,
+      "realWebRTC": true,
+      "oneClinicalAuthority": true
+    }
+  }
+}
