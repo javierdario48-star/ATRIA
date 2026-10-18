@@ -5,7 +5,7 @@ const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
  * Only the caller's existing RAF invokes maintain(); there is no timer here.
  */
 export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onClose=()=>{}}){
- const peers=new Map();let token=null,user=null,room=null,roster=[],invites=[],busy=null,nextPoll=0,disposed=false,roomEpoch=0;
+ const peers=new Map();let token=null,user=null,room=null,roster=[],invites=[],busy=null,nextPoll=0,disposed=false,roomEpoch=0,desiredRoomId=null;
  const temporary=new Map();let storage;try{storage=window.localStorage;storage.getItem(SESSION_KEY);}catch{storage={getItem:k=>temporary.get(k),setItem:(k,v)=>temporary.set(k,v),removeItem:k=>temporary.delete(k)};}
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
@@ -25,7 +25,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  function setRoom(value){
   if(disposed)return;
   if(value.mode!=='coop')throw Error('competitive-mode-not-enabled');
-  room=value;savedRoom=room.id;try{storage.setItem(ROOM_KEY,room.id);}catch{}onRoom(structuredClone(room),user);
+  room=value;desiredRoomId=room.id;savedRoom=room.id;try{storage.setItem(ROOM_KEY,room.id);}catch{}onRoom(structuredClone(room),user);
  }
  function peer(member,initiator){
   const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roster.find(x=>x.userId===member.userId)?.motionSession,lastAttempt:window.performance.now(),link:null};
@@ -46,7 +46,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   const id=room?.id||savedRoom;
   let latest;try{latest=await api('rooms/'+id+'/messages?after=0');}
   catch(error){if(!active())return;if(![403,404].includes(error.status))return;
-   const wasActive=!!room;room=null;savedRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}for(const p of peers.values())p.link.dispose();peers.clear();if(wasActive)onClose();return;}
+   const wasActive=!!room;room=null;desiredRoomId=null;savedRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}for(const p of peers.values())p.link.dispose();peers.clear();if(wasActive)onClose();return;}
   if(!active())return;
   setRoom(latest.room);
   if(!active()||!room)return;
@@ -78,11 +78,15 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   connect,
   flush:()=>busy||Promise.resolve(),
   setProfile(value){profile={...value};},
-  async invite(ids){const epoch=++roomEpoch;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
-   const result=await api('rooms',{mode:'coop',invitees:ids,peerId});if(disposed||epoch!==roomEpoch)throw Error('Invitación cancelada.');setRoom(result.room);return structuredClone(room);},
-  async join(id){const epoch=++roomEpoch;await connect();const result=await api('rooms/join',{roomId:id,peerId});if(disposed||epoch!==roomEpoch)throw Error('Entrada cancelada.');setRoom(result.room);return structuredClone(room);},
+  async invite(ids){const epoch=++roomEpoch;desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
+   const result=await api('rooms',{mode:'coop',invitees:ids,peerId});if(disposed||epoch!==roomEpoch){try{await api('rooms/'+result.room.id+'/cancel',{});}catch{}throw Error('Invitación cancelada.');}setRoom(result.room);return structuredClone(room);},
+  async join(id){const epoch=++roomEpoch;desiredRoomId=id;await connect();
+   let result;try{result=await api('rooms/join',{roomId:id,peerId});}
+   catch(error){if(epoch===roomEpoch){desiredRoomId=null;if(room?.id!==id)try{await api('rooms/'+id+'/leave',{});}catch{}}throw error;}
+   if(disposed||epoch!==roomEpoch){if(desiredRoomId!==id&&room?.id!==id)try{await api('rooms/'+id+'/leave',{});}catch{}throw Error('Entrada cancelada.');}
+   setRoom(result.room);return structuredClone(room);},
   async leave(){
-   roomEpoch++;const previous=room;room=null;savedRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}
+   roomEpoch++;desiredRoomId=null;const previous=room;room=null;savedRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}
    for(const p of peers.values())p.link.dispose();peers.clear();
    if(previous)try{await api('rooms/'+previous.id+'/'+(previous.hostUserId===user.id?'cancel':'leave'),{});}catch{}
   },
@@ -93,6 +97,6 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   isMember:id=>!!room?.members.some(x=>x.userId===id),
   isHost:()=>!!user&&room?.hostUserId===user.id,
   state:()=>structuredClone({user,room,roster,invites,recovering:!!savedRoom,connections:[...peers.values()].map(p=>({id:p.id,state:p.link.state()}))}),
-  dispose(){disposed=true;roomEpoch++;for(const p of peers.values())p.link.dispose();peers.clear();}
+  dispose(){disposed=true;roomEpoch++;desiredRoomId=null;for(const p of peers.values())p.link.dispose();peers.clear();}
  });
 }

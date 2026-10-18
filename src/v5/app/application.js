@@ -72,6 +72,7 @@ export async function createApplication({document,window,content,signal}){
   onSocial:()=>{if(destroyed)return;const s=social.state();if(world.snapshot().phase==='lobby'){
    if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster);renderSocialLists();}},
   onRoom:room=>{if(destroyed)return;
+   if(room.id===coopRoomId)world.reconcileDoctors(room.members);
    if(room.allAccepted&&social.isHost()&&coopCaseId&&!coopRoomId&&cooperativeFlow.mayEnter('host',{phase:world.snapshot().phase,hasSession:!!guardSession}))startCooperativeHost(room);
    if(pendingCoopLeave&&outcomeDelivered())enterLobby(true);},
   onPacket:receiveCooperativePacket,onClose:()=>{if(coopRoomId&&!guardSession?.read().patient.caseEnded)enterLobby(false);}});
@@ -83,6 +84,9 @@ export async function createApplication({document,window,content,signal}){
  }
  function showPeople(){socialEnabled=true;open('<h2>Personas · Cooperativo</h2><div id="coopInvitations"></div><p>Colegas en el lobby</p><div id="coopDoctors"></div><p class="note">Creá una guardia desde Hacer guardia → Cooperativo. Hasta cuatro médicos comparten el mismo paciente.</p><div class="actions"><button data-action="close">Cerrar</button></div>','people');renderSocialLists();}
  function clinicalChanged(){renderGuardCommunication();if(outcomeId(guardSession?.read().patient))publishCooperativeState(window.performance.now(),true);}
+ function confirmOutcomeDelivery(host,p){
+  if(guardSession!==replica)return;const id=outcomeId(p);if(id)social.send(host,{kind:'outcome.received',eventId:id,patientUid:p.uid});
+ }
  function outcomeDelivered(){const s=social.state();return cooperativeFlow.delivered(guardSession?.read().patient,s.user?.id,s.room?.members||[]);}
  function requestLobby(){
   if(coopRoomId&&social.isHost()&&outcomeId(guardSession?.read().patient)&&!outcomeDelivered()){
@@ -113,9 +117,9 @@ export async function createApplication({document,window,content,signal}){
    replica=createCooperativeReplica({roomId:room.id,hostId:sender,send:social.send,storage:window.sessionStorage,onSnapshot:value=>{
     world.applySharedSpatial(value.spatial);
     if(value.clinical.room.revision!==lastRemoteRevision){lastRemoteRevision=value.clinical.room.revision;clinicalChanged();}
-    const id=outcomeId(value.clinical.patient);if(id)social.send(sender,{kind:'outcome.received',eventId:id,patientUid:value.clinical.patient.uid});
+    confirmOutcomeDelivery(sender,value.clinical.patient);
    }});
-   replica.apply(packet);guardSession=replica;clinicalUI.reset();close();resetChat('Guardia cooperativa conectada.');renderGuardCommunication();lastClinicalFrame=window.performance.now();return;
+   replica.apply(packet);guardSession=replica;clinicalUI.reset();close();resetChat('Guardia cooperativa conectada.');renderGuardCommunication();confirmOutcomeDelivery(sender,packet.clinical.patient);lastClinicalFrame=window.performance.now();return;
   }
   if(!guardSession||!coopRoomId)return;
   if(social.isHost()){
@@ -290,12 +294,14 @@ export async function createApplication({document,window,content,signal}){
   if(button.dataset.action==='close')close();
   if(button.dataset.action==='return-lobby'){requestLobby();return;}
   if(button.dataset.action==='join-coop'){
+   cancelSharedIntent();
    const intent=cooperativeFlow.begin('guest');
    try{await social.join(button.dataset.room);if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Conectando a la guardia…</h2><p>Esperando la autoridad clínica del anfitrión.</p>');}catch(error){if(cooperativeFlow.current(intent))toast(error.message);}return;
   }
   if(button.dataset.action==='start-guard'){
    if(draftMode==='coop'){
     if(!Object.hasOwn(CLINICAL_EXECUTORS,ui('caseChoice').value)){toast('Este caso todavía no tiene atención completa.');return;}
+    cancelSharedIntent();
     coopCaseId=ui('caseChoice').value;
     const intent=cooperativeFlow.begin('host');
     try{await social.invite([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value));if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Invitación enviada</h2><p>Esperando que los colegas acepten la guardia compartida.</p>');}catch(error){if(cooperativeFlow.current(intent))toast(error.message);}return;

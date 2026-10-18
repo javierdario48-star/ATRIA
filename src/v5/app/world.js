@@ -69,6 +69,7 @@ export function createWorld(content,profile){
   showLobbyPlayers(list){if(phase!=='lobby')return;others=list.filter(x=>x.userId!==profile.id).map(x=>actor(x.userId,{x:x.x,y:x.y},
    {kind:'doctor',name:x.name,color:x.color||'navy',level:x.level||1,dir:x.dir,walkPhase:x.walkPhase}));},
   targetRemote(id,x,y){const other=others.find(x=>x.id===id);return !!other&&authoritative&&navigation.target(other,x,y);},
+  reconcileDoctors(members){if(phase==='guard'&&mode==='coop'&&authoritative)others=others.filter(x=>members.some(m=>m.userId===x.id));},
   stopRemote(id){const other=others.find(x=>x.id===id);if(other){other.path=[];other.pathIndex=0;other.target=null;other.moving=false;}},
   patientInRangeFor(id,uid){const a=id===profile.id?player:others.find(x=>x.id===id),p=patients.find(x=>x.uid===uid);
    return a&&p&&Math.hypot(a.x-p.x,a.y-p.y)<=PATIENT_RANGE?uid:null;},

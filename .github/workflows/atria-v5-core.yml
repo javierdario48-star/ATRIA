@@ -259,6 +259,34 @@ jobs:
           path: qa/v5-browser-results/
           retention-days: 14
 
+  real-cooperative-team-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        doctors: [3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - run: npm run build:v5
+      - name: Three or four independent doctors share actual care, terminal recovery, XP and guest departure
+        env:
+          V5_COOP_PLAYERS: ${{ matrix.doctors }}
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/cooperative-team-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-cooperative-${{ matrix.doctors }}-clinical-evidence
+          path: qa/v5-browser-results/
+          retention-days: 14
+
   preserved-historical-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 20

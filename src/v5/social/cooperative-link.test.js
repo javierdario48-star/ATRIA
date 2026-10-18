@@ -42,3 +42,28 @@ test('a transient signaling-service failure cannot close the native cooperative 
  const room=await a.invite([other.body.user.id]);f.fail('/api/rooms/'+room.id+'/messages');a.maintain(1000,{x:40,y:40});await a.flush();
  assert.equal(a.state().room?.id,room.id);assert.equal(f.closed(),0);a.dispose();
 });
+test('canceling an invitation still being created removes its committed remote invitation',async()=>{
+ const f=fixture(),a=f.make();await a.connect();const other=await f.backend.route({method:'POST',path:'register',body:{clientKey:crypto.randomUUID(),name:'Bruno'}});
+ f.delay('/api/rooms');const inviting=a.invite([other.body.user.id]);while(!f.held())await Promise.resolve();await a.leave();f.release();
+ await assert.rejects(inviting,/cancelada/);
+ const me=await f.backend.route({path:'me',headers:{authorization:'Bearer '+other.body.token}});
+ assert.equal(me.body.invites.length,0,'local mode must not leave an orphan invitation for the colleague');a.dispose();
+});
+async function invited(f,a){
+ await a.connect();const host=await f.backend.route({method:'POST',path:'register',body:{clientKey:crypto.randomUUID(),name:'Bruno'}});
+ const headers={authorization:'Bearer '+host.body.token};
+ const result=await f.backend.route({method:'POST',path:'rooms',headers,body:{mode:'coop',invitees:[a.state().user.id],peerId:'host-peer'}});
+ return {id:result.body.room.id,headers};
+}
+test('canceling an already committed join removes its remote membership',async()=>{
+ const f=fixture(),a=f.make(),host=await invited(f,a);f.delay('/api/rooms/join');const joining=a.join(host.id);
+ while(!f.held())await Promise.resolve();await a.leave();f.release();await assert.rejects(joining,/cancelada/);
+ const result=await f.backend.route({path:'rooms/'+host.id+'/messages',headers:host.headers});
+ assert(!result.body.room.members.some(x=>x.userId===a.state().user.id),'a cancelled join must not leave an accepted ghost member');assert.equal(a.state().room,null);a.dispose();
+});
+test('a superseded join cannot revoke a new intentional join to the same room',async()=>{
+ const f=fixture(),a=f.make(),host=await invited(f,a);f.delay('/api/rooms/join');const previous=a.join(host.id);
+ while(!f.held())await Promise.resolve();await a.join(host.id);f.release();await assert.rejects(previous,/cancelada/);
+ const result=await f.backend.route({path:'rooms/'+host.id+'/messages',headers:host.headers});
+ assert(result.body.room.members.some(x=>x.userId===a.state().user.id));assert.equal(a.state().room.id,host.id);a.dispose();
+});

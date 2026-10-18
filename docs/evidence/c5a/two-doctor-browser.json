@@ -1,0 +1,166 @@
+{
+  "browserProcesses": 2,
+  "physicalAndroid": false,
+  "apiLatencyMs": 35,
+  "patientUid": "8309559a-24ac-41a0-9e31-94560624ae48:patient",
+  "guestReload": {
+    "samePatient": true,
+    "sameAdministrations": true,
+    "clockContinued": true,
+    "previousClock": 11.8538,
+    "recoveredClock": 14.1536
+  },
+  "closureDelivery": {
+    "soleHostClosure": true,
+    "guestRuntimeStalled": true,
+    "hostDepartureWaited": true,
+    "guestReceiptPersisted": true
+  },
+  "closure": {
+    "kind": "clinical.closure",
+    "eventId": "8309559a-24ac-41a0-9e31-94560624ae48:qa_a230ab5641d648bda812dc278caa0b:message-df2fccda-18c6-465a-a0c3-b45f1c6eb110-9:0",
+    "patientUid": "8309559a-24ac-41a0-9e31-94560624ae48:patient",
+    "actorId": "qa_a230ab5641d648bda812dc278caa0b",
+    "caseId": "PERI-PBE-001",
+    "destination": "sala",
+    "quality": {
+      "score": 100,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 25,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "debrief": {
+      "schema": "atria.v5.closure-debrief.v1",
+      "score": 100,
+      "earned": [
+        {
+          "label": "Impresión diagnóstica",
+          "points": 15
+        },
+        {
+          "label": "Anamnesis",
+          "points": 15
+        },
+        {
+          "label": "Evaluación y reevaluación",
+          "points": 25
+        },
+        {
+          "label": "Estudios relevantes",
+          "points": 15
+        },
+        {
+          "label": "Tratamiento y destino",
+          "points": 25
+        },
+        {
+          "label": "Uso eficiente de recursos",
+          "points": 5
+        }
+      ],
+      "deductions": [],
+      "missing": [],
+      "unnecessary": []
+    },
+    "xp": 111,
+    "closed": true
+  },
+  "administrations": [
+    {
+      "id": "ceftriaxone",
+      "label": "Ceftriaxona IV",
+      "dose": {
+        "amount": 1000,
+        "unit": "mg",
+        "display": "1 g",
+        "defaultApplied": false
+      },
+      "sourceEventId": "8309559a-24ac-41a0-9e31-94560624ae48:qa_85ef65844bc49594965d9b7ef5600b:message-515f51f4-a478-4a32-9fad-c5e851b2342e-1:2",
+      "actorId": "qa_85ef65844bc49594965d9b7ef5600b",
+      "patientUid": "8309559a-24ac-41a0-9e31-94560624ae48:patient",
+      "route": "iv",
+      "administeredAtRealSecond": 11.0538,
+      "administeredAtNativeMinute": 1.297521
+    },
+    {
+      "id": "albumin",
+      "label": "Albúmina IV",
+      "dose": {
+        "amount": 1.5,
+        "unit": "g/kg",
+        "display": "1.5 g/kg",
+        "defaultApplied": false
+      },
+      "sourceEventId": "8309559a-24ac-41a0-9e31-94560624ae48:qa_a230ab5641d648bda812dc278caa0b:message-df2fccda-18c6-465a-a0c3-b45f1c6eb110-2:0",
+      "actorId": "qa_a230ab5641d648bda812dc278caa0b",
+      "patientUid": "8309559a-24ac-41a0-9e31-94560624ae48:patient",
+      "route": "iv",
+      "administeredAtRealSecond": 11.853800000000001,
+      "administeredAtNativeMinute": 1.3935210000000002
+    }
+  ],
+  "studies": [
+    {
+      "id": "pbe_paracentesis",
+      "label": "Paracentesis diagnóstica + PMN",
+      "type": "procedure",
+      "patientUid": "8309559a-24ac-41a0-9e31-94560624ae48:patient",
+      "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³.",
+      "resultSource": "native",
+      "nativeResult": true,
+      "universalFallback": false,
+      "status": "done",
+      "requestedAtMinute": 9.1705,
+      "readyAtMinute": 49.170500000000004,
+      "sourceEventId": "8309559a-24ac-41a0-9e31-94560624ae48:qa_85ef65844bc49594965d9b7ef5600b:message-515f51f4-a478-4a32-9fad-c5e851b2342e-8:0",
+      "actorId": "qa_85ef65844bc49594965d9b7ef5600b"
+    },
+    {
+      "id": "pbe_renal",
+      "label": "Función renal + ionograma",
+      "type": "lab",
+      "patientUid": "8309559a-24ac-41a0-9e31-94560624ae48:patient",
+      "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal.",
+      "resultSource": "native",
+      "nativeResult": true,
+      "universalFallback": false,
+      "status": "done",
+      "requestedAtMinute": 9.3367,
+      "readyAtMinute": 54.3367,
+      "sourceEventId": "8309559a-24ac-41a0-9e31-94560624ae48:qa_a230ab5641d648bda812dc278caa0b:message-df2fccda-18c6-465a-a0c3-b45f1c6eb110-7:0",
+      "actorId": "qa_a230ab5641d648bda812dc278caa0b"
+    }
+  ],
+  "globalTranscriptMessages": 18,
+  "complications": [
+    {
+      "kind": "opioid-respiratory-depression",
+      "sourceEventId": "5e4334d0-3735-4e32-8b91-1c936604a4ae:qa_a230ab5641d648bda812dc278caa0b:message-df2fccda-18c6-465a-a0c3-b45f1c6eb110-10:2",
+      "patientUid": "5e4334d0-3735-4e32-8b91-1c936604a4ae:patient",
+      "drugId": "morphine",
+      "atNativeMinute": 1.201896,
+      "atRealSecond": 10.0479,
+      "peakSeverity": 1,
+      "status": "active",
+      "message": "Depresión respiratoria tras morfina: deterioro respiratorio observado con exposición opioide activa. Reevaluar y estabilizar."
+    }
+  ],
+  "death": {
+    "patientUid": "5e4334d0-3735-4e32-8b91-1c936604a4ae:patient",
+    "cause": "critical-hypoxemia",
+    "atRealSecond": 302.2528,
+    "oneEvent": true,
+    "xp": 0
+  },
+  "errors": [],
+  "realUi": true,
+  "realWebRTC": true,
+  "oneClinicalAuthority": true
+}

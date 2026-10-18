@@ -17,6 +17,8 @@ test('cooperative world has one spatial nurse owner, shared patient UID and inde
  assert.equal(b.enqueueNurseJourney({eventId:'bad',patientUid:'shared-patient',kind:'iv'}).status,'no-guard');
  b.applySharedSpatial({nurses:a.snapshot().nurses,doctors:[{...a.snapshot().player,id:'A'},...a.snapshot().others]});
  assert.equal(b.snapshot().others[0].name,'Ana');assert.deepEqual(b.snapshot().nurses,a.snapshot().nurses);
+ a.reconcileDoctors([{userId:'A'}]);assert.equal(a.snapshot().others.length,0,'an explicit departure removes the remote avatar');
+ assert.equal(a.targetRemote('B',goal.x,goal.y),false);assert.equal(a.snapshot().patients[0].uid,'shared-patient','departure does not reset care');
 });
 test('patients in independent world instances cannot share a persistent XP identity',async()=>{
  const {createWorld}=await import('./world.js'),content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};

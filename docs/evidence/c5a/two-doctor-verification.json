@@ -1,0 +1,45 @@
+{
+  "sha": "6b201645bc7037141c1abd502bdbdef7354ac8aa",
+  "v5CI": {
+    "run": 39118154410,
+    "conclusion": "success",
+    "jobs": 8
+  },
+  "legacyCI": {
+    "run": 39118154408,
+    "conclusion": "success",
+    "jobs": 4
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-8lxwhuzfs-javierdario4878-7324.vercel.app/",
+    "http": 200,
+    "manifestFiles": 114,
+    "entireManifestEqualToLocalBuild": true
+  },
+  "browserArtifact": {
+    "id": 12133630937,
+    "sha256": "1b252d72a11e88b7f1bcf90aaa8b15adf44057085280f99d6f02eedb2bc659a2",
+    "verified": true
+  },
+  "actualClinicalBrowsers": 2,
+  "independentChromiumProcesses": 2,
+  "realWebRTC": true,
+  "network": "same CI machine, loopback HTTP, historical social backend with injected QA cache,35ms/request",
+  "care": {
+    "case": "PERI-PBE-001",
+    "score": 100,
+    "xp": 111,
+    "actualDosesFromDifferentDoctors": true,
+    "guestPageReload": true,
+    "hostWaitsForFinalReceipt": true
+  },
+  "harm": {
+    "case": "PERI-TER-001",
+    "realMorphineAndFluidAdministration": true,
+    "sharedComplicationAndDeath": true,
+    "deathXP": 0
+  },
+  "physicalAndroid": false,
+  "hostMigration": false,
+  "productionWANVerified": false
+}
