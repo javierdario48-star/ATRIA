@@ -62,7 +62,9 @@
     "state": "READY",
     "httpStatus": 200,
     "manifestFiles": 103,
-    "entireManifestEqualToLocalBuild": false
+    "entireManifestEqualToLocalBuild": true,
+    "manifestVerificationMethod": "Isolated archive rebuild of codeSha compared with the complete parsed JSON served by the immutable preview URL.",
+    "manifestReverifiedAtUtc": "2026-10-18T02:43:28.953604+00:00"
   },
   "architecture": {
     "productionModules": 66,

@@ -1,0 +1,117 @@
+{
+  "schema": "atria.v5.checkpoint-verification.v1",
+  "checkpoint": "C3.a",
+  "repository": "javierdario48-star/ATRIA",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "codeSha": "9c480eaba4ae72cc60de2f1833f3421f8fbf3e9a",
+  "codeTree": "2bc0b76ac78ff092e605f8283f79b402edca7e75",
+  "implementationSha": "a99ef345682df7dfb55d1b380ad5d92dddf098c4",
+  "ci": {
+    "v5": {
+      "id": 39090491746,
+      "conclusion": "success",
+      "jobs": 4,
+      "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/39090491746"
+    },
+    "legacyCensus": {
+      "id": 39090491758,
+      "conclusion": "success",
+      "jobs": 4,
+      "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/39090491758"
+    },
+    "browserArtifact": {
+      "id": 12123250222,
+      "sha256": "c53d8d113437581f8761e1dd5c6f6a095531411db03573c414445d9b93712bd2",
+      "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/39090491746/artifacts/12123250222"
+    }
+  },
+  "tests": {
+    "v5": 408,
+    "core": 40,
+    "physiologyScenarios": 12,
+    "physiologyPoints": 156,
+    "maxVitalError": 6.536993168992922e-12,
+    "maxPhysiologyError": 2.0583534876550402e-13,
+    "numericQualityAndNativeCareerScenarios": 5,
+    "dialogueComparisons": 30,
+    "examComparisons": 60,
+    "surgeryScenarios": 10,
+    "peritonitisSessionTests": 7,
+    "fullLocalHistoricalExitCode": 0,
+    "fullCIHistoricalExitCode": 0,
+    "nursingCombinations": 421,
+    "closureScenarios": 131,
+    "harmScenarios": 39,
+    "unresolvedLegacyDiuretics": 2,
+    "httpBrowsers": [
+      2,
+      3,
+      4
+    ],
+    "historicalBrowserChecks": [
+      "F/2",
+      "G/2",
+      "I/3"
+    ],
+    "peritonitisUi": {
+      "devices": [
+        "desktop",
+        "Pixel 5 emulation"
+      ],
+      "score": 95,
+      "xp": 128,
+      "receiptsPerJourney": 5,
+      "physicalNursingJobsPerJourney": 7,
+      "sourceControlled": false,
+      "oneAward": true,
+      "persistedAfterReload": true,
+      "physicalAndroid": false
+    },
+    "app": {
+      "score": 100,
+      "xp": 133
+    },
+    "cirr": {
+      "score": 100,
+      "xp": 133
+    }
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-263ttw7a7-javierdario4878-7324.vercel.app/",
+    "deploymentId": "dpl_5cocXebLf5nU51ndZjX1N8fjj6dM",
+    "commitSha": "9c480eaba4ae72cc60de2f1833f3421f8fbf3e9a",
+    "state": "READY",
+    "httpStatus": 200,
+    "manifestFiles": 109,
+    "manifestSha256": "e0d905f828d294b0d42ded5f91960e1325a32e7ad201afd734a50a0a2059ec6e",
+    "entireManifestEqualToLocalBuild": true,
+    "directBrowserScope": "Published preview boot, case selector and guard entry checked; complete clinical desktop/Pixel journeys run through the real UI on the CI-built executable."
+  },
+  "architecture": {
+    "productionModules": 69,
+    "singleRafOwner": true,
+    "newTimers": 0,
+    "parallelVitalWriter": false,
+    "legacySourceModified": false,
+    "mainModified": false,
+    "completeCaseExecutors": [
+      "CIRR-001",
+      "APP-001",
+      "PERI-SEC-001"
+    ],
+    "ivRegistryEntries": 19
+  },
+  "corrections": [
+    "Shared furosemide preparation restored from 1.5s to the genuine V19 0.55s after comparative RED/GREEN evidence.",
+    "New browser journey selects the canonical capitalized peritonitis label and measures actual vitals before requesting urgent surgical assessment; clinical expectations remain unchanged.",
+    "C2.c manifest evidence boolean corrected only after an isolated rebuild of feeab5a and exact comparison with its immutable preview manifest."
+  ],
+  "limits": [
+    "PBE and tertiary peritonitis are not connected; the other eight cases also lack full V5 executors.",
+    "PBE convalescence and its reversible initial confusion must be migrated next; sourceControlled is initially true in that medical seed and does not imply an operation.",
+    "No full 30-treatment PK, interaction or random V3 phenotype certification.",
+    "Two historical late/clamped diuretic discrepancies remain recorded in unchanged legacy code; the new acute PERI-SEC harmful response is proven separately.",
+    "Cooperative/competitive clinical product, social lobby, reconnect and WebRTC remain incomplete.",
+    "Android tested through Pixel emulation only."
+  ]
+}

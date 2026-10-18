@@ -1,0 +1,340 @@
+[
+  {
+    "name": "desktop",
+    "physicalAndroid": false,
+    "caseId": "PERI-SEC-001",
+    "realUi": true,
+    "realNursing": true,
+    "receipts": [
+      {
+        "id": "oxygen",
+        "label": "Oxígeno suplementario",
+        "action": "start",
+        "dose": {
+          "amount": 4,
+          "unit": "L/min",
+          "display": "4 L/min",
+          "device": "nasal-cannula",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-ef4c7fd2-172e-4bd7-b169-283b1f44d9c3:local-player:message-4:6",
+        "actorId": "local-player",
+        "patientUid": "936ccf4e-eecd-452b-a309-fbac58c62f8b:patient-2",
+        "administeredAtRealSecond": 12.4676,
+        "administeredAtNativeMinute": 1.455945
+      },
+      {
+        "id": "fluid",
+        "label": "Reposición con cristaloides",
+        "dose": {
+          "amount": 1000,
+          "unit": "ml",
+          "display": "1 l",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-ef4c7fd2-172e-4bd7-b169-283b1f44d9c3:local-player:message-4:2",
+        "actorId": "local-player",
+        "patientUid": "936ccf4e-eecd-452b-a309-fbac58c62f8b:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 13.2842,
+        "administeredAtNativeMinute": 1.5539370000000001
+      },
+      {
+        "id": "ceftriaxone",
+        "label": "Ceftriaxona IV",
+        "dose": {
+          "amount": 1000,
+          "unit": "mg",
+          "display": "1 g",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-ef4c7fd2-172e-4bd7-b169-283b1f44d9c3:local-player:message-4:3",
+        "actorId": "local-player",
+        "patientUid": "936ccf4e-eecd-452b-a309-fbac58c62f8b:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 14.7842,
+        "administeredAtNativeMinute": 1.7339370000000003
+      },
+      {
+        "id": "metronidazole",
+        "label": "Metronidazol IV",
+        "dose": {
+          "amount": 500,
+          "unit": "mg",
+          "display": "500 mg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-ef4c7fd2-172e-4bd7-b169-283b1f44d9c3:local-player:message-4:4",
+        "actorId": "local-player",
+        "patientUid": "936ccf4e-eecd-452b-a309-fbac58c62f8b:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 16.2842,
+        "administeredAtNativeMinute": 1.913937
+      },
+      {
+        "id": "vasopressor",
+        "label": "Noradrenalina IV",
+        "dose": {
+          "amount": 0.05,
+          "unit": "µg/kg/min",
+          "display": "0.05 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-ef4c7fd2-172e-4bd7-b169-283b1f44d9c3:local-player:message-4:5",
+        "actorId": "local-player",
+        "patientUid": "936ccf4e-eecd-452b-a309-fbac58c62f8b:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 17.1007,
+        "action": "start",
+        "moleculeId": "norepinephrine",
+        "administeredAtNativeMinute": 2.011917
+      }
+    ],
+    "quality": {
+      "score": 95,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 20,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "xp": 128,
+    "oneAward": true,
+    "sourceControlUnchanged": true,
+    "completedStudies": [
+      {
+        "id": "peri_cbc",
+        "label": "Hemograma + inflamación",
+        "type": "lab",
+        "patientUid": "936ccf4e-eecd-452b-a309-fbac58c62f8b:patient-2",
+        "result": "Leucocitosis marcada con neutrofilia y desviación a la izquierda.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.4123,
+        "readyAtMinute": 57.4123,
+        "sourceEventId": "guard-ef4c7fd2-172e-4bd7-b169-283b1f44d9c3:local-player:message-15:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "peri_ct",
+        "label": "TC abdominopélvica urgente",
+        "type": "imaging",
+        "patientUid": "936ccf4e-eecd-452b-a309-fbac58c62f8b:patient-2",
+        "result": "Diverticulitis sigmoidea perforada con aire extraluminal, líquido libre y cambios inflamatorios difusos.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.6033,
+        "readyAtMinute": 122.6033,
+        "sourceEventId": "guard-ef4c7fd2-172e-4bd7-b169-283b1f44d9c3:local-player:message-16:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "peri_gas",
+        "label": "Gases + ionograma + función renal",
+        "type": "lab",
+        "patientUid": "936ccf4e-eecd-452b-a309-fbac58c62f8b:patient-2",
+        "result": "Acidosis metabólica asociada a hipoperfusión · Na 131 mEq/L · K 3,2 mEq/L · urea/creatinina elevadas en patrón prerrenal.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.8091,
+        "readyAtMinute": 32.8091,
+        "sourceEventId": "guard-ef4c7fd2-172e-4bd7-b169-283b1f44d9c3:local-player:message-17:0",
+        "actorId": "local-player"
+      }
+    ],
+    "consult": {
+      "id": "cirugia",
+      "patientUid": "936ccf4e-eecd-452b-a309-fbac58c62f8b:patient-2",
+      "sourceEventId": "guard-ef4c7fd2-172e-4bd7-b169-283b1f44d9c3:local-player:message-3:0",
+      "status": "done",
+      "accepted": true,
+      "reviewStatus": "accepted",
+      "advice": "Shock y sospecha específica de foco quirúrgico: aceptamos evaluación urgente mientras completan el examen y la reanimación. Esto no autoriza todavía el traslado.",
+      "respondedAtRealSecond": 10.947600000000001
+    },
+    "originalFindings": true,
+    "allergyAsked": true,
+    "persistedAfterReload": true,
+    "errors": []
+  },
+  {
+    "name": "pixel",
+    "physicalAndroid": false,
+    "caseId": "PERI-SEC-001",
+    "realUi": true,
+    "realNursing": true,
+    "receipts": [
+      {
+        "id": "oxygen",
+        "label": "Oxígeno suplementario",
+        "action": "start",
+        "dose": {
+          "amount": 4,
+          "unit": "L/min",
+          "display": "4 L/min",
+          "device": "nasal-cannula",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-a68d8c58-814b-4b07-838f-c237e0ac4c64:local-player:message-4:6",
+        "actorId": "local-player",
+        "patientUid": "cffa8e3c-66f9-4137-8a3e-9cab534f6111:patient-2",
+        "administeredAtRealSecond": 12.4128,
+        "administeredAtNativeMinute": 1.448109
+      },
+      {
+        "id": "fluid",
+        "label": "Reposición con cristaloides",
+        "dose": {
+          "amount": 1000,
+          "unit": "ml",
+          "display": "1 l",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-a68d8c58-814b-4b07-838f-c237e0ac4c64:local-player:message-4:2",
+        "actorId": "local-player",
+        "patientUid": "cffa8e3c-66f9-4137-8a3e-9cab534f6111:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 13.223400000000002,
+        "administeredAtNativeMinute": 1.5453810000000001
+      },
+      {
+        "id": "ceftriaxone",
+        "label": "Ceftriaxona IV",
+        "dose": {
+          "amount": 1000,
+          "unit": "mg",
+          "display": "1 g",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-a68d8c58-814b-4b07-838f-c237e0ac4c64:local-player:message-4:3",
+        "actorId": "local-player",
+        "patientUid": "cffa8e3c-66f9-4137-8a3e-9cab534f6111:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 14.7234,
+        "administeredAtNativeMinute": 1.7253809999999998
+      },
+      {
+        "id": "metronidazole",
+        "label": "Metronidazol IV",
+        "dose": {
+          "amount": 500,
+          "unit": "mg",
+          "display": "500 mg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-a68d8c58-814b-4b07-838f-c237e0ac4c64:local-player:message-4:4",
+        "actorId": "local-player",
+        "patientUid": "cffa8e3c-66f9-4137-8a3e-9cab534f6111:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 16.2399,
+        "administeredAtNativeMinute": 1.9073609999999999
+      },
+      {
+        "id": "vasopressor",
+        "label": "Noradrenalina IV",
+        "dose": {
+          "amount": 0.05,
+          "unit": "µg/kg/min",
+          "display": "0.05 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-a68d8c58-814b-4b07-838f-c237e0ac4c64:local-player:message-4:5",
+        "actorId": "local-player",
+        "patientUid": "cffa8e3c-66f9-4137-8a3e-9cab534f6111:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 17.0566,
+        "action": "start",
+        "moleculeId": "norepinephrine",
+        "administeredAtNativeMinute": 2.005365
+      }
+    ],
+    "quality": {
+      "score": 95,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 20,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "xp": 128,
+    "oneAward": true,
+    "sourceControlUnchanged": true,
+    "completedStudies": [
+      {
+        "id": "peri_cbc",
+        "label": "Hemograma + inflamación",
+        "type": "lab",
+        "patientUid": "cffa8e3c-66f9-4137-8a3e-9cab534f6111:patient-2",
+        "result": "Leucocitosis marcada con neutrofilia y desviación a la izquierda.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.1993,
+        "readyAtMinute": 57.1993,
+        "sourceEventId": "guard-a68d8c58-814b-4b07-838f-c237e0ac4c64:local-player:message-15:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "peri_ct",
+        "label": "TC abdominopélvica urgente",
+        "type": "imaging",
+        "patientUid": "cffa8e3c-66f9-4137-8a3e-9cab534f6111:patient-2",
+        "result": "Diverticulitis sigmoidea perforada con aire extraluminal, líquido libre y cambios inflamatorios difusos.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.4128,
+        "readyAtMinute": 122.4128,
+        "sourceEventId": "guard-a68d8c58-814b-4b07-838f-c237e0ac4c64:local-player:message-16:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "peri_gas",
+        "label": "Gases + ionograma + función renal",
+        "type": "lab",
+        "patientUid": "cffa8e3c-66f9-4137-8a3e-9cab534f6111:patient-2",
+        "result": "Acidosis metabólica asociada a hipoperfusión · Na 131 mEq/L · K 3,2 mEq/L · urea/creatinina elevadas en patrón prerrenal.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.6232,
+        "readyAtMinute": 32.6232,
+        "sourceEventId": "guard-a68d8c58-814b-4b07-838f-c237e0ac4c64:local-player:message-17:0",
+        "actorId": "local-player"
+      }
+    ],
+    "consult": {
+      "id": "cirugia",
+      "patientUid": "cffa8e3c-66f9-4137-8a3e-9cab534f6111:patient-2",
+      "sourceEventId": "guard-a68d8c58-814b-4b07-838f-c237e0ac4c64:local-player:message-3:0",
+      "status": "done",
+      "accepted": true,
+      "reviewStatus": "accepted",
+      "advice": "Shock y sospecha específica de foco quirúrgico: aceptamos evaluación urgente mientras completan el examen y la reanimación. Esto no autoriza todavía el traslado.",
+      "respondedAtRealSecond": 10.887599999999999
+    },
+    "originalFindings": true,
+    "allergyAsked": true,
+    "persistedAfterReload": true,
+    "errors": []
+  }
+]
