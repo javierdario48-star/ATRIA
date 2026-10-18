@@ -5,10 +5,10 @@ const copy=x=>structuredClone(x);
 const canonical=x=>Array.isArray(x)?x.map(canonical):x&&typeof x==='object'?
  Object.fromEntries(Object.keys(x).sort().map(key=>[key,canonical(x[key])])):x;
 
-export function createNativeClinicalPort({withPatient,invoke,validateReceipt=()=>{}}={}){
+export function createNativeClinicalPort({withPatient,invoke,validateReceipt=()=>{},checkpoint=null}={}){
  if(typeof withPatient!=='function'||typeof invoke!=='function'||typeof validateReceipt!=='function')
   throw Error('native clinical withPatient and invoke required');
- const receipts=new Map(),inflight=new Map(),subscribers=new Set();
+ const receipts=new Map(copy(checkpoint?.receipts??[])),inflight=new Map(),subscribers=new Set();
  function acknowledge(result,patientUid,eventId,intent){
   if(!result||!['executed','pending','rejected','unconfirmed'].includes(result.status))
    throw Error('native executor returned no trustworthy execution state');
@@ -21,6 +21,7 @@ export function createNativeClinicalPort({withPatient,invoke,validateReceipt=()=
    reason:result.reason??null};
  }
  return Object.freeze({
+  checkpoint(){if(inflight.size)throw Error('native checkpoint requires settled executions');return copy({receipts:[...receipts]});},
   async execute({eventId,patientUid,actorId,intent}){
    if(typeof eventId!=='string'||!eventId||typeof patientUid!=='string'||!patientUid)
     throw Error('patient-scoped native event identity required');

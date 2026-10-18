@@ -25,12 +25,12 @@ export function closureSnapshot(p,c,destination){return {
 /** One migrated native care executor, operating on the SAME patient as C1.
  * No UI, timers, global binding, pharmacology wrapper or alternate patient state.
  */
-export function createCirrCare(p,c,{mode,defaultDoses,progress,cases}){
+export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null}){
  if(c.id!=='CIRR-001')throw Error('C2 care only supports CIRR-001');
  Object.assign(p,{liveVitals:initialCirrVitals(c),baselineVitals:initialCirrVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,lastVitalsKnown:null,
   diagnosis:'',reassessments:0,lastReassessment:null,pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,consults:[],pendingConsults:[],caseEnded:false,closure:null});
  initializeExamination(p);
- const pending=new Map();
+ const pending=new Map(copy(checkpoint?.pending??[]));
  const rejected=(cmd,reason,message)=>({status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason,
   ...(message?{receipt:{eventId:cmd.eventId,patientUid:p.uid,message}}:{})});
  const executed=(cmd,data)=>({status:'executed',eventId:cmd.eventId,patientUid:p.uid,
@@ -39,8 +39,8 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases}){
   ...(t.action?{action:t.action,route:t.route,previousDose:copy(t.previousDose)}:{}),
   administeredAtRealSecond:t.administeredAtRealSecond,administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
   message:(reused?'Ya ejecutado por la indicación original: ':t.action==='stop'?'Suspensión confirmada: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
- const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected});
- const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness});
+ const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected,checkpoint:checkpoint?.iv});
+ const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,checkpoint:checkpoint?.surgery});
  function readiness(destination){
   const out=csEvaluateClosure487(closureSnapshot(p,c,destination));
   if(p.pendingTreatments.length||p.pendingConsults.length){out.ready=false;out.action=null;out.missing.push('Esperar la ejecución o resolución de las intervenciones y consultas pendientes.');}
@@ -50,6 +50,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases}){
   return out;
  }
  return Object.freeze({
+  checkpoint:()=>copy({pending:[...pending],iv:ivMedicines.checkpoint(),surgery:surgery.checkpoint()}),
   readiness,
   execute(cmd,clock){
    if(cmd.patientUid!==p.uid)return rejected(cmd,'wrong-patient');

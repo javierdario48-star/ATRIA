@@ -9,10 +9,10 @@
 const id=value=>typeof value==='string'&&value.length>0&&value.length<=160;
 const copy=value=>structuredClone(value);
 
-export function createNurseDispatcher({navigation,nurses,patients}={}){
+export function createNurseDispatcher({navigation,nurses,patients,checkpoint=null}={}){
  if(!navigation||!Array.isArray(nurses)||!Array.isArray(patients))throw Error('nursing spatial context required');
- const tasks=new Map(),arrivals=[],byUid=new Map(patients.map(p=>[p.uid,p]));
- let disposed=false,queuedRetryTime=0;
+ const tasks=new Map(copy(checkpoint?.tasks??[])),arrivals=copy(checkpoint?.arrivals??[]),byUid=new Map(patients.map(p=>[p.uid,p]));
+ let disposed=false,queuedRetryTime=checkpoint?.queuedRetryTime??0;
  function assignment(task){
   // One bedside intervention per patient. Other nurses may work in other boxes,
   // but several NPCs must not pile onto the same patient for a compound order.
@@ -45,6 +45,7 @@ export function createNurseDispatcher({navigation,nurses,patients}={}){
   }
  }
  return Object.freeze({
+  checkpoint:()=>copy({tasks:[...tasks],arrivals,queuedRetryTime}),
   enqueue({eventId,patientUid,kind}={}){
    if(disposed)return {status:'disposed'};
    if(!id(eventId)||!id(patientUid)||!id(kind))return {status:'invalid-task'};

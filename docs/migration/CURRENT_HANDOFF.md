@@ -56,6 +56,10 @@ APP conserva ceftriaxona+metronidazol, piptazo o imipenem según su finalizador 
 
 Morfina conserva preparación IV0.55s, referencia4mg/rango positivo original hasta30mg, últimas24dosis/40min nativos, eliminación renal y efectos por estado real. La complicación opioide requiere riesgo original y efecto respiratorio observado; hipoxemia exclusivamente por fluidos no se atribuye a morfina. No añadir el antiguo daño acumulativo permanente encima.
 
+## C5.b.1 en implementación
+
+Estado operacional versionado y autoridad durable con CAS implementados; [contrato y alcance](C5B_PERSISTENT_CLINICAL_AUTHORITY.md). La interfaz C5.a permanece conservada hasta verificar almacenamiento privado y completar integración/navegadores. No declarar recuperación del anfitrión por este primer checkpoint. Nuevo endpoint `/api/clinical` y adaptador Blob privado; nunca se usa la caché social para persistir clínica.
+
 ## Qué sigue
 
 1. **C5.b: continuidad de la autoridad y backend durable.** C5.a2/3/4 está aprobado; no repetirlo como auditoría ni sustituir el ejecutor. Resolver recuperación/migración del anfitrión y guardia en segundo plano sin otro escritor, almacenamiento/transacciones y entrega final diferida. Incorporar pruebas de caída/recarga del anfitrión antes de afirmar reconexión de cualquier jugador.
@@ -68,4 +72,4 @@ Morfina conserva preparación IV0.55s, referencia4mg/rango positivo original has
 
 Antes de modificar comprobar HEAD remoto sin descartar cambios locales. Antes de publicar: `npm run test:v5`, `npm run test:v5-core`, ambos builds V5, `node scripts/audit-v5-boundary.mjs`, `git diff --check`. Después comprobar ambos workflows del SHA exacto, regresión histórica, navegadores/HTTP y manifiesto completo de preview.
 
-No modificar `main`, V4, golden master, ramas históricas ni módulos estables sin defecto reproducido. Desde el HEAD inicial `00984d4329ffbff504914625f6f0bdd5fcd54276` no se alteran `src/clinical`, `src/integration`, `vendor` ni `api`. La VM nativa de `qa/physiology-live/native-journey-487.mjs` es sólo QA. Informes previos: [C12.h](STEP_12H_LEGACY_FUNCTIONAL_AUDIT.md), [C12.i](STEP_12I_FLUID_RECEIPT_BRIDGE.md), [C12.j](STEP_12J_LEGACY_SEPSIS_PHYSIOLOGY.md), [C12.k corregido](STEP_12K_MEDICATION_AND_CLOCK_DOMAINS.md). Historial íntegro del handoff disponible en git, no rehacer ese trabajo.
+No modificar `main`, V4, golden master, ramas históricas ni módulos estables sin defecto reproducido. Desde el HEAD inicial `00984d4329ffbff504914625f6f0bdd5fcd54276` no se alteran `src/clinical`, `src/integration` ni `vendor`. C5.b agrega `api/clinical.js`; las rutas sociales históricas permanecen inalteradas. La VM nativa de `qa/physiology-live/native-journey-487.mjs` es sólo QA. Informes previos: [C12.h](STEP_12H_LEGACY_FUNCTIONAL_AUDIT.md), [C12.i](STEP_12I_FLUID_RECEIPT_BRIDGE.md), [C12.j](STEP_12J_LEGACY_SEPSIS_PHYSIOLOGY.md), [C12.k corregido](STEP_12K_MEDICATION_AND_CLOCK_DOMAINS.md). Historial íntegro del handoff disponible en git, no rehacer ese trabajo.

@@ -33,11 +33,16 @@ const routeReason={
  * care mutate the same owned patient through one port; UI never mutates it.
  */
 export function createGuardSession({roomId,mode,actorId,actorName,patient,content,resolveContext,onChange=()=>{},progress=createProgressionLedger(),nursing=null,
- members=[{id:actorId,name:actorName}],authenticate=null}){
+ members=[{id:actorId,name:actorName}],authenticate=null,checkpoint=null}){
  if(!['solo','apprentice','coop'].includes(mode)||typeof resolveContext!=='function')throw Error('supported clinical mode/context required');
  if(mode==='coop'&&(members.length<2||members.length>4||!members.some(x=>x.id===actorId)))throw Error('cooperative roster requires two to four doctors');
  const memberNames=new Map(members.map(x=>[x.id,String(x.name||x.id).slice(0,32)]));
  const caseData=content.cases.find(c=>c.id===patient.caseId);if(!caseData)throw Error('unknown patient case');
+ if(checkpoint&&(checkpoint.schemaVersion!==1||checkpoint.modelVersion!=='atria-clinical-c5b-1'||
+  checkpoint.roomId!==roomId||checkpoint.mode!==mode||checkpoint.actorId!==actorId||
+  checkpoint.patient.uid!==patient.uid||checkpoint.patient.caseId!==caseData.id||
+  JSON.stringify(checkpoint.members)!==JSON.stringify(members)))throw Error('incompatible clinical checkpoint room/patient/model');
+ if(checkpoint)progress=createProgressionLedger(checkpoint.progress);
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[],
   ...patientAllergyFacts487(patient),adverseEvents:[]};
  if(nativePatient.allergies.length){
@@ -45,16 +50,24 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   nativePatient.allergyHistoryAnswer='Tengo alergia a '+nativePatient.allergies.map(id=>
    (labels.get(id)||id)+(nativePatient.severeAllergies.includes(id)?' (reacción grave)':'')).join(', ')+'.';
  }
- const options={mode,defaultDoses:content.defaultDoses,progress,cases:content.cases};
+ const options={mode,defaultDoses:content.defaultDoses,progress,cases:content.cases,checkpoint:checkpoint?.care};
  // Every case inherits the validated global formulary (including cases that
  // do not yet have an active clinical executor). This is a PURE interpreter,
  // not a replacement for the native APP/CIRR physiological owner.
  const pharmacology=createCasePharmacology({cases:content.cases,therapies:content.therapies});
  const factory={cirr:createCirrCare,app:createAppCare,peritonitis:createPeritonitisCare}[CLINICAL_EXECUTORS[caseData.id]];
  const care=factory?factory(nativePatient,caseData,options):null;
- const studies=createStudyService(content.cases),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
+ // Factories initialize their native fields. Restore the SAME owned object
+ // afterwards so every executor and pending task keeps its original reference.
+ if(checkpoint){for(const k of Object.keys(nativePatient))delete nativePatient[k];Object.assign(nativePatient,copy(checkpoint.patient));}
+ const studies=createStudyService(content.cases,checkpoint?.studies),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
  const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))];
  const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map(),waitingForAccess=new Map();
+ if(checkpoint){
+  for(const [k,v] of checkpoint.pendingStudyRequests)pendingStudyRequests.set(k,new Set(v));
+  for(const [k,v] of checkpoint.pendingNurseJobs)pendingNurseJobs.set(k,copy(v));
+  for(const [k,v] of checkpoint.waitingForAccess)waitingForAccess.set(k,copy(v));
+ }
  const nursingWorkPending=()=>pendingNurseJobs.size>0||waitingForAccess.size>0;
  if(nursing&&(!['enqueue','takeArrivals','accept'].every(k=>typeof nursing[k]==='function')))
   throw Error('nursing adapter needs enqueue, takeArrivals and accept');
@@ -90,9 +103,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   }
   return null;
  }
- const guardClock=createGuardClock(actorId);let clock=guardClock.read(),disposed=false,deathPublished=false;
+ const guardClock=createGuardClock(actorId,checkpoint?.clock);let clock=guardClock.read(),disposed=false,deathPublished=checkpoint?.deathPublished??false;
  const credentials=Object.freeze({roomId,actorId,nonce:Symbol('local-room')});
  const port=createNativeClinicalPort({
+  checkpoint:checkpoint?.port,
   validateReceipt:assertMatchingClinicalReceipt,
   withPatient:async(uid,fn)=>{if(uid!==nativePatient.uid)throw Error('patient not in this room');return fn(nativePatient);},
   invoke:async({eventId,actorId,patientUid,intent})=>{
@@ -172,6 +186,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   }
  });
  const authority=createRoomAuthority({roomId,mode,members,patients:[{uid:patient.uid}],
+  checkpoint:checkpoint?.authority,
   authenticate:token=>token===credentials?{id:actorId,roomId}:authenticate?.(token)??null,clinicalPort:port,
   resolveSpeechContext:({envelope,actorId:requestActor})=>({...resolveContext({actorId:requestActor,targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,
    ...(care&&nursing?{venousAccessCount:nativePatient.venousAccessCount??0,pendingIV:[...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv'),defaultDoses:content.defaultDoses}:{}),
@@ -258,6 +273,15 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   return rows;
  }
  return Object.freeze({
+  /** Operational data only. Caller serializes mutations and awaits this
+   * barrier before committing world + session as one durable transaction. */
+  async checkpoint(){
+   if(disposed)throw Error('guard session disposed');await authority.flush();
+   return copy({schemaVersion:1,modelVersion:'atria-clinical-c5b-1',roomId,mode,actorId,actorName,members,
+    patient:nativePatient,clock:guardClock.checkpoint(),deathPublished,progress:progress.read(),
+    care:care?.checkpoint()??null,studies:studies.checkpoint(),port:port.checkpoint(),authority:authority.checkpoint(),
+    pendingStudyRequests:[...pendingStudyRequests].map(([k,v])=>[k,[...v]]),pendingNurseJobs:[...pendingNurseJobs],waitingForAccess:[...waitingForAccess]});
+  },
   catalog:()=>copy(orderedStudies),
   async post(envelope,authenticatedCredentials=credentials){
    if(disposed)return {status:'rejected',reason:'room-disposed'};
@@ -310,11 +334,12 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     care.dispose(); // cancel native medication and consultation preparations
     const reject=eventId=>port.complete({eventId,patientUid:nativePatient.uid,
      status:'rejected',reason:'patient-not-active'});
-    for(const ids of pendingStudyRequests.values())for(const eventId of ids)reject(eventId);
+    // Cancel every pending native binding, including a specialist whose
+    // response was still being prepared. No orphan pending ACK survives death.
+    for(const [eventId,record] of port.checkpoint().receipts)
+     if(record.ack.status==='pending')reject(eventId);
     pendingStudyRequests.clear();
-    for(const eventId of waitingForAccess.keys())reject(eventId);
     waitingForAccess.clear();
-    for(const eventId of pendingNurseJobs.keys())reject(eventId);
     // A nurse already walking to the bed must still report rejected arrival.
     if(!authority.reportPatientDeath({patientUid:nativePatient.uid,
        cause:nativePatient.deathReason,atNativeMinute:clock.nativeMinute}))

@@ -6,6 +6,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/clinical",
+      "destination": "/api/clinical"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/social?route=:path*"
     }

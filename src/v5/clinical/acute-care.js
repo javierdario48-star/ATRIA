@@ -10,7 +10,7 @@ import {createIVAdministration} from './native-medications.js';
 import {createSurgicalConsultation} from './surgical-consultation.js';
 
 const copy=x=>structuredClone(x);
-export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases},policy){
+export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null},policy){
  Object.assign(p,{liveVitals:policy.initialVitals(c),baselineVitals:policy.initialVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,
   lastVitalsKnown:null,diagnosis:'',reassessments:0,lastReassessment:null,
   pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,
@@ -28,8 +28,8 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases},policy){
    (t.dose?' · '+t.dose.display:'')+'.'});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
-  proof,rejected});
- const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness});
+  proof,rejected,checkpoint:checkpoint?.iv});
+ const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,checkpoint:checkpoint?.surgery});
  function readiness(destination){
   const out=policy.evaluate(p,c,destination);
   if(!out)return null;
@@ -42,6 +42,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases},policy){
   return out;
  }
  return Object.freeze({
+  checkpoint:()=>({iv:ivMedicines.checkpoint(),surgery:surgery.checkpoint()}),
   readiness,
   execute(cmd,clock){
    if(cmd.patientUid!==p.uid)return rejected(cmd,'wrong-patient');

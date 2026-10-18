@@ -7,8 +7,8 @@ const actor=(id,point,extra={})=>({id,...point,r:10.5,speed:205,path:[],pathInde
  dir:'S',moving:false,walkPhase:0,lastSide:1,...extra});
 
 /** Owns spatial state only. No DOM, clock, clinical execution or network writes. */
-export function createWorld(content,profile){
- const identity=globalThis.crypto.randomUUID();
+export function createWorld(content,profile,checkpoint=null){
+ let identity=globalThis.crypto.randomUUID();
  const navigation=createNavigation(content.map);
  const start=content.map.player_start_tile;
  const point=tile=>navigation.center(...(navigation.nearest(...tile,8)||start));
@@ -64,7 +64,15 @@ export function createWorld(content,profile){
   }
  }
  const snapshot=()=>structuredClone({phase,mode,caseId,generation,player,nurses,patients,expert,others,entities:entities()});
+ if(checkpoint){
+  if(checkpoint.schemaVersion!==1||checkpoint.profile.id!==profile.id||checkpoint.state.phase!=='guard')throw Error('incompatible world checkpoint');
+  const saved=structuredClone(checkpoint);profile=saved.profile;identity=saved.identity;
+  ({phase,mode,caseId,generation,player,nurses,patients,expert,others}=saved.state);
+  authoritative=saved.authoritative;pendingInteraction=saved.pendingInteraction;
+  if(authoritative)nursing=createNurseDispatcher({navigation,nurses,patients,checkpoint:saved.nursing});
+ }
  return Object.freeze({navigation,enterLobby,enterGuard,step,snapshot,
+  checkpoint:()=>structuredClone({schemaVersion:1,identity,profile,state:snapshot(),authoritative,pendingInteraction,nursing:nursing?.checkpoint()??null}),
   setSocialIdentity(id){profile={...profile,id};},
   showLobbyPlayers(list){if(phase!=='lobby')return;others=list.filter(x=>x.userId!==profile.id).map(x=>actor(x.userId,{x:x.x,y:x.y},
    {kind:'doctor',name:x.name,color:x.color||'navy',level:x.level||1,dir:x.dir,walkPhase:x.walkPhase}));},

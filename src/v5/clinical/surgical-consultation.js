@@ -28,8 +28,8 @@ export function surgicalReviewSnapshot(p,c,cases=[c]){
   initialShock:Number(String(c.vitals.bp).split('/')[0])<90,
   imagingDone:p.orders.some(o=>o.status==='done'&&/^(peri_ct|peri_rx|ter_ct)|ct|rx|imagen|radiografia|tomografia/i.test(o.id))};
 }
-export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness}){
- const pending=new Set();
+export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,checkpoint=null}){
+ const pending=new Set(structuredClone(checkpoint?.pending??[]));
  function receipt(cmd,consult,reused=false){
   const missing=consult.accepted?(readiness(consult.id==='uti'?'uti':'quirofano')?.missing||[]):[];
   return executed(cmd,{consultId:consult.id,sourceEventId:consult.sourceEventId,
@@ -38,6 +38,7 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness}){
    message:(consult.id==='uti'?'UTI: ':'Cirugía: ')+consult.advice+(missing.length?' Pendiente para la derivación: '+missing.join(' '):'')});
  }
  return Object.freeze({
+  checkpoint:()=>structuredClone({pending:[...pending]}),
   request(cmd,clock){
    const {intent}=cmd;
    if(!['cirugia','uti'].includes(intent.id)||!['consult.request','procedure.request'].includes(intent.kind))return null;

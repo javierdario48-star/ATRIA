@@ -11,7 +11,7 @@ const copy=x=>structuredClone(x);
  * One serial dispatch lane per room, one native clinical port.
  */
 export function createRoomAuthority({roomId,mode,members,patients,authenticate,clinicalPort,resolveSpeechContext,
- respondNpc=null,emit=()=>{},time=()=>0}={}){
+ respondNpc=null,emit=()=>{},time=()=>0,checkpoint=null}={}){
  if(!id(roomId)||!VALID_MODES.has(mode)||typeof authenticate!=='function'||
   typeof clinicalPort?.execute!=='function'||typeof resolveSpeechContext!=='function')
   throw Error('invalid authoritative room configuration');
@@ -22,6 +22,18 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
   [...byPatient.keys()].some(x=>!id(x))||[...memberSet].some(x=>!id(x)))throw Error('invalid room members/patients');
  let revision=0,sequence=Promise.resolve(),disposed=false,unsubscribeCompletion=null;
  const transcript=[],events=[],seen=new Map(),pendingExecutions=new Map(),complications=new Set(),readyDestinations=new Map();
+ if(checkpoint){
+  const saved=copy(checkpoint);
+  if(saved.roomId!==roomId||saved.mode!==mode||!Number.isSafeInteger(saved.revision)||saved.revision<0||
+   JSON.stringify(saved.members)!==JSON.stringify([...memberSet])||
+   saved.patients.length!==byPatient.size||saved.patients.some(p=>!byPatient.has(p.uid)))throw Error('incompatible room checkpoint');
+  revision=saved.revision;for(const p of saved.patients)byPatient.set(p.uid,p);
+  transcript.push(...saved.transcript);events.push(...saved.events);
+  for(const [k,v] of saved.seen)seen.set(k,v);
+  for(const [k,v] of saved.pendingExecutions)pendingExecutions.set(k,v);
+  for(const k of saved.complications)complications.add(k);
+  for(const [k,v] of saved.readyDestinations)readyDestinations.set(k,v);
+ }
  const snapshot=()=>copy({roomId,mode,revision,members:[...memberSet],
   patients:[...byPatient.values()],transcript,events});
  const rejection=(commandId,reason)=>({commandId,status:'rejected',reason,roomId,revision});
@@ -156,7 +168,9 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
    if(disposed)return Promise.resolve(rejection(envelope?.id??null,'authority-disposed'));
    return enqueue(()=>process(envelope,credentials));
   },
-  flush:()=>sequence,
+  async flush(){let pending;do{pending=sequence;await pending;}while(pending!==sequence);},
+  checkpoint:()=>copy({...snapshot(),seen:[...seen],pendingExecutions:[...pendingExecutions],
+   complications:[...complications],readyDestinations:[...readyDestinations]}),
   // Native minimum-requirement transition, published to the same room stream.
   // No chat/transport command can supply this proof or award experience.
   reportCareReadiness({patientUid,destinations}){

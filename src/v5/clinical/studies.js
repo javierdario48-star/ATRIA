@@ -7,11 +7,11 @@ const copy=x=>structuredClone(x);
 
 // The caller owns the clinical clock and the authoritative patient objects.
 // This service only requests/results existing studies; it has no drug writer.
-export function createStudyService(cases){
+export function createStudyService(cases,checkpoint=null){
  if(!Array.isArray(cases)||cases.some(c=>!identity(c?.id)||!Array.isArray(c.studies))||
     new Set(cases.map(c=>c.id)).size!==cases.length)throw Error('valid unique study cases required');
  const definitions=copy(cases),byCase=new Map(definitions.map(c=>[c.id,c]));
- const catalog=buildStudyCatalog(definitions),events=new Map();
+ const catalog=buildStudyCatalog(definitions),events=new Map(copy(checkpoint?.events??[]));
  const patientValid=p=>identity(p?.uid)&&byCase.has(p.caseId)&&Array.isArray(p.orders);
  const rejected=(p,eventId,reason)=>({status:'rejected',patientUid:p?.uid??null,eventId:eventId??null,reason});
  function acknowledged(p,eventId,order){
@@ -23,6 +23,7 @@ export function createStudyService(cases){
   }};
  }
  return Object.freeze({
+  checkpoint:()=>copy({events:[...events]}),
   catalog:()=>copy(catalog),
   request(patient,command={}){
    const {id,eventId,actorId,atMinute}=command||{};

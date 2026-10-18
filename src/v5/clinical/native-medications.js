@@ -67,8 +67,8 @@ export function parseStandardIVDose(text,reference){
 /** Scheduling and receipts for validated IV medicine: never changes vitals.
  * Calling care.advance() remains the only path to a true administration.
  */
-export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected}){
- const tasks=new Map();
+export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected,checkpoint=null}){
+ const tasks=new Map(structuredClone(checkpoint?.tasks??[]));
  const copy=x=>structuredClone(x);
  function request(cmd,clock){
   const id=cmd.intent.id;
@@ -127,5 +127,6 @@ export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected})
   return task.commands.map(cmd=>proof(cmd,t,cmd.eventId!==task.sourceEventId));
  }
  return Object.freeze({request,due,finish,owns:task=>tasks.get(task.sourceEventId)===task,
+  checkpoint:()=>copy({tasks:[...tasks]}),
   dispose(){tasks.clear();}});
 }
