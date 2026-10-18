@@ -2,10 +2,17 @@ import * as blob from '@vercel/blob';
 import {getCache} from '@vercel/functions';
 import {createQaSocialServer} from '../src/social/qa-social-server.js';
 import {createPrivateBlobGuardStore} from '../src/v5/server/private-blob-guard-store.js';
+import {createPostgresGuardStore} from '../src/v5/server/postgres-guard-store.js';
 import {createDurableGuardAuthority} from '../src/v5/server/durable-guard-authority.js';
 import {createClinicalHttp} from '../src/v5/server/clinical-http.js';
 import {clinicalContent} from '../src/v5/server/content.js';
-const store=createPrivateBlobGuardStore(blob),authority=createDurableGuardAuthority({store,content:clinicalContent});
+// C5.b.2: the Postgres store is selected only if BOTH server-only secrets
+// are present. Clinical requests remain disabled until replica migration.
+const sqlConfigured=!!process.env.SUPABASE_URL&&!!process.env.SUPABASE_SECRET_KEY;
+const store=sqlConfigured?createPostgresGuardStore({
+ url:process.env.SUPABASE_URL,secretKey:process.env.SUPABASE_SECRET_KEY
+}):createPrivateBlobGuardStore(blob);
+const authority=createDurableGuardAuthority({store,content:clinicalContent});
 const social=createQaSocialServer(getCache(undefined,'atria-social-qa-v1',':'));
 const route=createClinicalHttp({authority,
  // C5.b.1 exposes the storage probe only. Enabling clinical requests requires
@@ -24,7 +31,7 @@ const route=createClinicalHttp({authority,
   const value={...seed,counter:before.value.counter+1};const etag=await store.compareAndSwap(id,before.etag,value);
   if(!etag||await store.compareAndSwap(id,before.etag,seed)!==null)throw Error('atomic Blob precondition unavailable');
   const after=await store.read(id);if(after.etag!==etag||after.value.counter!==value.counter)throw Error('consistent Blob read unavailable');
-  return {durable:true,kind:'private-blob-etag-cas',schemaVersion:1};
+  return {durable:true,kind:sqlConfigured?'postgres-atomic-cas':'private-blob-etag-cas',schemaVersion:1};
  }});
 export default async function clinical(req,res){
  res.setHeader('Cache-Control','private, no-store');res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('X-Content-Type-Options','nosniff');
