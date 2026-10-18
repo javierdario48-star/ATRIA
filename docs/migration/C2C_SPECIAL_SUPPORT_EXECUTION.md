@@ -2,6 +2,8 @@
 
 Rama exclusiva: `atria-5.0-core-rebuild-experimental`. Continúa D1 certificado en `8c9b2c1a9be1a47856a7025ec50663f4ad92c2da`; no cambia el manual maestro. Este documento describe implementación y límites, no certifica por sí solo la CI.
 
+**Código certificado: `feeab5a8a0af356f83884f56e15139a7b49d0c3a`.** [CI V5 completa](https://github.com/javierdario48-star/ATRIA/actions/runs/39076467282), [censo histórico](https://github.com/javierdario48-star/ATRIA/actions/runs/39076467248) y [preview con 103 hashes verificados](https://night-shift-clinical-ib00fbtzl-javierdario4878-7324.vercel.app/). La regresión completa pasó también localmente. [Certificación estructurada](../evidence/c2c/verification.json).
+
 ## Ejecución real recuperada
 
 Se amplía el mismo registro y ejecutor IV de 15 a **19 entradas**. APP y CIRR conservan sus respectivos escritores de signos, la misma autoridad, reloj, acceso venoso, enfermería espacial, preparación, recibos e idempotencia.
@@ -36,7 +38,7 @@ Validación local: **401/401 V5**, **40/40 core**, builds V5/core, frontera de *
 
 `node qa/v5/characterize-special-support-native.mjs` ejecuta el V4 efectivo mediante el harness histórico sólo de QA y el circuito V5 real: APP/CIRR × cuatro formulaciones, seis albúminas, titulación/suspensión. **10/10 escenarios**, constantes y ecuaciones equivalentes; diferencia máxima observada en los ejes: **8.53e−14**. Se verifican ausencia de administración antes de preparar, unidades, dosis, recibos, daño y suspensión sin dosis adicional. Los 31 hashes de módulos originales y resultados están en [la evidencia](../evidence/c2c/special-support-native-parity.json). La comparación usa la vía de medicación del monitor original porque su alias de enfermería de albúmina contiene el defecto documentado; las pruebas V5 también verifican el circuito corregido por enfermería.
 
-`node qa/v5/special-support-browser.mjs` prueba los ESM publicados con enfermería espacial real en Chromium escritorio/Pixel, Solitario/Aprendiz: lote inválido sin trayecto ni efectos, IV/monitor, cuatro administraciones, reintento, titulación, suspensión, seis recibos, historia y cero estudios espurios. Es una admisión explícita de QA, sin inyectar signos o administraciones; no reemplaza las pruebas UI completas APP/CIRR que permanecen activas. **Android físico no probado.** Esta suite está añadida a CI junto a la comparativa; su resultado del SHA publicado debe certificarse en el handoff.
+`node qa/v5/special-support-browser.mjs` prueba los ESM publicados con enfermería espacial real en Chromium escritorio/Pixel, Solitario/Aprendiz: lote inválido sin trayecto ni efectos, IV/monitor, cuatro administraciones, reintento, titulación, suspensión, seis recibos, historia y cero estudios espurios. **4/4 recorridos aprobados**: [recibos exactos](../evidence/c2c/special-support-browser.json). Es una admisión explícita de QA, sin inyectar signos o administraciones; no reemplaza las pruebas UI completas APP/CIRR que permanecen activas y aprobaron con 100/100 y 133XP únicos. **Android físico no probado.** La CI HTTP con 2/3/4 Chromium y F/G/I históricos también pasó; no certifica guardias clínicas multijugador completas.
 
 ## Límites y siguiente checkpoint
 

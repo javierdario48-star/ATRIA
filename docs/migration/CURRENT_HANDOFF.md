@@ -10,20 +10,20 @@ Este handoff reemplaza el resumen acumulativo anterior. Su contenido íntegro si
 
 ## Estado que sí está comprobado
 
-**C2.c implementado, pendiente de certificar la CI del commit publicado:** [formulaciones especiales y soporte compartido](C2C_SPECIAL_SUPPORT_EXECUTION.md). Albúmina g/kg, transfusión en unidades, noradrenalina titulable/suspendible y anfotericina mg/kg por el mismo ejecutor IV y enfermería física. Validación local 401/401 V5, 40/40 core, builds/frontera y comparativa efectiva V4/V5 10/10. No confundir este resultado local con CI/navegadores aprobados; el último ejecutable certificado continúa siendo el D1 inferior hasta completar esas verificaciones.
+**C2.c certificado:** [formulaciones especiales y soporte compartido](C2C_SPECIAL_SUPPORT_EXECUTION.md). Albúmina g/kg, transfusión en unidades, noradrenalina titulable/suspendible y anfotericina mg/kg por el mismo ejecutor IV y enfermería física. **401/401 V5**, 40/40 core, comparativa efectiva V4/V5 **10/10**, builds/frontera, regresión histórica y navegadores completos aprobados. Los cuatro recorridos escritorio/Pixel × Solitario/Aprendiz verifican seis recibos auténticos, con titulación y suspensión sin dosis adicional. [Evidencia exacta](../evidence/c2c/verification.json).
 
 **D1 verificado:** [impresión diagnóstica y derivación contextual](STEP_13A_DIAGNOSIS_AND_SURGICAL_HANDOFF.md). Insignia flotante, vocabulario global original, guardar/borrar/reeditar, destinos por requisitos reales, aviso único de enfermería y respuestas quirúrgicas originales a 3,5 s en APP/CIRR. No exige una operación realizada ni un umbral de calidad de 70. El primer commit `b6d966e815bf7ca523f3deebb16f3ec05a6f44f4` falló solamente en el trayecto de escritorio del nuevo bot, corregido junto con la conservación de los botones durante actualizaciones sin cambios. La CI del SHA final inferior pasó completa.
 
-**Último código funcional verificado:** `8c9b2c1a9be1a47856a7025ec50663f4ad92c2da`.
+**Último código funcional verificado:** `feeab5a8a0af356f83884f56e15139a7b49d0c3a`.
 El commit posterior de entrega sólo actualiza documentación/evidencia; obtener su SHA con `git log -1 --format=%H`. Comprobar siempre el HEAD remoto antes de continuar.
 
-- [CI V5 completa, 4/4 aprobada](https://github.com/javierdario48-star/ATRIA/actions/runs/39074212282): **385/385 V5**, 40/40 core, ambos builds, frontera arquitectónica, navegadores y regresión histórica completa.
-- [Censo histórico F/G/I aprobado](https://github.com/javierdario48-star/ATRIA/actions/runs/39074212283).
-- [Preview del mismo código](https://night-shift-clinical-pnvgtr9jy-javierdario4878-7324.vercel.app/): READY, HTTP200, los **101 hashes** del manifiesto coinciden con el build local. Verificación directa adicional de UI en escritorio: acercamiento desde la insignia, tres peritonitis, guardar/borrar/reeditar y rechazo quirúrgico por examen/signos pendientes.
+- [CI V5 completa, 4/4 aprobada](https://github.com/javierdario48-star/ATRIA/actions/runs/39076467282): **401/401 V5**, 40/40 core, ambos builds, frontera arquitectónica, navegadores y regresión histórica completa.
+- [Censo histórico F/G/I aprobado](https://github.com/javierdario48-star/ATRIA/actions/runs/39076467248).
+- [Preview del mismo código](https://night-shift-clinical-ib00fbtzl-javierdario4878-7324.vercel.app/): READY, HTTP200, los **103 hashes** del manifiesto coinciden con el build local. El diagnóstico flotante, rechazos/aceptación quirúrgica y destinos de D1 permanecen cubiertos por CI. Su preview anterior también se comprobó directamente en escritorio.
 - Regresión original preservada: 421 combinaciones de enfermería, 131 escenarios de cierre y 39 de tratamiento perjudicial. Las dos discrepancias antiguas de diuréticos continúan identificadas y abiertas; verde no significa que se hayan resuelto.
 - APP/CIRR completan los recorridos de UI con 100/100 y 133 XP únicos. Escritorio y Pixel emulado; **Android físico no probado**.
 
-Evidencia exacta del último código: [D1 verification.json](../evidence/d1/verification.json) y [comparativa quirúrgica efectiva V4/V5](../evidence/d1/surgery-native-parity.json). Logs, capturas y resultados de escritorio/Pixel: [artefacto de CI](https://github.com/javierdario48-star/ATRIA/actions/runs/39074212282/artifacts/12116397696).
+Evidencia exacta del último código: [C2.c verification.json](../evidence/c2c/verification.json), [comparativa de soporte efectivo V4/V5](../evidence/c2c/special-support-native-parity.json) y [recibos de navegadores](../evidence/c2c/special-support-browser.json). Logs, capturas y resultados de escritorio/Pixel: [artefacto de CI](https://github.com/javierdario48-star/ATRIA/actions/runs/39076467282/artifacts/12117108286). Se conserva [la certificación anterior D1](../evidence/d1/verification.json).
 
 ## Checkpoints publicados en esta ejecución
 
@@ -34,6 +34,7 @@ Evidencia exacta del último código: [D1 verification.json](../evidence/d1/veri
 | C2.b | `4a726fb6f80ec1976e5a7c667778673834e56024` | Morfina efectiva: dosis, preparación, acumulación, eliminación, efectos respiratorios/hemodinámicos y consecuencias. |
 | C2.b.1 | `26cc058a30485191749b6df485f2a5221c525676` | Analgesia real también en la respuesta del paciente y el examen, con desaparición del efecto y nueva respuesta al redosificar. |
 | D1 | `8c9b2c1a9be1a47856a7025ec50663f4ad92c2da` | Diagnóstico flotante original, destinos automáticos mínimos, respuestas quirúrgicas contextualizadas, rechazo/corrección/aceptación y XP único. |
+| C2.c | `feeab5a8a0af356f83884f56e15139a7b49d0c3a` | Albúmina, transfusión, noradrenalina titulable/suspendible y anfotericina mg/kg; consecuencias originales y equivalencia de supervivencia entre frames largos/cortos. |
 
 Cada checkpoint anterior tiene CI V5 y censo histórico aprobados. Informes y enlaces individuales: [C1](C1_CLINICAL_FREEDOM.md), [C2.a](C2A_ANTIMICROBIAL_EXECUTION.md), [C2.b y corrección observacional](C2B_MORPHINE_EXECUTION.md). Evidencia estructurada en `docs/evidence/c1`, `c2a`, `c2b` y `c2b1`.
 
@@ -59,7 +60,7 @@ La complicación opioide exige riesgo original y un efecto sobre el eje respirat
 
 ## Qué falta; retomar aquí
 
-1. **Cerrar certificación C2.c y continuar catálogo.** Implementadas las cuatro formulaciones especiales por el circuito compartido; corregidas colisión de albúmina/hepatograma, pérdida de mg/kg de anfotericina, conversión de vías no IV y salto de supervivencia con albúmina en frames largos. Comparativa 10/10 y 401/401 V5 locales. Antes de considerarlo certificado verificar CI/navegadores/preview del nuevo SHA. C2 no equivale todavía al catálogo completo para todos los casos.
+1. **C2.c certificado; continuar la farmacología según el caso.** Corregidas colisión de albúmina/hepatograma, pérdida de mg/kg de anfotericina, conversión de vías no IV y salto de supervivencia con albúmina en frames largos. Comparativa 10/10, 401/401 V5 y CI/navegadores/preview del SHA superior aprobados. C2 no equivale todavía al catálogo completo para todos los casos; no repetir esta implementación ni usarla para prometer ejecutores de peritonitis aún ausentes.
 2. **C3 no está integrado.** `sepsis-physiology-487-core.js` ya contiene la transición original comparada para las tres peritonitis, pero falta su propietario clínico y los efectos inmediatos efectivos. Recuperar `applyImmediatePhysiology`, cobertura/dosis/rampa y reglas posteriores válidas de secondary bridge/critical rescue; utilizar un único writer. No copiar B1 de líquidos ni aplicar fisiología séptica a APP/CIRR. Comparar atención correcta, abandono, exceso, daño, foco persistente, rescate y muerte. Corregir los dos diuréticos no lesivos de PERI-SEC/CHOLANG mediante reproducción, no relajando pruebas.
 3. **C4 pendiente:** los otros11 ejecutores y sus antecedentes/examen/estudios/evolución/cierres. Las tres peritonitis requieren `csPeritonitisEvaluate487` y la calidad efectiva posterior, no imponer APP/CIRR. Una aceptación quirúrgica no equivale a cirugía/control del foco realizado. Mantener suma/descuento/omisiones/acciones indebidas y XP único.
 4. **C5 pendiente:** el producto aún no ofrece guardias clínicas cooperativas/competitivas completas. La CI HTTP2/3/4Chromium prueba el protocolo, autoridad y recibos; no certificar por ello juego clínico multijugador, lobby social completo, reconexión o WebRTC real. Conservar un chat global por guardia, primera interacción válida en competitivo, tratamiento compartido en cooperativo y la misma clínica para todos.

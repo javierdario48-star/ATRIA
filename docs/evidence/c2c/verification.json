@@ -1,0 +1,82 @@
+{
+  "schema": "atria.v5.checkpoint-verification.v1",
+  "checkpoint": "C2.c",
+  "repository": "javierdario48-star/ATRIA",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "codeSha": "feeab5a8a0af356f83884f56e15139a7b49d0c3a",
+  "codeTree": "ae34c5a3365d34f92f014a33e8d9f7621a8f233a",
+  "ci": {
+    "v5": {
+      "id": 39076467282,
+      "conclusion": "success",
+      "jobs": 4,
+      "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/39076467282"
+    },
+    "legacyCensus": {
+      "id": 39076467248,
+      "conclusion": "success",
+      "jobs": 4,
+      "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/39076467248"
+    },
+    "browserArtifact": {
+      "id": 12117108286,
+      "sha256": "2e61944098378e0182998aa07e017d51c64e2eaf6762a27de4578afbf5411cec"
+    }
+  },
+  "tests": {
+    "v5": 401,
+    "core": 40,
+    "comparisonScenarios": 10,
+    "spatialBrowserJourneys": 4,
+    "spatialReceiptsPerJourney": 6,
+    "allNursingJobsConfirmed": true,
+    "nursingCombinations": 421,
+    "closureScenarios": 131,
+    "harmScenarios": 39,
+    "unresolvedLegacyDiuretics": 2,
+    "fullLocalHistoricalExitCode": 0,
+    "fullCIHistoricalExitCode": 0,
+    "httpBrowsers": [
+      2,
+      3,
+      4
+    ],
+    "historicalBrowserChecks": [
+      "F/2",
+      "G/2",
+      "I/3"
+    ],
+    "app": {
+      "score": 100,
+      "xp": 133
+    },
+    "cirr": {
+      "score": 100,
+      "xp": 133
+    }
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-ib00fbtzl-javierdario4878-7324.vercel.app/",
+    "deploymentId": "dpl_E9krygRGpgGRfWpSvdWSWpKeVyZC",
+    "commitSha": "feeab5a8a0af356f83884f56e15139a7b49d0c3a",
+    "state": "READY",
+    "httpStatus": 200,
+    "manifestFiles": 103,
+    "entireManifestEqualToLocalBuild": false
+  },
+  "architecture": {
+    "productionModules": 66,
+    "singleRafOwner": true,
+    "newTimers": 0,
+    "parallelVitalWriter": false,
+    "legacySourceModified": false,
+    "mainModified": false
+  },
+  "limits": [
+    "APP/CIRR are still the two complete case executors",
+    "Peritonitis longitudinal and immediate physiology not connected",
+    "No full 30-treatment PK/interaction claim",
+    "Cooperative/competitive clinical game not integrated",
+    "Android tested through Pixel emulation only"
+  ]
+}

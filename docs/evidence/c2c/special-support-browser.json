@@ -1,0 +1,562 @@
+[
+  {
+    "mobile": false,
+    "mode": "solo",
+    "physicalAndroid": false,
+    "initialAck": [
+      [
+        "iv",
+        "pending"
+      ],
+      [
+        "monitor",
+        "pending"
+      ],
+      [
+        "albumin",
+        "pending"
+      ],
+      [
+        "transfusion",
+        "pending"
+      ],
+      [
+        "amphotericin",
+        "pending"
+      ],
+      [
+        "vasopressor",
+        "pending"
+      ]
+    ],
+    "receipts": [
+      {
+        "id": "albumin",
+        "action": "administration",
+        "dose": {
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:2"
+      },
+      {
+        "id": "transfusion",
+        "action": "administration",
+        "dose": {
+          "amount": 1,
+          "unit": "unidad",
+          "display": "1 unidad",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:3"
+      },
+      {
+        "id": "amphotericin",
+        "action": "administration",
+        "dose": {
+          "amount": 0.7,
+          "unit": "mg/kg",
+          "display": "0.7 mg/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:4"
+      },
+      {
+        "id": "vasopressor",
+        "action": "start",
+        "dose": {
+          "amount": 0.05,
+          "unit": "µg/kg/min",
+          "display": "0.05 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:5"
+      },
+      {
+        "id": "vasopressor",
+        "action": "setRate",
+        "dose": {
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:s4:0"
+      },
+      {
+        "id": "vasopressor",
+        "action": "stop",
+        "previousDose": {
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:s5:0"
+      }
+    ],
+    "beforeStop": {
+      "temp": 37.2,
+      "hr": 86.20842129755327,
+      "rr": 20,
+      "sys": 118.06656906188516,
+      "dia": 73.45606234869261,
+      "spo2": 96
+    },
+    "afterStop": {
+      "temp": 37.2,
+      "hr": 78.3093654685513,
+      "rr": 20,
+      "sys": 142.06028915120837,
+      "dia": 85.52723416497481,
+      "spo2": 96
+    },
+    "exposure": {
+      "unit": "µg/kg/min",
+      "totalAmount": null,
+      "administrations": 2,
+      "sourceEventIds": [
+        "browser-support:doctor:combined-special:5",
+        "browser-support:doctor:s4:0",
+        "browser-support:doctor:s5:0"
+      ],
+      "currentRate": 0,
+      "stops": 1,
+      "rateChanges": 1,
+      "starts": 1
+    },
+    "orders": 0,
+    "journeys": [
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed"
+    ]
+  },
+  {
+    "mobile": false,
+    "mode": "apprentice",
+    "physicalAndroid": false,
+    "initialAck": [
+      [
+        "iv",
+        "pending"
+      ],
+      [
+        "monitor",
+        "pending"
+      ],
+      [
+        "albumin",
+        "pending"
+      ],
+      [
+        "transfusion",
+        "pending"
+      ],
+      [
+        "amphotericin",
+        "pending"
+      ],
+      [
+        "vasopressor",
+        "pending"
+      ]
+    ],
+    "receipts": [
+      {
+        "id": "albumin",
+        "action": "administration",
+        "dose": {
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:2"
+      },
+      {
+        "id": "transfusion",
+        "action": "administration",
+        "dose": {
+          "amount": 1,
+          "unit": "unidad",
+          "display": "1 unidad",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:3"
+      },
+      {
+        "id": "amphotericin",
+        "action": "administration",
+        "dose": {
+          "amount": 0.7,
+          "unit": "mg/kg",
+          "display": "0.7 mg/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:4"
+      },
+      {
+        "id": "vasopressor",
+        "action": "start",
+        "dose": {
+          "amount": 0.05,
+          "unit": "µg/kg/min",
+          "display": "0.05 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:5"
+      },
+      {
+        "id": "vasopressor",
+        "action": "setRate",
+        "dose": {
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:s4:0"
+      },
+      {
+        "id": "vasopressor",
+        "action": "stop",
+        "previousDose": {
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:s5:0"
+      }
+    ],
+    "beforeStop": {
+      "temp": 37.2,
+      "hr": 86.20842129755327,
+      "rr": 20,
+      "sys": 118.06656906188516,
+      "dia": 73.45606234869261,
+      "spo2": 96
+    },
+    "afterStop": {
+      "temp": 37.2,
+      "hr": 78.3093654685513,
+      "rr": 20,
+      "sys": 142.06028915120837,
+      "dia": 85.52723416497481,
+      "spo2": 96
+    },
+    "exposure": {
+      "unit": "µg/kg/min",
+      "totalAmount": null,
+      "administrations": 2,
+      "sourceEventIds": [
+        "browser-support:doctor:combined-special:5",
+        "browser-support:doctor:s4:0",
+        "browser-support:doctor:s5:0"
+      ],
+      "currentRate": 0,
+      "stops": 1,
+      "rateChanges": 1,
+      "starts": 1
+    },
+    "orders": 0,
+    "journeys": [
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed"
+    ]
+  },
+  {
+    "mobile": true,
+    "mode": "solo",
+    "physicalAndroid": false,
+    "initialAck": [
+      [
+        "iv",
+        "pending"
+      ],
+      [
+        "monitor",
+        "pending"
+      ],
+      [
+        "albumin",
+        "pending"
+      ],
+      [
+        "transfusion",
+        "pending"
+      ],
+      [
+        "amphotericin",
+        "pending"
+      ],
+      [
+        "vasopressor",
+        "pending"
+      ]
+    ],
+    "receipts": [
+      {
+        "id": "albumin",
+        "action": "administration",
+        "dose": {
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:2"
+      },
+      {
+        "id": "transfusion",
+        "action": "administration",
+        "dose": {
+          "amount": 1,
+          "unit": "unidad",
+          "display": "1 unidad",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:3"
+      },
+      {
+        "id": "amphotericin",
+        "action": "administration",
+        "dose": {
+          "amount": 0.7,
+          "unit": "mg/kg",
+          "display": "0.7 mg/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:4"
+      },
+      {
+        "id": "vasopressor",
+        "action": "start",
+        "dose": {
+          "amount": 0.05,
+          "unit": "µg/kg/min",
+          "display": "0.05 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:5"
+      },
+      {
+        "id": "vasopressor",
+        "action": "setRate",
+        "dose": {
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:s4:0"
+      },
+      {
+        "id": "vasopressor",
+        "action": "stop",
+        "previousDose": {
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:s5:0"
+      }
+    ],
+    "beforeStop": {
+      "temp": 37.2,
+      "hr": 86.20842129755327,
+      "rr": 20,
+      "sys": 118.06656906188516,
+      "dia": 73.45606234869261,
+      "spo2": 96
+    },
+    "afterStop": {
+      "temp": 37.2,
+      "hr": 78.3093654685513,
+      "rr": 20,
+      "sys": 142.06028915120837,
+      "dia": 85.52723416497481,
+      "spo2": 96
+    },
+    "exposure": {
+      "unit": "µg/kg/min",
+      "totalAmount": null,
+      "administrations": 2,
+      "sourceEventIds": [
+        "browser-support:doctor:combined-special:5",
+        "browser-support:doctor:s4:0",
+        "browser-support:doctor:s5:0"
+      ],
+      "currentRate": 0,
+      "stops": 1,
+      "rateChanges": 1,
+      "starts": 1
+    },
+    "orders": 0,
+    "journeys": [
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed"
+    ]
+  },
+  {
+    "mobile": true,
+    "mode": "apprentice",
+    "physicalAndroid": false,
+    "initialAck": [
+      [
+        "iv",
+        "pending"
+      ],
+      [
+        "monitor",
+        "pending"
+      ],
+      [
+        "albumin",
+        "pending"
+      ],
+      [
+        "transfusion",
+        "pending"
+      ],
+      [
+        "amphotericin",
+        "pending"
+      ],
+      [
+        "vasopressor",
+        "pending"
+      ]
+    ],
+    "receipts": [
+      {
+        "id": "albumin",
+        "action": "administration",
+        "dose": {
+          "amount": 1.5,
+          "unit": "g/kg",
+          "display": "1.5 g/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:2"
+      },
+      {
+        "id": "transfusion",
+        "action": "administration",
+        "dose": {
+          "amount": 1,
+          "unit": "unidad",
+          "display": "1 unidad",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:3"
+      },
+      {
+        "id": "amphotericin",
+        "action": "administration",
+        "dose": {
+          "amount": 0.7,
+          "unit": "mg/kg",
+          "display": "0.7 mg/kg",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:4"
+      },
+      {
+        "id": "vasopressor",
+        "action": "start",
+        "dose": {
+          "amount": 0.05,
+          "unit": "µg/kg/min",
+          "display": "0.05 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:combined-special:5"
+      },
+      {
+        "id": "vasopressor",
+        "action": "setRate",
+        "dose": {
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:s4:0"
+      },
+      {
+        "id": "vasopressor",
+        "action": "stop",
+        "previousDose": {
+          "amount": 0.02,
+          "unit": "µg/kg/min",
+          "display": "0.02 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "browser-support:doctor:s5:0"
+      }
+    ],
+    "beforeStop": {
+      "temp": 37.2,
+      "hr": 86.20842129755327,
+      "rr": 20,
+      "sys": 118.06656906188516,
+      "dia": 73.45606234869261,
+      "spo2": 96
+    },
+    "afterStop": {
+      "temp": 37.2,
+      "hr": 78.3093654685513,
+      "rr": 20,
+      "sys": 142.06028915120837,
+      "dia": 85.52723416497481,
+      "spo2": 96
+    },
+    "exposure": {
+      "unit": "µg/kg/min",
+      "totalAmount": null,
+      "administrations": 2,
+      "sourceEventIds": [
+        "browser-support:doctor:combined-special:5",
+        "browser-support:doctor:s4:0",
+        "browser-support:doctor:s5:0"
+      ],
+      "currentRate": 0,
+      "stops": 1,
+      "rateChanges": 1,
+      "starts": 1
+    },
+    "orders": 0,
+    "journeys": [
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed",
+      "confirmed"
+    ]
+  }
+]
