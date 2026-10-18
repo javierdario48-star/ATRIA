@@ -47,6 +47,9 @@ export function confirmedClinicalMissteps(patient,caseDef){
  if(caseDef?.id==='APP-001'&&exposures.furosemide?.administrations&&
     lung.confirmedFluidMl<3000)
   notes.push('Furosemida sin sobrecarga demostrada en APP-001');
+ if(caseDef?.id==='PERI-SEC-001'&&exposures.furosemide?.administrations&&
+    lung.confirmedFluidMl<3000)
+  notes.push('Furosemida en peritonitis secundaria con hipovolemia, sin sobrecarga demostrada');
  if((exposures.furosemide?.totalAmount??0)>160)
   notes.push('Dosis acumuladas de furosemida superiores a la pauta del caso');
  return {...lung,adverseCount:Math.min(4,lung.adverseCount+notes.length),

@@ -123,7 +123,7 @@ export async function createApplication({document,window,content,signal}){
    <button class="mode" disabled><b>Cooperativo</b><small>2–4 jugadores · pendiente de integrar.</small></button>
    <button class="mode" disabled><b>Competitivo</b><small>2–4 jugadores · pendiente de integrar.</small></button></div>
    <label class="field">Caso<select id="caseChoice">${content.cases.map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join('')}</select></label>
-   <p class="note">CIRR y APP-001: evaluación, estudios, tratamiento y cierre con XP. Otros casos: navegación y estudios. Tutor, voz y multijugador siguen en migración.</p>
+   <p class="note">CIRR, APP-001 y peritonitis secundaria: evaluación, estudios, tratamiento y cierre con XP. Otros casos: navegación y estudios. Tutor, voz y multijugador siguen en migración.</p>
    <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);
  }
  function selectRecipient(kind,patientUid=null){
@@ -225,7 +225,7 @@ export async function createApplication({document,window,content,signal}){
       open('<div id="caseResult">'+caseDebriefHTML(receipt)+'</div><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button><button data-action="close">Seguir viendo el caso</button></div>','outcome');
     }});
    lastClinicalFrame=window.performance.now();
-   close();resetChat(['CIRR-001','APP-001'].includes(s.caseId)?'Guardia clínica. Evaluación, estudios, tratamiento y cierre disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
+   close();resetChat(['CIRR-001','APP-001','PERI-SEC-001'].includes(s.caseId)?'Guardia clínica. Evaluación, estudios, tratamiento y cierre disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
   }
   if(button.dataset.action==='patient-chart'){
    const p=world.snapshot().patients.find(p=>p.uid===clinicalUI.patientUid());if(p)clinicalUI.showPatient(p);

@@ -12,11 +12,19 @@ const scenarios=[
  {id:'wrong-diagnosis',caseId:'APP-001',diagnosis:'cirrosis',exam:true},
  {id:'missing-exam',caseId:'APP-001',diagnosis:'apendicitis aguda',exam:false},
  {id:'accepted-team',caseId:'APP-001',diagnosis:'apendicitis aguda',exam:true},
- {id:'medical-focus',caseId:'CIRR-001',diagnosis:'cirrosis',exam:true}
+ {id:'medical-focus',caseId:'CIRR-001',diagnosis:'cirrosis',exam:true},
+ {id:'secondary-missing-diagnosis',caseId:'PERI-SEC-001',diagnosis:'',exam:false},
+ {id:'secondary-urgent-specific',caseId:'PERI-SEC-001',diagnosis:'peritonitis secundaria',exam:false},
+ {id:'secondary-broad-diagnosis',caseId:'PERI-SEC-001',diagnosis:'peritonitis',exam:true},
+ {id:'secondary-documented-focus',caseId:'PERI-SEC-001',diagnosis:'peritonitis secundaria',exam:true}
 ];
 const sources=loadNativeReferenceSources487(),results=[];
 for(const scenario of scenarios){
  const legacy=createNativeReferenceRuntime487({caseId:scenario.caseId,sources}),p=legacy.ctx.sim;
+ // Peritonitis also refreshes its bedside action after a response. Stub only
+ // that presentation sink, as in the historical live-native journey fixture.
+ legacy.ctx.document.createElement=()=>({style:{},textContent:'',onclick:null});
+ legacy.ctx.document.body.appendChild=()=>{};
  p.diagnosis=scenario.diagnosis;
  if(scenario.exam){p.examDone=true;p.lastVitalsKnown=true;}
  legacy.ctx.nurseNatural('Enfermera cirugía');legacy.ctx.nurseNatural('Enfermera cirugía');

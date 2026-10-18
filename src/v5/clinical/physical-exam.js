@@ -1,4 +1,4 @@
-// Effective ns421-clinical-exam findings, deliberately limited to the two
+// Effective ns421-clinical-exam findings, deliberately limited to the
 // migrated cases. Neither undefined findings nor an untouched organ are normal.
 import {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
 import {readNeurologicalState,readPatientObservations} from './patient-observations.js';
@@ -8,6 +8,9 @@ const findings={
  'CIRR-001':{appearance:'Adelgazado.',skin:'Arañas vasculares y eritema palmar.',
   inspection:'Abdomen globoso, con distensión por líquido.',palpation:'Ascitis moderada; abdomen globoso.',
   spleen:'Esplenomegalia.',percussion:'Matidez compatible con líquido abdominal.'},
+ 'PERI-SEC-001':{appearance:'Permanece inmóvil para evitar dolor.',
+  inspection:'Abdomen distendido; respiración costal y superficial.',
+  palpation:'Defensa y contractura difusas, Blumberg positivo.',bowel:'Ruidos hidroaéreos muy disminuidos.'},
  'APP-001':{appearance:'Molestia con el movimiento.',
   palpation:'Dolor máximo en fosa ilíaca derecha y punto de McBurney; defensa localizada y Blumberg positivo. Dolor con maniobra del psoas. Sin contractura generalizada.'}
 };

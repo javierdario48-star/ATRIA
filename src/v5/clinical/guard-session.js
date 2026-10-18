@@ -3,6 +3,7 @@ import {createNativeClinicalPort} from '../adapters/native-clinical-port.js';
 import {createStudyService} from './studies.js';
 import {createCirrCare} from './cirr-care.js';
 import {createAppCare} from './app-care.js';
+import {createPeritonitisCare} from './peritonitis-care.js';
 import {createProgressionLedger} from './progression.js';
 import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
@@ -46,7 +47,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // not a replacement for the native APP/CIRR physiological owner.
  const pharmacology=createCasePharmacology({cases:content.cases,therapies:content.therapies});
  const care=caseData.id==='CIRR-001'?createCirrCare(nativePatient,caseData,options):
-  caseData.id==='APP-001'?createAppCare(nativePatient,caseData,options):null;
+  caseData.id==='APP-001'?createAppCare(nativePatient,caseData,options):
+  caseData.id==='PERI-SEC-001'?createPeritonitisCare(nativePatient,caseData,options):null;
  const studies=createStudyService(content.cases),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
  const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))];
  const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map(),waitingForAccess=new Map();
@@ -58,7 +60,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // same native case formulary and dose/device parsers; never preview effects.
  // Single orders still return their existing per-intervention rejection.
  const migratedTherapies=new Set(['oxygen',...Object.keys(IV_MEDICINES),
-  ...(caseData.id==='APP-001'?['npo']:['espironolactona','sal_restriccion','paracentesis_ter'])]);
+  ...(caseData.id==='APP-001'?['npo']:caseData.id==='CIRR-001'?['espironolactona','sal_restriccion','paracentesis_ter']:[])]);
  function validateClinicalBatch(intents){
   if(intents.length<2)return null;
   for(const intent of intents){
@@ -184,7 +186,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   return out;
  }
  function eligibleDestinations(){
-  return care&&!nativePatient.caseEnded?(CASE_CLOSURE_RULES_487[caseData.id]?.destinations||[]).filter(id=>closureReadiness(id)?.ready):[];
+  return care&&!nativePatient.caseEnded?(CASE_CLOSURE_RULES_487[caseData.id]?.destinations||
+   (caseData.id==='PERI-SEC-001'?['quirofano']:[])).filter(id=>closureReadiness(id)?.ready):[];
  }
  const publishReadiness=()=>authority.reportCareReadiness({patientUid:nativePatient.uid,destinations:eligibleDestinations()});
  function resultText(item,label){
@@ -262,7 +265,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    // A long presentation frame must preserve adverse episodes, support changes
    // and fatal exposure in the SAME clock/executor path. A pending medicine
    // only selects time resolution; effects still require actual administration.
-   if((nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
+   if((caseData.id==='PERI-SEC-001'||nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
      nativePatient.pendingTreatments?.some(x=>survivalSensitiveIV.has(x.id)))&&deltaRealSeconds>.25){
     const ready=[];
     for(let elapsed=0;elapsed<deltaRealSeconds-1e-9;elapsed+=.25)
@@ -381,7 +384,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    eligibleDestinations:eligibleDestinations(),
-   closure:copy(closureReadiness(caseData.id==='APP-001'?'quirofano':'sala'))};},
+   closure:copy(closureReadiness(['APP-001','PERI-SEC-001'].includes(caseData.id)?'quirofano':'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }

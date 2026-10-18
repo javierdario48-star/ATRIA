@@ -31,6 +31,10 @@ jobs:
         run: node qa/v5/characterize-surgery-native.mjs
       - name: Original special support doses, respiratory harm, infusion titration and withdrawal remain equivalent
         run: node qa/v5/characterize-special-support-native.mjs
+      - name: Original secondary peritonitis longitudinal physiology and genuine preparation remain equivalent
+        run: node qa/v5/characterize-peritonitis-native.mjs
+      - name: Actual V19 peritonitis quality and career XP remain graded and equivalent
+        run: node qa/v5/characterize-peritonitis-quality.mjs
       - name: Executable V4 clinical harm-and-exposure parity gate (QA-only)
         run: node qa/v5/clinical-parity-gate.mjs
       - name: Contrast rapid iatrogenic fluid response against untreated legacy control
@@ -95,6 +99,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/special-support-browser.mjs
+      - name: Complete secondary peritonitis from actual desktop and Pixel UI through safe surgical handoff and unique XP
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/peritonitis-browser.mjs
       - name: Desktop, Android emulation, landscape, transitions, IME and disposal
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright

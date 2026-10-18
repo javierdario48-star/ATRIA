@@ -1,0 +1,239 @@
+{
+  "schema": "atria-secondary-quality-parity/v1",
+  "allMatched": true,
+  "sourceHashes": {
+    "base": "a3013bbb7c2fe657acd064e46ed56600830a09933ed63e1be439b04a9d8fa7ef",
+    "correction": "7eec1a3b98c136ba3e0df90c05c9d2c984cb8950469208f5787968e4b18316b2"
+  },
+  "fixtureLimits": "Native diagnostic/study/consult prerequisites supplied; V5 uses actual dialogue, examination, studies, IV administration and consultation. Native numeric quality and native career/finalizer run unchanged.",
+  "results": [
+    {
+      "id": "emergency-minimum",
+      "history": [],
+      "studies": [],
+      "reassess": false,
+      "quality": {
+        "score": 84,
+        "diagnosis": 15,
+        "history": 10,
+        "safety": 22,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 115,
+      "nativeXp": 115,
+      "nativeQuality": {
+        "score": 84,
+        "diagnosis": 15,
+        "history": 10,
+        "safety": 22,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": true,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "sourceControlUnchanged": true
+    },
+    {
+      "id": "minimum-reassessed",
+      "history": [
+        "migration"
+      ],
+      "studies": [],
+      "reassess": true,
+      "quality": {
+        "score": 87,
+        "diagnosis": 15,
+        "history": 10,
+        "safety": 25,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 118,
+      "nativeXp": 118,
+      "nativeQuality": {
+        "score": 87,
+        "diagnosis": 15,
+        "history": 10,
+        "safety": 25,
+        "studies": 12,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": true,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "sourceControlUnchanged": true
+    },
+    {
+      "id": "full-care",
+      "history": [
+        "onset",
+        "migration",
+        "movement",
+        "ileus"
+      ],
+      "studies": [
+        "peri_cbc",
+        "peri_ct",
+        "peri_gas"
+      ],
+      "reassess": true,
+      "quality": {
+        "score": 95,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 128,
+      "nativeXp": 128,
+      "nativeQuality": {
+        "score": 95,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": true,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "sourceControlUnchanged": true
+    },
+    {
+      "id": "overtesting",
+      "history": [
+        "onset",
+        "migration",
+        "movement",
+        "ileus"
+      ],
+      "studies": [
+        "peri_cbc",
+        "peri_ct",
+        "peri_gas",
+        "renal"
+      ],
+      "reassess": true,
+      "quality": {
+        "score": 94,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 20,
+        "efficiency": 4,
+        "penalty": 1,
+        "extraStudies": 1,
+        "extraStudyPenalty": 1,
+        "handoffCredit": 0
+      },
+      "xp": 126,
+      "nativeXp": 126,
+      "nativeQuality": {
+        "score": 94,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 20,
+        "efficiency": 4,
+        "penalty": 0,
+        "notes": [
+          "Eficiencia: 1 estudio(s) no prioritario(s) para esta semilla."
+        ],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": true,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "sourceControlUnchanged": true
+    },
+    {
+      "id": "original-alternative-quality",
+      "history": [
+        "onset",
+        "migration",
+        "movement",
+        "ileus"
+      ],
+      "studies": [
+        "peri_cbc",
+        "peri_ct",
+        "peri_gas"
+      ],
+      "reassess": true,
+      "alternative": true,
+      "quality": {
+        "score": 90,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 20,
+        "studies": 15,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 122,
+      "nativeXp": 122,
+      "nativeQuality": {
+        "score": 90,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 20,
+        "studies": 15,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": true,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "sourceControlUnchanged": true
+    }
+  ]
+}

@@ -25,7 +25,7 @@ for(const filename of sources){
  if(filename!=='src/v5/app/application.js'&&/\brequestAnimationFrame\s*\(/.test(code))
   errors.push(filename+': a second animation loop outside the application owner');
  if(filename.startsWith('src/v5/ui/')&&
-   /from\s*['"]\.\.\/(?:adapters\/|core\/room-authority|clinical\/(?:cirr-care|app-care|guard-session))/.test(code))
+   /from\s*['"]\.\.\/(?:adapters\/|core\/room-authority|clinical\/(?:cirr-care|app-care|acute-care|peritonitis-care|guard-session|native-app|native-cirr|native-peritonitis))/.test(code))
   errors.push(filename+': UI importing the clinical executor or authority');
  if(/(?:from\s*['"]|import\s*\(['"])(?:\.\.\/)+integration\//.test(code))
   errors.push(filename+': direct dependency on a legacy patch bundle');

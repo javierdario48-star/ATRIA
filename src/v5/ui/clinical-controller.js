@@ -142,7 +142,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  }
  function showTreatment(){
   const p=state()?.patient;if(!p)return;
-  const isApp=p.caseId==='APP-001',placeholder=isApp?'colocar una vía, ceftriaxona 1 g y metronidazol 500 mg':'espironolactona 100 mg oral';
+  const acute=['APP-001','PERI-SEC-001'].includes(p.caseId),placeholder=acute?'colocar una vía, ceftriaxona 1 g y metronidazol 500 mg':'espironolactona 100 mg oral';
   open('<h2>Tratamiento · Enfermería</h2><div id="therapyRecords"></div><label class="field">Orden<input id="therapyOrder" maxlength="200" placeholder="'+esc(placeholder)+'"></label>'+
    '<p class="note">Las indicaciones pendientes se distinguen de las intervenciones ejecutadas. Confirmá la preparación, la vía y la respuesta del paciente.</p>'+
    '<div class="actions"><button data-action="request-surgery">Solicitar interconsulta a cirugía</button></div>'+

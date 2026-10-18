@@ -27,8 +27,10 @@ function deliver(f,key='dose-a',start=0){
  const req=f.care.execute(cmd(f.p,key),at(start));
  assert.equal(req.status,'pending');
  assert.equal(f.p.administrationLog.length,start===0?0:1);
- assert.deepEqual(f.care.advance(at(start),at(start+1.49),1.49),[]);
- const done=f.care.advance(at(start+1.49),at(start+1.51),.02);
+ // Effective V19 preparation is 550ms in APP/CIRR/PERI, verified against
+ // actual legacy receipts. The previous 1.5s assumption was incorrect.
+ assert.deepEqual(f.care.advance(at(start),at(start+.54),.54),[]);
+ const done=f.care.advance(at(start+.54),at(start+.56),.02);
  assert.equal(done.length,1);assert.equal(done[0].receipt.sourceEventId,key);
  return done[0];
 }

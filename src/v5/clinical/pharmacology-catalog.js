@@ -117,7 +117,7 @@ function evaluate(c,p,atNativeMinute,catalog){
   if(['albumin','transfusion','vasopressor'].includes(id))changes={...changes,
    offsets:support.drugs[id]?.offsets??zero(),phase:support.drugs[id]?.active?1:0};
   if(!changes.known&&rule.mechanism!=='unmodeled')throw Error('missing inherited drug evaluation '+id);
-  const {scale,warnings}=caseModifiers(c,id),ownedAxes=OWNER[c.id]?.[id]||[];
+  const {scale,warnings}=caseModifiers(c,id),ownedAxes=c.id==='PERI-SEC-001'?VITALS:OWNER[c.id]?.[id]||[];
   // A native case-specific writer keeps its already verified axes. This is a
   // projection, not an extra update on liveVitals; no double application.
   const offsets=Object.fromEntries(VITALS.map(axis=>[axis,
