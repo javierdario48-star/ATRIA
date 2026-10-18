@@ -4,6 +4,7 @@ import {createClinicalHttp,clinicalActorId} from './clinical-http.js';
 const key='a'.repeat(64),actorId=clinicalActorId(key);
 const room={id:'room',mode:'coop',hostUserId:actorId,allAccepted:true,members:[{userId:actorId,name:'A'},{userId:'guest',name:'B'}]};
 function fixture(verified=room){const calls=[];return {calls,http:createClinicalHttp({
+ enabled:true,
  authority:{async bootstrap(input){calls.push(input);return {epoch:0};},async transact(input){calls.push(input);return {epoch:1};}},
  verifiedRoom:async()=>verified,probe:async()=>({durable:true,kind:'private-blob-cas'})})};}
 test('HTTP bootstrap uses authenticated accepted roster; payload cannot choose actor, host or members',async()=>{
@@ -23,4 +24,14 @@ test('a storage probe failure is diagnosable server-side without exposing backen
  const response=await route({method:'POST',body:{clientKey:key,action:'capability'}});
  assert.equal(response.status,503);assert.equal(response.body.error,'private-durable-clinical-store-unavailable');
  assert.equal(observed.cause,error);assert.equal(observed.action,'capability');
+});
+
+test('production cannot start a parallel clinical authority before the recovery client is integrated',async()=>{
+ let invoked=false;const route=createClinicalHttp({authority:{bootstrap:async()=>{invoked=true;},transact:async()=>{invoked=true;}},verifiedRoom:async()=>room,probe:async()=>({durable:true})});
+ for(const action of ['start','sync']){
+  const response=await route({method:'POST',body:{action,clientKey:key,roomId:'room',caseId:'PERI-PBE-001'}});
+  assert.equal(response.status,503);assert.equal(response.body.code,'recovery-client-not-enabled');
+ }
+ assert.equal(invoked,false);
+ const capability=await route({method:'POST',body:{action:'capability',clientKey:key}});assert.equal(capability.body.clinicalEnabled,false);
 });

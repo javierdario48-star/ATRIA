@@ -7,12 +7,13 @@ const statusFor={forbidden:403,missing:404,exists:409,busy:409,fenced:409,incomp
 /** The transport verifies initial social invitation once. Thereafter the
  * durable roster and possession of the existing device secret suffice, even
  * if the ephemeral social cache or original host has disappeared. */
-export function createClinicalHttp({authority,verifiedRoom,probe,onUnavailable=()=>{}}){
+export function createClinicalHttp({authority,verifiedRoom,probe,onUnavailable=()=>{},enabled=false}){
  return async function route({method,headers={},body={}}){
   if(method!=='POST')return {status:405,body:{error:'POST required'}};
   let actorId;try{actorId=clinicalActorId(body.clientKey);}catch{return {status:401,body:{error:'invalid recovery credential'}};}
   try{
-   if(body.action==='capability')return {status:200,body:await probe()};
+   if(body.action==='capability')return {status:200,body:{...await probe(),clinicalEnabled:enabled}};
+   if(!enabled)return {status:503,body:{error:'clinical recovery client not enabled',code:'recovery-client-not-enabled'}};
    if(typeof body.roomId!=='string'||!/^[-a-zA-Z0-9_]{1,100}$/.test(body.roomId))return {status:400,body:{error:'invalid room'}};
    if(body.action==='start'){
     const room=await verifiedRoom(headers,body.roomId,actorId);

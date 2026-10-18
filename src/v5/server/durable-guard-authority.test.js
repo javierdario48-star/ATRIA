@@ -26,7 +26,7 @@ async function nearBed(f){const r=await f.read(),p=r.runtime.world.state.patient
  const target=w.navigation.center(...p.approach);await f.call('a',{motion:[target.x,target.y]});await f.call('b',{motion:[target.x,target.y]});
  f.tick(20000);await f.call();assert(await f.read());
 }
-test('disk/process recreation preserves pending nurse, preparation, aliases and same-event ACK after lost response',async()=>{
+test('database reopen and service recreation preserve pending nurse, preparation, aliases and same-event ACK after lost response',async()=>{
  const f=await fixture();try{
   await nearBed(f);
   const envelope={id:'dose',text:'Enfermera monitor y ceftriaxona 1 g y albumina 1.5 g/kg'};
