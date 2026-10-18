@@ -16,7 +16,7 @@ export function createPrivateBlobGuardStore({get,put,BlobPreconditionFailedError
   }catch(error){if(error instanceof BlobPreconditionFailedError||error?.name==='BlobPreconditionFailedError')return null;
    // A first-create race (or a lost successful first response) is reconciled
    // through the same origin-consistent private read, never an overwrite.
-   if(etag===null){const existing=await this.read(id);if(existing)return null;}
+   if(etag===null){try{const existing=await this.read(id);if(existing)return null;}catch{/* preserve the original write failure */}}
    throw error;}}
  });
 }

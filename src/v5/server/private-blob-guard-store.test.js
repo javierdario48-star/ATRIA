@@ -21,5 +21,5 @@ test('private Blob CAS rejects stale writers and never uses CDN caching, public 
 });
 test('access/storage failure never silently falls back to public or memory',async()=>{
  const f=createPrivateBlobGuardStore({BlobPreconditionFailedError:Conflict,get:async()=>{throw Error('private access unavailable');},put:async()=>{throw Error('public-only store');}});
- await assert.rejects(f.read('room'),/private access/);await assert.rejects(f.compareAndSwap('room',null,{patient:'never public'}),/private access/);
+ await assert.rejects(f.read('room'),/private access/);await assert.rejects(f.compareAndSwap('room',null,{patient:'never public'}),/public-only store/);
 });
