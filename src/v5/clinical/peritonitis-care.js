@@ -1,4 +1,5 @@
 import {createAcuteCare} from './acute-care.js';
+import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {csPeritonitisEvaluate487} from '../../clinical/peritonitis-pathways.js';
 import {csDxMatchesCase487} from '../../clinical/diagnostic-impression-487.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
@@ -37,18 +38,24 @@ export function peritonitisClosureQuality487(p,c,snapshot,destination,safeHandof
   handoffCredit:safeHandoff?score-subtotal:0};
 }
 export function createPeritonitisCare(p,c,options){
- if(c.id!=='PERI-SEC-001')throw Error('only secondary peritonitis executor is connected');
+ if(CLINICAL_EXECUTORS[c.id]!=='peritonitis')throw Error('peritonitis executor is not connected');
  return createAcuteCare(p,c,options,{
   initialVitals:initialPeritonitisVitals,initialize:initializeNativePeritonitis,
   advanceVitals:advancePeritonitisVitals,onAdministration:applyConfirmedSepsisAdministration487,
   evaluate(patient,caseData,destination){
    const snapshot=peritonitisClosureSnapshot(patient,caseData,options.cases),out=csPeritonitisEvaluate487(snapshot);
+   // The legacy metadata conflates the medical PBE seed with an operation.
+   // No source-control procedure is executable in this bedside migration.
+   out.procedurePerformed=false;
+   destination??=out.action;
    const correct=out.ready&&out.action===destination;
    out.quality=peritonitisClosureQuality487(patient,caseData,snapshot,destination,correct);
    if(out.ready&&!correct){out.ready=false;out.action=null;out.missing.push('Elegir el destino que corresponde al estado clínico: '+out.label+'.');}
    return out;
   },
   reassessmentMessage:patient=>'Reevaluación: FC '+Math.round(patient.liveVitals.hr)+', PA '+Math.round(patient.liveVitals.sys)+'/'+Math.round(patient.liveVitals.dia)+'. Continuar vigilancia y coordinación con el equipo receptor.',
-  closureMessage:receipt=>'Derivación a quirófano confirmada. El control del foco se realizará allí. '+receipt.quality.score+'/100 · +'+receipt.xp+' XP.'
+  closureMessage:receipt=>(receipt.destination==='quirofano'?'Derivación a quirófano confirmada. El control del foco se realizará allí. ':
+   receipt.destination==='uti'?'Derivación a UTI confirmada. Continuar soporte y tratamiento en el equipo receptor. ':
+   'Internación en sala confirmada. Continuar tratamiento y vigilancia renal. ')+receipt.quality.score+'/100 · +'+receipt.xp+' XP.'
  });
 }

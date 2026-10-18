@@ -20,7 +20,7 @@ const observations=excerpt(stateScript,' function neurological(',' function care
  excerpt(dialogue,' function symptoms(',' window.nsSymptoms=');
 const cases=JSON.parse(fs.readFileSync('src/v5/content/cases.json','utf8'));
 let comparisons=0;
-for(const caseId of ['CIRR-001','APP-001','PERI-SEC-001']){
+for(const caseId of ['CIRR-001','APP-001','PERI-SEC-001','PERI-PBE-001']){
  const c=cases.find(c=>c.id===caseId),[sys,dia]=c.vitals.bp.split('/').map(Number),base={...c.vitals,sys,dia};
  for(const change of [{},{sys:85,rr:28},{spo2:88},{hr:75,sys:120,dia:78,temp:37,rr:18}]){
   const vitals={...base,...change},p={caseId,liveVitals:vitals,baselineVitals:base},
@@ -40,4 +40,4 @@ for(const caseId of ['CIRR-001','APP-001','PERI-SEC-001']){
 }
 console.log(JSON.stringify({test:'effective-original-examination',comparisons,passed:true,
  referenceSHA256:createHash('sha256').update(reference).digest('hex'),
- scope:'CIRR/APP/PERI-SEC techniques, native pain, real-sign trend, hypotension, hypoxemia and tachypnea; no unmodeled organ reported normal'}));
+ scope:'CIRR/APP/PERI-SEC/PBE techniques, native pain, real-sign trend, hypotension, hypoxemia and tachypnea; no unmodeled organ reported normal'}));

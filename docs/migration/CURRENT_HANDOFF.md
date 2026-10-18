@@ -6,6 +6,8 @@
 Actualizado: 18-10-2026 UTC. Repositorio `javierdario48-star/ATRIA`.
 **Única rama de implementación:** `atria-5.0-core-rebuild-experimental`.
 
+**C3.b en validación:** [PBE en el ejecutor compartido](C3B_PBE.md). Se conectaron anamnesis/examen originales, convalecencia ns423, Glasgow14→15 condicionado, paracentesis40s/renal45s, albúmina/cobertura y daño renal reales, Sala/UTI y calidad/XP. Local:414V5,40core, PBE12/173 y calidad4 recorridos; PERI-SEC21/505 preservados. La certificación del SHA publicado requiere todavía navegador escritorio/Pixel y ambas CI; no presentar PBE como certificado antes de ese resultado. Después: **C3.c TER y C5.a Cooperativo clínico real antes de los otros ocho casos**.
+
 Este handoff reemplaza el resumen acumulativo anterior. Su contenido íntegro sigue disponible en [la versión de 26cc058](https://github.com/javierdario48-star/ATRIA/blob/26cc058a30485191749b6df485f2a5221c525676/docs/migration/CURRENT_HANDOFF.md), además de los informes de cada paso. No se borró código funcional.
 
 **C3.a.1 (QA extendida; NO un nuevo ejecutor clínico):** [estudio comparativo longitudinal de secuencias](STEP_13B_PERITONITIS_TIMING_PARITY.md). Nueve escenarios nuevos con medicamentos diferidos/repetidos, escritura y múltiples ejes × 349 observaciones, emparejados al runtime V4 efectivo (error vital máximo 6.40e-12), sumados a 12 escenarios/156 puntos originales = 21/505 para el fenotipo típico PERI-SEC. Solo pruebas; todos los medicamentos/casos, variantes V3, 24h completas y multijugador V5 siguen pendientes. [CI de código](https://github.com/javierdario48-star/ATRIA/actions/runs/39092610789). No reconfigurar el motor por esta certificación.

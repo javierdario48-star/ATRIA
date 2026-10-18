@@ -14,7 +14,7 @@ const read=n=>JSON.parse(fs.readFileSync('src/v5/content/'+n+'.json','utf8')),
  content={cases:read('cases'),defaultDoses:read('default-doses'),therapies:read('therapies')};
 const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 let comparisons=0;
-for(const caseId of ['CIRR-001','APP-001','PERI-SEC-001']){
+for(const caseId of ['CIRR-001','APP-001','PERI-SEC-001','PERI-PBE-001']){
  const c=content.cases.find(c=>c.id===caseId),sim={gameMinute:0,patientInstance:{uid:'reference-context'},monitorTherapies:new Map(),interventions:new Set(),administrationLog:[]};
  const ctx=vm.createContext({C:c,sim,norm,complete:()=>{},oldReply:q=>{
   const fact=csAnamnesisFact(c,q);return fact?.text||c.intents.find(i=>i.keys.some(k=>norm(q)===norm(k)))?.answers[0]||null;
@@ -36,5 +36,5 @@ for(const caseId of ['CIRR-001','APP-001','PERI-SEC-001']){
  }
  session.dispose();
 }
-console.log(JSON.stringify({test:'effective-original-dialogue',comparisons,profiles:3,passed:true,
+console.log(JSON.stringify({test:'effective-original-dialogue',comparisons,profiles:4,passed:true,
  scope:'native pain dimensions, short follow-ups and fever duration; corrections to falsely credited history covered separately'}));

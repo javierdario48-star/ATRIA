@@ -1,0 +1,315 @@
+{
+  "schema": "atria-peritonitis-case-parity/v1",
+  "caseId": "PERI-PBE-001",
+  "allMatched": true,
+  "scope": "Typical effective native phenotype, genuine preparation/administration and explicit native clock epochs; pre-death horizon <=120 real seconds. No source-control procedure or simulated study transport.",
+  "sourceHashes": [
+    {
+      "id": "qa-native-nursing",
+      "sha256": "ce45bf3cbaaca402ba225782ca11d8c8393fb511a1ed69b8b147172d6c4f4827"
+    },
+    {
+      "id": "native-normalization",
+      "sha256": "aec25bd006bcf26b01bbd9b8ef8996033c44860f4156752538c3a17958ecf3bd"
+    },
+    {
+      "id": "native-case-lookup",
+      "sha256": "2e9d160438155436df9965fa1d5c4d0106afbb780782cd679e8792553e89a217"
+    },
+    {
+      "id": "native-initial-state",
+      "sha256": "fd6e26acf90f429d551733fdf5c6fbb43c91fcec5886787137e558101211599f"
+    },
+    {
+      "id": "native-therapy",
+      "sha256": "2cdc142f1f01e4fbd12104809b362295abf79fd8cefb7ee0f450798d18d15fd7"
+    },
+    {
+      "id": "native-order-intervention",
+      "sha256": "f0856324742f3cc938279b993a6622774dd7d4885c35019a5d41906e49d11fe3"
+    },
+    {
+      "id": "native-tick",
+      "sha256": "8f029c94159b995bda2b007ce59dbf94881cdf83d171d67ebfb8f169d406bcae"
+    },
+    {
+      "id": "native-fatal-exposure",
+      "sha256": "190925d14bcde87661c6a66d3a14d1c3501ee29550c32b1babc52cfce6a2519c"
+    },
+    {
+      "id": "cs-safe-v0180-clinical",
+      "sha256": "e2c28b6a9a1346418057c48ecf9c98779e6e95b364cf85531b0b19eabc585cc8"
+    },
+    {
+      "id": "cs-safe-v0190-clinical",
+      "sha256": "506338a0a8ee0e14d2050904c60dd32e1dbbfd5ed0c4dfc6aad404b62cec83a0"
+    },
+    {
+      "id": "cs-safe-v0203-binding",
+      "sha256": "bb5c37ac43ec08854ea95b8f4fbd08ea7738b44f6e03e75271fe523d6eecf003"
+    },
+    {
+      "id": "cs-rebase174-v3-clinical",
+      "sha256": "4c0c471761db2fcdc81a5d01aab4a77e0588e97d03ba7ad75e419da88b3a5fdd"
+    },
+    {
+      "id": "atria-phase4-composite-orders",
+      "sha256": "1a8486362d5a2148283bad01aeaa90f971cecf8b33593de4716b691edafd9795"
+    },
+    {
+      "id": "atria-phase7-nursing-receipts",
+      "sha256": "1f51be923832b983292032b18c194986935f6c5693114bf0544b101faac2da84"
+    },
+    {
+      "id": "atria-peritonitis-487-disposition",
+      "sha256": "214a322dc763e9567161bfc490d5b4ee03ee70bc17f39873534279ca5e3f187a"
+    },
+    {
+      "id": "atria-surgical-nursing-487",
+      "sha256": "948707d387260248f03b8aaacd1f12c155f1f5dfc275c0c9eea3770d407e60be"
+    },
+    {
+      "id": "atria-nurse-voice-routing-487",
+      "sha256": "830041ecd7091b0a0b509c541ce2b7b0eae2c808505d56badc483dd98d175e94"
+    },
+    {
+      "id": "atria-nurse-execution-487",
+      "sha256": "c017bb1c6c0ea221e7c20b7c09607e1174b9b168460dab6b44cbaaeb398a0266"
+    },
+    {
+      "id": "atria-manual-monitor-iv-487",
+      "sha256": "f203b30c4d88d6f146ecfca6d7e625802d63541ade9500bb5436d2dc6ef86d5e"
+    },
+    {
+      "id": "atria-grace-survival-487",
+      "sha256": "3394d71b1ce04dcd728af6cd1e5d0bd2d2819ffcd50f50dfd91e7160092a0484"
+    },
+    {
+      "id": "atria-secondary-sepsis-bridge-487",
+      "sha256": "c64b8ff301f891d0bd987d18c3b3e28139185db3b5eb2a0822df517782ca6f2f"
+    },
+    {
+      "id": "atria-critical-rescue-487",
+      "sha256": "f16c3caf80dd101d6ae8951d6757bb9d8ae75b6621a59aa6998df4cf9dba3a04"
+    },
+    {
+      "id": "atria-verified-clinical-chat-487",
+      "sha256": "9e2a822db648c4df1e869e17686830e3c8121758544e74e52eb028753d8ff095"
+    },
+    {
+      "id": "atria-case-aware-pharmacology-487",
+      "sha256": "62837cdbd5d84e9f03aec07333703d547e8b6220ac5d9aa5737eaa66b6ccc747"
+    },
+    {
+      "id": "cs-v412-monitor-recognition",
+      "sha256": "c345996f3cb888fb1d75952203ba9f13709e7ecad0f8e7827adf40c33382d6c1"
+    },
+    {
+      "id": "ns421-clinical-state",
+      "sha256": "f83b849ecb18bc224c5d45fc742a06d978755a8e7a7ccfd0226f3ed23b2a6cbd"
+    },
+    {
+      "id": "ns422-treatment-context",
+      "sha256": "31ed6e0d9bfd1da23a88653b916a3c5e387409d2c80ee3fb7de785ce02805901"
+    },
+    {
+      "id": "ns423-evolution",
+      "sha256": "f8c8f30ca9985b3913f49890130f6088e2f66f35bd8925702d21357ecb047b5f"
+    },
+    {
+      "id": "atria-morphine-487",
+      "sha256": "de6ffc1c8774951e6fc5bc7a382b85b8e59ce12c2a128712ad115932d0fb90c2"
+    },
+    {
+      "id": "atria-urgent-care-487",
+      "sha256": "16e189b07143c970bf6b37c3b07ce5df65101caac86b1a5b3085c6ef01c5a88c"
+    },
+    {
+      "id": "atria-case-completion-487",
+      "sha256": "e8bcf739e7fa8ecc6d126b87da8cde0f921267babeddf0cf1d7fc08a1369742f"
+    }
+  ],
+  "results": [
+    {
+      "id": "abandonment",
+      "orders": [],
+      "maxError": {
+        "vitals": 1.9753088054130785e-12,
+        "physiology": 4.551914400963142e-14
+      },
+      "observations": 14
+    },
+    {
+      "id": "reference",
+      "orders": [
+        "ceftriaxona 1 g",
+        "albumina 1.5 g/kg"
+      ],
+      "maxError": {
+        "vitals": 1.8616219676914625e-12,
+        "physiology": 5.284661597215745e-14
+      },
+      "observations": 14
+    },
+    {
+      "id": "without-albumin",
+      "orders": [
+        "ceftriaxona 1 g"
+      ],
+      "maxError": {
+        "vitals": 1.7195134205394424e-12,
+        "physiology": 5.284661597215745e-14
+      },
+      "observations": 14
+    },
+    {
+      "id": "albumin-without-coverage",
+      "orders": [
+        "albumina 1.5 g/kg"
+      ],
+      "maxError": {
+        "vitals": 1.8900436771218665e-12,
+        "physiology": 4.551914400963142e-14
+      },
+      "observations": 14
+    },
+    {
+      "id": "alternative",
+      "orders": [
+        "imipenem 500 mg",
+        "albumina 1.5 g/kg"
+      ],
+      "maxError": {
+        "vitals": 1.8616219676914625e-12,
+        "physiology": 5.284661597215745e-14
+      },
+      "observations": 14
+    },
+    {
+      "id": "wrong-nephrotoxic",
+      "orders": [
+        "amikacina 500 mg"
+      ],
+      "maxError": {
+        "vitals": 1.9184653865522705e-12,
+        "physiology": 4.551914400963142e-14
+      },
+      "observations": 14
+    },
+    {
+      "id": "repeated-nephrotoxic",
+      "timeline": [
+        {
+          "at": 0,
+          "orders": [
+            "amikacina 500 mg"
+          ]
+        },
+        {
+          "at": 24,
+          "orders": [
+            "amikacina 500 mg"
+          ]
+        }
+      ],
+      "maxError": {
+        "vitals": 1.9895196601282805e-12,
+        "physiology": 4.551914400963142e-14
+      },
+      "observations": 15
+    },
+    {
+      "id": "late-rescue",
+      "timeline": [
+        {
+          "at": 30,
+          "orders": [
+            "ceftriaxona 1 g",
+            "albumina 1.5 g/kg",
+            "Ringer 500 ml"
+          ]
+        }
+      ],
+      "maxError": {
+        "vitals": 1.9610979506978765e-12,
+        "physiology": 5.090372567906343e-14
+      },
+      "observations": 14
+    },
+    {
+      "id": "hypovolemic-diuresis",
+      "orders": [
+        "furosemida 40 mg"
+      ],
+      "maxError": {
+        "vitals": 1.9610979506978765e-12,
+        "physiology": 4.551914400963142e-14
+      },
+      "observations": 14
+    },
+    {
+      "id": "overload",
+      "orders": [
+        "Ringer 6000 ml"
+      ],
+      "maxError": {
+        "vitals": 1.9895196601282805e-12,
+        "physiology": 4.551914400963142e-14
+      },
+      "observations": 14
+    },
+    {
+      "id": "albumin-excess",
+      "timeline": [
+        {
+          "at": 0,
+          "orders": [
+            "albumina 1.5 g/kg"
+          ]
+        },
+        {
+          "at": 12,
+          "orders": [
+            "albumina 1.5 g/kg"
+          ]
+        },
+        {
+          "at": 24,
+          "orders": [
+            "albumina 1.5 g/kg"
+          ]
+        }
+      ],
+      "maxError": {
+        "vitals": 1.9610979506978765e-12,
+        "physiology": 4.54081217071689e-14
+      },
+      "observations": 16
+    },
+    {
+      "id": "typing-during-treatment",
+      "timeline": [
+        {
+          "at": 0,
+          "orders": [
+            "ceftriaxona 1 g",
+            "albumina 1.5 g/kg"
+          ]
+        },
+        {
+          "at": 10,
+          "typing": true
+        },
+        {
+          "at": 35,
+          "typing": false
+        }
+      ],
+      "maxError": {
+        "vitals": 1.8758328224066645e-12,
+        "physiology": 5.67323965583455e-14
+      },
+      "observations": 16
+    }
+  ]
+}

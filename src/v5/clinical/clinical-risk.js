@@ -50,6 +50,16 @@ export function confirmedClinicalMissteps(patient,caseDef){
  if(caseDef?.id==='PERI-SEC-001'&&exposures.furosemide?.administrations&&
     lung.confirmedFluidMl<3000)
   notes.push('Furosemida en peritonitis secundaria con hipovolemia, sin sobrecarga demostrada');
+ // Native peritonitis avoid lists already drive renal stress in the sole
+ // physiology owner. Preserve that clinical mistake in the shared debrief;
+ // this is a safety assessment, never another organ-toxicity equation.
+ if(['PERI-PBE-001','PERI-TER-001'].includes(caseDef?.id)){
+  for(const id of ['amikacin','gentamicin'])
+   if(caseDef.physiology?.avoid?.includes(id)&&exposures[id]?.administrations)
+    notes.push((patient.administrationLog.find(x=>x.id===id)?.label||id)+' con riesgo renal documentado en '+caseDef.id);
+  if(caseDef.physiology?.avoid?.includes('furosemide')&&exposures.furosemide?.administrations&&lung.confirmedFluidMl<3000)
+   notes.push('Furosemida con hipovolemia y riesgo renal en '+caseDef.id);
+ }
  if((exposures.furosemide?.totalAmount??0)>160)
   notes.push('Dosis acumuladas de furosemida superiores a la pauta del caso');
  return {...lung,adverseCount:Math.min(4,lung.adverseCount+notes.length),

@@ -69,3 +69,25 @@ export function legacySepsisVitalsOffsets487(state,baseline,c){
   rr:dI*11-dO*8,sys:dV*82+dS*42+dC*28-dI*18,
   dia:dV*38+dS*32-dI*8,spo2:dO*23-dI*2.5};
 }
+/** Effective ns423 recovery correction, AFTER native disease/bridge/rescue.
+ * It projects state only. Source already controlled (or not surgical), adequate
+ * real coverage and actual circulatory support are all necessary.
+ */
+export function advanceLegacySepsisConvalescence487(state,baseline,c,minutes,{
+ coverageScore=0,coverageRamp=0,fluidActive=false,fluidMl=0,albuminDose=0
+}={}){
+ validCase(c);
+ if(!Number.isFinite(minutes)||minutes<0||minutes>1.5+1e-9)throw Error('invalid convalescence clock step');
+ const p={...state},needsFluid=c.keyInterventions.includes('fluid')||c.physiology.supportive?.includes('fluid');
+ const adequateFluid=!needsFluid||fluidMl>=Number(c.physiology.doseRules?.fluid?.amount||500)*.5;
+ // V4 DEFAULT_THERAPY_DOSES.albumin.amount is 1.5 g/kg; half is its
+ // original convalescence threshold, not another albumin effect/dose policy.
+ if(coverageScore>=.8&&coverageRamp===1&&p.sourceControlled&&p.inflammation<=baseline.inflammation*.7&&
+   (fluidActive&&adequateFluid||albuminDose>=.75)){
+  p.effectiveVolume+=minutes*.12*(.86-p.effectiveVolume);
+  p.svr+=minutes*.08*(.92-p.svr);p.contractility+=minutes*.05*(.95-p.contractility);
+  p.oxygenation+=minutes*.05*(1-p.oxygenation);
+  p.renalReserve+=minutes*.02*(Math.min(1,baseline.renalReserve+.05)-p.renalReserve);
+ }
+ return p;
+}

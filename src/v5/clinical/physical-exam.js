@@ -5,6 +5,9 @@ import {readNeurologicalState,readPatientObservations} from './patient-observati
 export {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
 const unspecified='Sin hallazgo específico modelado en este escenario.';
 const findings={
+ 'PERI-PBE-001':{appearance:'Respuestas lentas al ingreso.',inspection:'Abdomen distendido por ascitis abundante.',
+  palpation:'Molestia difusa leve; sin defensa ni Blumberg franco.',percussion:'Matidez por líquido abdominal.',
+  neuro:'Atención enlentecida, sin focalidad neurológica modelada.'},
  'CIRR-001':{appearance:'Adelgazado.',skin:'Arañas vasculares y eritema palmar.',
   inspection:'Abdomen globoso, con distensión por líquido.',palpation:'Ascitis moderada; abdomen globoso.',
   spleen:'Esplenomegalia.',percussion:'Matidez compatible con líquido abdominal.'},

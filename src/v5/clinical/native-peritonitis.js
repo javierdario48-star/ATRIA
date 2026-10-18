@@ -1,4 +1,5 @@
-import {initialLegacySepsisPhysiology487,advanceLegacySepsisPhysiology487,
+import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {initialLegacySepsisPhysiology487,advanceLegacySepsisPhysiology487,advanceLegacySepsisConvalescence487,
  legacySepsisVitalsOffsets487} from './sepsis-physiology-487-core.js';
 import {csSecondaryBridgePhysiology487} from '../../clinical/secondary-sepsis-bridge-487.js';
 import {csCriticalRescuePhysiology487} from '../../clinical/critical-rescue-487.js';
@@ -11,7 +12,7 @@ const axes=['temp','hr','rr','sys','dia','spo2'];
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
 export function initialPeritonitisVitals(c){
- if(c.id!=='PERI-SEC-001')throw Error('secondary peritonitis policy requires PERI-SEC-001');
+ if(CLINICAL_EXECUTORS[c.id]!=='peritonitis')throw Error('peritonitis case policy is not connected');
  const [sys,dia]=c.vitals.bp.split('/').map(Number);
  return {temp:c.vitals.temp,hr:c.vitals.hr,rr:c.vitals.rr,sys,dia,spo2:c.vitals.spo2};
 }
@@ -100,6 +101,10 @@ export function advancePeritonitisVitals(p,c,dt,atNativeMinute){
   view.phys=p.phys;view.gameMinute=at;
   csSecondaryBridgePhysiology487(view,c,before,dm,false);
   csCriticalRescuePhysiology487(view,c,dm,false);
+  p.phys=advanceLegacySepsisConvalescence487(p.phys,p.physBaseline,c,dm,{
+   coverageScore:coverage.score,coverageRamp:coverage.ramp,
+   fluidActive:view.monitorTherapies.has('fluid'),fluidMl:view.therapyTotals.fluidMl,
+   albuminDose:view.monitorTherapies.get('albumin')?.dose?.amount||0});
   const progression=legacySepsisVitalsOffsets487(p.phys,p.physBaseline,c),base=initialPeritonitisVitals(c);
   const target=Object.fromEntries(axes.map(axis=>[axis,base[axis]+progression[axis]]));
   if(view.monitorTherapies.has('oxygen')){target.spo2+=6;target.rr-=2;}

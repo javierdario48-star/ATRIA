@@ -1,5 +1,10 @@
 // Effective ns421-patient-dialogue profiles. Only existing complete V5 cases.
 export const PATIENT_PROFILES=Object.freeze({
+ 'PERI-PBE-001':{place:'Me molesta toda la panza, que está muy hinchada.',
+  onset:'Creo que desde ayer estoy peor… no me acuerdo bien.',radiation:'No sé señalar otro lugar; me molesta toda la panza.',
+  character:'Es una molestia en toda la panza, no muy fuerte.',intensity:4,
+  worse:'Me molesta más con la panza tan hinchada.',relief:'No sé bien… no encontré algo que me alivie.',
+  symptoms:'Tengo la panza cada vez más hinchada y tuve fiebre. Mi familia me trajo.'},
  'CIRR-001':{place:'Siento presión en toda la panza, por lo hinchada que está.',
   onset:'Hace varias semanas; fue aumentando de a poco.',radiation:'No se me corre a otro lado.',
   character:'Es pesadez y presión, no un dolor fuerte.',intensity:3,

@@ -1,4 +1,5 @@
 import {createRoomAuthority} from '../core/room-authority.js';
+import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {createNativeClinicalPort} from '../adapters/native-clinical-port.js';
 import {createStudyService} from './studies.js';
 import {createCirrCare} from './cirr-care.js';
@@ -46,9 +47,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // do not yet have an active clinical executor). This is a PURE interpreter,
  // not a replacement for the native APP/CIRR physiological owner.
  const pharmacology=createCasePharmacology({cases:content.cases,therapies:content.therapies});
- const care=caseData.id==='CIRR-001'?createCirrCare(nativePatient,caseData,options):
-  caseData.id==='APP-001'?createAppCare(nativePatient,caseData,options):
-  caseData.id==='PERI-SEC-001'?createPeritonitisCare(nativePatient,caseData,options):null;
+ const factory={cirr:createCirrCare,app:createAppCare,peritonitis:createPeritonitisCare}[CLINICAL_EXECUTORS[caseData.id]];
+ const care=factory?factory(nativePatient,caseData,options):null;
  const studies=createStudyService(content.cases),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
  const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))];
  const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map(),waitingForAccess=new Map();
@@ -186,8 +186,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   return out;
  }
  function eligibleDestinations(){
-  return care&&!nativePatient.caseEnded?(CASE_CLOSURE_RULES_487[caseData.id]?.destinations||
-   (caseData.id==='PERI-SEC-001'?['quirofano']:[])).filter(id=>closureReadiness(id)?.ready):[];
+  if(!care||nativePatient.caseEnded)return [];
+  const destinations=CASE_CLOSURE_RULES_487[caseData.id]?.destinations;
+  if(destinations)return destinations.filter(id=>closureReadiness(id)?.ready);
+  const out=closureReadiness();return out?.ready?[out.action]:[];
  }
  const publishReadiness=()=>authority.reportCareReadiness({patientUid:nativePatient.uid,destinations:eligibleDestinations()});
  function resultText(item,label){
@@ -265,7 +267,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    // A long presentation frame must preserve adverse episodes, support changes
    // and fatal exposure in the SAME clock/executor path. A pending medicine
    // only selects time resolution; effects still require actual administration.
-   if((caseData.id==='PERI-SEC-001'||nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
+   if((CLINICAL_EXECUTORS[caseData.id]==='peritonitis'||nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
      nativePatient.pendingTreatments?.some(x=>survivalSensitiveIV.has(x.id)))&&deltaRealSeconds>.25){
     const ready=[];
     for(let elapsed=0;elapsed<deltaRealSeconds-1e-9;elapsed+=.25)
@@ -384,7 +386,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    eligibleDestinations:eligibleDestinations(),
-   closure:copy(closureReadiness(['APP-001','PERI-SEC-001'].includes(caseData.id)?'quirofano':'sala'))};},
+   closure:copy(closureReadiness(CLINICAL_EXECUTORS[caseData.id]==='peritonitis'?undefined:caseData.id==='APP-001'?'quirofano':'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }

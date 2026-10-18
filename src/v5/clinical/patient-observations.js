@@ -6,7 +6,10 @@ import {confirmedMorphineResponse487} from './morphine-487.js';
 export function readNeurologicalState(p){
  if(p.neurology)return {...p.neurology};
  const impaired=Number(p.hypoperfusionNativeMinutes||0);
- return impaired>=6?{eye:2,verbal:2,motor:4}:impaired>=2?{eye:3,verbal:3,motor:5}:{eye:4,verbal:5,motor:6};
+ const confused=p.caseId==='PERI-PBE-001',recovered=confused&&
+  p.phys?.inflammation<Number(p.physBaseline?.inflammation||.62)*.8&&p.liveVitals?.sys>=100;
+ return impaired>=6?{eye:2,verbal:2,motor:4}:impaired>=2?{eye:3,verbal:3,motor:5}:
+  {eye:4,verbal:confused&&!recovered?4:5,motor:6};
 }
 function observationIndex(v,n){
  const map=(v.sys+2*v.dia)/3;
@@ -15,7 +18,7 @@ function observationIndex(v,n){
   Math.max(0,8-v.rr)+Math.max(0,v.temp-37.5)*.8+Math.max(0,15-(n.eye??4)-(n.verbal??5)-(n.motor??6));
 }
 export function readPatientObservations(p,caseId=p.caseId,atNativeMinute=0){
- const neuro=readNeurologicalState(p),initial=observationIndex(p.baselineVitals||p.liveVitals,{eye:4,verbal:5,motor:6}),
+ const neuro=readNeurologicalState(p),initial=observationIndex(p.baselineVitals||p.liveVitals,readNeurologicalState({caseId})),
   delta=observationIndex(p.liveVitals,neuro)-initial;
  const trend=delta>.8?'worse':delta<-.8?'better':'unchanged';
  const intensity=PATIENT_PROFILES[caseId]?.intensity;

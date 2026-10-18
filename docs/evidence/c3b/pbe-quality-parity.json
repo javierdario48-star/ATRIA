@@ -1,0 +1,199 @@
+{
+  "caseId": "PERI-PBE-001",
+  "allMatched": true,
+  "sourceHashes": {
+    "base": "a3013bbb7c2fe657acd064e46ed56600830a09933ed63e1be439b04a9d8fa7ef",
+    "correction": "7eec1a3b98c136ba3e0df90c05c9d2c984cb8950469208f5787968e4b18316b2"
+  },
+  "scope": "Original numeric grading and career unchanged; native prerequisite records supplied; V5 uses actual interview, examination, study deadlines, administrations and consultation. No operation.",
+  "results": [
+    {
+      "id": "minimum",
+      "history": [
+        "cirrhosis"
+      ],
+      "studies": [
+        "pbe_paracentesis"
+      ],
+      "reassess": false,
+      "quality": {
+        "score": 89,
+        "diagnosis": 15,
+        "history": 10,
+        "safety": 22,
+        "studies": 12,
+        "treatment": 25,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 121,
+      "nativeXp": 121,
+      "nativeQuality": {
+        "score": 89,
+        "diagnosis": 15,
+        "history": 10,
+        "safety": 22,
+        "studies": 12,
+        "treatment": 25,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": false,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "noOperation": true
+    },
+    {
+      "id": "complete",
+      "history": [
+        "cirrhosis",
+        "ascites",
+        "fever",
+        "confusion"
+      ],
+      "studies": [
+        "pbe_paracentesis",
+        "pbe_renal"
+      ],
+      "reassess": true,
+      "quality": {
+        "score": 100,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 25,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 133,
+      "nativeXp": 133,
+      "nativeQuality": {
+        "score": 100,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 25,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": false,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "noOperation": true
+    },
+    {
+      "id": "excess-studies",
+      "history": [
+        "cirrhosis",
+        "ascites",
+        "fever",
+        "confusion"
+      ],
+      "studies": [
+        "pbe_paracentesis",
+        "pbe_renal",
+        "pbe_cbc"
+      ],
+      "reassess": true,
+      "quality": {
+        "score": 99,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 25,
+        "efficiency": 4,
+        "penalty": 1,
+        "extraStudies": 1,
+        "extraStudyPenalty": 1,
+        "handoffCredit": 0
+      },
+      "xp": 132,
+      "nativeXp": 132,
+      "nativeQuality": {
+        "score": 99,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 25,
+        "efficiency": 4,
+        "penalty": 0,
+        "notes": [
+          "Eficiencia: 1 estudio(s) no prioritario(s) para esta semilla."
+        ],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": false,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "noOperation": true
+    },
+    {
+      "id": "alternative-coverage",
+      "history": [
+        "cirrhosis",
+        "ascites",
+        "fever",
+        "confusion"
+      ],
+      "studies": [
+        "pbe_paracentesis",
+        "pbe_renal"
+      ],
+      "reassess": true,
+      "alternative": true,
+      "quality": {
+        "score": 95,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "extraStudies": 0,
+        "extraStudyPenalty": 0,
+        "handoffCredit": 0
+      },
+      "xp": 128,
+      "nativeXp": 128,
+      "nativeQuality": {
+        "score": 95,
+        "diagnosis": 15,
+        "history": 15,
+        "safety": 25,
+        "studies": 15,
+        "treatment": 20,
+        "efficiency": 5,
+        "penalty": 0,
+        "notes": [],
+        "safe": true,
+        "safeReasons": [],
+        "autonomy": 100,
+        "critical": false,
+        "missingEssential": []
+      },
+      "oneAward": true,
+      "noOperation": true
+    }
+  ]
+}
