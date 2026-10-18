@@ -36,6 +36,11 @@ try{
   await page.locator('[data-diagnosis="Peritonitis secundaria"]').click();await page.locator('#diagnosisInput').press('Enter');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis secundaria');
   await page.locator('#modalClose').click();
+  // The original surgeon requires DOCUMENTED shock. Hidden initial vitals
+  // cannot substitute for the doctor's actual measurement.
+  await page.locator('#peopleButton').click();await page.locator('[data-action="record-vitals"]').click();
+  await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.lastVitalsKnown);
+  await page.locator('#modalClose').click();
   await send('Enfermera cirugía');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
   assert.equal((await state()).patient.consults[0].accepted,true,'specific initial shock permits urgent assessment');
   assert.deepEqual((await state()).eligibleDestinations,[],'urgent acceptance is not completed care');
