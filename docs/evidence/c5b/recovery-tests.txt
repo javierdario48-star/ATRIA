@@ -1,0 +1,30 @@
+✔ complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: APP-001 (700.356221ms)
+✔ complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: CIRR-001 (514.56359ms)
+✔ complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: PERI-SEC-001 (617.675229ms)
+✔ complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: PERI-PBE-001 (440.856331ms)
+✔ complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: PERI-TER-001 (499.069836ms)
+✔ checkpoint rejects incompatible schema, patient, room and clock before restoring clinical execution (4.942182ms)
+✔ death settles a pending receiving-team consultation before a recovery checkpoint (161.57353ms)
+✔ mid-preparation checkpoint preserves alias receipts, CIRR oral work and pending pressor rate/stop (126.685524ms)
+✔ HTTP bootstrap uses authenticated accepted roster; payload cannot choose actor, host or members (2.083171ms)
+✔ recovery identity survives social-cache loss; only the durable membership authorizes it (0.606892ms)
+✔ a storage probe failure is diagnosable server-side without exposing backend details to clients (0.567983ms)
+✔ production cannot start a parallel clinical authority before the recovery client is integrated (0.392509ms)
+✔ database reopen and service recreation preserve pending nurse, preparation, aliases and same-event ACK after lost response (687.323703ms)
+✔ concurrent orders serialize through one durable lease, reject stale ownership and retain original event identities (403.466832ms)
+✔ expired worker cannot publish or ACK after a new generation recovers; crash lease survives reopening (99.779929ms)
+✔ elapsed recovery is bounded without discarding time; abandonment reaches original shock/death once (767.487093ms)
+✔ closing while a colleague is offline durably awards each doctor once across all reloads (1424.458744ms)
+✔ an original case without a migrated executor cannot create a durable clinical guard (12.121739ms)
+✔ independent Node processes contend on the same durable SQLite revision with exactly one winner (75.682521ms)
+✔ real epoch timestamps cannot accumulate fractional-step drift during long recovery (692.222606ms)
+✔ private Blob CAS rejects stale writers and never uses CDN caching, public access or random paths (3.728322ms)
+✔ access/storage failure never silently falls back to public or memory (0.393862ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4368.161884

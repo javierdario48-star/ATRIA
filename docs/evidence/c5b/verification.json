@@ -1,0 +1,112 @@
+{
+  "checkpoint": "C5.b.1",
+  "baseSha": "980eeca10596ae678164e0a698c46922bd6cd874",
+  "codeSha": "8fc417799f5ae35585e831adf20907a5acc6da77",
+  "scope": "operational checkpoint, reusable recovery authority, atomic adapters; public recovery client not integrated",
+  "local": {
+    "v5": {
+      "passed": 460,
+      "failed": 0
+    },
+    "core": {
+      "passed": 40,
+      "failed": 0
+    },
+    "recovery": {
+      "passed": 22,
+      "failed": 0,
+      "scenarios": [
+        "complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: APP-001",
+        "complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: CIRR-001",
+        "complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: PERI-SEC-001",
+        "complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: PERI-PBE-001",
+        "complete checkpoint resumes physical access, queued drugs, duplicate studies and consultations: PERI-TER-001",
+        "checkpoint rejects incompatible schema, patient, room and clock before restoring clinical execution",
+        "death settles a pending receiving-team consultation before a recovery checkpoint",
+        "mid-preparation checkpoint preserves alias receipts, CIRR oral work and pending pressor rate/stop",
+        "HTTP bootstrap uses authenticated accepted roster; payload cannot choose actor, host or members",
+        "recovery identity survives social-cache loss; only the durable membership authorizes it",
+        "a storage probe failure is diagnosable server-side without exposing backend details to clients",
+        "production cannot start a parallel clinical authority before the recovery client is integrated",
+        "database reopen and service recreation preserve pending nurse, preparation, aliases and same-event ACK after lost response",
+        "concurrent orders serialize through one durable lease, reject stale ownership and retain original event identities",
+        "expired worker cannot publish or ACK after a new generation recovers; crash lease survives reopening",
+        "elapsed recovery is bounded without discarding time; abandonment reaches original shock/death once",
+        "closing while a colleague is offline durably awards each doctor once across all reloads",
+        "an original case without a migrated executor cannot create a durable clinical guard",
+        "independent Node processes contend on the same durable SQLite revision with exactly one winner",
+        "real epoch timestamps cannot accumulate fractional-step drift during long recovery",
+        "private Blob CAS rejects stale writers and never uses CDN caching, public access or random paths",
+        "access/storage failure never silently falls back to public or memory"
+      ]
+    },
+    "historicalRegression": "npm test completed exit 0 on initial C5.b.1 clinical implementation; later changes server-only, exact final regression verified in CI",
+    "buildV5Files": 114,
+    "buildCoreModules": 15,
+    "boundaryProductionModules": 79,
+    "newClinicalTimers": 0,
+    "comparativeV4": {
+      "pbe": {
+        "scenarios": 12,
+        "measurements": 173
+      },
+      "tertiary": {
+        "scenarios": 13,
+        "measurements": 187
+      },
+      "secondarySequence": {
+        "scenarios": 9,
+        "measurements": 349
+      },
+      "secondaryTotal": {
+        "scenarios": 21,
+        "measurements": 505
+      }
+    }
+  },
+  "ci": {
+    "v5": {
+      "runId": 39139029892,
+      "status": "success",
+      "jobs": 11
+    },
+    "historical": {
+      "runId": 39139029901,
+      "status": "success",
+      "jobs": 4
+    },
+    "jobEvidence": "ci-jobs.json"
+  },
+  "networkScope": {
+    "sqlite": "real on-disk WAL and atomic transactions, reopened services and independent Node CAS contenders; not production storage on Vercel",
+    "browserRegression": "existing C5.a public UI, separate Chromium processes 2/3/4, real WebRTC on CI loopback; no C5.b recovery UI claim",
+    "wan": "deployed API capability request only, failed closed with suspended Blob; no WAN clinical recovery or TURN claim"
+  },
+  "production": {
+    "clinicalEnabled": false,
+    "reason": "Blob store suspended; replica integration pending",
+    "storageEvidence": "storage-status.json",
+    "guardsStartSync": {
+      "status": 503,
+      "code": "recovery-client-not-enabled"
+    }
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-dy605rv50-javierdario4878-7324.vercel.app/",
+    "manifestHttp": 200,
+    "identicalFileHashes": 114,
+    "browserSmoke": "actual final preview loaded and entered through public UI",
+    "screenshot": "preview-lobby.jpg",
+    "screenshotGitBlob": "e3912baa73abe57482ff8579a7870ff3cfe711fc",
+    "codeSha": "8fc417799f5ae35585e831adf20907a5acc6da77",
+    "screenshotClientCodeSha": "0dd48f7ce6d595fb2dc824867e87a0f6aac04c00",
+    "screenshotClientMatchesFinalManifest": true
+  },
+  "pending": [
+    "working private durable store with verified consistent reads and CAS",
+    "integrate host and guests as clinical replicas; refuse old host packets after durable authority admission",
+    "persist per-device outbox and room reconnect route without relying on ephemeral social sessions",
+    "exercise all 12 requested interruptions through public UI with 2 then 3 and 4 independent browsers",
+    "lobby communication, WAN/NAT/TURN, then Competitive; no remaining case migration yet"
+  ]
+}
