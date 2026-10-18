@@ -87,9 +87,10 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   for(const p of world.patients){
    const [x,y]=screen(p.x,p.y),im=images.patient,h=40*scale,w=h*im.width/im.height;ctx.drawImage(im,x-w/2,y-h/2,w,h);
   }
-  const actors=[...world.nurses,...(world.expert?[world.expert]:[]),world.player].sort((a,b)=>a.y-b.y);
-  for(const a of actors){sprite(a.id==='self'?'player-'+a.color:a.kind==='vega'?'vega':'nurse',a,a.kind==='vega'?72:a.kind==='nurse'?57:62);}
+  const actors=[...world.nurses,...(world.others||[]),...(world.expert?[world.expert]:[]),world.player].sort((a,b)=>a.y-b.y);
+  for(const a of actors){sprite(a.id==='self'||a.kind==='doctor'?'player-'+a.color:a.kind==='vega'?'vega':'nurse',a,a.kind==='vega'?72:a.kind==='nurse'?57:62);}
   if(world.phase!=='title')label(world.player,world.player.name,world.player.level);
+  for(const a of world.others||[])label(a,a.name,a.level);
   if(world.expert)label(world.expert,'Dr. Vega');
   if(world.player.target){const [x,y]=screen(...world.player.target);ctx.strokeStyle='#ffd25f';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,9*scale,0,Math.PI*2);ctx.stroke();}
  }

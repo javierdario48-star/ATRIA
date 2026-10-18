@@ -5,6 +5,9 @@ import {createHospitalRenderer} from '../render/hospital.js';
 import {createPresentationTimeline} from '../render/presentation-timeline.js';
 import {createGuardSession} from '../clinical/guard-session.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {createCooperativeLink} from '../social/cooperative-link.js';
+import {createCooperativeReplica} from '../social/cooperative-replica.js';
+import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecycle.js';
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
@@ -31,7 +34,9 @@ export async function createApplication({document,window,content,signal}){
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
-  announcedDeathUid=null,pendingPatientAction=null;
+  announcedDeathUid=null,pendingPatientAction=null,announcedClosure=null,coopCaseId=null,
+  coopRoomId=null,replica=null,lastSharedPublish=0,sharedSequence=0,lastMotion='',lastRemoteRevision=-1,socialEnabled=false;
+ const messageEpoch=window.crypto.randomUUID(),cooperativeFlow=createCooperativeLifecycle();let pendingCoopLeave=false;
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
  const renderer=await createHospitalRenderer(canvas,content,{signal,window});
  const scheduler=new FrameScheduler({mobileRenderHz:60}),listeners=[];
@@ -63,6 +68,73 @@ export async function createApplication({document,window,content,signal}){
  function close(){if(dialog.open)dialog.close();delete dialog.dataset.panel;}
  const clinicalUI=createClinicalInterface({document,session:()=>guardSession,open,close,send:submitText,notify:toast,cases:content.cases,
   onTalk:uid=>selectRecipient('patient',uid)});
+ const social=createCooperativeLink({window,profile,
+  onSocial:()=>{if(destroyed)return;const s=social.state();if(world.snapshot().phase==='lobby'){
+   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster);renderSocialLists();}},
+  onRoom:room=>{if(destroyed)return;
+   if(room.allAccepted&&social.isHost()&&coopCaseId&&!coopRoomId&&cooperativeFlow.mayEnter('host',{phase:world.snapshot().phase,hasSession:!!guardSession}))startCooperativeHost(room);
+   if(pendingCoopLeave&&outcomeDelivered())enterLobby(true);},
+  onPacket:receiveCooperativePacket,onClose:()=>{if(coopRoomId&&!guardSession?.read().patient.caseEnded)enterLobby(false);}});
+ function renderSocialLists(){
+  const s=social.state(),list=ui('coopDoctors'),invitations=ui('coopInvitations');
+  if(list){const selected=new Set([...list.querySelectorAll('input:checked')].map(x=>x.value));
+   list.innerHTML=s.roster.filter(x=>x.userId!==s.user?.id).map(x=>'<label><input type="checkbox" value="'+esc(x.userId)+'" '+(selected.has(x.userId)?'checked':'')+'>'+esc(x.name)+'</label>').join('')||'<p>Esperando colegas conectados…</p>';}
+  if(invitations)invitations.innerHTML=s.invites.map(x=>'<div><b>'+esc(x.host.name)+'</b> invita a una guardia cooperativa. <button data-action="join-coop" data-room="'+esc(x.roomId)+'">Aceptar</button></div>').join('')||'<p>Sin invitaciones pendientes.</p>';
+ }
+ function showPeople(){socialEnabled=true;open('<h2>Personas · Cooperativo</h2><div id="coopInvitations"></div><p>Colegas en el lobby</p><div id="coopDoctors"></div><p class="note">Creá una guardia desde Hacer guardia → Cooperativo. Hasta cuatro médicos comparten el mismo paciente.</p><div class="actions"><button data-action="close">Cerrar</button></div>','people');renderSocialLists();}
+ function clinicalChanged(){renderGuardCommunication();if(outcomeId(guardSession?.read().patient))publishCooperativeState(window.performance.now(),true);}
+ function outcomeDelivered(){const s=social.state();return cooperativeFlow.delivered(guardSession?.read().patient,s.user?.id,s.room?.members||[]);}
+ function requestLobby(){
+  if(coopRoomId&&social.isHost()&&outcomeId(guardSession?.read().patient)&&!outcomeDelivered()){
+   pendingCoopLeave=true;publishCooperativeState(window.performance.now(),true);toast('Esperando que tus colegas reciban el resultado. Si están desconectados, deben reconectarse.');return;
+  }enterLobby(true);
+ }
+ function cancelSharedIntent(){cooperativeFlow.cancel();coopCaseId=null;pendingCoopLeave=false;social.leave();}
+ function startCooperativeHost(room){
+  coopRoomId=room.id;cooperativeFlow.bind(room.id);announcedClosure=null;announcedDeathUid=null;
+  world=createWorld(content,{...profile,id:social.state().user.id});
+  const members=room.members.map(x=>({id:x.userId,name:x.name,color:'navy'}));
+  world.enterGuard({mode:'coop',caseId:coopCaseId,patientUid:room.id+':patient',members});
+  const patient=world.snapshot().patients[0],hostId=social.state().user.id;
+  guardSession=createGuardSession({roomId:room.id,mode:'coop',actorId:hostId,actorName:profile.name,members,patient,content,
+   authenticate:id=>social.isMember(id)?{id,roomId:room.id}:null,
+   nursing:{enqueue:task=>world.enqueueNurseJourney(task),takeArrivals:()=>world.takeNurseArrivals(),accept:r=>world.acceptNurseClinicalResult(r)},
+   resolveContext:({actorId,targetPatientUid})=>({patientUid:world.patientInRangeFor(actorId,targetPatientUid||patient.uid),focusedNpc:actorId===hostId?focusedNpc:null}),
+   onChange:clinicalChanged});
+  lastClinicalFrame=window.performance.now();clinicalUI.reset();close();resetChat('Guardia cooperativa: un paciente, una autoridad y un chat compartido.');updateHud();
+ }
+ async function receiveCooperativePacket(sender,packet){
+  if(destroyed)return;
+  if(!coopRoomId&&packet.kind==='state'&&sender===social.state().room?.hostUserId&&cooperativeFlow.mayEnter('guest',{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:social.state().recovering})){
+   const room=social.state().room;if(packet.roomId!==room.id||!Object.hasOwn(CLINICAL_EXECUTORS,packet.clinical?.patient?.caseId))return;
+   coopRoomId=room.id;cooperativeFlow.bind(room.id);announcedClosure=null;announcedDeathUid=null;
+   world=createWorld(content,{...profile,id:social.state().user.id});world.enterGuard({mode:'coop',caseId:packet.clinical.patient.caseId,
+    patientUid:packet.clinical.patient.uid,members:room.members.map(x=>({id:x.userId,name:x.name})),authoritative:false});
+   replica=createCooperativeReplica({roomId:room.id,hostId:sender,send:social.send,storage:window.sessionStorage,onSnapshot:value=>{
+    world.applySharedSpatial(value.spatial);
+    if(value.clinical.room.revision!==lastRemoteRevision){lastRemoteRevision=value.clinical.room.revision;clinicalChanged();}
+    const id=outcomeId(value.clinical.patient);if(id)social.send(sender,{kind:'outcome.received',eventId:id,patientUid:value.clinical.patient.uid});
+   }});
+   guardSession=replica;clinicalUI.reset();close();resetChat('Guardia cooperativa conectada.');replica.apply(packet);renderGuardCommunication();lastClinicalFrame=window.performance.now();return;
+  }
+  if(!guardSession||!coopRoomId)return;
+  if(social.isHost()){
+   if(!social.isMember(sender))return;
+   if(packet.kind==='command'){
+    const value=packet.envelope;if(!value||typeof value.id!=='string'||typeof value.text!=='string')return;
+    const ack=await guardSession.post({id:value.id,text:value.text,...(value.targetPatientUid?{targetPatientUid:value.targetPatientUid}:{})},sender);
+    social.send(sender,{kind:'ack',ack});publishCooperativeState(window.performance.now(),true);
+   }
+   if(packet.kind==='motion'&&Array.isArray(packet.target)&&packet.target.length===2&&packet.target.every(Number.isFinite))world.targetRemote(sender,...packet.target);
+   if(packet.kind==='outcome.received'&&packet.patientUid===guardSession.read().patient.uid&&cooperativeFlow.confirm(packet.roomId,packet.eventId,sender,guardSession.read().patient,social.state().room.members)&&pendingCoopLeave&&outcomeDelivered())enterLobby(true);
+  }else if(sender===social.state().room?.hostUserId)replica?.apply(packet);
+ }
+ function publishCooperativeState(now,force=false){
+  if(!coopRoomId||!social.isHost()||!guardSession||!force&&now-lastSharedPublish<100)return;
+  lastSharedPublish=now;const s=world.snapshot(),id=social.state().user.id;
+  social.broadcast({kind:'state',roomId:coopRoomId,sequence:++sharedSequence,clinical:guardSession.read(),catalog:guardSession.catalog(),
+   spatial:{nurses:s.nurses,doctors:[{...s.player,id,kind:'doctor'},...s.others]}});
+ }
  function line(name,text,system=false){
   history.push({name,text,system});if(history.length>300)history.shift();
   const el=document.createElement('div');el.className='line'+(system?' system':'');
@@ -80,11 +152,15 @@ export async function createApplication({document,window,content,signal}){
   }
   ui('chatHistory').replaceChildren(fragment);ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
   clinicalUI.render();
+  const closure=guardSession.read().patient.closure;
+  if(coopRoomId&&closure?.closed)progress.award(closure);
   if(progress.read().receipts.length!==savedRewardCount){
    try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));savedRewardCount=progress.read().receipts.length;}
    catch{toast('Progreso confirmado en esta sesión; no se pudo guardar en este dispositivo.');}
   }
   updateHud();
+  if(closure?.closed&&announcedClosure!==closure.eventId){announcedClosure=closure.eventId;
+   open('<div id="caseResult">'+caseDebriefHTML(closure)+'</div><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button><button data-action="close">Seguir viendo el caso</button></div>','outcome');}
  }
  function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;focusedPatientUid=null;line('ATRIA',message,true);}
  function advanceClinicalTo(now){
@@ -103,7 +179,7 @@ export async function createApplication({document,window,content,signal}){
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard',clinical=guardSession?.read();
   const minute=Math.floor(clinical?.clock.gameMinute||0),total=8*60+15+minute;
-  ui('status').textContent=guard&&clinical?.patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':'Lobby local · 5.0 experimental';
+  ui('status').textContent=guard&&clinical?.patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='coop'?'Cooperativo':s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':social.state().user?'Lobby social · 5.0 experimental':'Lobby local · 5.0 experimental';
   if(guard)patientClinical.update(s.patients.find(p=>p.uid===clinical?.patient.uid),clinical);else patientClinical.hide();
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
   ui('peopleButton').textContent=guard?'Historia':'Personas';
@@ -112,20 +188,23 @@ export async function createApplication({document,window,content,signal}){
   input.placeholder=guard?'Hablar en la guardia…':'Hablar en el lobby…';
   document.body.dataset.phase=s.phase;document.body.dataset.generation=String(s.generation);
  }
- function enterLobby(){
+ function enterLobby(leaveShared=false){
   advanceClinicalTo(window.performance.now());
-  guardSession?.dispose();guardSession=null;announcedDeathUid=null;pendingPatientAction=null;clinicalUI.reset();patientWheel.hide();patientClinical.hide();close();world.enterLobby();resetChat('El lobby está listo para hablar.');
+  if(leaveShared)cancelSharedIntent();
+  guardSession?.dispose();guardSession=null;replica=null;coopRoomId=null;coopCaseId=null;lastMotion='';announcedClosure=null;announcedDeathUid=null;pendingPatientAction=null;clinicalUI.reset();patientWheel.hide();patientClinical.hide();close();world.enterLobby();resetChat('El lobby está listo para hablar.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;updateHud();
  }
  function guardSetup(){
+  if(draftMode==='coop')socialEnabled=true;
   open(`<h2>Hacer guardia</h2><p>Elegí la modalidad y el caso de práctica.</p><div class="modes">
    <button class="mode ${draftMode==='apprentice'?'active':''}" data-mode="apprentice"><b>Aprendiz</b><small>Con Dr. Vega. Navegación disponible; tutor clínico en migración.</small></button>
    <button class="mode ${draftMode==='solo'?'active':''}" data-mode="solo"><b>Solitario</b><small>Explorá el hospital con los recursos originales.</small></button>
-   <button class="mode" disabled><b>Cooperativo</b><small>2–4 jugadores · pendiente de integrar.</small></button>
+   <button class="mode ${draftMode==='coop'?'active':''}" data-mode="coop"><b>Cooperativo</b><small>2–4 médicos comparten la misma atención.</small></button>
    <button class="mode" disabled><b>Competitivo</b><small>2–4 jugadores · pendiente de integrar.</small></button></div>
    <label class="field">Caso<select id="caseChoice">${content.cases.map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join('')}</select></label>
+   ${draftMode==='coop'?'<p>Invitar colegas conectados</p><div id="coopDoctors"></div>':''}
    <p class="note">CIRR, APP-001, peritonitis secundaria, PBE y terciaria: evaluación, estudios, tratamiento y cierre con XP. Otros casos: navegación y estudios. Tutor, voz y multijugador siguen en migración.</p>
-   <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);
+   <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);renderSocialLists();
  }
  function selectRecipient(kind,patientUid=null){
   if(composition){deferredRecipient=kind;return;}
@@ -140,7 +219,7 @@ export async function createApplication({document,window,content,signal}){
   if(!guardSession){line(profile.name,text);return;}
   advanceClinicalTo(window.performance.now());
   const session=guardSession;
-  try{return await session.post({id:'message-'+(++messageNumber),text,...(patientUid?{targetPatientUid:patientUid}:{})});}
+  try{return await session.post({id:'message-'+messageEpoch+'-'+(++messageNumber),text,...(patientUid?{targetPatientUid:patientUid}:{})});}
   catch{if(guardSession===session)toast('No pude confirmar el mensaje.');}
  }
  function canvasDown(event){
@@ -181,12 +260,13 @@ export async function createApplication({document,window,content,signal}){
  ui('playerName').value=profile.name;ui('enterButton').textContent='Entrar al hospital →';ui('enterButton').disabled=false;
  listen(ui('profileForm'),'submit',event=>{
   event.preventDefault();profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico'};
+  social.setProfile(profile);
   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{/* session still usable */}
   world=createWorld(content,profile);enterLobby();
  });
- listen(ui('guardButton'),'click',()=>world.snapshot().phase==='guard'?enterLobby():guardSetup());
+ listen(ui('guardButton'),'click',()=>world.snapshot().phase==='guard'?requestLobby():guardSetup());
  listen(ui('peopleButton'),'click',()=>world.snapshot().phase==='guard'?clinicalUI.showPatient(world.snapshot().patients.find(p=>p.uid===world.nearby())||world.snapshot().patients[0]):
-  open('<h2>Personas</h2><p>Esta compilación funciona en modo local. La presencia, las invitaciones y las salas compartidas todavía no están conectadas.</p>'));
+  showPeople());
  listen(ui('profileButton'),'click',showProfile);listen(ui('modalClose'),'click',close);
  listen(patientClinical.root,'click',event=>{
   const button=event.target.closest('button');if(!button)return;
@@ -206,10 +286,22 @@ export async function createApplication({document,window,content,signal}){
  listen(dialog,'click',async event=>{
   if(await clinicalUI.handle(event.target))return;
   const button=event.target.closest('button');if(!button)return;
-  if(button.dataset.mode){draftMode=button.dataset.mode;guardSetup();}
+  if(button.dataset.mode){if(button.dataset.mode!=='coop')cancelSharedIntent();draftMode=button.dataset.mode;guardSetup();}
   if(button.dataset.action==='close')close();
-  if(button.dataset.action==='return-lobby'){enterLobby();return;}
+  if(button.dataset.action==='return-lobby'){requestLobby();return;}
+  if(button.dataset.action==='join-coop'){
+   const intent=cooperativeFlow.begin('guest');
+   try{await social.join(button.dataset.room);if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Conectando a la guardia…</h2><p>Esperando la autoridad clínica del anfitrión.</p>');}catch(error){if(cooperativeFlow.current(intent))toast(error.message);}return;
+  }
   if(button.dataset.action==='start-guard'){
+   if(draftMode==='coop'){
+    if(!Object.hasOwn(CLINICAL_EXECUTORS,ui('caseChoice').value)){toast('Este caso todavía no tiene atención completa.');return;}
+    coopCaseId=ui('caseChoice').value;
+    const intent=cooperativeFlow.begin('host');
+    try{await social.invite([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value));if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Invitación enviada</h2><p>Esperando que los colegas acepten la guardia compartida.</p>');}catch(error){if(cooperativeFlow.current(intent))toast(error.message);}return;
+   }
+   cancelSharedIntent();
+   announcedClosure=null;
    guardSession?.dispose();announcedDeathUid=null;pendingPatientAction=null;clinicalUI.reset();patientWheel.hide();patientClinical.hide();world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});
    const s=world.snapshot(),roomId='guard-'+window.crypto.randomUUID();
    guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,progress,
@@ -220,10 +312,6 @@ export async function createApplication({document,window,content,signal}){
      renderGuardCommunication();
      // A native closure is the ONLY trigger. Chat messages that merely ask
      // for admission, surgery or discharge must never display an XP outcome.
-     const receipt=event.type==='chat.posted'?
-      event.clinical.find(x=>x.status==='executed'&&x.kind==='case.close')?.receipt?.closure:null;
-     if(receipt?.closed===true&&receipt.patientUid===guardSession.read().patient.uid)
-      open('<div id="caseResult">'+caseDebriefHTML(receipt)+'</div><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button><button data-action="close">Seguir viendo el caso</button></div>','outcome');
     }});
    lastClinicalFrame=window.performance.now();
    close();resetChat(Object.hasOwn(CLINICAL_EXECUTORS,s.caseId)?'Guardia clínica. Evaluación, estudios, tratamiento y cierre disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
@@ -234,6 +322,7 @@ export async function createApplication({document,window,content,signal}){
   if(button.dataset.action==='save-profile'){
    const next={name:ui('aliasChoice').value.trim().slice(0,32)||'Médico',scrubColor:ui('colorChoice').value};
    world.setAppearance(next);profile=next;
+   social.setProfile(profile);
    try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
    close();updateHud();
   }
@@ -289,6 +378,10 @@ export async function createApplication({document,window,content,signal}){
   if(destroyed)return;raf=null;frames++;
   advanceClinicalTo(now);
   scheduler.tick(now,{simulate:dt=>{world.step(dt);presentation.advance(world.snapshot());},maintain:()=>{guardSession?.finishNurseArrivals();
+   const s=world.snapshot();if(s.phase!=='title'&&(socialEnabled||coopRoomId||social.state().recovering))social.maintain(now,s.player);
+   if(replica){replica.maintain(now);const key=JSON.stringify(s.player.target||[s.player.x,s.player.y]);
+    if(key!==lastMotion){lastMotion=key;const host=social.state().room?.hostUserId;if(host)social.send(host,{kind:'motion',target:s.player.target||[s.player.x,s.player.y]});}}
+   publishCooperativeState(now);
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
    const interaction=world.takeInteraction();if(interaction)activateEntity(interaction);
    if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();clinicalUI.render();}
@@ -298,12 +391,13 @@ export async function createApplication({document,window,content,signal}){
  function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
   clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);presentation.reset(world.snapshot());raf=window.requestAnimationFrame(frame);}}
  function pause(){advanceClinicalTo(window.performance.now());lastClinicalFrame=null;if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
- function destroy(){if(destroyed)return;destroyed=true;guardSession?.dispose();guardSession=null;pendingPatientAction=null;patientWheel.hide();patientClinical.hide();pause();close();atriaKeyboard.destroy();rootLifecycle.leave();}
+ function destroy(){if(destroyed)return;destroyed=true;guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();pause();close();atriaKeyboard.destroy();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
  drawWorld();resume();
  return Object.freeze({snapshot:()=>({...world.snapshot(),history:structuredClone(history),clinical:guardSession?.read()||null}),
   diagnostics:()=>({destroyed,raf:raf===null?0:1,listeners:destroyed?0:listeners.length+atriaKeyboard.listenerCount(),timers:0,frames,
-   renderer:renderer.metrics(),keyboard:{open:atriaKeyboard.isOpen()},generation:world.snapshot().generation}),destroy});
+   renderer:renderer.metrics(),keyboard:{open:atriaKeyboard.isOpen()},generation:world.snapshot().generation,
+   cooperative:{roomId:coopRoomId,authority:!!coopRoomId&&!replica,replica:!!replica,connections:social.state().connections}}),destroy});
 }

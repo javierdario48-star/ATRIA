@@ -1,6 +1,6 @@
 # C3.c — peritonitis terciaria y receptor clínico
 
-Parte de PBE certificado `33140e729989f626627aa43dba39577efb2b09bb`, sólo en la rama experimental. Candidato pendiente de CI/navegador del SHA publicado.
+Parte de PBE certificado `33140e729989f626627aa43dba39577efb2b09bb`, sólo en la rama experimental. Certificado en `1dfaee5c8f38225aa69d087238e153ce4033e436`: [CI V5 7/7](https://github.com/javierdario48-star/ATRIA/actions/runs/39115471547) y [censo histórico 4/4](https://github.com/javierdario48-star/ATRIA/actions/runs/39115471540). [Verificación exacta](../evidence/c3c/verification.json).
 
 ## Implementación
 
@@ -27,6 +27,8 @@ La UI permite pedir ambas consultas, distingue pendientes/rechazadas/aceptadas p
 - `node qa/v5/tertiary-quality-parity.mjs`: [V19 numérico + corrección peritonitis + carrera reales](../evidence/c3c/tertiary-quality-parity.json). Mínimo84/115XP; cuidado completo con cultivo pendiente92/124; exceso91/123; alternativa imipenem92/124. Sin cirugía ficticia. Como en V4, las alternativas autorizadas por disposición no implican idéntica cobertura fisiológica: el fenotipo efectivo TER sólo modela piptazo en `coverageSets`. Se documenta la limitación original, no se falsifican fármacos para igualarla.
 - UTI:10 comparaciones del texto/acuidad original. Entrevista50 y examen100 comparaciones sobre cinco casos. La excepción por shock reciente se prueba separadamente.
 - El oxígeno conserva el contrato espacial V5 ya certificado. Su llegada física difiere de la preparación V4 de0.55s y se prueba con sesión/interfaz, **no** se afirma identidad temporal de ese dispositivo en el bot estricto de medicaciones. Las formulaciones IV estándar siguen siendo las dosis de referencia ya migradas; C2 no está completo.
-- `qa/v5/tertiary-browser.mjs`: escritorio y Pixel, caminar, diagnóstico flotante, UTI real, seis trabajos de enfermería/cuatro dosis, historia/examen, CBC/TC completados y cultivo pendiente, reevaluación, UTI92/124 y XP persistente único. No certificar hasta el resultado de CI. Pixel no prueba hardware Android.
+- `qa/v5/tertiary-browser.mjs`: escritorio y Pixel, caminar, diagnóstico flotante, UTI real, seis trabajos de enfermería/cuatro dosis, historia/examen, CBC/TC completados y cultivo pendiente, reevaluación, UTI92/124 y XP persistente único. **Aprobado en ambos dispositivos**, sin errores de página. [Recibos y resultados](../evidence/c3c/tertiary-browser.json); [capturas de CI](https://github.com/javierdario48-star/ATRIA/actions/runs/39115471547/artifacts/12132665602). Pixel no prueba hardware Android.
 
 Siguiente checkpoint obligatorio: C5.a, dos médicos en una guardia con esta misma autoridad y ejecutores; después tres/cuatro. No activar Competitivo ni migrar los otros ocho antes de demostrar Cooperativo real.
+
+Preview del SHA certificado: https://night-shift-clinical-jz5cxo85m-javierdario4878-7324.vercel.app/ (READY/HTTP200; las110 entradas del manifiesto coinciden con la reconstrucción aislada de ese SHA).

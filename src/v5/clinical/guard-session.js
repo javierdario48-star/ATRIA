@@ -32,8 +32,11 @@ const routeReason={
 /** Local authoritative clinical composition. C1 studies and C2 native CIRR
  * care mutate the same owned patient through one port; UI never mutates it.
  */
-export function createGuardSession({roomId,mode,actorId,actorName,patient,content,resolveContext,onChange=()=>{},progress=createProgressionLedger(),nursing=null}){
- if(!['solo','apprentice'].includes(mode)||typeof resolveContext!=='function')throw Error('local clinical mode/context required');
+export function createGuardSession({roomId,mode,actorId,actorName,patient,content,resolveContext,onChange=()=>{},progress=createProgressionLedger(),nursing=null,
+ members=[{id:actorId,name:actorName}],authenticate=null}){
+ if(!['solo','apprentice','coop'].includes(mode)||typeof resolveContext!=='function')throw Error('supported clinical mode/context required');
+ if(mode==='coop'&&(members.length<2||members.length>4||!members.some(x=>x.id===actorId)))throw Error('cooperative roster requires two to four doctors');
+ const memberNames=new Map(members.map(x=>[x.id,String(x.name||x.id).slice(0,32)]));
  const caseData=content.cases.find(c=>c.id===patient.caseId);if(!caseData)throw Error('unknown patient case');
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[],
   ...patientAllergyFacts487(patient),adverseEvents:[]};
@@ -168,9 +171,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    return care?care.execute({eventId,actorId,patientUid,intent},clock):{status:'rejected',patientUid,eventId,reason:'clinical-action-not-migrated'};
   }
  });
- const authority=createRoomAuthority({roomId,mode,members:[{id:actorId}],patients:[{uid:patient.uid}],
-  authenticate:token=>token===credentials?{id:actorId,roomId}:null,clinicalPort:port,
-  resolveSpeechContext:({envelope})=>({...resolveContext({targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,
+ const authority=createRoomAuthority({roomId,mode,members,patients:[{uid:patient.uid}],
+  authenticate:token=>token===credentials?{id:actorId,roomId}:authenticate?.(token)??null,clinicalPort:port,
+  resolveSpeechContext:({envelope,actorId:requestActor})=>({...resolveContext({actorId:requestActor,targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,
    ...(care&&nursing?{venousAccessCount:nativePatient.venousAccessCount??0,pendingIV:[...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv'),defaultDoses:content.defaultDoses}:{}),
    studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions,
     surgicalConsultDone:!!nativePatient.consults?.some(x=>x.id==='cirugia'&&x.status==='done'&&x.accepted),
@@ -212,11 +215,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   const rows=[],announcedResults=new Set();
   for(const event of room.events){
    if(event.type==='chat.posted'){
-    const message=event.message,selected=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(message.text);
+    const message={...event.message,id:(mode==='coop'?event.message.actorId+':':'')+event.message.id},selected=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(message.text);
     // A menu selection retains its exact protocol ID; the shared presentation
     // uses the familiar clinical label rather than exposing that internal ID.
     const text=selected&&labels.has(selected[1])?'Enfermera, '+labels.get(selected[1]):message.text;
-    rows.push({id:'player:'+message.id,name:actorName,text,role:'player'});
+    rows.push({id:'player:'+message.id,name:memberNames.get(message.actorId)||actorName,text,role:'player'});
     if(event.routeError)rows.push({id:'route:'+message.id,name:'Enfermera',role:'nurse',
      text:routeReason[event.routeError]||'No pude ejecutar esa indicación.'});
     for(let i=0;i<event.clinical.length;i++){
@@ -256,9 +259,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  }
  return Object.freeze({
   catalog:()=>copy(orderedStudies),
-  async post(envelope){
+  async post(envelope,authenticatedCredentials=credentials){
    if(disposed)return {status:'rejected',reason:'room-disposed'};
-   const reply=await authority.dispatch({kind:'chat.post',...envelope},credentials);publishReadiness();return reply;
+   const reply=await authority.dispatch({kind:'chat.post',...envelope},authenticatedCredentials);publishReadiness();return reply;
   },
   advance:function advance(deltaRealSeconds,{typing=false}={}){
    if(disposed)throw Error('guard session disposed');

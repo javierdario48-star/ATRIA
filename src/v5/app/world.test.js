@@ -3,6 +3,21 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const read=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name,import.meta.url)));
+test('cooperative world has one spatial nurse owner, shared patient UID and independently navigable doctors',async()=>{
+ const {createWorld}=await import('./world.js'),content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
+ const members=[{id:'A',name:'Ana',color:'navy'},{id:'B',name:'Bruno',color:'green'}];
+ const a=createWorld(content,{id:'A',name:'Ana'}),b=createWorld(content,{id:'B',name:'Bruno'});
+ a.enterGuard({mode:'coop',caseId:'PERI-PBE-001',patientUid:'shared-patient',members});
+ b.enterGuard({mode:'coop',caseId:'PERI-PBE-001',patientUid:'shared-patient',members,authoritative:false});
+ assert.equal(a.snapshot().patients[0].uid,b.snapshot().patients[0].uid);
+ const goal=a.navigation.center(15,40),before=a.snapshot().others[0];assert(a.targetRemote('B',goal.x,goal.y));
+ for(let i=0;i<180;i++)a.step(1/60);
+ assert(Math.hypot(before.x-a.snapshot().others[0].x,before.y-a.snapshot().others[0].y)>30);
+ assert.equal(a.targetRemote('intruder',goal.x,goal.y),false);
+ assert.equal(b.enqueueNurseJourney({eventId:'bad',patientUid:'shared-patient',kind:'iv'}).status,'no-guard');
+ b.applySharedSpatial({nurses:a.snapshot().nurses,doctors:[{...a.snapshot().player,id:'A'},...a.snapshot().others]});
+ assert.equal(b.snapshot().others[0].name,'Ana');assert.deepEqual(b.snapshot().nurses,a.snapshot().nurses);
+});
 test('patients in independent world instances cannot share a persistent XP identity',async()=>{
  const {createWorld}=await import('./world.js'),content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
  const worlds=[createWorld(content,{name:'same'}),createWorld(content,{name:'same'})];

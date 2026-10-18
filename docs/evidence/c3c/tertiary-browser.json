@@ -1,0 +1,308 @@
+[
+  {
+    "name": "desktop",
+    "physicalAndroid": false,
+    "caseId": "PERI-TER-001",
+    "realUi": true,
+    "realNursing": true,
+    "receipts": [
+      {
+        "id": "oxygen",
+        "label": "Oxígeno suplementario",
+        "action": "start",
+        "dose": {
+          "amount": 4,
+          "unit": "L/min",
+          "display": "4 L/min",
+          "device": "nasal-cannula",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-7191ccb5-3708-4548-82d0-65be5a1f480c:local-player:message-4:5",
+        "actorId": "local-player",
+        "patientUid": "0f296c96-0e46-4b80-b178-5202aca84f2c:patient-2",
+        "administeredAtRealSecond": 12.7575,
+        "administeredAtNativeMinute": 1.481292
+      },
+      {
+        "id": "fluid",
+        "label": "Reposición con cristaloides",
+        "dose": {
+          "amount": 1000,
+          "unit": "ml",
+          "display": "1 l",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-7191ccb5-3708-4548-82d0-65be5a1f480c:local-player:message-4:2",
+        "actorId": "local-player",
+        "patientUid": "0f296c96-0e46-4b80-b178-5202aca84f2c:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 13.574100000000001,
+        "administeredAtNativeMinute": 1.5792840000000001
+      },
+      {
+        "id": "piptazo",
+        "label": "Cobertura antibiótica amplia ajustable a cultivos",
+        "dose": {
+          "amount": 4500,
+          "unit": "mg",
+          "display": "4.5 g",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-7191ccb5-3708-4548-82d0-65be5a1f480c:local-player:message-4:3",
+        "actorId": "local-player",
+        "patientUid": "0f296c96-0e46-4b80-b178-5202aca84f2c:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 15.0741,
+        "administeredAtNativeMinute": 1.7592839999999998
+      },
+      {
+        "id": "vasopressor",
+        "label": "Noradrenalina IV",
+        "dose": {
+          "amount": 0.05,
+          "unit": "µg/kg/min",
+          "display": "0.05 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-7191ccb5-3708-4548-82d0-65be5a1f480c:local-player:message-4:4",
+        "actorId": "local-player",
+        "patientUid": "0f296c96-0e46-4b80-b178-5202aca84f2c:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 15.8907,
+        "action": "start",
+        "moleculeId": "norepinephrine",
+        "administeredAtNativeMinute": 1.8572760000000001
+      }
+    ],
+    "quality": {
+      "score": 92,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 12,
+      "treatment": 20,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "xp": 124,
+    "oneAward": true,
+    "sourceControlUnchanged": true,
+    "studies": [
+      {
+        "id": "ter_cbc",
+        "label": "Hemograma + función orgánica",
+        "type": "lab",
+        "patientUid": "0f296c96-0e46-4b80-b178-5202aca84f2c:patient-2",
+        "result": "Leucocitosis con neutrofilia, deterioro renal y alteraciones compatibles con sepsis persistente.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.7468,
+        "readyAtMinute": 67.74680000000001,
+        "sourceEventId": "guard-7191ccb5-3708-4548-82d0-65be5a1f480c:local-player:message-14:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "ter_ct",
+        "label": "TC abdominopélvica",
+        "type": "imaging",
+        "patientUid": "0f296c96-0e46-4b80-b178-5202aca84f2c:patient-2",
+        "result": "Inflamación peritoneal difusa persistente sin un absceso intraabdominal único bien delimitado.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.9501,
+        "readyAtMinute": 132.9501,
+        "sourceEventId": "guard-7191ccb5-3708-4548-82d0-65be5a1f480c:local-player:message-15:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "ter_culture",
+        "label": "Cultivo de material peritoneal",
+        "type": "lab",
+        "patientUid": "0f296c96-0e46-4b80-b178-5202aca84f2c:patient-2",
+        "result": "Desarrollo de Enterococcus y Candida en esta semilla. Requiere ajustar cobertura al cultivo.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "pending",
+        "requestedAtMinute": 13.1619,
+        "readyAtMinute": 1453.1619,
+        "sourceEventId": "guard-7191ccb5-3708-4548-82d0-65be5a1f480c:local-player:message-16:0",
+        "actorId": "local-player"
+      }
+    ],
+    "consult": {
+      "id": "uti",
+      "patientUid": "0f296c96-0e46-4b80-b178-5202aca84f2c:patient-2",
+      "sourceEventId": "guard-7191ccb5-3708-4548-82d0-65be5a1f480c:local-player:message-3:0",
+      "status": "done",
+      "accepted": true,
+      "reviewStatus": "accepted",
+      "advice": "UTI evalúa: cuadro con criterios de alta complejidad; mantener reanimación y preparar ingreso crítico.",
+      "respondedAtRealSecond": 11.1649
+    },
+    "originalFindings": true,
+    "allergyAsked": true,
+    "persistedAfterReload": true,
+    "errors": []
+  },
+  {
+    "name": "pixel",
+    "physicalAndroid": false,
+    "caseId": "PERI-TER-001",
+    "realUi": true,
+    "realNursing": true,
+    "receipts": [
+      {
+        "id": "oxygen",
+        "label": "Oxígeno suplementario",
+        "action": "start",
+        "dose": {
+          "amount": 4,
+          "unit": "L/min",
+          "display": "4 L/min",
+          "device": "nasal-cannula",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-9e2b2545-de0a-432a-82c5-4a65b8585a24:local-player:message-4:5",
+        "actorId": "local-player",
+        "patientUid": "14f646a6-f98c-4914-8989-65644de1ffd5:patient-2",
+        "administeredAtRealSecond": 12.5201,
+        "administeredAtNativeMinute": 1.463055
+      },
+      {
+        "id": "fluid",
+        "label": "Reposición con cristaloides",
+        "dose": {
+          "amount": 1000,
+          "unit": "ml",
+          "display": "1 l",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-9e2b2545-de0a-432a-82c5-4a65b8585a24:local-player:message-4:2",
+        "actorId": "local-player",
+        "patientUid": "14f646a6-f98c-4914-8989-65644de1ffd5:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 13.3368,
+        "administeredAtNativeMinute": 1.561059
+      },
+      {
+        "id": "piptazo",
+        "label": "Cobertura antibiótica amplia ajustable a cultivos",
+        "dose": {
+          "amount": 4500,
+          "unit": "mg",
+          "display": "4.5 g",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-9e2b2545-de0a-432a-82c5-4a65b8585a24:local-player:message-4:3",
+        "actorId": "local-player",
+        "patientUid": "14f646a6-f98c-4914-8989-65644de1ffd5:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 14.8368,
+        "administeredAtNativeMinute": 1.741059
+      },
+      {
+        "id": "vasopressor",
+        "label": "Noradrenalina IV",
+        "dose": {
+          "amount": 0.05,
+          "unit": "µg/kg/min",
+          "display": "0.05 µg/kg/min",
+          "defaultApplied": false
+        },
+        "sourceEventId": "guard-9e2b2545-de0a-432a-82c5-4a65b8585a24:local-player:message-4:4",
+        "actorId": "local-player",
+        "patientUid": "14f646a6-f98c-4914-8989-65644de1ffd5:patient-2",
+        "route": "iv",
+        "administeredAtRealSecond": 15.653400000000001,
+        "action": "start",
+        "moleculeId": "norepinephrine",
+        "administeredAtNativeMinute": 1.8390510000000002
+      }
+    ],
+    "quality": {
+      "score": 92,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 12,
+      "treatment": 20,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "xp": 124,
+    "oneAward": true,
+    "sourceControlUnchanged": true,
+    "studies": [
+      {
+        "id": "ter_cbc",
+        "label": "Hemograma + función orgánica",
+        "type": "lab",
+        "patientUid": "14f646a6-f98c-4914-8989-65644de1ffd5:patient-2",
+        "result": "Leucocitosis con neutrofilia, deterioro renal y alteraciones compatibles con sepsis persistente.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.2819,
+        "readyAtMinute": 67.28190000000001,
+        "sourceEventId": "guard-9e2b2545-de0a-432a-82c5-4a65b8585a24:local-player:message-14:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "ter_ct",
+        "label": "TC abdominopélvica",
+        "type": "imaging",
+        "patientUid": "14f646a6-f98c-4914-8989-65644de1ffd5:patient-2",
+        "result": "Inflamación peritoneal difusa persistente sin un absceso intraabdominal único bien delimitado.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "done",
+        "requestedAtMinute": 12.4718,
+        "readyAtMinute": 132.4718,
+        "sourceEventId": "guard-9e2b2545-de0a-432a-82c5-4a65b8585a24:local-player:message-15:0",
+        "actorId": "local-player"
+      },
+      {
+        "id": "ter_culture",
+        "label": "Cultivo de material peritoneal",
+        "type": "lab",
+        "patientUid": "14f646a6-f98c-4914-8989-65644de1ffd5:patient-2",
+        "result": "Desarrollo de Enterococcus y Candida en esta semilla. Requiere ajustar cobertura al cultivo.",
+        "resultSource": "native",
+        "nativeResult": true,
+        "universalFallback": false,
+        "status": "pending",
+        "requestedAtMinute": 12.6916,
+        "readyAtMinute": 1452.6916,
+        "sourceEventId": "guard-9e2b2545-de0a-432a-82c5-4a65b8585a24:local-player:message-16:0",
+        "actorId": "local-player"
+      }
+    ],
+    "consult": {
+      "id": "uti",
+      "patientUid": "14f646a6-f98c-4914-8989-65644de1ffd5:patient-2",
+      "sourceEventId": "guard-9e2b2545-de0a-432a-82c5-4a65b8585a24:local-player:message-3:0",
+      "status": "done",
+      "accepted": true,
+      "reviewStatus": "accepted",
+      "advice": "UTI evalúa: cuadro con criterios de alta complejidad; mantener reanimación y preparar ingreso crítico.",
+      "respondedAtRealSecond": 11.0022
+    },
+    "originalFindings": true,
+    "allergyAsked": true,
+    "persistedAfterReload": true,
+    "errors": []
+  }
+]

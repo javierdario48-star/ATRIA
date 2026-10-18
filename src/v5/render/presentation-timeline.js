@@ -25,8 +25,10 @@ export function createPresentationTimeline(initial){
   const t=finite(alpha)?Math.max(0,Math.min(1,alpha)):1;
   const past=new Map((before?.nurses||[]).map(x=>[x.id,x]));
   const future=new Map((after?.nurses||[]).map(x=>[x.id,x]));
+  const oldDoctors=new Map((before?.others||[]).map(x=>[x.id,x])),newDoctors=new Map((after?.others||[]).map(x=>[x.id,x]));
   return {...live,player:actorPose(before?.player,after?.player,live.player,t),
    nurses:live.nurses.map(a=>actorPose(past.get(a.id),future.get(a.id),a,t)),
+   ...(live.others?{others:live.others.map(a=>actorPose(oldDoctors.get(a.id),newDoctors.get(a.id),a,t))}:{}),
    expert:live.expert?actorPose(before?.expert,after?.expert,live.expert,t):null};
  }
  return Object.freeze({reset,advance,sample});

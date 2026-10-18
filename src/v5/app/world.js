@@ -12,7 +12,7 @@ export function createWorld(content,profile){
  const navigation=createNavigation(content.map);
  const start=content.map.player_start_tile;
  const point=tile=>navigation.center(...(navigation.nearest(...tile,8)||start));
- let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null;
+ let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true;
  const entities=()=>hospitalEntities({patients,nurses,expert},content.map,content.beds);
  function lobbyTile(){
   let hash=0;for(const char of profile.name||'Medico')hash=(hash*31+char.charCodeAt(0))>>>0;
@@ -21,24 +21,29 @@ export function createWorld(content,profile){
  }
  function resetPlayer(tile){player=actor('self',point(tile),{name:profile.name,color:profile.scrubColor||'navy',level:1});}
  resetPlayer(lobbyTile());
- function enterLobby(){nursing?.dispose();nursing=null;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
+ function enterLobby(){nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
  function enterGuard(options={}){
   const selected=options.mode||'solo';
-  if(!['solo','apprentice'].includes(selected))throw Error('multiplayer mode not migrated');
+  if(!['solo','apprentice','coop'].includes(selected))throw Error('multiplayer mode not migrated');
   const c=content.cases.find(c=>c.id===options.caseId);if(!c)throw Error('unknown clinical case');
   nursing?.dispose();nursing=null;
   generation++;phase='guard';mode=selected;caseId=c.id;pendingInteraction=null;resetPlayer(start);
+  authoritative=options.authoritative!==false;
+  others=(options.members||[]).filter(x=>x.id!==profile.id).map(x=>actor(x.id,point(start),{kind:'doctor',name:x.name,color:x.color||'navy',level:1}));
   nurses=nurseHomes.map((home,index)=>actor('nurse-'+index,point(home),{kind:'nurse',r:8.5,speed:140,home:[...home],patrolAt:index*2}));
   const bed=content.beds.find(b=>b.id===(options.bedId||'B1'))||content.beds[0];
   patients=[{id:'patient-'+generation,uid:'patient-'+generation,caseId:c.id,bedId:bed.id,
    x:bed.patient[0],y:bed.patient[1],approach:[...bed.approach],name:c.demo,chief:c.chief}];
   patients[0].uid=identity+':'+patients[0].uid;
+  if(selected==='coop'&&typeof options.patientUid==='string'&&options.patientUid)patients[0].uid=options.patientUid;
   expert=selected==='apprentice'?actor('vega',point([14,45]),{kind:'vega',name:'Dr. Vega',r:9.5,speed:220}):null;
-  nursing=createNurseDispatcher({navigation,nurses,patients});
+  if(authoritative)nursing=createNurseDispatcher({navigation,nurses,patients});
  }
  function step(dt){
   if(phase==='title')return;
   navigation.move(player,dt);
+  if(!authoritative)return;
+  for(const other of others)navigation.move(other,dt);
   nursing?.advance(dt);
   for(const n of nurses){
    if(n.journeyId)continue; // Nurse movement is owned by dispatcher until clinical receipt.
@@ -58,8 +63,22 @@ export function createWorld(content,profile){
    navigation.move(expert,dt);
   }
  }
- const snapshot=()=>structuredClone({phase,mode,caseId,generation,player,nurses,patients,expert,entities:entities()});
+ const snapshot=()=>structuredClone({phase,mode,caseId,generation,player,nurses,patients,expert,others,entities:entities()});
  return Object.freeze({navigation,enterLobby,enterGuard,step,snapshot,
+  setSocialIdentity(id){profile={...profile,id};},
+  showLobbyPlayers(list){if(phase!=='lobby')return;others=list.filter(x=>x.userId!==profile.id).map(x=>actor(x.userId,{x:x.x,y:x.y},
+   {kind:'doctor',name:x.name,color:x.color||'navy',level:x.level||1,dir:x.dir,walkPhase:x.walkPhase}));},
+  targetRemote(id,x,y){const other=others.find(x=>x.id===id);return !!other&&authoritative&&navigation.target(other,x,y);},
+  stopRemote(id){const other=others.find(x=>x.id===id);if(other){other.path=[];other.pathIndex=0;other.target=null;other.moving=false;}},
+  patientInRangeFor(id,uid){const a=id===profile.id?player:others.find(x=>x.id===id),p=patients.find(x=>x.uid===uid);
+   return a&&p&&Math.hypot(a.x-p.x,a.y-p.y)<=PATIENT_RANGE?uid:null;},
+  applySharedSpatial({nurses:sharedNurses,doctors}){
+   if(authoritative||mode!=='coop')return false;
+   nurses=structuredClone(sharedNurses);others=structuredClone(doctors.filter(x=>x.id!==profile.id));
+   const self=doctors.find(x=>x.id===profile.id);
+   if(self&&!player.moving&&Math.hypot(self.x-player.x,self.y-player.y)>3){player.x=self.x;player.y=self.y;}
+   return true;
+  },
   /** Spatial nursing is deliberately not hooked to clinical effects until the
    * native port can gate procedures on arrival; no false execution is shown.
    */

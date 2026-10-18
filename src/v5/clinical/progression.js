@@ -1,7 +1,7 @@
 // Native csResultCareer arithmetic for a selected single-case practice.
 // No continuous-shift/mentor multiplier is claimed before those modes migrate.
 export function nativeCaseXP({score,mode,autonomy=100,practiceMult=1,shiftMult=1,complexityMult=1}){
- if(!Number.isFinite(score)||score<0||score>100||!['solo','apprentice'].includes(mode))throw Error('invalid reward inputs');
+ if(!Number.isFinite(score)||score<0||score>100||!['solo','apprentice','coop'].includes(mode))throw Error('invalid reward inputs');
  return Math.max(4,Math.round((16+score*.95)*(mode==='solo'?1.2:1)*shiftMult*(.72+.28*(autonomy/100))*practiceMult*complexityMult));
 }
 export function createProgressionLedger(saved={}){

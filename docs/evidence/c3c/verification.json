@@ -1,0 +1,49 @@
+{
+  "sha": "1dfaee5c8f38225aa69d087238e153ce4033e436",
+  "v5CI": {
+    "run": 39115471547,
+    "conclusion": "success",
+    "jobs": 7
+  },
+  "legacyCI": {
+    "run": 39115471540,
+    "conclusion": "success",
+    "jobs": 4
+  },
+  "preview": {
+    "url": "https://night-shift-clinical-jz5cxo85m-javierdario4878-7324.vercel.app/",
+    "http": 200,
+    "manifestFiles": 110,
+    "entireManifestEqualToIsolatedCodeShaBuild": true
+  },
+  "browserArtifact": {
+    "id": 12132665602,
+    "sha256": "97d90c0a878a4086c6a737674ea98c3e1ae3c83981b94b8ce858ae907e8557b2",
+    "verified": true
+  },
+  "browser": [
+    {
+      "device": "desktop",
+      "score": 92,
+      "xp": 124,
+      "realUi": true,
+      "realNursing": true,
+      "administrations": 4,
+      "oneAward": true,
+      "persistedAfterReload": true,
+      "errors": []
+    },
+    {
+      "device": "pixel",
+      "score": 92,
+      "xp": 124,
+      "realUi": true,
+      "realNursing": true,
+      "administrations": 4,
+      "oneAward": true,
+      "persistedAfterReload": true,
+      "errors": []
+    }
+  ],
+  "physicalAndroid": false
+}
