@@ -6,16 +6,16 @@ import {createCooperativeLink} from './cooperative-link.js';
 const storage=()=>{const data=new Map();return {getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)};};
 function fixture(){
  const data=new Map(),store={get:async k=>data.get(k),set:async(k,v)=>data.set(k,structuredClone(v)),delete:async k=>data.delete(k)},backend=createQaSocialServer(store);
- let delayed=null,release=null,failed=null;const requests=[];let closed=0;
+ let delayed=null,release=null,failed=null,beforePath=null,beforeRelease=null;const requests=[];let closed=0;
  const win={localStorage:storage(),crypto,performance:{now:()=>10000},fetch:async(uri,options)=>{
   const url=new URL(uri,'http://test'),input={method:options.method,path:url.pathname,query:Object.fromEntries(url.searchParams),headers:options.headers,body:options.body?JSON.parse(options.body):{}};
-  requests.push(url.pathname);const result=await(url.pathname==='/api/lobby-sync'?backend.signalRoute(input):backend.route(input));
+  requests.push(url.pathname);if(beforePath===url.pathname){beforePath=null;await new Promise(resolve=>beforeRelease=resolve);}const result=await(url.pathname==='/api/lobby-sync'?backend.signalRoute(input):backend.route(input));
   if(delayed===url.pathname){delayed=null;await new Promise(resolve=>release=resolve);}
   if(failed===url.pathname){failed=null;return {ok:false,status:503,json:async()=>({error:'temporarily-unavailable'})};}
   return {ok:result.status<400,status:result.status,json:async()=>result.body};
  }};
  const make=()=>createCooperativeLink({window:win,profile:{name:'Ana',scrubColor:'navy'},onClose:()=>closed++});
- return {win,backend,requests,make,delay:path=>delayed=path,held:()=>!!release,release:()=>release?.(),fail:path=>failed=path,closed:()=>closed};
+ return {win,backend,requests,make,delay:path=>delayed=path,held:()=>!!release,release:()=>release?.(),fail:path=>failed=path,closed:()=>closed,delayBefore:path=>beforePath=path,beforeHeld:()=>!!beforeRelease,releaseBefore:()=>beforeRelease?.()};
 }
 test('reloaded social identity renews authenticated presence without replaying a stale motion sequence',async()=>{
  const f=fixture(),a=f.make();await a.connect();for(let i=1;i<=8;i++){a.maintain(i*2000,{x:i,y:40});await a.flush();}
@@ -66,4 +66,20 @@ test('a superseded join cannot revoke a new intentional join to the same room',a
  while(!f.held())await Promise.resolve();await a.join(host.id);f.release();await assert.rejects(previous,/cancelada/);
  const result=await f.backend.route({path:'rooms/'+host.id+'/messages',headers:host.headers});
  assert(result.body.room.members.some(x=>x.userId===a.state().user.id));assert.equal(a.state().room.id,host.id);a.dispose();
+});
+
+test('accepting an invitation consumes it locally before the next room can be opened',async()=>{
+ const f=fixture(),a=f.make(),host=await invited(f,a);
+ a.maintain(1000,{x:40,y:40});await a.flush();assert.equal(a.state().invites.length,1);
+ await a.join(host.id);assert.deepEqual(a.state().invites,[],'an accepted room cannot remain an Accept button');
+ await a.leave();assert.deepEqual(a.state().invites,[],'returning to lobby cannot resurrect the old invitation');a.dispose();
+});
+
+test('a late invitation poll cannot reinsert the room accepted during the same intent',async()=>{
+ const f=fixture(),a=f.make(),host=await invited(f,a);
+ f.delayBefore('/api/rooms/join');const joining=a.join(host.id);while(!f.beforeHeld())await Promise.resolve();
+ f.delay('/api/me');a.maintain(1000,{x:40,y:40});while(!f.held())await Promise.resolve();
+ f.releaseBefore();await joining;assert.equal(a.state().room.id,host.id);
+ f.release();await a.flush();assert.deepEqual(a.state().invites,[],'a pre-accept response cannot restore an accepted invitation');
+ await a.leave();assert.deepEqual(a.state().invites,[]);a.dispose();
 });

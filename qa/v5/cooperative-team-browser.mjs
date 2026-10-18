@@ -13,7 +13,15 @@ async function invite(caseId){
  const a=pages[0];await a.locator('#guardButton').click();await a.locator('[data-mode="coop"]').click();await a.locator('#caseChoice').selectOption(caseId);
  for(const name of names.slice(1))await a.locator('#coopDoctors label').filter({hasText:name}).locator('input').check();
  await a.locator('[data-action="start-guard"]').click();
- for(const p of pages.slice(1)){await p.locator('#peopleButton').click();await p.locator('[data-action="join-coop"]').click();}
+ await a.getByRole('heading',{name:'Invitación enviada',exact:true}).waitFor();
+ const roomId=await a.evaluate(()=>localStorage.getItem('atria.v5.coop.room'));
+ assert(roomId,'the public invitation must be committed before colleagues accept');
+ const round={caseId,roomId,accepted:[]};(report.invitationRounds??=[]).push(round);
+ for(const [i,p] of pages.slice(1).entries()){
+  await p.locator('#peopleButton').click();const accept=p.locator('[data-action="join-coop"]');
+  const selected=await accept.getAttribute('data-room');assert.equal(selected,roomId,'the visible invitation must belong to this new guard');
+  round.accepted.push({doctor:i+1,roomId:selected});await accept.click();
+ }
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().mode==='coop'&&!!atriaV5.snapshot().clinical,null,{timeout:60000})));
  const snapshots=await Promise.all(pages.map(clinical)),uid=snapshots[0].patient.uid;
  for(const s of snapshots){assert.equal(s.patient.uid,uid);assert.equal(s.room.members.length,count);}
@@ -84,5 +92,5 @@ try{
  await fs.writeFile(out+'/cooperative-team-'+count+'-summary.json',JSON.stringify(report,null,2)+'\n');console.log('COOPERATIVE TEAM UI PASS',JSON.stringify({players:count,score:100,xp:111,terminalReload:true,guestDeparture:true}));
 }catch(error){
  const snapshots=[];for(const [i,p] of pages.entries()){await p.screenshot({path:out+'/team-'+count+'-failure-'+i+'.png'}).catch(()=>{});snapshots.push(await p.evaluate(()=>({snapshot:atriaV5?.snapshot(),diagnostics:atriaV5?.diagnostics(),modal:document.querySelector('#modalContent')?.innerText})).catch(()=>null));}
- await fs.writeFile(out+'/cooperative-team-'+count+'-failure.json',JSON.stringify({stage,error:String(error),errors,snapshots},null,2)+'\n');throw error;
+ await fs.writeFile(out+'/cooperative-team-'+count+'-failure.json',JSON.stringify({stage,error:String(error),errors,invitationRounds:report.invitationRounds||[],requests:h.requests,snapshots},null,2)+'\n');throw error;
 }finally{for(const ctx of contexts)await ctx.close();for(const b of browsers.slice(1))await b.close();await h.close();}

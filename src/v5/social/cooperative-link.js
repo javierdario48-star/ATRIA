@@ -25,7 +25,8 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  function setRoom(value){
   if(disposed)return;
   if(value.mode!=='coop')throw Error('competitive-mode-not-enabled');
-  room=value;desiredRoomId=room.id;savedRoom=room.id;try{storage.setItem(ROOM_KEY,room.id);}catch{}onRoom(structuredClone(room),user);
+  room=value;desiredRoomId=room.id;savedRoom=room.id;invites=invites.filter(x=>x.roomId!==room.id);
+  try{storage.setItem(ROOM_KEY,room.id);}catch{}onRoom(structuredClone(room),user);
  }
  function peer(member,initiator){
   const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roster.find(x=>x.userId===member.userId)?.motionSession,lastAttempt:window.performance.now(),link:null};
@@ -42,7 +43,8 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   if(!active())return;
   const social=await api('lobby?after=0');roster=social.players;
   if(!active())return;
-  if(!room&&!savedRoom){const me=await api('me');if(!active())return;invites=me.invites.filter(x=>x.mode==='coop');onSocial();return;}
+  if(!room&&!savedRoom){const me=await api('me');if(!active())return;
+   invites=me.invites.filter(x=>x.mode==='coop'&&x.roomId!==room?.id&&x.roomId!==savedRoom);onSocial();return;}
   const id=room?.id||savedRoom;
   let latest;try{latest=await api('rooms/'+id+'/messages?after=0');}
   catch(error){if(!active())return;if(![403,404].includes(error.status))return;
