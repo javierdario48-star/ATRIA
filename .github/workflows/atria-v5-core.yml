@@ -33,6 +33,8 @@ jobs:
         run: node qa/v5/characterize-special-support-native.mjs
       - name: Original secondary peritonitis longitudinal physiology and genuine preparation remain equivalent
         run: node qa/v5/characterize-peritonitis-native.mjs
+      - name: Verify repeated and delayed V4 therapies, two-stage coverage, renal risk and typing pace in actual PERI-SEC owner
+        run: node qa/v5/peritonitis-sequence-parity.mjs
       - name: Actual V19 peritonitis quality and career XP remain graded and equivalent
         run: node qa/v5/characterize-peritonitis-quality.mjs
       - name: Executable V4 clinical harm-and-exposure parity gate (QA-only)
