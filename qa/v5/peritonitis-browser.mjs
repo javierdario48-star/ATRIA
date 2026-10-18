@@ -33,8 +33,8 @@ try{
   assert.equal((await state()).patient.phys.sourceControlled,false);
   assert.equal(await page.locator('[data-patient-destination]').count(),0);
   await page.locator('[data-patient-diagnosis]').click();await page.locator('#diagnosisInput').fill('peritonitis');
-  await page.locator('[data-diagnosis="peritonitis secundaria"]').click();await page.locator('#diagnosisInput').press('Enter');
-  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='peritonitis secundaria');
+  await page.locator('[data-diagnosis="Peritonitis secundaria"]').click();await page.locator('#diagnosisInput').press('Enter');
+  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis secundaria');
   await page.locator('#modalClose').click();
   await send('Enfermera cirugía');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
   assert.equal((await state()).patient.consults[0].accepted,true,'specific initial shock permits urgent assessment');
