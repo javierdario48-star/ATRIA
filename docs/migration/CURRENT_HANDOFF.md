@@ -1,55 +1,71 @@
-# ATRIA 5.0 — continuación C5.b.3
+# ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
-Repositorio `javierdario48-star/ATRIA`. Rama exclusiva `atria-5.0-core-rebuild-experimental`. Base remota verificada al iniciar: `388f1fdb62f0dfd34cbb1c2db1227e879140bfce`. Obtener el HEAD actual antes de modificar; nunca forzar el ref. Contratos: [manual maestro](ATRIA_50_MANUAL_MAESTRO_FUNCIONAL.md), decisiones explícitas del usuario y ejecutores existentes.
+Repositorio `javierdario48-star/ATRIA`; rama exclusiva `atria-5.0-core-rebuild-experimental`. Base remota al iniciar: `388f1fdb62f0dfd34cbb1c2db1227e879140bfce`. Código ejecutable certificado: `6f152a61f02b571dd56218e6a2befa9b0480f6c7`. El checkpoint posterior agrega QA/evidencia sin cambiar el ejecutable. Obtener HEAD remoto antes de continuar; nunca forzar el ref.
 
-## Checkpoint de corrección — 19-10-2026 UTC
+## Estado — 19-10-2026 UTC
 
-**C5.b.3 sigue en validación; todavía no activar el Preview.** En la base, CI V5 run `39189733905`: 14/15 trabajos aprobados; únicamente falló el cierre PBE. Sus síntomas (albúmina y renal ausentes) no identificaban por sí solos la causa.
+**C5.b.3 completado y habilitado sólo en el Preview de esta rama experimental.** PBE cerró con 100/100 y 111 XP por médico: dos procesos Chromium independientes, uno con emulación Pixel 5; interrogatorio/examen, dos estudios recibidos, monitor/ceftriaxona/albúmina con enfermería física, mejoría fisiológica, reevaluación, Sala, pérdida del anfitrión con trabajo pendiente, continuación del invitado, retorno y recarga de ambos sin duplicar historial, dosis, estudios, recibos o XP.
 
-Correcciones acotadas de esta continuación:
+No equivale a aceptación en teléfonos físicos ni a terminar todo C5/ATRIA. C5.a se conserva. Production, main y ATRIA 4.8.7 no se modificaron.
 
-- La entrada durable usa HTTP autenticado para anfitrión e invitados. No depende de recibir un `durable.hello` por WebRTC. La admisión reintenta desde el RAF existente, con un plazo de 1 s, aunque una petición de señalización siga pendiente. `start` verifica la invitación completa en el servidor; `sync` verifica la membresía durable. La caché social `allAccepted` no decide la autorización durable. El cliente C5.a conserva su requisito de invitación aceptada y su transporte original. La capacidad se conserva por sala para no repetir sondeos de escritura en cada reintento.
-- El mundo distingue instrucciones locales de movimiento de posiciones recibidas. Antes, una corrección visual podía volver al servidor como otra orden y cancelar el destino; además, mover la posición sin reconstruir el camino dejaba un índice de ruta incompatible. `world.motionIntent()` registra sólo destinos/paradas explícitos; la reconciliación reutiliza la navegación existente para rehacer el camino desde la posición corregida. No cambia velocidad, mapa, alcance clínico ni motor fisiológico.
-- El bot espera el mensaje concreto enviado, en lugar de cualquier incremento del transcript. El caso PBE ahora exige desconexión del anfitrión con enfermería/estudios pendientes, continuidad del invitado, mejoría fisiológica, retorno del anfitrión y recarga de ambos tras cierre con recibos/XP únicos. El viewport de escritorio es el mismo 1280×960 de los otros recorridos durables para evitar clics interceptados por el HUD.
+## Corrección acotada
 
-Evidencia local reunida: 474/474 pruebas V5; 40/40 núcleo; builds V5 y core; frontera arquitectónica (82 módulos, un RAF, sin nuevo timer ni ejecutor clínico en UI). La prueba focal de movimiento fue roja y después verde; 19 pruebas de mundo/navegación pasan. La admisión de tres médicos pasó con bootstrap diferido, `sync` 404 y señalización de anfitrión/invitado todavía colgada; todos recibieron el mismo paciente sin autoridad local.
+- Admisión durable mediante HTTP autenticado para ambos roles, independiente de `durable.hello` por WebRTC. Reintenta desde el RAF existente con plazo de 1 s aunque la señalización siga pendiente. La caché social `allAccepted` no autoriza: `start` verifica invitación completa en servidor y `sync` membresía durable. Capacidad conservada por sala; C5.a mantiene sus requisitos/transporte.
+- `world.motionIntent()` registra sólo destinos/paradas explícitos. Una posición recibida ya no vuelve al servidor como otra instrucción que cancela el destino. La reconciliación reconstruye la ruta existente desde la posición corregida. Sin cambios de mapa, velocidad, alcance ni fisiología.
+- El bot espera el mensaje concreto y confirma llegada autoritativa en cada tramo antes de seguir; usa clic real visible, sin forzar. Su oracle de navegación sólo opera sobre un clon Node. Al retornar exige también convergencia local/cámara.
+- La prueba pierde al anfitrión tras comprobar cero administraciones y estudios pendientes después de monitor/ceftriaxona. El invitado envía albúmina y continúa desconectado el anfitrión. Para cada fármaco exige orden original `pending` y un completion posterior único ligado a actor/sourceEventId. Así verifica causalidad aunque un ACK repetido llegue después de completarse enfermería; el ACK retenido puede evolucionar a `executed`.
 
-**El cierre PBE ordinario pasó una vez con 100/100 y 111 XP por médico. No basta para certificar la integración.** La ampliación a 350 ms reprodujo rechazos `no-patient-target` por posición del servidor fuera del radio de B1; [observaciones previas a la corrección](../evidence/c5b3/spatial-rejection-before-fix.json). Un recorrido posterior completó fármacos/estudios y cierre, pero obtuvo 96 porque una pregunta quedó sin paciente; esa ejecución se mantuvo FALLIDA, sin bajar 100/111. Se está verificando la corrección completa de reconciliación. No presentar el fallo original de CI como causalmente demostrado en todos sus detalles.
+La CI original `39189733905` tenía 14/15. Sus síntomas no demostraban una causa única. A 350 ms se reprodujeron rechazos por posición fuera del radio de B1: [observaciones anteriores](../evidence/c5b3/spatial-rejection-before-fix.json). Se conservaron los fallos, sin subir tiempos ni bajar 100/111. No se reemplazaron motores ni añadieron casos.
 
-## Persistencia y activación
+## Evidencia
 
-Supabase dedicado: `atria-clinical`, referencia `hugqjejfyyilslbomsgi`, PostgreSQL en São Paulo. El adapter existente, RPC CAS, RLS y acceso sólo servidor se conservan. [Contrato y DDL](C5B2_SUPABASE_STORE.md), [autoridad recuperable](C5B_PERSISTENT_CLINICAL_AUTHORITY.md).
+| Validación | Resultado |
+|---|---|
+| CI del código ejecutable `6f152a6` | [V5 39194087173](https://github.com/javierdario48-star/ATRIA/actions/runs/39194087173): 15/15; [histórica 39194087198](https://github.com/javierdario48-star/ATRIA/actions/runs/39194087198): 4/4. [Registro](../evidence/c5b3/code-ci.json). Incluye cierre PBE, 2/3/4 médicos, recuperación y C5.a. |
+| Local | 474/474 V5, 40/40 core, 19 mundo/navegación, ambos builds. Frontera: 82 módulos, un RAF, sin timer nuevo ni otro ejecutor clínico en UI. |
+| Admisión sin RTC/sondeo social terminado | Tres médicos entraron con bootstrap diferido, sync 404 y señalización pendiente; ninguno creó autoridad local. Incluido en CI. |
+| PBE a 350 ms | 100/100, 111 XP cada uno, recuperación y ambas recargas sin duplicados. [Resultado](../evidence/c5b3/pbe-latency350.json). |
+| UI real/PostgreSQL/dos despliegues | Cada navegador usó un Preview distinto del mismo código y la misma guardia. [Clínica](../evidence/c5b3/pbe-postgres.json), [concurrencia/recuperación](../evidence/c5b3/postgres-preview.json). |
+| Albúmina concurrente | Mismo evento real: un 200 y un 409 busy. El invitado recuperó su ACK por el segundo despliegue; sólo dos dosis totales. Tras cierre, ambos devolvieron el mismo ACK clínico. Otro evento concurrente produjo una sola entrada. |
+| Lectura SQL independiente al terminar | Cerrado, revisión SQL 355/época 177, lease nulo; dos dosis y dos estudios con fuentes únicas; dos claims de 111 ligados a sus integrantes; confirmaciones de ambos; cero enfermería/accesos pendientes. [SQL](../evidence/c5b3/postgres-persisted.json). |
+| CAS PostgreSQL aislado | Cuatro writers, un ganador/tres conflictos; escritura obsoleta rechazada. Sólo se borró la fila aislada. [Prueba](../evidence/c5b3/postgres-cas.json). |
+| Assets desplegados | Manifest y 114 hashes idénticos; HTML idéntico al quitar sólo el script oficial del toolbar Preview de Vercel. [Prueba](../evidence/c5b3/preview-assets.json). |
 
-Prueba real adicional: cuatro llamadas independientes con revisión esperada 1 produjeron un ganador (revisión 2) y tres conflictos; una escritura obsoleta posterior fue rechazada. Se borró sólo la fila aislada de QA. [Evidencia](../evidence/c5b3/postgres-cas.json). Esto no equivale aún a un recorrido clínico WAN entre instancias Vercel.
+Los checks del SHA que contiene este handoff identifican la CI exacta de QA/documentación. Las referencias anteriores certifican el código ejecutable; no sustituyen comprobar el HEAD definitivo. [Registro de alcance/despliegues](../evidence/c5b3/verification.json).
 
-`SUPABASE_URL` y `SUPABASE_SECRET_KEY` existen sólo en Preview. `ATRIA_DURABLE_COOP_ENABLED` no se ha configurado. La condición de `api/clinical.js` sigue siendo `VERCEL_ENV==='preview' && ATRIA_DURABLE_COOP_ENABLED==='1'`. Production está siempre desactivada. No tocar Production, main, V4, claves privadas ni planes. Conservar la ruta C5.a.
+## Preview y autoridad
 
-## Continuar desde aquí
+Vercel `night-shift-clinical`, región `gru1`: [Preview de esta rama](https://night-shift-clinical-git-atria-50-c-fd8524-javierdario4878-7324.vercel.app/). URLs inmutables y deployment IDs en la evidencia. No promover a Production.
 
-1. Terminar el recorrido PBE ampliado: dos navegadores independientes, enfermería física, dos fármacos, dos estudios, respuesta fisiológica, reevaluación, Sala 100/111, mismo historial y ninguna duplicación al recargar. No aumentar tiempos ni reducir aserciones.
-2. Revalidar los recorridos durables de 2/3/4 médicos y las regresiones C5.a. Verificar ambos workflows del SHA publicado, no una CI de otro commit. Las pruebas de tres/cuatro de la base sí aprobaron; no confundirlo con los nuevos recorridos todavía en marcha.
-3. Sólo tras aprobación automatizada, provisionar la activación limitada a esta rama Preview y desplegar el SHA probado. Probar el mismo juego contra PostgreSQL real, concurrencia/recuperación entre instancias, órdenes pendientes y XP; comprobar de nuevo UI completa. No sustituir C5.a ni declarar C5 completo por un sondeo de capacidad.
-4. Actualizar este handoff con SHA/CI/evidencia/URL final y límites comprobados.
+`ATRIA_DURABLE_COOP_ENABLED=1` se creó sólo para target Preview y esta rama, después de CI 15/15 + 4/4. La condición sigue intacta: `VERCEL_ENV==='preview' && ATRIA_DURABLE_COOP_ENABLED==='1'`. No se retiró C5.a.
 
-## Contratos preservados
+Supabase `atria-clinical`, ref `hugqjejfyyilslbomsgi`, São Paulo. `SUPABASE_URL`/`SUPABASE_SECRET_KEY` permanecen del lado servidor y sólo en Preview; adapter/RPC/RLS sin cambios. [Contrato/DDL](C5B2_SUPABASE_STORE.md), [autoridad](C5B_PERSISTENT_CLINICAL_AUTHORITY.md).
 
-Cinco ejecutores actuales: `CIRR-001`, `APP-001`, `PERI-SEC-001`, `PERI-PBE-001`, `PERI-TER-001`. No añadir casos ni migrar los otros ocho en esta tarea. Competitivo permanece desactivado. Mantener Solitario/Aprendiz, mapa/sprites, teclado propio, chat/menciones, examen, estudios, farmacología, enfermería, fisiología, cierre y XP.
+La autoridad conserva concesión/época y CAS de todo el agregado antes del ACK; un worker obsoleto no publica. El runtime compone World/GuardSession existentes. Vía, monitor, preparaciones, viajes de enfermería, estudios, reloj, recibos, cierre, claims y confirmaciones se recuperan del checkpoint operacional. Ningún cliente durable crea GuardSession ni ejecuta otra fisiología.
 
-`guard-runtime.js` compone el mismo World/GuardSession existentes. `durable-guard-authority.js` usa concesión/época y CAS de todo el agregado antes de ACK. Un trabajador obsoleto no publica. Preparaciones, vías, monitor, trabajos de enfermería, estudios, reloj, recibos, cierre y claims por integrante se recuperan del checkpoint operacional, no de botones ni de un snapshot visual. Ningún cliente durable crea otra GuardSession.
+## Prueba mínima en dos teléfonos
 
-Orden válida no equivale a administración; no bloquear una decisión clínicamente incorrecta pero interpretable; las consecuencias nacen de recibos auténticos. Derivar no opera ni controla foco. Requisitos de disposición y calidad/XP siguen separados. El reloj visible conserva 1 min real = 1 h de juego; farmacodinámica nativa .12/.03, sin cambiar constantes globales.
+1. Abrir el mismo Preview en ambos, nombres distintos, entrar y abrir «Personas» para aparecer.
+2. Uno: «Hacer guardia → Cooperativo», elegir PBE e invitar. El otro acepta desde «Personas».
+3. Acercarse a B1 y repartir anamnesis/examen, paracentesis diagnóstica y función renal/ionograma. Registrar PBE, monitor, ceftriaxona 1 g y albúmina 1.5 g/kg. Esperar recibos/resultados y reevaluar antes de Sala.
+4. Cerrar anfitrión con trabajo pendiente; continuar como invitado. Reabrir el mismo URL/perfil sin borrar almacenamiento: mismo paciente/historial/órdenes. Tras cierre y recarga de ambos, un solo recibo de XP por médico.
 
-La carrera actual se conserva por dispositivo; los claims durables están ligados a integrantes de la guardia, sin afirmar una carrera de cuenta global migrada. Chat social de lobby, voz/TURN y aceptación Android/iPhone físicos siguen fuera de esta certificación. Emulación Pixel no equivale a teléfono real.
+## Reproducir y continuar
 
-## Validación reproducible
+`npm run test:v5`; `npm run test:v5-core`; ambos builds; `node scripts/audit-v5-boundary.mjs`; `npm test`; `git diff --check`. Playwright/Chromium: `.github/workflows/atria-v5-core.yml`.
 
-`npm run test:v5`; `npm run test:v5-core`; `npm run build:v5`; `npm run build:v5-core`; `node scripts/audit-v5-boundary.mjs`; `git diff --check`; `npm test` completo. Para navegador, usar Playwright 1.58.2 y Chromium configurados en `.github/workflows/atria-v5-core.yml`:
+Navegador: `node qa/v5/durable-cooperative-browser.mjs`; `node qa/v5/durable-cooperative-admission-browser.mjs`; `V5_DURABLE_PLAYERS=3 node qa/v5/durable-cooperative-team-browser.mjs` (repetir con 4); `V5_DURABLE_LATENCY=350 node qa/v5/durable-cooperative-closure-browser.mjs`.
 
-- `node qa/v5/durable-cooperative-browser.mjs`
-- `node qa/v5/durable-cooperative-admission-browser.mjs`
-- `V5_DURABLE_PLAYERS=3 node qa/v5/durable-cooperative-team-browser.mjs` (repetir con 4)
-- `node qa/v5/durable-cooperative-closure-browser.mjs` (también `V5_DURABLE_LATENCY=350`)
+WAN: `V5_BROWSER_URL=<primary> V5_SECONDARY_URL=<secondary> node qa/v5/durable-postgres-preview.mjs`. Ambos HTTPS Preview habilitados, PostgreSQL y mismo código. Reutiliza UI completa, compite con el mismo evento real y devuelve respuestas reales; nunca fabrica estados clínicos. Flags proxy/CA del reporte: sólo entorno de automatización, sin relajar seguridad del producto. Resultados en `qa/v5-browser-results`; el backend local es SQLite/CAS y no equivale a PostgreSQL/WAN.
 
-El último acepta `V5_BROWSER_URL` para validar el despliegue real; no intercepta datos clínicos. Sus recibos y fallos se guardan en `qa/v5-browser-results`, publicados como artefacto CI. El backend local de esos recorridos es SQLite/CAS, no PostgreSQL ni prueba WAN.
+## Contratos y límites
 
-Procedencia histórica: [C5.a](C5A_SHARED_CLINICAL_GUARD.md), [evidencia C5.a](../evidence/c5a/verification.json), [C5.b.1](../evidence/c5b/verification.json), [PBE](C3B_PBE.md), [terciaria](C3C_TERTIARY_PERITONITIS.md). No rehacer auditorías ni extracciones ya verificadas.
+Cinco ejecutores: `CIRR-001`, `APP-001`, `PERI-SEC-001`, `PERI-PBE-001`, `PERI-TER-001`. Sin casos nuevos ni migración de los otros ocho. Competitivo desactivado. Solitario/Aprendiz, NPC, chat/menciones, enfermería, estudios, farmacología, fisiología, historial, cierre, XP, teclado y movimiento conservan sus implementaciones/regresiones.
+
+Orden válida no equivale a administración; no bloquear una decisión incorrecta pero interpretable. Derivar no opera ni controla foco. Disposición y calidad/XP siguen separadas. Reloj visible: 1 min real = 1 h de juego; farmacodinámica nativa .12/.03, sin cambiar constantes.
+
+Carrera por dispositivo y claims durables por integrante; sin afirmar migración de carrera global de cuenta. Lobby/chat social conserva servicio regional existente. Voz/TURN y Android/iPhone físicos fuera de esta certificación; emulación Pixel no equivale a dispositivo físico. No retirar C5.a ni ampliar a Production sin tarea posterior explícita.
+
+Calidad: dos módulos productivos modificados en la corrección; sin dependencias nuevas, timers, motores paralelos ni refactors generales. La extensión posterior es QA/evidencia. Revisión focal y frontera verificadas.
+
+Contratos: [manual maestro](ATRIA_50_MANUAL_MAESTRO_FUNCIONAL.md), [C5.a](C5A_SHARED_CLINICAL_GUARD.md), [C5.b.1](../evidence/c5b/verification.json), [PBE](C3B_PBE.md), [terciaria](C3C_TERTIARY_PERITONITIS.md).

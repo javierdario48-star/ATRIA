@@ -8,6 +8,7 @@ import {clinical,send,walk,study} from './cooperative-ui.mjs';
 const h=await browserHarness({apiLatency:Number(process.env.V5_DURABLE_LATENCY||35),durable:true});
 const other=await h.newBrowser(),contexts=[],pages=[],errors=[],acknowledgements=[];
 const out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results';
+const names=['Dra. Ana','Dr. Bruno'].map(name=>name+(process.env.V5_QA_NAME_SUFFIX?' '+process.env.V5_QA_NAME_SUFFIX:''));
 await fs.mkdir(out,{recursive:true});
 let stage='boot';
 try{
@@ -22,17 +23,17 @@ try{
      acknowledgements:value.acknowledgements,doctors:value.spatial?.doctors});
    }catch{}
   });
-  await p.goto(process.env.V5_BROWSER_URL||h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
-  await p.locator('#playerName').fill(i?'Dr. Bruno':'Dra. Ana');
+  await p.goto(i===1&&process.env.V5_GUEST_BROWSER_URL||process.env.V5_BROWSER_URL||h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
+  await p.locator('#playerName').fill(names[i]);
   await p.locator('#enterButton').click();
   await p.locator('#peopleButton').click();await p.locator('#modalClose').click();
  }
  let host=pages[0];const guest=pages[1];
  stage='accepted two-physician durable room';
- await host.waitForFunction(()=>atriaV5.snapshot().others.some(x=>x.name==='Dr. Bruno'));
+ await host.waitForFunction(name=>atriaV5.snapshot().others.some(x=>x.name===name),names[1]);
  await host.locator('#guardButton').click();await host.locator('[data-mode="coop"]').click();
  await host.locator('#caseChoice').selectOption('PERI-PBE-001');
- await host.locator('#coopDoctors label').filter({hasText:'Dr. Bruno'}).locator('input').check();
+ await host.locator('#coopDoctors label').filter({hasText:names[1]}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
  await guest.locator('#peopleButton').click();await guest.locator('[data-action="join-coop"]').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>{
@@ -62,15 +63,21 @@ try{
  await host.locator('#diagnosisInput').press('Enter');await host.locator('#modalClose').click();
  stage='bedside treatment using physical nurse';
  await send(host,'Enfermera monitor y ceftriaxona 1 g');
- await send(guest,'Enfermera albumina 1.5 g/kg');
- const early=await clinical(guest);
+ const early=await clinical(host);
  assert.equal(early.patient.administrationLog.length,0,'an order must not bypass physical nurse');
  assert.equal(early.patient.orders.length,2,'both real studies must be admitted');
  assert(early.patient.orders.some(x=>x.status==='pending'),'host loss must occur with unfinished work');
- for(const item of early.room.events.filter(x=>x.type==='chat.posted'))
-  assert.equal(item.routeError,null,'clinical command must be admitted: '+item.message.text);
  stage='host disconnects with nursing and studies pending';
+ const albuminPending=send(guest,'Enfermera albumina 1.5 g/kg');
+ albuminPending.catch(()=>{});
  await host.close();
+ await albuminPending;
+ const admitted=await clinical(guest);
+ for(const item of admitted.room.events.filter(x=>x.type==='chat.posted'))
+  assert.equal(item.routeError,null,'clinical command must be admitted: '+item.message.text);
+ for(const id of ['ceftriaxone','albumin'])
+  assert(admitted.room.events.some(event=>event.type==='chat.posted'&&event.clinical.some(item=>
+   item.kind==='therapy.request'&&item.id===id&&item.status==='pending')),'the original order must wait for physical nurse: '+id);
  await guest.waitForFunction(()=>{
   const c=atriaV5.snapshot().clinical;
   return c?.patient.administrationLog.length===2&&c.patient.procedures?.monitor?.connected===true
@@ -81,6 +88,14 @@ try{
  assert.equal(new Set(treated.patient.administrationLog.map(x=>x.actorId)).size,2);
  assert.equal(new Set(treated.patient.administrationLog.map(x=>x.sourceEventId)).size,2);
  assert.deepEqual(treated.patient.administrationLog.map(x=>x.id).sort(),['albumin','ceftriaxone']);
+ for(const administration of treated.patient.administrationLog){
+  const completed=treated.room.events.filter(event=>event.type==='clinical.completed'&&event.eventId===administration.sourceEventId);
+  assert.equal(completed.length,1,'exactly one authentic nursing completion per dose');
+  const completion=completed[0],order=treated.room.events.find(event=>event.type==='chat.posted'&&event.message.id===completion.commandId&&event.message.actorId===administration.actorId);
+  assert(order&&completion.revision>order.revision&&completion.at>order.message.at,'nursing must complete after the original order');
+  assert.equal(completion.clinical[0].status,'executed');
+  assert.equal(completion.clinical[0].receipt.sourceEventId,administration.sourceEventId);
+ }
  assert.equal(new Set(treated.patient.orders.map(x=>x.sourceEventId)).size,2);
  stage='host returns to the same completed nursing, studies and history';
  host=await contexts[0].newPage();pages[0]=host;host.setDefaultTimeout(45000);

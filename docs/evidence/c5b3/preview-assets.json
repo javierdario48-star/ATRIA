@@ -1,0 +1,12 @@
+{
+  "origin": "https://night-shift-clinical-r57r48hky-javierdario4878-7324.vercel.app",
+  "manifestMatches": true,
+  "identicalAssetHashes": 114,
+  "html": [
+    {
+      "file": "index.html",
+      "originalSourceMatchesAfterRemovingExactVercelToolbar": true
+    }
+  ],
+  "passed": true
+}

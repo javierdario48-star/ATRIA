@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-19",
+  "method": "read-only SQL after real two-deployment browser closure, both reloads and concurrent retries",
+  "room_id": "a597e3ef-c1bd-44ee-8ee3-711378153cec",
+  "revision": 355,
+  "epoch": 177,
+  "lease": null,
+  "closed": true,
+  "score": 100,
+  "xp": 111,
+  "administrations": 2,
+  "unique_administrations": 2,
+  "studies": 2,
+  "unique_studies": 2,
+  "claims": [
+    {
+      "xp": 111,
+      "member": "qa_1fbefa861d5bc312c8551b46d2e46b",
+      "actorId": "qa_1fbefa861d5bc312c8551b46d2e46b",
+      "sameOutcome": true
+    },
+    {
+      "xp": 111,
+      "member": "qa_ac3d46666cb46563ef8f875cb5a4cb",
+      "actorId": "qa_ac3d46666cb46563ef8f875cb5a4cb",
+      "sameOutcome": true
+    }
+  ],
+  "deliveries": [
+    [
+      "qa_1fbefa861d5bc312c8551b46d2e46b",
+      {
+        "revision": 24,
+        "outcomeId": "a597e3ef-c1bd-44ee-8ee3-711378153cec:qa_1fbefa861d5bc312c8551b46d2e46b:message-21861a1f-dbd6-4818-9496-ff4270ce2988-1:0"
+      }
+    ],
+    [
+      "qa_ac3d46666cb46563ef8f875cb5a4cb",
+      {
+        "revision": 24,
+        "outcomeId": "a597e3ef-c1bd-44ee-8ee3-711378153cec:qa_1fbefa861d5bc312c8551b46d2e46b:message-21861a1f-dbd6-4818-9496-ff4270ce2988-1:0"
+      }
+    ]
+  ],
+  "pending_nursing": 0,
+  "waiting_for_access": 0
+}

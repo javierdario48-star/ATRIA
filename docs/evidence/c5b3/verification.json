@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-19",
+  "baseHead": "388f1fdb62f0dfd34cbb1c2db1227e879140bfce",
+  "clinicalCodeHead": "6f152a61f02b571dd56218e6a2befa9b0480f6c7",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "scope": "C5.b.3; QA/documentation-only follow-up",
+  "previewOnly": true,
+  "featureFlag": {
+    "name": "ATRIA_DURABLE_COOP_ENABLED",
+    "value": "1",
+    "target": [
+      "preview"
+    ],
+    "gitBranch": "atria-5.0-core-rebuild-experimental",
+    "activatedAfterGreenRuns": [
+      39194087173,
+      39194087198
+    ]
+  },
+  "deployments": [
+    {
+      "id": "dpl_4AMgsAFbb6VpuSB9f7joGdh6Z4fK",
+      "url": "https://night-shift-clinical-r57r48hky-javierdario4878-7324.vercel.app",
+      "sha": "6f152a61f02b571dd56218e6a2befa9b0480f6c7",
+      "target": null,
+      "readyState": "READY"
+    },
+    {
+      "id": "dpl_DFeFmyYrF1XL6muyjR6sH1TRpDsv",
+      "url": "https://night-shift-clinical-c3r6m5lut-javierdario4878-7324.vercel.app",
+      "sha": "6f152a61f02b571dd56218e6a2befa9b0480f6c7",
+      "target": null,
+      "readyState": "READY"
+    }
+  ],
+  "tests": {
+    "v5": 474,
+    "core": 40,
+    "worldNavigation": 19,
+    "structuralModules": 82,
+    "productionRafOwners": 1,
+    "newProductionTimers": 0,
+    "independentClinicalExecutorsInUi": 0,
+    "ciV5Jobs": 15,
+    "ciHistoricalJobs": 4,
+    "durablePlayers": [
+      2,
+      3,
+      4
+    ],
+    "pbeQuality": 100,
+    "perDoctorXp": 111,
+    "realPostgresBrowserAcceptance": true,
+    "realMultiDeploymentContentionAndRecovery": true
+  },
+  "evidence": {
+    "clinical": "pbe-postgres.json",
+    "crossDeployment": "postgres-preview.json",
+    "persistedSql": "postgres-persisted.json",
+    "localLatency350": "pbe-latency350.json",
+    "codeCi": "code-ci.json",
+    "assets": "preview-assets.json"
+  },
+  "preserved": [
+    "C5.a",
+    "solo",
+    "apprentice",
+    "native clinical engines",
+    "existing five cases",
+    "Production",
+    "main",
+    "ATRIA 4.8.7"
+  ],
+  "limitations": [
+    "No physical Android/iPhone acceptance performed",
+    "Voice/TURN outside scope",
+    "Career per device with durable per-member guard claims, no global account career migration",
+    "Not certification of all remaining C5 social features"
+  ]
+}

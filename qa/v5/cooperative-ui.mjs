@@ -1,4 +1,8 @@
 // Public-UI helpers shared by the independently launched 2/3/4-browser runs.
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createNavigation} from '../../src/v5/engine/navigation.js';
+const navigation=createNavigation(JSON.parse(readFileSync(new URL('../../src/v5/content/hospital.json',import.meta.url),'utf8')));
 export const state=p=>p.evaluate(()=>atriaV5.snapshot());
 export const clinical=async p=>(await state(p)).clinical;
 async function waitForMessage(p,text,before){
@@ -12,9 +16,30 @@ export async function send(p,text){const before=await messageIds(p);
 }
 export async function walk(p,lastX=144){
  for(const [x,y] of [[496,1200],[496,1080],[496,960],[496,840],[496,720],[400,580],[250,470],[lastX,420]]){
-  await p.waitForFunction(()=>{const s=atriaV5.snapshot(),c=atriaV5.diagnostics().renderer.camera;return Math.abs(c.x-s.player.x)<1&&Math.abs(c.y-s.player.y)<1;});
-  const r=await p.evaluate(()=>atriaV5.diagnostics().renderer),point={x:(x-r.camera.x)*r.scale+r.anchorX,y:(y-r.camera.y)*r.scale+r.anchorY};
-  await p.locator('#game').click({position:point});await p.waitForFunction(()=>atriaV5.snapshot().player.moving);await p.waitForFunction(()=>!atriaV5.snapshot().player.moving);
+  await p.waitForFunction(()=>{const s=atriaV5.snapshot(),c=atriaV5.diagnostics().renderer.camera;
+   return !s.player.moving&&!s.player.target&&s.player.pathIndex>=s.player.path.length&&Math.abs(c.x-s.player.x)<1&&Math.abs(c.y-s.player.y)<1;});
+  const before=await state(p),expected=structuredClone(before.player);assert(navigation.target(expected,x,y));
+  const goal=expected.target,name=before.player.name;
+  const arrival=(await p.evaluate(()=>atriaV5.diagnostics().cooperative.durable))?p.waitForResponse(async response=>{
+   if(new URL(response.url()).pathname!=='/api/clinical'||response.status()!==200)return false;
+   try{const value=await response.json(),self=value.spatial?.doctors.find(d=>d.name===name);
+    return self&&!self.moving&&!self.target&&Math.hypot(self.x-goal[0],self.y-goal[1])<3;
+   }catch{return false;}
+  }):null;
+  arrival?.catch(()=>{}); // A failed click still closes the browser in finally.
+  // Check the hit target and dispatch a real pointer immediately. Locator
+  // actionability can wait while a reconciled camera invalidates old pixels.
+  const point=await p.evaluate(({x,y})=>{
+   const r=atriaV5.diagnostics().renderer,b=document.getElementById('game').getBoundingClientRect();
+   const px=b.x+(x-r.camera.x)*r.scale+r.anchorX,py=b.y+(y-r.camera.y)*r.scale+r.anchorY;
+   return {x:px,y:py,unobstructed:document.elementFromPoint(px,py)?.id==='game'};
+  },{x,y});
+  assert(point.unobstructed,'the intended waypoint must be visible and unobstructed');
+  await p.mouse.click(point.x,point.y);
+  if(arrival)await arrival;
+  await p.waitForFunction(goal=>{const s=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
+   return !s.moving&&!s.target&&s.pathIndex>=s.path.length&&Math.hypot(s.x-goal[0],s.y-goal[1])<3&&Math.hypot(c.x-s.x,c.y-s.y)<1;
+  },goal);
  }
 }
 export async function study(p,id){const before=await messageIds(p);await p.locator('#peopleButton').click();await p.locator('[data-action="studies"]').click();await p.locator('#studyChoice').selectOption(id);await p.locator('[data-action="request-study"]').click();await waitForMessage(p,'/estudio '+id,before);}

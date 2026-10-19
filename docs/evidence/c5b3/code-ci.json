@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-19",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "clinicalCodeHead": "6f152a61f02b571dd56218e6a2befa9b0480f6c7",
+  "workflows": [
+    {
+      "runId": 39194087173,
+      "head": "6f152a61f02b571dd56218e6a2befa9b0480f6c7",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/39194087173",
+      "jobs": [
+        {
+          "name": "clean-core-contract",
+          "conclusion": "success"
+        },
+        {
+          "name": "durable-cooperative-browser",
+          "conclusion": "success"
+        },
+        {
+          "name": "complete-peritonitis-browser (tertiary)",
+          "conclusion": "success"
+        },
+        {
+          "name": "durable-cooperative-team-browser (3)",
+          "conclusion": "success"
+        },
+        {
+          "name": "durable-guard-recovery",
+          "conclusion": "success"
+        },
+        {
+          "name": "complete-peritonitis-browser (pbe)",
+          "conclusion": "success"
+        },
+        {
+          "name": "complete-peritonitis-browser (peritonitis)",
+          "conclusion": "success"
+        },
+        {
+          "name": "independent-game-browser",
+          "conclusion": "success"
+        },
+        {
+          "name": "real-cooperative-team-browser (4)",
+          "conclusion": "success"
+        },
+        {
+          "name": "real-cooperative-clinical-browser",
+          "conclusion": "success"
+        },
+        {
+          "name": "preserved-historical-regression",
+          "conclusion": "success"
+        },
+        {
+          "name": "real-cooperative-team-browser (3)",
+          "conclusion": "success"
+        },
+        {
+          "name": "durable-cooperative-closure-browser",
+          "conclusion": "success"
+        },
+        {
+          "name": "actual-http-multiplayer-browser",
+          "conclusion": "success"
+        },
+        {
+          "name": "durable-cooperative-team-browser (4)",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "runId": 39194087198,
+      "head": "6f152a61f02b571dd56218e6a2befa9b0480f6c7",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/javierdario48-star/ATRIA/actions/runs/39194087198",
+      "jobs": [
+        {
+          "name": "legacy-multiplayer-characterization (I, 3)",
+          "conclusion": "success"
+        },
+        {
+          "name": "legacy-multiplayer-characterization (G, 2)",
+          "conclusion": "success"
+        },
+        {
+          "name": "legacy-gameplay-browser",
+          "conclusion": "success"
+        },
+        {
+          "name": "legacy-multiplayer-characterization (F, 2)",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "note": "Exact executable-code checkpoint verified before enabling the experimental branch Preview. Later QA/documentation-only checkpoints must also have green workflows at their published HEAD."
+}

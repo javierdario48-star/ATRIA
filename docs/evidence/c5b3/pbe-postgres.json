@@ -1,0 +1,153 @@
+{
+  "passed": true,
+  "url": "https://night-shift-clinical-r57r48hky-javierdario4878-7324.vercel.app",
+  "doctors": 2,
+  "physicalAndroid": false,
+  "patientUid": "a597e3ef-c1bd-44ee-8ee3-711378153cec:patient",
+  "roomId": "a597e3ef-c1bd-44ee-8ee3-711378153cec",
+  "hostLostWithWorkPending": true,
+  "hostRecovered": true,
+  "initialVitals": {
+    "hr": 119.94108109840545,
+    "rr": 25.643015730162524,
+    "dia": 54.69677811115078,
+    "sys": 89.05767905956836,
+    "spo2": 94.60770536524525,
+    "temp": 38.25547319413694
+  },
+  "treatedVitals": {
+    "hr": 104.25418068693375,
+    "rr": 20.83334683095517,
+    "dia": 60.1909362425641,
+    "sys": 100.13357737236065,
+    "spo2": 96.38879144945155,
+    "temp": 37.813171735642136
+  },
+  "initialInflammation": 0.7764478999999412,
+  "treatedInflammation": 0.33719562499992095,
+  "closure": {
+    "kind": "clinical.closure",
+    "eventId": "a597e3ef-c1bd-44ee-8ee3-711378153cec:qa_1fbefa861d5bc312c8551b46d2e46b:message-21861a1f-dbd6-4818-9496-ff4270ce2988-1:0",
+    "patientUid": "a597e3ef-c1bd-44ee-8ee3-711378153cec:patient",
+    "actorId": "qa_1fbefa861d5bc312c8551b46d2e46b",
+    "caseId": "PERI-PBE-001",
+    "destination": "sala",
+    "quality": {
+      "score": 100,
+      "diagnosis": 15,
+      "history": 15,
+      "safety": 25,
+      "studies": 15,
+      "treatment": 25,
+      "efficiency": 5,
+      "penalty": 0,
+      "extraStudies": 0,
+      "extraStudyPenalty": 0,
+      "handoffCredit": 0
+    },
+    "debrief": {
+      "schema": "atria.v5.closure-debrief.v1",
+      "score": 100,
+      "earned": [
+        {
+          "label": "Impresión diagnóstica",
+          "points": 15
+        },
+        {
+          "label": "Anamnesis",
+          "points": 15
+        },
+        {
+          "label": "Evaluación y reevaluación",
+          "points": 25
+        },
+        {
+          "label": "Estudios relevantes",
+          "points": 15
+        },
+        {
+          "label": "Tratamiento y destino",
+          "points": 25
+        },
+        {
+          "label": "Uso eficiente de recursos",
+          "points": 5
+        }
+      ],
+      "deductions": [],
+      "missing": [],
+      "unnecessary": []
+    },
+    "xp": 111,
+    "closed": true
+  },
+  "administrations": [
+    {
+      "id": "ceftriaxone",
+      "dose": {
+        "unit": "mg",
+        "amount": 1000,
+        "display": "1 g",
+        "defaultApplied": false
+      },
+      "label": "Ceftriaxona IV",
+      "route": "iv",
+      "actorId": "qa_1fbefa861d5bc312c8551b46d2e46b",
+      "patientUid": "a597e3ef-c1bd-44ee-8ee3-711378153cec:patient",
+      "sourceEventId": "a597e3ef-c1bd-44ee-8ee3-711378153cec:qa_1fbefa861d5bc312c8551b46d2e46b:message-7471015a-badb-4e8d-937b-58211d28a98c-10:2",
+      "administeredAtRealSecond": 37.333333333333336,
+      "administeredAtNativeMinute": 4.273
+    },
+    {
+      "id": "albumin",
+      "dose": {
+        "unit": "g/kg",
+        "amount": 1.5,
+        "display": "1.5 g/kg",
+        "defaultApplied": false
+      },
+      "label": "Albúmina IV",
+      "route": "iv",
+      "actorId": "qa_ac3d46666cb46563ef8f875cb5a4cb",
+      "patientUid": "a597e3ef-c1bd-44ee-8ee3-711378153cec:patient",
+      "sourceEventId": "a597e3ef-c1bd-44ee-8ee3-711378153cec:qa_ac3d46666cb46563ef8f875cb5a4cb:message-c3ad54ad-cf6f-4675-9dc5-b252e6f0e3b0-5:0",
+      "administeredAtRealSecond": 41.916666666666664,
+      "administeredAtNativeMinute": 4.823
+    }
+  ],
+  "orders": [
+    {
+      "id": "pbe_paracentesis",
+      "type": "procedure",
+      "label": "Paracentesis diagnóstica + PMN",
+      "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³.",
+      "status": "done",
+      "actorId": "qa_ac3d46666cb46563ef8f875cb5a4cb",
+      "patientUid": "a597e3ef-c1bd-44ee-8ee3-711378153cec:patient",
+      "nativeResult": true,
+      "resultSource": "native",
+      "readyAtMinute": 69.61666666666667,
+      "sourceEventId": "a597e3ef-c1bd-44ee-8ee3-711378153cec:qa_ac3d46666cb46563ef8f875cb5a4cb:message-c3ad54ad-cf6f-4675-9dc5-b252e6f0e3b0-4:0",
+      "requestedAtMinute": 29.616666666666667,
+      "universalFallback": false
+    },
+    {
+      "id": "pbe_renal",
+      "type": "lab",
+      "label": "Función renal + ionograma",
+      "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal.",
+      "status": "done",
+      "actorId": "qa_1fbefa861d5bc312c8551b46d2e46b",
+      "patientUid": "a597e3ef-c1bd-44ee-8ee3-711378153cec:patient",
+      "nativeResult": true,
+      "resultSource": "native",
+      "readyAtMinute": 76.45,
+      "sourceEventId": "a597e3ef-c1bd-44ee-8ee3-711378153cec:qa_1fbefa861d5bc312c8551b46d2e46b:message-7471015a-badb-4e8d-937b-58211d28a98c-8:0",
+      "requestedAtMinute": 31.45,
+      "universalFallback": false
+    }
+  ],
+  "perDoctorXp": 111,
+  "noDuplicateXpOnBothReloads": true,
+  "errors": []
+}

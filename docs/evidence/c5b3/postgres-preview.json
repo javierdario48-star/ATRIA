@@ -1,0 +1,52 @@
+{
+  "passed": true,
+  "primary": "https://night-shift-clinical-r57r48hky-javierdario4878-7324.vercel.app",
+  "secondary": "https://night-shift-clinical-c3r6m5lut-javierdario4878-7324.vercel.app",
+  "roomId": "a597e3ef-c1bd-44ee-8ee3-711378153cec",
+  "realPostgreSQL": true,
+  "realBrowserUi": true,
+  "independentDeployments": true,
+  "guestRequestsOnSecondary": 2,
+  "nativeUiTraffic": "each browser uses its own deployment",
+  "secondaryRecoveredMedicalAckAfterHostLoss": true,
+  "concurrentInitialStatuses": [
+    200,
+    200
+  ],
+  "accepted": [
+    {
+      "deployment": "https://night-shift-clinical-r57r48hky-javierdario4878-7324.vercel.app",
+      "epoch": 177,
+      "revision": 25
+    },
+    {
+      "deployment": "https://night-shift-clinical-c3r6m5lut-javierdario4878-7324.vercel.app",
+      "epoch": 176,
+      "revision": 25
+    }
+  ],
+  "uniqueCommandAfterRetry": true,
+  "medicalEventReplay": {
+    "commandId": "message-c3ad54ad-cf6f-4675-9dc5-b252e6f0e3b0-5",
+    "statuses": [
+      {
+        "deployment": "https://night-shift-clinical-c3r6m5lut-javierdario4878-7324.vercel.app",
+        "status": 409,
+        "code": "busy"
+      },
+      {
+        "deployment": "https://night-shift-clinical-r57r48hky-javierdario4878-7324.vercel.app",
+        "status": 200,
+        "code": null
+      }
+    ],
+    "identicalAcceptedAckAcrossDeployments": true
+  },
+  "identicalAckAcrossDeployments": true,
+  "uniqueMedicationReceipts": 2,
+  "uniqueStudies": 2,
+  "perDoctorXp": 111,
+  "memberClaims": 2,
+  "proxyUsed": true,
+  "proxyCertificateException": true
+}
