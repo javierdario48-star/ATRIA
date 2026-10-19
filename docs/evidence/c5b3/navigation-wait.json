@@ -1,0 +1,107 @@
+{
+  "date": "2026-10-19",
+  "parentHead": "d739d6a3faead992e5e563d6d31f9f3e26200f5a",
+  "productionCodeHead": "6f152a61f02b571dd56218e6a2befa9b0480f6c7",
+  "failedRun": 39196874010,
+  "failedJob": 117881436638,
+  "failedStage": "remote navigation and shared transcript",
+  "failedMessage": "page.waitForResponse: Timeout 45000ms exceeded",
+  "previousV5Jobs": {
+    "passed": 14,
+    "total": 15
+  },
+  "previousHistoricalRun": 39196874005,
+  "previousHistoricalJobs": {
+    "passed": 4,
+    "total": 4
+  },
+  "diagnosis": {
+    "layer": "QA pointer projection / awaited navigation goal",
+    "subscriptionBeforeClick": true,
+    "responseBodyReusableInInstalledPlaywright": "1.58.2 server network.Response.body caches _contentPromise",
+    "originalCiLogHadNoWaypointOrObservedPose": true,
+    "controlledRegression": "real map/navigation, page projection double, admitted subpixel camera correction ±0.8px",
+    "examples": [
+      {
+        "waypoint": [
+          400,
+          580
+        ],
+        "expectedGoal": [
+          400,
+          594.1132075471698
+        ],
+        "otherGoalAfterDrift": [
+          400,
+          565.1320754716982
+        ]
+      },
+      {
+        "waypoint": [
+          496,
+          840
+        ],
+        "expectedGoal": [
+          496,
+          825.9622641509434
+        ],
+        "otherGoalAfterDrift": [
+          496,
+          854.9433962264151
+        ]
+      }
+    ],
+    "noTransportDefectDemonstrated": true
+  },
+  "fix": {
+    "pointer": "center of original requested tile, not center of nearest open goal",
+    "authoritativeArrivalStillRequired": true,
+    "timeoutMs": 45000,
+    "arrivalTolerancePixels": 3,
+    "clinicalAssertionsRemoved": 0,
+    "productionFilesChanged": [],
+    "newDependencies": [],
+    "environmentMutations": []
+  },
+  "regression": {
+    "before": {
+      "tests": 6,
+      "passed": 2,
+      "failed": 4
+    },
+    "after": {
+      "tests": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "realBrowserConsecutivePasses": 5,
+    "rtcUnavailable": true,
+    "hostLossAndRecovery": true,
+    "sharedTranscriptMessages": 3,
+    "ciRepetitionsPerJob": 3
+  },
+  "local": {
+    "v5": 474,
+    "core": 40,
+    "builds": [
+      "v5",
+      "v5-core"
+    ],
+    "structuralModules": 82,
+    "rafOwners": 1,
+    "newTimers": 0,
+    "independentClinicalExecutorsInUi": 0
+  },
+  "flagObserved": {
+    "key": "ATRIA_DURABLE_COOP_ENABLED",
+    "value": "1",
+    "target": [
+      "preview"
+    ],
+    "gitBranch": "atria-5.0-core-rebuild-experimental",
+    "createdAt": 1792380392423,
+    "updatedAt": 1792380392423,
+    "changed": false
+  },
+  "scope": "QA-only correction; final HEAD CI and final Preview/WAN must be verified after publication"
+}

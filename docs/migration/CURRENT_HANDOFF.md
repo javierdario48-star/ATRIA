@@ -1,12 +1,22 @@
 # ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
-Repositorio `javierdario48-star/ATRIA`; rama exclusiva `atria-5.0-core-rebuild-experimental`. Base remota al iniciar: `388f1fdb62f0dfd34cbb1c2db1227e879140bfce`. Código ejecutable certificado: `6f152a61f02b571dd56218e6a2befa9b0480f6c7`. El checkpoint posterior agrega QA/evidencia sin cambiar el ejecutable. Obtener HEAD remoto antes de continuar; nunca forzar el ref.
+Repositorio `javierdario48-star/ATRIA`; rama exclusiva `atria-5.0-core-rebuild-experimental`. Base original: `388f1fdb62f0dfd34cbb1c2db1227e879140bfce`. Código ejecutable certificado: `6f152a61f02b571dd56218e6a2befa9b0480f6c7`. Esta consolidación parte del HEAD remoto `d739d6a3faead992e5e563d6d31f9f3e26200f5a` y sólo modifica QA/workflow/evidencia. El HEAD vigente es el commit que contiene este archivo (`git rev-parse HEAD`); comprobar sus checks exactos. Obtener HEAD remoto antes de continuar; nunca forzar el ref.
 
 ## Estado — 19-10-2026 UTC
 
-**C5.b.3 completado y habilitado sólo en el Preview de esta rama experimental.** PBE cerró con 100/100 y 111 XP por médico: dos procesos Chromium independientes, uno con emulación Pixel 5; interrogatorio/examen, dos estudios recibidos, monitor/ceftriaxona/albúmina con enfermería física, mejoría fisiológica, reevaluación, Sala, pérdida del anfitrión con trabajo pendiente, continuación del invitado, retorno y recarga de ambos sin duplicar historial, dosis, estudios, recibos o XP.
+**Autoridad clínica C5.b.3 validada y habilitada sólo en el Preview experimental. La aceptación técnica del HEAD exige sus checks 15/15 V5 y 4/4 históricos.** PBE cerró con 100/100 y 111 XP por médico: dos procesos Chromium independientes, uno con emulación Pixel 5; interrogatorio/examen, dos estudios recibidos, monitor/ceftriaxona/albúmina con enfermería física, mejoría fisiológica, reevaluación, Sala, pérdida del anfitrión con trabajo pendiente, continuación del invitado, retorno y recarga de ambos sin duplicar historial, dosis, estudios, recibos o XP.
 
 No equivale a aceptación en teléfonos físicos ni a terminar todo C5/ATRIA. C5.a se conserva. Production, main y ATRIA 4.8.7 no se modificaron.
+
+## Consolidación de la espera HTTP
+
+El HEAD previo `d739d6a` obtuvo 14/15 V5 ([run 39196874010](https://github.com/javierdario48-star/ATRIA/actions/runs/39196874010)) y 4/4 históricos ([run 39196874005](https://github.com/javierdario48-star/ATRIA/actions/runs/39196874005)). Falló únicamente `durable-cooperative-browser`, job `117881436638`, durante `remote navigation and shared transcript`: `waitForResponse` agotó 45 s. PBE, recuperación y equipos de 3/4 sí aprobaron.
+
+La suscripción se instalaba antes del clic. Playwright 1.58.2 conserva el cuerpo de Response en `_contentPromise`; leer JSON en otro observador no lo consume. El log anterior no retenía la celda/pose esperada y no demuestra por sí solo un defecto del transporte. La nueva regresión controlada sí reproduce un defecto del bot: con una corrección de cámara admisible de ±0,8 píxeles, los puntos (400,580)/(496,840), próximos al borde de celda, generan otra meta real. El servidor llega a esa otra meta y la espera exige una posición diferente.
+
+El bot ahora proyecta el centro de la misma celda solicitada, preservando incluso la búsqueda de celda abierta para los puntos bloqueados. Conserva clic real, hit-test visible, llegada autoritativa, tolerancias, 45 s y todas las aserciones clínicas. Un fallo futuro incluye doctor, waypoint, meta y última pose/época HTTP. No se cambió código productivo ni el transporte.
+
+Regresión con mapa/navegación reales y doble de página: 2 controles pasaban y 4 casos con cámara corregida fallaban antes; 6/6 pasan después. Cinco recorridos completos consecutivos con dos navegadores independientes y RTC bloqueado aprobaron pérdida/recuperación del anfitrión y transcript compartido. La CI repite ese recorrido tres veces dentro del mismo job (siguen siendo 15 jobs). Se repitieron 474/474 V5, 40/40 core, builds y frontera de 82 módulos/un RAF. [Evidencia de consolidación](../evidence/c5b3/navigation-wait.json).
 
 ## Corrección acotada
 

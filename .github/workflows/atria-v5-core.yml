@@ -313,11 +313,17 @@ jobs:
       - name: Install isolated browser test driver
         run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
       - run: npm run build:v5
+      - name: Navigation bot keeps its tile across subpixel camera corrections
+        run: node --test qa/v5/cooperative-ui.test.mjs
       - name: Two independent doctors, server-only clinical authority, host loss and durable restoration
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
-        run: node qa/v5/durable-cooperative-browser.mjs
+        run: |
+          for attempt in 1 2 3
+          do
+            node qa/v5/durable-cooperative-browser.mjs
+          done
       - name: Delayed bootstrap and three doctors with RTC signaling still pending
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright

@@ -20,9 +20,14 @@ export async function walk(p,lastX=144){
    return !s.player.moving&&!s.player.target&&s.player.pathIndex>=s.player.path.length&&Math.abs(c.x-s.player.x)<1&&Math.abs(c.y-s.player.y)<1;});
   const before=await state(p),expected=structuredClone(before.player);assert(navigation.target(expected,x,y));
   const goal=expected.target,name=before.player.name;
+  // Keep the original requested tile, including nearest-open-tile routing.
+  // A subpixel camera correction must not move an edge click into its neighbour.
+  const aim=navigation.center(...navigation.tileAt(x,y));
+  let observed=null;
   const arrival=(await p.evaluate(()=>atriaV5.diagnostics().cooperative.durable))?p.waitForResponse(async response=>{
    if(new URL(response.url()).pathname!=='/api/clinical'||response.status()!==200)return false;
    try{const value=await response.json(),self=value.spatial?.doctors.find(d=>d.name===name);
+    observed={epoch:value.epoch,doctor:self?{x:self.x,y:self.y,moving:self.moving,target:self.target}:null};
     return self&&!self.moving&&!self.target&&Math.hypot(self.x-goal[0],self.y-goal[1])<3;
    }catch{return false;}
   }):null;
@@ -33,10 +38,12 @@ export async function walk(p,lastX=144){
    const r=atriaV5.diagnostics().renderer,b=document.getElementById('game').getBoundingClientRect();
    const px=b.x+(x-r.camera.x)*r.scale+r.anchorX,py=b.y+(y-r.camera.y)*r.scale+r.anchorY;
    return {x:px,y:py,unobstructed:document.elementFromPoint(px,py)?.id==='game'};
-  },{x,y});
+  },aim);
   assert(point.unobstructed,'the intended waypoint must be visible and unobstructed');
   await p.mouse.click(point.x,point.y);
-  if(arrival)await arrival;
+  if(arrival)try{await arrival;}catch(error){
+   error.message+='; '+JSON.stringify({doctor:name,waypoint:[x,y],goal,observed});throw error;
+  }
   await p.waitForFunction(goal=>{const s=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
    return !s.moving&&!s.target&&s.pathIndex>=s.path.length&&Math.hypot(s.x-goal[0],s.y-goal[1])<3&&Math.hypot(c.x-s.x,c.y-s.y)<1;
   },goal);
