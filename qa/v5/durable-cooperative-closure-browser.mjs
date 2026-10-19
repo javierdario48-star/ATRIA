@@ -57,7 +57,7 @@ try{
  stage='administered drugs with unique receipts and completed studies';
  await Promise.all(pages.map(p=>p.waitForFunction(()=>{
   const c=atriaV5.snapshot().clinical;
-  return c?.patient.administrationLog.length===2&&c.patient.procedures.monitor.connected
+  return c?.patient.administrationLog.length===2&&c.patient.procedures?.monitor?.connected===true
    &&c.patient.orders.length===2&&c.patient.orders.every(x=>x.status==='done');
  },null,{timeout:120000})));
  const treated=await clinical(host);
