@@ -16,9 +16,9 @@ const store=sqlConfigured?createPostgresGuardStore({
 const authority=createDurableGuardAuthority({store,content:clinicalContent});
 const social=createQaSocialServer(getCache(undefined,'atria-social-qa-v1',':'));
 const route=createClinicalHttp({authority,
- // C5.b.1 exposes the storage probe only. Enabling clinical requests requires
- // the integrated replica client to replace C5.a, never coexist with its host.
- enabled:false,
+ // C5.b.3: activation requires an explicit Preview-only server variable.
+ // Production is always disabled, even if the variable is accidentally set.
+ enabled:process.env.VERCEL_ENV==='preview'&&process.env.ATRIA_DURABLE_COOP_ENABLED==='1',
  onUnavailable(error,action){if(action==='capability')console.error('ATRIA durable storage capability failed',
   error?.name||'Error',String(error?.message||'').replace(/vercel_blob_[a-z_]+_[A-Za-z0-9_-]+/gi,'[redacted]').slice(0,400));},
  async verifiedRoom(headers,roomId,actorId){
