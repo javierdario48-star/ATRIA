@@ -5,6 +5,7 @@ import {createPrivateBlobGuardStore} from '../src/v5/server/private-blob-guard-s
 import {createPostgresGuardStore} from '../src/v5/server/postgres-guard-store.js';
 import {createDurableGuardAuthority} from '../src/v5/server/durable-guard-authority.js';
 import {createClinicalHttp} from '../src/v5/server/clinical-http.js';
+import {createClinicalStoreProbe} from '../src/v5/server/clinical-store-probe.js';
 import {clinicalContent} from '../src/v5/server/content.js';
 // C5.b.2: the Postgres store is selected only if BOTH server-only secrets
 // are present. Clinical requests remain disabled until replica migration.
@@ -25,14 +26,7 @@ const route=createClinicalHttp({authority,
   const result=await social.route({method:'GET',path:'/api/rooms/'+roomId+'/messages',headers,query:{after:0}});
   return result.status===200?result.body.room:null;
  },
- async probe(){
-  const id='storage-capability',seed={kind:'atria-private-cas-probe',counter:0};
-  await store.compareAndSwap(id,null,seed);const before=await store.read(id);if(!before)throw Error('private Blob read unavailable');
-  const value={...seed,counter:before.value.counter+1};const etag=await store.compareAndSwap(id,before.etag,value);
-  if(!etag||await store.compareAndSwap(id,before.etag,seed)!==null)throw Error('atomic Blob precondition unavailable');
-  const after=await store.read(id);if(after.etag!==etag||after.value.counter!==value.counter)throw Error('consistent Blob read unavailable');
-  return {durable:true,kind:sqlConfigured?'postgres-atomic-cas':'private-blob-etag-cas',schemaVersion:1};
- }});
+ probe:createClinicalStoreProbe({store,kind:sqlConfigured?'postgres-atomic-cas':'private-blob-etag-cas'})});
 export default async function clinical(req,res){
  res.setHeader('Cache-Control','private, no-store');res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('X-Content-Type-Options','nosniff');
  const origin=req.headers?.origin,host=req.headers?.host;
