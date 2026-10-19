@@ -9,7 +9,7 @@ const guestBrowser=await h.newBrowser(),contexts=[],errors=[],pages=[];
 let stage='boot';
 try{
  for(const [i,browser] of [h.browser,guestBrowser].entries()){
-  const context=await browser.newContext(i===1?h.devices['Pixel 5']:{viewport:{width:1024,height:768}});
+  const context=await browser.newContext(i===1?h.devices['Pixel 5']:{viewport:{width:1280,height:960}});
   contexts.push(context);
   const page=await context.newPage();pages.push(page);
   page.setDefaultTimeout(45000);
