@@ -17,7 +17,13 @@ export async function browserHarness({apiLatency=0}={}){
    if(pathname.startsWith('/api/')){
     let raw='';for await(const chunk of req)raw+=chunk;if(apiLatency)await new Promise(r=>setTimeout(r,apiLatency));
     const input={method:req.method,path:pathname,query:Object.fromEntries(url.searchParams),headers:req.headers,body:raw?JSON.parse(raw):{}};
-    const response=await (pathname==='/api/lobby-sync'?social.signalRoute(input):social.route(input));
+    // C5.a baseline tests keep the new server authority disabled; C5.b
+    // acceptance has a separate durable backend, never this ephemeral fixture.
+    const response=pathname==='/api/clinical'?
+     (input.method==='POST'&&input.body.action==='capability'
+      ?{status:200,body:{durable:false,kind:'qa-legacy-only',schemaVersion:1,clinicalEnabled:false}}
+      :{status:503,body:{code:'recovery-client-not-enabled'}}):
+     (pathname==='/api/lobby-sync'?await social.signalRoute(input):await social.route(input));
     requests.push({path:pathname,status:response.status});res.writeHead(response.status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(response.body));return;
    }
    const file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':''));
