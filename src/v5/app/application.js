@@ -307,7 +307,9 @@ export async function createApplication({document,window,content,signal}){
   advanceClinicalTo(window.performance.now());
   if(leaveShared)restoreRoomId=null;
   if(leaveShared)cancelSharedIntent();
-  guardSession?.dispose();guardSession=null;replica=null;durableClient=null;coopRoomId=null;coopCaseId=null;lastMotion='';announcedClosure=null;announcedDeathUid=null;pendingPatientAction=null;clinicalUI.reset();patientWheel.hide();patientClinical.hide();close();world.enterLobby();resetChat('El lobby está listo para hablar.');
+  guardSession?.dispose();guardSession=null;replica=null;durableClient=null;coopRoomId=null;coopCaseId=null;lastMotion='';announcedClosure=null;announcedDeathUid=null;pendingPatientAction=null;clinicalUI.reset();patientWheel.hide();patientClinical.hide();close();// Everyone joining the lobby participates in the existing social presence loop;
+  // opening Personas or choosing Cooperativo must not be a prerequisite.
+  world.enterLobby();socialEnabled=true;resetChat('El lobby está listo para hablar.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;updateHud();maybeRecoverStoredRoom();
  }
  function guardSetup(){
