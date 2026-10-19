@@ -1,5 +1,14 @@
 # ATRIA 5.0 — punto de continuación verificado
 
+## C5.b.2 — Preview Supabase conectada y regresión HTTP (19-10-2026 UTC)
+
+**Evidencia real, sin activar la nueva autoridad:** Preview Vercel `night-shift-clinical-p8on1cj3g-javierdario4878-7324.vercel.app` del commit `93d5485e43ac597ff909501fba2b4c76dd44959c` devolvió **8/8 HTTP200** con `{durable:true,kind:'postgres-atomic-cas',schemaVersion:1,clinicalEnabled:false}` ante ocho sondeos concurrentes desde otro entorno. Dos llamadas `start/sync` respondieron HTTP503 `recovery-client-not-enabled` como protección prevista. El sondeo anterior sí había reproducido 2/4 respuestas HTTP503 por contención de la propia fila de capacidad; `clinical-store-probe.js` lo corrige con relectura y CAS acotado sin otra tabla ni almacén. Tests del módulo: 3/3. No significa que los médicos puedan recuperar la sesión en la interfaz.
+
+**Integración de transporte probada:** `src/v5/server/clinical-http-durable.test.js` ejercita API HTTP con dos identidades, SQLite durable, recreación del worker, pérdida de caché social, rechazo al extraño y deduplicación del mismo mensaje al reintentar. Pasó localmente antes de su publicación en el commit `3023c7bab9ab4a5e691b9f58d2bca4cc0f2c2fe9`. Checkpoint previo del sondeo: `93d5485e43ac597ff909501fba2b4c76dd44959c`. **Comprobar CI del HEAD final** y no declarar certificación de navegador 2/3/4. La rama es exclusivamente `atria-5.0-core-rebuild-experimental`; V4, cinco casos, Production y el cliente C5.a siguen intactos.
+
+**Próxima implementación C5.b.3:** sustituir *de manera excluyente* la ejecución Cooperativa del navegador por autoridad durable (no alternar dos propietarios); adaptar cliente de órdenes, snapshots/monitor, navegación, confirmaciones de cierre/XP y recuperación de host/invitados; conservar WebRTC para movimiento/social cuando corresponda, y luego habilitar server `start/sync` y recorrer navegador real 2/3/4 con suspensión, muerte, enfermería y reinicio. Backend ya existe y la credencial Preview funciona; **no basta con cambiar `enabled:false`**.
+
+
 **Contrato obligatorio:** [Manual maestro](ATRIA_50_MANUAL_MAESTRO_FUNCIONAL.md) y [continuación](WORK_CONTINUATION_FROM_MANUAL.md). No reinterpretar reglas ni sustituir módulos funcionales. Actualizado18-10-2026 UTC. Repositorio `javierdario48-star/ATRIA`, única rama `atria-5.0-core-rebuild-experimental`.
 
 ## C5.b.2 Supabase (checkpoint aislado; no activar guardia pública)
