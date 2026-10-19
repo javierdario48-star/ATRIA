@@ -98,6 +98,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   broadcast(packet){if(room)for(const p of peers.values())p.link.send({...packet,roomId:room.id});},
   isMember:id=>!!room?.members.some(x=>x.userId===id),
   isHost:()=>!!user&&room?.hostUserId===user.id,
+  credentials:()=>({clientKey,authorization:token?'Bearer '+token:null}),
   state:()=>structuredClone({user,room,roster,invites,recovering:!!savedRoom,connections:[...peers.values()].map(p=>({id:p.id,state:p.link.state()}))}),
   dispose(){disposed=true;roomEpoch++;desiredRoomId=null;for(const p of peers.values())p.link.dispose();peers.clear();}
  });
