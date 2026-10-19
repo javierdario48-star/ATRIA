@@ -61,14 +61,14 @@ try{
  await send(pages[2],'Enfermera albumina 1.5 g/kg');
  await host.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders?.length>=0);
  await host.waitForFunction(()=>{
-  const c=atriaV5.snapshot().clinical;return c.patient.administrationLog.length>=2&&c.patient.procedures.monitor.connected;
+  const c=atriaV5.snapshot().clinical;return c.patient.administrationLog.length>=2&&c.patient.procedures?.monitor?.connected===true;
  },null,{timeout:120000});
  // The host's committed result is not proof that every replica has
  // received that version yet. Require the guest to observe both real
  // administrations and the physical monitor receipt before comparing.
  await guest.waitForFunction(()=>{
   const c=atriaV5.snapshot().clinical;
-  return c?.patient.administrationLog.length===2&&c.patient.procedures.monitor.connected;
+  return c?.patient.administrationLog.length===2&&c.patient.procedures?.monitor?.connected===true;
  },null,{timeout:120000});
  const medicated=await clinical(guest);
  assert.equal(medicated.patient.administrationLog.length,2);
