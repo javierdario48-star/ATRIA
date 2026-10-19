@@ -98,7 +98,25 @@ try{
  console.log('DURABLE TEAM PASS',JSON.stringify({doctors:count,serverOnly:true,
   hostRecovered:true,sharedNursing:true,medicationReceipts:2,transcript:recovered.room.transcript.length}));
 }catch(error){
- console.error('DURABLE TEAM FAIL',JSON.stringify({doctors:count,stage,error:error.message,pageErrors:errors}));
+ const clinicalStates=await Promise.all(pages.map(async(p,i)=>{
+  try{return await p.evaluate(index=>{
+   const snapshot=atriaV5.snapshot(),patient=snapshot.clinical?.patient,diagnostics=atriaV5.diagnostics();
+   return {doctor:index,phase:snapshot.phase,mode:snapshot.mode,
+    durable:diagnostics.cooperative?.durable,
+    room:snapshot.clinical?.room?.roomId,
+    clinicalClock:snapshot.clinical?.clock?.gameMinute,
+    ended:patient?.caseEnded,died:patient?.patientDied,
+    orders:patient?.orders?.map(x=>({id:x.id,status:x.status})),
+    administrations:patient?.administrationLog?.map(x=>({actorId:x.actorId,sourceEventId:x.sourceEventId})),
+    monitor:patient?.procedures?.monitor?.connected,events:snapshot.clinical?.room?.events?.slice(-5),
+    transcript:snapshot.clinical?.room?.transcript?.slice(-6).map(x=>({actorId:x.actorId,id:x.id,text:x.text}))};
+  },i)}catch{return {doctor:i,unavailable:true}}
+ }));
+ const statuses=Object.entries(h.requests.reduce((acc,x)=>{
+  const key=x.path+':'+x.status;acc[key]=(acc[key]||0)+1;return acc;
+ },{})).filter(([key])=>key.startsWith('/api/clinical')).slice(0,15);
+ console.error('DURABLE TEAM FAIL',JSON.stringify({doctors:count,stage,error:error.message,
+  pageErrors:errors,clinicalStates,requestStatuses:statuses}));
  throw error;
 }finally{
  for(const ctx of contexts)await ctx.close().catch(()=>{});
