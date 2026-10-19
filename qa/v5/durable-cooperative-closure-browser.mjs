@@ -91,5 +91,22 @@ try{
  assert.deepEqual(errors,[]);
  console.log('DURABLE PBE CLOSURE PASS',JSON.stringify({score:100,perDoctorXp:111,uniqueAdminReceipts:2,
   studies:2,sharedClosure:true,noDuplicateXpOnReload:true}));
-}catch(error){console.error('DURABLE PBE CLOSURE FAIL',JSON.stringify({stage,error:error.message,pageErrors:errors}));throw error;}
+}catch(error){
+ const snapshots=await Promise.all(pages.map(async(p,i)=>{
+  try{return await p.evaluate(index=>{
+   const c=atriaV5.snapshot().clinical,p=c?.patient,d=atriaV5.diagnostics();
+   return {actor:index,phase:atriaV5.snapshot().phase,durable:d.cooperative?.durable,
+    clinicalMinute:c?.clock?.gameMinute,ended:p?.caseEnded,died:p?.patientDied,
+    administrations:p?.administrationLog?.map(x=>({actorId:x.actorId,sourceEventId:x.sourceEventId})),
+    orders:p?.orders?.map(x=>({id:x.id,status:x.status})),
+    monitor:p?.procedures?.monitor?.connected,
+    transcript:c?.room?.transcript?.slice(-10).map(x=>({actorId:x.actorId,id:x.id,text:x.text}))};
+  },i);}catch{return {actor:i,unavailable:true};}
+ }));
+ const statuses=Object.entries(h.requests.reduce((all,x)=>{const key=x.path+':'+x.status;
+  all[key]=(all[key]||0)+1;return all;},{})).filter(([key])=>key.startsWith('/api/clinical')).slice(0,12);
+ console.error('DURABLE PBE CLOSURE FAIL',JSON.stringify({stage,error:error.message,
+  pageErrors:errors,snapshots,requestStatuses:statuses}));
+ throw error;
+}
 finally{for(const context of contexts)await context.close().catch(()=>{});await other.close().catch(()=>{});await h.close();}
