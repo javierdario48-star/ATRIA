@@ -11,6 +11,13 @@ try{
  for(const [i,browser] of [h.browser,guestBrowser].entries()){
   const context=await browser.newContext(i===1?h.devices['Pixel 5']:{viewport:{width:1280,height:960}});
   contexts.push(context);
+  // Clinical admission and recovery must work even on a network where no
+  // WebRTC data channel can open. Preserve actual HTTP presence/invitations.
+  await context.route('**/api/lobby-sync**',route=>{
+   const request=route.request(),url=new URL(request.url());
+   const signaling=url.searchParams.has('signal')||request.method()==='POST'&&request.postDataJSON()?.signal;
+   return signaling?route.abort():route.continue();
+  });
   const page=await context.newPage();pages.push(page);
   page.setDefaultTimeout(45000);
   page.on('pageerror',e=>errors.push({doctor:i,message:e.message}));
@@ -68,7 +75,7 @@ try{
  assert.deepEqual(resumed.room.transcript.map(x=>x.id),live.room.transcript.map(x=>x.id));
  assert.deepEqual(errors,[]);
  console.log(JSON.stringify({passed:true,caseId:'PERI-PBE-001',twoBrowsers:true,
-  recoveredHost:true,guestContinued:true,serverOnly:true,transcript:resumed.room.transcript.length}));
+  recoveredHost:true,guestContinued:true,serverOnly:true,rtcUnavailable:true,transcript:resumed.room.transcript.length}));
 }catch(error){console.error(JSON.stringify({passed:false,stage,message:error.message,pageErrors:errors}));throw error;}
 finally{
  for(const context of contexts)await context.close().catch(()=>{});

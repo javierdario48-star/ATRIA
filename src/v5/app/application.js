@@ -37,7 +37,7 @@ export async function createApplication({document,window,content,signal}){
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
   announcedDeathUid=null,pendingPatientAction=null,announcedClosure=null,coopCaseId=null,
   coopRoomId=null,replica=null,durableClient=null,lastSharedPublish=0,sharedSequence=0,lastMotion='',lastRemoteRevision=-1,socialEnabled=false,
-  durableStarting=false,durableJoining=false,lastDurableErrorAt=-Infinity;
+  durableStarting=false,durableJoining=false,lastDurableErrorAt=-Infinity,nextCooperativeAdmission=0,cooperativeCapability=null;
  const messageEpoch=window.crypto.randomUUID(),cooperativeFlow=createCooperativeLifecycle();let pendingCoopLeave=false;
  let restoreRoomId=null;try{restoreRoomId=window.localStorage.getItem('atria.v5.coop.room');}catch{}
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
@@ -77,7 +77,7 @@ export async function createApplication({document,window,content,signal}){
   onRoom:room=>{if(destroyed)return;
    if(room.id===coopRoomId)world.reconcileDoctors(room.members);
    if(room.id===restoreRoomId)maybeRecoverStoredRoom();
-   if(room.allAccepted&&social.isHost()&&coopCaseId&&!coopRoomId&&!durableStarting&&cooperativeFlow.mayEnter('host',{phase:world.snapshot().phase,hasSession:!!guardSession}))beginCooperativeHost(room);
+   maybeBeginCooperativeRoom();
    if(pendingCoopLeave&&outcomeDelivered())enterLobby(true);},
   onPacket:receiveCooperativePacket,onClose:()=>{if(durableClient)return;if(coopRoomId&&!guardSession?.read().patient.caseEnded)enterLobby(false);}});
  function renderSocialLists(){
@@ -88,6 +88,14 @@ export async function createApplication({document,window,content,signal}){
  }
  function showPeople(){socialEnabled=true;open('<h2>Personas · Cooperativo</h2><div id="coopInvitations"></div><p>Colegas en el lobby</p><div id="coopDoctors"></div><p class="note">Creá una guardia desde Hacer guardia → Cooperativo. Hasta cuatro médicos comparten el mismo paciente.</p><div class="actions"><button data-action="close">Cerrar</button></div>','people');renderSocialLists();}
  function clinicalChanged(){renderGuardCommunication();if(outcomeId(guardSession?.read().patient))publishCooperativeState(window.performance.now(),true);}
+ function maybeBeginCooperativeRoom(now=window.performance.now()){
+  if(now<nextCooperativeAdmission||coopRoomId||durableStarting||durableJoining)return;
+  const state=social.state(),room=state.room,role=social.isHost()?'host':'guest';
+  if(!room||role==='host'&&!coopCaseId||
+   !cooperativeFlow.mayEnter(role,{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:state.recovering}))return;
+  nextCooperativeAdmission=now+1000;
+  beginCooperativeRoom(room);
+ }
  function confirmOutcomeDelivery(host,p){
   if(guardSession!==replica)return;const id=outcomeId(p);if(id)social.send(host,{kind:'outcome.received',eventId:id,patientUid:p.uid});
  }
@@ -151,26 +159,34 @@ export async function createApplication({document,window,content,signal}){
     restoreRoomId=null;
   }finally{durableJoining=false;}
  }
- async function beginCooperativeHost(room){
+ async function beginCooperativeRoom(room){
   durableStarting=true;let client=null;
+  const host=social.isHost();
   try{
-   const credentials=social.credentials();
-   const response=await window.fetch('/api/clinical',{method:'POST',cache:'no-store',
-    headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'capability',clientKey:credentials.clientKey})});
-   if(!response.ok)throw Error('No se pudo verificar la autoridad persistente');
-   const capability=await response.json();
-   if(destroyed||coopRoomId||social.state().room?.id!==room.id||!coopCaseId)return;
-   if(capability.clinicalEnabled!==true){startCooperativeHost(room);return;}
-   client=makeDurableClient(room);await client.start(coopCaseId);
+   if(cooperativeCapability?.roomId!==room.id){
+    const credentials=social.credentials();
+    const response=await window.fetch('/api/clinical',{method:'POST',cache:'no-store',
+     headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'capability',clientKey:credentials.clientKey})});
+    if(!response.ok)throw Error('No se pudo verificar la autoridad persistente');
+    const capability=await response.json();
+    if(typeof capability.clinicalEnabled!=='boolean')throw Error('Autoridad clínica sin confirmar');
+    cooperativeCapability={roomId:room.id,clinicalEnabled:capability.clinicalEnabled};
+   }
+   if(destroyed||coopRoomId||social.state().room?.id!==room.id||host&&!coopCaseId)return;
+   if(!cooperativeCapability.clinicalEnabled){if(host&&room.allAccepted)startCooperativeHost(room);return;}
+   // Durable admission depends on the authenticated HTTP room, not an RTC
+   // hello. A guest retries a not-yet-created room on the next social poll.
+   client=makeDurableClient(room);
+   if(host)await client.start(coopCaseId);else await client.sync();
    if(destroyed||coopRoomId||social.state().room?.id!==room.id){client.dispose();return;}
    attachDurableRoom(room,client);
    social.broadcast({kind:'durable.hello',roomId:room.id});
-  }catch{client?.dispose();if(!destroyed&&!coopRoomId)
+  }catch(error){client?.dispose();if(host&&!destroyed&&!coopRoomId&&!(error.status===403&&!room.allAccepted))
    toast('No se inició la guardia: no se confirmó la autoridad del servidor.');}
   finally{durableStarting=false;}
  }
  async function joinDurableRoom(room){
-  if(durableJoining||coopRoomId)return;
+  if(durableJoining||durableStarting||coopRoomId)return;
   durableJoining=true;let client;
   try{
    client=makeDurableClient(room);await client.sync();
@@ -481,10 +497,13 @@ export async function createApplication({document,window,content,signal}){
   advanceClinicalTo(now);
   scheduler.tick(now,{simulate:dt=>{world.step(dt);presentation.advance(world.snapshot());},maintain:()=>{guardSession?.finishNurseArrivals();
    const s=world.snapshot();if(s.phase!=='title'&&(socialEnabled||coopRoomId||social.state().recovering))social.maintain(now,s.player);
+   // Admission can retry while RTC signaling is stalled inside social.poll.
+   // The existing RAF/deadline drives it; there is no additional timer.
+   if(s.phase==='lobby'&&!guardSession)maybeBeginCooperativeRoom(now);
    if(durableClient){
     durableClient.setTyping(clinicalTyping);
-    const target=s.player.target||[s.player.x,s.player.y],key=JSON.stringify(target);
-    if(key!==lastMotion){lastMotion=key;durableClient.motion(target);}
+    const intent=world.motionIntent(),key=JSON.stringify(intent);
+    if(intent&&key!==lastMotion){lastMotion=key;durableClient.motion(intent.target);}
     durableClient.maintain(now);
    }else if(replica){replica.maintain(now);const key=JSON.stringify(s.player.target||[s.player.x,s.player.y]);
     if(key!==lastMotion){lastMotion=key;const host=social.state().room?.hostUserId;if(host)social.send(host,{kind:'motion',target:s.player.target||[s.player.x,s.player.y]});}}

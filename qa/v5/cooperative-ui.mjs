@@ -1,9 +1,14 @@
 // Public-UI helpers shared by the independently launched 2/3/4-browser runs.
 export const state=p=>p.evaluate(()=>atriaV5.snapshot());
 export const clinical=async p=>(await state(p)).clinical;
-export async function send(p,text){const before=(await clinical(p)).room.transcript.length;
+async function waitForMessage(p,text,before){
+ await p.waitForFunction(({text,before})=>atriaV5.snapshot().clinical.room.transcript.some(x=>
+  x.text===text&&!before.includes(x.actorId+':'+x.id)),{text,before});
+}
+const messageIds=async p=>(await clinical(p)).room.transcript.map(x=>x.actorId+':'+x.id);
+export async function send(p,text){const before=await messageIds(p);
  await p.locator('#dieInput').fill(text);await p.locator('#chatForm [type="submit"]').click();await p.locator('#dieInput').blur();
- await p.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,before);
+ await waitForMessage(p,text,before);
 }
 export async function walk(p,lastX=144){
  for(const [x,y] of [[496,1200],[496,1080],[496,960],[496,840],[496,720],[400,580],[250,470],[lastX,420]]){
@@ -12,4 +17,4 @@ export async function walk(p,lastX=144){
   await p.locator('#game').click({position:point});await p.waitForFunction(()=>atriaV5.snapshot().player.moving);await p.waitForFunction(()=>!atriaV5.snapshot().player.moving);
  }
 }
-export async function study(p,id){await p.locator('#peopleButton').click();await p.locator('[data-action="studies"]').click();await p.locator('#studyChoice').selectOption(id);await p.locator('[data-action="request-study"]').click();}
+export async function study(p,id){const before=await messageIds(p);await p.locator('#peopleButton').click();await p.locator('[data-action="studies"]').click();await p.locator('#studyChoice').selectOption(id);await p.locator('[data-action="request-study"]').click();await waitForMessage(p,'/estudio '+id,before);}

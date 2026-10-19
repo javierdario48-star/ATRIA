@@ -1,0 +1,72 @@
+{
+  "baseSha": "388f1fdb62f0dfd34cbb1c2db1227e879140bfce",
+  "scope": "local two-browser 350ms reproduction during C5.b.3 investigation, before separating outbound input from server pose; not asserted to be the sole cause of original CI failure",
+  "patientPosition": [
+    97,
+    409
+  ],
+  "patientRange": 150,
+  "stage": "distributed interrogation, exam, diagnostic impression and studies",
+  "rejectedCommands": [
+    {
+      "doctor": 0,
+      "epoch": 50,
+      "ack": {
+        "commandId": "message-654ee3e1-e803-4ad6-a9be-8613dd79e020-3",
+        "status": "received-not-executed",
+        "roomId": "876aed22-e800-4f2c-bfa6-b527ff3cda02",
+        "revision": 5,
+        "recipient": "patient",
+        "patientUid": null,
+        "routeError": "no-patient-target",
+        "clinical": []
+      },
+      "serverDoctors": [
+        {
+          "id": "qa_fe5dd00591cb8fa17f2f2966546f2e",
+          "x": 272,
+          "y": 507.1698113207547,
+          "moving": false,
+          "target": null
+        },
+        {
+          "id": "qa_6c689e94070dfd0c719f149f91b20f",
+          "x": 176,
+          "y": 391.24528301886795,
+          "moving": false,
+          "target": null
+        }
+      ]
+    },
+    {
+      "doctor": 0,
+      "epoch": 55,
+      "ack": {
+        "commandId": "message-654ee3e1-e803-4ad6-a9be-8613dd79e020-4",
+        "status": "received-not-executed",
+        "roomId": "876aed22-e800-4f2c-bfa6-b527ff3cda02",
+        "revision": 6,
+        "recipient": "patient",
+        "patientUid": null,
+        "routeError": "no-patient-target",
+        "clinical": []
+      },
+      "serverDoctors": [
+        {
+          "id": "qa_fe5dd00591cb8fa17f2f2966546f2e",
+          "x": 272,
+          "y": 507.1698113207547,
+          "moving": false,
+          "target": null
+        },
+        {
+          "id": "qa_6c689e94070dfd0c719f149f91b20f",
+          "x": 176,
+          "y": 391.24528301886795,
+          "moving": false,
+          "target": null
+        }
+      ]
+    }
+  ]
+}

@@ -318,6 +318,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/durable-cooperative-browser.mjs
+      - name: Delayed bootstrap and three doctors with RTC signaling still pending
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/durable-cooperative-admission-browser.mjs
 
   durable-cooperative-team-browser:
     runs-on: ubuntu-latest
@@ -357,6 +362,12 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/durable-cooperative-closure-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-durable-closure-evidence
+          path: qa/v5-browser-results/
+          retention-days: 14
 
   preserved-historical-regression:
     runs-on: ubuntu-latest

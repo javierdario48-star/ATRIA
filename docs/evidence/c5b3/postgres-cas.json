@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-19",
+  "project": "atria-clinical",
+  "projectRef": "hugqjejfyyilslbomsgi",
+  "method": "four independent concurrent Supabase execute_sql calls invoking existing public.atria_guard_cas",
+  "initialRevision": 1,
+  "concurrentResults": [
+    2,
+    null,
+    null,
+    null
+  ],
+  "successfulWriters": 1,
+  "conflicts": 3,
+  "staleWriteResult": null,
+  "cleanup": {
+    "deletedQaRows": 1,
+    "deletedRevision": 2,
+    "deletedMarker": "worker-0"
+  },
+  "scope": "real PostgreSQL CAS contention; does not alone certify clinical HTTP/browser recovery"
+}

@@ -12,14 +12,21 @@ export function createWorld(content,profile,checkpoint=null){
  const navigation=createNavigation(content.map);
  const start=content.map.player_start_tile;
  const point=tile=>navigation.center(...(navigation.nearest(...tile,8)||start));
- let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true;
+ let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true,
+  motionSequence=0,lastMotionIntent=null;
  const entities=()=>hospitalEntities({patients,nurses,expert},content.map,content.beds);
  function lobbyTile(){
   let hash=0;for(const char of profile.name||'Medico')hash=(hash*31+char.charCodeAt(0))>>>0;
   const offsets=[[-3,-2],[0,-3],[3,-2],[-4,1],[4,1],[-2,3],[2,3],[0,1]],d=offsets[hash%offsets.length];
   return [start[0]+d[0],start[1]+d[1]];
  }
- function resetPlayer(tile){player=actor('self',point(tile),{name:profile.name,color:profile.scrubColor||'navy',level:1});}
+ function resetPlayer(tile){player=actor('self',point(tile),{name:profile.name,color:profile.scrubColor||'navy',level:1});lastMotionIntent=null;}
+ // Outbound movement represents explicit input, never a pose received from
+ // another authority. Navigation may finish or reconcile without canceling it.
+ function targetPlayer(x,y){
+  if(phase==='title'||!navigation.target(player,x,y))return false;
+  lastMotionIntent={sequence:++motionSequence,target:[...player.target]};return true;
+ }
  resetPlayer(lobbyTile());
  function enterLobby(){nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
  function enterGuard(options={}){
@@ -85,7 +92,11 @@ export function createWorld(content,profile,checkpoint=null){
    if(authoritative||mode!=='coop')return false;
    nurses=structuredClone(sharedNurses);others=structuredClone(doctors.filter(x=>x.id!==profile.id));
    const self=doctors.find(x=>x.id===profile.id);
-   if(self&&!player.moving&&Math.hypot(self.x-player.x,self.y-player.y)>3){player.x=self.x;player.y=self.y;}
+   if(self&&!player.moving&&Math.hypot(self.x-player.x,self.y-player.y)>3){
+    player.x=self.x;player.y=self.y;
+    const target=lastMotionIntent?.target||self.target;
+    if(target)navigation.target(player,...target);
+   }
    return true;
   },
   /** Spatial nursing is deliberately not hooked to clinical effects until the
@@ -104,8 +115,10 @@ export function createWorld(content,profile,checkpoint=null){
    player.name=name;player.color=scrubColor;
   },
   setLevel(level){if(!Number.isSafeInteger(level)||level<1)throw Error('invalid player level');player.level=level;},
-  target(x,y){pendingInteraction=null;return phase!=='title'&&navigation.target(player,x,y);},
-  stop(){pendingInteraction=null;player.path=[];player.pathIndex=0;player.target=null;player.moving=false;},
+  motionIntent:()=>lastMotionIntent?structuredClone(lastMotionIntent):null,
+  target(x,y){pendingInteraction=null;return targetPlayer(x,y);},
+  stop(){pendingInteraction=null;player.path=[];player.pathIndex=0;player.target=null;player.moving=false;
+   lastMotionIntent={sequence:++motionSequence,target:[player.x,player.y]};},
   interactionAt:(x,y)=>structuredClone(hitWorldEntity(entities(),x,y)),
   patientInRange(uid){const p=patients.find(p=>p.uid===uid);return p&&Math.hypot(player.x-p.x,player.y-p.y)<=PATIENT_RANGE?uid:null;},
   beginInteraction(id){
@@ -115,7 +128,7 @@ export function createWorld(content,profile,checkpoint=null){
    const p=patients.find(p=>p.uid===entity.patientUid);
    if(!p?.approach)return {status:'out-of-range'};
    const goal=navigation.center(...(navigation.nearest(...p.approach,8)||p.approach));
-   if(!navigation.target(player,goal.x,goal.y))return {status:'unreachable'};
+   if(!targetPlayer(goal.x,goal.y))return {status:'unreachable'};
    pendingInteraction=id;return {status:'walking'};
   },
   takeInteraction(){

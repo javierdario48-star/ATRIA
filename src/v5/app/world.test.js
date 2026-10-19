@@ -3,6 +3,28 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const read=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name,import.meta.url)));
+test('authoritative pose corrections cannot become new local movement instructions',async()=>{
+ const {createWorld}=await import('./world.js');
+ const content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
+ const world=createWorld(content,{id:'A',name:'Ana'}),members=[{id:'A',name:'Ana'},{id:'B',name:'Bruno'}];
+ world.enterGuard({mode:'coop',caseId:'PERI-PBE-001',patientUid:'shared-patient',members,authoritative:false});
+ assert.equal(typeof world.motionIntent,'function','world must distinguish local input from replicated pose');
+ assert.equal(world.motionIntent(),null,'entering a replica does not order a move to its local spawn');
+ const start=world.snapshot().player,goal=world.navigation.center(4,14);
+ assert(world.target(goal.x,goal.y));const intent=world.motionIntent();
+ assert.deepEqual(intent.target,[goal.x,goal.y]);
+ for(let i=0;i<1200;i++)world.step(1/60);
+ assert.equal(world.snapshot().player.moving,false);
+ world.applySharedSpatial({nurses:[],doctors:[{...start,id:'A'}]});
+ assert.deepEqual(world.motionIntent(),intent,'a delayed server pose must not cancel the requested destination');
+ assert.deepEqual(world.snapshot().player.target,[goal.x,goal.y],'reconciliation must restore a valid route from the corrected pose');
+ for(let i=0;i<1200;i++)world.step(1/60);
+ assert(Math.hypot(world.snapshot().player.x-goal.x,world.snapshot().player.y-goal.y)<1);
+ world.applySharedSpatial({nurses:[],doctors:[{...start,id:'A'}]});
+ world.stop();const stopped=world.motionIntent();
+ assert(stopped.sequence>intent.sequence);assert.deepEqual(stopped.target,[start.x,start.y]);
+ world.enterLobby();assert.equal(world.motionIntent(),null,'room transitions discard only the old input');
+});
 test('cooperative world has one spatial nurse owner, shared patient UID and independently navigable doctors',async()=>{
  const {createWorld}=await import('./world.js'),content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
  const members=[{id:'A',name:'Ana',color:'navy'},{id:'B',name:'Bruno',color:'green'}];
