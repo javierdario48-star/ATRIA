@@ -13,7 +13,7 @@ let stage='boot';
 try{
  for(let i=0;i<count;i++){
   if(i)browsers.push(await h.newBrowser());
-  const ctx=await browsers[i].newContext(i===count-1?h.devices['Pixel 5']:{viewport:{width:1024,height:768}});
+  const ctx=await browsers[i].newContext(i===count-1?h.devices['Pixel 5']:{viewport:{width:1280,height:960}});
   contexts.push(ctx);
   const page=await ctx.newPage();pages.push(page);page.setDefaultTimeout(60000);
   page.on('pageerror',e=>errors.push({doctor:i,message:e.message}));
