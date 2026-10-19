@@ -319,6 +319,28 @@ jobs:
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/durable-cooperative-browser.mjs
 
+  durable-cooperative-team-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    strategy:
+      fail-fast: false
+      matrix:
+        doctors: [3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - run: npm run build:v5
+      - name: Multi-physician durable care, physical nursing, host shutdown and same guard recovery
+        env:
+          V5_DURABLE_PLAYERS: ${{ matrix.doctors }}
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/durable-cooperative-team-browser.mjs
+
   preserved-historical-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 20
