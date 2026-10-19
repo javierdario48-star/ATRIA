@@ -105,6 +105,7 @@ export function createDurableCooperativeReplica({
   setTyping(value){typing=!!value;},
   confirm(revision,outcomeId){confirmation={revision,outcomeId};},
   read:()=>current?clone(current.clinical):null,
+  snapshotSpatial:()=>current?clone(current.spatial):null,
   catalog:()=>clone(current?.catalog||[]),
   monitorRead(uid){const p=current?.clinical?.patient;
    return p?.uid===uid?{uid,caseEnded:p.caseEnded,ecg:clone(p.ecg),
