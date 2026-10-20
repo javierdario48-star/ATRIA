@@ -386,8 +386,16 @@ export async function createApplication({document,window,content,signal}){
  async function submitText(text,{patientUid}={}){
   if(!text.trim())return;
   if(!guardSession){
-   try{await social.postLobbyMessage(text,social.state().user?.id+':'+messageEpoch+':'+(++messageNumber));}
-   catch{toast('No se pudo enviar al lobby. Volvé a intentar.');}
+   const userId=social.state().user?.id;
+   if(!userId){toast('Conectando al lobby. Intentá de nuevo.');return;}
+   const messageId=userId+':'+messageEpoch+':'+(++messageNumber);
+   // Show the local message immediately, as in the original lobby, while
+   // retaining one server-owned delivery for every other connected browser.
+   seenLobbyMessages.add(messageId);line(profile.name,text);
+   world.showLobbyMessage(userId,text,window.performance.now());
+   try{await social.postLobbyMessage(text,messageId);}
+   catch{line('ATRIA','Mensaje no enviado. Revisá la conexión y volvé a escribirlo.',true);
+    toast('No se pudo enviar al lobby.');}
    return;
   }
   advanceClinicalTo(window.performance.now());
