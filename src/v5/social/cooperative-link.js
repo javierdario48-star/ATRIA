@@ -39,7 +39,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   const epoch=roomEpoch,active=()=>!disposed&&roomEpoch===epoch;
   await connect();
   if(!active())return;
-  await api('',{presence:{peerId,motionSession,motionEpoch,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,seq:++presenceSequence}},true);
+  await api('',{presence:{peerId,motionSession,motionEpoch,motionAt:window.performance.now(),sentAt:Date.now(),motionCadence:260,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,seq:++presenceSequence}},true);
   if(!active())return;
   const social=await api('lobby?after=0');roster=social.players;lobbyMessages=social.messages||[];
   if(!active())return;
@@ -88,6 +88,8 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
   async acceptFriend(userId){await connect();await api('friends/accept',{userId});const me=await api('me');
    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
+  async declineInvitation(roomId){await connect();await api('rooms/'+roomId+'/invite/decline',{});
+   invites=invites.filter(x=>x.roomId!==roomId);onSocial();},
   async invite(ids){const epoch=++roomEpoch;desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
    const result=await api('rooms',{mode:'coop',invitees:ids,peerId});if(disposed||epoch!==roomEpoch){try{await api('rooms/'+result.room.id+'/cancel',{});}catch{}throw Error('Invitación cancelada.');}setRoom(result.room);return structuredClone(room);},
   async join(id){const epoch=++roomEpoch;desiredRoomId=id;await connect();
@@ -100,7 +102,11 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    for(const p of peers.values())p.link.dispose();peers.clear();
    if(previous)try{await api('rooms/'+previous.id+'/'+(previous.hostUserId===user.id?'cancel':'leave'),{});}catch{}
   },
-  maintain(now,pose){if(disposed||busy||now<nextPoll)return;nextPoll=now+1000;
+  maintain(now,pose){if(disposed||busy||now<nextPoll)return;
+   // ATRIA 4.8.7's original 260 ms HTTP fallback is necessary to keep
+   // the shared remote-motion sampler continuous; a 1000 ms gap rebases it.
+   // Once a ward is selected, retain the old slower social/signaling poll.
+   nextPoll=now+(room||savedRoom?1000:260);
    busy=poll(now,pose).catch(()=>{}).finally(()=>busy=null);},
   send(id,packet){return !!room&&(peers.get(id)?.link.send({...packet,roomId:room.id})??false);},
   broadcast(packet){if(room)for(const p of peers.values())p.link.send({...packet,roomId:room.id});},
