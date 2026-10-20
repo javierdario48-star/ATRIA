@@ -1,4 +1,5 @@
 import {createNavigation} from '../engine/navigation.js';
+import {createRemotePose,receiveRemotePose,sampleRemotePose} from '../../social/remote-motion.js';
 import {createNurseDispatcher} from '../engine/nurse-dispatcher.js';
 import {hospitalEntities,hitWorldEntity,canInteract,PATIENT_RANGE} from '../engine/interactions.js';
 
@@ -14,6 +15,7 @@ export function createWorld(content,profile,checkpoint=null){
  const point=tile=>navigation.center(...(navigation.nearest(...tile,8)||start));
  let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true,
   motionSequence=0,lastMotionIntent=null;
+ const lobbyRemotes=new Map();
  const entities=()=>hospitalEntities({patients,nurses,expert},content.map,content.beds);
  function lobbyTile(){
   let hash=0;for(const char of profile.name||'Medico')hash=(hash*31+char.charCodeAt(0))>>>0;
@@ -28,9 +30,9 @@ export function createWorld(content,profile,checkpoint=null){
   lastMotionIntent={sequence:++motionSequence,target:[...player.target]};return true;
  }
  resetPlayer(lobbyTile());
- function enterLobby(){nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
+ function enterLobby(){lobbyRemotes.clear();nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
  function enterGuard(options={}){
-  const selected=options.mode||'solo';
+  lobbyRemotes.clear();const selected=options.mode||'solo';
   if(!['solo','apprentice','coop'].includes(selected))throw Error('multiplayer mode not migrated');
   const c=content.cases.find(c=>c.id===options.caseId);if(!c)throw Error('unknown clinical case');
   nursing?.dispose();nursing=null;
@@ -46,9 +48,15 @@ export function createWorld(content,profile,checkpoint=null){
   expert=selected==='apprentice'?actor('vega',point([14,45]),{kind:'vega',name:'Dr. Vega',r:9.5,speed:220}):null;
   if(authoritative)nursing=createNurseDispatcher({navigation,nurses,patients});
  }
- function step(dt){
+ function step(dt,now=Date.now()){
   if(phase==='title')return;
   navigation.move(player,dt);
+  if(phase==='lobby')for(const other of others){
+   const track=lobbyRemotes.get(other.id);if(!track)continue;
+   const pose=sampleRemotePose(track,now);
+   Object.assign(other,{x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase});
+  }
+  if(phase==='lobby')for(const actor of [player,...others])if(actor.speechBubble&&actor.speechBubble.until<=now)delete actor.speechBubble;
   if(!authoritative)return;
   for(const other of others)navigation.move(other,dt);
   nursing?.advance(dt);
@@ -81,8 +89,27 @@ export function createWorld(content,profile,checkpoint=null){
  return Object.freeze({navigation,enterLobby,enterGuard,step,snapshot,
   checkpoint:()=>structuredClone({schemaVersion:1,identity,profile,state:snapshot(),authoritative,pendingInteraction,nursing:nursing?.checkpoint()??null}),
   setSocialIdentity(id){profile={...profile,id};},
-  showLobbyPlayers(list){if(phase!=='lobby')return;others=list.filter(x=>x.userId!==profile.id).map(x=>actor(x.userId,{x:x.x,y:x.y},
-   {kind:'doctor',name:x.name,color:x.color||'navy',level:x.level||1,dir:x.dir,walkPhase:x.walkPhase}));},
+  showLobbyPlayers(list,now=Date.now()){
+   if(phase!=='lobby')return;
+   const previous=new Map(others.map(p=>[p.id,p])),ids=new Set(),updated=[];
+   for(const remote of list){
+    if(remote.userId===profile.id||ids.has(remote.userId))continue;
+    ids.add(remote.userId);
+    let other=previous.get(remote.userId),track=lobbyRemotes.get(remote.userId);
+    if(!track){track=createRemotePose({x:remote.x,y:remote.y,now,cadence:1000,speed:205});lobbyRemotes.set(remote.userId,track);}
+    receiveRemotePose(track,{...remote,now});
+    if(!other)other=actor(remote.userId,{x:track.x,y:track.y},{kind:'doctor'});
+    Object.assign(other,{name:remote.name,color:remote.color||'navy',level:remote.level||1});
+    updated.push(other);
+   }
+   others=updated;
+   for(const id of lobbyRemotes.keys())if(!ids.has(id))lobbyRemotes.delete(id);
+  },
+  showLobbyMessage(userId,text,now=Date.now()){
+   if(phase!=='lobby')return;
+   const speaker=userId===profile.id?player:others.find(p=>p.id===userId);
+   if(speaker)speaker.speechBubble={text:String(text).slice(0,120),until:now+4500};
+  },
   targetRemote(id,x,y){const other=others.find(x=>x.id===id);return !!other&&authoritative&&navigation.target(other,x,y);},
   reconcileDoctors(members){if(phase==='guard'&&mode==='coop'&&authoritative)others=others.filter(x=>members.some(m=>m.userId===x.id));},
   stopRemote(id){const other=others.find(x=>x.id===id);if(other){other.path=[];other.pathIndex=0;other.target=null;other.moving=false;}},
