@@ -96,8 +96,8 @@ export function createWorld(content,profile,checkpoint=null){
     if(remote.userId===profile.id||ids.has(remote.userId))continue;
     ids.add(remote.userId);
     let other=previous.get(remote.userId),track=lobbyRemotes.get(remote.userId);
-    if(!track){track=createRemotePose({x:remote.x,y:remote.y,now,cadence:1000,speed:205});lobbyRemotes.set(remote.userId,track);}
-    receiveRemotePose(track,{...remote,now});
+    if(!track){track=createRemotePose({x:remote.x,y:remote.y,now,cadence:260,speed:205});lobbyRemotes.set(remote.userId,track);}
+    receiveRemotePose(track,{...remote,now,transport:'http',motionCadence:remote.motionCadence||260});
     if(!other)other=actor(remote.userId,{x:track.x,y:track.y},{kind:'doctor'});
     Object.assign(other,{name:remote.name,color:remote.color||'navy',level:remote.level||1});
     updated.push(other);
