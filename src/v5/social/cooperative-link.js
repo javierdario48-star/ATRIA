@@ -39,9 +39,14 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   const epoch=roomEpoch,active=()=>!disposed&&roomEpoch===epoch;
   await connect();
   if(!active())return;
-  await api('',{presence:{peerId,motionSession,motionEpoch,motionAt:window.performance.now(),sentAt:Date.now(),motionCadence:260,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,seq:++presenceSequence}},true);
+  // V4's HTTP movement/roster fallback travels concurrently: an unrelated
+  // directory read must never add a full RTT before the next motion packet.
+  const [,social]=await Promise.all([
+   api('',{presence:{peerId,motionSession,motionEpoch,motionAt:window.performance.now(),sentAt:Date.now(),motionCadence:260,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,seq:++presenceSequence}},true),
+   api('lobby?after=0')
+  ]);
   if(!active())return;
-  const social=await api('lobby?after=0');roster=social.players;lobbyMessages=social.messages||[];
+  roster=social.players;lobbyMessages=social.messages||[];
   if(!active())return;
   if(!room&&!savedRoom){
    // Movement is the V4 260ms fallback; invitation/friend discovery needn't
