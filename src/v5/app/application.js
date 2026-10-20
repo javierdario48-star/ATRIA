@@ -61,8 +61,19 @@ export async function createApplication({document,window,content,signal}){
   patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
    {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard'});
  }
- const history=[];
+ const history=[],seenLobbyMessages=new Set();let selectedLobbyPlayerId=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
+ function renderLobbyMessages(s){
+  if(world.snapshot().phase!=='lobby')return;
+  for(const message of s.lobbyMessages||[]){
+   const id=message.messageId||message.userId+':'+message.sequence+':'+message.createdAt;
+   if(seenLobbyMessages.has(id))continue;
+   seenLobbyMessages.add(id);
+   if(seenLobbyMessages.size>350)seenLobbyMessages.delete(seenLobbyMessages.values().next().value);
+   line(message.name||'Médico',message.text);
+   if(Date.now()-message.createdAt<4500)world.showLobbyMessage(message.userId,message.text,window.performance.now());
+  }
+ }
  function toast(message){ui('toast').textContent=message;ui('toast').hidden=false;toastUntil=window.performance.now()+3200;}
  function open(html,kind='clinical'){
   world.stop();drag=null;patientWheel.hide();dialog.dataset.panel=kind;
@@ -73,7 +84,7 @@ export async function createApplication({document,window,content,signal}){
   onTalk:uid=>selectRecipient('patient',uid)});
  const social=createCooperativeLink({window,profile,
   onSocial:()=>{if(destroyed)return;const s=social.state();if(world.snapshot().phase==='lobby'){
-   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster);renderSocialLists();maybeRecoverStoredRoom();}},
+   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();maybeRecoverStoredRoom();}},
   onRoom:room=>{if(destroyed)return;
    if(room.id===coopRoomId)world.reconcileDoctors(room.members);
    if(room.id===restoreRoomId)maybeRecoverStoredRoom();
@@ -85,8 +96,38 @@ export async function createApplication({document,window,content,signal}){
   if(list){const selected=new Set([...list.querySelectorAll('input:checked')].map(x=>x.value));
    list.innerHTML=s.roster.filter(x=>x.userId!==s.user?.id).map(x=>'<label><input type="checkbox" value="'+esc(x.userId)+'" '+(selected.has(x.userId)?'checked':'')+'>'+esc(x.name)+'</label>').join('')||'<p>Esperando colegas conectados…</p>';}
   if(invitations)invitations.innerHTML=s.invites.map(x=>'<div><b>'+esc(x.host.name)+'</b> invita a una guardia cooperativa. <button data-action="join-coop" data-room="'+esc(x.roomId)+'">Aceptar</button></div>').join('')||'<p>Sin invitaciones pendientes.</p>';
+  const requests=ui('friendRequests'),contacts=ui('lobbyContacts');
+  if(requests)requests.innerHTML=(s.requests?.incoming||[]).map(x=>
+   '<p>'+esc(x.name)+' te agregó. <button data-action="accept-friend" data-user="'+esc(x.id)+'">Aceptar amistad</button></p>').join('');
+  if(contacts)contacts.innerHTML=s.roster.filter(x=>x.userId!==s.user?.id).map(x=>
+   '<button data-action="inspect-player" data-user="'+esc(x.userId)+'">'+esc(x.name)+
+   ((s.friends||[]).some(f=>f.id===x.userId)?' · Amigo':'')+'</button>').join('')||'<p>No hay otros médicos conectados.</p>';
  }
- function showPeople(){socialEnabled=true;open('<h2>Personas · Cooperativo</h2><div id="coopInvitations"></div><p>Colegas en el lobby</p><div id="coopDoctors"></div><p class="note">Creá una guardia desde Hacer guardia → Cooperativo. Hasta cuatro médicos comparten el mismo paciente.</p><div class="actions"><button data-action="close">Cerrar</button></div>','people');renderSocialLists();}
+ function showPeople(){socialEnabled=true;open('<h2>Personas</h2><div id="friendRequests"></div><div id="coopInvitations"></div><p>Colegas conectados · tocá para agregar o invitar</p><div id="lobbyContacts"></div><p>Invitación múltiple (hasta 3 colegas)</p><div id="coopDoctors"></div><div class="actions"><button data-action="close">Cerrar</button></div>','people');renderSocialLists();}
+ function showLobbyPlayerCard(userId){
+  const state=social.state(),person=state.roster.find(x=>x.userId===userId);
+  if(!person)return toast('Ese médico ya no está conectado.');
+  selectedLobbyPlayerId=userId;
+  const friend=state.friends?.some(x=>x.id===userId),
+    pending=state.requests?.outgoing?.some(x=>x.id===userId),
+    incoming=state.requests?.incoming?.some(x=>x.id===userId);
+  const cases=content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id));
+  open('<h2>'+esc(person.name)+'</h2><p>'+ (friend?'Amigo':pending?'Solicitud de amistad enviada':'Médico conectado')+
+   '</p><div class="actions">'+(incoming?'<button data-action="accept-friend" data-user="'+esc(userId)+'">Aceptar amistad</button>':
+   !friend&&!pending?'<button data-action="add-friend" data-user="'+esc(userId)+'">Agregar a amigos</button>':'')+
+   (friend?'<label>Paciente<select id="friendCase">'+cases.map(c=>'<option value="'+esc(c.id)+'" '+(c.id==='PERI-PBE-001'?'selected':'')+'>'+esc(c.selector)+'</option>').join('')+
+   '</select></label><button class="primary" data-action="invite-friend" data-user="'+esc(userId)+'">Invitar a una guardia</button>':'')+
+   '<button data-action="close">Cerrar</button></div>','lobby-person');
+ }
+ async function inviteColleagues(ids,caseId){
+  if(!Object.hasOwn(CLINICAL_EXECUTORS,caseId)){toast('Este caso todavía no tiene atención completa.');return;}
+  if(!ids.length){toast('Elegí al menos un médico conectado.');return;}
+  cancelSharedIntent();coopCaseId=caseId;
+  const intent=cooperativeFlow.begin('host');
+  try{await social.invite(ids);
+   if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Invitación enviada</h2><p>Esperando que los colegas acepten la guardia compartida.</p>');
+  }catch(error){if(cooperativeFlow.current(intent))toast(error.message);}
+ }
  function clinicalChanged(){renderGuardCommunication();if(outcomeId(guardSession?.read().patient))publishCooperativeState(window.performance.now(),true);}
  function maybeBeginCooperativeRoom(now=window.performance.now()){
   if(now<nextCooperativeAdmission||coopRoomId||durableStarting||durableJoining)return;
@@ -334,7 +375,11 @@ export async function createApplication({document,window,content,signal}){
  }
  async function submitText(text,{patientUid}={}){
   if(!text.trim())return;
-  if(!guardSession){line(profile.name,text);return;}
+  if(!guardSession){
+   try{await social.postLobbyMessage(text,social.state().user?.id+':'+messageEpoch+':'+(++messageNumber));}
+   catch{toast('No se pudo enviar al lobby. Volvé a intentar.');}
+   return;
+  }
   advanceClinicalTo(window.performance.now());
   const session=guardSession;
   try{return await session.post({id:'message-'+(coopRoomId?messageEpoch+'-':'')+(++messageNumber),text,...(patientUid?{targetPatientUid:patientUid}:{})});}
@@ -342,7 +387,12 @@ export async function createApplication({document,window,content,signal}){
  }
  function canvasDown(event){
   if(world.snapshot().phase==='title')return;
-  const [x,y]=renderer.toWorld(event.clientX,event.clientY),hit=world.interactionAt(x,y);
+  const [x,y]=renderer.toWorld(event.clientX,event.clientY);
+  if(world.snapshot().phase==='lobby'){
+   const player=world.snapshot().others.find(p=>Math.hypot(p.x-x,p.y-y)<=25);
+   if(player){showLobbyPlayerCard(player.id);return;}
+  }
+  const hit=world.interactionAt(x,y);
   if(hit){
    pendingPatientAction=null;
    const result=world.beginInteraction(hit.id);drag=null;
@@ -405,6 +455,19 @@ export async function createApplication({document,window,content,signal}){
   if(await clinicalUI.handle(event.target))return;
   const button=event.target.closest('button');if(!button)return;
   if(button.dataset.mode){if(button.dataset.mode!=='coop')cancelSharedIntent();draftMode=button.dataset.mode;guardSetup();}
+  if(button.dataset.action==='inspect-player'){showLobbyPlayerCard(button.dataset.user);return;}
+  if(button.dataset.action==='add-friend'||button.dataset.action==='accept-friend'){
+   try{
+    if(button.dataset.action==='accept-friend')await social.acceptFriend(button.dataset.user);
+    else await social.addFriend(button.dataset.user);
+    if(dialog.dataset.panel==='lobby-person')showLobbyPlayerCard(button.dataset.user);
+    else renderSocialLists();
+   }catch(error){toast(error.message||'No se confirmó la amistad.');}
+   return;
+  }
+  if(button.dataset.action==='invite-friend'){
+   await inviteColleagues([button.dataset.user],ui('friendCase')?.value||'PERI-PBE-001');return;
+  }
   if(button.dataset.action==='close')close();
   if(button.dataset.action==='return-lobby'){requestLobby();return;}
   if(button.dataset.action==='join-coop'){
@@ -414,11 +477,7 @@ export async function createApplication({document,window,content,signal}){
   }
   if(button.dataset.action==='start-guard'){
    if(draftMode==='coop'){
-    if(!Object.hasOwn(CLINICAL_EXECUTORS,ui('caseChoice').value)){toast('Este caso todavía no tiene atención completa.');return;}
-    cancelSharedIntent();
-    coopCaseId=ui('caseChoice').value;
-    const intent=cooperativeFlow.begin('host');
-    try{await social.invite([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value));if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Invitación enviada</h2><p>Esperando que los colegas acepten la guardia compartida.</p>');}catch(error){if(cooperativeFlow.current(intent))toast(error.message);}return;
+    await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),ui('caseChoice').value);return;
    }
    cancelSharedIntent();
    announcedClosure=null;
@@ -497,7 +556,7 @@ export async function createApplication({document,window,content,signal}){
  function frame(now){
   if(destroyed)return;raf=null;frames++;
   advanceClinicalTo(now);
-  scheduler.tick(now,{simulate:dt=>{world.step(dt);presentation.advance(world.snapshot());},maintain:()=>{guardSession?.finishNurseArrivals();
+  scheduler.tick(now,{simulate:dt=>{world.step(dt,now);presentation.advance(world.snapshot());},maintain:()=>{guardSession?.finishNurseArrivals();
    const s=world.snapshot();if(s.phase!=='title'&&(socialEnabled||coopRoomId||social.state().recovering))social.maintain(now,s.player);
    // Admission can retry while RTC signaling is stalled inside social.poll.
    // The existing RAF/deadline drives it; there is no additional timer.
