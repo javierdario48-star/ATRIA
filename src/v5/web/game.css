@@ -227,3 +227,16 @@ dialog[data-panel="monitor"] #modalClose{position:relative;z-index:2;margin:0 0 
 .case-score-row .score-gain{color:#a7e4c7}.case-score-row .score-loss{color:#ffc2a5}
 .case-score-empty{font-size:12px;opacity:.6;margin:0}
 @media(max-width:480px){.case-score-grid{gap:5px}.case-score-section{padding:7px}.case-score-row{font-size:11px}.case-score-section>h4{font-size:10px}}
+
+/* V4-style unilateral invitations: visible immediately, without opening Personas.
+ * Nonmodal: it never blocks movement, history, or the existing guard controls. */
+#coopInviteNotice:not([hidden]){
+ position:fixed;z-index:31;top:calc(env(safe-area-inset-top) + 64px);left:50%;
+ transform:translateX(-50%);width:min(92vw,390px);box-sizing:border-box;
+ display:grid;gap:5px;text-align:center;padding:11px 12px;border-radius:13px;
+ background:#0b2931f5;color:#ebf8f5;border:1px solid #67c1b4;
+ box-shadow:0 10px 24px #00131c90;font-size:12px;
+}
+#coopInviteNotice strong{font-size:13px;color:#e2fbf0}
+#coopInviteNotice .invite-actions{display:flex;justify-content:center;gap:9px;margin-top:5px}
+#coopInviteNotice .invite-actions button{min-height:40px;min-width:90px}
