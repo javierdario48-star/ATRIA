@@ -1,5 +1,19 @@
 # ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
+## C5.b.3 — lobby antiguo recuperado y aceptación unilateral verificada (20-10-2026 UTC)
+
+**Motivo de este checkpoint:** en la aceptación física, el usuario confirmó que el chat ya funcionaba, pero el avatar remoto se teletransportaba y las invitaciones no llegaban/obligaban a invitaciones recíprocas. La clínica durable no era el origen.
+
+**Causa y solución (sólo V5 experimental):**
+- Se cotejó directamente `src/integration/remote-motion-487.js` y `src/social/remote-motion.js` de ATRIA 4.8.7. La ruta HTTP de V4 transmitía cada **260 ms** (RTC alcanzaba 100 ms), mientras V5 transmitía/poleaba cada **1000 ms**; el mismo interpolador interpreta esos huecos como interrupciones y reajustaba el actor remoto. `src/v5/social/cooperative-link.js` conserva ahora los metadatos históricos `motionAt`, `sentAt`, `motionCadence:260` y envía presencia+roster sin bloquear uno detrás de otro. La consulta de contactos/invitaciones se limita a ~780 ms para evitar sobrecarga. `src/v5/app/world.js` preserva el avatar, usa el sampler original a 260 ms y no le aplica también la navegación de médicos clínicos. No se añadieron bucles, servidores ni motores nuevos.
+- El servidor **ya admitía invitación unilateral**: una única llamada de host a `/api/rooms`, luego el invitado acepta `/api/rooms/join`. El defecto estaba en V5: la invitación permanecía oculta en el modal de Personas. Se añadió `#coopInviteNotice` visible, no modal, con Aceptar/Rechazar; ambos usan la lógica social existente y la ruta ya implementada para declinar. Se puede tocar un avatar e invitarlo directamente sin amistad mutua; agregar a amigos sigue funcionando. El selector múltiple previo se conserva para 2–4 jugadores.
+- El chat global y las burbujas que el usuario ya consideraba reparados se preservaron sin cambios.
+  
+**Evidencia:** `npm run test:v5` local **476/476**, `npm run build:v5` aprobado. El job aislado `lobby-social-acceptance` de GitHub Actions (run `39358444987`, job `118418663119`) aprobó en dos navegadores independientes (escritorio+Pixel emulado), con movimiento real de **57,96 px** y **salto máximo entre fotogramas de 3,77 px**. También confirmó burbujas, chat bilateral, interacción por tocar, amistad, una sola invitación de anfitrión, notificación visible y aceptación del invitado hasta entrar en guardia. La regresión histórica `ATRIA 4.8.7 Legacy Gameplay Census` del SHA anterior `a9fdc6a2` terminó aprobada. La CI completa del SHA de código `e8c53ac8` estaba todavía ejecutándose en la última consulta; **no declarar toda la CI verde sin leer el resultado final**.
+
+**Pendiente:** prueba de dos teléfonos físicos bajo latencia real, validar suavidad y notificaciones en Android/iPhone, y revisar CI completa del HEAD definitivo. No tocar Production, main, V4, arquitectura clínica durable, tratamientos o XP por estas correcciones de lobby. El preview experimental y la autoridad clínica siguen en su configuración previa.
+
+
 ## C5.b.3 — aceptación física: lobby social (19-10-2026)
 
 **Tres fallos confirmados por el usuario en dos dispositivos físicos:** (1) otro jugador parecía teletransportarse en el lobby; (2) los mensajes públicos no llegaban al otro dispositivo, ni al historial ni a la burbuja; (3) hacer Cooperativo requería un formulario de casillas complejo, sin poder tocar primero a un amigo. Estas son fallas de UX/social independientes de la autoridad clínica PostgreSQL y deben quedar resueltas antes de certificar aceptación móvil.
