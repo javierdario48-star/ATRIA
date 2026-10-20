@@ -61,7 +61,7 @@ export async function createApplication({document,window,content,signal}){
   patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
    {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard'});
  }
- const history=[],seenLobbyMessages=new Set();let selectedLobbyPlayerId=null;
+ const history=[],seenLobbyMessages=new Set();let selectedLobbyPlayerId=null,selectedLobbyCardState=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
  function renderLobbyMessages(s){
   if(world.snapshot().phase!=='lobby')return;
@@ -84,7 +84,12 @@ export async function createApplication({document,window,content,signal}){
   onTalk:uid=>selectRecipient('patient',uid)});
  const social=createCooperativeLink({window,profile,
   onSocial:()=>{if(destroyed)return;const s=social.state();if(world.snapshot().phase==='lobby'){
-   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();maybeRecoverStoredRoom();}},
+   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();
+   if(dialog.open&&dialog.dataset.panel==='lobby-person'&&selectedLobbyPlayerId){
+    const id=selectedLobbyPlayerId,status=friendStatus(s,id);
+    if(status!==selectedLobbyCardState)showLobbyPlayerCard(id);
+   }
+   maybeRecoverStoredRoom();}},
   onRoom:room=>{if(destroyed)return;
    if(room.id===coopRoomId)world.reconcileDoctors(room.members);
    if(room.id===restoreRoomId)maybeRecoverStoredRoom();
@@ -104,10 +109,15 @@ export async function createApplication({document,window,content,signal}){
    ((s.friends||[]).some(f=>f.id===x.userId)?' · Amigo':'')+'</button>').join('')||'<p>No hay otros médicos conectados.</p>';
  }
  function showPeople(){socialEnabled=true;open('<h2>Personas</h2><div id="friendRequests"></div><div id="coopInvitations"></div><p>Colegas conectados · tocá para agregar o invitar</p><div id="lobbyContacts"></div><p>Invitación múltiple (hasta 3 colegas)</p><div id="coopDoctors"></div><div class="actions"><button data-action="close">Cerrar</button></div>','people');renderSocialLists();}
+ function friendStatus(s,id){
+  return s.friends?.some(x=>x.id===id)?'friend':
+   s.requests?.incoming?.some(x=>x.id===id)?'incoming':
+   s.requests?.outgoing?.some(x=>x.id===id)?'outgoing':'stranger';
+ }
  function showLobbyPlayerCard(userId){
   const state=social.state(),person=state.roster.find(x=>x.userId===userId);
   if(!person)return toast('Ese médico ya no está conectado.');
-  selectedLobbyPlayerId=userId;
+  selectedLobbyPlayerId=userId;selectedLobbyCardState=friendStatus(state,userId);
   const friend=state.friends?.some(x=>x.id===userId),
     pending=state.requests?.outgoing?.some(x=>x.id===userId),
     incoming=state.requests?.incoming?.some(x=>x.id===userId);
