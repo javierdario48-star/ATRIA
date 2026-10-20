@@ -58,7 +58,7 @@ try{
  await bruno.locator('#coopInviteAccept').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().phase==='guard'&&
   atriaV5.snapshot().mode==='coop',null,{timeout:75000})));
- assert.equal(h.requests.filter(x=>x.path==='/api/rooms'&&x.method==='POST').length,1,
+ assert.equal(h.requests.filter(x=>x.path==='/api/rooms'&&x.status===201).length,1,
   'only the host creates an invitation; guest accepts it without a counterinvitation');
  assert.deepEqual(errors,[]);
  console.log('V5 LOBBY SOCIAL UI PASS',JSON.stringify({chatBoth:true,bubble:true,friendTap:true,
