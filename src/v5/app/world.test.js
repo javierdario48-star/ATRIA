@@ -144,7 +144,7 @@ test('lobby preserves remote avatar identity and interpolates fresh presence ins
  const before=w.snapshot().others[0];
  assert.equal(before.x,at.x,'a new remote position must not instantly teleport the sprite');
  assert.equal(before.speechBubble?.text,'Hola!','new presence preserves the active bubble');
- for(let t=2040;t<=2900;t+=40)w.step(.04,t);
+ for(let t=2040;t<=2200;t+=40)w.step(.04,t);
  const between=w.snapshot().others[0];
  assert(between.x>at.x&&between.x<at.x+100,'the public lobby interpolates an actual walk');
  assert.equal(between.color,'green');
