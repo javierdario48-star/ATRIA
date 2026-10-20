@@ -1,5 +1,19 @@
 # ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
+## C5.b.3 — aceptación física: lobby social (19-10-2026)
+
+**Tres fallos confirmados por el usuario en dos dispositivos físicos:** (1) otro jugador parecía teletransportarse en el lobby; (2) los mensajes públicos no llegaban al otro dispositivo, ni al historial ni a la burbuja; (3) hacer Cooperativo requería un formulario de casillas complejo, sin poder tocar primero a un amigo. Estas son fallas de UX/social independientes de la autoridad clínica PostgreSQL y deben quedar resueltas antes de certificar aceptación móvil.
+
+**Correcciones publicadas solamente en `atria-5.0-core-rebuild-experimental`:**
+
+- `src/v5/app/world.js`: deja de recrear el avatar en cada actualización de presencia; reutiliza `src/social/remote-motion.js` (motor previamente probado), interpola pose en el RAF existente, conserva globos y deja la navegación clínica de guardia separada. Unitarios verifican transición suave en posición intermedia, expiración del globo y separación de guardia.
+- `src/v5/social/cooperative-link.js`: publica chat global por las rutas sociales existentes `/api/lobby/chat`, reenvía los mensajes del roster y consulta amistades/solicitudes mediante `/api/me`; usa `friends` y `friends/accept` ya existentes. Un test de dos clientes independientes comprobó registro, chat, solicitud, aceptación e invitación.
+- `src/v5/app/application.js` y `src/v5/render/hospital.js`: los mensajes del lobby se muestran una vez en ambos historiales y como burbujas temporales; tocar el avatar en el lobby abre acciones Agregar a amigos / Aceptar amistad / Invitar a guardia, con PBE preseleccionado y selector de caso acotado. Se conserva el mecanismo anterior de invitación múltiple y el cliente durable sin modificaciones.
+- `qa/v5/lobby-social-browser.mjs` valida dos navegadores independientes (uno emulado Pixel) con chat bilateral, burbujas, toque de avatar, amistad y recepción de invitación. Quedó añadido a CI `independent-game-browser`. **Aún pendiente confirmar esa prueba y CI general en el HEAD final; no afirmar que la aceptación física ya pasó.**
+
+**Resultados ya verificados:** `npm run build:v5` aprobó; `npm run test:v5` del primer checkpoint de UI aprobó 474/474. Los 17 tests dirigidos de mundo y vínculo social, incluido uno nuevo para dos clientes, pasaron 17/17 en el checkpoint posterior. **Sigue pendiente** corrida de navegador real/CI final; el usuario debe comprobar los tres comportamientos en dos móviles sobre la misma URL del HEAD final. Production, main, V4, terapias y autoridad clínica durable no fueron modificados.
+
+
 Repositorio `javierdario48-star/ATRIA`; rama exclusiva `atria-5.0-core-rebuild-experimental`. Base original: `388f1fdb62f0dfd34cbb1c2db1227e879140bfce`. Código ejecutable certificado: `6f152a61f02b571dd56218e6a2befa9b0480f6c7`. Esta consolidación parte del HEAD remoto `d739d6a3faead992e5e563d6d31f9f3e26200f5a` y sólo modifica QA/workflow/evidencia. El HEAD vigente es el commit que contiene este archivo (`git rev-parse HEAD`); comprobar sus checks exactos. Obtener HEAD remoto antes de continuar; nunca forzar el ref.
 
 ## Estado — 19-10-2026 UTC
