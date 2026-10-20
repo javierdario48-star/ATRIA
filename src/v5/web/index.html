@@ -16,6 +16,13 @@
   <div class="brand"><span class="logo">A</span><div><b>ATRIA</b><small id="status">5.0 · Experimental</small><small id="playerProgress">Nivel 1 · 0/200 XP</small></div></div>
   <div class="hud-actions"><button id="guardButton" class="primary">Hacer guardia</button><button id="peopleButton">Personas</button><button id="profileButton">Perfil</button></div>
  </header>
+ <aside id="coopInviteNotice" role="status" aria-live="polite" hidden>
+  <strong id="coopInviteSender"></strong><span>te invita a una guardia cooperativa.</span>
+  <div class="invite-actions">
+   <button id="coopInviteAccept" class="primary" type="button">Aceptar</button>
+   <button id="coopInviteDecline" type="button">Rechazar</button>
+  </div>
+ </aside>
  <section id="splash" class="overlay">
   <div class="splash-card"><div class="wordmark"><span class="logo">A</span> ATRIA</div><p class="eyebrow">GUARDIAS QUE ENSEÑAN</p>
    <h1>La noche empieza acá.</h1><p>Un hospital vivo. Decisiones clínicas. Tu próximo desafío.</p>
