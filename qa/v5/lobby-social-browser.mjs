@@ -52,10 +52,16 @@ try{
  assert.equal(await ana.locator('#friendCase').inputValue(),'PERI-PBE-001');
  await ana.locator('[data-action="invite-friend"]').click();
  await ana.getByRole('heading',{name:'Invitación enviada'}).waitFor();
- await bruno.locator('#peopleButton').click();
- await bruno.locator('#coopInvitations [data-action="join-coop"]').waitFor();
+ stage='unilateral notification, acceptance without making another invitation';
+ await bruno.locator('#coopInviteNotice').waitFor({state:'visible',timeout:30000});
+ assert.match(await bruno.locator('#coopInviteNotice').innerText(),/Dra\. Ana/);
+ await bruno.locator('#coopInviteAccept').click();
+ await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().phase==='guard'&&
+  atriaV5.snapshot().mode==='coop',null,{timeout:75000})));
+ assert.equal(h.requests.filter(x=>x.path==='/api/rooms'&&x.method==='POST').length,1,
+  'only the host creates an invitation; guest accepts it without a counterinvitation');
  assert.deepEqual(errors,[]);
  console.log('V5 LOBBY SOCIAL UI PASS',JSON.stringify({chatBoth:true,bubble:true,friendTap:true,
-  friendAccepted:true,invitation:true,phonesPhysical:false}));
+  friendAccepted:true,unilateralInvitation:true,joinByNotification:true,phonesPhysical:false}));
 }catch(e){console.error('V5 LOBBY SOCIAL UI FAIL',JSON.stringify({stage,error:e.message,errors}));throw e;}
 finally{for(const ctx of contexts)await ctx.close().catch(()=>{});await guestBrowser.close().catch(()=>{});await h.close();}
