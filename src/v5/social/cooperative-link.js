@@ -5,7 +5,7 @@ const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
  * Only the caller's existing RAF invokes maintain(); there is no timer here.
  */
 export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onClose=()=>{}}){
- const peers=new Map();let token=null,user=null,room=null,roster=[],invites=[],busy=null,nextPoll=0,disposed=false,roomEpoch=0,desiredRoomId=null;
+ const peers=new Map();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,nextPoll=0,disposed=false,roomEpoch=0,desiredRoomId=null;
  const temporary=new Map();let storage;try{storage=window.localStorage;storage.getItem(SESSION_KEY);}catch{storage={getItem:k=>temporary.get(k),setItem:(k,v)=>temporary.set(k,v),removeItem:k=>temporary.delete(k)};}
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
@@ -41,10 +41,11 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   if(!active())return;
   await api('',{presence:{peerId,motionSession,motionEpoch,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,seq:++presenceSequence}},true);
   if(!active())return;
-  const social=await api('lobby?after=0');roster=social.players;
+  const social=await api('lobby?after=0');roster=social.players;lobbyMessages=social.messages||[];
   if(!active())return;
   if(!room&&!savedRoom){const me=await api('me');if(!active())return;
-   invites=me.invites.filter(x=>x.mode==='coop'&&x.roomId!==room?.id&&x.roomId!==savedRoom);onSocial();return;}
+   invites=me.invites.filter(x=>x.mode==='coop'&&x.roomId!==room?.id&&x.roomId!==savedRoom);
+   friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();return;}
   const id=room?.id||savedRoom;
   let latest;try{latest=await api('rooms/'+id+'/messages?after=0');}
   catch(error){if(!active())return;if(![403,404].includes(error.status))return;
@@ -80,6 +81,13 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   connect,
   flush:()=>busy||Promise.resolve(),
   setProfile(value){profile={...value};},
+  async postLobbyMessage(text,messageId){await connect();const result=await api('lobby/chat',{text,messageId});
+   lobbyMessages=[...lobbyMessages.filter(x=>x.messageId!==result.message.messageId),result.message].slice(-90);
+   onSocial();return result.message;},
+  async addFriend(userId){await connect();await api('friends',{userId});const me=await api('me');
+   friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
+  async acceptFriend(userId){await connect();await api('friends/accept',{userId});const me=await api('me');
+   friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
   async invite(ids){const epoch=++roomEpoch;desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
    const result=await api('rooms',{mode:'coop',invitees:ids,peerId});if(disposed||epoch!==roomEpoch){try{await api('rooms/'+result.room.id+'/cancel',{});}catch{}throw Error('Invitación cancelada.');}setRoom(result.room);return structuredClone(room);},
   async join(id){const epoch=++roomEpoch;desiredRoomId=id;await connect();
@@ -99,7 +107,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   isMember:id=>!!room?.members.some(x=>x.userId===id),
   isHost:()=>!!user&&room?.hostUserId===user.id,
   credentials:()=>({clientKey,authorization:token?'Bearer '+token:null}),
-  state:()=>structuredClone({user,room,roster,invites,recovering:!!savedRoom,connections:[...peers.values()].map(p=>({id:p.id,state:p.link.state()}))}),
+  state:()=>structuredClone({user,room,roster,lobbyMessages,friends,requests,invites,recovering:!!savedRoom,connections:[...peers.values()].map(p=>({id:p.id,state:p.link.state()}))}),
   dispose(){disposed=true;roomEpoch++;desiredRoomId=null;for(const p of peers.values())p.link.dispose();peers.clear();}
  });
 }
