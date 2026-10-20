@@ -58,7 +58,7 @@ export function createWorld(content,profile,checkpoint=null){
   }
   if(phase==='lobby')for(const actor of [player,...others])if(actor.speechBubble&&actor.speechBubble.until<=now)delete actor.speechBubble;
   if(!authoritative)return;
-  for(const other of others)navigation.move(other,dt);
+  if(phase==='guard')for(const other of others)navigation.move(other,dt);
   nursing?.advance(dt);
   for(const n of nurses){
    if(n.journeyId)continue; // Nurse movement is owned by dispatcher until clinical receipt.
