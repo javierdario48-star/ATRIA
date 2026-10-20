@@ -147,6 +147,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/lobby-presence-browser.mjs
+      - name: Two-device lobby chat, bubbles, direct friendship and invitation from avatar
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/lobby-social-browser.mjs
       - name: World patient and monitor taps, anatomical exam, Glasgow and known measurements
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
