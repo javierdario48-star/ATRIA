@@ -131,3 +131,30 @@ test('C08a nurse traversal uses the actual ATRIA map and cannot confirm a proced
  world.enterGuard({mode:'solo',caseId:'CIRR-001'});
  assert.equal(world.nurseJourneySnapshot().length,0,'new guard cannot inherit old nursing job');
 });
+
+test('lobby preserves remote avatar identity and interpolates fresh presence instead of teleporting',async()=>{
+ const {createWorld}=await import('./world.js');
+ const w=createWorld({map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')},{id:'A',name:'Ana'});
+ w.enterLobby();const at=w.navigation.center(15,45);
+ const first={userId:'B',name:'Bruno',x:at.x,y:at.y,motionSession:'session-1',motionEpoch:10,seq:1,
+  moving:true,dir:'E',color:'green'};
+ w.showLobbyPlayers([first],1000);assert.equal(w.snapshot().others[0].x,at.x);
+ w.showLobbyMessage('B','Hola!',1100);
+ w.showLobbyPlayers([{...first,x:at.x+100,moving:false,seq:2}],2000);
+ const before=w.snapshot().others[0];
+ assert.equal(before.x,at.x,'a new remote position must not instantly teleport the sprite');
+ assert.equal(before.speechBubble?.text,'Hola!','new presence preserves the active bubble');
+ for(let t=2040;t<=2900;t+=40)w.step(.04,t);
+ const between=w.snapshot().others[0];
+ assert(between.x>at.x&&between.x<at.x+100,'the public lobby interpolates an actual walk');
+ assert.equal(between.color,'green');
+ assert.equal(between.speechBubble?.text,'Hola!');
+ for(let t=2940;t<=5900;t+=40)w.step(.04,t);
+ assert.equal(w.snapshot().others[0].speechBubble,undefined,'expired bubbles are removed without timers');
+ w.showLobbyPlayers([],6100);
+ assert.equal(w.snapshot().others.length,0,'departed player is removed');
+ w.showLobbyPlayers([first],6200);
+ assert.equal(w.snapshot().others.length,1,'rejoining player is a fresh interpolation epoch');
+ w.enterGuard({mode:'solo',caseId:'PERI-PBE-001'});
+ assert.equal(w.snapshot().others.length,0,'lobby interpolator never owns clinical guard actors');
+});
