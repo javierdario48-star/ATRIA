@@ -110,6 +110,29 @@ jobs:
       - name: Production API imports the pinned private Blob SDK
         run: node -e "import('./api/clinical.js').then(()=>console.log('clinical API imports successfully'))"
 
+  lobby-social-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Build independent V5 browser game
+        run: npm run build:v5
+      - name: Two lobby players appear without opening the directory
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/lobby-presence-browser.mjs
+      - name: Global chat and unilateral invitation from touched avatar, accepted by invited doctor
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/lobby-social-browser.mjs
+
   independent-game-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 12
