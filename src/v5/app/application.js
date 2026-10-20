@@ -84,13 +84,14 @@ export async function createApplication({document,window,content,signal}){
   onTalk:uid=>selectRecipient('patient',uid)});
  const social=createCooperativeLink({window,profile,
   onSocial:()=>{if(destroyed)return;const s=social.state();if(world.snapshot().phase==='lobby'){
-   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();
+   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();renderInvitationNotice(s);
    if(dialog.open&&dialog.dataset.panel==='lobby-person'&&selectedLobbyPlayerId){
     const id=selectedLobbyPlayerId,status=friendStatus(s,id);
     if(status!==selectedLobbyCardState)showLobbyPlayerCard(id);
    }
    maybeRecoverStoredRoom();}},
   onRoom:room=>{if(destroyed)return;
+   renderInvitationNotice(social.state());
    if(room.id===coopRoomId)world.reconcileDoctors(room.members);
    if(room.id===restoreRoomId)maybeRecoverStoredRoom();
    maybeBeginCooperativeRoom();
@@ -107,6 +108,28 @@ export async function createApplication({document,window,content,signal}){
   if(contacts)contacts.innerHTML=s.roster.filter(x=>x.userId!==s.user?.id).map(x=>
    '<button data-action="inspect-player" data-user="'+esc(x.userId)+'">'+esc(x.name)+
    ((s.friends||[]).some(f=>f.id===x.userId)?' · Amigo':'')+'</button>').join('')||'<p>No hay otros médicos conectados.</p>';
+ }
+ function renderInvitationNotice(s){
+  const notice=ui('coopInviteNotice');
+  const invitation=s.invites?.find(x=>x.roomId!==s.room?.id);
+  notice.hidden=world.snapshot().phase!=='lobby'||!!coopRoomId||!invitation;
+  if(!notice.hidden){
+   ui('coopInviteSender').textContent=invitation.host?.name||'Otro médico';
+   notice.dataset.room=invitation.roomId;
+  }else delete notice.dataset.room;
+ }
+ async function acceptCooperativeInvitation(roomId){
+  if(!roomId||coopRoomId)return;
+  cancelSharedIntent();
+  const intent=cooperativeFlow.begin('guest');
+  ui('coopInviteNotice').hidden=true;
+  try{
+   await social.join(roomId);
+   if(cooperativeFlow.current(intent)&&!coopRoomId)
+    open('<h2>Conectando a la guardia…</h2><p>Esperando la autoridad clínica del anfitrión.</p>');
+  }catch(error){
+   if(cooperativeFlow.current(intent)){toast(error.message);renderInvitationNotice(social.state());}
+  }
  }
  function showPeople(){socialEnabled=true;open('<h2>Personas</h2><div id="friendRequests"></div><div id="coopInvitations"></div><p>Colegas conectados · tocá para agregar o invitar</p><div id="lobbyContacts"></div><p>Invitación múltiple (hasta 3 colegas)</p><div id="coopDoctors"></div><div class="actions"><button data-action="close">Cerrar</button></div>','people');renderSocialLists();}
  function friendStatus(s,id){
@@ -125,8 +148,8 @@ export async function createApplication({document,window,content,signal}){
   open('<h2>'+esc(person.name)+'</h2><p>'+ (friend?'Amigo':pending?'Solicitud de amistad enviada':'Médico conectado')+
    '</p><div class="actions">'+(incoming?'<button data-action="accept-friend" data-user="'+esc(userId)+'">Aceptar amistad</button>':
    !friend&&!pending?'<button data-action="add-friend" data-user="'+esc(userId)+'">Agregar a amigos</button>':'')+
-   (friend?'<label>Paciente<select id="friendCase">'+cases.map(c=>'<option value="'+esc(c.id)+'" '+(c.id==='PERI-PBE-001'?'selected':'')+'>'+esc(c.selector)+'</option>').join('')+
-   '</select></label><button class="primary" data-action="invite-friend" data-user="'+esc(userId)+'">Invitar a una guardia</button>':'')+
+   '<label>Paciente<select id="friendCase">'+cases.map(c=>'<option value="'+esc(c.id)+'" '+(c.id==='PERI-PBE-001'?'selected':'')+'>'+esc(c.selector)+'</option>').join('')+
+   '</select></label><button class="primary" data-action="invite-friend" data-user="'+esc(userId)+'">Invitar a una guardia</button>'+
    '<button data-action="close">Cerrar</button></div>','lobby-person');
  }
  async function inviteColleagues(ids,caseId){
@@ -450,6 +473,16 @@ export async function createApplication({document,window,content,signal}){
   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{/* session still usable */}
   world=createWorld(content,profile);enterLobby();
  });
+ listen(ui('coopInviteAccept'),'click',()=>acceptCooperativeInvitation(ui('coopInviteNotice').dataset.room));
+ listen(ui('coopInviteDecline'),'click',async()=>{
+  const roomId=ui('coopInviteNotice').dataset.room;
+  if(!roomId)return;
+  ui('coopInviteNotice').hidden=true;
+  try{await social.declineInvitation(roomId);}catch(error){
+   toast(error.message||'No se pudo rechazar la invitación.');
+   renderInvitationNotice(social.state());
+  }
+ });
  listen(ui('guardButton'),'click',()=>world.snapshot().phase==='guard'?requestLobby():guardSetup());
  listen(ui('peopleButton'),'click',()=>world.snapshot().phase==='guard'?clinicalUI.showPatient(world.snapshot().patients.find(p=>p.uid===world.nearby())||world.snapshot().patients[0]):
   showPeople());
@@ -489,9 +522,7 @@ export async function createApplication({document,window,content,signal}){
   if(button.dataset.action==='close')close();
   if(button.dataset.action==='return-lobby'){requestLobby();return;}
   if(button.dataset.action==='join-coop'){
-   cancelSharedIntent();
-   const intent=cooperativeFlow.begin('guest');
-   try{await social.join(button.dataset.room);if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Conectando a la guardia…</h2><p>Esperando la autoridad clínica del anfitrión.</p>');}catch(error){if(cooperativeFlow.current(intent))toast(error.message);}return;
+   await acceptCooperativeInvitation(button.dataset.room);return;
   }
   if(button.dataset.action==='start-guard'){
    if(draftMode==='coop'){
