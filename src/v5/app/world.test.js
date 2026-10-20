@@ -140,16 +140,17 @@ test('lobby preserves remote avatar identity and interpolates fresh presence ins
   moving:true,dir:'E',color:'green'};
  w.showLobbyPlayers([first],1000);assert.equal(w.snapshot().others[0].x,at.x);
  w.showLobbyMessage('B','Hola!',1100);
- w.showLobbyPlayers([{...first,x:at.x+100,moving:false,seq:2}],2000);
+ // Two real V4-style fallback packets 260 ms apart at ~200 px/s.
+ w.showLobbyPlayers([{...first,x:at.x+52,moving:false,seq:2}],1260);
  const before=w.snapshot().others[0];
  assert.equal(before.x,at.x,'a new remote position must not instantly teleport the sprite');
  assert.equal(before.speechBubble?.text,'Hola!','new presence preserves the active bubble');
- for(let t=2040;t<=2200;t+=40)w.step(.04,t);
+ for(let t=1280;t<=1420;t+=20)w.step(.02,t);
  const between=w.snapshot().others[0];
- assert(between.x>at.x&&between.x<at.x+100,'the public lobby interpolates an actual walk');
+ assert(between.x>at.x&&between.x<at.x+52,'the public lobby interpolates an actual walk');
  assert.equal(between.color,'green');
  assert.equal(between.speechBubble?.text,'Hola!');
- for(let t=2940;t<=5900;t+=40)w.step(.04,t);
+ for(let t=1440;t<=5900;t+=40)w.step(.04,t);
  assert.equal(w.snapshot().others[0].speechBubble,undefined,'expired bubbles are removed without timers');
  w.showLobbyPlayers([],6100);
  assert.equal(w.snapshot().others.length,0,'departed player is removed');
