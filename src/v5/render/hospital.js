@@ -46,6 +46,24 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   if(level){ctx.font='800 '+sub+'px system-ui';ctx.fillStyle='#8edcf5';ctx.fillText('Nv.'+level,x,top+4*scale);}
   ctx.restore();
  }
+ function speechBubble(a,now){
+  const bubble=a.speechBubble;if(!bubble||bubble.until<=now)return;
+  const [x,y]=screen(a.x,a.y),font=Math.max(9,10*scale),max=188*scale;
+  ctx.save();ctx.font='600 '+font+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+  const words=String(bubble.text).split(/\s+/),lines=[];let line='';
+  for(const word of words){
+   const next=line?line+' '+word:word;
+   if(line&&ctx.measureText(next).width>max){lines.push(line);line=word;}else line=next;
+  }
+  if(line)lines.push(line);
+  const visible=lines.slice(0,3),w=Math.min(max,Math.max(62*scale,...visible.map(t=>ctx.measureText(t).width+20*scale))),
+   h=(visible.length*font*1.4)+12*scale,top=y-94*scale-h;
+  ctx.fillStyle='rgba(255,255,250,.96)';ctx.strokeStyle='#23506b';ctx.lineWidth=1.3;
+  ctx.beginPath();ctx.roundRect(x-w/2,top,w,h,8*scale);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#102f45';
+  for(let i=0;i<visible.length;i++)ctx.fillText(visible[i],x,top+12*scale+font*.65+i*font*1.4);
+  ctx.restore();
+ }
  // The original B4/relocated monitor is an added screen, not baked into the map.
  // Draw the spatial entity only; this code never reads or changes patient signs.
  function monitor(m){
@@ -91,6 +109,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   for(const a of actors){sprite(a.id==='self'||a.kind==='doctor'?'player-'+a.color:a.kind==='vega'?'vega':'nurse',a,a.kind==='vega'?72:a.kind==='nurse'?57:62);}
   if(world.phase!=='title')label(world.player,world.player.name,world.player.level);
   for(const a of world.others||[])label(a,a.name,a.level);
+  if(world.phase==='lobby')for(const a of [world.player,...world.others])speechBubble(a,now);
   if(world.expert)label(world.expert,'Dr. Vega');
   if(world.player.target){const [x,y]=screen(...world.player.target);ctx.strokeStyle='#ffd25f';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,9*scale,0,Math.PI*2);ctx.stroke();}
  }
