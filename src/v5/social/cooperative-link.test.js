@@ -83,3 +83,40 @@ test('a late invitation poll cannot reinsert the room accepted during the same i
  f.release();await a.flush();assert.deepEqual(a.state().invites,[],'a pre-accept response cannot restore an accepted invitation');
  await a.leave();assert.deepEqual(a.state().invites,[]);a.dispose();
 });
+
+test('two independent lobby clients exchange chat, accept friendship and receive direct invitation',async()=>{
+ const records=new Map(),backend=createQaSocialServer({
+  get:async k=>records.get(k),set:async(k,v)=>records.set(k,structuredClone(v)),
+  delete:async k=>records.delete(k)
+ });
+ const make=(name)=>{
+  const win={localStorage:storage(),crypto,performance:{now:()=>10000},
+   fetch:async(uri,opts)=>{
+    const url=new URL(uri,'http://test'),input={method:opts.method,path:url.pathname,
+     query:Object.fromEntries(url.searchParams),headers:opts.headers,
+     body:opts.body?JSON.parse(opts.body):{}};
+    const r=await(url.pathname==='/api/lobby-sync'?backend.signalRoute(input):backend.route(input));
+    return {ok:r.status<400,status:r.status,json:async()=>r.body};
+   }};
+  return createCooperativeLink({window:win,profile:{name,scrubColor:'navy'}});
+ };
+ const a=make('Ana'),b=make('Bruno');await Promise.all([a.connect(),b.connect()]);
+ const aid=a.state().user.id,bid=b.state().user.id;
+ for(const client of [a,b]){client.maintain(1000,{x:450,y:820,dir:'S'});await client.flush();}
+ assert(a.state().roster.some(x=>x.userId===bid));
+ const id=aid+':hello-1';await a.postLobbyMessage('Hola Bruno',id);
+ b.maintain(2500,{x:460,y:821,dir:'E'});await b.flush();
+ assert.equal(b.state().lobbyMessages.filter(m=>m.text==='Hola Bruno').length,1);
+ await a.addFriend(bid);
+ b.maintain(3700,{x:460,y:821});await b.flush();
+ assert(b.state().requests.incoming.some(x=>x.id===aid));
+ await b.acceptFriend(aid);
+ a.maintain(4800,{x:450,y:820});await a.flush();
+ assert(a.state().friends.some(x=>x.id===bid));
+ const room=await a.invite([bid]);
+ b.maintain(6000,{x:460,y:821});await b.flush();
+ assert(b.state().invites.some(x=>x.roomId===room.id));
+ await b.join(room.id);
+ assert.equal(b.state().room.id,room.id);
+ a.dispose();b.dispose();
+});
