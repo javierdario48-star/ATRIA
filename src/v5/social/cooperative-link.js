@@ -5,7 +5,7 @@ const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
  * Only the caller's existing RAF invokes maintain(); there is no timer here.
  */
 export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onClose=()=>{}}){
- const peers=new Map();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,nextPoll=0,disposed=false,roomEpoch=0,desiredRoomId=null;
+ const peers=new Map();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,nextPoll=0,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
  const temporary=new Map();let storage;try{storage=window.localStorage;storage.getItem(SESSION_KEY);}catch{storage={getItem:k=>temporary.get(k),setItem:(k,v)=>temporary.set(k,v),removeItem:k=>temporary.delete(k)};}
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
@@ -43,9 +43,16 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   if(!active())return;
   const social=await api('lobby?after=0');roster=social.players;lobbyMessages=social.messages||[];
   if(!active())return;
-  if(!room&&!savedRoom){const me=await api('me');if(!active())return;
-   invites=me.invites.filter(x=>x.mode==='coop'&&x.roomId!==room?.id&&x.roomId!==savedRoom);
-   friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();return;}
+  if(!room&&!savedRoom){
+   // Movement is the V4 260ms fallback; invitation/friend discovery needn't
+   // fetch profiles at that frequency. Keep a visible notice under 1 second.
+   if(now-lastContactsAt>=780){
+    const me=await api('me');if(!active())return;
+    lastContactsAt=now;
+    invites=me.invites.filter(x=>x.mode==='coop'&&x.roomId!==room?.id&&x.roomId!==savedRoom);
+    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};
+   }
+   onSocial();return;}
   const id=room?.id||savedRoom;
   let latest;try{latest=await api('rooms/'+id+'/messages?after=0');}
   catch(error){if(!active())return;if(![403,404].includes(error.status))return;
