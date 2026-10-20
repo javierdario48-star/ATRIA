@@ -103,6 +103,7 @@ test('two independent lobby clients exchange chat, accept friendship and receive
  const a=make('Ana'),b=make('Bruno');await Promise.all([a.connect(),b.connect()]);
  const aid=a.state().user.id,bid=b.state().user.id;
  for(const client of [a,b]){client.maintain(1000,{x:450,y:820,dir:'S'});await client.flush();}
+ a.maintain(2500,{x:450,y:820,dir:'S'});await a.flush();
  assert(a.state().roster.some(x=>x.userId===bid));
  const id=aid+':hello-1';await a.postLobbyMessage('Hola Bruno',id);
  b.maintain(2500,{x:460,y:821,dir:'E'});await b.flush();
