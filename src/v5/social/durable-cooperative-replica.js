@@ -10,7 +10,7 @@ export function createDurableCooperativeReplica({
  if(!/^[A-Za-z0-9_-]{1,100}$/.test(roomId)||!/^[-a-zA-Z0-9]{32,120}$/.test(clientKey))
   throw Error('invalid durable cooperative credentials');
  const key='atria.v5.durable.pending:'+roomId;
- let disposed=false,current=null,epoch=-1,lastPoll=-Infinity,inflight=null,queuedMotion=null,queuedMotionSequence=null,typing=null,confirmation=null;
+ let disposed=false,current=null,epoch=-1,lastPoll=-Infinity,inflight=null,queuedMotion=null,queuedMotionSequence=null,latestMotionSequence=0,typing=null,confirmation=null;
  const pending=new Map();
  const clone=x=>structuredClone(x);
  function save(){try{storage?.setItem(key,JSON.stringify([...pending.values()].map(x=>x.envelope)));}catch{}}
@@ -113,7 +113,8 @@ export function createDurableCooperativeReplica({
   motion(target,sequence=null){
    if(!Array.isArray(target)||target.length!==2||!target.every(Number.isFinite))return false;
    if(sequence!==null&&(!Number.isSafeInteger(sequence)||sequence<1||sequence>1e9))return false;
-   if(queuedMotionSequence!==null&&sequence!==null&&sequence<queuedMotionSequence)return false;
+   if(sequence!==null&&sequence<latestMotionSequence)return false;
+   if(sequence!==null)latestMotionSequence=Math.max(latestMotionSequence,sequence);
    queuedMotion=clone(target);queuedMotionSequence=sequence;return true;
   },
   setTyping(value){typing=!!value;},
