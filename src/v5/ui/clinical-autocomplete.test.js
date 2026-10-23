@@ -50,6 +50,11 @@ test('safe fuzzy recognition offers corrections without editing a dose or clinic
   const results=clinicalCompletions('Enfermera, '+error,c);
   assert(results.length>0,error);
  }
+ assert.deepEqual(spellingSuggestions('hols'),[
+  {kind:'spelling',label:'hola',replacement:'hola'}]);
+ assert.deepEqual(correctEverydayBeforeSpace('hols',4),{value:'hola',cursor:4});
+ assert.equal(correctEverydayBeforeSpace('hola',4),null,'correct words must stay intact');
+ assert.equal(correctEverydayBeforeSpace('morfins',7),null,'unrecognized drug names are not guessed');
  assert.deepEqual(spellingSuggestions('Doctor qeu'),[
   {kind:'spelling',label:'que',replacement:'Doctor que'}]);
  assert.deepEqual(correctEverydayBeforeSpace('Enfemera',8),{value:'enfermera',cursor:9});

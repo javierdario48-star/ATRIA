@@ -58,7 +58,7 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
   if(key==='nurse'){onNurse?.();return;}
   if(key==='symbols'){symbols=!symbols;shift=false;paint();return;}
   if(key==='shift'){shift=!shift;paint();return;}
-  input.focus({preventScroll:true});
+  if(document.activeElement!==input)input.focus({preventScroll:true});
   const chosen=shift&&key.length===1?key.toUpperCase():key;
   const start=input.selectionStart??input.value.length,end=input.selectionEnd??input.value.length;
   const fix=key==='space'&&start===end?correctEverydayBeforeSpace(input.value,start):null;
@@ -68,16 +68,32 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
   input.dispatchEvent(new window.Event('input',{bubbles:true,inputType:'insertText'}));
   if(shift){shift=false;paint();}
  }
- function suppressBlur(event){if(event.target.closest('button'))event.preventDefault();}
+ // Physical touch registration cannot depend on a subsequent synthetic click:
+ // a slight finger movement may cancel click on Android.
+ const handledTouch=new WeakMap();
+ function onPointerDown(event){
+  const button=event.target.closest('button[data-key]');
+  if(!button||!root.contains(button))return;
+  event.preventDefault();
+  if(event.pointerType==='touch'||event.pointerType==='pen'){
+   handledTouch.set(button,Date.now());
+   onKey(event);
+  }
+ }
+ function onClick(event){
+  const button=event.target.closest('button[data-key]');
+  if(button&&Date.now()-(handledTouch.get(button)||0)<950)return;
+  onKey(event);
+ }
  const onToggle=()=>setOpen(!open);
- root.addEventListener('pointerdown',suppressBlur);
- root.addEventListener('click',onKey);
+ root.addEventListener('pointerdown',onPointerDown,{passive:false});
+ root.addEventListener('click',onClick);
  toggle?.addEventListener('click',onToggle);
  host.append(root);
  setOpen(!!(window.matchMedia?.('(pointer: coarse)').matches||window.innerWidth<=700));
  return Object.freeze({isOpen:()=>open,setOpen,element:root,listenerCount:()=>disposed?0:(toggle?3:2),destroy(){
   if(disposed)return;disposed=true;
-  root.removeEventListener('pointerdown',suppressBlur);root.removeEventListener('click',onKey);
+  root.removeEventListener('pointerdown',onPointerDown);root.removeEventListener('click',onClick);
   toggle?.removeEventListener('click',onToggle);root.remove();
   document.body.classList.remove('atria-keyboard-open');input.setAttribute('inputmode','text');
  }});

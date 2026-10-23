@@ -95,6 +95,12 @@ try{
  await page.locator('#atriaKeyboard [data-key="space"]').click();
  assert.equal(await page.locator('#dieInput').inputValue(),'que ');
  await page.locator('#dieInput').fill('');
+ // Actual touch taps, not mouse clicks: no duplicate letters and safe spelling.
+ for(const letter of ['h','o','l','s'])await page.locator('#atriaKeyboard [data-key="'+letter+'"]').tap();
+ assert.equal(await page.locator('#dieInput').inputValue(),'hols');
+ await page.locator('#atriaKeyboard [data-key="space"]').tap();
+ assert.equal(await page.locator('#dieInput').inputValue(),'hola ');
+ await page.locator('#dieInput').fill('');
 
  // Toggle compares original camera and input mode; map is not scaled or cropped.
  await page.locator('#keyboardToggleButton').click();

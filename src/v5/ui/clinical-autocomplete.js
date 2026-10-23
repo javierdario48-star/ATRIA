@@ -13,6 +13,51 @@ const commonFixes=Object.freeze({
  'sintmas':'síntomas','diagnotico':'diagnóstico','diganostico':'diagnóstico',
  'exman':'examen','abdomne':'abdomen','estudioo':'estudio'
 });
+// Small offline Spanish vocabulary for high-confidence single-letter typos.
+// All medicine, dosages and unrecognized clinical words require explicit choice.
+const everydayWords=new Set(`
+hola gracias buenos buenas buen buenísimo por para porque pero como
+cuando donde quien quienes cuanto cuantos que qué cual cuáles
+yo tu tú el ella ellos ellas usted ustedes nosotros nosotras vos
+soy eres es somos son estoy estas está estamos están estuve
+tengo tienes tiene tenemos tienen hay había fue fueron
+hoy ayer mañana tarde noche día dias días semana mes año años
+si sí no nada algo alguien alguno alguna todo todos todas mucho mucha muchos
+poco poca pocos más menos muy bastante casi siempre nunca
+bien mal mejor peor bueno buena lindo linda
+quiero quieres quiere queremos puedo puedes puede podemos
+hacer haces hace hacemos hice hizo hacen decir dice dije digo
+ir voy vas va vamos venir viene vengo
+chau adiós adios buenasnoches buenosdias
+ahora luego después antes pronto recién entonces ya todavía aun aún
+tambien también además solo sola solos
+aquí ahi ahí allá acá afuera dentro arriba abajo lado
+amigo amiga amigos amigas familia mamá papá hermano hermana
+casa trabajo escuela universidad libro mesa mano cabeza pie brazo
+hombre mujer niño niña doctor doctora persona paciente
+esto esta este estos estas eso esa ese esos esas aquello
+tener estar ser haber hacer dar tomar poner pasar saber salir
+comer beber dormir estudiar leer escribir hablar escuchar mirar
+necesito necesitas necesita necesitamos disculpa perdón
+favor porfavor perfecto excelente terrible genial
+feliz triste cansado cansada tranquilo tranquila
+pasa claro seguro segura verdad mentira
+saludos nos vemos
+`.trim().split(/\s+/).map(normalizeClinicalQuery));
+function everydayCorrection(word){
+ const normalized=normalizeClinicalQuery(word);
+ const direct=commonFixes[normalized];
+ if(direct)return direct;
+ if(normalized.length<4||normalized.length>15||everydayWords.has(normalized))return null;
+ let match=null;
+ for(const candidate of everydayWords){
+  if(Math.abs(candidate.length-normalized.length)>1)continue;
+  if(editDistance(normalized,candidate,1)!==1)continue;
+  if(match!==null&&match!==candidate)return null; // Ambiguous: leave unchanged.
+  match=candidate;
+ }
+ return match;
+}
 const prefix=/^\s*enfermer(?:a|o|ia)\s*[,.:]?\s*/i;
 export function shortNursePrefix(text){
  const value=String(text||'');
@@ -117,7 +162,7 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
 export function spellingSuggestions(text,{limit=3}={}){
  const full=String(text||''),found=/([a-záéíóúñü]+)$/i.exec(full);
  if(!found)return [];
- const word=found[1],normalized=normalizeClinicalQuery(word),replacement=commonFixes[normalized];
+ const word=found[1],replacement=everydayCorrection(word);
  if(!replacement||replacement.toLowerCase()===word.toLowerCase())return [];
  return [{label:replacement,replacement:full.slice(0,-word.length)+replacement,kind:'spelling'}].slice(0,limit);
 }
@@ -127,7 +172,7 @@ export function correctEverydayBeforeSpace(value,cursor){
  const prefix=String(value).slice(0,cursor);
  const m=/([a-záéíóúñü]+)$/i.exec(prefix);
  if(!m)return null;
- const fix=commonFixes[normalizeClinicalQuery(m[1])];
+ const fix=everydayCorrection(m[1]);
  if(!fix||fix.toLowerCase()===m[1].toLowerCase())return null;
  const start=cursor-m[1].length;
  return {value:String(value).slice(0,start)+fix+String(value).slice(cursor),

@@ -31,18 +31,18 @@ dialog{position:fixed;inset:0;margin:auto;width:min(94vw,560px);max-height:88dvh
 /* ATRIA compact keyboard preview: proportional 4-row native chat input. */
 .atria-keyboard{
  display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:4px;
- height:clamp(164px,22dvh,270px);padding:8px 5px 7px;
+ height:clamp(186px,25dvh,270px);padding:6px 4px 5px;
  border:1px solid #38787b;border-top:0;border-radius:0 0 16px 16px;
  background:linear-gradient(180deg,#061a20f5,#09242af9);
  box-shadow:0 6px 19px #0009;
  touch-action:manipulation;user-select:none;-webkit-user-select:none;
 }
-.atria-key-row{display:flex;gap:4px;min-height:0;justify-content:center}
+.atria-key-row{display:flex;gap:2px;min-height:0;justify-content:center}
 .atria-key-row .atria-key{
  min-width:0;min-height:0;flex:1 1 0;padding:0 1px;border-radius:8px;
  background:linear-gradient(155deg,#243c42,#172d33);border:1px solid #496a709e;
  color:#ecf6f5;font:500 clamp(13px,3.7vw,19px) system-ui,sans-serif;
- box-shadow:0 2px 2px #0004;touch-action:manipulation;
+ box-shadow:0 2px 2px #0004;touch-action:none;-webkit-tap-highlight-color:transparent;
 }
 .atria-key-row .atria-key:active{background:#3a7777;transform:translateY(1px)}
 .atria-key-row .atria-key.wide{flex:1.42 1 0;background:#14363c}

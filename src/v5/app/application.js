@@ -717,7 +717,14 @@ export async function createApplication({document,window,content,signal}){
   input.focus({preventScroll:true});input.setSelectionRange(input.value.length,input.value.length);
   input.dispatchEvent(new window.Event('input',{bubbles:true}));
  });
- listen(input,'input',()=>{if(!composition)updateTypingAssistance();});
+ // Limit fuzzy suggestion renders to one per frame; insert typed letters immediately.
+ let assistFrame=0;
+ listen(input,'input',()=>{
+  if(composition||assistFrame)return;
+  assistFrame=window.requestAnimationFrame(()=>{
+   assistFrame=0;if(!signal?.aborted)updateTypingAssistance();
+  });
+ });
  listen(ui('recipientButton'),'click',()=>{
   if(world.snapshot().phase==='guard')selectRecipient(focusedNpc==='nurse'?'vega':focusedNpc==='vega'?'patient':'nurse');
  });
