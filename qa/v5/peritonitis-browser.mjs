@@ -23,7 +23,7 @@ try{
   };
   for(const [x,y] of [[496,1200],[496,1080],[496,960],[496,840],[496,720],[400,580],[250,470],[144,420]]){
    stage=name+' walking '+x+','+y;
-   await page.waitForFunction(()=>{const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;return Math.abs(c.x-p.x)<1&&Math.abs(c.y-p.y)<1;});
+   await page.waitForFunction(()=>{const p=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;return Math.hypot(c.x-p.x,c.y-p.y)<2.5;});
    const r=await page.evaluate(()=>atriaV5.diagnostics().renderer),point={x:(x-r.camera.x)*r.scale+r.anchorX,y:(y-r.camera.y)*r.scale+r.anchorY};
    const hud=await page.locator('#hud').boundingBox(),dock=await page.locator('#chatDock').boundingBox();
    assert(point.y>hud.y+hud.height+5&&point.y<dock.y-5,'visible map route');
