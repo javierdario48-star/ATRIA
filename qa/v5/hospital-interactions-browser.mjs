@@ -100,9 +100,15 @@ try{
  assert.equal(await wheel.locator('button').count(),6);
  await page.screenshot({path:out+'/contextual-patient-wheel.png'});
  await wheel.locator('[data-patient-action="examination"]').click();
+ assert.match(await page.locator('#examProgressiveSummary').innerText(),/Pendiente de exploración/);
+ assert.equal(await page.locator('#examBodyMarkers .exam-map-pin').count(),0,
+  'unexplored patient must not show any visual clinical clue');
  const choose=async region=>page.locator('#examRegions [data-exam-region="'+region+'"]').click();
  await page.locator('svg [data-exam-region="abdomen"]').click();assert.deepEqual((await state()).patient.examFindings,{});
  await page.locator('[data-exam-section="palpation"]').click();await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings.abdomen?.palpation);
+ assert.match(await page.locator('#examProgressiveSummary').innerText(),/Abdomen.*Ascitis/);
+ assert.match(await page.locator('#examBodyFindings').innerText(),/Ascitis/);
+ assert.equal(await page.locator('#examBodyMarkers .exam-map-pin').count(),1);
  assert.match(await page.locator('#examResults').innerText(),/Ascitis/);assert.doesNotMatch(await page.locator('#examResults').innerText(),/Esplenomegalia/);
  assert(!(await state()).patient.examDone);assert.deepEqual((await state()).patient.lastVitalsKnown,measured);
  await choose('thorax');await page.locator('[data-exam-section="auscultation"]').click();
@@ -111,7 +117,14 @@ try{
  for(const tech of ['inspection','percussion'])await page.locator('[data-exam-section="'+tech+'"]').click();
  assert(!(await state()).patient.examDone,'thorax auscultation cannot count as abdominal auscultation');
  await page.locator('[data-exam-section="auscultation"]').click();await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.examDone);
- await choose('spleen');await page.locator('[data-exam-section="palpation"]').click();assert.match(await page.locator('#examResults').innerText(),/Esplenomegalia/);
+ await choose('spleen');await page.locator('[data-exam-section="palpation"]').click();
+ assert.match(await page.locator('#examResults').innerText(),/Esplenomegalia/);
+ assert.match(await page.locator('#examProgressiveSummary').innerText(),/Esplenomegalia/);
+ const method=page.locator('#examResults details[data-exam-method="palpation"]');
+ await method.locator('summary').click();
+ assert.match(await method.innerText(),/Esplenomegalia/);
+ assert.equal(await method.getAttribute('open'),'',
+  'all original maneuver detail remains available on demand');
  await choose('neurological');await page.locator('[data-glasgow="eye"]').click();
  assert.equal((await state()).patient.glasgow.total,null);await page.locator('[data-glasgow="verbal"]').click();await page.locator('[data-glasgow="motor"]').click();
  assert.equal((await state()).patient.glasgow.total,15);
