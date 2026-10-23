@@ -159,3 +159,28 @@ test('lobby preserves remote avatar identity and interpolates fresh presence ins
  w.enterGuard({mode:'solo',caseId:'PERI-PBE-001'});
  assert.equal(w.snapshot().others.length,0,'lobby interpolator never owns clinical guard actors');
 });
+
+
+test('durable guard keeps speech bubbles and interpolated doctors between confirmed server snapshots',async()=>{
+ const {createWorld}=await import('./world.js');
+ const w=createWorld({map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')},{id:'A',name:'Ana'});
+ w.enterGuard({mode:'coop',caseId:'PERI-PBE-001',members:[{id:'A',name:'Ana'},{id:'B',name:'Bruno'}],authoritative:false});
+ const patient=w.snapshot().patients[0],base=w.snapshot().player;
+ const remote={id:'B',kind:'doctor',name:'Bruno',color:'navy',x:base.x+60,y:base.y,dir:'E',moving:true};
+ const nurse=w.snapshot().nurses;
+ w.applySharedSpatial({nurses:nurse,doctors:[{...base,id:'A'},remote]},1000);
+ w.showGuardMessage('B','Hola desde la guardia',1100);
+ assert.equal(w.snapshot().others[0].speechBubble.text,'Hola desde la guardia');
+ w.applySharedSpatial({nurses:nurse,doctors:[{...base,id:'A'}, {...remote,x:remote.x+50}]},1350);
+ const after=w.snapshot().others[0];
+ assert.equal(after.speechBubble.text,'Hola desde la guardia');
+ assert(after.x<remote.x+50,'the server snapshot must not teleport the remotely rendered doctor');
+ for(let t=1380;t<=1650;t+=30)w.step(.03,t);
+ assert(w.snapshot().others[0].x>remote.x,'the remote actor progresses toward its confirmed server target');
+ w.showGuardMessage('A','Mi mensaje',1700);
+ assert.equal(w.snapshot().player.speechBubble.text,'Mi mensaje');
+ for(let t=1740;t<=6300;t+=40)w.step(.04,t);
+ assert.equal(w.snapshot().player.speechBubble,undefined);
+ assert.equal(w.snapshot().others[0].speechBubble,undefined);
+ assert.equal(w.snapshot().patients[0].uid,patient.uid,'visual interpolation does not mutate clinical patient');
+});
