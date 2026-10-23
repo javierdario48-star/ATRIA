@@ -86,7 +86,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function close(){if(dialog.open)dialog.close();delete dialog.dataset.panel;}
  const clinicalUI=createClinicalInterface({document,session:()=>guardSession,open,close,send:submitText,notify:toast,cases:content.cases,
-  onTalk:uid=>selectRecipient('patient',uid)});
+  onTalk:uid=>selectRecipient('patient',uid),therapies:content.therapies});
  const social=createCooperativeLink({window,profile,
   onSocial:()=>{if(destroyed)return;const s=social.state();renderNotifications(s);if(world.snapshot().phase==='lobby'){
    if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();
