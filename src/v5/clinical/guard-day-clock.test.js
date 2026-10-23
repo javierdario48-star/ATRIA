@@ -24,3 +24,26 @@ test('sealed native clock epochs preserve 24h visible time and never overflow af
  assert(end.nativeMinute>before.nativeMinute);
  assert(end.segmentCount<=128);
 });
+
+test('two successive clinical patients have distinct receipt IDs and a cumulative shift clock',async()=>{
+ const {createGuardSession}=await import('./guard-session.js');
+ const {createProgressionLedger}=await import('./progression.js');
+ const fs=await import('node:fs');
+ const read=x=>JSON.parse(fs.readFileSync(new URL('../content/'+x+'.json',import.meta.url)));
+ const data={cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')};
+ const ledger=createProgressionLedger();let total=0;
+ for(let i=1;i<=2;i++){
+  const s=createGuardSession({roomId:'shift:'+i,mode:'solo',actorId:'A',actorName:'A',
+   patient:{uid:'shift-patient-'+i,caseId:'CIRR-001'},content:data,progress:ledger,
+   resolveContext:()=>({patientUid:'shift-patient-'+i})});
+  try{
+   await s.post({id:'diagnosis',text:'/diagnostico cirrosis'});
+   const r=await s.post({id:'closure',text:'/cierre-parcial observacion'});
+   assert.equal(r.clinical[0].status,'executed');
+   s.advance(12);total+=s.read().clock.gameMinute;
+  }finally{s.dispose();}
+ }
+ assert.equal(total,24);
+ assert.equal(ledger.read().receipts.length,2);
+ assert.equal(new Set(ledger.read().receipts.map(r=>r.patientUid)).size,2);
+});

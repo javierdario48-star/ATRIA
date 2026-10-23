@@ -31,3 +31,25 @@ test('two authenticated cooperative doctors share the genuine patient, transcrip
   assert.equal(s.read().patient.closure.quality.score,100);assert.equal(s.read().progress.xp,111,'native cooperative mode has no solo autonomy multiplier');
  }finally{s.dispose();}
 });
+
+test('four clinicians share one valid partial closure and only one EXP receipt',async()=>{
+ const roomId='shared-four-doctors',participants=['A','B','C','D'],
+  members=participants.map(id=>({id,name:'Doctor '+id}));
+ const keys=new Map(participants.map(id=>['token-'+id,id]));
+ const s=createGuardSession({roomId,mode:'coop',actorId:'A',actorName:'Doctor A',
+  members,authenticate:token=>keys.has(token)?{id:keys.get(token),roomId}:null,
+  patient:{uid:'four-player-case',caseId:'CIRR-001'},content,
+  resolveContext:({actorId})=>({patientUid:participants.includes(actorId)?'four-player-case':null})});
+ try{
+  const results=await Promise.all(participants.map(id=>
+   s.post({id:'dx-'+id,text:'/diagnostico cirrosis'},'token-'+id)));
+  assert(results.every(x=>x.status!=='rejected'));
+  const closes=await Promise.all(participants.map(id=>
+   s.post({id:'close-'+id,text:'/cierre-parcial observacion'},'token-'+id)));
+  assert.equal(closes.filter(x=>x.clinical?.[0]?.status==='executed').length,1);
+  assert.equal(s.read().patient.caseEnded,true);
+  assert.equal(s.read().progress.receipts.length,1);
+  assert.equal(new Set(s.read().messages.filter(x=>x.role==='player').map(x=>x.actorId)).size,4);
+  assert.equal((await s.post({id:'unauthorized',text:'/cierre-parcial observacion'},'forged')).status,'rejected');
+ }finally{s.dispose();}
+});
