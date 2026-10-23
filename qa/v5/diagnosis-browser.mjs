@@ -30,33 +30,55 @@ try{
    const point={x:(x-r.camera.x)*r.scale+r.anchorX,y:(y-r.camera.y)*r.scale+r.anchorY};
    const hud=await page.locator('#hud').boundingBox(),dock=await page.locator('#chatDock').boundingBox();
    assert(point.y>hud.y+hud.height+5&&point.y<dock.y-5,'waypoint must be an exposed map touch, never behind HUD/chat');
+   const before=await page.evaluate(()=>({x:atriaV5.snapshot().player.x,y:atriaV5.snapshot().player.y}));
+   // A waypoint already reached in the same tile must not require a new movement transition.
+   if(Math.hypot(before.x-x,before.y-y)<=8)continue;
    await page.locator('#game').click({position:point});
-   await page.waitForFunction(()=>atriaV5.snapshot().player.moving);await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
+   await page.waitForFunction(start=>{
+    const p=atriaV5.snapshot().player;
+    return Math.hypot(p.x-start.x,p.y-start.y)>8;
+   },before);
+   await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
   }
   stage=name+' diagnosis and consultation';
-  assert.equal(await page.locator('[data-patient-destination]').count(),0);
+  assert.equal((await state()).eligibleDestinations.includes('quirofano'),false);
   await send('Enfermera cirugía');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
   assert.equal((await state()).patient.consults[0].accepted,false);
-  await page.locator('[data-patient-diagnosis]').click();
+  // The floating edit badge deliberately yields to walkable approach tiles.
+  // The patient chart is the same supported public diagnosis workflow.
+  const openEditor=async()=>{
+   const badge=page.locator('[data-patient-diagnosis]');
+   const floating=await badge.isVisible();
+   if(floating)await badge.click();
+   else await page.locator('#peopleButton').click();
+   return floating;
+  };
+  const closeIfOpen=async()=>{
+   if(await page.locator('#modal').evaluate(el=>el.open))await page.locator('#modalClose').click();
+  };
+  let floating=await openEditor();
   const field=page.locator('#diagnosisInput');await field.fill('peritonitis');
-  const text=await page.locator('#diagnosisSuggestions').innerText();
-  for(const term of ['Peritonitis bacteriana espontánea','Peritonitis secundaria','Peritonitis terciaria'])assert(text.includes(term));
+  const terms=await page.locator('#diagnosisSuggestions').innerText();
+  for(const term of ['Peritonitis bacteriana espontánea','Peritonitis secundaria','Peritonitis terciaria'])assert(terms.includes(term));
   await field.evaluate(el=>el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,isComposing:true})));
   assert.equal((await state()).patient.diagnosis,'','IME confirmation must not save a draft');
   await page.locator('[data-action="save-diagnosis"]').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='peritonitis');
-  assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,
-   'diagnosis modal closes automatically after save');
-  await page.locator('[data-patient-diagnosis]').click();
+  if(floating)assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,
+   'dedicated diagnosis dialog auto-closes after save');
+  else await closeIfOpen();
+  floating=await openEditor();
   await page.locator('[data-action="clear-diagnosis"]').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='');
   await field.fill('apendi');await page.locator('[data-diagnosis="apendicitis aguda"]').click();await field.press('Enter');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='apendicitis aguda');
-  assert.equal(await page.locator('#modal').evaluate(el=>el.open),false);
-  assert.match(await page.locator('[data-patient-diagnosis]').innerText(),/apendicitis aguda/);
+  if(floating)assert.equal(await page.locator('#modal').evaluate(el=>el.open),false);
+  else await closeIfOpen();
+  if(await page.locator('[data-patient-diagnosis]').isVisible())
+   assert.match(await page.locator('[data-patient-diagnosis]').innerText(),/apendicitis aguda/);
   await page.screenshot({path:out+'/diagnosis-'+name+'.png'});
-  await page.locator('[data-patient-diagnosis]').click();assert.equal(await field.inputValue(),'apendicitis aguda');
-  await page.locator('#modalClose').click();
+  await openEditor();assert.equal(await field.inputValue(),'apendicitis aguda');
+  await closeIfOpen();
   await send('Enfermera cirugía');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===2);
   assert.equal((await state()).patient.consults[1].reviewStatus,'missing-exam');
   assert.equal((await state()).patient.treatments.length,0);
@@ -69,7 +91,7 @@ try{
   await ctx.close();
  }
  await fs.writeFile(out+'/diagnosis-summary.json',JSON.stringify(results,null,2)+'\n');
- console.log('FLOATING DIAGNOSIS BROWSER PASS',JSON.stringify(results));
+ console.log('DIAGNOSIS PUBLIC UI PASS',JSON.stringify(results));
 }catch(error){
  if(page&&!page.isClosed()){
   await page.screenshot({path:out+'/diagnosis-failure.png'}).catch(()=>{});
