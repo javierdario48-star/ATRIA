@@ -37,14 +37,17 @@ try{
  assert.match(await page.locator('#chatHistory').innerText(),/varias semanas/);
  assert.match(await page.locator('#chatHistory').innerText(),/muchos años|durante años/);
  await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
- for(const section of ['general','inspection','auscultation','percussion','palpation']){
-  await page.locator('#examRegions [data-exam-region="'+(section==='general'?'general':'abdomen')+'"]').click();
-  await page.locator('[data-exam-section="'+section+'"]').click();
-  await page.waitForFunction(s=>!!atriaV5.snapshot().clinical.patient.exam[s],section);
- }
+ // A region card performs its actual constituent examination techniques.
+ await page.locator('#examRegions [data-exam-region="general"]').click();
+ await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings.general);
+ await page.locator('#examRegions [data-exam-region="abdomen"]').click();
+ await page.waitForFunction(()=>['inspection','auscultation','percussion','palpation'].every(
+  method=>!!atriaV5.snapshot().clinical.patient.examFindings.abdomen?.[method]));
  await page.locator('#examRegions [data-exam-region="spleen"]').click();
- await page.locator('[data-exam-section="palpation"]').click();
- assert((await state()).patient.examDone);assert.match(await page.locator('#examResults').innerText(),/Esplenomegalia/);
+ await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings.spleen?.palpation);
+ assert((await state()).patient.examDone);
+ await page.locator('.exam-advanced > summary').click();
+ assert.match(await page.locator('#examResults').innerText(),/Esplenomegalia/);
  await page.locator('#modalClose').click();await page.locator('#peopleButton').click();
  await page.locator('[data-action="record-vitals"]').click();await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.lastVitalsKnown);
  assert.match(await page.locator('#clinicalVitals').innerText(),/108\/68/);await page.locator('#modalClose').click();
