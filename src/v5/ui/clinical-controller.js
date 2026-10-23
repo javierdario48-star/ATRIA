@@ -15,7 +15,7 @@ import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} fro
 /** UI state only. Every clinical action keeps its explicit UID and uses send().
  * The app owns the dialog and event listener; this controller owns neither timers nor listeners.
  */
-export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[],therapies=[]}){
+export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[],therapies=[],onMonitorOpen=()=>{}}){
  const ui=id=>document.getElementById(id);
  let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='',pendingDisposition=null;
  const ecgSweep=createEcgSweep();
@@ -115,6 +115,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    '<button data-action="toggle-monitor" class="primary"></button><button data-action="record-vitals">Medir ahora</button>'+
    '<button data-action="patient-chart">Historia</button></div>','monitor');
   ui('modalContent').dataset.patientUid=patientUid;render();renderOrderSuggestions();
+  onMonitorOpen();
  }
  /** Invoked by the world-anchored patient menu; clinical actions still use
   * the existing session, UID, room authority and panel handlers.

@@ -406,3 +406,11 @@ dialog[data-panel="case-close"] .panel{padding:16px}
 body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding:3px 5px}
 @media(max-width:420px){#chatForm{gap:3px}#nurseQuickButton:not([hidden]){min-width:32px;max-width:34px;font-size:9px}
  #chatForm #recipientButton{max-width:75px}}
+
+/* V4.13 audio returns as a compact, user-controlled soundscape. */
+#audioButton{min-width:30px;font-size:16px;padding:3px 5px}
+.audio-option{display:flex;align-items:center;gap:9px;padding:8px 4px;font-size:12px}
+.audio-option input{width:17px;height:17px;min-width:17px;accent-color:#9ae2d6}
+#audioVolume{width:100%;accent-color:#9ae2d6}
+.audio-note{font-size:11px;opacity:.85}
+@media(max-width:560px){#audioButton{min-width:28px;font-size:14px;padding:3px 4px}}
