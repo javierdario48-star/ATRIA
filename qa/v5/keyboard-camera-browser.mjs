@@ -76,6 +76,25 @@ try{
  await page.locator('#atriaKeyboard [data-key="send"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical?.room?.transcript?.some(x=>x.text==='hola'));
  assert.equal((await page.evaluate(()=>atriaV5.snapshot().clinical.room.transcript.filter(x=>x.text==='hola').length)),1);
+ // Nurse shortcut and shared clinical autocomplete are presentation-only.
+ const beforeCompletion=(await page.evaluate(()=>atriaV5.snapshot().clinical.room.transcript.length));
+ await page.locator('#nurseQuickButton').click();
+ assert.equal(await page.locator('#dieInput').inputValue(),'Enfermera, ');
+ await page.locator('#dieInput').fill('Enfermera, ceftr');
+ await page.locator('#chatSuggestions').waitFor({state:'visible'});
+ const cef=page.locator('#chatSuggestions [data-assist-kind="order"]').filter({hasText:'Ceftriaxona'}).first();
+ assert.equal(await cef.count(),1,'case-scoped nurse command suggestion is visible');
+ await cef.click();
+ assert.match(await page.locator('#dieInput').inputValue(),/^Enfermera, ceftriaxona/i);
+ assert.equal(await page.evaluate(()=>atriaV5.snapshot().clinical.room.transcript.length),
+  beforeCompletion,'choosing a suggestion does not send any medicine');
+ await page.locator('#dieInput').fill('');
+ await page.locator('#atriaKeyboard [data-key="nurse"]').click();
+ assert.equal(await page.locator('#dieInput').inputValue(),'Enfermera, ');
+ await page.locator('#dieInput').fill('qeu');
+ await page.locator('#atriaKeyboard [data-key="space"]').click();
+ assert.equal(await page.locator('#dieInput').inputValue(),'que ');
+ await page.locator('#dieInput').fill('');
 
  // Toggle compares original camera and input mode; map is not scaled or cropped.
  await page.locator('#keyboardToggleButton').click();
