@@ -29,6 +29,8 @@ test('exact same engine serves chat and monitor and does not infer hidden case r
  assert.equal(chat.command,mon.command);
  assert.equal(chat.replacement,'Enfermera, '+chat.command);
  assert.equal(mon.replacement,mon.command);
+ assert.equal(suggestion('Enfermera, ceftr',{...c,mode:'monitor'}).command,mon.command,
+  'monitor accepts the same spoken addressed query');
  const appStudies=clinicalVocabulary(c).filter(x=>x.kind==='study').map(x=>x.id);
  assert(!appStudies.includes('study:hepatograma'),'only selected case studies are shown');
  assert(!JSON.stringify(clinicalCompletions('hemog',c)).includes('AST 82'));
