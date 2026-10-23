@@ -19,7 +19,7 @@ export function createClinicalChecklist({document}){
  let uid=null,collapsed=false,previous='';
  function update(state){
   if(!uid||!state||state.patient?.uid!==uid||state.patient?.caseEnded||state.patient?.patientDied){
-   if(uid&&(state?.patient?.caseEnded||state?.patient?.closure?.closed||state?.patient?.patientDied))hide();
+   if(uid&&(!state||state.patient?.uid!==uid||state.patient?.caseEnded||state.patient?.closure?.closed||state.patient?.patientDied))hide();
    return;
   }
   const html=clinicalChecklistHTML(state,{collapsed});
