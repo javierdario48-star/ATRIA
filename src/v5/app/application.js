@@ -61,7 +61,7 @@ export async function createApplication({document,window,content,signal}){
   patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
    {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard'});
  }
- const history=[],seenLobbyMessages=new Set(),seenGuardMessages=new Set();let selectedLobbyPlayerId=null,selectedLobbyCardState=null;
+ const history=[],seenLobbyMessages=new Set(),seenGuardMessages=new Set(),fastWardSpeech=new Map();let selectedLobbyPlayerId=null,selectedLobbyCardState=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
  function renderLobbyMessages(s){
   if(world.snapshot().phase!=='lobby')return;
@@ -99,7 +99,7 @@ export async function createApplication({document,window,content,signal}){
    if(room.id===restoreRoomId)maybeRecoverStoredRoom();
    maybeBeginCooperativeRoom();
    if(pendingCoopLeave&&outcomeDelivered())enterLobby(true);},
-  onPacket:receiveCooperativePacket,onClose:()=>{if(durableClient)return;if(coopRoomId&&!guardSession?.read().patient.caseEnded)enterLobby(false);}});
+  onPacket:receiveCooperativePacket,onRoomSpeech:showWardSpeech,onClose:()=>{if(durableClient)return;if(coopRoomId&&!guardSession?.read().patient.caseEnded)enterLobby(false);}});
  function renderSocialLists(){
   const s=social.state(),list=ui('coopDoctors'),invitations=ui('coopInvitations');
   if(list){const selected=new Set([...list.querySelectorAll('input:checked')].map(x=>x.value));
@@ -230,7 +230,7 @@ export async function createApplication({document,window,content,signal}){
   durableClient=client;replica=client;guardSession=client;lastRemoteRevision=-1;
   if(spatial)world.applySharedSpatial(spatial);
   lastClinicalFrame=window.performance.now();clinicalUI.reset();close();
-  seenGuardMessages.clear();resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
+  seenGuardMessages.clear();fastWardSpeech.clear();resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;
   clinicalChanged();updateHud();
  }
@@ -310,6 +310,10 @@ export async function createApplication({document,window,content,signal}){
    {phase:world.snapshot().phase,hasSession:!!guardSession,recovering:social.state().recovering})){
    joinDurableRoom(social.state().room);return;
   }
+  if(packet.kind==='physician.preview'&&durableClient&&coopRoomId===packet.roomId){
+   showWardSpeech({roomId:packet.roomId,userId:sender,id:packet.id,text:packet.text});
+   return;
+  }
   if(durableClient)return;
   if(!coopRoomId&&packet.kind==='state'&&sender===social.state().room?.hostUserId&&cooperativeFlow.mayEnter('guest',{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:social.state().recovering})){
    const room=social.state().room;if(packet.roomId!==room.id||!Object.hasOwn(CLINICAL_EXECUTORS,packet.clinical?.patient?.caseId))return;
@@ -352,6 +356,19 @@ export async function createApplication({document,window,content,signal}){
   ui('chatHistory').append(el);while(ui('chatHistory').children.length>300)ui('chatHistory').firstChild.remove();
   ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
  }
+ function showWardSpeech({roomId,userId,id,text}){
+  if(!durableClient||roomId!==coopRoomId||typeof id!=='string'||
+     typeof text!=='string'||text.length>280||!social.isMember(userId))return;
+  const key='player:'+userId+':'+id;
+  if(seenGuardMessages.has(key)||fastWardSpeech.has(key))return;
+  const name=social.state().room?.members.find(m=>m.userId===userId)?.name||'Médico';
+  const time=window.performance.now();
+  fastWardSpeech.set(key,{id:key,name,text,time});
+  seenGuardMessages.add(key);
+  world.showGuardMessage(userId,text,time);
+  line(name,text); // social speech preview: not a medication or medical receipt
+  if(fastWardSpeech.size>60)fastWardSpeech.delete(fastWardSpeech.keys().next().value);
+ }
  function renderGuardCommunication(){
   if(!guardSession)return;const rows=guardSession.read().messages.slice(-300),fragment=document.createDocumentFragment();
   const actors=[...world.snapshot().others,world.snapshot().player];
@@ -367,11 +384,21 @@ export async function createApplication({document,window,content,signal}){
   }
   if(seenGuardMessages.size>800)for(const id of [...seenGuardMessages].slice(0,seenGuardMessages.size-500))
    seenGuardMessages.delete(id);
+  const ids=new Set(rows.map(row=>row.id)),time=window.performance.now();
+  for(const [id,preview] of fastWardSpeech)
+   if(ids.has(id)||time-preview.time>15000)fastWardSpeech.delete(id);
   history.length=0;
   for(const row of rows){
    history.push({name:row.name,text:row.text,system:row.role!=='player'});
    const el=document.createElement('div'),who=document.createElement('b');el.className='line';el.dataset.messageId=row.id;
    who.textContent=row.name+':';el.append(who,document.createTextNode(row.text));fragment.append(el);
+  }
+  for(const preview of fastWardSpeech.values()){
+   history.push({name:preview.name,text:preview.text,system:false});
+   const el=document.createElement('div'),who=document.createElement('b');
+   el.className='line';el.dataset.messageId=preview.id;
+   who.textContent=preview.name+':';el.append(who,document.createTextNode(preview.text));
+   fragment.append(el);
   }
   ui('chatHistory').replaceChildren(fragment);ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
   clinicalUI.render();
@@ -463,8 +490,16 @@ export async function createApplication({document,window,content,signal}){
   // Speech is a visual local action, NOT an executed treatment. Display it
   // without waiting for PostgreSQL; clinical replies still require an ACK.
   world.showGuardMessage('local-player',text,window.performance.now());
+  const id='message-'+(coopRoomId?messageEpoch+'-':'')+(++messageNumber);
+  if(durableClient&&coopRoomId){
+   const sender=social.state().user?.id;
+   if(sender)showWardSpeech({roomId:coopRoomId,userId:sender,id,text});
+   // Room speech is a display preview, never an order or a second authority.
+   // Do not wait for this network path before submitting clinical action.
+   social.postRoomSpeech({id,text}).catch(()=>{});
+  }
   const session=guardSession;
-  try{return await session.post({id:'message-'+(coopRoomId?messageEpoch+'-':'')+(++messageNumber),text,...(patientUid?{targetPatientUid:patientUid}:{})});}
+  try{return await session.post({id,text,...(patientUid?{targetPatientUid:patientUid}:{})});}
   catch{if(guardSession===session)toast('No pude confirmar el mensaje.');}
  }
  function canvasDown(event){
