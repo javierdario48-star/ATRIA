@@ -121,3 +121,26 @@ test('two independent lobby clients exchange chat, accept friendship and receive
  assert.equal(b.state().room.id,room.id);
  a.dispose();b.dispose();
 });
+
+test('private ward keeps 260ms movement even when its RTC signaling is delayed',async()=>{
+ const f=fixture(),a=f.make();await a.connect();
+ const colleague=await f.backend.route({method:'POST',path:'register',
+  body:{clientKey:crypto.randomUUID(),name:'Bruno'}});
+ const room=await a.invite([colleague.body.user.id]);
+ f.delay('/api/rooms/'+room.id+'/messages');
+ a.maintain(1000,{x:400,y:720,dir:'E',moving:true,phase:'guard',roomId:room.id});
+ while(!f.held())await Promise.resolve();
+ a.maintain(1300,{x:452,y:720,dir:'E',moving:true,phase:'guard',roomId:room.id});
+ let value=null;
+ for(let i=0;i<100;i++){
+  const list=await f.backend.roster();
+  value=list.find(x=>x.userId===a.state().user.id);
+  if(value?.x===452)break;
+  await Promise.resolve();
+ }
+ assert.equal(value?.x,452,'the ward pose is published while RTC signaling stays blocked');
+ assert.equal(value?.roomId,room.id);
+ assert.equal(value?.phase,'guard');
+ assert.equal(value?.motionCadence,260);
+ f.release();await a.flush();a.dispose();
+});
