@@ -60,6 +60,14 @@ try{
   x.speechBubble?.text==='Hola desde invitado'),null,{timeout:18000});
  const before=await clinical(guest);
  assert.equal(before.room.transcript.length,2);
+ // The fast room preview is display-only. Once PostgreSQL confirms the
+ // clinical chat, the preview must not leave a duplicate line in either UI.
+ await Promise.all(pages.map(p=>p.waitForFunction(()=>
+  atriaV5.snapshot().clinical?.room?.transcript?.length>=2)));
+ for(const [page,text] of [[host,'Hola desde invitado'],[guest,'Hola desde anfitriona']]){
+  const rows=page.locator('#chatHistory .line').filter({hasText:text});
+  assert.equal(await rows.count(),1,'one physician speech line after clinical confirmation');
+ }
  stage='close host and continue guest';
  await host.close();
  await send(guest,'La guardia sigue sin anfitriona');
