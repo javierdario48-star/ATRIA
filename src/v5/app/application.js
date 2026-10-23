@@ -67,7 +67,7 @@ export async function createApplication({document,window,content,signal}){
   patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
    {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard'});
  }
- const history=[],seenLobbyMessages=new Set(),seenGuardMessages=new Set(),seenNpcMessages=new Set(),seenNurseCues=new Set(),nurseCueRows=[],fastWardSpeech=new Map();let selectedLobbyPlayerId=null,selectedLobbyCardState=null;
+ const history=[],seenLobbyMessages=new Set(),seenGuardMessages=new Set(),seenNpcMessages=new Set(),seenNurseCues=new Set(),nurseCueRows=[],fastWardSpeech=new Map();let lastNurseCueAt=-Infinity,lastPatientSpeechAt=-Infinity,selectedLobbyPlayerId=null,selectedLobbyCardState=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
  function renderLobbyMessages(s){
   if(world.snapshot().phase!=='lobby')return;
@@ -239,7 +239,7 @@ export async function createApplication({document,window,content,signal}){
   durableClient=client;replica=client;guardSession=client;lastRemoteRevision=-1;
   if(spatial)world.applySharedSpatial(spatial,window.performance.now(),client.lastAcknowledgedMotion(social.state().user?.id));
   lastClinicalFrame=window.performance.now();clinicalUI.reset();close();
-  seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;fastWardSpeech.clear();resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
+  seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;lastNurseCueAt=-Infinity;lastPatientSpeechAt=-Infinity;fastWardSpeech.clear();resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;
   clinicalChanged();updateHud();
  }
@@ -384,17 +384,20 @@ export async function createApplication({document,window,content,signal}){
   // One contextual nurse, always modest: asks about the next decision based
   // only on confirmed state or the doctor's OWN diagnostic impression.
   const workflow=clinicalWorkflow(clinicalState),cue=workflow?.cue,patientId=clinicalState.patient.uid;
-  if(cue&&!seenNurseCues.has(patientId+':'+cue.id)){
-   seenNurseCues.add(patientId+':'+cue.id);
+  const cueTime=window.performance.now();
+  const canCue=cueTime-lastNurseCueAt>=28000&&cueTime-lastPatientSpeechAt>=12000;
+  if(cue&&canCue&&!seenNurseCues.has(patientId+':'+cue.id)){
+   seenNurseCues.add(patientId+':'+cue.id);lastNurseCueAt=cueTime;
    const message={id:'nurse-guidance:'+patientId+':'+cue.id,
     name:'Enfermera',role:'nurse',text:cue.text};
    nurseCueRows.push(message);
-   if(nurseCueRows.length>14)nurseCueRows.shift();
+   if(nurseCueRows.length>5)nurseCueRows.shift();
    world.showNpcMessage('nurse',message.text,window.performance.now());
   }
   for(const row of rows){
    if(!['patient','nurse','mentor'].includes(row.role)||seenNpcMessages.has(row.id))continue;
    seenNpcMessages.add(row.id);
+   if(row.role==='patient')lastPatientSpeechAt=window.performance.now();
    world.showNpcMessage(row.role,row.text,window.performance.now());
   }
   const actors=[...world.snapshot().others,world.snapshot().player];
@@ -522,6 +525,9 @@ export async function createApplication({document,window,content,signal}){
  }
  async function submitText(text,{patientUid}={}){
   if(!text.trim())return;
+  if(guardSession&&/^\s*enfermer(?:a|o|ia)\b/i.test(text)){
+   focusedNpc=null;focusedPatientUid=null;updateHud();
+  }
   if(!guardSession){
    const userId=social.state().user?.id;
    if(!userId){toast('Conectando al lobby. Intentá de nuevo.');return;}
@@ -726,7 +732,7 @@ export async function createApplication({document,window,content,signal}){
   });
  });
  listen(ui('recipientButton'),'click',()=>{
-  if(world.snapshot().phase==='guard')selectRecipient(focusedNpc==='nurse'?'vega':focusedNpc==='vega'?'patient':'nurse');
+  if(world.snapshot().phase==='guard')selectRecipient(focusedNpc==='nurse'?'patient':'nurse');
  });
  listen(ui('historyButton'),'click',()=>{
   const expanded=ui('chatHistory').classList.toggle('expanded');ui('historyButton').setAttribute('aria-expanded',String(expanded));
@@ -779,7 +785,13 @@ export async function createApplication({document,window,content,signal}){
    publishCooperativeState(now);
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
    const interaction=world.takeInteraction();if(interaction)activateEntity(interaction);
-   if(guardSession&&now-lastPanelUpdate>=1000){lastPanelUpdate=now;updateHud();clinicalUI.render();}
+   if(guardSession&&now-lastPanelUpdate>=1000){
+    lastPanelUpdate=now;updateHud();clinicalUI.render();
+    if(now-lastNurseCueAt>=28000&&now-lastPatientSpeechAt>=12000){
+     const s=guardSession.read(),cue=clinicalWorkflow(s)?.cue;
+     if(cue&&!seenNurseCues.has(s.patient.uid+':'+cue.id))renderGuardCommunication();
+    }
+   }
   },render:()=>{drawWorld(now);clinicalUI.animate(now);},isMobile:window.innerWidth<700});
   raf=window.requestAnimationFrame(frame);
  }

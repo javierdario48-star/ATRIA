@@ -75,7 +75,7 @@ body.atria-keyboard-open #chatHistory.expanded{height:auto;max-height:min(33dvh,
 /* C05.c — world-anchored bedside actions, not a second clinical interface.
    Only the small buttons intercept touches; the surrounding hospital is walkable. */
 .patient-wheel{
- position:fixed;z-index:19;width:256px;height:252px;
+ position:fixed;z-index:19;width:220px;height:217px;
  transform:translate(-50%,-50%);pointer-events:none;
  filter:drop-shadow(0 5px 10px #0007);
 }
@@ -97,26 +97,26 @@ body.atria-keyboard-open #chatHistory.expanded{height:auto;max-height:min(33dvh,
 dialog[data-panel="diagnosis"]{max-width:460px}
 .patient-wheel-controls{position:relative;width:100%;height:100%}
 .patient-wheel-action{
- position:absolute;width:78px;min-height:62px;display:grid;justify-items:center;align-content:center;gap:3px;
+ position:absolute;width:69px;min-height:54px;display:grid;justify-items:center;align-content:center;gap:2px;
  border:0;border-radius:14px;background:none;box-shadow:none;pointer-events:auto;
- color:#f0fffc;font-size:10px;font-weight:750;text-shadow:0 1px 4px #07131eff;
+ color:#f0fffc;font-size:9px;font-weight:750;text-shadow:0 1px 4px #07131eff;
  padding:0;transition:transform .11s ease;
 }
 .patient-wheel-action:active{transform:scale(.94)}
 .patient-wheel-glyph{
- display:grid;place-items:center;width:44px;height:44px;
+ display:grid;place-items:center;width:39px;height:39px;
  border:1px solid #83c9c8a6;border-radius:50%;
  background:radial-gradient(circle at 35% 25%,#2b6269f7,#092732fa);
  box-shadow:0 5px 16px #0009,inset 0 1px 3px #ddffff24;
  font-size:21px;line-height:1;color:#d9f9f1;text-shadow:none;
 }
 .patient-wheel-action:focus-visible .patient-wheel-glyph{outline:2px solid #b1f2ed;outline-offset:2px}
-.action-talk{left:89px;top:0}
-.action-examination{left:178px;top:43px}
-.action-history{left:178px;top:139px}
-.action-studies{left:89px;top:188px}
-.action-treatment{left:0;top:139px}
-.action-patient{left:0;top:43px}
+.action-talk{left:75px;top:0}
+.action-examination{left:150px;top:37px}
+.action-history{left:150px;top:119px}
+.action-studies{left:75px;top:163px}
+.action-treatment{left:0;top:119px}
+.action-patient{left:0;top:37px}
 @media(max-width:350px), (max-height:620px){
  .patient-wheel{zoom:.82}
 }
