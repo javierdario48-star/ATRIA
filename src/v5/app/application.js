@@ -89,7 +89,10 @@ export async function createApplication({document,window,content,signal}){
     const id=selectedLobbyPlayerId,status=friendStatus(s,id);
     if(status!==selectedLobbyCardState)showLobbyPlayerCard(id);
    }
-   maybeRecoverStoredRoom();}},
+   maybeRecoverStoredRoom();
+   }else if(durableClient&&coopRoomId&&s.room?.id===coopRoomId&&world.snapshot().phase==='guard'){
+    world.showGuardSocialPlayers(s.roster,coopRoomId,s.room.members.map(m=>m.userId),window.performance.now());
+   }},
   onRoom:room=>{if(destroyed)return;
    renderNotifications(social.state());
    if(room.id===coopRoomId)world.reconcileDoctors(room.members);
@@ -653,7 +656,7 @@ export async function createApplication({document,window,content,signal}){
   if(destroyed)return;raf=null;frames++;
   advanceClinicalTo(now);
   scheduler.tick(now,{simulate:dt=>{world.step(dt,now);presentation.advance(world.snapshot());},maintain:()=>{guardSession?.finishNurseArrivals();
-   const s=world.snapshot();if(s.phase!=='title'&&(socialEnabled||coopRoomId||social.state().recovering))social.maintain(now,s.player);
+   const s=world.snapshot();if(s.phase!=='title'&&(socialEnabled||coopRoomId||social.state().recovering))social.maintain(now,{...s.player,phase:s.phase,roomId:coopRoomId});
    // Admission can retry while RTC signaling is stalled inside social.poll.
    // The existing RAF/deadline drives it; there is no additional timer.
    if(s.phase==='lobby'&&!guardSession)maybeBeginCooperativeRoom(now);
