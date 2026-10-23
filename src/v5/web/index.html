@@ -14,13 +14,20 @@
  <nav id="patientClinicalActions" class="patient-clinical-actions" aria-label="Impresión y destinos del paciente" hidden></nav>
  <header id="hud" hidden>
   <div class="brand"><span class="logo">A</span><div><b>ATRIA</b><small id="status">5.0 · Experimental</small><small id="playerProgress">Nivel 1 · 0/200 XP</small></div></div>
-  <div class="hud-actions"><button id="guardButton" class="primary">Hacer guardia</button><button id="peopleButton">Personas</button><button id="profileButton">Perfil</button></div>
+  <div class="hud-actions"><button id="guardButton" class="primary">Hacer guardia</button><button id="peopleButton">Personas</button><button id="profileButton">Perfil</button><button id="notificationsButton" type="button" aria-label="Notificaciones" title="Notificaciones">🔔 <span id="notificationsCount" hidden>0</span></button></div>
  </header>
  <aside id="coopInviteNotice" role="status" aria-live="polite" hidden>
   <strong id="coopInviteSender"></strong><span>te invita a una guardia cooperativa.</span>
   <div class="invite-actions">
    <button id="coopInviteAccept" class="primary" type="button">Aceptar</button>
    <button id="coopInviteDecline" type="button">Rechazar</button>
+  </div>
+ </aside>
+ <aside id="friendRequestNotice" role="status" aria-live="polite" hidden>
+  <strong id="friendRequestSender"></strong><span>quiere agregarte a amigos.</span>
+  <div class="invite-actions">
+   <button id="friendRequestAccept" class="primary" type="button">Aceptar</button>
+   <button id="friendRequestDecline" type="button">Rechazar</button>
   </div>
  </aside>
  <section id="splash" class="overlay">
