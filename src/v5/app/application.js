@@ -61,7 +61,7 @@ export async function createApplication({document,window,content,signal}){
   patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
    {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard'});
  }
- const history=[],seenLobbyMessages=new Set();let selectedLobbyPlayerId=null,selectedLobbyCardState=null;
+ const history=[],seenLobbyMessages=new Set(),seenGuardMessages=new Set();let selectedLobbyPlayerId=null,selectedLobbyCardState=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
  function renderLobbyMessages(s){
   if(world.snapshot().phase!=='lobby')return;
@@ -83,15 +83,15 @@ export async function createApplication({document,window,content,signal}){
  const clinicalUI=createClinicalInterface({document,session:()=>guardSession,open,close,send:submitText,notify:toast,cases:content.cases,
   onTalk:uid=>selectRecipient('patient',uid)});
  const social=createCooperativeLink({window,profile,
-  onSocial:()=>{if(destroyed)return;const s=social.state();if(world.snapshot().phase==='lobby'){
-   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();renderInvitationNotice(s);
+  onSocial:()=>{if(destroyed)return;const s=social.state();renderNotifications(s);if(world.snapshot().phase==='lobby'){
+   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();
    if(dialog.open&&dialog.dataset.panel==='lobby-person'&&selectedLobbyPlayerId){
     const id=selectedLobbyPlayerId,status=friendStatus(s,id);
     if(status!==selectedLobbyCardState)showLobbyPlayerCard(id);
    }
    maybeRecoverStoredRoom();}},
   onRoom:room=>{if(destroyed)return;
-   renderInvitationNotice(social.state());
+   renderNotifications(social.state());
    if(room.id===coopRoomId)world.reconcileDoctors(room.members);
    if(room.id===restoreRoomId)maybeRecoverStoredRoom();
    maybeBeginCooperativeRoom();
@@ -108,6 +108,19 @@ export async function createApplication({document,window,content,signal}){
   if(contacts)contacts.innerHTML=s.roster.filter(x=>x.userId!==s.user?.id).map(x=>
    '<button data-action="inspect-player" data-user="'+esc(x.userId)+'">'+esc(x.name)+
    ((s.friends||[]).some(f=>f.id===x.userId)?' · Amigo':'')+'</button>').join('')||'<p>No hay otros médicos conectados.</p>';
+ }
+ function renderNotifications(s){
+  const incoming=s.requests?.incoming||[],invites=s.invites||[];
+  const number=incoming.length+invites.length,count=ui('notificationsCount');
+  count.textContent=number>99?'99+':String(number);count.hidden=number===0;
+  ui('notificationsButton').setAttribute('aria-label','Notificaciones'+(number?' ('+number+' pendientes)':''));
+  renderInvitationNotice(s);
+  const notice=ui('friendRequestNotice'),request=incoming[0];
+  notice.hidden=world.snapshot().phase!=='lobby'||!request;
+  if(request){
+   ui('friendRequestSender').textContent=request.name||'Otro médico';
+   notice.dataset.user=request.id;
+  }else delete notice.dataset.user;
  }
  function renderInvitationNotice(s){
   const notice=ui('coopInviteNotice');
@@ -190,7 +203,7 @@ export async function createApplication({document,window,content,signal}){
    }},
    onSnapshot:value=>{
     if(durableClient!==client||coopRoomId!==room.id||destroyed)return;
-    world.applySharedSpatial(value.spatial);
+    world.applySharedSpatial(value.spatial,window.performance.now());
     const revision=value.clinical.room.revision;
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
     const terminal=outcomeId(value.clinical.patient);
@@ -209,7 +222,7 @@ export async function createApplication({document,window,content,signal}){
   durableClient=client;replica=client;guardSession=client;lastRemoteRevision=-1;
   if(spatial)world.applySharedSpatial(spatial);
   lastClinicalFrame=window.performance.now();clinicalUI.reset();close();
-  resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
+  seenGuardMessages.clear();resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;
   clinicalChanged();updateHud();
  }
@@ -296,7 +309,7 @@ export async function createApplication({document,window,content,signal}){
    world=createWorld(content,{...profile,id:social.state().user.id});world.enterGuard({mode:'coop',caseId:packet.clinical.patient.caseId,
     patientUid:packet.clinical.patient.uid,members:room.members.map(x=>({id:x.userId,name:x.name})),authoritative:false});
    replica=createCooperativeReplica({roomId:room.id,hostId:sender,send:social.send,storage:window.sessionStorage,onSnapshot:value=>{
-    world.applySharedSpatial(value.spatial);
+    world.applySharedSpatial(value.spatial,window.performance.now());
     if(value.clinical.room.revision!==lastRemoteRevision){lastRemoteRevision=value.clinical.room.revision;clinicalChanged();}
     confirmOutcomeDelivery(sender,value.clinical.patient);
    }});
@@ -333,6 +346,16 @@ export async function createApplication({document,window,content,signal}){
  }
  function renderGuardCommunication(){
   if(!guardSession)return;const rows=guardSession.read().messages.slice(-300),fragment=document.createDocumentFragment();
+  const actors=[...world.snapshot().others,world.snapshot().player];
+  for(const row of rows){
+   if(row.role!=='player'||seenGuardMessages.has(row.id))continue;
+   seenGuardMessages.add(row.id);
+   const author=actors.find(a=>row.id.startsWith('player:'+a.id+':'));
+   if(author)world.showGuardMessage(author.id,row.text,window.performance.now());
+   else if(!coopRoomId)world.showGuardMessage('local-player',row.text,window.performance.now());
+  }
+  if(seenGuardMessages.size>800)for(const id of [...seenGuardMessages].slice(0,seenGuardMessages.size-500))
+   seenGuardMessages.delete(id);
   history.length=0;
   for(const row of rows){
    history.push({name:row.name,text:row.text,system:row.role!=='player'});
@@ -472,6 +495,15 @@ export async function createApplication({document,window,content,signal}){
   social.setProfile(profile);
   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{/* session still usable */}
   world=createWorld(content,profile);enterLobby();
+ });
+ listen(ui('notificationsButton'),'click',showPeople);
+ listen(ui('friendRequestAccept'),'click',async()=>{
+  const id=ui('friendRequestNotice').dataset.user;if(!id)return;
+  try{await social.acceptFriend(id);}catch(error){toast(error.message||'No se pudo aceptar la amistad.');}
+ });
+ listen(ui('friendRequestDecline'),'click',async()=>{
+  const id=ui('friendRequestNotice').dataset.user;if(!id)return;
+  try{await social.declineFriend(id);}catch(error){toast(error.message||'No se pudo rechazar la amistad.');}
  });
  listen(ui('coopInviteAccept'),'click',()=>acceptCooperativeInvitation(ui('coopInviteNotice').dataset.room));
  listen(ui('coopInviteDecline'),'click',async()=>{
@@ -614,7 +646,7 @@ export async function createApplication({document,window,content,signal}){
     durableClient.setTyping(clinicalTyping);
     const intent=world.motionIntent(),key=JSON.stringify(intent);
     if(intent&&key!==lastMotion){lastMotion=key;durableClient.motion(intent.target);}
-    durableClient.maintain(now);
+    durableClient.maintain(now,{moving:s.player.moving});
    }else if(replica){replica.maintain(now);const key=JSON.stringify(s.player.target||[s.player.x,s.player.y]);
     if(key!==lastMotion){lastMotion=key;const host=social.state().room?.hostUserId;if(host)social.send(host,{kind:'motion',target:s.player.target||[s.player.x,s.player.y]});}}
    publishCooperativeState(now);
