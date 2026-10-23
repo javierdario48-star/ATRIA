@@ -1,5 +1,6 @@
 import {csDxSpecificity487,csDxCatalog487,csDxSuggest487} from '../../clinical/diagnostic-impression-487.js';
 import {esc,setHTML} from './render-content.js';
+import {positionPatientOverlay} from './patient-overlay-layout.js';
 
 export const DESTINATION_LABELS=Object.freeze({quirofano:'Derivar a quirófano',sala:'Internar en sala',
  observacion:'Dejar en observación',uti:'Derivar a UTI',alta:'Dar el alta',procedimiento:'Derivar a procedimiento'});
@@ -48,18 +49,11 @@ export function createPatientClinicalOverlay({document,window,cases}){
    const [sx,sy]=renderer.screen(patient.x,patient.y);
    if(sx<0||sx>window.innerWidth||sy<hudBottom||sy>dockTop){root.hidden=true;return;}
    root.hidden=false;
-   const rect=root.getBoundingClientRect(),gap=14;
-   // Keep the unobtrusive editor BESIDE the patient, below the speech bubble.
-   // Unlike the old sy-74-height placement it never sits over the dialogue.
-   const right=sx+gap,roomRight=window.innerWidth-right;
-   const left=sx-rect.width-gap;
-   const x=roomRight>=rect.width+8?right:left>=8?left:
-    Math.max(8,Math.min(window.innerWidth-rect.width-8,right));
-   root.style.left=x+'px';
-   // The badge belongs BELOW the patient sprite, never over the tap-to-walk
-   // approach tile to the right of B1. Previously sy+6 intercepted the final
-   // route waypoint and prevented legitimate ambulatory movement.
-   root.style.top=Math.max(hudBottom+6,Math.min(dockTop-rect.height-6,sy+48))+'px';
+   const rect=root.getBoundingClientRect(),scale=renderer.metrics().scale;
+   const placement=positionPatientOverlay({x:sx,y:sy,width:rect.width,height:rect.height,
+    viewportWidth:window.innerWidth,top:hudBottom,bottom:dockTop,scale});
+   root.style.left=placement.left+'px';
+   root.style.top=placement.top+'px';
   },
   hide(){patient=null;root.hidden=true;delete root.dataset.patientUid;}
  });
