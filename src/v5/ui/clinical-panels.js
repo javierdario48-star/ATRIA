@@ -73,7 +73,7 @@ export function historyHTML(p){
  return sections.map(([title,body])=>'<section class="clinical-section"><h3>'+title+'</h3>'+body+'</section>').join('');
 }
 export function patientHTML(p,{readOnly=false}={}){return `
- <div id="clinicalVitals" class="clinical-section"></div>
+ <div id="clinicalVitals" class="clinical-section"></div>\n <section id="clinicalWorkflow" class="clinical-workflow" aria-label="Estado de la atención"></section>
  <div class="clinical-actions"><button data-action="examination">Examen físico</button><button data-action="clinical-history">Historia clínica</button><button data-action="record-vitals">Signos vitales</button><button data-action="studies">Estudios</button><button data-action="treatment">Tratamiento</button><button data-action="reassess">Reevaluar</button></div>
  <details><summary>Anamnesis registrada</summary><div id="clinicalHistory"></div></details>
  <details><summary>Intervenciones confirmadas</summary><div id="therapyRecords"></div></details>
