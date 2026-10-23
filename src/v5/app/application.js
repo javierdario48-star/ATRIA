@@ -16,6 +16,7 @@ import {clinicalCompletions,spellingSuggestions} from '../ui/clinical-autocomple
 import {createClinicalInterface} from '../ui/clinical-controller.js';
 import {clinicalWorkflow} from '../ui/clinical-workflow.js';
 import {caseDebriefHTML} from '../ui/case-debrief.js';
+import {guardScoreModelV5,guardScoreboardHTML} from '../ui/guard-scoreboard.js';
 import {createPatientActionWheel} from '../ui/patient-actions.js';
 import {createPatientClinicalOverlay} from '../ui/diagnostic-impression.js';
 import {createClinicalChecklist} from '../ui/clinical-checklist.js';
@@ -56,6 +57,7 @@ export async function createApplication({document,window,content,signal}){
  const patientWheel=createPatientActionWheel({document,window});
  const patientClinical=createPatientClinicalOverlay({document,window,cases:content.cases});
  const clinicalChecklist=createClinicalChecklist({document});
+ let scoreMarkup='';
  const hospitalAudio=createHospitalAudio({window,storage:window.localStorage});
  let audioPatient=null,lastAudioRead=-Infinity;
  const chatSuggestions=ui('chatSuggestions'),nurseQuick=ui('nurseQuickButton');
@@ -501,6 +503,15 @@ export async function createApplication({document,window,content,signal}){
  }
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard',clinical=guardSession?.read();
+  const scoreHost=ui('guardScoreboard');
+  if(scoreHost){
+   scoreHost.hidden=!guard;
+   if(guard){
+    const score=guardScoreboardHTML(guardScoreModelV5({
+     mode:s.mode,patient:clinical?.patient}));
+    if(score!==scoreMarkup){scoreHost.innerHTML=score;scoreMarkup=score;}
+   }else{scoreMarkup='';scoreHost.replaceChildren();}
+  }
   audioPatient=guard?clinical?.patient??null:null;
   autocompleteCaseId=guard?clinical?.patient?.caseId??null:null;
   const minute=Math.floor(clinical?.clock.gameMinute||0),total=8*60+15+minute;

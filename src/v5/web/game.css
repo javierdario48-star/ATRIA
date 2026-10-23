@@ -414,3 +414,20 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 #audioVolume{width:100%;accent-color:#9ae2d6}
 .audio-note{font-size:11px;opacity:.85}
 @media(max-width:560px){#audioButton{min-width:28px;font-size:14px;padding:3px 4px}}
+
+/* Compact read-only career/guard scoreboard migrated from ATRIA 4.8.7. */
+.guard-scoreboard{position:fixed;z-index:11;top:calc(73px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);
+ width:max-content;max-width:calc(100vw - 26px);pointer-events:none;border-radius:11px;
+ padding:5px 12px 6px;background:#071f27d9;backdrop-filter:blur(10px);
+ border:1px solid #9acdb747;box-shadow:0 6px 15px #0005;font-variant-numeric:tabular-nums}
+.guard-score-title{text-align:center;text-transform:uppercase;font-size:8px;letter-spacing:1.3px;color:#a4d4c9;font-weight:750}
+.guard-score-metrics{display:flex;gap:9px;align-items:center;justify-content:center;white-space:nowrap;font-size:9px;color:#b5d4d1}
+.guard-score-metrics>div{display:flex;align-items:center;gap:5px}
+.guard-score-metrics b{font-size:15px;color:#b5f2d8}
+.guard-score-metrics i{width:1px;height:18px;background:#90d0c950}
+.guard-score-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.guard-score-player{font-size:9px;padding:3px 6px;border-radius:5px;background:#173c43}
+.guard-score-player b,.guard-score-player span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.guard-score-player.leader{border:1px solid #e5c785}
+@media(max-width:430px){.guard-scoreboard{padding:4px 7px;top:calc(70px + env(safe-area-inset-top))}
+.guard-score-metrics{gap:6px;font-size:8px}.guard-score-metrics b{font-size:13px}}
