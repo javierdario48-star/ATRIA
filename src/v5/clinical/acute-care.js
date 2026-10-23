@@ -6,6 +6,7 @@ import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalM
 import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
 import {createClosureDebrief} from './closure-debrief.js';
+import {partialDisposition} from './partial-closure.js';
 import {createIVAdministration} from './native-medications.js';
 import {createSurgicalConsultation} from './surgical-consultation.js';
 
@@ -76,7 +77,8 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
     p.diagnosis=intent.value;return executed(cmd,{diagnosis:p.diagnosis,message:p.diagnosis?'Impresión diagnóstica: '+p.diagnosis+'.':'Impresión diagnóstica borrada.'});
    }
    if(intent.kind==='case.close'){
-    const evaluation=readiness(intent.id);
+    const strict=readiness(intent.id);
+    const evaluation=intent.partial?partialDisposition(p,c,intent.id,strict,{cases}):strict;
     if(!evaluation?.ready)return rejected(cmd,'closure-not-ready',(evaluation?.missing||['Destino no disponible.']).join(' '));
     const xp=nativeCaseXP({score:evaluation.quality.score,mode});
     const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,

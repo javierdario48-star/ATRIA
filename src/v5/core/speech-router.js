@@ -29,17 +29,18 @@ export function routeWardSpeech(text,context={}){
   const error=component!=='all'&&!Object.hasOwn(GLASGOW_COMPONENTS,component)?'invalid-clinical-command':!patientUid?'no-patient-target':null;
   return {recipient:'patient',patientUid,original,intents:error?[]:[{kind:'exam.glasgow',id:component,sourceText:original}],...(error?{error}:{})};
  }
- const clinical=/^\/(signos|examen|reevaluar|diagnostico|disposicion)(?:\s+(.+))?$/i.exec(original);
+ const clinical=/^\/(signos|examen|reevaluar|diagnostico|disposicion|cierre-parcial)(?:\s+(.+))?$/i.exec(original);
  if(clinical&&context.clinicalEvaluation){
   const action=clinical[1].toLowerCase(),value=clinical[2]?.trim(),patientUid=context.patientUid??null;
-  const kinds={signos:'vitals.record',examen:'exam.record',reevaluar:'patient.reassess',diagnostico:'diagnosis.record',disposicion:'case.close'};
+  const kinds={signos:'vitals.record',examen:'exam.record',reevaluar:'patient.reassess',diagnostico:'diagnosis.record',disposicion:'case.close','cierre-parcial':'case.close'};
   const parts=action==='examen'?(value||'').split(/\s+/):[],regionId=parts.length===2?parts[0]:null,
    technique=regionId?parts[1]:value;
   const valid=action==='examen'?(regionId?validExamSelection(regionId,technique):Object.hasOwn(EXAM_TECHNIQUES,technique)):
-   action==='disposicion'?['sala','observacion','alta','uti','quirofano','procedimiento'].includes(value):
+   ['disposicion','cierre-parcial'].includes(action)?['sala','observacion','alta','uti','quirofano','procedimiento'].includes(value):
    action==='diagnostico'?!!value&&value.length<=200:!value;
   const error=!valid?'invalid-clinical-command':!patientUid?'no-patient-target':null;
-  return {recipient:'patient',patientUid,original,intents:error?[]:[{kind:kinds[action],id:action==='examen'?technique:action==='disposicion'?value:action,
+  return {recipient:'patient',patientUid,original,intents:error?[]:[{kind:kinds[action],id:action==='examen'?technique:['disposicion','cierre-parcial'].includes(action)?value:action,
+   ...(action==='cierre-parcial'?{partial:true}:{}),
    ...(regionId?{regionId}:{}),
    ...(action==='diagnostico'?{value}:{}),sourceText:original}],...(error?{error}:{})};
  }

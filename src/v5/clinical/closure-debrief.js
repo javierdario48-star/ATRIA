@@ -12,11 +12,14 @@ export function createClosureDebrief(p,c,q){
  if(q.handoffCredit)earned.push({label:'Continuidad del cuidado',points:q.handoffCredit});
  const extraDeduction=q.extraStudyPenalty??Math.min(5,Math.max(0,q.extraStudies||0)*2);
  const iatrogenicDeduction=Math.max(0,(q.penalty||0)-extraDeduction);
+ const diagnosisPenalty=Math.max(0,q.diagnosticPenalty||0);
  const deductions=[
+  ...(diagnosisPenalty?[{label:'Ajuste por precisión diagnóstica (factor '+q.diagnosticFactor+')',points:-diagnosisPenalty}]:[]),
   ...(extraDeduction?[{label:'Estudios innecesarios',points:-extraDeduction}]:[]),
   ...(iatrogenicDeduction?[{label:'Efectos adversos confirmados',points:-iatrogenicDeduction}]:[])];
  const missing=[];
- if((q.diagnosis||0)<15)missing.push('Precisar el diagnóstico presuntivo.');
+ if((q.diagnosis||0)<15||q.diagnosticFactor<1)
+  missing.push('Precisar el diagnóstico presuntivo.');
  if((q.history||0)<15)missing.push('Completar anamnesis relevante y antecedentes.');
  if((q.safety||0)<25)missing.push('Completar examen, signos, reevaluación y destino.');
  if((q.studies||0)<15)missing.push('Completar los estudios pertinentes del caso.');

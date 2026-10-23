@@ -4,6 +4,7 @@ import {initialCirrVitals,parseCirrDose,advanceCirrVitals} from './native-cirr.j
 import {nativeCaseXP} from './progression.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {createClosureDebrief} from './closure-debrief.js';
+import {partialDisposition} from './partial-closure.js';
 import {createIVAdministration} from './native-medications.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
@@ -89,7 +90,8 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
     p.diagnosis=intent.value;return executed(cmd,{diagnosis:p.diagnosis,message:p.diagnosis?'Impresión diagnóstica registrada: '+p.diagnosis+'.':'Impresión diagnóstica borrada.'});
    }
    if(intent.kind==='case.close'){
-    const evaluation=readiness(intent.id);
+    const strict=readiness(intent.id);
+    const evaluation=intent.partial?partialDisposition(p,c,intent.id,strict,{cases}):strict;
     if(!evaluation?.ready)return rejected(cmd,'closure-not-ready',(evaluation?.missing||['Destino no disponible.']).join(' '));
     const xp=nativeCaseXP({score:evaluation.quality.score,mode});
     const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,caseId:c.id,
