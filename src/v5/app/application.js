@@ -227,6 +227,9 @@ export async function createApplication({document,window,content,signal}){
   world=createWorld(content,{...profile,id:social.state().user?.id||profile.id});
   world.enterGuard({mode:'coop',caseId:current.patient.caseId,patientUid:current.patient.uid,
    members:room.members.map(x=>({id:x.userId,name:x.name,color:'navy'})),authoritative:false});
+  // Recovery uses a newly created world; its first input must be newer than
+  // the sequence persisted for this same doctor in the previous session.
+  world.seedMovementSequence(client.lastAcknowledgedMotion(social.state().user?.id));
   durableClient=client;replica=client;guardSession=client;lastRemoteRevision=-1;
   if(spatial)world.applySharedSpatial(spatial);
   lastClinicalFrame=window.performance.now();clinicalUI.reset();close();
