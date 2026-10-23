@@ -448,6 +448,9 @@ export async function createApplication({document,window,content,signal}){
    return;
   }
   advanceClinicalTo(window.performance.now());
+  // Speech is a visual local action, NOT an executed treatment. Display it
+  // without waiting for PostgreSQL; clinical replies still require an ACK.
+  world.showGuardMessage('local-player',text,window.performance.now());
   const session=guardSession;
   try{return await session.post({id:'message-'+(coopRoomId?messageEpoch+'-':'')+(++messageNumber),text,...(patientUid?{targetPatientUid:patientUid}:{})});}
   catch{if(guardSession===session)toast('No pude confirmar el mensaje.');}
