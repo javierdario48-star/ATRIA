@@ -32,22 +32,26 @@ try{
   if(opened)await page.locator('#keyboardToggleButton').click();
   const initial=await page.evaluate(()=>({s:atriaV5.snapshot(),d:atriaV5.diagnostics(),r:resourceMetrics()}));
   assert.equal(initial.d.renderer.images,13);assert.equal(initial.d.raf,1);assert.equal(initial.r.timers,0);
-  // Real pointer events. The compact keyboard can conceal the old fixed
-  // center click, so project known walkable lobby tiles into the open viewport.
+  // Mobile keyboard covers different parts of the canvas. Test actual
+  // reachable taps relative to the avatar rather than fixed world pixels.
   const canvas=page.locator('#game'),box=await canvas.boundingBox();
+  const startPoint=(await page.evaluate(()=>atriaV5.snapshot())).player;
   let walked=false;
-  for(const [wx,wy] of [[496,1200],[496,1080],[496,960],[400,1100]]){
+  for(const [dx,dy] of [[0,120],[120,0],[-120,0],[0,-120],[80,80],[-80,80]]){
    const camera=await page.evaluate(()=>atriaV5.diagnostics().renderer);
-   const x=(wx-camera.camera.x)*camera.scale+camera.anchorX;
-   const y=(wy-camera.camera.y)*camera.scale+camera.anchorY;
+   const x=(startPoint.x+dx-camera.camera.x)*camera.scale+camera.anchorX;
+   const y=(startPoint.y+dy-camera.camera.y)*camera.scale+camera.anchorY;
    const hud=await page.locator('#hud').boundingBox(),dock=await page.locator('#chatDock').boundingBox();
-   if(x<15||x>box.width-15||y<hud.y+hud.height-box.y+8||
-    y>dock.y-box.y-8)continue;
+   if(x<12||x>box.width-12||y<hud.y+hud.height-box.y+6||y>dock.y-box.y-6)continue;
    await canvas.click({position:{x,y}});
-   try{await page.waitForFunction(()=>atriaV5.snapshot().player.moving,null,{timeout:4000});walked=true;break;}
-   catch{/* A wall or occluded tile was selected; try the next exposed point. */}
+   try{
+    await page.waitForFunction(p=>Math.hypot(
+     atriaV5.snapshot().player.x-p.x,atriaV5.snapshot().player.y-p.y)>30,
+     {x:startPoint.x,y:startPoint.y},{timeout:2600});
+    walked=true;break;
+   }catch{/* Try the next genuinely exposed reachable touch target. */}
   }
-  assert(walked,'a reachable unobscured lobby click must start player navigation');
+  assert(walked,'an exposed lobby touch must move the avatar more than 30 pixels');
   await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
   const moved=await page.evaluate(()=>atriaV5.snapshot().player);
   assert(Math.hypot(moved.x-initial.s.player.x,moved.y-initial.s.player.y)>30);

@@ -49,7 +49,7 @@ test('four clinicians share one valid partial closure and only one EXP receipt',
   assert.equal(closes.filter(x=>x.clinical?.[0]?.status==='executed').length,1);
   assert.equal(s.read().patient.caseEnded,true);
   assert.equal(s.read().progress.receipts.length,1);
-  assert.equal(new Set(s.read().messages.filter(x=>x.role==='player').map(x=>x.actorId)).size,4);
+  assert.equal(new Set(s.read().messages.filter(x=>x.role==='player').map(x=>x.name)).size,4);
   assert.equal((await s.post({id:'unauthorized',text:'/cierre-parcial observacion'},'forged')).status,'rejected');
  }finally{s.dispose();}
 });
