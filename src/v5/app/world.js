@@ -62,12 +62,8 @@ export function createWorld(content,profile,checkpoint=null){
    const pose=sampleRemotePose(track.pose,now);
    Object.assign(other,{x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase});
   }
-  if(phase==='guard'&&!authoritative)for(const nurse of nurses){
-   const track=nurseRemotes.get(nurse.id);if(!track)continue;
-   const pose=sampleRemotePose(track.pose,now);
-   Object.assign(nurse,{x:pose.x,y:pose.y,dir:pose.dir,
-    moving:pose.moving,walkPhase:pose.walkPhase});
-  }
+  if(phase==='guard'&&!authoritative)for(const track of nurseRemotes.values())
+   sampleRemotePose(track.pose,now);
   for(const actor of [player,...others])if(actor.speechBubble&&actor.speechBubble.until<=now)delete actor.speechBubble;
   if(!authoritative)return;
   if(phase==='guard')for(const other of others)navigation.move(other,dt);
@@ -99,6 +95,16 @@ export function createWorld(content,profile,checkpoint=null){
   if(authoritative)nursing=createNurseDispatcher({navigation,nurses,patients,checkpoint:saved.nursing});
  }
  return Object.freeze({navigation,enterLobby,enterGuard,step,snapshot,
+  presentNurses(frame){
+   if(phase!=='guard'||authoritative)return frame;
+   for(const nurse of frame.nurses||[]){
+    const pose=nurseRemotes.get(nurse.id)?.pose;
+    if(!pose?.samples.length)continue;
+    Object.assign(nurse,{x:pose.x,y:pose.y,dir:pose.dir,
+     moving:pose.moving,walkPhase:pose.walkPhase});
+   }
+   return frame;
+  },
   checkpoint:()=>structuredClone({schemaVersion:1,identity,profile,state:snapshot(),authoritative,pendingInteraction,nursing:nursing?.checkpoint()??null}),
   setSocialIdentity(id){profile={...profile,id};},
   showLobbyPlayers(list,now=Date.now()){
@@ -161,10 +167,9 @@ export function createWorld(content,profile,checkpoint=null){
    // The server owns all bedside receipts and nurse journeys. Clients only
    // interpolate the committed pose between clinical snapshots. Reuse the
    // same visual timeline as doctors, with the actual nurse speed.
-   const priorNurses=new Map(nurses.map(n=>[n.id,n]));
    const activeNurses=new Set();
    nurses=sharedNurses.map(remote=>{
-    const nurse=structuredClone(remote),previous=priorNurses.get(nurse.id);
+    const nurse=structuredClone(remote);
     activeNurses.add(nurse.id);
     let track=nurseRemotes.get(nurse.id);
     if(!track){
@@ -185,10 +190,8 @@ export function createWorld(content,profile,checkpoint=null){
      motionSession:'clinical-nurse:'+nurse.id,motionEpoch:1,
      seq:++track.seq,motionCadence:900});
     track.previous=nurse;
-    // Preserve the on-screen position, even if the newest authoritative
-    // sample is already further along the physical route.
-    if(previous)Object.assign(nurse,{x:previous.x,y:previous.y,
-     dir:previous.dir,walkPhase:previous.walkPhase,moving:previous.moving});
+    // Retain the exact authoritative nurse receipt/location in world state.
+    // Visual-only positions are applied on a separate render snapshot.
     return nurse;
    });
    for(const id of nurseRemotes.keys())if(!activeNurses.has(id))nurseRemotes.delete(id);
