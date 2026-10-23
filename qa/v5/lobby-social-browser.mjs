@@ -39,12 +39,12 @@ try{
  if(await bruno.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')
   await bruno.locator('#keyboardToggleButton').click();
  await bruno.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
- const tap=await bruno.evaluate(()=>{
+ const movementTap=await bruno.evaluate(()=>{
   const r=atriaV5.diagnostics().renderer,b=document.getElementById('game').getBoundingClientRect();
   return {x:b.left+(496-r.camera.x)*r.scale+r.anchorX,
    y:b.top+(1200-r.camera.y)*r.scale+r.anchorY};
  });
- await bruno.mouse.click(tap.x,tap.y);
+ await bruno.mouse.click(movementTap.x,movementTap.y);
  await bruno.waitForFunction(()=>{const p=atriaV5.snapshot().player;return p.moving||p.pathIndex>0;});
  const frames=await sampled;
  const distances=frames.slice(1).map((p,i)=>Math.hypot(p.x-frames[i].x,p.y-frames[i].y));
