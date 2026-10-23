@@ -4,7 +4,7 @@ import {createDurableCooperativeReplica} from './durable-cooperative-replica.js'
 const roomId='r123',clientKey='a'.repeat(64);
 function harness(){
  const store=new Map(),sent=[],messages=[];
- let revision=0,seq=0,online=true,recovering=false;
+ let revision=0,seq=0,online=true,recovering=false,nextSyncGate=null;
  const state=()=>({epoch:revision,recovering,
   clinical:{room:{roomId},patient:{uid:'P',caseId:'PERI-PBE-001',procedures:{},ecg:{},lastVitalsKnown:{}}},catalog:['studies'],spatial:{nurses:[],doctors:[]}});
  const window={fetch:async(_url,options)=>{
@@ -12,6 +12,7 @@ function harness(){
   if(!online)throw Error('offline');
   if(body.action==='start'){return {ok:true,json:async()=>state()};}
   if(body.action==='sync'){
+   const gate=nextSyncGate;nextSyncGate=null;if(gate)await gate;
    revision++;const acks=[];
    if(!recovering){
     for(const x of body.commands||[]){
@@ -25,7 +26,7 @@ function harness(){
  }};
  const storage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)};
  const client=(onSnapshot=()=>{})=>createDurableCooperativeReplica({window,roomId,clientKey,storage,onSnapshot});
- return {client,store,sent,messages,setOnline:x=>online=x,setRecovering:x=>recovering=x};
+ return {client,store,sent,messages,setOnline:x=>online=x,setRecovering:x=>recovering=x,blockNextSync:gate=>nextSyncGate=gate};
 }
 test('start/sync only use remote authority, no local medical runtime',async()=>{
  const f=harness(),seen=[],client=f.client(x=>seen.push(x.epoch));
@@ -65,4 +66,20 @@ test('catch-up does not discard pending commands, motion or confirmation',async(
 });
 test('invalid credentials rejected before a clinical request',()=>{
  assert.throws(()=>createDurableCooperativeReplica({window:{},roomId:'../wrong',clientKey}),/invalid/);
+});
+
+test('a patient utterance arriving during a server read flushes immediately after it, without duplicate writes',async()=>{
+ const f=harness(),client=f.client();let release;
+ const gate=new Promise(resolve=>release=resolve);f.blockNextSync(gate);
+ const inflight=client.sync();
+ const speaking=client.post({id:'speech-during-sync',text:'¿Desde cuándo le duele?'});
+ assert.equal(f.sent.filter(x=>x.action==='sync').length,1,'only one request is in flight');
+ release();await inflight;const receipt=await speaking;
+ assert.equal(receipt.commandId,'speech-during-sync');
+ const requests=f.sent.filter(x=>x.action==='sync');
+ assert.equal(requests.length,2,'speech does not wait for the 900ms idle poll');
+ assert.deepEqual(requests[0].commands,[]);
+ assert.deepEqual(requests[1].commands.map(x=>x.id),['speech-during-sync']);
+ assert.deepEqual(f.messages,['speech-during-sync']);
+ client.dispose();
 });
