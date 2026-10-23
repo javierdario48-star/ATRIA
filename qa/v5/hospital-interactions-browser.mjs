@@ -25,8 +25,11 @@ try{
  beforePress=(await state()).room.transcript.length;
  await page.mouse.move(buttonBox.x+buttonBox.width/2,buttonBox.y+buttonBox.height/2);await page.mouse.down();
  await page.waitForTimeout(1200);await page.mouse.up();
- await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,beforePress);
+ // A second tap flips the card without duplicating an assessment; the
+ // following tap deliberately repeats the physical examination.
+ assert.equal((await state()).room.transcript.length,beforePress);
  await page.locator('#examRegions [data-exam-region="general"]').click();
+ await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,beforePress);
  assert.deepEqual((await state()).patient.examFindings,{});assert(!(await state()).patient.lastVitalsKnown);
  await page.locator('#modalClose').click();await page.locator('#keyboardToggleButton').click();
  await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
