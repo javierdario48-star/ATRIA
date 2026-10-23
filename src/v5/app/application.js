@@ -51,6 +51,7 @@ export async function createApplication({document,window,content,signal}){
  const patientClinical=createPatientClinicalOverlay({document,window,cases:content.cases});
  const clinicalChecklist=createClinicalChecklist({document});
  const chatSuggestions=ui('chatSuggestions'),nurseQuick=ui('nurseQuickButton');
+ let autocompleteCaseId=null;
  const atriaKeyboard=createAtriaKeyboard({document,window,input,host:ui('chatDock'),
   onSubmit:()=>{if(composition)return;const message=input.value.trim();if(message){input.value='';updateTypingAssistance();submitText(message);}},
   onRecipient:()=>ui('recipientButton').click(),onNurse:()=>{if(guardSession)selectRecipient('nurse');}});
@@ -459,6 +460,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard',clinical=guardSession?.read();
+  autocompleteCaseId=guard?clinical?.patient?.caseId??null:null;
   const minute=Math.floor(clinical?.clock.gameMinute||0),total=8*60+15+minute;
   ui('status').textContent=guard&&clinical?.patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='coop'?'Cooperativo':s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':social.state().user?'Lobby social · 5.0 experimental':'Lobby local · 5.0 experimental';
   if(guard)patientClinical.update(s.patients.find(p=>p.uid===clinical?.patient.uid),clinical);else patientClinical.hide();
@@ -495,10 +497,10 @@ export async function createApplication({document,window,content,signal}){
  }
  function updateTypingAssistance(){
   if(!chatSuggestions)return;
-  const patient=guardSession?.read()?.patient;
-  const nurseContext=!!patient&&(focusedNpc==='nurse'||/^\s*enfermer(?:a|o|ia)\b/i.test(input.value));
+  const patient=autocompleteCaseId;
+  const nurseContext=!!guardSession&&!!patient&&(focusedNpc==='nurse'||/^\s*enfermer(?:a|o|ia)\b/i.test(input.value));
   const suggestions=nurseContext?clinicalCompletions(input.value,{
-   caseId:patient.caseId,cases:content.cases,therapies:content.therapies
+   caseId:patient,cases:content.cases,therapies:content.therapies
   }):spellingSuggestions(input.value);
   const fragment=document.createDocumentFragment();
   for(const item of suggestions){
