@@ -330,3 +330,53 @@ dialog[data-panel="monitor"] #modalClose{position:relative;z-index:2;margin:0 0 
 #chatHistory .line.nurse{background:#55451e45;border-left:2px solid #d9ae64;padding:4px 6px;border-radius:3px;margin:2px 0}
 #chatHistory .line.nurse b{color:#f4cf83}
 @media(prefers-reduced-motion:reduce){.exam-flip-inner{transition:none}}
+
+/* On-demand bedside checklist: left edge, under HUD, above map; minimal overlap. */
+.bedside-checklist{position:fixed;z-index:9;top:calc(max(8px,env(safe-area-inset-top)) + 67px);
+ left:max(6px,env(safe-area-inset-left));width:clamp(122px,30vw,166px);
+ max-height:min(53dvh,365px);overflow:hidden;padding:7px 8px;
+ background:rgba(5,29,37,.67);border:1px solid rgba(126,199,185,.36);
+ border-radius:11px;box-shadow:0 6px 16px #00141d4a;backdrop-filter:blur(6px);
+ pointer-events:none;color:#d4f0e8}
+.bedside-checklist[hidden]{display:none}
+.bedside-checklist-head{display:flex;align-items:center;justify-content:space-between;gap:5px}
+.bedside-checklist-head strong{font-size:10px;color:#b3eddf}
+.bedside-checklist-head button{pointer-events:auto;min-height:22px;width:24px;
+ padding:0;font-size:15px;border-radius:6px;background:#234952a8}
+.bedside-checklist-steps{margin:7px 0 0;padding:0;display:grid;gap:5px;list-style:none}
+.bedside-checklist-steps li{font-size:9px;line-height:1.25;display:grid;grid-template-columns:13px 1fr;gap:4px;align-items:center}
+.bedside-checklist-steps li>span:first-child{color:#748c97;font-size:13px}
+.bedside-checklist-steps li[data-status="done"]>span:first-child{color:#9ce2c9}
+.bedside-checklist-steps li[data-status="ready"]>span:first-child{color:#dfc68a}
+.bedside-checklist-steps li[data-status="attention"]>span:first-child{color:#efae8f}
+.bedside-checklist-steps li[data-status="partial"]>span:first-child{color:#8ac2cd}
+.bedside-checklist>small{display:block;margin-top:8px;font-size:8px;line-height:1.3;color:#7da5a5}
+body.atria-keyboard-open .bedside-checklist{max-height:min(34dvh,230px);overflow:auto}
+@media(max-width:380px){.bedside-checklist{width:127px;padding:6px}.bedside-checklist-steps{gap:4px}}
+/* The diagnosis tag sits BESIDE the patient's feet and below the speech bubble. */
+.patient-clinical-actions{transform:none;width:max-content;max-width:150px;gap:0;
+ filter:drop-shadow(0 3px 6px #0007);pointer-events:none}
+.patient-clinical-actions button[data-patient-diagnosis]{pointer-events:auto;display:block;max-width:150px;
+ min-height:29px;padding:5px 9px;border-radius:999px;white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis;text-align:left;
+ font-size:10px;font-weight:700;color:#d0f1e9;
+ border:1px solid #7ecdc08c;background:#103139cf;
+ box-shadow:inset 0 1px #ffffff1a}
+.patient-clinical-actions button[data-patient-diagnosis]:active{background:#1f6262}
+/* Actual case closure should never open the oversized full patient chart. */
+dialog[data-panel="case-close"]{width:min(92vw,365px);max-height:min(65dvh,450px);border-color:#70bbae}
+dialog[data-panel="case-close"] .panel{padding:16px}
+.case-close-content h2{margin:0 0 5px;font-size:17px}
+.case-close-subtitle{font-size:11px;color:#a4c4c6}
+.case-close-diagnosis{display:grid;gap:4px;padding:10px;background:#143841;
+ border:1px solid #477b80;border-radius:10px;margin:10px 0}
+.case-close-diagnosis span{font-size:10px;color:#90bbba}
+.case-close-diagnosis strong{font-size:13px;color:#e3f9ef;overflow-wrap:anywhere}
+.case-close-ready{font-size:12px;color:#baf4df}
+.case-close-waiting{font-size:12px;color:#e4cab2}
+.case-close-choices{display:grid;grid-template-columns:1fr;gap:7px;margin:9px 0}
+.case-close-choices button{text-align:left;min-height:40px;background:#1d5148;border-color:#8cc9b7}
+.case-close-note{font-size:10px;color:#93babc}
+.case-close-pending{font-size:10px;line-height:1.45;color:#a9cad0;margin:9px 0}
+.case-close-actions{gap:7px;justify-content:stretch}
+.case-close-actions button{flex:1;font-size:11px}
