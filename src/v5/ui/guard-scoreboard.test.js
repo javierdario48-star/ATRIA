@@ -26,3 +26,20 @@ test('the competitive scoreboard ranks only real assigned outcomes; ties do not 
  assert(guardScoreboardHTML(model).includes('Médica Uno'));
  assert(!guardScoreboardHTML(model).includes('<script'));
 });
+
+test('sequential patients within one guard aggregate only distinct receipts and count positive resolution',()=>{
+ const outcomes=[
+  {patientUid:'first',closed:true,survived:true,score:45,xp:71},
+  {patientUid:'second',closed:true,survived:true,score:90,xp:120}
+ ];
+ const next={uid:'third',caseEnded:false,closure:null};
+ assert.deepEqual(guardScoreModelV5({mode:'solo',patient:next,outcomes}),
+  {mode:'solo',resolved:2,xp:191});
+ const third={uid:'third',caseEnded:true,patientDied:false,
+  closure:{closed:true,quality:{score:65},xp:92}};
+ assert.deepEqual(guardScoreModelV5({mode:'solo',patient:third,outcomes}),
+  {mode:'solo',resolved:3,xp:283});
+ const replay=[...outcomes,outcomes[0]];
+ assert.deepEqual(guardScoreModelV5({mode:'solo',patient:next,outcomes:replay}),
+  {mode:'solo',resolved:2,xp:191});
+});
