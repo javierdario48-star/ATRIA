@@ -27,3 +27,14 @@ test('a known solid bedside region wins over a visible but walkable exterior lan
  assert(!(p.left>=220&&p.top>=390&&p.top<=465),
   'prefer a nearby wall/bed region to a path-blocking diagnosis button');
 });
+
+test('when the whole bedside approach is walkable the badge yields to the map',()=>{
+ const placement=positionPatientOverlay({x:144,y:420,width:122,height:30,
+  viewportWidth:694,top:180,bottom:930,scale:1,isWalkableScreen:()=>true});
+ assert.equal(placement.safe,false,'never claim a safe position on a walking lane');
+});
+test('when the badge fits over solid furniture it remains usable',()=>{
+ const placement=positionPatientOverlay({x:144,y:420,width:122,height:30,
+  viewportWidth:694,top:180,bottom:930,scale:1,isWalkableScreen:()=>false});
+ assert.equal(placement.safe,true);
+});

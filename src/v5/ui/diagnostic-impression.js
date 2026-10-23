@@ -53,6 +53,10 @@ export function createPatientClinicalOverlay({document,window,cases}){
    const placement=positionPatientOverlay({x:sx,y:sy,width:rect.width,height:rect.height,
     viewportWidth:window.innerWidth,top:hudBottom,bottom:dockTop,scale,
     isWalkableScreen});
+   // If no collision-free location exists, use the patient's existing
+   // menu instead of stealing a map tap from the movement controller.
+   // The same exam/diagnosis editor remains accessible through the patient.
+   if(!placement.safe&&isWalkableScreen){root.hidden=true;return;}
    root.style.left=placement.left+'px';
    root.style.top=placement.top+'px';
   },

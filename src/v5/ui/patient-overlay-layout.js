@@ -24,7 +24,10 @@ export function positionPatientOverlay({x,y,width,height,viewportWidth,top,botto
  const overlap=p=>{
   if(typeof isWalkableScreen!=='function')return 0;
   let count=0;
-  for(const fx of [.12,.5,.88])for(const fy of [.18,.82])
+  // Sample the full button footprint including edges. A single reachable
+  // navigation lane under the badge is enough to make this unsafe.
+  for(const fx of [.02,.14,.28,.42,.56,.70,.84,.98])
+   for(const fy of [.04,.25,.5,.75,.96])
    if(isWalkableScreen(p.left+width*fx,p.top+height*fy))count++;
   return count;
  };
@@ -32,7 +35,7 @@ export function positionPatientOverlay({x,y,width,height,viewportWidth,top,botto
  if(options.length){
   const ordered=options.map((p,index)=>({...p,collisions:overlap(p),index}))
    .sort((a,b)=>a.collisions-b.collisions||a.index-b.index);
-  return {left:ordered[0].left,top:ordered[0].top};
+  return {left:ordered[0].left,top:ordered[0].top,safe:ordered[0].collisions===0};
  }
  // Extremely narrow viewports retain a visible editor rather than overflow.
  const fallback=candidates.reduce((best,p)=>{
@@ -41,5 +44,5 @@ export function positionPatientOverlay({x,y,width,height,viewportWidth,top,botto
   const score=collision*1e6+clampDistance;
   return !best||score<best.score?{left,top:py,score}:best;
  },null);
- return {left:fallback.left,top:fallback.top};
+ return {left:fallback.left,top:fallback.top,safe:overlap(fallback)===0};
 }
