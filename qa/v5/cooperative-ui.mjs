@@ -44,9 +44,16 @@ export async function walk(p,lastX=144){
   if(arrival)try{await arrival;}catch(error){
    error.message+='; '+JSON.stringify({doctor:name,waypoint:[x,y],goal,observed});throw error;
   }
-  await p.waitForFunction(goal=>{const s=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
-   return !s.moving&&!s.target&&s.pathIndex>=s.path.length&&Math.hypot(s.x-goal[0],s.y-goal[1])<3&&Math.hypot(c.x-s.x,c.y-s.y)<1;
-  },goal);
+  try{
+   await p.waitForFunction(goal=>{const s=atriaV5.snapshot().player,c=atriaV5.diagnostics().renderer.camera;
+    return !s.moving&&!s.target&&s.pathIndex>=s.path.length&&Math.hypot(s.x-goal[0],s.y-goal[1])<3&&Math.hypot(c.x-s.x,c.y-s.y)<1;
+   },goal);
+  }catch(error){
+   const debug=await p.evaluate(()=>({player:atriaV5.snapshot().player,
+    renderer:atriaV5.diagnostics().renderer,phase:atriaV5.snapshot().phase,
+    dialog:document.querySelector('#modal')?.open,keyboard:atriaV5.diagnostics().keyboard}));
+   error.message+='; '+JSON.stringify({waypoint:[x,y],goal,debug});throw error;
+  }
  }
 }
 export async function study(p,id){const before=await messageIds(p);await p.locator('#peopleButton').click();await p.locator('[data-action="studies"]').click();await p.locator('#studyChoice').selectOption(id);await p.locator('[data-action="request-study"]').click();await waitForMessage(p,'/estudio '+id,before);}

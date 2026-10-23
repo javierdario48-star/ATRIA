@@ -51,7 +51,9 @@ try{
     walked=true;break;
    }catch{/* Try the next genuinely exposed reachable touch target. */}
   }
-  assert(walked,'an exposed lobby touch must move the avatar more than 30 pixels');
+  assert(walked,'an exposed lobby touch must move the avatar more than 30 pixels: '+
+   JSON.stringify(await page.evaluate(()=>({player:atriaV5.snapshot().player,
+    renderer:atriaV5.diagnostics().renderer,toast:document.getElementById('toast')?.textContent}))));
   await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
   const moved=await page.evaluate(()=>atriaV5.snapshot().player);
   assert(Math.hypot(moved.x-initial.s.player.x,moved.y-initial.s.player.y)>30);

@@ -56,7 +56,10 @@ export function createPatientClinicalOverlay({document,window,cases}){
    const x=roomRight>=rect.width+8?right:left>=8?left:
     Math.max(8,Math.min(window.innerWidth-rect.width-8,right));
    root.style.left=x+'px';
-   root.style.top=Math.max(hudBottom+6,Math.min(dockTop-rect.height-6,sy+6))+'px';
+   // The badge belongs BELOW the patient sprite, never over the tap-to-walk
+   // approach tile to the right of B1. Previously sy+6 intercepted the final
+   // route waypoint and prevented legitimate ambulatory movement.
+   root.style.top=Math.max(hudBottom+6,Math.min(dockTop-rect.height-6,sy+48))+'px';
   },
   hide(){patient=null;root.hidden=true;delete root.dataset.patientUid;}
  });
