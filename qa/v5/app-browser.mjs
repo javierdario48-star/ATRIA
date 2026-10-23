@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
+import {chooseDestination} from './cooperative-ui.mjs';
 const out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results',h=await browserHarness();
 await fs.mkdir(out,{recursive:true});
 let page;
@@ -39,11 +40,13 @@ try{
  for(const question of ['¿desde cuando empezo?','¿se movio el dolor?','¿tiene apetito?'])await send(question);
  await page.locator('#peopleButton').click();
  await page.locator('[data-action="examination"]').click();
- for(const section of ['general','inspection','auscultation','percussion','palpation']){
-  await page.locator('#examRegions [data-exam-region="'+(section==='general'?'general':'abdomen')+'"]').click();
-  await page.locator('[data-exam-section="'+section+'"]').click();
-  await page.waitForFunction(s=>!!atriaV5.snapshot().clinical.patient.exam[s],section);
- }
+ // Selecting a region performs the real component examination techniques.
+ await page.locator('#examRegions [data-exam-region="general"]').click();
+ await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings.general);
+ await page.locator('#examRegions [data-exam-region="abdomen"]').click();
+ await page.waitForFunction(()=>['inspection','auscultation','percussion','palpation'].every(
+  method=>!!atriaV5.snapshot().clinical.patient.examFindings.abdomen?.[method]));
+ await page.locator('.exam-advanced > summary').click();
  assert.match(await page.locator('#examResults').innerText(),/McBurney/);
  await page.locator('#modalClose').click();
  await page.locator('#peopleButton').click();
@@ -148,8 +151,8 @@ try{
  assert.equal(consult.accepted,false,'an undocumented diagnosis must receive the original clinical refusal');
  assert.equal(consult.reviewStatus,'missing-dx');
  assert.match(await page.locator('#chatHistory').innerText(),/Falta registrar una impresión/i);
- assert.equal(await page.locator('[data-patient-destination]').count(),0);
- await page.locator('[data-patient-diagnosis]').click();
+ assert.equal((await state()).eligibleDestinations.includes('quirofano'),false,'refused surgical consult cannot unlock destination');
+ await page.locator('#peopleButton').click(); // the clinical chart remains available when the floating badge is safely hidden
  await page.locator('#diagnosisInput').fill('peritonitis');
  const suggestions=await page.locator('#diagnosisSuggestions').innerText();
  for(const term of ['Peritonitis secundaria','Peritonitis terciaria','Peritonitis bacteriana espontánea'])assert(suggestions.includes(term));
@@ -162,7 +165,7 @@ try{
  await page.locator('#diagnosisInput').press('Enter');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='apendicitis aguda');
  await page.locator('#modalClose').click();
- await page.screenshot({path:out+'/app-floating-diagnosis.png'});
+ await page.screenshot({path:out+'/app-chart-diagnosis.png'});
  await send('/consulta cirugia');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===2);
  assert.equal((await state()).patient.consults[1].accepted,true,'corrected request is evaluated again');
@@ -174,7 +177,7 @@ try{
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.reassessments>0);
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.eligibleDestinations.includes('quirofano'));
  await page.locator('#modalClose').click();
- await page.locator('[data-patient-destination="quirofano"]').click();
+ await chooseDestination(page,'quirofano');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
  const closed=await state();
  assert.equal(closed.patient.closure.destination,'quirofano');
@@ -197,7 +200,7 @@ try{
  const report={caseId:'APP-001',browser:true,mobileEmulation:true,physicalAndroid:false,
   confirmedVenousAccess:true,antibiotics:delivered.patient.administrationLog,
   fluidVitalResponse:afterFluid.patient.liveVitals,surgeryRefusal:consult,surgeryConsult:closed.patient.consults.at(-1),
-  globalDiagnosticSuggestions:true,diagnosticClearAndEdit:true,floatingDestination:true,
+  globalDiagnosticSuggestions:true,diagnosticClearAndEdit:true,bedsideClosureWheel:true,
   disposition:'ED transfer to surgery, not performed appendectomy',closure:closed.patient.closure,
   exactlyOnceXP:true,persistedAfterReload:true,errors};
  await fs.writeFile(out+'/app-summary.json',JSON.stringify(report,null,2));
