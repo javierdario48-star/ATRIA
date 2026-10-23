@@ -1,7 +1,7 @@
 import {getCache} from '@vercel/functions';
-import {createQaSocialServer} from '../src/social/qa-social-server.js';
+import {createV5QaSocialServer} from '../src/v5/social/room-membership-store.js';
 const store=getCache(undefined,'atria-social-qa-v1',':');
-const core=createQaSocialServer(store);
+const core=createV5QaSocialServer(store);
 const maxBytes=16000;
 export async function handler(req,res,{signaling=false}={}){
  res.setHeader('Cache-Control','private, no-store');

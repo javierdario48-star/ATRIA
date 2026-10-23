@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import {createQaSocialServer} from '../../social/qa-social-server.js';
+import {createV5QaSocialServer} from './room-membership-store.js';
 function fixture(){
  const values=new Map();
  const store={get:async key=>structuredClone(values.get(key)??null),
   set:async(key,v)=>{await Promise.resolve();values.set(key,structuredClone(v));},
   delete:async key=>{values.delete(key);}};
- return createQaSocialServer(store);
+ return createV5QaSocialServer(store);
 }
 async function register(server,name){
  const response=await server.route({method:'POST',path:'register',

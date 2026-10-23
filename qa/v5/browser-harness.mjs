@@ -2,7 +2,7 @@ import {createServer} from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
-import {createQaSocialServer} from '../../src/social/qa-social-server.js';
+import {createV5QaSocialServer} from '../../src/v5/social/room-membership-store.js';
 import {createSqliteGuardStore} from './sqlite-guard-store.mjs';
 import {createDurableGuardAuthority} from '../../src/v5/server/durable-guard-authority.js';
 import {createClinicalHttp} from '../../src/v5/server/clinical-http.js';
@@ -14,7 +14,7 @@ export async function browserHarness({apiLatency=0,durable=false}={}){
  const {chromium,devices}=require(process.env.PLAYWRIGHT_MODULE_PATH||
   (process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright':'playwright'));
  const root=path.resolve('out-v5'),requests=[];
- const records=new Map(),social=createQaSocialServer({get:async k=>records.get(k),set:async(k,v)=>records.set(k,structuredClone(v)),delete:async k=>records.delete(k)});
+ const records=new Map(),social=createV5QaSocialServer({get:async k=>records.get(k),set:async(k,v)=>records.set(k,structuredClone(v)),delete:async k=>records.delete(k)});
  const durableDir=durable?mkdtempSync(path.join(tmpdir(),'atria-durable-browser-')):null;
  const store=durable?createSqliteGuardStore(path.join(durableDir,'guards.sqlite')):null;
  const readContent=name=>JSON.parse(readFileSync(new URL('../../src/v5/content/'+name+'.json',import.meta.url),'utf8'));

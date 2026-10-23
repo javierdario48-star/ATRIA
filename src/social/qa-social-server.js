@@ -17,18 +17,6 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
  const get=async(t,id,def=null)=>(await storage.get(key(t,id)))??def;
  const put=(t,id,val,seconds=ttl.profile)=>storage.set(key(t,id),val,{ttl:seconds});
  const del=(t,id)=>storage.delete(key(t,id));
- // V2 room membership uses immutable invitations plus one independent
- // acceptance record per colleague. Parallel joins cannot overwrite a roster.
- // The original V1 room shape remains readable for existing temporary rooms.
- async function getRoom(id){
-  const room=await get('room',id);
-  if(!room||room.schemaVersion!==2)return room;
-  const invited=room.invitees||[];
-  const records=await Promise.all(invited.map(uid=>get('room-member',id+':'+uid)));
-  const joined=records.filter(x=>x?.state==='accepted');
-  return {...room,members:[room.members[0],...joined.map(({state,...member})=>member)],
-   pending:invited.filter((uid,i)=>!records[i])};
- }
  const profile=id=>get('user',id);
  const validUser=async header=>{
   const raw=String(header?.authorization??header?.Authorization??'').replace(/^Bearer\s+/i,'');
@@ -64,7 +52,7 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
  async function links(id){
   const [ids,incoming,outgoing,inv,live]=await Promise.all([get('friends',id,[]),get('requests',id,[]),get('outgoing',id,[]),get('invites',id,[]),roster()]);const online=new Set(live.map(x=>x.userId)),card=id=>userCard(id,online);
   const cards=await Promise.all(ids.map(card)),i=await Promise.all(incoming.map(card)),o=await Promise.all(outgoing.map(card));
-  const invites=await Promise.all(inv.map(async v=>{const r=await getRoom(v.roomId);if(!r||r.closed)return null;const host=await card(r.hostUserId);return {roomId:r.id,host:host||{id:r.hostUserId,name:'Anfitrión',handle:'medico'},mode:r.mode,members:r.members.length,maxPlayers:4}}));
+  const invites=await Promise.all(inv.map(async v=>{const r=await get('room',v.roomId);if(!r||r.closed)return null;const host=await card(r.hostUserId);return {roomId:r.id,host:host||{id:r.hostUserId,name:'Anfitrión',handle:'medico'},mode:r.mode,members:r.members.length,maxPlayers:4}}));
   return {friends:cards.filter(Boolean),requests:{incoming:i.filter(Boolean),outgoing:o.filter(Boolean)},invites:invites.filter(Boolean)};
  }
  const addUnique=(items,x,max=50)=>[...new Set([...(Array.isArray(items)?items:[]),x])].slice(-max);
@@ -136,24 +124,17 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
    const invites=[...new Set((Array.isArray(body.invitees)?body.invitees:[]).map(x=>safe(x,64)))].filter(x=>x&&x!==user.id).slice(0,3);
    if(!invites.length)return failure(400,'Invitá al menos a un compañero');
    const people=await Promise.all(invites.map(profile));if(people.some(x=>!x))return failure(404,'Un invitado no existe');
-   const id=uuid(),room={id,schemaVersion:2,invitees:invites,code:id.slice(0,8).toUpperCase(),mode,hostUserId:user.id,members:[{userId:user.id,name:user.name,handle:user.handle,peerId:safe(body.peerId,100),accepted:true}],pending:invites,closed:false,createdAt:now()};
+   const id=uuid(),room={id,code:id.slice(0,8).toUpperCase(),mode,hostUserId:user.id,members:[{userId:user.id,name:user.name,handle:user.handle,peerId:safe(body.peerId,100),accepted:true}],pending:invites,closed:false,createdAt:now()};
    await put('room',id,room,ttl.room);
    for(const other of invites)await writeUserList('invites',other,a=>[...a.filter(x=>x.roomId!==id),{roomId:id}].slice(-20));
    return success({room:await publicRoom(room,user.id)},201);
   }
   if(path==='rooms/join'&&method==='POST'){
    const id=safe(body.roomId,64),code=safe(body.code,10).toUpperCase();
-   let room=id?await getRoom(id):null;
+   let room=id?await get('room',id):null;
    if(!room&&code)return failure(404,'Solo se aceptan invitaciones directas en el entorno QA');
    if(!room||room.closed)return failure(404,'Guardia inexistente');
    if(!room.pending.includes(user.id)&&!room.members.some(x=>x.userId===user.id))return failure(403,'No estás invitado');
-   if(room.schemaVersion===2){
-    // Independent keys give concurrent joiners conflict-free acceptance.
-    await put('room-member',id+':'+user.id,{state:'accepted',userId:user.id,
-     name:user.name,handle:user.handle,peerId:safe(body.peerId,100),accepted:true},ttl.room);
-    await writeUserList('invites',user.id,a=>a.filter(x=>x.roomId!==id));
-    return success({room:await publicRoom(await getRoom(id),user.id)});
-   }
    if(!room.members.some(x=>x.userId===user.id)){
     if(room.members.length>=4)return failure(409,'Grupo completo');
     room.members.push({userId:user.id,name:user.name,handle:user.handle,peerId:safe(body.peerId,100),accepted:true});
@@ -163,7 +144,7 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
    return success({room:await publicRoom(room,user.id)});
   }
   const match=path.match(/^rooms\/([a-f0-9-]{36})\/(messages|invite|leave|cancel)(?:\/(remove|decline))?$/);
-  if(match){const [,id,action,sub]=match,room=await getRoom(id);if(!room||room.closed)return failure(404,'Guardia inexistente');
+  if(match){const [,id,action,sub]=match,room=await get('room',id);if(!room||room.closed)return failure(404,'Guardia inexistente');
    const member=room.members.find(m=>m.userId===user.id),host=room.hostUserId===user.id;
    if(action==='messages'){
     if(!member)return failure(403,'No sos integrante de esta guardia');
@@ -182,36 +163,6 @@ export function createQaSocialServer(storage,{now=()=>Date.now(),uuid=()=>crypto
     }
    }
    if(method!=='POST')return failure(405,'Método no permitido');
-   if(room.schemaVersion===2){
-    // Authoritative room metadata has one writer (the host). Joiners and
-    // leavers only mutate their own slot, never the host's room object.
-    if(action==='leave'){
-     if(host){const base=await get('room',id);base.closed=true;await put('room',id,base,ttl.room);}
-     else await put('room-member',id+':'+user.id,{state:'left'},ttl.room);
-     await writeUserList('invites',user.id,a=>a.filter(x=>x.roomId!==id));
-    }else if(action==='cancel'){
-     if(!host)return failure(403,'Solo el anfitrión puede cancelar');
-     const base=await get('room',id);base.closed=true;await put('room',id,base,ttl.room);
-    }else if(action==='invite'&&!sub){
-     if(!host)return failure(403,'Solo el anfitrión puede invitar');
-     const other=safe(body.userId,64);if(!await profile(other))return failure(404,'Invitado inexistente');
-     if(room.members.length+room.pending.length>=4)return failure(409,'Grupo completo');
-     const base=await get('room',id);
-     if(!base.invitees.includes(other))base.invitees.push(other);
-     await put('room',id,base,ttl.room);
-     await writeUserList('invites',other,a=>[...a,{roomId:id}].slice(-20));
-    }else if(action==='invite'&&sub==='decline'){
-     if(!room.pending.includes(user.id))return failure(403,'No existe invitación para este usuario');
-     await put('room-member',id+':'+user.id,{state:'declined'},ttl.room);
-     await writeUserList('invites',user.id,a=>a.filter(x=>x.roomId!==id));
-    }else if(action==='invite'&&sub==='remove'){
-     if(!host)return failure(403,'Solo el anfitrión puede quitar invitados');
-     const other=safe(body.userId,64);
-     await put('room-member',id+':'+other,{state:'removed'},ttl.room);
-     await writeUserList('invites',other,a=>a.filter(x=>x.roomId!==id));
-    }else return failure(404,'Acción no implementada');
-    return success({room:await publicRoom(await getRoom(id),user.id),ok:true});
-   }
    if(action==='leave'){
     room.members=room.members.filter(m=>m.userId!==user.id);
     if(!room.members.length)room.closed=true;
