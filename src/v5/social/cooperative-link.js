@@ -1,12 +1,13 @@
 import {createWardPeer} from './ward-peer.js';
 import {privateRoomMotionPrefix} from './room-motion-scope.js';
+import {createPeerRecoveryPolicy} from './peer-recovery-policy.js';
 const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
 /** Existing authenticated social registration/invitations and V4 SDP relay.
  * Clinical commands/snapshots travel on one reliable ordered ward channel.
  * Only the caller's existing RAF invokes maintain(); there is no timer here.
  */
 export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onRoomSpeech=()=>{},onClose=()=>{}}){
- const peers=new Map();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoom=null,busySpeech=null,nextPoll=0,nextRoomPoll=0,nextSpeechPoll=0,roomSpeechCursor=0,roomSpeechRoom=null,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
+ const peers=new Map(),recovery=createPeerRecoveryPolicy();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoom=null,busySpeech=null,nextPoll=0,nextRoomPoll=0,nextSpeechPoll=0,roomSpeechCursor=0,roomSpeechRoom=null,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
  const temporary=new Map();let storage;try{storage=window.localStorage;storage.getItem(SESSION_KEY);}catch{storage={getItem:k=>temporary.get(k),setItem:(k,v)=>temporary.set(k,v),removeItem:k=>temporary.delete(k)};}
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
@@ -26,12 +27,13 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  function setRoom(value){
   if(disposed)return;
   if(value.mode!=='coop')throw Error('competitive-mode-not-enabled');
+  if(room?.id&&room.id!==value.id){for(const peer of peers.values())peer.link.dispose();peers.clear();recovery.reset();}
   if(roomSpeechRoom!==value.id){roomSpeechCursor=0;roomSpeechRoom=value.id;}
   room=value;desiredRoomId=room.id;savedRoom=room.id;invites=invites.filter(x=>x.roomId!==room.id);
   try{storage.setItem(ROOM_KEY,room.id);}catch{}onRoom(structuredClone(room),user);
  }
  function peer(member,initiator){
-  const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roster.find(x=>x.userId===member.userId)?.motionSession,lastAttempt:window.performance.now(),link:null};
+  const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roster.find(x=>x.userId===member.userId)?.motionSession,link:null};
   entry.link=createWardPeer({RTCPeerConnection:window.RTCPeerConnection,initiator,
    signal:description=>api('',{signal:{type:description.type,fromUserId:user.id,fromPeerId:peerId,toPeerId:member.peerId,description}},true),
    onMessage:packet=>{if(!disposed&&peers.get(entry.id)===entry&&room?.id===entry.roomId&&packet.roomId===entry.roomId&&room.members.some(x=>x.userId===entry.id))onPacket(entry.id,packet);}});
@@ -77,7 +79,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   const id=room?.id||savedRoom;
   let latest;try{latest=await api('rooms/'+id+'/messages?after=0');}
   catch(error){if(!active())return;if(![403,404].includes(error.status))return;
-   const wasActive=!!room;room=null;desiredRoomId=null;savedRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}for(const p of peers.values())p.link.dispose();peers.clear();if(wasActive)onClose();return;}
+   const wasActive=!!room;room=null;desiredRoomId=null;savedRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}for(const p of peers.values())p.link.dispose();peers.clear();recovery.reset();if(wasActive)onClose();return;}
   if(!active())return;
   setRoom(latest.room);
   if(!active()||!room)return;
@@ -87,14 +89,12 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    if(!member.peerId)continue;
    let p=peers.get(member.userId);
    const motionSession=roster.find(x=>x.userId===member.userId)?.motionSession;
-   if(p&&motionSession&&p.motionSession&&p.motionSession!==motionSession){p.link.dispose();peers.delete(member.userId);p=null;}
-   // ICE/data channel may remain "connecting" forever on mobile or after
-   // a lost offer. Rebuild only a genuinely stale pending link, preserving
-   // the latest authorized room/member and its clinical authority.
-   const linkState=p?.link.state();
-   const stalled=linkState==='connecting'||linkState==='new';
-   if(p&&((['closed','failed','disconnected'].includes(linkState)&&now-p.lastAttempt>6000)||
-      (stalled&&now-p.lastAttempt>15000))){
+   if(p&&motionSession&&p.motionSession&&p.motionSession!==motionSession){
+    p.link.dispose();peers.delete(member.userId);recovery.forget(member.userId);p=null;
+   }
+   // A single tested recovery policy owns state transitions, backoff, and
+   // cooldown. No timer, per-view retry or duplicate signaling channel.
+   if(p&&recovery.shouldRestart(member.userId,p.link.state(),now)){
     p.link.dispose();peers.delete(member.userId);p=null;
    }
    p??=peer(member,host);
@@ -110,7 +110,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    if(ice.signal?.fromUserId===member.userId&&ice.signal.fromPeerId===member.peerId&&ice.signal.toPeerId===peerId)await p.link.receive(ice.signal.description);
    await p.link.maintain();
   }
-  for(const [id,p] of peers)if(!remotes.some(x=>x.userId===id)){p.link.dispose();peers.delete(id);}
+  for(const [id,p] of peers)if(!remotes.some(x=>x.userId===id)){p.link.dispose();peers.delete(id);recovery.forget(id);}
   if(!disposed)onSocial();
  }
  async function pollRoomSpeech(){
@@ -165,7 +165,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    setRoom(result.room);return structuredClone(room);},
   async leave(){
    roomEpoch++;desiredRoomId=null;const previous=room;room=null;savedRoom=null;roomSpeechCursor=0;roomSpeechRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}
-   for(const p of peers.values())p.link.dispose();peers.clear();
+   for(const p of peers.values())p.link.dispose();peers.clear();recovery.reset();
    if(previous)try{await api('rooms/'+previous.id+'/'+(previous.hostUserId===user.id?'cancel':'leave'),{});}catch{}
   },
   maintain(now,pose){
@@ -192,6 +192,6 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   isHost:()=>!!user&&room?.hostUserId===user.id,
   credentials:()=>({clientKey,authorization:token?'Bearer '+token:null}),
   state:()=>structuredClone({user,room,roster,lobbyMessages,friends,requests,invites,recovering:!!savedRoom,connections:[...peers.values()].map(p=>({id:p.id,state:p.link.state()}))}),
-  dispose(){disposed=true;roomEpoch++;desiredRoomId=null;for(const p of peers.values())p.link.dispose();peers.clear();}
+  dispose(){disposed=true;roomEpoch++;desiredRoomId=null;for(const p of peers.values())p.link.dispose();peers.clear();recovery.reset();}
  });
 }
