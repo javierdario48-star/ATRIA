@@ -31,7 +31,8 @@ try{
   async function glasgow(){
    await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
    await page.locator('#examRegions [data-exam-region="neurological"]').click();
-   for(const part of ['eye','verbal','motor'])await page.locator('[data-glasgow="'+part+'"]').click();
+   await page.waitForFunction(()=>{const g=atriaV5.snapshot().clinical.patient.glasgow;
+    return !!g?.eye&&!!g?.verbal&&!!g?.motor;});
    const total=(await state()).patient.glasgow.total;await page.locator('#modalClose').click();return total;
   }
   assert.equal(await glasgow(),14);
@@ -42,10 +43,13 @@ try{
   assert.equal(prescribed.patient.administrationLog.length,0);
   for(const text of ['¿Tiene cirrosis?','¿Tiene ascitis?','¿Tuvo fiebre?','¿Notó confusión?'])await send(text);
   await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
-  for(const technique of ['general','inspection','auscultation','percussion','palpation']){
-   await page.locator('#examRegions [data-exam-region="'+(technique==='general'?'general':'abdomen')+'"]').click();
-   await page.locator('[data-exam-section="'+technique+'"]').click();
-  }
+  // Selecting a body region now executes all real constituent maneuvers.
+  // The old per-maneuver buttons live under an optional collapsed detail.
+  await page.locator('#examRegions [data-exam-region="general"]').click();
+  await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.general);
+  await page.locator('#examRegions [data-exam-region="abdomen"]').click();
+  await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.abdomen?.palpation);
+  await page.locator('.exam-advanced > summary').click();
   assert.match(await page.locator('#examResults').innerText(),/Molestia difusa leve/);await page.locator('#modalClose').click();
   for(const id of ['pbe_paracentesis','pbe_renal']){
    stage=name+' study '+id;await page.locator('#peopleButton').click();await page.locator('[data-action="studies"]').click();

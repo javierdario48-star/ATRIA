@@ -53,11 +53,13 @@ try{
   // Obtain history and an actual directed exam while nursing prepares care.
   for(const text of ['¿Cuántas operaciones previas?','¿Evolución desde la cirugía?','¿Tiene defensas bajas?','¿Tiene alergias?'])await send(text);
   await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
-  for(const technique of ['general','inspection','auscultation','percussion','palpation']){
-   await page.locator('#examRegions [data-exam-region="'+(technique==='general'?'general':'abdomen')+'"]').click();
-   await page.locator('[data-exam-section="'+technique+'"]').click();
-   await page.waitForFunction(t=>!!atriaV5.snapshot().clinical.patient.exam[t],technique);
-  }
+  // Selecting a body region now executes all real constituent maneuvers.
+  // The old per-maneuver buttons live under an optional collapsed detail.
+  await page.locator('#examRegions [data-exam-region="general"]').click();
+  await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.general);
+  await page.locator('#examRegions [data-exam-region="abdomen"]').click();
+  await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.abdomen?.palpation);
+  await page.locator('.exam-advanced > summary').click();
   assert.match(await page.locator('#examResults').innerText(),/Dolor difuso; sin colección focal/);
   await page.locator('#modalClose').click();
   for(const id of ['ter_cbc','ter_ct','ter_culture']){
