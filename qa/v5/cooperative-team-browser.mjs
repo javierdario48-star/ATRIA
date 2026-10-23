@@ -21,6 +21,10 @@ async function invite(caseId){
   await p.locator('#peopleButton').click();const accept=p.locator('[data-action="join-coop"]');
   const selected=await accept.getAttribute('data-room');assert.equal(selected,roomId,'the visible invitation must belong to this new guard');
   round.accepted.push({doctor:i+1,roomId:selected});await accept.click();
+  // Wait for the server-ACKNOWLEDGED join before the next doctor joins.
+  // Two simultaneous read-modify-write joins can overwrite one another in
+  // the QA social room. A button click alone is not membership confirmation.
+  await p.waitForFunction(id=>localStorage.getItem('atria.v5.coop.room')===id,roomId);
  }
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().mode==='coop'&&!!atriaV5.snapshot().clinical,null,{timeout:60000})));
  const snapshots=await Promise.all(pages.map(clinical)),uid=snapshots[0].patient.uid;
