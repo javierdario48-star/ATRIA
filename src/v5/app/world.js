@@ -16,7 +16,7 @@ export function createWorld(content,profile,checkpoint=null){
  const point=tile=>navigation.center(...(navigation.nearest(...tile,8)||start));
  let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true,
   motionSequence=0,lastMotionIntent=null;
- const lobbyRemotes=new Map(),guardRemotes=new Map();
+ const lobbyRemotes=new Map(),guardRemotes=new Map(),nurseRemotes=new Map();
  const entities=()=>hospitalEntities({patients,nurses,expert},content.map,content.beds);
  function lobbyTile(){
   let hash=0;for(const char of profile.name||'Medico')hash=(hash*31+char.charCodeAt(0))>>>0;
@@ -31,9 +31,9 @@ export function createWorld(content,profile,checkpoint=null){
   lastMotionIntent={sequence:++motionSequence,target:[...player.target]};return true;
  }
  resetPlayer(lobbyTile());
- function enterLobby(){lobbyRemotes.clear();guardRemotes.clear();nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
+ function enterLobby(){lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
  function enterGuard(options={}){
-  lobbyRemotes.clear();guardRemotes.clear();const selected=options.mode||'solo';
+  lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();const selected=options.mode||'solo';
   if(!['solo','apprentice','coop'].includes(selected))throw Error('multiplayer mode not migrated');
   const c=content.cases.find(c=>c.id===options.caseId);if(!c)throw Error('unknown clinical case');
   nursing?.dispose();nursing=null;
@@ -61,6 +61,12 @@ export function createWorld(content,profile,checkpoint=null){
    const track=guardRemotes.get(other.id);if(!track)continue;
    const pose=sampleRemotePose(track.pose,now);
    Object.assign(other,{x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase});
+  }
+  if(phase==='guard'&&!authoritative)for(const nurse of nurses){
+   const track=nurseRemotes.get(nurse.id);if(!track)continue;
+   const pose=sampleRemotePose(track.pose,now);
+   Object.assign(nurse,{x:pose.x,y:pose.y,dir:pose.dir,
+    moving:pose.moving,walkPhase:pose.walkPhase});
   }
   for(const actor of [player,...others])if(actor.speechBubble&&actor.speechBubble.until<=now)delete actor.speechBubble;
   if(!authoritative)return;
@@ -152,7 +158,40 @@ export function createWorld(content,profile,checkpoint=null){
    return a&&p&&Math.hypot(a.x-p.x,a.y-p.y)<=PATIENT_RANGE?uid:null;},
   applySharedSpatial({nurses:sharedNurses,doctors},now=Date.now()){
    if(authoritative||mode!=='coop')return false;
-   nurses=structuredClone(sharedNurses);
+   // The server owns all bedside receipts and nurse journeys. Clients only
+   // interpolate the committed pose between clinical snapshots. Reuse the
+   // same visual timeline as doctors, with the actual nurse speed.
+   const priorNurses=new Map(nurses.map(n=>[n.id,n]));
+   const activeNurses=new Set();
+   nurses=sharedNurses.map(remote=>{
+    const nurse=structuredClone(remote),previous=priorNurses.get(nurse.id);
+    activeNurses.add(nurse.id);
+    let track=nurseRemotes.get(nurse.id);
+    if(!track){
+     track={pose:createRemotePose({x:nurse.x,y:nurse.y,now,cadence:900,speed:nurse.speed||140}),
+      seq:0,previous:null};
+     nurseRemotes.set(nurse.id,track);
+    }
+    const route=[{x:track.previous?.x??nurse.x,y:track.previous?.y??nurse.y}];
+    if(track.previous&&Array.isArray(track.previous.path)&&Array.isArray(nurse.path)&&
+       track.previous.path.length===nurse.path.length&&
+       track.previous.path.every((p,i)=>p[0]===nurse.path[i][0]&&p[1]===nurse.path[i][1])){
+     const begin=track.previous.pathIndex??0,end=nurse.pathIndex??0;
+     if(begin<=end)for(let i=begin;i<end;i++)
+      route.push(navigation.center(...nurse.path[i]));
+    }
+    route.push({x:nurse.x,y:nurse.y});
+    receiveRemotePose(track.pose,{...nurse,now,route,transport:'clinical',
+     motionSession:'clinical-nurse:'+nurse.id,motionEpoch:1,
+     seq:++track.seq,motionCadence:900});
+    track.previous=nurse;
+    // Preserve the on-screen position, even if the newest authoritative
+    // sample is already further along the physical route.
+    if(previous)Object.assign(nurse,{x:previous.x,y:previous.y,
+     dir:previous.dir,walkPhase:previous.walkPhase,moving:previous.moving});
+    return nurse;
+   });
+   for(const id of nurseRemotes.keys())if(!activeNurses.has(id))nurseRemotes.delete(id);
    const previous=new Map(others.map(x=>[x.id,x]));
    const remoteIds=new Set();
    others=doctors.filter(x=>x.id!==profile.id).map(remote=>{
