@@ -66,3 +66,20 @@ test('suggestions remain display-only; the real speech router enforces patient i
  assert.equal(response.intents.length,0);
  assert(Object.keys(s).every(x=>!['patient','execute','administer'].includes(x)));
 });
+
+
+test('every offered nursing command is recognized by the real interpreter in its case',()=>{
+ for(const c of cases){
+  for(const item of clinicalVocabulary({...context(c.id),studies:c.studies})){
+   const r=routeWardSpeech('Enfermera, '+item.command,{
+    patientUid:'P',clinicalEvaluation:true,studies:c.studies,
+    therapies,interventions:c.interventions,venousAccessCount:2
+   });
+   assert.equal(r.error,undefined,c.id+' / '+item.id+' / '+item.command+' '+r.error);
+   assert(r.intents.length>0,c.id+' / '+item.id+' cannot become an inert button');
+   if(item.kind==='study')
+    assert(r.intents.some(x=>x.kind==='study.request'&&x.id===item.id.slice(6)),
+     c.id+' / '+item.id+' must not silently select another study');
+  }
+ }
+});
