@@ -37,9 +37,10 @@ export function createPatientClinicalOverlay({document,window,cases}){
   update(worldPatient,clinical){
    if(!worldPatient||clinical?.patient.uid!==worldPatient.uid||clinical.patient.caseEnded){patient=null;root.hidden=true;return;}
    patient={uid:worldPatient.uid,x:worldPatient.x,y:worldPatient.y};root.dataset.patientUid=patient.uid;
-   const html='<button type="button" data-patient-diagnosis aria-label="Editar impresión diagnóstica">'+
-    esc(diagnosisBadgeLabel(cases,clinical.patient.diagnosis))+'</button>'+
-    '<div class="patient-destinations">'+destinationButtonsHTML(clinical.canEdit===false?[]:clinical.eligibleDestinations,{floating:true})+'</div>';
+   const impression=String(clinical.patient.diagnosis||'').trim();
+   const label=impression?'✎ '+impression:'✎ Impresión';
+   const html='<button type="button" data-patient-diagnosis aria-label="Editar impresión diagnóstica" '+
+    'title="'+esc(diagnosisBadgeLabel(cases,impression))+'">'+esc(label)+'</button>';
    setHTML(root,html);
   },
   position(renderer,hudBottom,dockTop,{obscured=false}={}){
@@ -47,9 +48,15 @@ export function createPatientClinicalOverlay({document,window,cases}){
    const [sx,sy]=renderer.screen(patient.x,patient.y);
    if(sx<0||sx>window.innerWidth||sy<hudBottom||sy>dockTop){root.hidden=true;return;}
    root.hidden=false;
-   const rect=root.getBoundingClientRect();
-   root.style.left=Math.max(rect.width/2+6,Math.min(window.innerWidth-rect.width/2-6,sx))+'px';
-   root.style.top=Math.max(hudBottom+6,Math.min(dockTop-rect.height-6,sy-74-rect.height))+'px';
+   const rect=root.getBoundingClientRect(),gap=14;
+   // Keep the unobtrusive editor BESIDE the patient, below the speech bubble.
+   // Unlike the old sy-74-height placement it never sits over the dialogue.
+   const right=sx+gap,roomRight=window.innerWidth-right;
+   const left=sx-rect.width-gap;
+   const x=roomRight>=rect.width+8?right:left>=8?left:
+    Math.max(8,Math.min(window.innerWidth-rect.width-8,right));
+   root.style.left=x+'px';
+   root.style.top=Math.max(hudBottom+6,Math.min(dockTop-rect.height-6,sy+6))+'px';
   },
   hide(){patient=null;root.hidden=true;delete root.dataset.patientUid;}
  });
