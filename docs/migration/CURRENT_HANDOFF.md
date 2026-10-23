@@ -1,5 +1,18 @@
 # ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
+## C5.b.3 — enfermería visual fluida, autoridad clínica intacta (22-10-2026)
+
+**Reporte real:** tras separar la sala privada de movimiento social del transporte clínico, el usuario confirmó que los personajes médicos ya caminan bien pero las enfermeras continúan con lag visual. Comparación de código: ATRIA V4 4.8.7 animaba la enfermera localmente a cada cuadro mediante `updateNurse(dt)`; en V5 durable, `world.step()` en réplica no autoritativa no mueve enfermería y `applySharedSpatial()` reemplazaba directamente `nurses` con el estado de la consulta PostgreSQL (aprox. 900 ms). La fisiología y los recibos de enfermería del servidor no resultaron implicados.
+
+**Corrección estrictamente visual en V5:**
+- `src/v5/app/world.js` mantiene el servidor como propietario exclusivo de rutas/tareas y posiciones clínicas `snapshot().nurses`; en un registro separado `nurseRemotes` reutiliza `createRemotePose/receiveRemotePose/sampleRemotePose` (interpolador aprobado del lobby), con velocidad auténtica de enfermería **140 px/s**, cadencia clínica nominal **900 ms** y waypoints de la ruta del servidor cuando la ruta es común. Muestrea cada RAF, pero **no muta las posiciones clínicas** del estado compartido.
+- `world.presentNurses(frame)` aplica coordenadas visuales solamente a una copia del cuadro de renderizado. `src/v5/app/application.js` lo llama después de `presentation.sample()` y antes de dibujar.
+- La primera iteración que interpolaba directamente `nurses` fue descartada porque la regresión existente exigía igualdad exacta con el servidor. El resultado definitivo preserva la igualdad de snapshots mientras interpola únicamente el sprite. No hay nuevo motor, simulación cliente ni ejecución de tratamientos o recepción ficticia.
+- Se agregaron pruebas en `src/v5/app/world.test.js` que verifican interpolación real entre dos snapshots clínicos, ausencia de saltos al recibir el siguiente, conservación exacta del valor médico y ausencia de dispatcher clínico en réplicas.
+
+**Evidencia:** checkpoint funcional `1a2675e313dcd8751f49e5d9b1c4c348fd7e6ff2` aprobó `npm run test:v5` **481/481** y `npm run build:v5`. El workflow histórico 4.8.7 terminó verde; la CI V5 definitiva seguía en cola en la última consulta. Preview Vercel específico de ese SHA READY: `https://night-shift-clinical-5wms2fx1w-javierdario4878-7324.vercel.app/`. Falta aceptación física en dos dispositivos, especialmente comprobar giros alrededor de obstáculos y que las acciones de enfermería no se adelanten a sus recibos. Production, main, V4, lógica farmacológica y XP no modificados.
+
+
 ## C5.b.3 — movimiento del lobby en la sala clínica privada (22-10-2026)
 
 **Motivo:** el usuario confirmó que el lobby era fluido, pero la guardia Cooperativa seguía con lag o empeoraba después de aumentar las consultas clínicas a 300 ms. No repetir ese remedio.
