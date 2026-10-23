@@ -7,7 +7,7 @@ import {setHTML} from './render-content.js';
 import {ecgPresentation} from '../clinical/ecg-morphology.js';
 import {caseDebriefHTML} from './case-debrief.js';
 import {createEcgSweep} from './ecg-sweep.js';
-import {monitorOrderExamples} from './monitor-order-suggestions.js';
+import {monitorOrderExamples,distinctOrderSuggestions} from './monitor-order-suggestions.js';
 import {clinicalCompletions,spellingSuggestions} from './clinical-autocomplete.js';
 import {monitorOrderLedger,administeredTreatmentHistory,latestMonitorOrderState} from './monitor-order-ledger.js';
 import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} from './diagnostic-impression.js';
@@ -141,7 +141,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
     studies:session()?.catalog()||[],limit:6}):
    monitorOrderExamples(caseId,'',{hint:showOrderHints});
   const spelling=!options.length?spellingSuggestions(input.value):[];
-  setHTML(target,[...options,...spelling].map(item=>
+  setHTML(target,distinctOrderSuggestions([...options,...spelling]).map(item=>
    '<button type="button" data-action="monitor-suggestion" data-order="'+
     esc(item.replacement??item.command)+'">'+esc(item.label)+'</button>'
   ).join(''));

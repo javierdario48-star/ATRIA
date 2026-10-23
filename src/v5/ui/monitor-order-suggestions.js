@@ -42,3 +42,15 @@ export function monitorOrderExamples(caseId,query='',{hint=false,limit=6}={}){
   normalizeOrderQuery(label).includes(normalized)||normalizeOrderQuery(command).includes(normalized)):items;
  return matching.slice(0,Math.max(0,Math.min(12,limit))).map(([id,label,command])=>({id,label,command}));
 }
+
+/** Unify spelling and medical suggestions by canonical command. A single
+ * selection must remain visually unique even when separate dictionaries
+ * recognize the same authorized phrase. This never sends a prescription. */
+export function distinctOrderSuggestions(suggestions=[]){
+ const ids=new Set();
+ return suggestions.filter(item=>{
+  const command=normalizeOrderQuery(item?.replacement??item?.command??'');
+  if(!command||ids.has(command))return false;
+  ids.add(command);return true;
+ });
+}
