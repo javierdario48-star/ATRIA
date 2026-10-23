@@ -6,7 +6,8 @@ function conciseMissing(p,c,q){
  const answered=new Set((p.intentHistory||[]).map(x=>x.id));
  const studies=new Set((p.orders||[]).filter(x=>x.status==='done').map(x=>x.id));
  const performed=new Set((p.administrationLog||[]).filter(x=>x.status!=='pending'&&x.action!=='stop').map(x=>x.id));
- for(const x of p.treatments||[])if(['done','executed','administered'].includes(x.status))performed.add(x.id);
+ // Native C2 and APP treatments record an executed sourceEventId, not a status.
+ for(const x of p.treatments||[])if(x?.sourceEventId&&x?.patientUid===p.uid)performed.add(x.id);
  const label=(items,id)=>items?.find(x=>x.id===id)?.label||
   items?.find(x=>x.id===id)?.reveal||id;
  const gaps=[];
