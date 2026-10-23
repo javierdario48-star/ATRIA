@@ -259,3 +259,22 @@ test('durable cooperative nurse walks between clinical snapshots without adminis
   'a nonauthoritative client cannot create nurse journeys or medication receipts');
  assert.equal(w.snapshot().patients[0].uid,'shared-patient');
 });
+
+
+test('rejoining a persistent clinical room continues after its last confirmed movement ID',async()=>{
+ const {createWorld}=await import('./world.js');
+ const c={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
+ const client=createWorld(c,{id:'A',name:'Ana'});
+ client.enterGuard({mode:'coop',caseId:'PERI-PBE-001',
+  members:[{id:'A',name:'Ana'},{id:'B',name:'Bruno'}],authoritative:false});
+ assert(client.seedMovementSequence(41));
+ assert(client.target(...Object.values(client.navigation.center(4,14))));
+ assert.equal(client.motionIntent().sequence,42,
+  'reconnected client sends the next sequence, not #1 from a new world');
+ assert(!client.seedMovementSequence(99),
+  'a delayed acknowledgement cannot replace the active local input sequence');
+ client.stop();
+ assert.equal(client.motionIntent().sequence,43);
+ client.enterLobby();
+ assert.equal(client.seedMovementSequence(99),false);
+});
