@@ -131,3 +131,27 @@ test('real epoch timestamps cannot accumulate fractional-step drift during long 
   assert.equal(result.clinical.clock.gameMinute,480,'480,000 actual milliseconds require exactly 28,800 original world steps');
  }finally{f.dispose();}
 });
+
+
+test('durable movement receipts are monotonic across CAS and restart; stale inputs cannot replay',async()=>{
+ const f=await fixture();try{
+  const {createWorld}=await import('../app/world.js');
+  const w=createWorld(content,{id:'a',name:'A'});
+  const first=w.navigation.center(15,42),second=w.navigation.center(15,40);
+  const one=await f.call('b',{motion:[first.x,first.y],motionSequence:1});
+  assert.equal(new Map(one.motionReceipts).get('b'),1);
+  const two=await f.call('b',{motion:[second.x,second.y],motionSequence:2});
+  assert.equal(new Map(two.motionReceipts).get('b'),2);
+  const direction=two.spatial.doctors.find(x=>x.id==='b').target;
+  assert.deepEqual(direction,[second.x,second.y]);
+  const stale=await f.call('b',{motion:[first.x,first.y],motionSequence:1});
+  assert.equal(new Map(stale.motionReceipts).get('b'),2);
+  assert.deepEqual(stale.spatial.doctors.find(x=>x.id==='b').target,direction,
+   'old network movement must never supersede a newer target');
+  await f.restart();
+  const persisted=await f.call('a');
+  assert.equal(new Map(persisted.motionReceipts).get('b'),2);
+  const retry=await f.call('b',{motion:[first.x,first.y],motionSequence:1});
+  assert.deepEqual(retry.spatial.doctors.find(x=>x.id==='b').target,direction);
+ }finally{f.dispose();}
+});
