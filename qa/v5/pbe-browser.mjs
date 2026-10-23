@@ -24,7 +24,20 @@ try{
    const r=await page.evaluate(()=>atriaV5.diagnostics().renderer),point={x:(x-r.camera.x)*r.scale+r.anchorX,y:(y-r.camera.y)*r.scale+r.anchorY};
    const hud=await page.locator('#hud').boundingBox(),dock=await page.locator('#chatDock').boundingBox();
    assert(point.y>hud.y+hud.height+5&&point.y<dock.y-5,'visible map route');
-   await page.locator('#game').click({position:point});await page.waitForFunction(()=>atriaV5.snapshot().player.moving);
+   const before=await page.evaluate(()=>({player:atriaV5.snapshot().player,
+   renderer:atriaV5.diagnostics().renderer}));
+   await page.locator('#game').click({position:point});
+   try{await page.waitForFunction(start=>{
+    const p=atriaV5.snapshot().player;
+    return p.moving||Math.hypot(p.x-start.x,p.y-start.y)>8;
+   },{x:before.player.x,y:before.player.y},{timeout:9000});}
+   catch(error){
+    error.message+='; '+JSON.stringify({waypoint:[x,y],stage,before,after:await page.evaluate(()=>({
+     player:atriaV5.snapshot().player,renderer:atriaV5.diagnostics().renderer,
+     dialog:document.querySelector('#modal')?.open,
+     modal:document.querySelector('#modalContent')?.textContent?.slice(0,180)}))});
+    throw error;
+   }
    await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
   }
   stage=name+' initial confusion';assert.equal((await state()).patient.phys.sourceControlled,true);
