@@ -41,7 +41,7 @@ try{
   await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
   const startPoint=(await page.evaluate(()=>atriaV5.snapshot())).player;
   let walked=false;
-  for(const [dx,dy] of [[0,120],[120,0],[-120,0],[0,-120],[80,80],[-80,80]]){
+  for(const [dx,dy] of [[0,-55],[0,-75],[0,-42],[0,120],[120,0],[-120,0],[0,-120],[80,80],[-80,80]]){
    const camera=await page.evaluate(()=>atriaV5.diagnostics().renderer);
    const x=(startPoint.x+dx-camera.camera.x)*camera.scale+camera.anchorX;
    const y=(startPoint.y+dy-camera.camera.y)*camera.scale+camera.anchorY;
