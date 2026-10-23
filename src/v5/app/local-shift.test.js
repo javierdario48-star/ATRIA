@@ -27,3 +27,11 @@ test('multiplayer, unclosed patients and exhausted 24-minute shifts cannot advan
  assert.equal(shift.totalMinutes(3000),1440);
  assert.deepEqual(shift.snapshot().seenCases,['APP-001']);
 });
+
+test('exploratory catalog cases remain selectable without enabling uncertified care',()=>{
+ const shift=createLocalShift({caseIds:['CIRR-001','EXPLORATORY-ONLY'],
+  rotationCaseIds:['CIRR-001']});
+ assert(shift.begin({caseId:'EXPLORATORY-ONLY'}));
+ assert.equal(shift.nextCase('EXPLORATORY-ONLY'),'CIRR-001');
+ assert.equal(shift.canContinue({previous:patient(20,false),mode:'solo'}),false);
+});

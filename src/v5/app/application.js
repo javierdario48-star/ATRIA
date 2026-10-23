@@ -56,7 +56,10 @@ export async function createApplication({document,window,content,signal}){
  const patientClinical=createPatientClinicalOverlay({document,window,cases:content.cases});
  const clinicalChecklist=createClinicalChecklist({document});
  let scoreMarkup='';
- const localShift=createLocalShift({caseIds:Object.keys(CLINICAL_EXECUTORS)});
+ // Unsupported catalog cases remain navigable, but subsequent arrivals rotate
+ // only among cases with certified clinical executors.
+ const localShift=createLocalShift({caseIds:content.cases.map(c=>c.id),
+  rotationCaseIds:Object.keys(CLINICAL_EXECUTORS)});
  const hospitalAudio=createHospitalAudio({window,storage:window.localStorage});
  let audioPatient=null,lastAudioRead=-Infinity;
  const chatSuggestions=ui('chatSuggestions'),nurseQuick=ui('nurseQuickButton');

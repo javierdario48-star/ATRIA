@@ -3,8 +3,9 @@
  * Cooperative and competitive patient rotation require their own durable room
  * authority and therefore cannot call begin(... continuation:true).
  */
-export function createLocalShift({caseIds=[],limitMinutes=1440}={}){
+export function createLocalShift({caseIds=[],rotationCaseIds=caseIds,limitMinutes=1440}={}){
  const options=[...new Set(caseIds)];
+ const rotation=[...new Set(rotationCaseIds)].filter(id=>options.includes(id));
  if(!Number.isFinite(limitMinutes)||limitMinutes<=0)throw Error('invalid shift duration');
  let state=null;
  const canContinue=({previous,mode}={})=>!!state&&
@@ -27,9 +28,9 @@ export function createLocalShift({caseIds=[],limitMinutes=1440}={}){
   return true;
  };
  const nextCase=current=>{
-  if(!state||options.length===0)return null;
-  return options.find(id=>!state.seenCases.includes(id))||
-   options[(options.indexOf(current)+1+options.length)%options.length];
+  if(!state||rotation.length===0)return null;
+  return rotation.find(id=>!state.seenCases.includes(id))||
+   rotation[(rotation.indexOf(current)+1+rotation.length)%rotation.length];
  };
  return Object.freeze({
   begin,record,canContinue,nextCase,reset:()=>{state=null;},
