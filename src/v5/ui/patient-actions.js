@@ -9,7 +9,7 @@ export const PATIENT_ACTIONS=Object.freeze([
  {id:'history',symbol:'▤',label:'Historia'},
  {id:'studies',symbol:'⌁',label:'Estudios'},
  {id:'treatment',symbol:'✚',label:'Tratamiento'},
- {id:'patient',symbol:'✓',label:'Resolver'}
+ {id:'patient',symbol:'✓',label:'Cerrar caso'}
 ]);
 export function createPatientActionWheel({document,window}){
  const root=document.getElementById('patientWheel');
