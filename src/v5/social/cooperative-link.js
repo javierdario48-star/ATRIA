@@ -5,7 +5,7 @@ const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
  * Only the caller's existing RAF invokes maintain(); there is no timer here.
  */
 export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onClose=()=>{}}){
- const peers=new Map();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,nextPoll=0,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
+ const peers=new Map();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoom=null,nextPoll=0,nextRoomPoll=0,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
  const temporary=new Map();let storage;try{storage=window.localStorage;storage.getItem(SESSION_KEY);}catch{storage={getItem:k=>temporary.get(k),setItem:(k,v)=>temporary.set(k,v),removeItem:k=>temporary.delete(k)};}
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
@@ -42,7 +42,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   // V4's HTTP movement/roster fallback travels concurrently: an unrelated
   // directory read must never add a full RTT before the next motion packet.
   const [,social]=await Promise.all([
-   api('',{presence:{peerId,motionSession,motionEpoch,motionAt:window.performance.now(),sentAt:Date.now(),motionCadence:260,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,seq:++presenceSequence}},true),
+   api('',{presence:{peerId,motionSession,motionEpoch,motionAt:window.performance.now(),sentAt:Date.now(),motionCadence:260,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,phase:pose.phase,roomId:pose.roomId||'',seq:++presenceSequence}},true),
    api('lobby?after=0')
   ]);
   if(!active())return;
@@ -58,6 +58,12 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
     friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};
    }
    onSocial();return;}
+  // Pose packets are not held behind room signaling, SDP or ICE negotiation.
+  onSocial();
+ }
+ async function pollRoom(now){
+  const epoch=roomEpoch,active=()=>!disposed&&roomEpoch===epoch;
+  await connect();if(!active()||!(room||savedRoom))return;
   const id=room?.id||savedRoom;
   let latest;try{latest=await api('rooms/'+id+'/messages?after=0');}
   catch(error){if(!active())return;if(![403,404].includes(error.status))return;
@@ -91,7 +97,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  }
  return Object.freeze({
   connect,
-  flush:()=>busy||Promise.resolve(),
+  flush:()=>Promise.all([busy,busyRoom].filter(Boolean)),
   setProfile(value){profile={...value};},
   async postLobbyMessage(text,messageId){await connect();const result=await api('lobby/chat',{text,messageId});
    lobbyMessages=[...lobbyMessages.filter(x=>x.messageId!==result.message.messageId),result.message].slice(-90);
@@ -116,12 +122,20 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    for(const p of peers.values())p.link.dispose();peers.clear();
    if(previous)try{await api('rooms/'+previous.id+'/'+(previous.hostUserId===user.id?'cancel':'leave'),{});}catch{}
   },
-  maintain(now,pose){if(disposed||busy||now<nextPoll)return;
-   // ATRIA 4.8.7's original 260 ms HTTP fallback is necessary to keep
-   // the shared remote-motion sampler continuous; a 1000 ms gap rebases it.
-   // Once a ward is selected, retain the old slower social/signaling poll.
-   nextPoll=now+(room||savedRoom?1000:260);
-   busy=poll(now,pose).catch(()=>{}).finally(()=>busy=null);},
+  maintain(now,pose){
+   if(disposed)return;
+   // Same 260ms social presence as the working lobby, even inside a ward.
+   // Signaling retains its separate slower, serialized room lane. Both are
+   // driven by the existing RAF (no added timers or transport stack).
+   if(!busy&&now>=nextPoll){
+    nextPoll=now+260;
+    busy=poll(now,pose).catch(()=>{}).finally(()=>busy=null);
+   }
+   if((room||savedRoom)&&!busyRoom&&now>=nextRoomPoll){
+    nextRoomPoll=now+1000;
+    busyRoom=pollRoom(now).catch(()=>{}).finally(()=>busyRoom=null);
+   }
+  },
   send(id,packet){return !!room&&(peers.get(id)?.link.send({...packet,roomId:room.id})??false);},
   broadcast(packet){if(room)for(const p of peers.values())p.link.send({...packet,roomId:room.id});},
   isMember:id=>!!room?.members.some(x=>x.userId===id),
