@@ -25,7 +25,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid){notify('Ese paciente no está disponible en esta guardia.');return;}
   patientUid=patient.uid;
   open('<h2>'+esc(patient.bedId||'Paciente')+' · Paciente</h2><p>'+esc(patient.name||'')+'</p><div class="note">'+esc(patient.chief||'')+'</div>'+
-   (s.patient.liveVitals?patientHTML(s.patient,{readOnly:s.canEdit===false||s.patient.caseEnded}):'<p>Atención completa de este caso en migración.</p><div class="actions"><button data-action="studies">Estudios</button></div>')+
+   (s.patient.liveVitals?patientHTML(s.patient,{readOnly:s.canEdit===false||s.patient.caseEnded}):'<p>—</p><div class="actions"><button data-action="studies">Estudios</button></div>')+
    '<div class="actions"><button data-action="patient-target">Interrogar</button><button data-action="close">Cerrar</button></div>');
   ui('modalContent').dataset.patientUid=patientUid;render();renderDiagnosisSuggestions();
  }

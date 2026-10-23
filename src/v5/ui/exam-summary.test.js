@@ -25,7 +25,7 @@ test('unexplored findings stay absent, and no unmodeled organ is called normal',
  await f.send('/examen abdomen inspection');
  let sections=examinedRegions(f.p()),ab=sections.find(x=>x.id==='abdomen');
  assert.equal(ab.status,'unmodeled');
- assert.equal(ab.summary,'Sin datos específicos modelados');
+ assert.equal(ab.summary,'—');
  assert(!progressiveExamImpression(f.p()).summary.includes('McBurney'));
  assert.equal(examRegionStatus(f.p(),'thorax'),'pending');
  await f.send('/examen abdomen palpation');
@@ -80,7 +80,8 @@ test('one flip card includes every authorized examined technique without inventi
  for(const technique of ['Inspección','Auscultación','Percusión','Palpación'])
   assert(html.includes(technique));
  assert(html.includes('Abdomen distendido por ascitis abundante'));
- assert(html.includes('Sin dato específico modelado'));
+ assert(html.includes('—'));
+ assert(!/modelad[ao]|simulaci[oó]n/i.test(html));
  assert(!html.includes('Auscultación normal'),'missing findings are not normal');
  assert.equal(f.p().examDone,false,'the flip card does not auto-complete unrelated general exam');
  f.s.dispose();

@@ -5,10 +5,15 @@ function recordedExam(p){return Object.values(p.examFindings||{}).some(x=>Object
 function consulted(p,id){return [...(p.consults||[]),...(p.pendingConsults||[])].some(x=>x.id===id);}
 export function clinicalWorkflow(state){
  const p=state?.patient;if(!p)return null;
- const assessed=!!p.intentHistory?.length;
+ const historyCount=(p.intentHistory||[]).length;
+ const assessed=historyCount>0;
+ const examCount=Object.values(p.examFindings||{}).reduce((n,r)=>n+Object.keys(r||{}).length,0);
  const examined=recordedExam(p);
  const studies=(p.orders||[]).some(o=>o.status==='done');
  const waiting=(p.orders||[]).some(o=>o.status!=='done');
+ // A pending hemogram or isolated question cannot trigger an early diagnosis.
+ const diagnosticReady=historyCount>=2&&(examCount>=2||p.examDone)&&
+  (studies||(historyCount>=3&&examCount>=3));
  const monitored=!!p.lastVitalsKnown||!!p.procedures?.monitor?.connected;
  const vital=p.lastVitalsKnown?.vitals||null;
  const unstable=!!vital&&(vital.sys<90||vital.spo2<90||vital.hr>140);
@@ -30,8 +35,8 @@ export function clinicalWorkflow(state){
  let cue=null;
  if(!ended){
   if(unstable)cue={id:'unstable',text:'Doctor, los signos registrados siguen comprometidos. ¿Qué hacemos?'};
-  else if(studies&&!diagnosis)cue={id:'results',text:'Doctor, ya hay resultados disponibles. ¿Cuál es su impresión diagnóstica?'};
-  else if(!diagnosis&&(assessed||examined||studies||therapy))cue={id:'diagnosis',text:'Doctor, ya tenemos información del paciente. ¿Cuál es su impresión diagnóstica?'};
+  else if(!diagnosis&&diagnosticReady)cue={id:'diagnosis',
+   text:'Doctor, con la anamnesis y el examen realizados, ¿cuál es su impresión diagnóstica?'};
   else if(diagnosis&&surgicalImpression&&!consulted(p,'cirugia'))
    cue={id:'surgery:'+normalize(diagnosis),text:'Doctor, según su impresión diagnóstica, ¿quiere que avise a cirugía?'};
   else if(diagnosis&&options.length)cue={id:'disposition',text:'Doctor, ya podemos definir cómo continúa el cuidado. ¿Qué destino indica?'};

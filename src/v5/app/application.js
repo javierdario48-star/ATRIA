@@ -696,7 +696,7 @@ export async function createApplication({document,window,content,signal}){
      // for admission, surgery or discharge must never display an XP outcome.
     }});
    lastClinicalFrame=window.performance.now();
-   close();resetChat(Object.hasOwn(CLINICAL_EXECUTORS,s.caseId)?'Guardia clínica. Evaluación, estudios, tratamiento y cierre disponibles.':'Guardia experimental. Estudios disponibles; atención completa en migración.');updateHud();
+   close();resetChat(Object.hasOwn(CLINICAL_EXECUTORS,s.caseId)?'Guardia clínica. Evaluación, estudios, tratamiento y cierre disponibles.':'Guardia abierta. Consultá la historia y elegí cómo evaluar al paciente.');updateHud();
   }
   if(button.dataset.action==='patient-chart'){
    const p=world.snapshot().patients.find(p=>p.uid===clinicalUI.patientUid());if(p)clinicalUI.showPatient(p);

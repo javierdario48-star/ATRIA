@@ -26,6 +26,8 @@ test('closure panel offers partial destination attempts but never authorizes or 
  const s=state();
  let html=closureDecisionHTML(s);
  assert.match(html,/Seleccioná un destino/);
+ assert(html.includes('id="caseClosureOptions"'));
+ assert(!html.includes('id="caseDestinations"'),'isolated closure buttons must survive patient chart refresh');
  assert(html.includes('data-action="close-diagnosis"'));
  for(const destination of ['observacion','sala','alta','quirofano','uti','procedimiento'])
   assert(html.includes('data-destination="'+destination+'"'));

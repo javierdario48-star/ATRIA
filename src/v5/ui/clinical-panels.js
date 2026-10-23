@@ -4,6 +4,7 @@ import {ecgPresentation} from '../clinical/ecg-morphology.js';
 import {confirmedFluidFeedback,fluidFeedbackLabel} from '../clinical/fluid-feedback.js';
 import {diagnosisEditorHTML} from './diagnostic-impression.js';
 import {esc} from './render-content.js';
+import {visibleExamFinding} from './exam-summary.js';
 export {esc} from './render-content.js';
 export const examNames=EXAM_TECHNIQUES;
 export function vitalsHTML(patient){
@@ -34,15 +35,15 @@ export function monitorHTML(patient){
   metric('FR',shown('rr',Math.round),'rpm','breath')+
   metric('TEMPERATURA',shown('temp',n=>n.toFixed(1)),'°C','temperature')+'</div>'+
   '<div class="device-trace '+(trace?'live':'idle')+'" aria-label="'+
-   (trace?'ECG simulado a partir del ritmo autorizado para este paciente; no es un registro diagnóstico':'Sin señal continua disponible')+'">'+
+   (trace?'Trazado orientador; no sustituye un electrocardiograma clínico':'Sin señal continua disponible')+'">'+
   (trace?'<svg viewBox="0 0 560 76" preserveAspectRatio="none" aria-hidden="true"><path id="monitorEcgPath" d=""/></svg>':
    '<div class="device-no-signal">SIN TRAZADO CONTINUO</div>')+'</div>'+
   '<div class="device-bottom"><span>'+note+'</span><span>'+
-  (trace?esc(ecg.label)+' · '+(ecg.rhythmSource==='case-rule'?'PATRÓN DEL CASO':'MODELO SINUSAL')+' · SIMULACIÓN, NO ECG DIAGNÓSTICO':
+  (trace?esc(ecg.label.replace(/ simulado$/i,''))+' · TRAZADO ILUSTRATIVO · NO ECG DIAGNÓSTICO':
    'SIN DATOS ELECTROCARDIOGRÁFICOS')+'</span></div>';
 }
 export function examHTML(patient){return Object.entries(patient.exam||{}).map(([id,data])=>
- '<section class="clinical-section"><b>'+esc(examNames[id])+'</b>'+data.rows.map(row=>'<p><strong>'+esc(row.organ)+':</strong> '+esc(row.text)+'</p>').join('')+'</section>').join('')||'<p>Elegí una técnica para explorar al paciente.</p>';}
+ '<section class="clinical-section"><b>'+esc(examNames[id])+'</b>'+data.rows.map(row=>'<p><strong>'+esc(row.organ)+':</strong> '+esc(visibleExamFinding(row.text))+'</p>').join('')+'</section>').join('')||'<p>Elegí una técnica para explorar al paciente.</p>';}
 export function therapyHTML(patient){
  const fluid=patient.uid&&patient.caseId?
   confirmedFluidFeedback(patient,{id:patient.caseId,vitals:patient.baselineVitals}):null;

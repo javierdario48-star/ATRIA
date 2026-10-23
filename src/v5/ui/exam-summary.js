@@ -2,7 +2,12 @@ import {EXAM_REGIONS,EXAM_TECHNIQUES} from '../clinical/exam-contract.js';
 
 // Only confirmed observations may be summarized. The legacy placeholder is
 // missing scenario coverage, NOT a normal physical exam.
-const absent=/^Sin hallazgo específico modelado en este escenario\.?$/i;
+const absent=/^(?:Sin hallazgo específico modelado en este escenario\.?|—)$/i;
+export function visibleExamFinding(text){
+ const value=String(text||'').trim();
+ if(!value||absent.test(value)||/no disponible en esta simulaci[oó]n/i.test(value))return '—';
+ return value.replace(/,?\s*sin focalidad neurol[oó]gica modelada\.?/i,'').trim().replace(/\.$/,'')||'—';
+}
 const coords=Object.freeze({
  general:[70,44],skin:[27,142],thorax:[70,82],abdomen:[70,137],
  liver:[83,132],spleen:[55,135],renal:[84,151],
@@ -11,7 +16,7 @@ const coords=Object.freeze({
 export function examMissing(text){return !text||absent.test(String(text).trim());}
 function relevantText(text){
  const clean=String(text||'').trim();
- return examMissing(clean)?null:clean;
+ return examMissing(clean)?null:visibleExamFinding(clean);
 }
 function compactText(text,max=104){
  const input=String(text||'').trim();
@@ -33,14 +38,14 @@ export function examinedRegions(patient){
   const methods=[];
   for(const technique of region.techniques){
    const entry=entries[technique];if(!entry)continue;
-   const findings=(entry.rows||[]).map(row=>({organ:row.organ,text:row.text,
+   const findings=(entry.rows||[]).map(row=>({organ:row.organ,text:visibleExamFinding(row.text),
     known:!!relevantText(row.text)}));
    methods.push({id:technique,label:EXAM_TECHNIQUES[technique],findings});
   }
   if(!methods.length)continue;
   const details=methods.flatMap(m=>m.findings.filter(f=>f.known).map(f=>f.text));
   const summary=details.length?compactText(details.slice(0,2).join(' · '),140):
-   'Sin datos específicos modelados';
+   '—';
   sections.push({id:regionId,label:region.label,methods,details,
    status:details.length?'observed':'unmodeled',summary,
    marker:coords[regionId]||null});
@@ -64,7 +69,7 @@ export function progressiveExamImpression(patient){
   pending:Object.keys(EXAM_REGIONS).length-sections.filter(s=>s.id!=='neurological').length,
   findings,
   summary:findings.length?findings.slice(0,4).map(f=>f.region+': '+f.text).join(' · '):
-   sections.length?'Exploración iniciada; no se documentaron hallazgos específicos.':
+   sections.length?'—':
     'Pendiente de exploración.'
  };
 }

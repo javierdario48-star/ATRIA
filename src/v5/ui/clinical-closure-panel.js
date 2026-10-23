@@ -18,7 +18,7 @@ export function closureDecisionHTML(state){
     esc(diagnostic||'Todavía no registrada')+'</strong></div>'+
   (choices.length?
    '<p class="case-close-ready">Seleccioná un destino para evaluar el cierre</p>'+
-   '<div id="caseDestinations" class="case-close-choices">'+destinationButtonsHTML(choices)+'</div>'+
+   '<div id="caseClosureOptions" class="case-close-choices">'+destinationButtonsHTML(choices)+'</div>'+
    '<p class="case-close-note">Las omisiones reducen los puntos sin impedir el intento. Cirugía y UTI deben aceptar la derivación.</p>':
    '<p class="case-close-waiting">El servidor aún no habilita un destino de cierre.</p>'+
    '<p class="case-close-note">Revisá la atención documentada. La lista de seguimiento orienta sin revelar los criterios ocultos de cada caso.</p>'+

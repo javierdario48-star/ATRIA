@@ -8,7 +8,15 @@ test('progress is documented without assuming stages complete or revealing true 
  const s=base();let x=clinicalWorkflow(s);assert(x.steps.every(z=>z.status==='pending'));
  assert.equal(x.cue,null);
  s.patient.intentHistory=[{id:'history'}];x=clinicalWorkflow(s);
- assert.equal(x.steps[0].status,'partial','a single question does not finish anamnesis');assert.equal(x.cue.id,'diagnosis');
+ assert.equal(x.steps[0].status,'partial','a single question does not finish anamnesis');
+ assert.equal(x.cue,null,'nurse must not demand a diagnosis after one question');
+ s.patient.orders=[{id:'hemograma',status:'pending'}];
+ assert.equal(clinicalWorkflow(s).cue,null,'a requested study is not a result');
+ s.patient.orders=[{id:'hemograma',status:'done'}];
+ assert.equal(clinicalWorkflow(s).cue,null,'studies alone are not enough');
+ s.patient.intentHistory.push({id:'history-2'});
+ s.patient.examFindings={general:{general:{rows:[]}},abdomen:{palpation:{rows:[]}}};
+ x=clinicalWorkflow(s);assert.equal(x.cue.id,'diagnosis');
  assert(!JSON.stringify(x).includes('peritonitis'));
 });
 test('moderate nurse asks what to do on measured instability; never orders a specific drug',()=>{

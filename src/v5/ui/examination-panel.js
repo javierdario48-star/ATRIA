@@ -49,12 +49,12 @@ function bodySummary(sections){
 function methodSummary(method){
  const observations=method.findings.filter(f=>f.known);
  return observations.length?observations.map(f=>f.text).join(' · ').slice(0,95)+
-   (observations.map(f=>f.text).join(' · ').length>95?'…':''):'Sin dato específico';
+   (observations.map(f=>f.text).join(' · ').length>95?'…':''):'—';
 }
 function methodDetails(method){
  return `<details class="exam-method" data-exam-method="${esc(method.id)}"><summary>
   <b>${esc(method.label)}</b><span>${esc(methodSummary(method))}</span></summary>
-  <div class="exam-method-body">${method.findings.map(row=>`<p><strong>${esc(row.organ)}:</strong> ${esc(row.known?row.text:'Sin dato específico modelado; no implica normalidad.')}</p>`).join('')}</div></details>`;
+  <div class="exam-method-body">${method.findings.map(row=>`<p><strong>${esc(row.organ)}:</strong> ${esc(row.known?row.text:'—')}</p>`).join('')}</div></details>`;
 }
 export function examFlipHTML(id,region,section,flipped){
  const label=region.label;
@@ -65,9 +65,9 @@ export function examFlipHTML(id,region,section,flipped){
  const methods=section?.methods||[];
  const lines=id==='neurological'?(section?.details||[]).map(x=>'<p>'+esc(x)+'</p>'):
   methods.map(m=>'<p><b>'+esc(m.label)+':</b> '+esc(m.findings.filter(x=>x.known).map(x=>x.text).join(' · ')||
-   'Sin dato específico modelado')+'</p>');
+   '—')+'</p>');
  const back='<span class="exam-flip-back"><b>'+esc(label)+'</b>'+
-  (lines.length?lines.join(''):'<small>Exploración pendiente.</small>')+
+  (lines.length?lines.join(''):'<small>—</small>')+
   '<small class="exam-flip-return">Tocar para volver</small></span>';
  return '<span class="exam-flip-inner">'+front+back+'</span>';
 }
@@ -114,7 +114,7 @@ export function renderExamination(document,p,regionId,flippedRegion=null){
    const detailed=selected.methods.filter(m=>m.findings.some(x=>x.known));
    const withoutDetail=selected.methods.filter(m=>!m.findings.some(x=>x.known));
    const quiet=withoutDetail.length?'<details class="exam-method exam-method-quiet" data-exam-method="unmodeled"><summary>'+
-    withoutDetail.length+' maniobra'+(withoutDetail.length===1?'':'s')+' sin dato específico</summary>'+
+    withoutDetail.length+' maniobra'+(withoutDetail.length===1?'':'s')+' · —</summary>'+
     '<div class="exam-method-body">'+withoutDetail.map(methodDetails).join('')+'</div></details>':'';
    return '<p class="exam-region-summary">'+esc(selected.summary)+'</p>'+
     detailed.map(methodDetails).join('')+quiet;
