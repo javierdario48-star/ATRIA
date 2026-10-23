@@ -157,7 +157,15 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
  const rows=vocabulary.map(item=>({
   ...item,score:Math.max(0,...item.terms.map(x=>rank(query,x)))
  })).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||a.label.localeCompare(b.label,'es'));
- return rows.slice(0,Math.max(0,Math.min(limit,8))).map(x=>({
+ // A spoken prescription must have ONE selectable command even if the
+ // shared dose catalog and a case-specific therapy register the same phrase.
+ // Recognition and actual administration remain owned by speech-router.
+ const seenCommands=new Set(),unique=rows.filter(row=>{
+  const phrase=normalizeClinicalQuery(row.command);
+  if(seenCommands.has(phrase))return false;
+  seenCommands.add(phrase);return true;
+ });
+ return unique.slice(0,Math.max(0,Math.min(limit,8))).map(x=>({
   id:x.id,kind:x.kind,label:x.label,command:x.command,
   replacement:replaceClinicalClause(text,x.command,{mode}),score:x.score
  }));

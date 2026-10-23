@@ -104,3 +104,11 @@ test('every offered nursing command is recognized by the real interpreter in its
   }
  }
 });
+
+test('same canonical medication produces one selectable command across independently registered vocabularies',()=>{
+ const c=context('CIRR-001');
+ const rows=clinicalCompletions('espiron',{...c,mode:'monitor',limit:8});
+ const doses=rows.filter(x=>x.replacement==='espironolactona 100 mg oral');
+ assert.equal(doses.length,1,'canonical spironolactone prescription never duplicates');
+ assert(rows.every((x,i)=>rows.findIndex(y=>y.command.toLowerCase()===x.command.toLowerCase())===i));
+});

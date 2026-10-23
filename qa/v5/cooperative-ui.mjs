@@ -40,7 +40,7 @@ export async function walk(p,lastX=144){
    const hit=document.elementFromPoint(px,py);
    return {x:px,y:py,unobstructed:hit?.id==='game',
     blockingElement:hit?.tagName+'#'+(hit?.id||'')+'.'+(typeof hit?.className==='string'?hit.className:''),
-    viewport:{width:innerWidth,height:innerHeight}};
+    viewport:{width:b.width,height:b.height}};
 
   },aim);
   assert(point.unobstructed,'the intended waypoint must be visible and unobstructed: '+JSON.stringify({point,aim}));
