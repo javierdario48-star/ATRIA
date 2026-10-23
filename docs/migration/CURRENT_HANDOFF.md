@@ -1,5 +1,27 @@
 # ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
+## C5.b.3 — reconciliación de movimiento sin replay (22-10-2026)
+
+**Reporte móvil del usuario:** al caminar en una guardia, a veces el médico retrocede o se teletransporta a una posición antigua y vuelve a recorrer el mismo trayecto. La mensajería entre médicos ya se considera funcional. Prioridad: movimiento correcto con dos jugadores antes de escalar el lobby.
+
+**Causa raíz comprobada en código:** `src/v5/app/world.js::applySharedSpatial()` contenía una regla que, si el actor local acababa de terminar de caminar y llegaba desde PostgreSQL una posición separada más de 3 px, asignaba directamente `player.x/y` a esa posición antigua y ejecutaba `navigation.target(player,...lastMotionIntent.target)`. **Eso reordenaba repetir la ruta completa.** Un segundo efecto era que, al faltar temporalmente paquetes sociales de un compañero, el render cambiaba al estado clínico más antiguo; luego volvía a social y repetía el desplazamiento visual.
+
+**Corrección integrada y sin segundo motor:**
+- `src/v5/clinical/guard-runtime.js`: confirmación `motionReceipts` por médico, números secuenciales monotónicos persistentes con el checkpoint clínico. La autoridad reconoce únicamente destinos aceptados y rechaza órdenes viejas. Soporta checkpoints previos que carecen de `motionReceipts` sin volver a inicializar la guardia.
+- `src/v5/server/durable-guard-authority.js` y `src/v5/server/clinical-http.js`: transporte opcional `motionSequence` por el mismo CAS PostgreSQL; mantiene `motion` array y clientes históricos compatibles. No modifica la fisiología, el mapa ni el sistema médico.
+- `src/v5/social/durable-cooperative-replica.js`: `motion(target,sequence)` y `lastAcknowledgedMotion(actorId)`; nunca rebaja `latestMotionSequence` aunque se confirme el paquete anterior o se reordenen respuestas HTTP. La única cola de comandos médicos permanece serializada.
+- `src/v5/app/application.js`: emite la secuencia original `world.motionIntent().sequence` y entrega el ACK de la autoridad a la reconciliación visual.
+- `src/v5/app/world.js`: eliminada la regla de rebobinar al jugador y recomputar la ruta. Una posición vieja no modifica la predicción local; solo una llegada final con ACK correspondiente puede ajustar una diferencia residual sin generar un nuevo recorrido. Los médicos remotos que ya reciben poses de la sala social no retroceden al snapshot clínico cuando se interrumpe momentáneamente ese canal: mantienen último estado visual y reanudan con datos sociales nuevos. Las posiciones clínicas del servidor conservan todos los permisos de interacciones y medicamentos.
+- `src/v5/app/world.test.js` reproduce caminata terminada, llegada de posición antigua y secuencia vieja/actual; asegura que nunca se repite la ruta. También prueba una lista de 30 jugadores sociales (3 miembros y 27 ajenos) sin contaminación de la guardia privada de cuatro plazas.
+- `src/v5/server/durable-guard-authority.test.js` verifica ACKs monotónicos, rechazo de entradas viejas y persistencia tras reinicio de SQLite. `src/v5/social/durable-cooperative-replica.test.js` prueba respuestas retrasadas, sucesión de secuencias y retención del input más reciente.
+
+**Referencias técnicas verificadas:** código `otclient/src/client/localplayer.cpp` (prewalk/confirmación del servidor), Gabriel Gambetta *Client-Side Prediction and Server Reconciliation*, y guías Valve *Source Multiplayer Networking*. El principio clave es no aplicar un snapshot pasado como si fuera el estado actual del propio jugador; diferenciar predicción local, ACK del servidor e interpolación remota.
+
+**Evidencias:** pruebas dirigidas de reconciliación+servidor+transporte **26/26**, suite V5 **485/485** y build aprobados en el checkpoint anterior al test de aislamiento de 30 presencias; ese nuevo test **12/12** del módulo mundo también aprobó. La CI GitHub del HEAD de código `8b953ea38b40c5f945fe2badfe967b7321387a3d` estaba en cola al consultar; el Preview correspondiente estaba READY. La regresión V4 histórica de checkpoints anteriores estaba verde. **No declarar CI del HEAD verde ni aceptación móvil sin comprobarlas**. Seguir exigiendo comprobación con dos teléfonos reales y RTT/jitter de guardia.
+
+**Escalabilidad:** la guardia clínica actual admite **2–4 médicos**, no 30. El lobby masivo de 30 debe someterse a una prueba de carga propia (conexiones concurrentes, P95/P99 de presencia, payload/usuario y persistencia). 30 sprites sintéticos no demuestran capacidad real de 30 conexiones. Si el polling HTTP completo o el servicio de presencia se satura, estudiar transferencia por eventos, cuotas y difusión por interés/área (AOI) en un checkpoint separado, nunca aumentar la frecuencia de PostgreSQL ni clonar la fisiología. Production, main, V4 y el resto de la clínica se mantienen intactos.
+
+
 ## C5.b.3 — cámara estable y chat rápido entre médicos (22-10-2026)
 
 **Reporte de aceptación:** al escribir en un dispositivo, la pantalla del otro puede desplazarse levemente y el globo o texto del médico puede tardar más de un segundo. El usuario valora el lobby estable y pide comparar técnicas OTClient/Tibia.
