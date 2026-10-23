@@ -45,11 +45,14 @@ try{
   assert.equal((await state()).patient.diagnosis,'','IME confirmation must not save a draft');
   await page.locator('[data-action="save-diagnosis"]').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='peritonitis');
+  assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,
+   'diagnosis modal closes automatically after save');
+  await page.locator('[data-patient-diagnosis]').click();
   await page.locator('[data-action="clear-diagnosis"]').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='');
   await field.fill('apendi');await page.locator('[data-diagnosis="apendicitis aguda"]').click();await field.press('Enter');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='apendicitis aguda');
-  await page.locator('#modalClose').click();
+  assert.equal(await page.locator('#modal').evaluate(el=>el.open),false);
   assert.match(await page.locator('[data-patient-diagnosis]').innerText(),/apendicitis aguda/);
   await page.screenshot({path:out+'/diagnosis-'+name+'.png'});
   await page.locator('[data-patient-diagnosis]').click();assert.equal(await field.inputValue(),'apendicitis aguda');

@@ -385,7 +385,8 @@ export async function createApplication({document,window,content,signal}){
   // only on confirmed state or the doctor's OWN diagnostic impression.
   const workflow=clinicalWorkflow(clinicalState),cue=workflow?.cue,patientId=clinicalState.patient.uid;
   const cueTime=window.performance.now();
-  const canCue=cueTime-lastNurseCueAt>=28000&&cueTime-lastPatientSpeechAt>=12000;
+  const freshPatient=rows.some(row=>row.role==='patient'&&!seenNpcMessages.has(row.id));
+  const canCue=!freshPatient&&cueTime-lastNurseCueAt>=28000&&cueTime-lastPatientSpeechAt>=12000;
   if(cue&&canCue&&!seenNurseCues.has(patientId+':'+cue.id)){
    seenNurseCues.add(patientId+':'+cue.id);lastNurseCueAt=cueTime;
    const message={id:'nurse-guidance:'+patientId+':'+cue.id,

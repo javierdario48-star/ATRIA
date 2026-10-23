@@ -71,7 +71,7 @@ export function routeWardSpeech(text,context={}){
  }
  const focus=context.focusedNpc;
  const recipient=nurseAddress.test(normalized)?'nurse':vegaAddress.test(normalized)?'vega':
-  focus==='vega'?'vega':'patient';
+  focus==='nurse'?'nurse':focus==='vega'?'vega':'patient';
  const patientUid=context.patientUid??null;
  if(recipient!=='nurse')return {recipient,patientUid,intents:context.clinicalEvaluation&&recipient==='patient'&&patientUid?
   [{kind:'history.ask',id:'dialogue',sourceText:original}]:[],original};

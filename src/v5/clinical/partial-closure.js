@@ -19,6 +19,7 @@ const BROAD_DIAGNOSIS=Object.freeze({
 export function diagnosticMultiplier(p,c,cases){
  const value=csDxNorm487(p.diagnosis);
  if(!value)return 0;
+ if(c.id==='CIRR-001'&&/\bcirrosis compensada\b/.test(value))return .6;
  if(csDxMatchesCase487(cases,c.id,p.diagnosis))return 1;
  return BROAD_DIAGNOSIS[c.id]?.test(value)?.6:0;
 }
