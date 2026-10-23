@@ -44,14 +44,15 @@ export function createPatientClinicalOverlay({document,window,cases}){
     'title="'+esc(diagnosisBadgeLabel(cases,impression))+'">'+esc(label)+'</button>';
    setHTML(root,html);
   },
-  position(renderer,hudBottom,dockTop,{obscured=false}={}){
+  position(renderer,hudBottom,dockTop,{obscured=false,isWalkableScreen=null}={}){
    if(!patient||obscured){root.hidden=true;return;}
    const [sx,sy]=renderer.screen(patient.x,patient.y);
    if(sx<0||sx>window.innerWidth||sy<hudBottom||sy>dockTop){root.hidden=true;return;}
    root.hidden=false;
    const rect=root.getBoundingClientRect(),scale=renderer.metrics().scale;
    const placement=positionPatientOverlay({x:sx,y:sy,width:rect.width,height:rect.height,
-    viewportWidth:window.innerWidth,top:hudBottom,bottom:dockTop,scale});
+    viewportWidth:window.innerWidth,top:hudBottom,bottom:dockTop,scale,
+    isWalkableScreen});
    root.style.left=placement.left+'px';
    root.style.top=placement.top+'px';
   },

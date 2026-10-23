@@ -74,7 +74,14 @@ export async function createApplication({document,window,content,signal}){
   renderer.draw(world.presentNurses(presentation.sample(worldSnapshot,alpha)),now);
   patientWheel.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top);
   patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
-   {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard'});
+   {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard',
+    // Read-only collision query from the SAME navigation owner. The badge
+    // cannot intercept a reachable tile when a solid anchor is available.
+    isWalkableScreen:(clientX,clientY)=>{
+     const [worldX,worldY]=renderer.toWorld(clientX,clientY);
+     const [column,row]=world.navigation.tileAt(worldX,worldY);
+     return world.navigation.passable(column,row);
+    }});
  }
  const history=[],seenLobbyMessages=new Set(),seenGuardMessages=new Set(),seenNpcMessages=new Set(),seenNurseCues=new Set(),nurseCueRows=[],fastWardSpeech=new Map();let lastNurseCueAt=-Infinity,lastPatientSpeechAt=-Infinity,selectedLobbyPlayerId=null,selectedLobbyCardState=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}

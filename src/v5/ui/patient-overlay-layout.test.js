@@ -19,3 +19,11 @@ test('tiny landscape can clamp without moving the patient or altering hit-test w
  assert(p.left>=8&&p.left+135<=252);
  assert(p.top>=78&&p.top+29<=163);
 });
+
+test('a known solid bedside region wins over a visible but walkable exterior lane',()=>{
+ const p=positionPatientOverlay({x:144,y:420,width:122,height:30,viewportWidth:694,
+  top:180,bottom:930,scale:1,
+  isWalkableScreen:(cx,cy)=>cx>220&&cy>390&&cy<465});
+ assert(!(p.left>=220&&p.top>=390&&p.top<=465),
+  'prefer a nearby wall/bed region to a path-blocking diagnosis button');
+});
