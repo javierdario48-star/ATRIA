@@ -10,7 +10,7 @@ export function createDurableCooperativeReplica({
  if(!/^[A-Za-z0-9_-]{1,100}$/.test(roomId)||!/^[-a-zA-Z0-9]{32,120}$/.test(clientKey))
   throw Error('invalid durable cooperative credentials');
  const key='atria.v5.durable.pending:'+roomId;
- let disposed=false,current=null,epoch=-1,lastPoll=-Infinity,inflight=null,queuedMotion=null,typing=null,confirmation=null;
+ let disposed=false,current=null,epoch=-1,lastPoll=-Infinity,inflight=null,queuedMotion=null,queuedMotionSequence=null,typing=null,confirmation=null;
  const pending=new Map();
  const clone=x=>structuredClone(x);
  function save(){try{storage?.setItem(key,JSON.stringify([...pending.values()].map(x=>x.envelope)));}catch{}}
@@ -51,8 +51,8 @@ export function createDurableCooperativeReplica({
   if(disposed)return Promise.reject(Error('replica-disposed'));
   if(inflight)return inflight;
   const batch=[...pending.values()].slice(0,16).map(x=>clone(x.envelope));
-  const motion=queuedMotion,typingState=typing,receipt=confirmation;
-  inflight=request('sync',{commands:batch,...(motion?{motion}:{}),
+  const motion=queuedMotion,motionSequence=queuedMotionSequence,typingState=typing,receipt=confirmation;
+  inflight=request('sync',{commands:batch,...(motion?{motion,...(motionSequence!==null?{motionSequence}:{})}:{}),
    ...(typingState!==null?{typing:typingState}:{}),...(receipt?{confirmation:receipt}:{})})
    .then(response=>{
     if(disposed)return null;
@@ -60,7 +60,7 @@ export function createDurableCooperativeReplica({
     // Do not discard motion on a recovering response: the server did not
     // admit new commands, movement or confirmations during catch-up.
     if(!response.recovering){
-     if(queuedMotion===motion)queuedMotion=null;
+     if(queuedMotion===motion){queuedMotion=null;queuedMotionSequence=null;}
      if(confirmation===receipt)confirmation=null;
     }
     return response;
@@ -110,14 +110,22 @@ export function createDurableCooperativeReplica({
     }else synchronize().catch(()=>{/* on next RAF retry same id */});
    });
   },
-  motion(target){
+  motion(target,sequence=null){
    if(!Array.isArray(target)||target.length!==2||!target.every(Number.isFinite))return false;
-   queuedMotion=clone(target);return true;
+   if(sequence!==null&&(!Number.isSafeInteger(sequence)||sequence<1||sequence>1e9))return false;
+   if(queuedMotionSequence!==null&&sequence!==null&&sequence<queuedMotionSequence)return false;
+   queuedMotion=clone(target);queuedMotionSequence=sequence;return true;
   },
   setTyping(value){typing=!!value;},
   confirm(revision,outcomeId){confirmation={revision,outcomeId};},
   read:()=>current?clone(current.clinical):null,
   snapshotSpatial:()=>current?clone(current.spatial):null,
+  lastAcknowledgedMotion(actorId){
+   const receipts=current?.motionReceipts;
+   if(!Array.isArray(receipts))return null; // old checkpoints remain compatible
+   const ack=receipts.find(pair=>Array.isArray(pair)&&pair[0]===actorId)?.[1];
+   return Number.isSafeInteger(ack)&&ack>0?ack:null;
+  },
   catalog:()=>clone(current?.catalog||[]),
   monitorRead(uid){const p=current?.clinical?.patient;
    return p?.uid===uid?{uid,caseEnded:p.caseEnded,ecg:clone(p.ecg),
