@@ -1,6 +1,7 @@
 // Presentation only: accepts confirmed snapshots and emits markup. No executor.
 import {EXAM_TECHNIQUES} from '../clinical/physical-exam.js';
 import {ecgPresentation} from '../clinical/ecg-morphology.js';
+import {monitorAcuity} from './monitor-acuity.js';
 import {confirmedFluidFeedback,fluidFeedbackLabel} from '../clinical/fluid-feedback.js';
 import {diagnosisEditorHTML} from './diagnostic-impression.js';
 import {esc} from './render-content.js';
@@ -24,9 +25,11 @@ export function monitorHTML(patient){
   connected?'Valores medidos · seguimiento continuo':'Última lectura disponible · sin vigilancia continua';
  const ecg=ecgPresentation(patient);
  const trace=ecg.connected&&(ecg.measured||['asystole','ventricular_fibrillation'].includes(ecg.rhythm)&&ecg.rhythmSource==='case-rule');
+ const acuity=monitorAcuity(patient,ecg);
  const metric=(name,value,unit,className)=>'<div class="device-value '+className+'"><span>'+name+'</span><strong>'+value+
   '</strong><small>'+unit+'</small></div>';
- return '<div class="device-top"><span class="device-indicator '+(connected?'active':'')+'"></span><span>'+status+
+ return '<div class="device-top" data-acuity="'+acuity.state+'"><span class="device-indicator '+(connected?'active':'')+'"></span><span>'+status+
+  '</span><strong class="device-acuity" role="status">'+acuity.label+'</strong>'+
   '</span><span class="device-patient">PACIENTE · '+esc(patient.uid)+'</span></div>'+
   '<div class="device-readings" aria-label="Última medición conocida">'+
   metric('FC',shown('hr',Math.round),'lpm','heart')+
@@ -34,7 +37,7 @@ export function monitorHTML(patient){
   metric('PRESIÓN ARTERIAL',measured?shown('sys',Math.round)+'/'+shown('dia',Math.round):'—','mmHg','pressure')+
   metric('FR',shown('rr',Math.round),'rpm','breath')+
   metric('TEMPERATURA',shown('temp',n=>n.toFixed(1)),'°C','temperature')+'</div>'+
-  '<div class="device-trace '+(trace?'live':'idle')+'" aria-label="'+
+  '<div class="device-trace '+(trace?'live':'idle')+'" data-acuity="'+acuity.state+'" aria-label="'+
    (trace?'Trazado orientador; no sustituye un electrocardiograma clínico':'Sin señal continua disponible')+'">'+
   (trace?'<svg viewBox="0 0 560 76" preserveAspectRatio="none" aria-hidden="true"><path id="monitorEcgPath" d=""/></svg>':
    '<div class="device-no-signal">SIN TRAZADO CONTINUO</div>')+'</div>'+

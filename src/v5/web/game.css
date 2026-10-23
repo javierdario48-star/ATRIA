@@ -431,3 +431,14 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 .guard-score-player.leader{border:1px solid #e5c785}
 @media(max-width:430px){.guard-scoreboard{padding:4px 7px;top:calc(70px + env(safe-area-inset-top))}
 .guard-score-metrics{gap:6px;font-size:8px}.guard-score-metrics b{font-size:13px}}
+
+/* Monitor acuity follows actual recorded measurements; zero state is neutral. */
+.device-acuity{margin-left:auto;flex-shrink:0;padding:4px 6px;border-radius:5px;
+ font-weight:800;font-size:9px;letter-spacing:.08em;color:#90aeb6;background:#18313b}
+.device-top[data-acuity="stable"] .device-acuity{color:#80edb4;background:#194336}
+.device-top[data-acuity="warning"] .device-acuity{color:#ffe08a;background:#5c471b}
+.device-top[data-acuity="critical"] .device-acuity{color:#ffb4a8;background:#612b2d}
+.device-trace[data-acuity="warning"] path{stroke:#f6d977;filter:drop-shadow(0 0 3px #ffe08a77)}
+.device-trace[data-acuity="critical"] path{stroke:#ff8d87;filter:drop-shadow(0 0 3px #ff8d8799)}
+.device-top[data-acuity="warning"] .device-indicator{background:#ffcf61;box-shadow:0 0 8px #ffcf6199}
+.device-top[data-acuity="critical"] .device-indicator{background:#ff8881;box-shadow:0 0 8px #ff888199}

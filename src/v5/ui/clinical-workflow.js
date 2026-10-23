@@ -3,6 +3,9 @@
 const normalize=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 function recordedExam(p){return Object.values(p.examFindings||{}).some(x=>Object.keys(x).length)||!!p.glasgow?.eye;}
 function consulted(p,id){return [...(p.consults||[]),...(p.pendingConsults||[])].some(x=>x.id===id);}
+// A service refusal must never create another automatic invitation to ask
+// for exactly the same consultation. User can request a new review explicitly.
+function rejectedConsult(p,id){return (p.consults||[]).some(x=>x.id===id&&x.accepted===false);}
 export function clinicalWorkflow(state){
  const p=state?.patient;if(!p)return null;
  const historyCount=(p.intentHistory||[]).length;
@@ -40,6 +43,8 @@ export function clinicalWorkflow(state){
   else if(diagnosis&&surgicalImpression&&!consulted(p,'cirugia'))
    cue={id:'surgery:'+normalize(diagnosis),text:'Doctor, según su impresión diagnóstica, ¿quiere que avise a cirugía?'};
   else if(diagnosis&&options.length)cue={id:'disposition',text:'Doctor, ya podemos definir cómo continúa el cuidado. ¿Qué destino indica?'};
+  else if(diagnosis&&surgicalImpression&&rejectedConsult(p,'cirugia'))
+   cue=null; // The surgical service already explained what is missing.
   else if(diagnosis&&!therapy&&!treatmentWaiting)cue={id:'plan:'+normalize(diagnosis),text:'Doctor, ya tenemos su impresión diagnóstica. ¿Cómo continuamos el tratamiento?'};
   else if(diagnosis&&therapy&&!options.length&&!treatmentWaiting)cue={id:'reassess',text:'Doctor, ya hay intervenciones registradas. ¿Cómo seguimos con la reevaluación?'};
  }

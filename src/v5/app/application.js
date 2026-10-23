@@ -397,6 +397,11 @@ export async function createApplication({document,window,content,signal}){
   // One contextual nurse, always modest: asks about the next decision based
   // only on confirmed state or the doctor's OWN diagnostic impression.
   const workflow=clinicalWorkflow(clinicalState),cue=workflow?.cue,patientId=clinicalState.patient.uid;
+   // Old guidance is not a medical message: invalidate it as soon as the
+   // authoritative case state changes (especially after a consult refusal).
+   for(let i=nurseCueRows.length-1;i>=0;i--)
+    if(!workflow?.cue||nurseCueRows[i].id!=='nurse-guidance:'+patientId+':'+workflow.cue.id)
+     nurseCueRows.splice(i,1);
    const concluded=!!clinicalState.patient.caseEnded||!!clinicalState.patient.patientDied||
     !!clinicalState.patient.closure?.closed;
    if(concluded){

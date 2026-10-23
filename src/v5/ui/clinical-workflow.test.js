@@ -55,3 +55,16 @@ test('nurse has no new coaching after care was closed or the patient died',()=>{
  s.patient.caseEnded=false;s.patient.patientDied=true;
  assert.equal(clinicalWorkflow(s).cue,null);
 });
+
+test('after a surgical rejection nurse never invites another identical consult or a premature plan',()=>{
+ const s=base();s.patient.diagnosis='apendicitis aguda';
+ assert.equal(clinicalWorkflow(s).cue?.id,'surgery:apendicitis aguda');
+ s.patient.pendingConsults=[{id:'cirugia',status:'pending'}];
+ assert.notEqual(clinicalWorkflow(s).cue?.id,'surgery:apendicitis aguda');
+ s.patient.pendingConsults=[];
+ s.patient.consults=[{id:'cirugia',status:'rejected',accepted:false,
+  advice:'Faltan signos vitales y examen físico dirigido.'}];
+ assert.equal(clinicalWorkflow(s).cue,null,'consult refusal already explains next steps');
+ s.patient.examDone=true;s.patient.lastVitalsKnown={vitals:{sys:110,spo2:99,hr:88}};
+ assert.equal(clinicalWorkflow(s).cue,null,'new request belongs to the clinician');
+});
