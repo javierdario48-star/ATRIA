@@ -51,7 +51,13 @@ try{
   await p.locator('#keyboardToggleButton').click();
  await Promise.all([walk(host),walk(guest,176)]);
  await send(host,'Hola desde anfitriona');
+ await host.waitForFunction(()=>atriaV5.snapshot().player.speechBubble?.text==='Hola desde anfitriona');
+ await guest.waitForFunction(()=>atriaV5.snapshot().others.some(x=>x.name==='Dra. Ana'&&
+  x.speechBubble?.text==='Hola desde anfitriona'),null,{timeout:18000});
  await send(guest,'Hola desde invitado');
+ await guest.waitForFunction(()=>atriaV5.snapshot().player.speechBubble?.text==='Hola desde invitado');
+ await host.waitForFunction(()=>atriaV5.snapshot().others.some(x=>x.name==='Dr. Bruno'&&
+  x.speechBubble?.text==='Hola desde invitado'),null,{timeout:18000});
  const before=await clinical(guest);
  assert.equal(before.room.transcript.length,2);
  stage='close host and continue guest';
