@@ -13,7 +13,9 @@ const coords=Object.freeze({
  liver:[83,132],spleen:[55,135],renal:[84,151],
  perineum:[70,179],pulses:[91,252],neurological:[70,29]
 });
-export function examMissing(text){return !text||absent.test(String(text).trim());}
+export function examMissing(text){const s=String(text||'').trim();
+ return !s||absent.test(s)||/no disponible en esta simulaci[oó]n/i.test(s);
+}
 function relevantText(text){
  const clean=String(text||'').trim();
  return examMissing(clean)?null:visibleExamFinding(clean);

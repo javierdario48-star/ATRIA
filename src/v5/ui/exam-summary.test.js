@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createGuardSession} from '../clinical/guard-session.js';
-import {examinedRegions,progressiveExamImpression,examRegionStatus} from './exam-summary.js';
+import {examinedRegions,progressiveExamImpression,examRegionStatus,examMissing,visibleExamFinding} from './exam-summary.js';
 import {examinationHTML,examFlipHTML} from './examination-panel.js';
 const read=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const content={cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')};
@@ -85,4 +85,10 @@ test('one flip card includes every authorized examined technique without inventi
  assert(!html.includes('Auscultación normal'),'missing findings are not normal');
  assert.equal(f.p().examDone,false,'the flip card does not auto-complete unrelated general exam');
  f.s.dispose();
+});
+
+test('unavailable inspection language renders only an em dash without claiming a clinical finding',()=>{
+ assert.equal(examMissing('—'),true);
+ assert.equal(examMissing('Inspección no disponible en esta simulación'),true);
+ assert.equal(visibleExamFinding('Inspección no disponible en esta simulación'),'—');
 });
