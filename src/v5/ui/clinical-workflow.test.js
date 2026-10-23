@@ -45,3 +45,13 @@ test('eligible destinations prompt a question, not a premature discharge or bypa
  assert.equal(clinicalWorkflow(s).cue,null);
  assert.equal(clinicalWorkflow(s).steps.find(x=>x.id==='destination').status,'done');
 });
+
+test('nurse has no new coaching after care was closed or the patient died',()=>{
+ const s={patient:{uid:'P',intentHistory:[],examFindings:{},orders:[],
+  treatments:[],administrationLog:[],pendingConsults:[],consults:[],
+  pendingTreatments:[],lastVitalsKnown:{vitals:{hr:85,sys:100,spo2:99}},
+  diagnosis:'cirrosis',caseEnded:true,closure:{closed:true}}};
+ assert.equal(clinicalWorkflow(s).cue,null);
+ s.patient.caseEnded=false;s.patient.patientDied=true;
+ assert.equal(clinicalWorkflow(s).cue,null);
+});

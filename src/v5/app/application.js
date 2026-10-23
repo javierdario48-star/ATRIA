@@ -395,10 +395,13 @@ export async function createApplication({document,window,content,signal}){
   // One contextual nurse, always modest: asks about the next decision based
   // only on confirmed state or the doctor's OWN diagnostic impression.
   const workflow=clinicalWorkflow(clinicalState),cue=workflow?.cue,patientId=clinicalState.patient.uid;
+   const concluded=!!clinicalState.patient.caseEnded||!!clinicalState.patient.patientDied||
+    !!clinicalState.patient.closure?.closed;
+   if(concluded)nurseCueRows.length=0;
   const cueTime=window.performance.now();
   const freshPatient=rows.some(row=>row.role==='patient'&&!seenNpcMessages.has(row.id));
   const canCue=!freshPatient&&cueTime-lastNurseCueAt>=28000&&cueTime-lastPatientSpeechAt>=12000;
-  if(cue&&canCue&&!seenNurseCues.has(patientId+':'+cue.id)){
+  if(!concluded&&cue&&canCue&&!seenNurseCues.has(patientId+':'+cue.id)){
    seenNurseCues.add(patientId+':'+cue.id);lastNurseCueAt=cueTime;
    const message={id:'nurse-guidance:'+patientId+':'+cue.id,
     name:'Enfermera',role:'nurse',text:cue.text};
@@ -433,7 +436,19 @@ export async function createApplication({document,window,content,signal}){
   for(const [id,preview] of fastWardSpeech)
    if(ids.has(id)||time-preview.time>15000)fastWardSpeech.delete(id);
   history.length=0;
-  for(const row of [...rows,...nurseCueRows]){
+  // Only a completed clinical receipt authorizes the nurse's final message.
+   const closure=clinicalState.patient.closure,destination=closure?.destination;
+   const closing={
+    observacion:'De acuerdo, queda en observación.',
+    sala:'De acuerdo, preparo la internación en sala.',
+    alta:'De acuerdo, preparo el alta y las indicaciones.',
+    quirofano:'Cirugía aceptó al paciente. Preparo el traslado a quirófano.',
+    uti:'UTI aceptó al paciente. Preparo el traslado.',
+    procedimiento:'El servicio receptor aceptó. Preparo el traslado al procedimiento.'
+   };
+   const farewell=concluded&&closure?.closed&&closing[destination]?{
+    id:'nurse-final:'+patientId+':'+closure.eventId,name:'Enfermera',role:'nurse',text:closing[destination]}:null;
+   for(const row of [...rows,...nurseCueRows,...(farewell?[farewell]:[])]){
    history.push({name:row.name,text:row.text,system:row.role!=='player'});
    const el=document.createElement('div'),who=document.createElement('b');
    el.className='line'+(['patient','nurse'].includes(row.role)?' '+row.role:'');

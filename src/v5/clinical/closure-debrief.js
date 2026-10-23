@@ -1,6 +1,32 @@
 // Compact V4 scoring breakdown adapted to confirmed V5 closure receipts.
 // It NEVER computes or awards XP. The V4 quality evaluator remains the owner.
 import {confirmedClinicalMissteps} from './clinical-risk.js';
+// Confirmed gaps are revealed only inside the final case result.
+function conciseMissing(p,c,q){
+ const answered=new Set((p.intentHistory||[]).map(x=>x.id));
+ const studies=new Set((p.orders||[]).filter(x=>x.status==='done').map(x=>x.id));
+ const performed=new Set((p.administrationLog||[]).filter(x=>x.status!=='pending'&&x.action!=='stop').map(x=>x.id));
+ for(const x of p.treatments||[])if(['done','executed','administered'].includes(x.status))performed.add(x.id);
+ const label=(items,id)=>items?.find(x=>x.id===id)?.label||
+  items?.find(x=>x.id===id)?.reveal||id;
+ const gaps=[];
+ if((q.diagnosis||0)<15||q.diagnosticFactor<1)
+  gaps.push('Precisar la impresión diagnóstica según los hallazgos.');
+ const tx=(c.keyInterventions||[]).filter(x=>!['source_control','surgery'].includes(x)&&!performed.has(x));
+ if((q.treatment||0)<25&&tx.length)
+  gaps.push('Tratamiento: '+tx.slice(0,2).map(id=>label(c.interventions,id)).join(' y ')+'.');
+ const labs=(c.keyStudies||[]).filter(x=>!studies.has(x));
+ if((q.studies||0)<15&&labs.length)
+  gaps.push('Estudios: '+labs.slice(0,2).map(id=>label(c.studies,id)).join(' y ')+'.');
+ const hist=(c.requiredHistory||[]).filter(x=>!answered.has(x));
+ if((q.history||0)<15&&hist.length)
+  gaps.push('Anamnesis: '+hist.slice(0,2).map(id=>label(c.intents,id)).join(' y ')+'.');
+ const examination=[!p.examDone?'Examen físico dirigido':null,
+  !p.lastVitalsKnown?'signos vitales':null,
+  !p.reassessments?'reevaluación':null].filter(Boolean);
+ if((q.safety||0)<25&&examination.length)gaps.push(examination.join(' · ')+'.');
+ return gaps.slice(0,3);
+}
 const labels={diagnosis:'Impresión diagnóstica',history:'Anamnesis',
  safety:'Evaluación y reevaluación',studies:'Estudios relevantes',
  treatment:'Tratamiento y destino',efficiency:'Uso eficiente de recursos'};
@@ -19,14 +45,7 @@ export function createClosureDebrief(p,c,q){
   ...(diagnosisPenalty?[{label:'Ajuste por precisión diagnóstica (factor '+q.diagnosticFactor+')',points:-diagnosisPenalty}]:[]),
   ...(extraDeduction?[{label:'Estudios innecesarios',points:-extraDeduction}]:[]),
   ...(iatrogenicDeduction?[{label:'Efectos adversos confirmados',points:-iatrogenicDeduction}]:[])];
- const missing=[];
- if((q.diagnosis||0)<15||q.diagnosticFactor<1)
-  missing.push('Precisar el diagnóstico presuntivo.');
- if((q.history||0)<15)missing.push('Completar anamnesis relevante y antecedentes.');
- if((q.safety||0)<25)missing.push('Completar examen, signos, reevaluación y destino.');
- if((q.studies||0)<15)missing.push('Completar los estudios pertinentes del caso.');
- if((q.treatment||0)<25)missing.push(c.id==='PERI-SEC-001'?
-  'Control definitivo del foco diferido al equipo quirúrgico receptor.':'Completar las intervenciones recomendadas.');
+ const missing=conciseMissing(p,c,q);
  const adverse=confirmedClinicalMissteps(p,c);
  const unnecessary=[
   ...((q.extraStudies||0)>0?[q.extraStudies+' estudios ajenos a la indicación principal']:[]),

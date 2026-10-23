@@ -59,3 +59,16 @@ test('real 4L harmful fluid contributes adverse penalty to compatible clinical p
   assert.equal(state.closure.quality.score<100,true);
  }finally{s.dispose();}
 });
+
+test('case feedback names actual omitted requirements in three short lines or fewer',async()=>{
+ const s=createGuardSession({roomId:'debrief-specific',mode:'solo',actorId:'doc',actorName:'Doc',
+  patient:{uid:'P',caseId:'CIRR-001'},content,resolveContext:()=>({patientUid:'P'})});
+ try{
+  await s.post({id:'diagnosis',text:'/diagnostico cirrosis'});
+  await s.post({id:'closure',text:'/cierre-parcial observacion'});
+  const d=s.read().patient.closure.debrief;
+  assert(d.missing.length>0&&d.missing.length<=3);
+  assert(d.missing.some(x=>/Espironolactona|Restricción de sodio|Hepatograma|Ecografía|distensión abdominal/i.test(x)));
+  assert(!d.missing.some(x=>/Completar los estudios pertinentes|Completar las intervenciones recomendadas/.test(x)));
+ }finally{s.dispose();}
+});
