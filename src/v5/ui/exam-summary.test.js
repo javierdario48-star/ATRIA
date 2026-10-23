@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createGuardSession} from '../clinical/guard-session.js';
 import {examinedRegions,progressiveExamImpression,examRegionStatus} from './exam-summary.js';
-import {examinationHTML} from './examination-panel.js';
+import {examinationHTML,examFlipHTML} from './examination-panel.js';
 const read=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const content={cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')};
 function setup(caseId='CIRR-001'){
@@ -67,5 +67,21 @@ test('true documented negatives are retained; absent scenario descriptions are n
  const chest=examinedRegions(f.p()).find(x=>x.id==='thorax');
  assert.equal(chest.status,'unmodeled');
  assert(!progressiveExamImpression(f.p()).summary.includes('sin soplos'));
+ f.s.dispose();
+});
+
+
+test('one flip card includes every authorized examined technique without inventing normal results',async()=>{
+ const f=setup('PERI-PBE-001');
+ for(const id of ['inspection','auscultation','percussion','palpation'])
+  await f.send('/examen abdomen '+id);
+ const section=examinedRegions(f.p()).find(s=>s.id==='abdomen');
+ const html=examFlipHTML('abdomen',{label:'Abdomen'},section,true);
+ for(const technique of ['Inspección','Auscultación','Percusión','Palpación'])
+  assert(html.includes(technique));
+ assert(html.includes('Abdomen distendido por ascitis abundante'));
+ assert(html.includes('Sin dato específico modelado'));
+ assert(!html.includes('Auscultación normal'),'missing findings are not normal');
+ assert.equal(f.p().examDone,false,'the flip card does not auto-complete unrelated general exam');
  f.s.dispose();
 });
