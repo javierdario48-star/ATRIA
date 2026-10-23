@@ -264,6 +264,15 @@ export function createWorld(content,profile,checkpoint=null){
   },
   setLevel(level){if(!Number.isSafeInteger(level)||level<1)throw Error('invalid player level');player.level=level;},
   motionIntent:()=>lastMotionIntent?structuredClone(lastMotionIntent):null,
+  seedMovementSequence(confirmed){
+   // A reconnected doctor shares the same durable actor ID, but gets a new
+   // world instance. Start above that actor's *persisted* last command,
+   // otherwise input #1 is discarded forever after a reload.
+   if(phase!=='guard'||authoritative||lastMotionIntent!==null||
+      !Number.isSafeInteger(confirmed)||confirmed<0)return false;
+   motionSequence=Math.max(motionSequence,confirmed);
+   return true;
+  },
   target(x,y){pendingInteraction=null;return targetPlayer(x,y);},
   stop(){pendingInteraction=null;player.path=[];player.pathIndex=0;player.target=null;player.moving=false;
    lastMotionIntent={sequence:++motionSequence,target:[player.x,player.y]};},
