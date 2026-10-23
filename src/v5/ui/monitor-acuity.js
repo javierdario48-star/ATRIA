@@ -8,10 +8,10 @@ export function monitorAcuity(patient,ecg=null){
   return {state:'unknown',label:'SIN VIGILANCIA',reason:''};
  const rhythm=ecg?.rhythm;
  if(patient.patientDied||abnormalRhythms.has(rhythm)||
-  v.sys<85||v.spo2<90||v.hr<40||v.hr>140||v.rr<8||v.rr>=35)
+  v.sys<90||v.spo2<90||v.hr<40||v.hr>=130||v.rr<8||v.rr>=35)
   return {state:'critical',label:'CRÍTICO',reason:'Signos de alarma'};
- if(v.sys<100||v.spo2<94||v.hr<50||v.hr>120||v.rr<10||v.rr>24||
-  Number.isFinite(v.temp)&&(v.temp<35||v.temp>=39))
+ if(v.sys<100||v.spo2<94||v.hr<50||v.hr>=110||v.rr<10||v.rr>=26||
+  Number.isFinite(v.temp)&&(v.temp<35||v.temp>=38))
   return {state:'warning',label:'VIGILANCIA',reason:'Valores fuera de rango'};
  return {state:'stable',label:'ESTABLE',reason:'Sin alarmas en la medición actual'};
 }

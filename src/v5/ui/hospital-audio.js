@@ -1,3 +1,4 @@
+import {monitorAcuity} from './monitor-acuity.js';
 // ATRIA V5 hospital soundscape: V4.13 melody, notification motifs and
 // HR-dependent bedside monitor, all driven by the ONE application RAF.
 // No media asset, clinical state writer, extra timer, or animation loop.
@@ -122,9 +123,10 @@ export function createHospitalAudio({window,storage}){
    nextBeat+=interval;
   }
   lastHR=hr;
-  const high=hr<=40||hr>=150||v.sys<80||v.spo2<88||v.rr<8||v.rr>=36;
-  const medium=hr>=130||v.sys<90||v.spo2<92||v.rr>=30;
-  const severity=high?'high':medium?'medium':'none';
+  // Visual severity and audible alarm use the same original V4-derived
+  // thresholds. This derives sound only, never modifies patient physiology.
+  const visual=monitorAcuity(patient,{rhythm:patient.ecg?.rhythm}).state;
+  const severity=visual==='critical'?'high':visual==='warning'?'medium':'none';
   if(severity!==alarm){alarm=severity;lastAlarm=-Infinity;}
   if(severity!=='none'&&now-lastAlarm>=(severity==='high'?3.6:7)){
    (severity==='high'?[0,.18,.36,.72,.9]:[0,.24,.48]).forEach((offset,i)=>

@@ -6,7 +6,8 @@ const p=(v,connected=true)=>({uid:'P1',caseEnded:false,patientDied:false,
  procedures:{monitor:{connected}},lastVitalsKnown:{vitals:{sys:120,dia:75,hr:82,spo2:98,rr:16,temp:37,...v}}});
 test('monitor acuity uses only true vital measurement and ECG state',()=>{
  assert.equal(monitorAcuity(p({})).state,'stable');
- assert.equal(monitorAcuity(p({hr:130})).state,'warning');
+ assert.equal(monitorAcuity(p({hr:115})).state,'warning');
+ assert.equal(monitorAcuity(p({hr:130})).state,'critical');
  assert.equal(monitorAcuity(p({spo2:89})).state,'critical');
  assert.equal(monitorAcuity(p({sys:77})).state,'critical');
  assert.equal(monitorAcuity(p({hr:0})).state,'critical');
