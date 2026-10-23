@@ -148,7 +148,7 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
  toggle?.addEventListener('click',onToggle);
  host.append(root);
  setOpen(!!(window.matchMedia?.('(pointer: coarse)').matches||window.innerWidth<=700));
- return Object.freeze({isOpen:()=>open,setOpen,advance,element:root,listenerCount:()=>disposed?0:(toggle?3:2),destroy(){
+ return Object.freeze({isOpen:()=>open,setOpen,advance,element:root,listenerCount:()=>disposed?0:(toggle?6:5),destroy(){
   if(disposed)return;disposed=true;
   cancelAccentHold();
   root.removeEventListener('pointerdown',onPointerDown);
