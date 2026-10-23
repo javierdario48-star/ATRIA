@@ -57,7 +57,7 @@ try{
  for(const [i,text] of ['¿Tiene cirrosis?','¿Tiene ascitis?','¿Tuvo fiebre?','¿Notó confusión?'].entries())await send(pages[i%count],text);
  for(const p of pages){await p.locator('#peopleButton').click();await p.locator('[data-action="examination"]').click();await p.locator('#examRegions [data-exam-region="general"]').click();await p.locator('#modalClose').click();}
  await a.locator('#peopleButton').click();await a.locator('[data-action="record-vitals"]').click();await a.locator('[data-action="examination"]').click();await a.locator('#examRegions [data-exam-region="abdomen"]').click();
- for(const t of ['inspection','auscultation','percussion','palpation'])await a.locator('[data-exam-section="'+t+'"]').click();await a.locator('#modalClose').click();
+await a.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.abdomen?.palpation);await a.locator('#modalClose').click();
  await study(pages[1],'pbe_paracentesis');await study(last,'pbe_renal');
  await a.locator('[data-patient-diagnosis]').click();await a.locator('#diagnosisInput').fill('PBE');await a.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();await a.locator('#diagnosisInput').press('Enter');await a.waitForFunction(()=>document.querySelector('#modal')?.open===false);
  await a.waitForFunction(n=>atriaV5.snapshot().clinical.patient.administrationLog.length===n,count===4?3:2,{timeout:45000});

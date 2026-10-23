@@ -51,8 +51,7 @@ try{
  await host.locator('#peopleButton').click();await host.locator('[data-action="record-vitals"]').click();
  await host.locator('[data-action="examination"]').click();
  await host.locator('#examRegions [data-exam-region="abdomen"]').click();
- for(const t of ['inspection','auscultation','percussion','palpation'])
-  await host.locator('[data-exam-section="'+t+'"]').click();
+  await host.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.abdomen?.palpation);
  await host.locator('#modalClose').click();
  await guest.locator('#peopleButton').click();await guest.locator('[data-action="examination"]').click();
  await guest.locator('#examRegions [data-exam-region="general"]').click();await guest.locator('#modalClose').click();
