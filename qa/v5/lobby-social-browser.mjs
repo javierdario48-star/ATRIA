@@ -34,8 +34,18 @@ try{
   });
   return frames;
  });
- const area=await bruno.locator('#game').boundingBox();
- await bruno.locator('#game').click({position:{x:area.width/2,y:area.height/2-100}});
+ // Tap a reachable corridor tile instead of blindly tapping the avatar's
+ // center or a part of the map covered by the in-game keyboard.
+ if(await bruno.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')
+  await bruno.locator('#keyboardToggleButton').click();
+ await bruno.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
+ const tap=await bruno.evaluate(()=>{
+  const r=atriaV5.diagnostics().renderer,b=document.getElementById('game').getBoundingClientRect();
+  return {x:b.left+(496-r.camera.x)*r.scale+r.anchorX,
+   y:b.top+(1200-r.camera.y)*r.scale+r.anchorY};
+ });
+ await bruno.mouse.click(tap.x,tap.y);
+ await bruno.waitForFunction(()=>{const p=atriaV5.snapshot().player;return p.moving||p.pathIndex>0;});
  const frames=await sampled;
  const distances=frames.slice(1).map((p,i)=>Math.hypot(p.x-frames[i].x,p.y-frames[i].y));
  const remoteTravel=distances.reduce((a,b)=>a+b,0),maxRemoteJump=Math.max(0,...distances);

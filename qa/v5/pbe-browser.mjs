@@ -58,7 +58,7 @@ try{
   }
   stage=name+' floating diagnosis';await page.locator('[data-patient-diagnosis]').click();await page.locator('#diagnosisInput').fill('PBE');
   await page.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();await page.locator('#diagnosisInput').press('Enter');
-  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis bacteriana espontánea');await page.locator('#modalClose').click();
+  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis bacteriana espontánea');assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,'diagnostic editor auto-closes');
   stage=name+' real treatment and convalescence';
   await page.waitForFunction(()=>{const p=atriaV5.snapshot().clinical.patient;return p.administrationLog.length===2&&p.procedures.monitor?.connected;},null,{timeout:45000});
   const delivered=await state();assert.equal(delivered.patient.venousAccessCount,1);assert.equal(new Set(delivered.patient.administrationLog.map(x=>x.sourceEventId)).size,2);

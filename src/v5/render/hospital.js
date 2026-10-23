@@ -99,8 +99,12 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
    const seconds=lastCameraTime===null?0:Math.max(0,Math.min(.08,(now-lastCameraTime)/1000));
    const smooth=1-Math.exp(-seconds/.14);
    const dx=target.x-camera.x,dy=target.y-camera.y;
-   if(Math.hypot(dx,dy)*scale>1.5){
+   const remaining=Math.hypot(dx,dy)*scale;
+   if(remaining>1.5){
     camera={x:camera.x+dx*smooth,y:camera.y+dy*smooth};
+   }else if(!target.moving&&remaining>0){
+    // Do not leave the camera a world-tile fraction short forever.
+    camera={x:target.x,y:target.y};
    }
   }
   cameraScene=scene;lastCameraTime=now;

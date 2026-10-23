@@ -35,7 +35,7 @@ try{
   await page.locator('[data-patient-diagnosis]').click();await page.locator('#diagnosisInput').fill('peritonitis');
   await page.locator('[data-diagnosis="Peritonitis secundaria"]').click();await page.locator('#diagnosisInput').press('Enter');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis secundaria');
-  await page.locator('#modalClose').click();
+  assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,'diagnostic editor auto-closes');
   // The original surgeon requires DOCUMENTED shock. Hidden initial vitals
   // cannot substitute for the doctor's actual measurement.
   await page.locator('#peopleButton').click();await page.locator('[data-action="record-vitals"]').click();
