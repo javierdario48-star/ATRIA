@@ -64,7 +64,7 @@ export function createWorld(content,profile,checkpoint=null){
   }
   if(phase==='guard'&&!authoritative)for(const track of nurseRemotes.values())
    sampleRemotePose(track.pose,now);
-  for(const actor of [player,...others])if(actor.speechBubble&&actor.speechBubble.until<=now)delete actor.speechBubble;
+  for(const actor of [player,...others,...nurses,...patients,...(expert?[expert]:[])])if(actor.speechBubble&&actor.speechBubble.until<=now)delete actor.speechBubble;
   if(!authoritative)return;
   if(phase==='guard')for(const other of others)navigation.move(other,dt);
   nursing?.advance(dt);
@@ -152,6 +152,15 @@ export function createWorld(content,profile,checkpoint=null){
    }
    return true;
   },
+  showNpcMessage(role,text,now=Date.now()){
+   if(phase!=='guard'||!['patient','nurse','mentor'].includes(role))return false;
+   // One consistent speaking nurse across the entire guard, never a
+   // fabricated NPC. All messages remain presentation-only.
+   const speaker=role==='patient'?patients[0]:role==='mentor'?expert:nurses[0];
+   if(!speaker)return false;
+   speaker.speechBubble={text:String(text).slice(0,150),until:now+5000,role};
+   return true;
+  },
   showGuardMessage(userId,text,now=Date.now()){
    if(phase!=='guard')return;
    const speaker=userId===profile.id||userId==='local-player'?player:others.find(p=>p.id===userId);
@@ -172,8 +181,11 @@ export function createWorld(content,profile,checkpoint=null){
    // interpolate the committed pose between clinical snapshots. Reuse the
    // same visual timeline as doctors, with the actual nurse speed.
    const activeNurses=new Set();
+   const previousNurses=new Map(nurses.map(n=>[n.id,n]));
    nurses=sharedNurses.map(remote=>{
     const nurse=structuredClone(remote);
+    const priorBubble=previousNurses.get(nurse.id)?.speechBubble;
+    if(priorBubble?.until>now)nurse.speechBubble=priorBubble;
     activeNurses.add(nurse.id);
     let track=nurseRemotes.get(nurse.id);
     if(!track){
