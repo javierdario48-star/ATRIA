@@ -181,10 +181,12 @@ export function correctEverydayBeforeSpace(value,cursor){
  const context=prefix.slice(0,-m[1].length);
  const previous=/([a-záéíóúñü]+)\s*$/i.exec(context)?.[1]||'';
  const inNurseOrder=/^\s*enfermer(?:a|o|ia)\s*[,.:]/i.test(prefix);
- const fix=everydayCorrection(m[1])||
+ const legacyFix=everydayCorrection(m[1]);
+ const fix=legacyFix||
   spanishAutoReplace(m[1],{previous,clinical:inNurseOrder});
  if(!fix||fix.toLowerCase()===m[1].toLowerCase())return null;
- const word=spanishCorrectCase(m[1],fix);
+ // Preserve earlier case conventions for the curated exact typo map.
+ const word=legacyFix||spanishCorrectCase(m[1],fix);
  const start=cursor-m[1].length;
  return {value:String(value).slice(0,start)+word+String(value).slice(cursor),
   cursor:start+word.length};
