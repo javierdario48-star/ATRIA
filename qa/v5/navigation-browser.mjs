@@ -47,7 +47,13 @@ try{
    const y=(startPoint.y+dy-camera.camera.y)*camera.scale+camera.anchorY;
    const hud=await page.locator('#hud').boundingBox(),dock=await page.locator('#chatDock').boundingBox();
    if(x<12||x>box.width-12||y<hud.y+hud.height-box.y+6||y>dock.y-box.y-6)continue;
+   // A legitimate nearby avatar can open its person card. Dismiss it
+   // and test the next navigable tile instead of blocking the canvas.
    await canvas.click({position:{x,y}});
+   if(await page.locator('#modal').evaluate(el=>el.open)){
+    await page.locator('#modalClose').click();
+    continue;
+   }
    try{
     await page.waitForFunction(p=>Math.hypot(
      atriaV5.snapshot().player.x-p.x,atriaV5.snapshot().player.y-p.y)>30,
