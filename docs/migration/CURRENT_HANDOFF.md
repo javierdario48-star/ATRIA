@@ -1,5 +1,23 @@
 # ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
+## ATRIA 5.0 — anamnesis natural y examen físico progresivo (22-10-2026)
+
+**Petición real:** los cinco pacientes jugables no entendían preguntas abiertas habituales ("por qué estás acá", "qué sientes", "qué te pasó", "síntomas", "cómo estás"). El panel de examen físico original por zonas/maniobras era atractivo pero verboso. Se solicitó conservar sus datos clínicos y la silueta, con lectura concisa, hallazgos destacados por zona e impresión general que se construya solo con lo explorado.
+
+**Cambios reales solo en `atria-5.0-core-rebuild-experimental`:**
+- `src/v5/clinical/patient-dialogue.js`: función pura `openHistoryIntent` y canal de preguntas abiertas previo a la coincidencia técnica. Reconoce motivo de consulta con expresiones habituales en español rioplatense/informal y de usted: "por qué estás acá", "qué sientes/sentís", "qué te pasó", "síntomas", "qué síntomas tenés", "cuáles son tus síntomas", "qué te trae por acá", "contame qué te pasa", "en qué puedo ayudarte". `cómo estás` responde sobre estado subjetivo actual. Las respuestas proceden exclusivamente de `PATIENT_PROFILES[caseId].symptoms`, observaciones clínicas vigentes o datos ya existentes. Ninguna pregunta ejecuta terapias, descubre exploración no realizada ni modifica casos.
+- `src/v5/ui/exam-summary.js`: modelo de presentación **puro** construido solo a partir de `patient.examFindings` y `patient.glasgow` confirmados. Agrupa hallazgos por región/maniobra, genera síntesis breve e impresión acumulativa, distingue zona pendiente, sin dato modelado y hallazgos constatados. **"Sin hallazgo específico modelado" nunca se convierte en examen normal** ni en "sin soplos" inventado. No cambió `src/v5/clinical/physical-exam.js` ni el modelo autoritativo.
+- `src/v5/ui/examination-panel.js`: conserva selector anatómico SVG y las 5 técnicas originales. Nuevo panel «Impresión en construcción» y marcas numéricas en la silueta para hallazgos efectivamente explorados; lista anatómica corta con hallazgos clave. Una región con datos destacados muestra resumen y desplegables de cada maniobra. Maniobras sin dato específico se **agrupan en una fila discreta**, expandible para detalles, sin presentar un resultado normal falso. Registro completo del examen permanece disponible.
+- `src/v5/web/game.css`: diseño móvil coherente con el actual, chips de hallazgos, tarjetas compactas de técnicas y categorías pendientes. Presentación sin bucles, cronómetros ni motores clínicos adicionales.
+- `src/v5/clinical/patient-dialogue.test.js`: variantes de interrogatorio frecuentes probadas en cinco casos completos, aislamiento por paciente y seguridad de preguntas desconocidas/compuestas.
+- `src/v5/ui/exam-summary.test.js`: progresión sin exponer datos de regiones no exploradas, persistencia de detalle, negativos relevantes y ausencia de falsos normales.
+- `qa/v5/hospital-interactions-browser.mjs`: regresión de UI para silueta inicialmente vacía, progresión al palpar abdomen, ausencia de filtración previa de esplenomegalia y expansión de palpación.
+
+**Evidencia:** código `b3a48decf5f4397f6fa6080f7247751384bc87e4` con `npm run test:v5` **494/494 aprobadas** y `npm run build:v5` aprobado (118 archivos). Workflow histórico V4.8.7 del mismo SHA **verde**. CI V5 del SHA `b3a48decf` en **cola** al momento de este registro; no declarar navegador/CI totalmente verde antes de su resultado. Preview Vercel de ese SHA READY en `https://night-shift-clinical-6i7dzmy1s-javierdario4878-7324.vercel.app/`. Falta aceptación real en Android y validar lectura/desplegables durante la guardia sin saltos de foco.
+
+**Límites y protección:** solo cinco casos actuales, no se agregó ningún caso, ni se alteraron los datos médicos históricos ni física/Glasgow/criterios de examen/XP/servidor/CAS/PostgreSQL, ni se modificó Production, main o ATRIA 4.8.7. La síntesis clínica es exclusivamente presentación de observaciones confirmadas. **Criterio de aceptación restante:** probar manualmente las preguntas naturales y registrar abdomen/tórax/Glasgow en un teléfono, con hallazgos correctos, negativos específicos conservados y detalle expandible accesible.
+
+
 ## C5.b.3 — reconciliación de movimiento sin replay (22-10-2026)
 
 **Reporte móvil del usuario:** al caminar en una guardia, a veces el médico retrocede o se teletransporta a una posición antigua y vuelve a recorrer el mismo trayecto. La mensajería entre médicos ya se considera funcional. Prioridad: movimiento correcto con dos jugadores antes de escalar el lobby.
