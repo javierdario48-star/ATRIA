@@ -71,9 +71,14 @@ export function clinicalVocabulary({caseId,cases=[],therapies=[],studies=[]}={})
  // Reuse the established dose-specific monitor vocabulary when available.
  for(const value of monitorOrderExamples(caseId,'',{hint:true,limit:12}))
   add(option('known:'+value.id,'order',value.label,value.command));
- for(const item of studyList)
-  add(option('study:'+item.id,'study',item.label,item.aliases?.[0]||item.label,
+ for(const item of studyList){
+  // Single-letter/abbreviated first aliases may be valid search keys but
+  // invalid spoken orders (e.g. `tc`). Prefer a documented full alias.
+  const spoken=item.aliases?.find(a=>normalizeClinicalQuery(a).length>=5)||
+   item.aliases?.[0]||item.label;
+  add(option('study:'+item.id,'study',item.label,spoken,
    [item.id,...(item.aliases||[])]));
+ }
  for(const item of therapies){
   // Do not duplicate an already certified native dose phrase with a
   // weaker undosed alias on the same monitor suggestion row.
@@ -88,7 +93,7 @@ export function clinicalVocabulary({caseId,cases=[],therapies=[],studies=[]}={})
    item.aliases?.[0]||item.label,[item.id,...(item.aliases||[])]));
  for(const [id,label,command,aliases] of [
   ['monitor','Conectar monitor','monitor',['monitorizar','monitoreo']],
-  ['vitals','Registrar signos vitales','signos',['constantes','presion']],
+  ['vitals','Registrar signos vitales','signos vitales',['constantes','presion']],
   ['iv','Colocar vía periférica','una vía',['via','acceso venoso']],
   ['two-iv','Colocar dos vías periféricas','dos vías',['dos accesos','2 vias']],
   ['surgery','Interconsulta con cirugía','interconsulta a cirugía',['cirugia','cirujano']],
