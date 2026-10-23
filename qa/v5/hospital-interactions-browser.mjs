@@ -15,17 +15,18 @@ try{
   await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,n);};
  // The chart is readable from the HUD; recording an exam still requires actual range.
  await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
- await page.locator('.exam-advanced > summary').click();
- await page.locator('[data-exam-section="general"]').focus();await page.waitForTimeout(1200);
- assert.equal(await page.evaluate(()=>document.activeElement?.dataset.examSection),'general','periodic refresh must preserve keyboard focus');
+ await page.locator('#examRegions [data-exam-region="general"]').focus();
+ await page.waitForTimeout(1200);
+ assert.equal(await page.evaluate(()=>document.activeElement?.dataset.examRegion),'general',
+  'periodic refresh must preserve focus on the selected region card');
  let beforePress=(await state()).room.transcript.length;
  await page.keyboard.press('Enter');await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,beforePress);
- const buttonBox=await page.locator('[data-exam-section="general"]').boundingBox();
+ const buttonBox=await page.locator('#examRegions [data-exam-region="general"]').boundingBox();
  beforePress=(await state()).room.transcript.length;
  await page.mouse.move(buttonBox.x+buttonBox.width/2,buttonBox.y+buttonBox.height/2);await page.mouse.down();
  await page.waitForTimeout(1200);await page.mouse.up();
  await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,beforePress);
- await page.locator('[data-exam-section="general"]').click();
+ await page.locator('#examRegions [data-exam-region="general"]').click();
  assert.deepEqual((await state()).patient.examFindings,{});assert(!(await state()).patient.lastVitalsKnown);
  await page.locator('#modalClose').click();await page.locator('#keyboardToggleButton').click();
  await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
