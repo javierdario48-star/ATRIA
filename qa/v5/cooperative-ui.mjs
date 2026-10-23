@@ -37,9 +37,13 @@ export async function walk(p,lastX=144){
   const point=await p.evaluate(({x,y})=>{
    const r=atriaV5.diagnostics().renderer,b=document.getElementById('game').getBoundingClientRect();
    const px=b.x+(x-r.camera.x)*r.scale+r.anchorX,py=b.y+(y-r.camera.y)*r.scale+r.anchorY;
-   return {x:px,y:py,unobstructed:document.elementFromPoint(px,py)?.id==='game'};
+   const hit=document.elementFromPoint(px,py);
+   return {x:px,y:py,unobstructed:hit?.id==='game',
+    blockingElement:hit?.tagName+'#'+(hit?.id||'')+'.'+(typeof hit?.className==='string'?hit.className:''),
+    viewport:{width:innerWidth,height:innerHeight}};
+
   },aim);
-  assert(point.unobstructed,'the intended waypoint must be visible and unobstructed');
+  assert(point.unobstructed,'the intended waypoint must be visible and unobstructed: '+JSON.stringify({point,aim}));
   await p.mouse.click(point.x,point.y);
   if(arrival)try{await arrival;}catch(error){
    error.message+='; '+JSON.stringify({doctor:name,waypoint:[x,y],goal,observed});throw error;

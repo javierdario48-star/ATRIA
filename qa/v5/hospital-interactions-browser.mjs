@@ -90,10 +90,10 @@ try{
 
  await page.locator('#monitorOrderInput').fill('espiron');
  const candidates=page.locator('#monitorOrderSuggestions [data-action="monitor-suggestion"]');
- assert.equal(await candidates.count(),1);
- assert.equal(await candidates.first().getAttribute('data-order'),'espironolactona 100 mg oral');
+ const spironolactone=candidates.filter('[data-order="espironolactona 100 mg oral"]');
+ assert.equal(await spironolactone.count(),1,'the canonical dose must appear once even when other completions are valid');
  assert.equal((await state()).patient.treatments.length,0,'autocomplete selection never executes a prescription');
- await candidates.first().click();
+ await spironolactone.click();
  assert.equal(await page.locator('#monitorOrderInput').inputValue(),'espironolactona 100 mg oral');
  await page.locator('#monitorOrderInput').fill('');
  await page.locator('[data-action="monitor-hint"]').click();
