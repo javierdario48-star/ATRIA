@@ -184,3 +184,36 @@ test('durable guard keeps speech bubbles and interpolated doctors between confir
  assert.equal(w.snapshot().others[0].speechBubble,undefined);
  assert.equal(w.snapshot().patients[0].uid,patient.uid,'visual interpolation does not mutate clinical patient');
 });
+
+
+test('private ward renders only verified room members through lobby social presence, retaining server clinical positions',async()=>{
+ const {createWorld}=await import('./world.js');
+ const w=createWorld({map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')},
+  {id:'A',name:'Ana'});
+ w.enterGuard({mode:'coop',caseId:'PERI-PBE-001',
+  members:[{id:'A',name:'Ana'},{id:'B',name:'Bruno'}],authoritative:false});
+ const self=w.snapshot().player,roomId='private-clinical-room',nurses=w.snapshot().nurses;
+ const remote={id:'B',kind:'doctor',name:'Bruno',x:self.x+50,y:self.y,dir:'E',moving:true,color:'navy'};
+ w.applySharedSpatial({nurses,doctors:[{...self,id:'A'},remote]},1000);
+ const guardPose={userId:'B',name:'Bruno',x:remote.x,y:remote.y,phase:'guard',roomId,
+  motionSession:'B-session',motionEpoch:12345,motionAt:1000,seq:1,dir:'E',moving:true};
+ w.showGuardSocialPlayers([guardPose],roomId,['A','B'],1000);
+ // A doctor in another ward or still in the public lobby is never rendered
+ // as this private ward's occupant.
+ w.showGuardSocialPlayers([{...guardPose,seq:2,x:remote.x+200,roomId:'unrelated'}],roomId,['A','B'],1260);
+ w.showGuardSocialPlayers([{...guardPose,seq:2,x:remote.x+200,phase:'lobby'}],roomId,['A','B'],1260);
+ w.showGuardSocialPlayers([{...guardPose,userId:'C',seq:2,x:remote.x+200}],roomId,['A','B'],1260);
+ assert.equal(w.snapshot().others[0].x,remote.x);
+ const advanced={...guardPose,x:remote.x+45,motionAt:1260,seq:2};
+ w.showGuardSocialPlayers([advanced],roomId,['A','B'],1260);
+ for(let t=1280;t<=1420;t+=20)w.step(.02,t);
+ const before=w.snapshot().others[0].x;
+ assert(before>remote.x&&before<remote.x+45,'the private ward interpolates, not teleports');
+ // A stale clinical checkpoint must not overwrite the social presentation.
+ w.applySharedSpatial({nurses,doctors:[{...self,id:'A'},{...remote,x:remote.x-30}]},1420);
+ assert(Math.abs(w.snapshot().others[0].x-before)<1,'slow CAS response does not pull the remote avatar backward');
+ // The same stored doctor is still server-controlled for validation; the
+ // renderer never manufactures a new clinical patient or treatment.
+ assert.equal(w.snapshot().patients.length,1);
+ assert.equal(w.snapshot().mode,'coop');
+});
