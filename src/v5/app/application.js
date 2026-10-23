@@ -12,6 +12,7 @@ import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecy
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
+import {clinicalWorkflow} from '../ui/clinical-workflow.js';
 import {caseDebriefHTML} from '../ui/case-debrief.js';
 import {createPatientActionWheel} from '../ui/patient-actions.js';
 import {createPatientClinicalOverlay} from '../ui/diagnostic-impression.js';
@@ -61,7 +62,7 @@ export async function createApplication({document,window,content,signal}){
   patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
    {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard'});
  }
- const history=[],seenLobbyMessages=new Set(),seenGuardMessages=new Set(),fastWardSpeech=new Map();let selectedLobbyPlayerId=null,selectedLobbyCardState=null;
+ const history=[],seenLobbyMessages=new Set(),seenGuardMessages=new Set(),seenNpcMessages=new Set(),seenNurseCues=new Set(),nurseCueRows=[],fastWardSpeech=new Map();let selectedLobbyPlayerId=null,selectedLobbyCardState=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
  function renderLobbyMessages(s){
   if(world.snapshot().phase!=='lobby')return;
@@ -233,7 +234,7 @@ export async function createApplication({document,window,content,signal}){
   durableClient=client;replica=client;guardSession=client;lastRemoteRevision=-1;
   if(spatial)world.applySharedSpatial(spatial,window.performance.now(),client.lastAcknowledgedMotion(social.state().user?.id));
   lastClinicalFrame=window.performance.now();clinicalUI.reset();close();
-  seenGuardMessages.clear();fastWardSpeech.clear();resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
+  seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;fastWardSpeech.clear();resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;
   clinicalChanged();updateHud();
  }
@@ -373,7 +374,24 @@ export async function createApplication({document,window,content,signal}){
   if(fastWardSpeech.size>60)fastWardSpeech.delete(fastWardSpeech.keys().next().value);
  }
  function renderGuardCommunication(){
-  if(!guardSession)return;const rows=guardSession.read().messages.slice(-300),fragment=document.createDocumentFragment();
+  if(!guardSession)return;
+  const clinicalState=guardSession.read(),rows=clinicalState.messages.slice(-300),fragment=document.createDocumentFragment();
+  // One contextual nurse, always modest: asks about the next decision based
+  // only on confirmed state or the doctor's OWN diagnostic impression.
+  const workflow=clinicalWorkflow(clinicalState),cue=workflow?.cue,patientId=clinicalState.patient.uid;
+  if(cue&&!seenNurseCues.has(patientId+':'+cue.id)){
+   seenNurseCues.add(patientId+':'+cue.id);
+   const message={id:'nurse-guidance:'+patientId+':'+cue.id,
+    name:'Enfermera',role:'nurse',text:cue.text};
+   nurseCueRows.push(message);
+   if(nurseCueRows.length>14)nurseCueRows.shift();
+   world.showNpcMessage('nurse',message.text,window.performance.now());
+  }
+  for(const row of rows){
+   if(!['patient','nurse','mentor'].includes(row.role)||seenNpcMessages.has(row.id))continue;
+   seenNpcMessages.add(row.id);
+   world.showNpcMessage(row.role,row.text,window.performance.now());
+  }
   const actors=[...world.snapshot().others,world.snapshot().player];
   for(const row of rows){
    if(row.role!=='player'||seenGuardMessages.has(row.id))continue;
@@ -391,9 +409,11 @@ export async function createApplication({document,window,content,signal}){
   for(const [id,preview] of fastWardSpeech)
    if(ids.has(id)||time-preview.time>15000)fastWardSpeech.delete(id);
   history.length=0;
-  for(const row of rows){
+  for(const row of [...rows,...nurseCueRows]){
    history.push({name:row.name,text:row.text,system:row.role!=='player'});
-   const el=document.createElement('div'),who=document.createElement('b');el.className='line';el.dataset.messageId=row.id;
+   const el=document.createElement('div'),who=document.createElement('b');
+   el.className='line'+(['patient','nurse'].includes(row.role)?' '+row.role:'');
+   el.dataset.messageId=row.id;el.dataset.role=row.role;
    who.textContent=row.name+':';el.append(who,document.createTextNode(row.text));fragment.append(el);
   }
   for(const preview of fastWardSpeech.values()){
@@ -449,6 +469,7 @@ export async function createApplication({document,window,content,signal}){
   advanceClinicalTo(window.performance.now());
   if(leaveShared)restoreRoomId=null;
   if(leaveShared)cancelSharedIntent();
+  seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;
   guardSession?.dispose();guardSession=null;replica=null;durableClient=null;coopRoomId=null;coopCaseId=null;lastMotion='';announcedClosure=null;announcedDeathUid=null;pendingPatientAction=null;clinicalUI.reset();patientWheel.hide();patientClinical.hide();close();// Everyone joining the lobby participates in the existing social presence loop;
   // opening Personas or choosing Cooperativo must not be a prerequisite.
   world.enterLobby();socialEnabled=true;resetChat('El lobby está listo para hablar.');
@@ -617,7 +638,7 @@ export async function createApplication({document,window,content,signal}){
     await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),ui('caseChoice').value);return;
    }
    cancelSharedIntent();
-   announcedClosure=null;
+   announcedClosure=null;seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;
    guardSession?.dispose();announcedDeathUid=null;pendingPatientAction=null;clinicalUI.reset();patientWheel.hide();patientClinical.hide();world.enterGuard({mode:draftMode,caseId:ui('caseChoice').value});
    const s=world.snapshot(),roomId='guard-'+window.crypto.randomUUID();
    guardSession=createGuardSession({roomId,mode:s.mode,actorId:'local-player',actorName:profile.name,progress,
