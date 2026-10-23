@@ -1,5 +1,6 @@
 import {createNavigation} from '../engine/navigation.js';
 import {createRemotePose,receiveRemotePose,sampleRemotePose} from '../../social/remote-motion.js';
+import {privateRoomMotionPrefix} from '../social/room-motion-scope.js';
 import {createNurseDispatcher} from '../engine/nurse-dispatcher.js';
 import {hospitalEntities,hitWorldEntity,canInteract,PATIENT_RANGE} from '../engine/interactions.js';
 
@@ -117,10 +118,10 @@ export function createWorld(content,profile,checkpoint=null){
   },
   showGuardSocialPlayers(list,roomId,members,now=Date.now()){
    if(phase!=='guard'||mode!=='coop'||authoritative||!roomId)return false;
-   const allowed=new Set(members);
+   const allowed=new Set(members),scope=privateRoomMotionPrefix(roomId);
    for(const remote of list){
     if(remote.userId===profile.id||!allowed.has(remote.userId)||
-       remote.phase!=='guard'||remote.roomId!==roomId)continue;
+       !String(remote.motionSession||'').startsWith(scope))continue;
     // The durable clinical roster still owns admission. Public presence
     // can only move an already-authorized avatar on the client display.
     const other=others.find(p=>p.id===remote.userId);
