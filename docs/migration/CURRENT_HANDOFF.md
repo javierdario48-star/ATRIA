@@ -1,5 +1,22 @@
 # ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
+## C5.b.3 — cámara estable y chat rápido entre médicos (22-10-2026)
+
+**Reporte de aceptación:** al escribir en un dispositivo, la pantalla del otro puede desplazarse levemente y el globo o texto del médico puede tardar más de un segundo. El usuario valora el lobby estable y pide comparar técnicas OTClient/Tibia.
+
+**Hallazgos en código:**
+- `src/v5/web/game.css` tenía `#chatHistory` con altura variable (32–90 px); cada mensaje podía alterar la parte visible del hospital mientras el teclado o el encuadre estaban activos. Se reserva una altura fija sin cambiar el modo expandido.
+- `src/v5/render/hospital.js` seguía exactamente cada corrección de `world.player` de PostgreSQL, incluso cuando el avatar estaba quieto y se recibió un evento externo. Se aplica únicamente en Cooperativo una estabilización visual acotada (140 ms, banda muerta 1,5 px) a correcciones pequeñas en reposo. Movimiento propio y cambios de escena siguen inmediatamente, sin alterar el actor clínico ni el mapeo toque→mundo.
+- En `src/v5/app/application.js`, los mensajes entre médicos aparecían en el teléfono remoto cuando PostgreSQL confirmaba una revisión clínica. Esa dependencia añadía latencia innecesaria a la presentación del mensaje.
+
+**Cambio limpio y acotado a V5:**
+- `src/v5/social/cooperative-link.js` utiliza el endpoint autenticado y **ya existente** `/api/rooms/:id/messages` (solo miembros de la sala) para un mensaje visual `physician.speech` de hasta 280 caracteres, con un cursor incremental consultado cada 320 ms mediante el RAF existente. Si WebRTC está conectado, emite además un paquete de vista previa inmediato. No se modificó el servidor V4 ni se creó uno nuevo; las consultas sociales son independientes de `/api/clinical` y no autorizan tratamiento alguno.
+- `src/v5/app/application.js` muestra los globos de médicos y agrega el texto del remitente rápidamente al historial, sin esperar a la evolución clínica. `fastWardSpeech` se correlaciona por ID original con `player:<actor>:<message>`, por lo que la confirmación autoritativa posterior sustituye la vista previa sin duplicar el mensaje. No se anticipan respuestas del paciente, medicamentos, estudios ni resultados.
+- `qa/v5/durable-cooperative-browser.mjs` exige un solo mensaje en cada historial después de la confirmación. `src/v5/social/cooperative-link.test.js` comprueba entrega en la primera lectura independiente de sala y deduplicación por cursor.
+
+**Evidencia local:** `npm run build:v5` aprobado; `npm run test:v5` **482/482** aprobadas en el checkpoint de código `8d55981aa9bccca2da455ff973130d708bb6c546`. No equiparar esas pruebas con latencia WAN medida. Confirmar CI de navegador final, estabilidad del encuadre con teclado y chat de 2 teléfonos Android/iPhone. Mantener Production, main, V4, fisiología, terapias, enfermería y XP intactos. La mejora en el usuario aún necesita aceptación física.
+
+
 ## C5.b.3 — enfermería visual fluida, autoridad clínica intacta (22-10-2026)
 
 **Reporte real:** tras separar la sala privada de movimiento social del transporte clínico, el usuario confirmó que los personajes médicos ya caminan bien pero las enfermeras continúan con lag visual. Comparación de código: ATRIA V4 4.8.7 animaba la enfermera localmente a cada cuadro mediante `updateNurse(dt)`; en V5 durable, `world.step()` en réplica no autoritativa no mueve enfermería y `applySharedSpatial()` reemplazaba directamente `nurses` con el estado de la consulta PostgreSQL (aprox. 900 ms). La fisiología y los recibos de enfermería del servidor no resultaron implicados.
