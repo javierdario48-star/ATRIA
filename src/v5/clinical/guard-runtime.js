@@ -35,7 +35,10 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,n
  let lastWallMs=checkpoint?.lastWallMs??nowMs,pendingQuanta=checkpoint?.pendingQuanta??0;
  if(!Number.isSafeInteger(lastWallMs)||lastWallMs<0||!Number.isSafeInteger(pendingQuanta)||pendingQuanta<0)throw Error('invalid runtime checkpoint clock');
  let typingUntilMs=checkpoint?.typingUntilMs??0;
- const claims=new Map(clone(checkpoint?.claims??[])),deliveries=new Map(clone(checkpoint?.deliveries??[]));
+ const claims=new Map(clone(checkpoint?.claims??[])),deliveries=new Map(clone(checkpoint?.deliveries??[])),
+  // Monotonic per-doctor acknowledgement of navigation intents. An older
+  // PostgreSQL response must never trigger a second local traversal.
+  motionReceipts=new Map(clone(checkpoint?.motionReceipts??[]));
  function awardMembers(){const receipt=session.read().patient.closure;
   if(receipt?.closed)for(const member of members)if(!claims.has(member.id))claims.set(member.id,{...clone(receipt),actorId:member.id});
  }
@@ -62,9 +65,15 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,n
    if(!members.some(x=>x.id===actorId))throw Error('not a clinical member');
    const ack=await session.post(envelope,actorId);await session.flush();awardMembers();return ack;
   },
-  motion(actorId,target){
+  motion(actorId,target,sequence=null){
    if(!members.some(x=>x.id===actorId)||!Array.isArray(target)||target.length!==2||!target.every(Number.isFinite))return false;
-   return actorId===hostId?world.target(...target):world.targetRemote(actorId,...target);
+   if(sequence!==null&&(!Number.isSafeInteger(sequence)||sequence<1||sequence>1e9))return false;
+   if(sequence!==null&&sequence<= (motionReceipts.get(actorId)??0))return true;
+   const applied=actorId===hostId?world.target(...target):world.targetRemote(actorId,...target);
+   // A rejected destination remains unacknowledged. It is never silently
+   // certified as reached, nor can a late older command supersede a new one.
+   if(applied&&sequence!==null)motionReceipts.set(actorId,sequence);
+   return applied;
   },
   // Preserve the legacy host keyboard domain with finite expiry. A vanished
   // browser cannot leave the room permanently at the typing rate.
@@ -78,9 +87,9 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,n
    return true;
   },
   view(){const s=world.snapshot();return clone({clinical:session.read(),catalog:session.catalog(),
-   spatial:{nurses:s.nurses,doctors:[{...s.player,id:hostId,kind:'doctor'},...s.others]},claims:[...claims],deliveries:[...deliveries]});},
+   spatial:{nurses:s.nurses,doctors:[{...s.player,id:hostId,kind:'doctor'},...s.others]},motionReceipts:[...motionReceipts],claims:[...claims],deliveries:[...deliveries]});},
   async checkpoint(){await session.flush();return clone({schemaVersion:1,modelVersion:CLINICAL_RUNTIME_VERSION,contentHash,roomId,caseId,members,hostId,
-   lastWallMs,pendingQuanta,typingUntilMs,claims:[...claims],deliveries:[...deliveries],world:world.checkpoint(),session:await session.checkpoint()});},
+   lastWallMs,pendingQuanta,typingUntilMs,motionReceipts:[...motionReceipts],claims:[...claims],deliveries:[...deliveries],world:world.checkpoint(),session:await session.checkpoint()});},
   dispose(){session.dispose();world.enterLobby();}
  });
 }
