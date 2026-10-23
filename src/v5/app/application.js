@@ -499,9 +499,10 @@ export async function createApplication({document,window,content,signal}){
   if(!chatSuggestions)return;
   const patient=autocompleteCaseId;
   const nurseContext=!!guardSession&&!!patient&&(focusedNpc==='nurse'||/^\s*enfermer(?:a|o|ia)\b/i.test(input.value));
-  const suggestions=nurseContext?clinicalCompletions(input.value,{
+  const medical=nurseContext?clinicalCompletions(input.value,{
    caseId:patient,cases:content.cases,therapies:content.therapies
-  }):spellingSuggestions(input.value);
+  }):[];
+  const suggestions=medical.length?medical:spellingSuggestions(input.value);
   const fragment=document.createDocumentFragment();
   for(const item of suggestions){
    const button=document.createElement('button');button.type='button';
