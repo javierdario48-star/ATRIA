@@ -4,6 +4,17 @@ import {readPatientObservations} from './patient-observations.js';
 
 const normalize=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
  .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+// Open-ended bedside questions are a distinct HISTORY intent, not a guessed
+// organ finding. Matching only broad question shapes prevents stealing
+// specific history, pain, orientation or treatment inquiries.
+export function openHistoryIntent(raw){
+ const n=normalize(raw).replace(/^(?:hola|buenas|buenos dias|buen dia|doctor|doctora)\\s+/,'');
+ if(/^(?:por que|porque|para que)\\s+(?:(?:te|lo|la|le)\\s+)?(?:trajeron|trajiste|viniste|vino|esta|estas|se encuentra)\\s+(?:(?:aca|aqui|al hospital|en el hospital|a la guardia|en la guardia))?$/.test(n))return 'reason';
+ if(/^(?:que|cuales|cual)\\s+(?:(?:te|le|se)\\s+)?(?:pasa|paso|sucede|ocurrio|trae|trajo|sientes|sentis|siente|molesta|molestias|sintomas|problema|tienes|tenes|tiene)(?:\\s+(?:ahora|hoy|actualmente|por aqui|aca|para venir|en este momento))?$/.test(n))return 'reason';
+ if(/^(?:sintomas|molestias|motivo de consulta|queja principal|enfermedad actual|que le ocurre|que te ocurre|que le pasa|que te pasa)$/.test(n))return 'reason';
+ if(/^(?:como|que tal)\\s+(?:(?:te|se)\\s+)?(?:encuentras|encuentra|estas|esta|sentis|sientes|siente|andas)(?:\\s+(?:ahora|hoy|desde que llegaste|actualmente))?$/.test(n))return 'status';
+ return null;
+}
 const dimensions=[
  ['place',/que (?:te |le )?duele|(?:donde|en que (?:parte|lugar)) (?:te |le )?(?:duele|molesta)|donde siente|donde es el dolor|^donde$|que dolor|que le molesta/],
  ['onset',/hace cuanto|desde cuando|cuanto (?:tiempo|hace)|cuando (?:empezo|comenzo|arranco)|hace mucho|desde hace/],
@@ -71,6 +82,12 @@ export function executePatientDialogue(p,c,cmd,clock){
   // question/conjunction; a special answer must not swallow another domain.
   const clauses=String(raw||'').split(/[?¿;]+/).flatMap(x=>normalize(x).replace(/^y /,'').split(/\s+(?:y|ademas|tambien)\s+/)).filter(Boolean);
   for(const clause of clauses){
+   const openQuestion=openHistoryIntent(clause);
+   if(openQuestion==='reason'){
+    answers.push(note('interview:symptoms',profile.symptoms,'native.patient-profile.symptoms').answer);
+    context.lastSymptom='chiefComplaint';continue;
+   }
+   if(openQuestion==='status'){answers.push(subjective());continue;}
    if(/como (?:estas|esta|te (?:sientes|sentis)|se siente)|(?:te|se) (?:sientes|sentis|siente) (?:mejor|peor)|estas (?:mejor|peor)|como (?:sigues|sigue|vas)|mejoraste|mejoro/.test(clause)){
     answers.push(subjective());continue;
    }
