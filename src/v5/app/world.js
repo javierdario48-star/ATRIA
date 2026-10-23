@@ -138,6 +138,10 @@ export function createWorld(content,profile,checkpoint=null){
     if(!track){
      track={pose:createRemotePose({x:remote.x,y:remote.y,now,cadence:320,speed:205}),seq:0};
      guardRemotes.set(remote.id,track);
+     // Seed the first *authoritative* point before receiving any later frame.
+     // Without this, the second snapshot is treated as initial and teleports.
+     receiveRemotePose(track.pose,{...remote,now,transport:'http',
+      motionSession:'guard:'+remote.id,motionEpoch:1,seq:++track.seq,motionCadence:320});
     }else{
      // Reuse original V4 visual timeline; never change server-owned positions.
      receiveRemotePose(track.pose,{...remote,now,transport:'http',
