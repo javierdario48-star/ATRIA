@@ -13,7 +13,9 @@ export function createClosureDebrief(p,c,q){
  const extraDeduction=q.extraStudyPenalty??Math.min(5,Math.max(0,q.extraStudies||0)*2);
  const iatrogenicDeduction=Math.max(0,(q.penalty||0)-extraDeduction);
  const diagnosisPenalty=Math.max(0,q.diagnosticPenalty||0);
+ const partialScorePenalty=Math.max(0,q.partialScorePenalty||0);
  const deductions=[
+  ...(partialScorePenalty?[{label:'Límite de puntuación por atención parcial',points:-partialScorePenalty}]:[]),
   ...(diagnosisPenalty?[{label:'Ajuste por precisión diagnóstica (factor '+q.diagnosticFactor+')',points:-diagnosisPenalty}]:[]),
   ...(extraDeduction?[{label:'Estudios innecesarios',points:-extraDeduction}]:[]),
   ...(iatrogenicDeduction?[{label:'Efectos adversos confirmados',points:-iatrogenicDeduction}]:[])];

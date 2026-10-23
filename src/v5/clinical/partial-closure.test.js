@@ -77,3 +77,19 @@ test('compact closure menu exposes attempts with partial work without claiming r
  assert(html.includes('data-destination="quirofano"'));
  assert(!html.includes('El servidor aún no habilita'));
 });
+
+test('partially graded peritonitis respects the native 69-point ceiling in debrief',async()=>{
+ const pbe=content.cases.find(c=>c.id==='PERI-PBE-001');
+ const patient={uid:'P',caseEnded:false,patientDied:false,diagnosis:'PBE',
+  liveVitals:{sys:115,spo2:96},consults:[],administrationLog:[]};
+ const original={score:69,diagnosis:15,history:15,safety:20,studies:15,treatment:15,
+  efficiency:5,extraStudies:0,penalty:0,handoffCredit:0};
+ const part=partialDisposition(patient,pbe,'sala',{quality:original,ready:false},{cases:content.cases});
+ assert.equal(part.ready,true);
+ assert.equal(part.quality.score,69);
+ assert.equal(part.quality.partialScorePenalty,16);
+ const {createClosureDebrief}=await import('./closure-debrief.js');
+ const scorecard=createClosureDebrief(patient,pbe,part.quality);
+ assert.equal(scorecard.score,69);
+ assert(scorecard.deductions.some(x=>x.label.includes('atención parcial')&&x.points===-16));
+});

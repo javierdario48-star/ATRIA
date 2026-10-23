@@ -21,7 +21,7 @@ export function diagnosticMultiplier(p,c,cases){
  if(!value)return 0;
  if(c.id==='CIRR-001'&&/\bcirrosis compensada\b/.test(value))return .6;
  if(csDxMatchesCase487(cases,c.id,p.diagnosis))return 1;
- return BROAD_DIAGNOSIS[c.id]?.test(value)?.6:0;
+ return BROAD_DIAGNOSIS[c.id]?.test(value)?0.6:0;
 }
 export function partialDisposition(p,c,destination,assessment,{cases}={}){
  if(p.caseEnded||p.patientDied)return {ready:false,missing:['Atención ya finalizada.']};
@@ -46,8 +46,17 @@ export function partialDisposition(p,c,destination,assessment,{cases}={}){
   return {ready:false,missing:['El evaluador clínico no confirmó la puntuación.']};
  const factor=diagnosticMultiplier(p,c,cases);
  const raw=original.score,score=Math.max(0,Math.min(100,Math.round(raw*factor)));
+ // Peritonitis V19 clamps non-ready outcomes to <=69. Retain that native
+ // quality cap in the existing scorecard, rather than inventing extra XP.
+ const extraDeduction=original.extraStudyPenalty??
+  Math.min(5,Math.max(0,original.extraStudies||0)*2);
+ const adverseDeduction=Math.max(0,(original.penalty||0)-extraDeduction);
+ const sumBeforeCap=['diagnosis','history','safety','studies','treatment']
+  .reduce((total,id)=>total+Number(original[id]||0),5+Number(original.handoffCredit||0))
+  -extraDeduction-adverseDeduction;
+ const partialScorePenalty=Math.max(0,Math.round(sumBeforeCap-raw));
  const quality={...original,score,diagnosticFactor:factor,scoreBeforeDiagnosticFactor:raw,
-  diagnosticPenalty:raw-score};
+  diagnosticPenalty:raw-score,partialScorePenalty};
  return {ready:true,action:destination,choices:[destination],missing:[],quality,
   partial:!assessment?.ready||factor!==1};
 }
