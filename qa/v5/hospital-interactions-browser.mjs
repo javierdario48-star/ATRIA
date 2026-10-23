@@ -129,8 +129,10 @@ try{
  await choose('abdomen');
  await page.waitForFunction(()=>['inspection','auscultation','palpation','percussion'].every(
   m=>!!atriaV5.snapshot().clinical.patient.examFindings.abdomen?.[m]),null,{timeout:30000});
- assert.match(await page.locator('#examProgressiveSummary').innerText(),/Abdomen.*Ascitis/);
- assert.match(await page.locator('#examBodyFindings').innerText(),/Ascitis/);
+ assert.match(await page.locator('#examProgressiveSummary').innerText(),/Abdomen.*(?:ascitis|distensión por líquido)/i);
+ assert.match(await page.locator('#examBodyFindings').innerText(),/(?:distensión por líquido|matidez compatible con líquido abdominal)/i);
+ assert.match((await state()).patient.examFindings.abdomen.palpation.rows.map(row=>row.text).join(' '),/ascitis moderada/i,
+  'native abdominal palpation must still record the ascitic finding');
  assert.equal(await page.locator('#examBodyMarkers .exam-map-pin').count(),1);
  assert.equal(await page.locator('#examRegions [data-exam-region="abdomen"]').getAttribute('aria-pressed'),'true');
  const abdomenCard=page.locator('#examRegions [data-exam-region="abdomen"] .exam-flip-back');
