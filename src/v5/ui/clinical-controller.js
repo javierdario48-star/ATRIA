@@ -8,13 +8,14 @@ import {ecgPresentation} from '../clinical/ecg-morphology.js';
 import {caseDebriefHTML} from './case-debrief.js';
 import {createEcgSweep} from './ecg-sweep.js';
 import {monitorOrderExamples} from './monitor-order-suggestions.js';
+import {clinicalCompletions,spellingSuggestions} from './clinical-autocomplete.js';
 import {monitorOrderLedger,administeredTreatmentHistory,latestMonitorOrderState} from './monitor-order-ledger.js';
 import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} from './diagnostic-impression.js';
 
 /** UI state only. Every clinical action keeps its explicit UID and uses send().
  * The app owns the dialog and event listener; this controller owns neither timers nor listeners.
  */
-export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[]}){
+export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[],therapies=[]}){
  const ui=id=>document.getElementById(id);
  let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='';
  const ecgSweep=createEcgSweep();
@@ -70,7 +71,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    '<section class="monitor-prescription" aria-label="Indicaciones desde el monitor">'+
     '<div class="monitor-prescription-heading"><label for="monitorOrderInput">INDICAR A ENFERMERÍA</label>'+
     '<button type="button" data-action="monitor-hint" aria-pressed="false">💡 Pistas</button></div>'+
-    '<div class="monitor-order-row"><input id="monitorOrderInput" type="text" autocomplete="off" maxlength="200" '+
+    '<div class="monitor-order-row"><input id="monitorOrderInput" type="text" autocomplete="off" autocorrect="on" spellcheck="true" maxlength="200" '+
      'aria-label="Buscar o escribir orden de enfermería" aria-controls="monitorOrderSuggestions" '+
      'placeholder="Buscar: Ringer, espironolactona…"/>'+
     '<button type="button" class="primary" data-action="monitor-order-submit">Indicar</button></div>'+
@@ -103,9 +104,15 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  function renderOrderSuggestions(){
   const input=ui('monitorOrderInput'),target=ui('monitorOrderSuggestions');
   if(!input||!target)return;
-  const options=monitorOrderExamples(state()?.patient.caseId,input.value,{hint:showOrderHints});
-  setHTML(target,options.map(item=>
-   '<button type="button" data-action="monitor-suggestion" data-order="'+esc(item.command)+'">'+esc(item.label)+'</button>'
+  const active=state(),caseId=active?.patient.caseId;
+  const options=input.value.trim()?
+   clinicalCompletions(input.value,{mode:'monitor',caseId,cases,therapies,
+    studies:session()?.catalog()||[],limit:6}):
+   monitorOrderExamples(caseId,'',{hint:showOrderHints});
+  const spelling=!options.length?spellingSuggestions(input.value):[];
+  setHTML(target,[...options,...spelling].map(item=>
+   '<button type="button" data-action="monitor-suggestion" data-order="'+
+    esc(item.replacement??item.command)+'">'+esc(item.label)+'</button>'
   ).join(''));
   const hint=document.querySelector('[data-action="monitor-hint"]');
   if(hint)hint.setAttribute('aria-pressed',String(showOrderHints));
@@ -268,7 +275,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   switch(b.dataset.action){
    case 'monitor-hint':showOrderHints=!showOrderHints;renderOrderSuggestions();return true;
    case 'monitor-suggestion':{
-    const field=ui('monitorOrderInput');if(field){field.value=b.dataset.order||'';showOrderHints=false;renderOrderSuggestions();field.focus({preventScroll:true});}
+    const field=ui('monitorOrderInput');if(field){field.value=b.dataset.order||'';showOrderHints=false;renderOrderSuggestions();field.focus({preventScroll:true});field.setSelectionRange(field.value.length,field.value.length);}
     return true;
    }
    case 'monitor-order-submit':await sendMonitorOrder();return true;
