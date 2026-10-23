@@ -80,11 +80,11 @@ export function createDurableCooperativeReplica({
    }
   },
   sync:synchronize,
-  maintain(now,{moving=false}={}){
-   // Guard movement has a faster cadence than resting clinical refresh. All
-   // actions still commit through the ONE server authority/CAS write lane.
-   const interval=moving||queuedMotion?300:900;
-   if(disposed||inflight||now-lastPoll<interval)return;
+  maintain(now){
+   // Physiological advancement and CAS writes are NOT a sprite transport.
+   // Movement is visible through the existing room-scoped social presence,
+   // so preserve the proven 900ms clinical cadence and avoid write contention.
+   if(disposed||inflight||now-lastPoll<900)return;
    lastPoll=now;synchronize().catch(()=>{/* retain pending events for next frame */});
   },
   post(envelope){
