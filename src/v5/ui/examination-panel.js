@@ -92,8 +92,15 @@ export function renderExamination(document,p,regionId){
  const observations=neuro?Object.entries(p.glasgow||{}).filter(([k])=>GLASGOW_COMPONENTS[k])
   .map(([k,v])=>'<div class="exam-brief"><b>'+esc(GLASGOW_COMPONENTS[k])+': '+(v.score??'NT')+'</b> · '+esc(v.text)+'</div>').join('')+
    (p.glasgow?'<p>Total: '+(p.glasgow.total==null?'faltan componentes o no son evaluables':p.glasgow.total+'/15')+'</p>':''):
-  selected?.methods.length?
-   '<p class="exam-region-summary">'+esc(selected.summary)+'</p>'+selected.methods.map(methodDetails).join(''):'';
+  selected?.methods.length?(()=>{
+   const detailed=selected.methods.filter(m=>m.findings.some(x=>x.known));
+   const withoutDetail=selected.methods.filter(m=>!m.findings.some(x=>x.known));
+   const quiet=withoutDetail.length?'<details class="exam-method exam-method-quiet" data-exam-method="unmodeled"><summary>'+
+    withoutDetail.length+' maniobra'+(withoutDetail.length===1?'':'s')+' sin dato específico</summary>'+
+    '<div class="exam-method-body">'+withoutDetail.map(methodDetails).join('')+'</div></details>':'';
+   return '<p class="exam-region-summary">'+esc(selected.summary)+'</p>'+
+    detailed.map(methodDetails).join('')+quiet;
+  })():'';
  setHTML(prior,observations||'<p class="note">Esta región todavía no fue explorada.</p>');
  for(const detail of prior.querySelectorAll('[data-exam-method]'))
   detail.open=openMethods.has(detail.dataset.examMethod);
