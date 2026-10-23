@@ -1,5 +1,22 @@
 # ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
+## C5.b.3 — UI de amistades y latencia de guardia (22-10-2026)
+
+**Reporte de aceptación manual:** el usuario confirmó que ya funciona el Cooperativo y que caminar en el lobby va fluido, pero pidió (1) solicitud de amistad visible como la invitación a guardia; (2) contador de notificaciones arriba a la derecha; (3) reducir lag al caminar y hablar al paciente en una guardia; (4) burbujas de mensajes sobre médicos en guardia. El tiempo de respuesta de dispositivos físicos permanece **sin certificar**.
+
+**Correcciones acotadas en la rama experimental:**
+- `src/v5/web/index.html` y `src/v5/web/game.css`: campanita con número de solicitudes entrantes de amistad + invitaciones de guardia; nuevo aviso de amistad con nombre y Aceptar/Rechazar. Mantiene la invitación unilateral existente. `src/v5/social/cooperative-link.js` utiliza la ruta ya existente `/api/friends/decline`; no hay servidor, loop, caché ni esquema nuevo.
+- `src/v5/social/durable-cooperative-replica.js`: el cliente conserva la autoridad única PostgreSQL y los comandos idempotentes; mientras el médico está caminando refresca cada **300 ms** en vez de esperar 900 ms en reposo. Si llega un mensaje de paciente durante otro HTTP sync, se envía justo después de esa respuesta sin dos mutaciones simultáneas ni reintentos descontrolados. Añadida regresión unitaria para ese caso.
+- `src/v5/app/world.js`: usa el interpolador existente para los médicos remotos también en guardia; conserva sus burbujas mientras llegan nuevos snapshots, sembrando desde la primera posición válida para impedir salto inicial. Ninguna posición visual reemplaza las decisiones espaciales del servidor clínico, y no se crea un segundo motor. `src/v5/render/hospital.js` dibuja globos tanto en lobby como en guardia.
+- `src/v5/app/application.js`: convierte mensajes médicos confirmados en burbujas para ambos actores, enlaza la identidad del usuario autenticado con el sprite propio y muestra inmediatamente su propia burbuja al hablar **sin declarar ejecutado ningún acto médico**. El resultado del paciente sigue esperando el ACK real. Las solicitudes de amistad se aceptan/rechazan directamente en el aviso; el botón de notificaciones abre el directorio.
+- `qa/v5/lobby-social-browser.mjs` exige ahora campanita y aviso de amistad a pantalla, además de invitación unilateral; `qa/v5/durable-cooperative-browser.mjs` exige burbujas locales y remotas en una guardia persistente real de dos navegadores.
+- `src/v5/app/world.test.js` y `src/v5/social/durable-cooperative-replica.test.js` cubren continuidad visual, expiración de burbujas, entrega de mensajes durante peticiones en curso, identidad clínica única y deduplicación.
+
+**Evidencia disponible:** compilación V5 aprobada antes del último ajuste de burbuja optimista; suite local `npm run test:v5` **478/478** en el checkpoint inmediatamente anterior al ajuste final; pruebas unitarias dirigidas (13/13), incluidas continuidad de movimiento y flush serial, aprobadas. El ajuste final de burbuja es exclusivamente visual. **No afirmar CI completamente verde del HEAD ni mejora WAN medida en teléfonos** hasta ejecutarla. La CI automatizada se encontraba en cola tras varios pushes, y es obligatoria para aceptación final.
+
+**Protecciones:** Production, main, V4, casos clínicos, evaluación, dosis, enfermería, persistencia PostgreSQL y XP no fueron modificados. La evaluación y acciones siguen autorizadas exclusivamente en servidor. Próximos pasos: validar la prueba de navegador del último HEAD, medir RTT de guardia bajo latencia real con 2 teléfonos y confirmar sin saltos/duplicaciones; ajustar sólo el transporte si persiste el lag.
+
+
 ## C5.b.3 — lobby antiguo recuperado y aceptación unilateral verificada (20-10-2026 UTC)
 
 **Motivo de este checkpoint:** en la aceptación física, el usuario confirmó que el chat ya funcionaba, pero el avatar remoto se teletransportaba y las invitaciones no llegaban/obligaban a invitaciones recíprocas. La clínica durable no era el origen.
