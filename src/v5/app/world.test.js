@@ -278,3 +278,31 @@ test('rejoining a persistent clinical room continues after its last confirmed mo
  client.enterLobby();
  assert.equal(client.seedMovementSequence(99),false);
 });
+
+
+test('30 public presences cannot enter a private 4-member clinical motion scene',async()=>{
+ const {createWorld}=await import('./world.js');
+ const content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
+ const world=createWorld(content,{id:'A',name:'Ana'});
+ const roomId='shared-ward',members=['A','B','C','D'];
+ world.enterGuard({mode:'coop',caseId:'PERI-PBE-001',patientUid:'p',
+  members:members.map(id=>({id,name:id})),authoritative:false});
+ const base=world.snapshot(),doctors=[{...base.player,id:'A'},
+  ...members.slice(1).map((id,i)=>({id,name:id,kind:'doctor',x:base.player.x+i*24,y:base.player.y,dir:'E',moving:false}))];
+ world.applySharedSpatial({nurses:base.nurses,doctors},1000);
+ const original=world.snapshot().others.map(p=>({id:p.id,x:p.x,y:p.y}));
+ const positions=Array.from({length:30},(_,i)=>({
+  userId:i<3?members[i+1]:'outsider-'+i,dir:'E',moving:true,
+  x:base.player.x+40+i*2,y:base.player.y,
+  motionSession:privateRoomMotionPrefix(roomId)+'session-'+i,
+  motionEpoch:100,seq:1,motionCadence:260
+ }));
+ world.showGuardSocialPlayers(positions,roomId,members,1000);
+ assert.deepEqual(world.snapshot().others.map(p=>p.id),['B','C','D']);
+ const next=positions.map((x,i)=>({...x,x:x.x+32,seq:2}));
+ world.showGuardSocialPlayers(next,roomId,members,1260);
+ for(let t=1280;t<=1400;t+=20)world.step(.02,t);
+ assert.equal(world.snapshot().others.length,3,'26 public players never consume clinical actor slots');
+ assert(world.snapshot().others.some((p,i)=>p.x!==original[i].x));
+ assert.equal(world.snapshot().patients[0].uid,'p');
+});
