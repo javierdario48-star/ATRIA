@@ -11,6 +11,11 @@ function conciseMissing(p,c,q){
  const label=(items,id)=>items?.find(x=>x.id===id)?.label||
   items?.find(x=>x.id===id)?.reveal||id;
  const gaps=[];
+ // Surgical source control happens at the accepting OR, not in the ED.
+ // Reflect pending definitive care rather than claiming the doctor failed
+ // to perform an operation in the bedside bay.
+ if(c.id==='PERI-SEC-001'&&p.consults?.some(x=>x.id==='cirugia'&&x.accepted))
+  gaps.push('Control del foco diferido al equipo quirúrgico receptor.');
  if((q.diagnosis||0)<15||q.diagnosticFactor<1)
   gaps.push('Precisar la impresión diagnóstica según los hallazgos.');
  const tx=(c.keyInterventions||[]).filter(x=>!['source_control','surgery'].includes(x)&&!performed.has(x));

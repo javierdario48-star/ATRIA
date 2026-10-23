@@ -41,8 +41,8 @@ test('scorecard reports unearned optional points separately from clinical closur
  const result=createClosureDebrief({uid:'P',administrationLog:[],liveVitals:{}},cirr,q);
  assert.equal(result.score,81);
  assert.equal(result.deductions.length,0);
- assert(result.missing.some(x=>x.includes('anamnesis')));
- assert(result.missing.some(x=>x.includes('estudios')));
+ assert(result.missing.some(x=>/anamnesis/i.test(x)));
+ assert(result.missing.some(x=>/estudios/i.test(x)));
 });
 test('real 4L harmful fluid contributes adverse penalty to compatible clinical policy snapshots',async()=>{
  const s=createGuardSession({roomId:'score-harm',mode:'solo',actorId:'doc',actorName:'Doctor',

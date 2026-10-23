@@ -110,6 +110,7 @@ test('APP surgery: wrong diagnosis rejected, accepted only after correction and 
   assert.equal(f.s.read().patient.consults.at(-1).accepted,false);
   for(const item of ['general','inspection','auscultation','percussion','palpation'])
    await send('/examen '+item);
+  await send('/signos'); // Original surgical acceptance explicitly needs vitals.
   await send('/consulta cirugia');await advance(3.5);
   const accepted=f.s.read().patient.consults.at(-1);
   assert.equal(accepted.status,'done');
