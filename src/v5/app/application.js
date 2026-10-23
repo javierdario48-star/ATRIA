@@ -56,7 +56,7 @@ export async function createApplication({document,window,content,signal}){
     bottom:ui('chatDock').getBoundingClientRect().top-origin-5});
   }else renderer.setPlayableBounds(null);
   const worldSnapshot=world.snapshot();
-  renderer.draw(presentation.sample(worldSnapshot,alpha),now);
+  renderer.draw(world.presentNurses(presentation.sample(worldSnapshot,alpha)),now);
   patientWheel.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top);
   patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
    {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard'});
