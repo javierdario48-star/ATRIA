@@ -131,8 +131,11 @@ export function createWorld(content,profile,checkpoint=null){
       seq:0,source:'social',lastSocialAt:now};
      guardRemotes.set(other.id,track);
     }
-    track.lastSocialAt=now;
+    const lastReceived=track.pose.lastReceive;
     receiveRemotePose(track.pose,{...remote,now,transport:'http',motionCadence:260});
+    // Old cached room presence is not a new movement packet. Once real
+    // packets cease, allow the durable snapshot to recover the display.
+    if(track.pose.lastReceive!==lastReceived)track.lastSocialAt=now;
    }
    return true;
   },
