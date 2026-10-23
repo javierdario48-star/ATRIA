@@ -240,3 +240,16 @@ dialog[data-panel="monitor"] #modalClose{position:relative;z-index:2;margin:0 0 
 #coopInviteNotice strong{font-size:13px;color:#e2fbf0}
 #coopInviteNotice .invite-actions{display:flex;justify-content:center;gap:9px;margin-top:5px}
 #coopInviteNotice .invite-actions button{min-height:40px;min-width:90px}
+
+/* Existing HUD and invitation styling; no independent notification loop. */
+#notificationsButton{position:relative;min-width:36px;padding:5px 7px;display:flex;align-items:center;justify-content:center;gap:2px}
+#notificationsCount:not([hidden]){position:absolute;right:-6px;top:-8px;min-width:18px;height:18px;border-radius:10px;
+ display:grid;place-items:center;padding:0 4px;background:#b43e4b;color:white;border:2px solid #0b2530;font-size:10px;font-weight:800}
+#friendRequestNotice:not([hidden]){position:fixed;z-index:31;top:calc(env(safe-area-inset-top) + 64px);
+ right:max(8px,env(safe-area-inset-right));width:min(92vw,340px);display:grid;gap:5px;
+ padding:11px 12px;text-align:center;border-radius:13px;background:#0b2931f5;color:#ebf8f5;
+ border:1px solid #67c1b4;box-shadow:0 10px 24px #00131c90;font-size:12px}
+#friendRequestNotice strong{color:#e2fbf0}
+#friendRequestNotice .invite-actions{display:flex;gap:9px;justify-content:center;margin-top:5px}
+#friendRequestNotice .invite-actions button{min-height:40px;min-width:90px}
+#coopInviteNotice:not([hidden]) ~ #friendRequestNotice:not([hidden]){top:calc(env(safe-area-inset-top) + 177px)}
