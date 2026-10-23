@@ -93,3 +93,36 @@ test('partially graded peritonitis respects the native 69-point ceiling in debri
  assert.equal(scorecard.score,69);
  assert(scorecard.deductions.some(x=>x.label.includes('atención parcial')&&x.points===-16));
 });
+
+test('APP surgery: wrong diagnosis rejected, accepted only after correction and exam, then one partial closure receipt',async()=>{
+ const f=fixture('APP-001','surgical-partial-flow');
+ const seq={n:0};
+ const send=text=>f.s.post({id:'surg-'+(++seq.n),text});
+ const advance=async seconds=>{f.s.advance(seconds);await f.s.flush();};
+ try{
+  await send('/diagnostico resfriado');
+  assert.equal((await send('/cierre-parcial quirofano')).clinical[0].status,'rejected');
+  await send('/consulta cirugia');await advance(3.5);
+  assert.equal(f.s.read().patient.consults.at(-1).accepted,false);
+  assert.equal(f.s.read().patient.caseEnded,false);
+  await send('/diagnostico apendicitis aguda');
+  await send('/consulta cirugia');await advance(3.5);
+  assert.equal(f.s.read().patient.consults.at(-1).accepted,false);
+  for(const item of ['general','inspection','auscultation','percussion','palpation'])
+   await send('/examen '+item);
+  await send('/consulta cirugia');await advance(3.5);
+  const accepted=f.s.read().patient.consults.at(-1);
+  assert.equal(accepted.status,'done');
+  assert.equal(accepted.accepted,true);
+  assert.equal(f.s.read().patient.caseEnded,false,'accepted consult is not final discharge');
+  const receipt=await send('/cierre-parcial quirofano');
+  assert.equal(receipt.clinical[0].status,'executed');
+  const state=f.s.read();
+  assert.equal(state.patient.closure.destination,'quirofano');
+  assert.equal(state.patient.caseEnded,true);
+  assert.equal(state.progress.receipts.length,1);
+  assert(state.patient.closure.debrief.missing.length<=3);
+  assert.equal((await send('/cierre-parcial quirofano')).clinical[0].status,'rejected');
+  assert.equal(f.s.read().progress.receipts.length,1);
+ }finally{f.s.dispose();}
+});
