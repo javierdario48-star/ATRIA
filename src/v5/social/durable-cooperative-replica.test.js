@@ -4,16 +4,16 @@ import {createDurableCooperativeReplica} from './durable-cooperative-replica.js'
 const roomId='r123',clientKey='a'.repeat(64);
 function harness(){
  const store=new Map(),sent=[],messages=[];
- let revision=0,seq=0,online=true,recovering=false,nextSyncGate=null;
+ let revision=0,seq=0,ackedMotion=0,online=true,recovering=false,nextSyncGate=null;
  const state=()=>({epoch:revision,recovering,
-  clinical:{room:{roomId},patient:{uid:'P',caseId:'PERI-PBE-001',procedures:{},ecg:{},lastVitalsKnown:{}}},catalog:['studies'],spatial:{nurses:[],doctors:[]}});
+  clinical:{room:{roomId},patient:{uid:'P',caseId:'PERI-PBE-001',procedures:{},ecg:{},lastVitalsKnown:{}}},catalog:['studies'],spatial:{nurses:[],doctors:[]},motionReceipts:ackedMotion?[['doctor',ackedMotion]]:[]});
  const window={fetch:async(_url,options)=>{
   const body=JSON.parse(options.body);sent.push(body);
   if(!online)throw Error('offline');
   if(body.action==='start'){return {ok:true,json:async()=>state()};}
   if(body.action==='sync'){
    const gate=nextSyncGate;nextSyncGate=null;if(gate)await gate;
-   revision++;const acks=[];
+   revision++;if(!recovering&&Number.isSafeInteger(body.motionSequence))ackedMotion=Math.max(ackedMotion,body.motionSequence);const acks=[];
    if(!recovering){
     for(const x of body.commands||[]){
      if(!messages.includes(x.id))messages.push(x.id);
@@ -81,5 +81,22 @@ test('a patient utterance arriving during a server read flushes immediately afte
  assert.deepEqual(requests[0].commands,[]);
  assert.deepEqual(requests[1].commands.map(x=>x.id),['speech-during-sync']);
  assert.deepEqual(f.messages,['speech-during-sync']);
+ client.dispose();
+});
+
+test('movement sequences are monotonic while old HTTP requests are delayed',async()=>{
+ const f=harness(),client=f.client();
+ assert.equal(client.motion([11,22],4),true);
+ let release;f.blockNextSync(new Promise(resolve=>release=resolve));
+ const first=client.sync();
+ assert.equal(f.sent.at(-1).motionSequence,4);
+ assert.equal(client.motion([11,22],3),false,'old input cannot replace newest intent');
+ assert.equal(client.motion([33,44],5),true);
+ release();await first;
+ assert.equal(client.lastAcknowledgedMotion('doctor'),4);
+ await client.sync();
+ assert.equal(client.lastAcknowledgedMotion('doctor'),5);
+ assert.deepEqual(f.sent.filter(x=>x.action==='sync').map(x=>x.motionSequence),[4,5]);
+ assert.equal(client.motion([1,2],4),false);
  client.dispose();
 });
