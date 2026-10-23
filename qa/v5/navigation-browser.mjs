@@ -32,10 +32,22 @@ try{
   if(opened)await page.locator('#keyboardToggleButton').click();
   const initial=await page.evaluate(()=>({s:atriaV5.snapshot(),d:atriaV5.diagnostics(),r:resourceMetrics()}));
   assert.equal(initial.d.renderer.images,13);assert.equal(initial.d.raf,1);assert.equal(initial.r.timers,0);
-  // Real canvas pointer events, not direct world mutations.
+  // Real pointer events. The compact keyboard can conceal the old fixed
+  // center click, so project known walkable lobby tiles into the open viewport.
   const canvas=page.locator('#game'),box=await canvas.boundingBox();
-  await canvas.click({position:{x:box.width/2,y:box.height/2-100}});
-  await page.waitForFunction(()=>atriaV5.snapshot().player.moving);
+  let walked=false;
+  for(const [wx,wy] of [[496,1200],[496,1080],[496,960],[400,1100]]){
+   const camera=await page.evaluate(()=>atriaV5.diagnostics().renderer);
+   const x=(wx-camera.camera.x)*camera.scale+camera.anchorX;
+   const y=(wy-camera.camera.y)*camera.scale+camera.anchorY;
+   const hud=await page.locator('#hud').boundingBox(),dock=await page.locator('#chatDock').boundingBox();
+   if(x<15||x>box.width-15||y<hud.y+hud.height-box.y+8||
+    y>dock.y-box.y-8)continue;
+   await canvas.click({position:{x,y}});
+   try{await page.waitForFunction(()=>atriaV5.snapshot().player.moving,null,{timeout:4000});walked=true;break;}
+   catch{/* A wall or occluded tile was selected; try the next exposed point. */}
+  }
+  assert(walked,'a reachable unobscured lobby click must start player navigation');
   await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
   const moved=await page.evaluate(()=>atriaV5.snapshot().player);
   assert(Math.hypot(moved.x-initial.s.player.x,moved.y-initial.s.player.y)>30);
