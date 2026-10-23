@@ -1,3 +1,4 @@
+import {correctEverydayBeforeSpace} from './clinical-autocomplete.js';
 /** ATRIA's in-game keyboard. Text editing only: no clinical executor or chat transport. */
 export const LETTER_ROWS=Object.freeze(['qwertyuiop','asdfghjklñ','zxcvbnm']);
 const SYMBOL_ROWS=Object.freeze([['1','2','3','4','5','6','7','8','9','0'],
@@ -14,7 +15,7 @@ export function editKeyboardText(value,start,end,key,maxLength=500){
  if(text.length-(b-a)+chunk.length>maxLength)return {value:text,cursor:a};
  return {value:text.slice(0,a)+chunk+text.slice(b),cursor:a+chunk.length};
 }
-export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecipient}){
+export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecipient,onNurse}){
  if(!host||!input)throw Error('ATRIA keyboard needs a dock and input');
  const root=document.createElement('section');
  root.id='atriaKeyboard';root.className='atria-keyboard';root.setAttribute('aria-label','Teclado ATRIA');
@@ -27,7 +28,7 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
   key.textContent=label;key.dataset.key=value;
   key.setAttribute('aria-label',value==='backspace'?'Borrar':value==='shift'?'Mayúsculas':
    value==='space'?'Espacio':value==='send'?'Enviar mensaje':value==='recipient'?'Cambiar interlocutor':
-   value==='symbols'?'Alternar símbolos':label);
+   value==='symbols'?'Alternar símbolos':value==='nurse'?'Dirigirse a enfermera':label);
   return key;
  }
  for(let row=0;row<4;row++){const div=document.createElement('div');div.className='atria-key-row row-'+row;root.append(div);rows.push(div);}
@@ -39,11 +40,11 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
    for(const key of rowData[i])rows[i].append(makeKey(shift?key.toUpperCase():key,key));
    if(i===2)rows[i].append(makeKey('⌫','backspace',true));
   }
-  rows[3].replaceChildren(makeKey(symbols?'ABC':'123','symbols',true),makeKey('⚕','recipient',true),
+  rows[3].replaceChildren(makeKey(symbols?'ABC':'123','symbols',true),makeKey('Enf.','nurse',true),
    makeKey('ATRIA','space',true),makeKey('.','.'),makeKey('➤','send',true));
   rows[3].querySelector('[data-key="space"]').classList.add('space');
   rows[3].querySelector('[data-key="send"]').classList.add('send');
-  rows[3].querySelector('[data-key="recipient"]').classList.add('recipient');
+  rows[3].querySelector('[data-key="nurse"]').classList.add('recipient');
   root.hidden=!open;document.body.classList.toggle('atria-keyboard-open',open);
   input.setAttribute('inputmode',open?'none':'text');
   if(toggle){toggle.setAttribute('aria-pressed',String(open));toggle.setAttribute('aria-label',open?'Ocultar teclado ATRIA':'Mostrar teclado ATRIA');}
@@ -54,12 +55,15 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
   const key=button.dataset.key;
   if(key==='send'){onSubmit?.();return;}
   if(key==='recipient'){onRecipient?.();return;}
+  if(key==='nurse'){onNurse?.();return;}
   if(key==='symbols'){symbols=!symbols;shift=false;paint();return;}
   if(key==='shift'){shift=!shift;paint();return;}
   input.focus({preventScroll:true});
   const chosen=shift&&key.length===1?key.toUpperCase():key;
-  const change=editKeyboardText(input.value,input.selectionStart??input.value.length,
-   input.selectionEnd??input.value.length,chosen,input.maxLength>0?input.maxLength:500);
+  const start=input.selectionStart??input.value.length,end=input.selectionEnd??input.value.length;
+  const fix=key==='space'&&start===end?correctEverydayBeforeSpace(input.value,start):null;
+  const change=editKeyboardText(fix?.value??input.value,fix?.cursor??start,
+   fix?.cursor??end,chosen,input.maxLength>0?input.maxLength:500);
   input.value=change.value;input.setSelectionRange(change.cursor,change.cursor);
   input.dispatchEvent(new window.Event('input',{bubbles:true,inputType:'insertText'}));
   if(shift){shift=false;paint();}
