@@ -90,15 +90,9 @@ try{
 
  await page.locator('#monitorOrderInput').fill('espiron');
  const candidates=page.locator('#monitorOrderSuggestions [data-action="monitor-suggestion"]');
- const spironolactone=candidates.filter('[data-order="espironolactona 100 mg oral"]');
- assert.equal(await spironolactone.count(),1,'one canonical dose: '+JSON.stringify(await page.evaluate(()=>({
-  nodes:[...document.querySelectorAll('#monitorOrderSuggestions')].map(el=>({
-   html:el.innerHTML,
-   parent:el.parentElement?.className,
-   count:el.querySelectorAll('[data-action="monitor-suggestion"]').length
-  })),
-  panel:document.querySelector('#modalContent')?.dataset.panel
- }))));
+ // The selector must match the actual button, not its ancestor.
+ const spironolactone=page.locator('#monitorOrderSuggestions [data-action="monitor-suggestion"][data-order="espironolactona 100 mg oral"]');
+ assert.equal(await spironolactone.count(),1,'canonical 100 mg dose is offered exactly once');
  assert.equal((await state()).patient.treatments.length,0,'autocomplete selection never executes a prescription');
  await spironolactone.click();
  assert.equal(await page.locator('#monitorOrderInput').inputValue(),'espironolactona 100 mg oral');
