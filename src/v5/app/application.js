@@ -399,7 +399,13 @@ export async function createApplication({document,window,content,signal}){
   const workflow=clinicalWorkflow(clinicalState),cue=workflow?.cue,patientId=clinicalState.patient.uid;
    const concluded=!!clinicalState.patient.caseEnded||!!clinicalState.patient.patientDied||
     !!clinicalState.patient.closure?.closed;
-   if(concluded)nurseCueRows.length=0;
+   if(concluded){
+    nurseCueRows.length=0;
+    // The final scorecard already presents XP; leave the nurse ONE natural
+    // acknowledgement rather than a generic automated close receipt.
+    for(let i=rows.length-1;i>=0;i--)
+     if(rows[i].role==='nurse'&&/^Caso cerrado\s*:/i.test(rows[i].text))rows.splice(i,1);
+   }
   const cueTime=window.performance.now();
   const freshPatient=rows.some(row=>row.role==='patient'&&!seenNpcMessages.has(row.id));
   const canCue=!freshPatient&&cueTime-lastNurseCueAt>=28000&&cueTime-lastPatientSpeechAt>=12000;
@@ -450,6 +456,11 @@ export async function createApplication({document,window,content,signal}){
    };
    const farewell=concluded&&closure?.closed&&closing[destination]?{
     id:'nurse-final:'+patientId+':'+closure.eventId,name:'Enfermera',role:'nurse',text:closing[destination]}:null;
+   if(farewell&&!seenNpcMessages.has(farewell.id)){
+    seenNpcMessages.add(farewell.id);
+    world.showNpcMessage('nurse',farewell.text,window.performance.now());
+    hospitalAudio.speech('nurse');
+   }
    for(const row of [...rows,...nurseCueRows,...(farewell?[farewell]:[])]){
    history.push({name:row.name,text:row.text,system:row.role!=='player'});
    const el=document.createElement('div'),who=document.createElement('b');
