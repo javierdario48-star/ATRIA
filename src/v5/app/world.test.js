@@ -306,3 +306,19 @@ test('30 public presences cannot enter a private 4-member clinical motion scene'
  assert(world.snapshot().others.some((p,i)=>p.x!==original[i].x));
  assert.equal(world.snapshot().patients[0].uid,'p');
 });
+
+
+test('reload starts movement IDs above the persisted server receipt',async()=>{
+ const {createWorld}=await import('./world.js');
+ const content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
+ const world=createWorld(content,{id:'A',name:'Ana'});
+ world.enterGuard({mode:'coop',caseId:'PERI-PBE-001',patientUid:'p',
+  members:[{id:'A',name:'Ana'},{id:'B',name:'Bruno'}],authoritative:false});
+ const existing=world.snapshot();
+ world.applySharedSpatial({nurses:existing.nurses,doctors:[{...existing.player,id:'A'}]},1000,17);
+ const goal=world.navigation.center(15,42);
+ assert(world.target(goal.x,goal.y));
+ assert.equal(world.motionIntent().sequence,18,'first input after reconnection is accepted by persistent server');
+ world.applySharedSpatial({nurses:existing.nurses,doctors:[{...existing.player,id:'A'}]},1100,15);
+ assert.equal(world.motionIntent().sequence,18,'old ACK cannot decrease the local counter');
+});
