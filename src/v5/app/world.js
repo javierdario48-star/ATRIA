@@ -164,6 +164,10 @@ export function createWorld(content,profile,checkpoint=null){
    return a&&p&&Math.hypot(a.x-p.x,a.y-p.y)<=PATIENT_RANGE?uid:null;},
   applySharedSpatial({nurses:sharedNurses,doctors},now=Date.now(),acknowledgedMotion=null){
    if(authoritative||mode!=='coop')return false;
+   // A browser recovering an existing durable room starts its local counter
+   // after the last sequence committed for this doctor, not at #1 again.
+   if(Number.isSafeInteger(acknowledgedMotion)&&acknowledgedMotion>motionSequence)
+    motionSequence=acknowledgedMotion;
    // The server owns all bedside receipts and nurse journeys. Clients only
    // interpolate the committed pose between clinical snapshots. Reuse the
    // same visual timeline as doctors, with the actual nurse speed.
