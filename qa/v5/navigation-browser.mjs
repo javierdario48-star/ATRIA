@@ -35,8 +35,9 @@ try{
   // Mobile keyboard covers different parts of the canvas. Test actual
   // reachable taps relative to the avatar rather than fixed world pixels.
   const canvas=page.locator('#game'),box=await canvas.boundingBox();
-  if(await page.evaluate(()=>{const d=atriaV5.diagnostics();return d.keyboard.open&&
-   d.renderer.playableBounds&&d.renderer.playableBounds.bottom-d.renderer.playableBounds.top<180;}))
+  // The movement test owns the unobscured viewport. Keyboard layout is
+  // verified separately; close it regardless of the available screen height.
+  if(await page.evaluate(()=>atriaV5.diagnostics().keyboard.open))
    await page.locator('#keyboardToggleButton').click();
   await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
   const startPoint=(await page.evaluate(()=>atriaV5.snapshot())).player;
