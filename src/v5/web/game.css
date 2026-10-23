@@ -380,3 +380,25 @@ dialog[data-panel="case-close"] .panel{padding:16px}
 .case-close-pending{font-size:10px;line-height:1.45;color:#a9cad0;margin:9px 0}
 .case-close-actions{gap:7px;justify-content:stretch}
 .case-close-actions button{flex:1;font-size:11px}
+
+/* One composer assistance strip for native and ATRIA keyboards. Explicit
+   suggestions insert text only; the send/order button stays authoritative. */
+#nurseQuickButton:not([hidden]){display:inline-flex;align-items:center;justify-content:center;
+ flex:0 0 auto;min-width:36px;max-width:38px;padding:3px;font-size:10px;font-weight:800;
+ color:#a5ece0;border-color:#538d84;background:#143940}
+#nurseQuickButton[hidden]{display:none!important}
+.chat-suggestions:not([hidden]){display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;
+ white-space:nowrap;scrollbar-width:thin;padding:4px 5px;margin:0 2px 3px;
+ border:1px solid #50858566;border-radius:9px;background:#0a2730ed;
+ -webkit-overflow-scrolling:touch;max-height:38px}
+.chat-suggestions[hidden]{display:none}
+.chat-suggestions button{flex:0 0 auto;min-height:28px;max-width:175px;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ padding:4px 9px;border-radius:7px;font-size:10px;font-weight:650;
+ background:#193d46;border:1px solid #5c99948c;color:#c6f1e7}
+.chat-suggestions button[data-assist-kind="study"]{color:#c4e4ff;border-color:#5a92a8}
+.chat-suggestions button[data-assist-kind="spelling"]{color:#f1dcad;border-color:#988456}
+.chat-suggestions button:focus-visible{outline:2px solid #b4e7e0}
+body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding:3px 5px}
+@media(max-width:420px){#chatForm{gap:3px}#nurseQuickButton:not([hidden]){min-width:32px;max-width:34px;font-size:9px}
+ #chatForm #recipientButton{max-width:75px}}
