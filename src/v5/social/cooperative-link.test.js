@@ -130,9 +130,11 @@ test('private ward keeps 260ms movement even when its RTC signaling is delayed',
  f.delay('/api/rooms/'+room.id+'/messages');
  a.maintain(1000,{x:400,y:720,dir:'E',moving:true,phase:'guard',roomId:room.id});
  while(!f.held())await Promise.resolve();
- a.maintain(1300,{x:452,y:720,dir:'E',moving:true,phase:'guard',roomId:room.id});
  let value=null;
- for(let i=0;i<100;i++){
+ for(let i=0;i<24;i++){
+  // A real 60Hz frame keeps calling maintain while an earlier presence
+  // request finishes; a single synthetic call may land on that boundary.
+  a.maintain(1300+i*40,{x:452,y:720,dir:'E',moving:true,phase:'guard',roomId:room.id});
   const list=await f.backend.roster();
   value=list.find(x=>x.userId===a.state().user.id);
   if(value?.x===452)break;
