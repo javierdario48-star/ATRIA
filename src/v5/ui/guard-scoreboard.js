@@ -23,9 +23,15 @@ export function guardScoreModelV5({mode='solo',patient=null,players=[],outcomes=
  // A cooperative closure is counted ONCE for the team, never multiplied by players.
  const closure=patient?.closure;
  const completed=!!closure?.closed&&!!patient?.caseEnded&&!patient?.patientDied;
+ const settled=new Map();
+ for(const outcome of outcomes)if(outcome?.closed&&outcome.patientUid)
+  settled.set(outcome.patientUid,outcome);
+ if(completed&&patient.uid&&!settled.has(patient.uid))
+  settled.set(patient.uid,{closed:true,survived:true,score:closure.quality?.score,xp:closure.xp});
+ const done=[...settled.values()];
  return {mode:mode==='apprentice'?'solo':mode,
-  resolved:completed&&Number(closure.quality?.score)>0?1:0,
-  xp:completed?Number(closure.xp)||0:0};
+  resolved:done.filter(x=>x.survived&&Number(x.score)>0).length,
+  xp:done.reduce((n,x)=>n+Math.max(0,Number(x.xp)||0),0)};
 }
 export function guardScoreboardHTML(model){
  if(!model)return '';
