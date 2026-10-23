@@ -57,3 +57,17 @@ export async function walk(p,lastX=144){
  }
 }
 export async function study(p,id){const before=await messageIds(p);await p.locator('#peopleButton').click();await p.locator('[data-action="studies"]').click();await p.locator('#studyChoice').selectOption(id);await p.locator('[data-action="request-study"]').click();await waitForMessage(p,'/estudio '+id,before);}
+
+// Complete patient handoff through public map, patient wheel, and the single
+// canonical closure panel; never invoke clinical engine APIs in browser QA.
+export async function chooseDestination(page,destination){
+ const target=await page.evaluate(()=>{
+  const p=atriaV5.snapshot().patients[0],r=atriaV5.diagnostics().renderer,
+   b=document.getElementById('game').getBoundingClientRect();
+  return {x:b.left+(p.x-r.camera.x)*r.scale+r.anchorX,
+   y:b.top+(p.y-r.camera.y)*r.scale+r.anchorY};
+ });
+ await page.mouse.click(target.x,target.y);
+ await page.locator('#patientWheel [data-patient-action="patient"]').click();
+ await page.locator('#caseClosureOptions [data-destination="'+destination+'"]').click();
+}

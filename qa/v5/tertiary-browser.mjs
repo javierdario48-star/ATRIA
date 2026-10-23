@@ -1,3 +1,4 @@
+import {chooseDestination} from './cooperative-ui.mjs';
 // Public UI only, desktop and Pixel. Snapshot reads never mutate the game.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -85,7 +86,7 @@ try{
   await page.locator('#modalClose').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.eligibleDestinations.includes('uti'));
   await page.screenshot({path:out+'/tertiary-'+name+'-ready.png'});
-  await page.locator('[data-patient-destination="uti"]').click();
+  await chooseDestination(page,'uti');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
   const closed=await state();assert.equal(closed.patient.closure.destination,'uti');
   assert.equal(closed.patient.closure.quality.score,92);assert.equal(closed.progress.xp,124);assert.equal(closed.progress.receipts.length,1);

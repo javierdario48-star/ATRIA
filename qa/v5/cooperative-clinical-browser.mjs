@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
-import {state,clinical,send,walk,study} from './cooperative-ui.mjs';
+import {state,clinical,send,walk,study,chooseDestination} from './cooperative-ui.mjs';
 const h=await browserHarness({apiLatency:35}),second=await h.newBrowser(),out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results';
 await fs.mkdir(out,{recursive:true});const contexts=[],pages=[],errors=[],report={browserProcesses:2,physicalAndroid:false,apiLatencyMs:35};let stage='boot';
 async function invite(caseId){
@@ -67,7 +67,7 @@ await b.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.
  const debuggerSession=await contexts[1].newCDPSession(b);let hostClosed;
  try{
   await debuggerSession.send('Debugger.enable');await debuggerSession.send('Debugger.pause');
-  await a.locator('[data-patient-destination="sala"]').click();await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
+  await chooseDestination(a,'sala');await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
   hostClosed=await clinical(a);await a.screenshot({path:out+'/coop-desktop-closed.png'});
   await a.locator('[data-action="return-lobby"]').click();assert.equal((await state(a)).phase,'guard','host departure must wait for the stalled guest receipt');
  }finally{await debuggerSession.send('Debugger.resume').catch(()=>{});await debuggerSession.detach();}

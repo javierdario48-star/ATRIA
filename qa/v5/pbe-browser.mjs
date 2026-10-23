@@ -1,3 +1,4 @@
+import {chooseDestination} from './cooperative-ui.mjs';
 // Complete public UI journey, no game mutations or accelerated clinical clock.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -72,7 +73,7 @@ try{
   assert.equal(await glasgow(),15,'neurological recovery requires actual physiological improvement');
   await page.locator('#peopleButton').click();await page.locator('[data-action="reassess"]').click();await page.locator('#modalClose').click();
   assert.deepEqual((await state()).eligibleDestinations,['sala']);await page.screenshot({path:out+'/pbe-'+name+'-ready.png'});
-  stage=name+' unique ward closure';await page.locator('[data-patient-destination="sala"]').click();await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
+  stage=name+' unique ward closure';await chooseDestination(page,'sala');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
   const closed=await state();assert.equal(closed.patient.closure.quality.score,100);assert.equal(closed.progress.xp,133);assert.equal(closed.progress.receipts.length,1);
   assert(closed.patient.phys.sourceControlled);assert(!closed.patient.treatments.some(x=>x.id==='source_control'));
   assert.match(await page.locator('#caseResult').innerText(),/100\/100/);await page.screenshot({path:out+'/pbe-'+name+'-closed.png'});

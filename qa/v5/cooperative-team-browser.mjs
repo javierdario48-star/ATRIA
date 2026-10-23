@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
-import {state,clinical,send,walk,study} from './cooperative-ui.mjs';
+import {state,clinical,send,walk,study,chooseDestination} from './cooperative-ui.mjs';
 const count=Number(process.env.V5_COOP_PLAYERS||3);assert([3,4].includes(count));
 const h=await browserHarness({apiLatency:count===3?70:110}),browsers=[h.browser],contexts=[],pages=[],errors=[];
 const names=['Dra. Ana','Dr. Bruno','Dra. Celia','Dr. Diego'].slice(0,count),out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results';
@@ -69,7 +69,7 @@ await a.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.
  for(const [i,p] of pages.entries())await p.screenshot({path:out+'/team-'+count+'-doctor-'+i+'-ready.png'});
  stage='initial terminal snapshot after guest reload must persist XP before host departure';
  await last.reload();await last.waitForFunction(()=>document.body.dataset.boot==='ready');
- await a.locator('[data-patient-destination="sala"]').click();await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
+ await chooseDestination(a,'sala');await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
  const hostClosed=await clinical(a);await a.screenshot({path:out+'/team-'+count+'-doctor-0-closed.png'});
  await a.locator('[data-action="return-lobby"]').click();assert.equal((await state(a)).phase,'guard','host must wait for the colleague still on the title screen');
  await last.locator('#enterButton').click();

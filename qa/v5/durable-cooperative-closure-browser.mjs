@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
-import {clinical,send,walk,study} from './cooperative-ui.mjs';
+import {clinical,send,walk,study,chooseDestination} from './cooperative-ui.mjs';
 
 const h=await browserHarness({apiLatency:Number(process.env.V5_DURABLE_LATENCY||35),durable:true});
 const other=await h.newBrowser(),contexts=[],pages=[],errors=[],acknowledgements=[];
@@ -111,7 +111,7 @@ try{
  await guest.locator('#peopleButton').click();await guest.locator('[data-action="reassess"]').click();
  await guest.locator('#modalClose').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical?.eligibleDestinations.includes('sala'),null,{timeout:80000})));
- await host.locator('[data-patient-destination="sala"]').click();
+ await chooseDestination(host,'sala');
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical?.patient.caseEnded,null,{timeout:60000})));
  const closed=await Promise.all(pages.map(clinical));
  assert.equal(closed[0].patient.uid,uid);assert.equal(closed[1].patient.uid,uid);
