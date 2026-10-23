@@ -218,3 +218,31 @@ test('private ward renders only verified room members through lobby social prese
  assert.equal(w.snapshot().patients.length,1);
  assert.equal(w.snapshot().mode,'coop');
 });
+
+
+test('durable cooperative nurse walks between clinical snapshots without administering locally',async()=>{
+ const {createWorld}=await import('./world.js');
+ const w=createWorld({map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')},
+  {id:'A',name:'Ana'});
+ w.enterGuard({mode:'coop',caseId:'PERI-PBE-001',patientUid:'shared-patient',
+  members:[{id:'A',name:'Ana'},{id:'B',name:'Bruno'}],authoritative:false});
+ const base=w.snapshot(),n=base.nurses[0];
+ const first={...n,moving:true,x:n.x,y:n.y,walkPhase:0};
+ const second={...n,moving:true,x:n.x+84,y:n.y,walkPhase:84/18};
+ const doctors=[{...base.player,id:'A'}];
+ w.applySharedSpatial({nurses:[first,...base.nurses.slice(1)],doctors},1000);
+ w.applySharedSpatial({nurses:[second,...base.nurses.slice(1)],doctors},1900);
+ assert.equal(w.snapshot().nurses[0].x,n.x,
+  'a remote clinical checkpoint must not instantly teleport the nurse');
+ for(let now=1950;now<=2270;now+=40)w.step(.04,now);
+ const middle=w.snapshot().nurses[0];
+ assert(middle.x>n.x&&middle.x<n.x+84,
+  'the nurse interpolates a visible path between authoritative receipts');
+ const before=middle.x;
+ w.applySharedSpatial({nurses:[{...second,x:n.x+108},...base.nurses.slice(1)],doctors},2400);
+ assert.equal(w.snapshot().nurses[0].x,before,
+  'subsequent snapshots keep the rendered nurse pose without snapping');
+ assert.equal(w.nurseJourneySnapshot().length,0,
+  'a nonauthoritative client cannot create nurse journeys or medication receipts');
+ assert.equal(w.snapshot().patients[0].uid,'shared-patient');
+});
