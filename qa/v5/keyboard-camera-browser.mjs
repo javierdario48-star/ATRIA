@@ -100,6 +100,9 @@ try{
  assert.equal(await page.locator('#dieInput').inputValue(),'hols');
  await page.locator('#atriaKeyboard [data-key="space"]').tap();
  assert.equal(await page.locator('#dieInput').inputValue(),'hola ');
+ await page.locator('#atriaKeyboard [data-key="backspace"]').tap();
+ assert.equal(await page.locator('#dieInput').inputValue(),'hols',
+  'backspace immediately after autocorrection restores the intended draft');
  await page.locator('#dieInput').fill('');
 
  // Toggle compares original camera and input mode; map is not scaled or cropped.

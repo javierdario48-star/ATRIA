@@ -21,6 +21,7 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
  root.id='atriaKeyboard';root.className='atria-keyboard';root.setAttribute('aria-label','Teclado ATRIA');
  const toggle=document.getElementById('keyboardToggleButton');
  let open=false,symbols=false,shift=false,disposed=false;
+ let lastAutocorrection=null;
  const rows=[];
  function makeKey(label,value,wide=false){
   const key=document.createElement('button');key.type='button';key.className='atria-key';
@@ -53,6 +54,15 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
  function onKey(event){
   const button=event.target.closest('button[data-key]');if(!button||!root.contains(button))return;
   const key=button.dataset.key;
+  if(key==='backspace'&&lastAutocorrection&&
+   input.value===lastAutocorrection.after&&input.selectionStart===lastAutocorrection.cursor&&
+   input.selectionEnd===lastAutocorrection.cursor){
+   input.value=lastAutocorrection.before;
+   const restored=lastAutocorrection.start;
+   input.setSelectionRange(restored,restored);lastAutocorrection=null;
+   input.dispatchEvent(new window.Event('input',{bubbles:true}));return;
+  }
+  lastAutocorrection=null;
   if(key==='send'){onSubmit?.();return;}
   if(key==='recipient'){onRecipient?.();return;}
   if(key==='nurse'){onNurse?.();return;}
@@ -64,6 +74,9 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
   const fix=key==='space'&&start===end?correctEverydayBeforeSpace(input.value,start):null;
   const change=editKeyboardText(fix?.value??input.value,fix?.cursor??start,
    fix?.cursor??end,chosen,input.maxLength>0?input.maxLength:500);
+  if(fix&&key==='space')lastAutocorrection={
+   before:input.value,after:change.value,cursor:change.cursor,start:start
+  };
   input.value=change.value;input.setSelectionRange(change.cursor,change.cursor);
   input.dispatchEvent(new window.Event('input',{bubbles:true,inputType:'insertText'}));
   if(shift){shift=false;paint();}

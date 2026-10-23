@@ -1,4 +1,5 @@
 import {monitorOrderExamples,normalizeOrderQuery} from './monitor-order-suggestions.js';
+import {spanishWordSuggestions,spanishAutoReplace,spanishCorrectCase} from './spanish-spellcheck.js';
 
 // One case-scoped input aid for the ward composer and bedside monitor.
 // The canonical clinical speech router still validates all submitted text.
@@ -162,9 +163,14 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
 export function spellingSuggestions(text,{limit=3}={}){
  const full=String(text||''),found=/([a-záéíóúñü]+)$/i.exec(full);
  if(!found)return [];
- const word=found[1],replacement=everydayCorrection(word);
- if(!replacement||replacement.toLowerCase()===word.toLowerCase())return [];
- return [{label:replacement,replacement:full.slice(0,-word.length)+replacement,kind:'spelling'}].slice(0,limit);
+ const word=found[1],preceding=full.slice(0,-word.length);
+ const prev=/([a-záéíóúñü]+)\s*$/i.exec(preceding)?.[1]||'';
+ const direct=everydayCorrection(word);
+ const guesses=direct?[direct]:spanishWordSuggestions(word,{previous:prev,limit});
+ return guesses.slice(0,limit).map(x=>{
+  const value=spanishCorrectCase(word,typeof x==='string'?x:x.word);
+  return {label:value,replacement:preceding+value,kind:'spelling'};
+ });
 }
 // Conservative autocorrection for everyday typos only; clinical drug and
 // diagnostic names always require the user to explicitly select a suggestion.
@@ -172,9 +178,14 @@ export function correctEverydayBeforeSpace(value,cursor){
  const prefix=String(value).slice(0,cursor);
  const m=/([a-záéíóúñü]+)$/i.exec(prefix);
  if(!m)return null;
- const fix=everydayCorrection(m[1]);
+ const context=prefix.slice(0,-m[1].length);
+ const previous=/([a-záéíóúñü]+)\s*$/i.exec(context)?.[1]||'';
+ const inNurseOrder=/^\s*enfermer(?:a|o|ia)\s*[,.:]/i.test(prefix);
+ const fix=everydayCorrection(m[1])||
+  spanishAutoReplace(m[1],{previous,clinical:inNurseOrder});
  if(!fix||fix.toLowerCase()===m[1].toLowerCase())return null;
+ const word=spanishCorrectCase(m[1],fix);
  const start=cursor-m[1].length;
- return {value:String(value).slice(0,start)+fix+String(value).slice(cursor),
-  cursor:start+fix.length};
+ return {value:String(value).slice(0,start)+word+String(value).slice(cursor),
+  cursor:start+word.length};
 }

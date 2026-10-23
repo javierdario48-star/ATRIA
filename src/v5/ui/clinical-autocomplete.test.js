@@ -53,6 +53,13 @@ test('safe fuzzy recognition offers corrections without editing a dose or clinic
  assert.deepEqual(spellingSuggestions('hols'),[
   {kind:'spelling',label:'hola',replacement:'hola'}]);
  assert.deepEqual(correctEverydayBeforeSpace('hols',4),{value:'hola',cursor:4});
+ assert.deepEqual(correctEverydayBeforeSpace('te pregintl',11),{value:'te pregunto',cursor:11});
+ assert(spellingSuggestions('te pregintl').some(x=>x.replacement==='te pregunto'),
+  'frequent Spanish conjugation with preceding context must be suggested');
+ assert.equal(correctEverydayBeforeSpace('Enfermera, ceftriaxna',20),null,
+  'nursing commands may not autocorrect medical terms');
+ assert.equal(correctEverydayBeforeSpace('morfins',7),null,
+  'pharmacological terms may only be chosen explicitly');
  assert.equal(correctEverydayBeforeSpace('hola',4),null,'correct words must stay intact');
  assert.equal(correctEverydayBeforeSpace('morfins',7),null,'unrecognized drug names are not guessed');
  assert.deepEqual(spellingSuggestions('Doctor qeu'),[
