@@ -19,12 +19,12 @@ export function clinicalWorkflow(state){
  const ended=!!p.caseEnded||!!p.patientDied||!!p.closure?.closed;
  const surgicalImpression=/apendicit|perforaci|peritonitis secundaria|foco quirurg|abdomen agudo quirurg|isquemia intestinal|obstruccion quirurg/.test(normalize(diagnosis));
  const steps=[
-  {id:'history',label:'Anamnesis',status:assessed?'done':'pending'},
-  {id:'exam',label:'Examen físico',status:examined?'partial':'pending'},
-  {id:'studies',label:'Estudios',status:studies?'done':waiting?'partial':'pending'},
+  {id:'history',label:'Anamnesis',status:assessed?'partial':'pending'},
+  {id:'exam',label:'Examen físico',status:p.examDone?'done':examined?'partial':'pending'},
+  {id:'studies',label:'Estudios',status:studies||waiting?'partial':'pending'},
   {id:'stabilization',label:'Estabilización',status:unstable?'attention':monitored?'review':'pending'},
   {id:'diagnosis',label:'Impresión diagnóstica',status:diagnosis?'done':'pending'},
-  {id:'treatment',label:'Tratamiento',status:therapy?'done':treatmentWaiting?'partial':'pending'},
+  {id:'treatment',label:'Tratamiento',status:therapy&&options.length?'done':therapy||treatmentWaiting?'partial':'pending'},
   {id:'destination',label:'Destino',status:ended?'done':options.length?'ready':'pending'}
  ];
  let cue=null;
