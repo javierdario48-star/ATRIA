@@ -133,6 +133,24 @@ jobs:
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/lobby-social-browser.mjs
 
+  keyboard-autocomplete-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Build V5 game without historical client
+        run: npm run build:v5
+      - name: Pixel keyboard, quick nurse, autocorrection, explicit completion and camera
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/keyboard-camera-browser.mjs
+
   independent-game-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 12
