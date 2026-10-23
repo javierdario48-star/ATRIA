@@ -115,6 +115,27 @@ export function createWorld(content,profile,checkpoint=null){
    const speaker=userId===profile.id?player:others.find(p=>p.id===userId);
    if(speaker)speaker.speechBubble={text:String(text).slice(0,120),until:now+4500};
   },
+  showGuardSocialPlayers(list,roomId,members,now=Date.now()){
+   if(phase!=='guard'||mode!=='coop'||authoritative||!roomId)return false;
+   const allowed=new Set(members);
+   for(const remote of list){
+    if(remote.userId===profile.id||!allowed.has(remote.userId)||
+       remote.phase!=='guard'||remote.roomId!==roomId)continue;
+    // The durable clinical roster still owns admission. Public presence
+    // can only move an already-authorized avatar on the client display.
+    const other=others.find(p=>p.id===remote.userId);
+    if(!other)continue;
+    let track=guardRemotes.get(other.id);
+    if(!track||track.source!=='social'){
+     track={pose:createRemotePose({x:other.x,y:other.y,now,cadence:260,speed:205}),
+      seq:0,source:'social',lastSocialAt:now};
+     guardRemotes.set(other.id,track);
+    }
+    track.lastSocialAt=now;
+    receiveRemotePose(track.pose,{...remote,now,transport:'http',motionCadence:260});
+   }
+   return true;
+  },
   showGuardMessage(userId,text,now=Date.now()){
    if(phase!=='guard')return;
    const speaker=userId===profile.id||userId==='local-player'?player:others.find(p=>p.id===userId);
@@ -135,8 +156,19 @@ export function createWorld(content,profile,checkpoint=null){
     const old=previous.get(remote.id),other=structuredClone(remote);
     if(old?.speechBubble?.until>now)other.speechBubble=old.speechBubble;
     let track=guardRemotes.get(remote.id);
+    if(track?.source==='social'&&now-track.lastSocialAt<1800){
+     // Live private-room presence animates the doctor. Server snapshots
+     // remain authoritative for clinical interactions, not visual poses.
+     Object.assign(other,{x:old?.x??track.pose.x,y:old?.y??track.pose.y,
+      dir:old?.dir??remote.dir,moving:old?.moving??remote.moving,
+      walkPhase:old?.walkPhase??remote.walkPhase});
+     return other;
+    }
+    if(track?.source==='social'){
+     guardRemotes.delete(remote.id);track=null;
+    }
     if(!track){
-     track={pose:createRemotePose({x:remote.x,y:remote.y,now,cadence:320,speed:205}),seq:0};
+     track={pose:createRemotePose({x:remote.x,y:remote.y,now,cadence:320,speed:205}),seq:0,source:'clinical'};
      guardRemotes.set(remote.id,track);
      // Seed the first *authoritative* point before receiving any later frame.
      // Without this, the second snapshot is treated as initial and teleports.
