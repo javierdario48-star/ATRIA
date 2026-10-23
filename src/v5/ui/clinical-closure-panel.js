@@ -7,7 +7,8 @@ export function closureDecisionHTML(state){
  const p=state?.patient;if(!p)return '';
  const steps=clinicalWorkflow(state)?.steps||[];
  const canEdit=state.canEdit!==false&&!p.caseEnded&&!p.patientDied;
- const choices=canEdit?(state.eligibleDestinations||[]):[];
+ // An attempt is always offered; only the native evaluator accepts it.
+ const choices=canEdit?['observacion','sala','alta','quirofano','uti','procedimiento']:[];
  const diagnostic=String(p.diagnosis||'').trim();
  const pending=steps.filter(s=>s.status==='pending'||s.status==='partial'||s.status==='attention')
   .map(s=>s.label);
@@ -16,9 +17,9 @@ export function closureDecisionHTML(state){
   '<div class="case-close-diagnosis"><span>Tu impresión diagnóstica</span><strong>'+
     esc(diagnostic||'Todavía no registrada')+'</strong></div>'+
   (choices.length?
-   '<p class="case-close-ready">Destino disponible para evaluación</p>'+
+   '<p class="case-close-ready">Seleccioná un destino para evaluar el cierre</p>'+
    '<div id="caseDestinations" class="case-close-choices">'+destinationButtonsHTML(choices)+'</div>'+
-   '<p class="case-close-note">La elección pasa por el servidor. Una interconsulta no garantiza aceptación.</p>':
+   '<p class="case-close-note">Las omisiones reducen los puntos sin impedir el intento. Cirugía y UTI deben aceptar la derivación.</p>':
    '<p class="case-close-waiting">El servidor aún no habilita un destino de cierre.</p>'+
    '<p class="case-close-note">Revisá la atención documentada. La lista de seguimiento orienta sin revelar los criterios ocultos de cada caso.</p>'+
    (pending.length?'<div class="case-close-pending">Por revisar: '+esc(pending.slice(0,4).join(' · '))+'</div>':''))+

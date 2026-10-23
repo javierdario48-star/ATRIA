@@ -17,7 +17,7 @@ import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} fro
  */
 export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[],therapies=[]}){
  const ui=id=>document.getElementById(id);
- let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='';
+ let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='',pendingDisposition=null;
  const ecgSweep=createEcgSweep();
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
  const post=text=>send(text,{patientUid});
@@ -56,11 +56,41 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const text=field.value.trim();if(!clear&&!text)return;
   await post(clear?'/diagnostico-borrar':'/diagnostico '+text);
   if(state()?.patient.uid!==s.patient.uid)return;
-  field.value=state().patient.diagnosis;renderDiagnosisSuggestions();render();
+  if(!clear&&ui('modal')?.dataset.panel==='diagnosis')close();
+  else{field.value=state().patient.diagnosis;renderDiagnosisSuggestions();}
+  render();
  }
  async function chooseDestination(patient,id){
-  const s=session()?.read();if(!s||s.patient.uid!==patient.uid||s.canEdit===false||!s.eligibleDestinations?.includes(id))return;
-  patientUid=patient.uid;await post('/disposicion '+id);
+  const s=session()?.read();
+  if(!patient||!s||s.patient.uid!==patient.uid||s.canEdit===false||
+   s.patient.caseEnded||s.patient.patientDied)return;
+  if(!['observacion','sala','alta','quirofano','uti','procedimiento'].includes(id))return;
+  patientUid=patient.uid;
+  const service=id==='quirofano'?'cirugia':id==='uti'?'uti':null;
+  if(service&&!s.patient.consults?.some(c=>c.id===service&&c.status==='done'&&c.accepted)){
+   pendingDisposition={patientUid:patient.uid,destination:id,service,
+    priorConsults:(s.patient.consults||[]).filter(c=>c.id===service).length};
+   notify('Enfermera: aviso a '+(service==='cirugia'?'Cirugía':'UTI')+'. Aguardamos su respuesta.');
+   const reply=await post('/consulta '+service);
+   if(reply?.status==='rejected'||reply?.routeError)pendingDisposition=null;
+   return;
+  }
+  pendingDisposition=null;await post('/cierre-parcial '+id);
+ }
+ function finishPendingDisposition(s){
+  const pending=pendingDisposition;
+  if(!pending||s.patient.uid!==pending.patientUid||s.patient.caseEnded||s.patient.patientDied){
+   pendingDisposition=null;return;
+  }
+  const consultations=(s.patient.consults||[]).filter(c=>c.id===pending.service);
+  const last=consultations.at(-1);
+  if(last?.status==='done'&&last.accepted){
+   pendingDisposition=null;
+   Promise.resolve().then(()=>post('/cierre-parcial '+pending.destination));
+  }else if(consultations.length>pending.priorConsults&&last?.status==='rejected'){
+   pendingDisposition=null;
+   notify('El servicio no aceptó el traslado. Revisá el diagnóstico y los estudios.');
+  }
  }
  function showMonitor(patient){
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid||!s.patient.liveVitals){notify('Monitor clínico todavía no disponible para este caso.');return;}
@@ -207,6 +237,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  }
  function render(){
   const s=state();if(!s){if(patientUid){close();patientUid=null;}return;}const p=s.patient;
+  finishPendingDisposition(s);
   if(document.getElementById('modal')?.dataset.panel==='case-close'){
    const content=ui('modalContent'),markup=closureDecisionHTML(s);
    if(content&&lastClosureMarkup!==markup){
@@ -271,7 +302,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const b=target.closest('button');if(!b||b.disabled)return false;
   if(b.dataset.examSection){await post('/examen '+regionId+' '+b.dataset.examSection);render();return true;}
   if(b.dataset.glasgow){await post('/glasgow '+b.dataset.glasgow);render();return true;}
-  if(b.dataset.destination){await post('/disposicion '+b.dataset.destination);render();ui('caseResult')?.scrollIntoView({block:'nearest'});return true;}
+  if(b.dataset.destination){await chooseDestination(state()?.patient,b.dataset.destination);render();return true;}
   switch(b.dataset.action){
    case 'monitor-hint':showOrderHints=!showOrderHints;renderOrderSuggestions();return true;
    case 'monitor-suggestion':{
@@ -303,5 +334,5 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   render();return true;
  }
  return Object.freeze({showPatient,showClosure,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
-  reset(){patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
+  reset(){patientUid=null;pendingDisposition=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }
