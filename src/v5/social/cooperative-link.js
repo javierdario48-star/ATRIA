@@ -88,7 +88,15 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    let p=peers.get(member.userId);
    const motionSession=roster.find(x=>x.userId===member.userId)?.motionSession;
    if(p&&motionSession&&p.motionSession&&p.motionSession!==motionSession){p.link.dispose();peers.delete(member.userId);p=null;}
-   if(p&&(['closed','failed','disconnected'].includes(p.link.state()))&&now-p.lastAttempt>6000){p.link.dispose();peers.delete(member.userId);p=null;}
+   // ICE/data channel may remain "connecting" forever on mobile or after
+   // a lost offer. Rebuild only a genuinely stale pending link, preserving
+   // the latest authorized room/member and its clinical authority.
+   const linkState=p?.link.state();
+   const stalled=linkState==='connecting'||linkState==='new';
+   if(p&&((['closed','failed','disconnected'].includes(linkState)&&now-p.lastAttempt>6000)||
+      (stalled&&now-p.lastAttempt>15000))){
+    p.link.dispose();peers.delete(member.userId);p=null;
+   }
    p??=peer(member,host);
    if(host)await p.link.start();
    const result=await api('?signal='+(host?'answer':'offer')+'&toPeer='+encodeURIComponent(peerId)+'&fromPeer='+encodeURIComponent(member.peerId),undefined,true);
