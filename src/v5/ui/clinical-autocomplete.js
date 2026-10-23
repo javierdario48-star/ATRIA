@@ -74,9 +74,15 @@ export function clinicalVocabulary({caseId,cases=[],therapies=[],studies=[]}={})
  for(const item of studyList)
   add(option('study:'+item.id,'study',item.label,item.aliases?.[0]||item.label,
    [item.id,...(item.aliases||[])]));
- for(const item of therapies)
-  add(option('therapy:'+item.id,'therapy',item.label,
+ for(const item of therapies){
+  // Do not duplicate an already certified native dose phrase with a
+  // weaker undosed alias on the same monitor suggestion row.
+  const alias=normalizeClinicalQuery(item.aliases?.[0]||item.label);
+  const isNative=items.some(x=>x.id.startsWith('known:')&&
+   x.terms.some(term=>term.startsWith(alias)&&alias.length>=5));
+  if(!isNative)add(option('therapy:'+item.id,'therapy',item.label,
    item.aliases?.[0]||item.label,[item.id,...(item.aliases||[])]));
+ }
  for(const item of current?.interventions||[])
   add(option('intervention:'+item.id,'procedure',item.label,
    item.aliases?.[0]||item.label,[item.id,...(item.aliases||[])]));
