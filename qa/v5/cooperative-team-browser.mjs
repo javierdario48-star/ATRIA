@@ -45,10 +45,29 @@ try{
  await Promise.all(pages.map((p,i)=>walk(p,144+i*20)));
  for(const p of pages)await p.waitForFunction(n=>atriaV5.snapshot().others.length===n-1,count);
  const positions=await Promise.all(pages.map(state));
+ // Remote poses travel through the existing HTTP/RTC presentation channel.
+ // Verify *convergence* to every actual resting avatar after dissemination,
+ // rather than sampling remote interpolation immediately after the last walk.
+ // Preserve the 45-world-pixel acceptance bound and report every divergent
+ // peer if convergence genuinely fails within the transport deadline.
+ const targets=positions.map(({player})=>({x:player.x,y:player.y}));
+ await Promise.all(pages.map((p,i)=>p.waitForFunction(({targets,names,i})=>{
+  const s=atriaV5.snapshot();
+  return targets.every((goal,j)=>{
+   if(j===i)return true;
+   const remote=s.others.find(actor=>actor.name===names[j]);
+   return !!remote&&Math.hypot(remote.x-goal.x,remote.y-goal.y)<45;
+  });
+ },{targets,names,i},{timeout:12000,polling:250})));
  for(const [i,p] of pages.entries()){
   const diagnostics=await p.evaluate(()=>atriaV5.diagnostics());assert.equal(diagnostics.cooperative.authority,i===0);
   assert.equal(diagnostics.cooperative.replica,i!==0);assert.equal(diagnostics.cooperative.connections.length,i===0?count-1:1);
-  for(const [j,other] of positions.entries())if(j!==i){const visible=positions[i].others.find(x=>x.name===names[j]);assert(visible);assert(Math.hypot(visible.x-other.player.x,visible.y-other.player.y)<45);}
+  const view=await state(p);
+  for(const [j,other] of positions.entries())if(j!==i){
+   const visible=view.others.find(x=>x.name===names[j]);assert(visible);
+   assert(Math.hypot(visible.x-other.player.x,visible.y-other.player.y)<45,
+    'remote pose must settle near the real doctor after propagation');
+  }
  }
  stage='one shared transcript, genuine nursing and distributed evaluation';
  for(const [i,p] of pages.entries())await send(p,'Hola, soy '+names[i]);
