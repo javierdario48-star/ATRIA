@@ -147,3 +147,38 @@ test('private ward keeps 260ms movement even when its RTC signaling is delayed',
  assert.equal(value?.motionCadence,260);
  f.release();await a.flush();a.dispose();
 });
+
+test('private physician speech reaches the second room member without clinical sync, once only',async()=>{
+ const data=new Map(),backend=createQaSocialServer({
+  get:async k=>data.get(k),set:async(k,v)=>data.set(k,structuredClone(v)),
+  delete:async k=>data.delete(k)
+ }),heard=[];
+ function client(name,onRoomSpeech=()=>{}){
+  const w={localStorage:storage(),crypto,performance:{now:()=>12000},
+   fetch:async(uri,options)=>{
+    const u=new URL(uri,'http://test');
+    const input={method:options.method,path:u.pathname,query:Object.fromEntries(u.searchParams),
+     headers:options.headers,body:options.body?JSON.parse(options.body):{}};
+    const r=await(u.pathname==='/api/lobby-sync'?backend.signalRoute(input):backend.route(input));
+    return {ok:r.status<400,status:r.status,json:async()=>r.body};
+   }};
+  return createCooperativeLink({window:w,profile:{name,scrubColor:'navy'},onRoomSpeech});
+ }
+ const ana=client('Ana'),bruno=client('Bruno',message=>heard.push(message));
+ await Promise.all([ana.connect(),bruno.connect()]);
+ const room=await ana.invite([bruno.state().user.id]);
+ await bruno.join(room.id);
+ assert.equal(await ana.postRoomSpeech({id:'message-100',text:'Hola desde Ana'}),true);
+ bruno.maintain(1000,{x:430,y:700,phase:'guard',roomId:room.id});
+ await bruno.flush();
+ assert.equal(heard.length,1,'one independent room poll delivers speech to the guest');
+ assert.deepEqual(heard.map(x=>x.text),['Hola desde Ana']);
+ assert.equal(heard[0].userId,ana.state().user.id);
+ assert.equal(heard[0].roomId,room.id);
+ bruno.maintain(1350,{x:430,y:700,phase:'guard',roomId:room.id});
+ await bruno.flush();
+ assert.equal(heard.length,1,'incremental cursor prevents duplicate bubbles');
+ const stranger=client('Outsider');await stranger.connect();
+ assert.equal(await stranger.postRoomSpeech({id:'intrusion',text:'No autorizado'}),false);
+ await ana.leave();bruno.dispose();ana.dispose();stranger.dispose();
+});
