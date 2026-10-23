@@ -231,7 +231,7 @@ export async function createApplication({document,window,content,signal}){
   // the sequence persisted for this same doctor in the previous session.
   world.seedMovementSequence(client.lastAcknowledgedMotion(social.state().user?.id));
   durableClient=client;replica=client;guardSession=client;lastRemoteRevision=-1;
-  if(spatial)world.applySharedSpatial(spatial);
+  if(spatial)world.applySharedSpatial(spatial,window.performance.now(),client.lastAcknowledgedMotion(social.state().user?.id));
   lastClinicalFrame=window.performance.now();clinicalUI.reset();close();
   seenGuardMessages.clear();fastWardSpeech.clear();resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;
