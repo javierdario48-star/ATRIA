@@ -445,7 +445,7 @@ export async function createApplication({document,window,content,signal}){
    if(ids.has(id)||time-preview.time>15000)fastWardSpeech.delete(id);
   history.length=0;
   // Only a completed clinical receipt authorizes the nurse's final message.
-   const closure=clinicalState.patient.closure,destination=closure?.destination;
+   const closingReceipt=clinicalState.patient.closure,destination=closingReceipt?.destination;
    const closing={
     observacion:'De acuerdo, queda en observación.',
     sala:'De acuerdo, preparo la internación en sala.',
@@ -454,8 +454,8 @@ export async function createApplication({document,window,content,signal}){
     uti:'UTI aceptó al paciente. Preparo el traslado.',
     procedimiento:'El servicio receptor aceptó. Preparo el traslado al procedimiento.'
    };
-   const farewell=concluded&&closure?.closed&&closing[destination]?{
-    id:'nurse-final:'+patientId+':'+closure.eventId,name:'Enfermera',role:'nurse',text:closing[destination]}:null;
+   const farewell=concluded&&closingReceipt?.closed&&closing[destination]?{
+    id:'nurse-final:'+patientId+':'+closingReceipt.eventId,name:'Enfermera',role:'nurse',text:closing[destination]}:null;
    if(farewell&&!seenNpcMessages.has(farewell.id)){
     seenNpcMessages.add(farewell.id);
     world.showNpcMessage('nurse',farewell.text,window.performance.now());
