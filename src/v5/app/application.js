@@ -11,6 +11,7 @@ import {createDurableCooperativeReplica} from '../social/durable-cooperative-rep
 import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecycle.js';
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
+import {clinicalCompletions,spellingSuggestions} from '../ui/clinical-autocomplete.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
 import {clinicalWorkflow} from '../ui/clinical-workflow.js';
 import {caseDebriefHTML} from '../ui/case-debrief.js';
@@ -49,9 +50,10 @@ export async function createApplication({document,window,content,signal}){
  const patientWheel=createPatientActionWheel({document,window});
  const patientClinical=createPatientClinicalOverlay({document,window,cases:content.cases});
  const clinicalChecklist=createClinicalChecklist({document});
+ const chatSuggestions=ui('chatSuggestions'),nurseQuick=ui('nurseQuickButton');
  const atriaKeyboard=createAtriaKeyboard({document,window,input,host:ui('chatDock'),
-  onSubmit:()=>{if(composition)return;const message=input.value.trim();if(message){input.value='';submitText(message);}},
-  onRecipient:()=>ui('recipientButton').click()});
+  onSubmit:()=>{if(composition)return;const message=input.value.trim();if(message){input.value='';updateTypingAssistance();submitText(message);}},
+  onRecipient:()=>ui('recipientButton').click(),onNurse:()=>{if(guardSession)selectRecipient('nurse');}});
  function drawWorld(now=window.performance.now(),alpha=scheduler.presentationAlpha()){
   if(atriaKeyboard.isOpen()&&!ui('chatDock').hidden&&!ui('hud').hidden){
    const origin=canvas.getBoundingClientRect().top;
@@ -437,7 +439,7 @@ export async function createApplication({document,window,content,signal}){
   if(closure?.closed&&announcedClosure!==closure.eventId){announcedClosure=closure.eventId;
    open('<div id="caseResult">'+caseDebriefHTML(closure)+'</div><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button><button data-action="close">Seguir viendo el caso</button></div>','outcome');}
  }
- function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;focusedPatientUid=null;line('ATRIA',message,true);}
+ function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;focusedPatientUid=null;updateTypingAssistance();line('ATRIA',message,true);}
  function announceDeath(p){
   if(!p?.patientDied||announcedDeathUid===p.uid)return;
   announcedDeathUid=p.uid;world.stop();patientWheel.hide();clinicalChecklist.hide();
@@ -465,6 +467,7 @@ export async function createApplication({document,window,content,signal}){
   ui('peopleButton').textContent=guard?'Historia':'Personas';
   const career=progress.read();ui('playerProgress').textContent='Nivel '+career.level+' · '+(career.xp%200)+'/200 XP';world.setLevel(career.level);
   ui('recipientButton').textContent=guard?({nurse:'Enfermera',vega:'Dr. Vega'}[focusedNpc]||'Paciente cercano'):'Lobby · público';
+  if(nurseQuick)nurseQuick.hidden=!guard;
   input.placeholder=guard?'Hablar en la guardia…':'Hablar en el lobby…';
   document.body.dataset.phase=s.phase;document.body.dataset.generation=String(s.generation);
  }
@@ -490,13 +493,29 @@ export async function createApplication({document,window,content,signal}){
    <p class="note">CIRR, APP-001, peritonitis secundaria, PBE y terciaria: evaluación, estudios, tratamiento y cierre con XP. Otros casos: navegación y estudios. Tutor, voz y multijugador siguen en migración.</p>
    <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);renderSocialLists();
  }
+ function updateTypingAssistance(){
+  if(!chatSuggestions)return;
+  const patient=guardSession?.read()?.patient;
+  const nurseContext=!!patient&&(focusedNpc==='nurse'||/^\s*enfermer(?:a|o|ia)\b/i.test(input.value));
+  const suggestions=nurseContext?clinicalCompletions(input.value,{
+   caseId:patient.caseId,cases:content.cases,therapies:content.therapies
+  }):spellingSuggestions(input.value);
+  const fragment=document.createDocumentFragment();
+  for(const item of suggestions){
+   const button=document.createElement('button');button.type='button';
+   button.dataset.assistReplacement=item.replacement;button.dataset.assistKind=item.kind;
+   button.setAttribute('role','option');button.title='Completar texto sin enviar';
+   button.textContent=(item.kind==='spelling'?'✎ ':'')+item.label;fragment.append(button);
+  }
+  chatSuggestions.replaceChildren(fragment);chatSuggestions.hidden=suggestions.length===0;
+ }
  function selectRecipient(kind,patientUid=null){
   if(composition){deferredRecipient=kind;return;}
   focusedNpc=kind==='patient'?null:kind;
   focusedPatientUid=kind==='patient'?patientUid:null;
   const text=input.value.replace(/^(?:(?:dr\.?\s*)?vega|enfermera|enfermero)\s*[,.:]?\s*/i,'');
   const prefix=kind==='nurse'?'Enfermera, ':kind==='vega'?'Vega, ':'';
-  input.value=prefix+text;updateHud();input.focus({preventScroll:true});input.setSelectionRange(prefix.length,prefix.length);
+  input.value=prefix+text;updateHud();input.focus({preventScroll:true});input.setSelectionRange(prefix.length,prefix.length);updateTypingAssistance();
  }
  async function submitText(text,{patientUid}={}){
   if(!text.trim())return;
@@ -685,6 +704,17 @@ export async function createApplication({document,window,content,signal}){
    event.preventDefault();clinicalUI.handle(event.target);
   }
  });
+ listen(nurseQuick,'click',()=>{if(guardSession)selectRecipient('nurse');});
+ listen(chatSuggestions,'pointerdown',event=>{
+  if(event.target.closest('[data-assist-replacement]'))event.preventDefault();
+ });
+ listen(chatSuggestions,'click',event=>{
+  const button=event.target.closest('[data-assist-replacement]');if(!button)return;
+  input.value=button.dataset.assistReplacement||input.value;
+  input.focus({preventScroll:true});input.setSelectionRange(input.value.length,input.value.length);
+  input.dispatchEvent(new window.Event('input',{bubbles:true}));
+ });
+ listen(input,'input',()=>{if(!composition)updateTypingAssistance();});
  listen(ui('recipientButton'),'click',()=>{
   if(world.snapshot().phase==='guard')selectRecipient(focusedNpc==='nurse'?'vega':focusedNpc==='vega'?'patient':'nurse');
  });
@@ -693,10 +723,10 @@ export async function createApplication({document,window,content,signal}){
  });
  listen(ui('chatForm'),'submit',event=>{
   event.preventDefault();if(composition)return;const text=input.value.trim();if(!text)return;
-  input.value='';submitText(text);
+  input.value='';updateTypingAssistance();submitText(text);
  });
  listen(input,'compositionstart',()=>composition=true);
- listen(input,'compositionend',()=>{composition=false;if(deferredRecipient){const target=deferredRecipient;deferredRecipient=null;selectRecipient(target);}});
+ listen(input,'compositionend',()=>{composition=false;if(deferredRecipient){const target=deferredRecipient;deferredRecipient=null;selectRecipient(target);}updateTypingAssistance();});
  listen(canvas,'pointerdown',canvasDown);
  listen(canvas,'pointermove',event=>{
   if(!drag||drag.id!==event.pointerId||Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<8)return;
