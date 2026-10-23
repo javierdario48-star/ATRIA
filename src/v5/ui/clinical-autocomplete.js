@@ -1,5 +1,6 @@
 import {monitorOrderExamples,normalizeOrderQuery} from './monitor-order-suggestions.js';
-import {spanishWordSuggestions,spanishAutoReplace,spanishCorrectCase} from './spanish-spellcheck.js';
+import {spanishWordSuggestions,spanishAutoReplace,spanishCorrectCase,
+ spanishKnownWord,spanishAccentSuggestions} from './spanish-spellcheck.js';
 
 // One case-scoped input aid for the ward composer and bedside monitor.
 // The canonical clinical speech router still validates all submitted text.
@@ -49,6 +50,7 @@ function everydayCorrection(word){
  const normalized=normalizeClinicalQuery(word);
  const direct=commonFixes[normalized];
  if(direct)return direct;
+ if(spanishKnownWord(word))return null;
  if(normalized.length<4||normalized.length>15||everydayWords.has(normalized))return null;
  let match=null;
  for(const candidate of everydayWords){
@@ -166,7 +168,9 @@ export function spellingSuggestions(text,{limit=3}={}){
  const word=found[1],preceding=full.slice(0,-word.length);
  const prev=/([a-záéíóúñü]+)\s*$/i.exec(preceding)?.[1]||'';
  const direct=everydayCorrection(word);
- const guesses=direct?[direct]:spanishWordSuggestions(word,{previous:prev,limit});
+ const accentChoices=spanishAccentSuggestions(word,{limit});
+ const guesses=direct?[direct]:accentChoices.length?accentChoices:
+  spanishWordSuggestions(word,{previous:prev,limit});
  return guesses.slice(0,limit).map(x=>{
   const value=spanishCorrectCase(word,typeof x==='string'?x:x.word);
   return {label:value,replacement:preceding+value,kind:'spelling'};

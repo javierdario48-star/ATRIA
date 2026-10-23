@@ -32030,6 +32030,20 @@ function words(){
  lookup={byPrefix,known};
  return lookup;
 }
+/** Preserve any valid word, with or without an accent, as written. */
+export function spanishKnownWord(word){
+ const value=fold(word);
+ return value.length>=2&&words().known.has(value);
+}
+/** Optional accents are presented as choices, never applied automatically. */
+export function spanishAccentSuggestions(word,{limit=3}={}){
+ const query=fold(word),original=String(word||'').toLowerCase();
+ if(query.length<2||!/^[a-z]+$/.test(query))return [];
+ const entries=(words().byPrefix.get(query.slice(0,2))||[])
+  .filter(e=>e.normalized===query&&e.word!==original&&/[áéíóú]/.test(e.word));
+ return entries.sort((a,b)=>b.freq-a.freq)
+  .slice(0,Math.max(0,Math.min(limit,5))).map(e=>({word:e.word,frequency:e.freq}));
+}
 function distance(a,b,limit){
  if(Math.abs(a.length-b.length)>limit)return limit+1;
  let prev=Array.from({length:b.length+1},(_,j)=>j),before=null;

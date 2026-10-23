@@ -61,6 +61,13 @@ test('safe fuzzy recognition offers corrections without editing a dose or clinic
  assert.equal(correctEverydayBeforeSpace('morfins',7),null,
   'pharmacological terms may only be chosen explicitly');
  assert.equal(correctEverydayBeforeSpace('hola',4),null,'correct words must stay intact');
+ assert.equal(correctEverydayBeforeSpace('paso',4),null,'never change paso to pasa');
+ assert.equal(correctEverydayBeforeSpace('te paso',7),null,'preserve a valid word in context');
+ assert.equal(correctEverydayBeforeSpace('como',4),null,'never invent a contextual accent');
+ assert(spellingSuggestions('paso').some(s=>s.replacement==='pasó'),
+  'accented alternatives may be tapped explicitly');
+ assert(spellingSuggestions('como').some(s=>s.replacement==='cómo'));
+ assert(spellingSuggestions('que').some(s=>s.replacement==='qué'));
  assert.equal(correctEverydayBeforeSpace('morfins',7),null,'unrecognized drug names are not guessed');
  assert.deepEqual(spellingSuggestions('Doctor qeu'),[
   {kind:'spelling',label:'que',replacement:'Doctor que'}]);

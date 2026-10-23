@@ -1,12 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {LETTER_ROWS,editKeyboardText} from './atria-keyboard.js';
+import {LETTER_ROWS,ACCENTED_KEYS,editKeyboardText} from './atria-keyboard.js';
 
 test('compact four-row layout retains Spanish ñ and complete alphabet',()=>{
  assert.equal(LETTER_ROWS.length,3);
  assert.equal(LETTER_ROWS[0],'qwertyuiop');
  assert(LETTER_ROWS[1].includes('ñ'));
  assert.equal(new Set(LETTER_ROWS.join('').split('')).size,27);
+});
+test('holding a vowel replaces only that letter with an accent',()=>{
+ assert.deepEqual(ACCENTED_KEYS,{a:'á',e:'é',i:'í',o:'ó',u:'ú'});
+ assert.deepEqual(editKeyboardText('paso',3,4,ACCENTED_KEYS.o),
+  {value:'pasó',cursor:4});
 });
 test('keyboard inserts at caret and replaces only selection',()=>{
  assert.deepEqual(editKeyboardText('Ringer',3,3,' '),{value:'Rin ger',cursor:4});

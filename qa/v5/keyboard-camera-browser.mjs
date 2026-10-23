@@ -105,6 +105,25 @@ try{
   'backspace immediately after autocorrection restores the intended draft');
  await page.locator('#dieInput').fill('');
 
+ // An unaccented real word remains untouched and can be accented with one tap.
+ await page.locator('#dieInput').fill('paso');
+ const accentOption=page.locator('#chatSuggestions [data-assist-kind="spelling"]').filter({hasText:'pasó'});
+ await accentOption.waitFor();
+ assert.equal(await page.locator('#dieInput').inputValue(),'paso');
+ await accentOption.click();
+ assert.equal(await page.locator('#dieInput').inputValue(),'pasó');
+ await page.locator('#dieInput').fill('pas');
+ const vowel=page.locator('#atriaKeyboard [data-key="o"]');
+ await vowel.evaluate(el=>el.dispatchEvent(new PointerEvent('pointerdown',{
+  pointerType:'touch',pointerId:33,bubbles:true,cancelable:true,clientX:0,clientY:0
+ })));
+ await page.waitForTimeout(530);
+ await vowel.evaluate(el=>el.dispatchEvent(new PointerEvent('pointerup',{
+  pointerType:'touch',pointerId:33,bubbles:true,cancelable:true,clientX:0,clientY:0
+ })));
+ assert.equal(await page.locator('#dieInput').inputValue(),'pasó',
+  'long hold adds an accent without a second keyboard');
+ await page.locator('#dieInput').fill('');
  // Toggle compares original camera and input mode; map is not scaled or cropped.
  await page.locator('#keyboardToggleButton').click();
  assert.equal(await page.locator('#dieInput').getAttribute('inputmode'),'text');

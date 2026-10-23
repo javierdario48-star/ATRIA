@@ -45,6 +45,10 @@ dialog{position:fixed;inset:0;margin:auto;width:min(94vw,560px);max-height:88dvh
  box-shadow:0 2px 2px #0004;touch-action:none;-webkit-tap-highlight-color:transparent;
 }
 .atria-key-row .atria-key:active{background:#3a7777;transform:translateY(1px)}
+.atria-key-row .atria-key[data-accent]{position:relative}
+.atria-key-row .atria-key[data-accent]::after{content:attr(data-accent);
+ position:absolute;right:3px;top:2px;font-size:8px;line-height:1;opacity:.58;
+ pointer-events:none}
 .atria-key-row .atria-key.wide{flex:1.42 1 0;background:#14363c}
 .atria-key-row .atria-key.space{flex:4.5 1 0;font:500 11px Georgia,serif;letter-spacing:.22em;color:#7caaa9}
 .atria-key-row .atria-key.send{background:linear-gradient(145deg,#168d91,#07636d);border-color:#25c5c1;color:white;font-size:20px}

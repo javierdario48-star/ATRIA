@@ -1,6 +1,7 @@
 import {correctEverydayBeforeSpace} from './clinical-autocomplete.js';
 /** ATRIA's in-game keyboard. Text editing only: no clinical executor or chat transport. */
 export const LETTER_ROWS=Object.freeze(['qwertyuiop','asdfghjklñ','zxcvbnm']);
+export const ACCENTED_KEYS=Object.freeze({a:'á',e:'é',i:'í',o:'ó',u:'ú'});
 const SYMBOL_ROWS=Object.freeze([['1','2','3','4','5','6','7','8','9','0'],
  ['@','#','$','%','&','-','+','(',')','/'],
  ['¿','?','!',';',':','á','é','í','ó','ú']]);
@@ -21,13 +22,21 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
  root.id='atriaKeyboard';root.className='atria-keyboard';root.setAttribute('aria-label','Teclado ATRIA');
  const toggle=document.getElementById('keyboardToggleButton');
  let open=false,symbols=false,shift=false,disposed=false;
- let lastAutocorrection=null;
+ let lastAutocorrection=null,pendingAccent=null;
+ function cancelAccentHold(){
+  if(pendingAccent){window.clearTimeout(pendingAccent.timer);pendingAccent=null;}
+ }
  const rows=[];
  function makeKey(label,value,wide=false){
   const key=document.createElement('button');key.type='button';key.className='atria-key';
   if(wide)key.classList.add('wide');
   key.textContent=label;key.dataset.key=value;
-  key.setAttribute('aria-label',value==='backspace'?'Borrar':value==='shift'?'Mayúsculas':
+  if(ACCENTED_KEYS[value]){
+   key.dataset.accent=ACCENTED_KEYS[value];
+   key.title='Mantener presionada para '+ACCENTED_KEYS[value];
+  }
+  key.setAttribute('aria-label',ACCENTED_KEYS[value]?
+   label+', mantener para '+ACCENTED_KEYS[value]:value==='backspace'?'Borrar':value==='shift'?'Mayúsculas':
    value==='space'?'Espacio':value==='send'?'Enviar mensaje':value==='recipient'?'Cambiar interlocutor':
    value==='symbols'?'Alternar símbolos':value==='nurse'?'Dirigirse a enfermera':label);
   return key;
@@ -50,7 +59,7 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
   input.setAttribute('inputmode',open?'none':'text');
   if(toggle){toggle.setAttribute('aria-pressed',String(open));toggle.setAttribute('aria-label',open?'Ocultar teclado ATRIA':'Mostrar teclado ATRIA');}
  }
- function setOpen(value){if(disposed)return;open=!!value;paint();}
+ function setOpen(value){if(disposed)return;cancelAccentHold();open=!!value;paint();}
  function onKey(event){
   const button=event.target.closest('button[data-key]');if(!button||!root.contains(button))return;
   const key=button.dataset.key;
@@ -91,7 +100,40 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
   if(event.pointerType==='touch'||event.pointerType==='pen'){
    handledTouch.set(button,Date.now());
    onKey(event);
+   const base=button.dataset.key;
+   if(ACCENTED_KEYS[base]){
+    const cursor=input.selectionStart??0,expected=input.value,pressed=event.pointerId;
+    pendingAccent={
+     pointerId:pressed,startX:event.clientX,startY:event.clientY,
+     timer:window.setTimeout(()=>{
+      if(!pendingAccent||pendingAccent.pointerId!==pressed)return;
+      pendingAccent=null;
+      if(input.value!==expected||input.selectionStart!==cursor||
+       input.selectionEnd!==cursor||cursor<1)return;
+      const source=input.value.slice(cursor-1,cursor);
+      if(source.toLowerCase()!==base)return;
+      const accent=source===source.toUpperCase()?
+       ACCENTED_KEYS[base].toUpperCase():ACCENTED_KEYS[base];
+      const result=editKeyboardText(input.value,cursor-1,cursor,accent,
+       input.maxLength>0?input.maxLength:500);
+      input.value=result.value;input.setSelectionRange(result.cursor,result.cursor);
+      input.dispatchEvent(new window.Event('input',{bubbles:true,inputType:'insertReplacementText'}));
+     },440)
+    };
+   }
   }
+ }
+ function onPointerMove(event){
+  if(pendingAccent&&pendingAccent.pointerId===event.pointerId&&
+   Math.hypot(event.clientX-pendingAccent.startX,event.clientY-pendingAccent.startY)>16)
+   cancelAccentHold();
+ }
+ function onPointerEnd(event){
+  if(event.pointerType==='touch'||event.pointerType==='pen'){
+   const button=event.target.closest?.('button[data-key]');
+   if(button&&root.contains(button))handledTouch.set(button,Date.now());
+  }
+  if(pendingAccent&&pendingAccent.pointerId===event.pointerId)cancelAccentHold();
  }
  function onClick(event){
   const button=event.target.closest('button[data-key]');
@@ -100,13 +142,21 @@ export function createAtriaKeyboard({document,window,input,host,onSubmit,onRecip
  }
  const onToggle=()=>setOpen(!open);
  root.addEventListener('pointerdown',onPointerDown,{passive:false});
+ root.addEventListener('pointermove',onPointerMove);
+ root.addEventListener('pointerup',onPointerEnd);
+ root.addEventListener('pointercancel',onPointerEnd);
  root.addEventListener('click',onClick);
  toggle?.addEventListener('click',onToggle);
  host.append(root);
  setOpen(!!(window.matchMedia?.('(pointer: coarse)').matches||window.innerWidth<=700));
  return Object.freeze({isOpen:()=>open,setOpen,element:root,listenerCount:()=>disposed?0:(toggle?3:2),destroy(){
   if(disposed)return;disposed=true;
-  root.removeEventListener('pointerdown',onPointerDown);root.removeEventListener('click',onClick);
+  cancelAccentHold();
+  root.removeEventListener('pointerdown',onPointerDown);
+  root.removeEventListener('pointermove',onPointerMove);
+  root.removeEventListener('pointerup',onPointerEnd);
+  root.removeEventListener('pointercancel',onPointerEnd);
+  root.removeEventListener('click',onClick);
   toggle?.removeEventListener('click',onToggle);root.remove();
   document.body.classList.remove('atria-keyboard-open');input.setAttribute('inputmode','text');
  }});
