@@ -2,6 +2,7 @@ import {patientHTML,vitalsHTML,therapyHTML,monitorHTML,historyHTML,esc} from './
 import {examinationHTML,renderExamination} from './examination-panel.js';
 import {EXAM_REGIONS} from '../clinical/exam-contract.js';
 import {clinicalWorkflow} from './clinical-workflow.js';
+import {closureDecisionHTML} from './clinical-closure-panel.js';
 import {setHTML} from './render-content.js';
 import {ecgPresentation} from '../clinical/ecg-morphology.js';
 import {caseDebriefHTML} from './case-debrief.js';
@@ -26,6 +27,13 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    (s.patient.liveVitals?patientHTML(s.patient,{readOnly:s.canEdit===false||s.patient.caseEnded}):'<p>Atención completa de este caso en migración.</p><div class="actions"><button data-action="studies">Estudios</button></div>')+
    '<div class="actions"><button data-action="patient-target">Interrogar</button><button data-action="close">Cerrar</button></div>');
   ui('modalContent').dataset.patientUid=patientUid;render();renderDiagnosisSuggestions();
+ }
+ function showClosure(patient){
+  const s=session()?.read();
+  if(!s||s.patient.uid!==patient?.uid){notify('No hay un caso activo para cerrar.');return;}
+  patientUid=patient.uid;
+  open(closureDecisionHTML(s),'case-close');
+  ui('modalContent').dataset.patientUid=patientUid;
  }
  function showDiagnosis(patient){
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid||!s.patient.liveVitals)return;
@@ -88,7 +96,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(section==='history'){showHistory();return;}
   if(section==='studies'){showStudies();return;}
   if(section==='treatment'){showTreatment();return;}
-  if(section==='patient'){showPatient(patient);return;}
+  if(section==='patient'){showClosure(patient);return;}
   if(section==='diagnosis'){showDiagnosis(patient);return;}
  }
  function renderOrderSuggestions(){
@@ -191,6 +199,12 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  }
  function render(){
   const s=state();if(!s){if(patientUid){close();patientUid=null;}return;}const p=s.patient;
+  if(document.getElementById('modal')?.dataset.panel==='case-close'){
+   const content=ui('modalContent'),markup=closureDecisionHTML(s);
+   if(content&&content.innerHTML!==markup){
+    setHTML(content,markup);content.dataset.patientUid=patientUid;
+   }
+  }
   setHTML(ui('studyOrders'),p.orders.length?p.orders.map(order=>'<div data-study="'+esc(order.id)+'" data-status="'+order.status+'"><b>'+esc(order.label)+'</b><small>'+
    (order.status==='done'?'Resultado disponible':'Pendiente · '+Math.max(0,Math.ceil(order.readyAtMinute-s.clock.clinicalMinute))+' min clínicos')+'</small>'+
    (order.status==='done'?'<p>'+esc(order.result)+'</p>':'')+'</div>').join(''):'<p>Todavía no solicitaste estudios.</p>');
@@ -258,6 +272,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    }
    case 'monitor-order-submit':await sendMonitorOrder();return true;
    case 'patient-target':close();onTalk(patientUid);return true;
+   case 'close-diagnosis':{const p=state()?.patient;if(p)showDiagnosis(p);return true;}
    case 'patient-chart':return false; // World supplies the current identity and spatial metadata.
    case 'clinical-history':showHistory();return true;
    case 'studies':showStudies();return true;
@@ -279,6 +294,6 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   }
   render();return true;
  }
- return Object.freeze({showPatient,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
+ return Object.freeze({showPatient,showClosure,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
   reset(){patientUid=null;regionId='general';flippedRegion=null;examBusy=false;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }
