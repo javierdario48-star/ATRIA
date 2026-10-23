@@ -288,10 +288,11 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
     // server authority). No client-side findings or fictitious completion.
     for(const technique of techniques){
      const before=state()?.patient;if(!before||before.caseEnded)break;
-     const performed=selected==='neurological'?
-      ['eye','verbal','motor'].every(k=>!!before.glasgow?.[k]):
-      !!before.examFindings?.[selected]?.[technique];
-     if(performed)continue;
+     // Deliberate examination must remain repeatable after physiological
+     // evolution. The old "already performed" short-circuit froze Glasgow at
+     // the admission score even after treatment improved consciousness.
+     // An active panel is still protected by examBusy and flip-to-close.
+     if(!before.uid)break;
      const receipt=await post(selected==='neurological'?'/glasgow all':
       '/examen '+selected+' '+technique);
      if(receipt?.status==='rejected'||receipt?.status==='unconfirmed')break;
