@@ -55,12 +55,12 @@ try{
   await host.locator('[data-exam-section="'+t+'"]').click();
  await host.locator('#modalClose').click();
  await guest.locator('#peopleButton').click();await guest.locator('[data-action="examination"]').click();
- await guest.locator('[data-exam-section="general"]').click();await guest.locator('#modalClose').click();
+ await guest.locator('#examRegions [data-exam-region="general"]').click();await guest.locator('#modalClose').click();
  await study(guest,'pbe_paracentesis');await study(host,'pbe_renal');
  await host.locator('[data-patient-diagnosis]').click();
  await host.locator('#diagnosisInput').fill('PBE');
  await host.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();
- await host.locator('#diagnosisInput').press('Enter');await host.locator('#modalClose').click();
+ await host.locator('#diagnosisInput').press('Enter');await host.waitForFunction(()=>document.querySelector('#modal')?.open===false);
  stage='bedside treatment using physical nurse';
  await send(host,'Enfermera monitor y ceftriaxona 1 g');
  const early=await clinical(host);

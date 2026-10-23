@@ -42,12 +42,12 @@ try{
  assert.equal((await clinical(a)).patient.administrationLog.length,0,'no effects before physical nurse arrival');
  for(const [p,questions] of [[a,['¿Tiene cirrosis?','¿Tuvo fiebre?']],[b,['¿Tiene ascitis?','¿Notó confusión?']]])for(const text of questions)await send(p,text);
  await a.locator('#peopleButton').click();await a.locator('[data-action="record-vitals"]').click();await a.locator('[data-action="examination"]').click();
- await a.locator('[data-exam-section="general"]').click();await a.locator('#modalClose').click();
+ await a.locator('#examRegions [data-exam-region="general"]').click();await a.locator('#modalClose').click();
  await b.locator('#peopleButton').click();await b.locator('[data-action="examination"]').click();
  await b.locator('#examRegions [data-exam-region="abdomen"]').click();
  for(const t of ['inspection','auscultation','percussion','palpation'])await b.locator('[data-exam-section="'+t+'"]').click();await b.locator('#modalClose').click();
  await study(b,'pbe_paracentesis');await study(a,'pbe_renal');
- await a.locator('[data-patient-diagnosis]').click();await a.locator('#diagnosisInput').fill('PBE');await a.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();await a.locator('#diagnosisInput').press('Enter');await a.locator('#modalClose').click();
+ await a.locator('[data-patient-diagnosis]').click();await a.locator('#diagnosisInput').fill('PBE');await a.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();await a.locator('#diagnosisInput').press('Enter');await a.waitForFunction(()=>document.querySelector('#modal')?.open===false);
  await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.administrationLog.length===2,null,{timeout:45000});
  const before=await clinical(a),roomId=before.room.roomId;
  assert.equal(new Set(before.patient.administrationLog.map(x=>x.actorId)).size,2,'both doctors really administered through the same nurse executor');

@@ -51,11 +51,11 @@ try{
  await send(a,'Enfermera monitor');await send(pages[1],'Enfermera ceftriaxona 1 g');await send(pages[2],'Enfermera albumina 1.5 g/kg');
  if(count===4)await send(pages[3],'Enfermera oxigeno 2 L/min');
  for(const [i,text] of ['¿Tiene cirrosis?','¿Tiene ascitis?','¿Tuvo fiebre?','¿Notó confusión?'].entries())await send(pages[i%count],text);
- for(const p of pages){await p.locator('#peopleButton').click();await p.locator('[data-action="examination"]').click();await p.locator('[data-exam-section="general"]').click();await p.locator('#modalClose').click();}
+ for(const p of pages){await p.locator('#peopleButton').click();await p.locator('[data-action="examination"]').click();await p.locator('#examRegions [data-exam-region="general"]').click();await p.locator('#modalClose').click();}
  await a.locator('#peopleButton').click();await a.locator('[data-action="record-vitals"]').click();await a.locator('[data-action="examination"]').click();await a.locator('#examRegions [data-exam-region="abdomen"]').click();
  for(const t of ['inspection','auscultation','percussion','palpation'])await a.locator('[data-exam-section="'+t+'"]').click();await a.locator('#modalClose').click();
  await study(pages[1],'pbe_paracentesis');await study(last,'pbe_renal');
- await a.locator('[data-patient-diagnosis]').click();await a.locator('#diagnosisInput').fill('PBE');await a.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();await a.locator('#diagnosisInput').press('Enter');await a.locator('#modalClose').click();
+ await a.locator('[data-patient-diagnosis]').click();await a.locator('#diagnosisInput').fill('PBE');await a.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();await a.locator('#diagnosisInput').press('Enter');await a.waitForFunction(()=>document.querySelector('#modal')?.open===false);
  await a.waitForFunction(n=>atriaV5.snapshot().clinical.patient.administrationLog.length===n,count===4?3:2,{timeout:45000});
  await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders.every(x=>x.status==='done'),null,{timeout:75000});
  await last.locator('#peopleButton').click();await last.locator('[data-action="reassess"]').click();await last.locator('#modalClose').click();
@@ -92,5 +92,9 @@ try{
  await fs.writeFile(out+'/cooperative-team-'+count+'-summary.json',JSON.stringify(report,null,2)+'\n');console.log('COOPERATIVE TEAM UI PASS',JSON.stringify({players:count,score:100,xp:111,terminalReload:true,guestDeparture:true}));
 }catch(error){
  const snapshots=[];for(const [i,p] of pages.entries()){await p.screenshot({path:out+'/team-'+count+'-failure-'+i+'.png'}).catch(()=>{});snapshots.push(await p.evaluate(()=>({snapshot:atriaV5?.snapshot(),diagnostics:atriaV5?.diagnostics(),modal:document.querySelector('#modalContent')?.innerText})).catch(()=>null));}
+ console.error('COOPERATIVE TEAM FAILURE',JSON.stringify({stage,error:String(error),
+  players:count,rooms:report.invitationRounds||[],
+  snapshots:snapshots.map(x=>({phase:x?.snapshot?.phase,mode:x?.snapshot?.mode,
+   social:x?.diagnostics?.cooperative,modal:x?.modal?.slice(0,250)}))}));
  await fs.writeFile(out+'/cooperative-team-'+count+'-failure.json',JSON.stringify({stage,error:String(error),errors,invitationRounds:report.invitationRounds||[],requests:h.requests,snapshots},null,2)+'\n');throw error;
 }finally{for(const ctx of contexts)await ctx.close();for(const b of browsers.slice(1))await b.close();await h.close();}
