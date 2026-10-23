@@ -5,8 +5,8 @@ const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
  * Clinical commands/snapshots travel on one reliable ordered ward channel.
  * Only the caller's existing RAF invokes maintain(); there is no timer here.
  */
-export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onClose=()=>{}}){
- const peers=new Map();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoom=null,nextPoll=0,nextRoomPoll=0,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
+export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onRoomSpeech=()=>{},onClose=()=>{}}){
+ const peers=new Map();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoom=null,busySpeech=null,nextPoll=0,nextRoomPoll=0,nextSpeechPoll=0,roomSpeechCursor=0,roomSpeechRoom=null,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
  const temporary=new Map();let storage;try{storage=window.localStorage;storage.getItem(SESSION_KEY);}catch{storage={getItem:k=>temporary.get(k),setItem:(k,v)=>temporary.set(k,v),removeItem:k=>temporary.delete(k)};}
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
@@ -26,6 +26,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  function setRoom(value){
   if(disposed)return;
   if(value.mode!=='coop')throw Error('competitive-mode-not-enabled');
+  if(roomSpeechRoom!==value.id){roomSpeechCursor=0;roomSpeechRoom=value.id;}
   room=value;desiredRoomId=room.id;savedRoom=room.id;invites=invites.filter(x=>x.roomId!==room.id);
   try{storage.setItem(ROOM_KEY,room.id);}catch{}onRoom(structuredClone(room),user);
  }
@@ -104,10 +105,38 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   for(const [id,p] of peers)if(!remotes.some(x=>x.userId===id)){p.link.dispose();peers.delete(id);}
   if(!disposed)onSocial();
  }
+ async function pollRoomSpeech(){
+  const epoch=roomEpoch,id=room?.id;
+  if(disposed||!id)return;
+  const value=await api('rooms/'+id+'/messages?after='+roomSpeechCursor);
+  if(disposed||roomEpoch!==epoch||room?.id!==id)return;
+  for(const entry of value.messages||[]){
+   if(!Number.isSafeInteger(entry.sequence)||entry.sequence<=roomSpeechCursor)continue;
+   roomSpeechCursor=entry.sequence;
+   const msg=entry.data;
+   if(msg?.kind!=='physician.speech'||typeof msg.id!=='string'||
+      typeof msg.text!=='string'||msg.text.length>280||entry.userId===user?.id)continue;
+   if(!room.members.some(m=>m.userId===entry.userId))continue;
+   onRoomSpeech({roomId:id,userId:entry.userId,id:msg.id,text:msg.text,
+    createdAt:entry.createdAt,transport:'http'});
+  }
+  // The endpoint may paginate. The next RAF poll continues from the cursor.
+ }
  return Object.freeze({
   connect,
-  flush:()=>Promise.all([busy,busyRoom].filter(Boolean)),
+  flush:()=>Promise.all([busy,busyRoom,busySpeech].filter(Boolean)),
   setProfile(value){profile={...value};},
+  async postRoomSpeech({id,text}){
+   if(!room||!user||typeof id!=='string'||!id||typeof text!=='string'||!text.trim())return false;
+   const activeRoom=room.id;
+   if(text.length>280)return false;
+   // Fast social preview, never a clinical command or bedside receipt.
+   for(const p of peers.values())p.link.send({kind:'physician.preview',roomId:activeRoom,id,text});
+   try{
+    await api('rooms/'+activeRoom+'/messages',{message:{kind:'physician.speech',id,text}});
+    return true;
+   }catch{return false;}
+  },
   async postLobbyMessage(text,messageId){await connect();const result=await api('lobby/chat',{text,messageId});
    lobbyMessages=[...lobbyMessages.filter(x=>x.messageId!==result.message.messageId),result.message].slice(-90);
    onSocial();return result.message;},
@@ -127,7 +156,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    if(disposed||epoch!==roomEpoch){if(desiredRoomId!==id&&room?.id!==id)try{await api('rooms/'+id+'/leave',{});}catch{}throw Error('Entrada cancelada.');}
    setRoom(result.room);return structuredClone(room);},
   async leave(){
-   roomEpoch++;desiredRoomId=null;const previous=room;room=null;savedRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}
+   roomEpoch++;desiredRoomId=null;const previous=room;room=null;savedRoom=null;roomSpeechCursor=0;roomSpeechRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}
    for(const p of peers.values())p.link.dispose();peers.clear();
    if(previous)try{await api('rooms/'+previous.id+'/'+(previous.hostUserId===user.id?'cancel':'leave'),{});}catch{}
   },
@@ -139,6 +168,10 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    if(!busy&&now>=nextPoll){
     nextPoll=now+260;
     busy=poll(now,pose).catch(()=>{}).finally(()=>busy=null);
+   }
+   if(room&&!busySpeech&&now>=nextSpeechPoll){
+    nextSpeechPoll=now+320;
+    busySpeech=pollRoomSpeech().catch(()=>{}).finally(()=>busySpeech=null);
    }
    if((room||savedRoom)&&!busyRoom&&now>=nextRoomPoll){
     nextRoomPoll=now+1000;
