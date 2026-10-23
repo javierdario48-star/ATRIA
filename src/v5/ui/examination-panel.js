@@ -29,8 +29,8 @@ export function examinationHTML(){return `<h2>Examen físico</h2>
  ${Object.entries({...EXAM_REGIONS,neurological:{label:'Neurológico · Glasgow'}}).map(([id,r])=>
   `<button data-exam-region="${id}" aria-pressed="false"><span>${esc(r.label)}</span><small class="exam-nav-state"></small></button>`).join('')}
  </nav></div>
- <details class="exam-advanced"><summary>Exploración individual (opcional)</summary><section class="exam-techniques"><h3 id="examRegionTitle"></h3><div id="examTechniques" class="row"></div></section></details>
- <div id="examResults" aria-live="polite"></div>
+ <details class="exam-advanced"><summary>Exploración individual y resultados completos (opcional)</summary><section class="exam-techniques"><h3 id="examRegionTitle"></h3><div id="examTechniques" class="row"></div></section>
+ <div id="examResults" aria-live="polite"></div></details>
  <details class="clinical-section"><summary>Registro completo del examen</summary><div id="examRecord"></div></details>
  <p class="note">Sin dato específico no significa normal. Las maniobras y resultados completos permanecen disponibles.</p>
  <div class="actions"><button data-action="patient-chart">Volver al paciente</button></div>`;}
