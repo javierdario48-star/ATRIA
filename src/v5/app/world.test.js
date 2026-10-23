@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {privateRoomMotionPrefix} from '../social/room-motion-scope.js';
 
 const read=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name,import.meta.url)));
 test('authoritative pose corrections cannot become new local movement instructions',async()=>{
@@ -196,12 +197,12 @@ test('private ward renders only verified room members through lobby social prese
  const remote={id:'B',kind:'doctor',name:'Bruno',x:self.x+50,y:self.y,dir:'E',moving:true,color:'navy'};
  w.applySharedSpatial({nurses,doctors:[{...self,id:'A'},remote]},1000);
  const guardPose={userId:'B',name:'Bruno',x:remote.x,y:remote.y,phase:'guard',roomId,
-  motionSession:'B-session',motionEpoch:12345,motionAt:1000,seq:1,dir:'E',moving:true};
+  motionSession:privateRoomMotionPrefix(roomId)+'B-session',motionEpoch:12345,motionAt:1000,seq:1,dir:'E',moving:true};
  w.showGuardSocialPlayers([guardPose],roomId,['A','B'],1000);
  // A doctor in another ward or still in the public lobby is never rendered
  // as this private ward's occupant.
- w.showGuardSocialPlayers([{...guardPose,seq:2,x:remote.x+200,roomId:'unrelated'}],roomId,['A','B'],1260);
- w.showGuardSocialPlayers([{...guardPose,seq:2,x:remote.x+200,phase:'lobby'}],roomId,['A','B'],1260);
+ w.showGuardSocialPlayers([{...guardPose,seq:2,x:remote.x+200,motionSession:privateRoomMotionPrefix('unrelated')+'other'}],roomId,['A','B'],1260);
+ w.showGuardSocialPlayers([{...guardPose,seq:2,x:remote.x+200,motionSession:'lobby-session'}],roomId,['A','B'],1260);
  w.showGuardSocialPlayers([{...guardPose,userId:'C',seq:2,x:remote.x+200}],roomId,['A','B'],1260);
  assert.equal(w.snapshot().others[0].x,remote.x);
  const advanced={...guardPose,x:remote.x+45,motionAt:1260,seq:2};
