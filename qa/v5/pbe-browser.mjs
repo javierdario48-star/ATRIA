@@ -26,6 +26,9 @@ try{
    assert(point.y>hud.y+hud.height+5&&point.y<dock.y-5,'visible map route');
    const before=await page.evaluate(()=>({player:atriaV5.snapshot().player,
    renderer:atriaV5.diagnostics().renderer}));
+   // The grid can already place us at this waypoint after the previous click.
+   // A legitimate no-op must not be classified as blocked movement.
+   if(Math.hypot(before.player.x-x,before.player.y-y)<=8)continue;
    await page.locator('#game').click({position:point});
    try{await page.waitForFunction(start=>{
     const p=atriaV5.snapshot().player;
