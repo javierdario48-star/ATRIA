@@ -63,10 +63,12 @@ try{
  stage='friend request and acceptance';
  await ana.locator('[data-action="add-friend"]').click();
  await ana.locator('#modalClose').click();
- await bruno.locator('#peopleButton').click();
- await bruno.locator('#friendRequests [data-action="accept-friend"]').waitFor();
- await bruno.locator('#friendRequests [data-action="accept-friend"]').click();
- await bruno.locator('#modalClose').click();
+ await bruno.locator('#friendRequestNotice').waitFor({state:'visible',timeout:30000});
+ assert.match(await bruno.locator('#friendRequestNotice').innerText(),/Dra\. Ana/);
+ assert.equal(await bruno.locator('#notificationsCount').innerText(),'1');
+ await bruno.locator('#friendRequestAccept').click();
+ await bruno.locator('#friendRequestNotice').waitFor({state:'hidden'});
+ await bruno.locator('#notificationsCount').waitFor({state:'hidden'});
  stage='direct invitation from tapped friend';
  await ana.locator('#peopleButton').click();
  await ana.locator('#lobbyContacts [data-action="inspect-player"]').filter({hasText:'Dr. Bruno'}).click();
@@ -77,6 +79,10 @@ try{
  stage='unilateral notification, acceptance without making another invitation';
  await bruno.locator('#coopInviteNotice').waitFor({state:'visible',timeout:30000});
  assert.match(await bruno.locator('#coopInviteNotice').innerText(),/Dra\. Ana/);
+ assert.equal(await bruno.locator('#notificationsCount').innerText(),'1');
+ await bruno.locator('#notificationsButton').click();
+ assert.match(await bruno.locator('#coopInvitations').innerText(),/Dra\. Ana/);
+ await bruno.locator('#modalClose').click();
  await bruno.locator('#coopInviteAccept').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().phase==='guard'&&
   atriaV5.snapshot().mode==='coop',null,{timeout:75000})));
