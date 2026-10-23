@@ -12,6 +12,10 @@ export function openHistoryIntent(raw){
  if(/^(?:por que|porque|para que)\s+(?:(?:te|lo|la|le)\s+)?(?:trajeron|trajiste|viniste|vino|esta|estas|se encuentra)\s+(?:(?:aca|aqui|al hospital|en el hospital|a la guardia|en la guardia))?$/.test(n))return 'reason';
  if(/^(?:que|cuales|cual)\s+(?:(?:te|le|se)\s+)?(?:pasa|paso|sucede|ocurrio|trae|trajo|sientes|sentis|siente|molesta|molestias|sintomas|problema|tienes|tenes|tiene)(?:\s+(?:ahora|hoy|actualmente|por aqui|por aca|aca|para venir|en este momento))?$/.test(n))return 'reason';
  if(/^(?:sintomas|molestias|motivo de consulta|queja principal|enfermedad actual|que le ocurre|que te ocurre|que le pasa|que te pasa)$/.test(n))return 'reason';
+ if(/^(?:que|cuales?) (?:son )?(?:(?:tus|sus|los|las) )?(?:sintomas|molestias|problemas)(?: (?:tenes|tienes|tiene|presentas|presenta|sentis|sientes|siente|ahora|hoy))?$/.test(n))return 'reason';
+ if(/^(?:me podes|me puedes|puedes|podes) (?:decir|contar|explicar)(?:me)? (?:que te pasa|que te paso|que le pasa|que siente|que sentis|que sientes)$/.test(n))return 'reason';
+ if(/^(?:contame|cuentame|digame|decime) (?:que te pasa|que te paso|que le pasa|que siente|que sentis|que sientes|por que viniste|por que vino)$/.test(n))return 'reason';
+ if(/^(?:en que puedo ayudarte|en que puedo ayudarle|para que viniste|para que vino|que motivo te trajo)$/.test(n))return 'reason';
  if(/^(?:como|que tal)\s+(?:(?:te|se)\s+)?(?:encuentras|encuentra|estas|esta|sentis|sientes|siente|andas)(?:\s+(?:ahora|hoy|desde que llegaste|actualmente))?$/.test(n))return 'status';
  return null;
 }
