@@ -6,7 +6,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   if(signal?.aborted)throw new DOMException('disposed','AbortError');return [key,image];
  })));
  let width=0,height=0,dpr=1,scale=1,camera={x:496,y:1348};
- let playBounds=null,anchorX=0,anchorY=null,lastAnchorTime=null;
+ let playBounds=null,anchorX=0,anchorY=null,lastAnchorTime=null,cameraScene=null,lastCameraTime=null;
  const pixel=value=>Math.round(value*dpr)/dpr;
  const [mapWidth,mapHeight]=content.map.source_size_px;
  const screen=(x,y)=>[(x-camera.x)*scale+anchorX,(y-camera.y)*scale+(anchorY??height/2)];
@@ -85,9 +85,25 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   // Exact old centering is important for the reversible visual parity control.
   // Smooth only into the keyboard layout; restore the original image on hide.
   anchorY=!valid?height/2:pixel(anchorY===null?desiredY:anchorY+(desiredY-anchorY)*(1-Math.exp(-dt/.10)));
-  // Snap the camera origin to device pixels. Otherwise canvas texture
-  // resampling produces the shimmer visible during subpixel walks on mobile.
-  camera=valid?{x:pixel(world.player.x*scale)/scale,y:pixel(world.player.y*scale)/scale}:{x:world.player.x,y:world.player.y};
+  // Follow actual local walking instantly. Only soften small authoritative
+  // idle corrections in durable co-op; a remote message must never trigger
+  // a camera jump. The world/clinical actor itself is never modified here.
+  const scene=world.phase+':'+world.generation;
+  const target=world.player,wasFollowing=cameraScene===scene;
+  if(!wasFollowing||world.phase!=='guard'||world.mode!=='coop'||target.moving||
+     Math.hypot(target.x-camera.x,target.y-camera.y)>180)
+   camera={x:target.x,y:target.y};
+  else{
+   const seconds=lastCameraTime===null?0:Math.max(0,Math.min(.08,(now-lastCameraTime)/1000));
+   const smooth=1-Math.exp(-seconds/.14);
+   const dx=target.x-camera.x,dy=target.y-camera.y;
+   if(Math.hypot(dx,dy)*scale>1.5){
+    camera={x:camera.x+dx*smooth,y:camera.y+dy*smooth};
+   }
+  }
+  cameraScene=scene;lastCameraTime=now;
+  // Device-pixel alignment avoids canvas texture shimmer on mobile.
+  if(valid)camera={x:pixel(camera.x*scale)/scale,y:pixel(camera.y*scale)/scale};
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
   const tile=512*scale,left=camera.x-anchorX/scale,top=camera.y-anchorY/scale;
   const sx=-((left*scale)%tile+tile)%tile,sy=-((top*scale)%tile+tile)%tile;
