@@ -6,7 +6,7 @@ import {setHTML} from './render-content.js';
 // A compact, progressive overlay around the ORIGINAL anatomical selector.
 // The source is p.examFindings (server-confirmed); no speculative normal exam.
 export function examinationHTML(){return `<h2>Examen físico</h2>
- <p class="note">Elegí una zona y una maniobra. Los hallazgos confirmados se incorporan al resumen progresivamente.</p>
+ <p class="note">Elegí una región: se evaluarán sus maniobras y la tarjeta mostrará el resultado. Tocá nuevamente para darla vuelta.</p>
  <section class="exam-progressive" aria-label="Impresión clínica progresiva">
   <div class="exam-progress-heading"><h3>Impresión en construcción</h3><small id="examProgressCount"></small></div>
   <div id="examProgressiveSummary" aria-live="polite"></div>
@@ -29,7 +29,7 @@ export function examinationHTML(){return `<h2>Examen físico</h2>
  ${Object.entries({...EXAM_REGIONS,neurological:{label:'Neurológico · Glasgow'}}).map(([id,r])=>
   `<button data-exam-region="${id}" aria-pressed="false"><span>${esc(r.label)}</span><small class="exam-nav-state"></small></button>`).join('')}
  </nav></div>
- <section class="exam-techniques"><h3 id="examRegionTitle"></h3><div id="examTechniques" class="row"></div></section>
+ <details class="exam-advanced"><summary>Exploración individual (opcional)</summary><section class="exam-techniques"><h3 id="examRegionTitle"></h3><div id="examTechniques" class="row"></div></section></details>
  <div id="examResults" aria-live="polite"></div>
  <details class="clinical-section"><summary>Registro completo del examen</summary><div id="examRecord"></div></details>
  <p class="note">Sin dato específico no significa normal. Las maniobras y resultados completos permanecen disponibles.</p>
@@ -56,7 +56,22 @@ function methodDetails(method){
   <b>${esc(method.label)}</b><span>${esc(methodSummary(method))}</span></summary>
   <div class="exam-method-body">${method.findings.map(row=>`<p><strong>${esc(row.organ)}:</strong> ${esc(row.known?row.text:'Sin dato específico modelado; no implica normalidad.')}</p>`).join('')}</div></details>`;
 }
-export function renderExamination(document,p,regionId){
+export function examFlipHTML(id,region,section,flipped){
+ const label=region.label;
+ const status=section?.status==='observed'?'Hallazgos':section?'Explorado':'Pendiente';
+ const title='<span class="exam-flip-heading">'+esc(label)+'</span>';
+ const front='<span class="exam-flip-front">'+title+'<small>'+esc(status)+'</small>'+
+  (section?.status==='observed'?'<span class="exam-flip-preview">'+esc(section.summary)+'</span>':'')+'</span>';
+ const methods=section?.methods||[];
+ const lines=id==='neurological'?(section?.details||[]).map(x=>'<p>'+esc(x)+'</p>'):
+  methods.map(m=>'<p><b>'+esc(m.label)+':</b> '+esc(m.findings.filter(x=>x.known).map(x=>x.text).join(' · ')||
+   'Sin dato específico modelado')+'</p>');
+ const back='<span class="exam-flip-back"><b>'+esc(label)+'</b>'+
+  (lines.length?lines.join(''):'<small>Exploración pendiente.</small>')+
+  '<small class="exam-flip-return">Tocar para volver</small></span>';
+ return '<span class="exam-flip-inner">'+front+back+'</span>';
+}
+export function renderExamination(document,p,regionId,flippedRegion=null){
  const nav=document.getElementById('examRegions');if(!nav)return;
  const sections=examinedRegions(p),impression=progressiveExamImpression(p);
  const summary=document.getElementById('examProgressiveSummary');
@@ -71,9 +86,12 @@ export function renderExamination(document,p,regionId){
   const id=b.dataset.examRegion,bSelected=id===regionId;
   b.setAttribute('aria-pressed',String(bSelected));
   b.classList.toggle('selected',bSelected);
-  const indicator=b.querySelector('.exam-nav-state');
-  if(indicator)indicator.textContent=examRegionStatus(p,id)==='observed'?'Hallazgos':
-   examRegionStatus(p,id)==='unmodeled'?'Sin dato específico':'Pendiente';
+  if(b.closest('#examRegions')){
+   b.classList.toggle('is-flipped',id===flippedRegion);
+   b.setAttribute('aria-label',EXAM_REGIONS[id]?.label||'Neurológico');
+   setHTML(b,examFlipHTML(id,{label:id==='neurological'?'Neurológico · Glasgow':EXAM_REGIONS[id].label},
+    sections.find(x=>x.id===id),id===flippedRegion));
+  }
  }
  const neuro=regionId==='neurological',r=EXAM_REGIONS[regionId];
  document.getElementById('examRegionTitle').textContent=neuro?'Neurológico · Glasgow':r.label;
