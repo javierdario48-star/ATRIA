@@ -16,7 +16,7 @@ import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} fro
  */
 export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[]}){
  const ui=id=>document.getElementById(id);
- let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null;
+ let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='';
  const ecgSweep=createEcgSweep();
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
  const post=text=>send(text,{patientUid});
@@ -32,7 +32,8 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const s=session()?.read();
   if(!s||s.patient.uid!==patient?.uid){notify('No hay un caso activo para cerrar.');return;}
   patientUid=patient.uid;
-  open(closureDecisionHTML(s),'case-close');
+  lastClosureMarkup=closureDecisionHTML(s);
+  open(lastClosureMarkup,'case-close');
   ui('modalContent').dataset.patientUid=patientUid;
  }
  function showDiagnosis(patient){
@@ -201,8 +202,8 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const s=state();if(!s){if(patientUid){close();patientUid=null;}return;}const p=s.patient;
   if(document.getElementById('modal')?.dataset.panel==='case-close'){
    const content=ui('modalContent'),markup=closureDecisionHTML(s);
-   if(content&&content.innerHTML!==markup){
-    setHTML(content,markup);content.dataset.patientUid=patientUid;
+   if(content&&lastClosureMarkup!==markup){
+    lastClosureMarkup=markup;setHTML(content,markup);content.dataset.patientUid=patientUid;
    }
   }
   setHTML(ui('studyOrders'),p.orders.length?p.orders.map(order=>'<div data-study="'+esc(order.id)+'" data-status="'+order.status+'"><b>'+esc(order.label)+'</b><small>'+
@@ -295,5 +296,5 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   render();return true;
  }
  return Object.freeze({showPatient,showClosure,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
-  reset(){patientUid=null;regionId='general';flippedRegion=null;examBusy=false;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
+  reset(){patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }
