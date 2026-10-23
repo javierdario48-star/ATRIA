@@ -211,7 +211,7 @@ export async function createApplication({document,window,content,signal}){
    }},
    onSnapshot:value=>{
     if(durableClient!==client||coopRoomId!==room.id||destroyed)return;
-    world.applySharedSpatial(value.spatial,window.performance.now());
+    world.applySharedSpatial(value.spatial,window.performance.now(),client.lastAcknowledgedMotion(social.state().user?.id));
     const revision=value.clinical.room.revision;
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
     const terminal=outcomeId(value.clinical.patient);
@@ -698,7 +698,7 @@ export async function createApplication({document,window,content,signal}){
    if(durableClient){
     durableClient.setTyping(clinicalTyping);
     const intent=world.motionIntent(),key=JSON.stringify(intent);
-    if(intent&&key!==lastMotion){lastMotion=key;durableClient.motion(intent.target);}
+    if(intent&&key!==lastMotion){lastMotion=key;durableClient.motion(intent.target,intent.sequence);}
     durableClient.maintain(now,{moving:s.player.moving});
    }else if(replica){replica.maintain(now);const key=JSON.stringify(s.player.target||[s.player.x,s.player.y]);
     if(key!==lastMotion){lastMotion=key;const host=social.state().room?.hostUserId;if(host)social.send(host,{kind:'motion',target:s.player.target||[s.player.x,s.player.y]});}}
