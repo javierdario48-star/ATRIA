@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import {createQaSocialServer} from '../../social/qa-social-server.js';
 import {createCooperativeLink} from './cooperative-link.js';
+import {privateRoomMotionPrefix} from './room-motion-scope.js';
 const storage=()=>{const data=new Map();return {getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)};};
 function fixture(){
  const data=new Map(),store={get:async k=>data.get(k),set:async(k,v)=>data.set(k,structuredClone(v)),delete:async k=>data.delete(k)},backend=createQaSocialServer(store);
@@ -141,8 +142,8 @@ test('private ward keeps 260ms movement even when its RTC signaling is delayed',
   await Promise.resolve();
  }
  assert.equal(value?.x,452,'the ward pose is published while RTC signaling stays blocked');
- assert.equal(value?.roomId,room.id);
- assert.equal(value?.phase,'guard');
+ assert(value.motionSession.startsWith(privateRoomMotionPrefix(room.id)),
+  'only the active private ward may render this pose');
  assert.equal(value?.motionCadence,260);
  f.release();await a.flush();a.dispose();
 });
