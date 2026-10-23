@@ -102,7 +102,7 @@ export function clinicalVocabulary({caseId,cases=[],therapies=[],studies=[]}={})
  return items;
 }
 export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,studies,limit=5}={}){
- const clause=mode==='monitor'?String(text||'').trim():activeClinicalClause(text).query;
+ const clause=mode==='monitor'?String(text||'').replace(prefix,'').trim():activeClinicalClause(text).query;
  const query=normalizeClinicalQuery(clause);
  if(query.length<2)return [];
  const vocabulary=clinicalVocabulary({caseId,cases,therapies,studies});
