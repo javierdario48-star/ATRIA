@@ -100,6 +100,8 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
   async acceptFriend(userId){await connect();await api('friends/accept',{userId});const me=await api('me');
    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
+  async declineFriend(userId){await connect();await api('friends/decline',{userId});const me=await api('me');
+   friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
   async declineInvitation(roomId){await connect();await api('rooms/'+roomId+'/invite/decline',{});
    invites=invites.filter(x=>x.roomId!==roomId);onSocial();},
   async invite(ids){const epoch=++roomEpoch;desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
