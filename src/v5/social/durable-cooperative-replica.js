@@ -80,8 +80,11 @@ export function createDurableCooperativeReplica({
    }
   },
   sync:synchronize,
-  maintain(now){
-   if(disposed||inflight||now-lastPoll<900)return;
+  maintain(now,{moving=false}={}){
+   // Guard movement has a faster cadence than resting clinical refresh. All
+   // actions still commit through the ONE server authority/CAS write lane.
+   const interval=moving||queuedMotion?300:900;
+   if(disposed||inflight||now-lastPoll<interval)return;
    lastPoll=now;synchronize().catch(()=>{/* retain pending events for next frame */});
   },
   post(envelope){
