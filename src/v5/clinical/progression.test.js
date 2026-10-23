@@ -10,3 +10,18 @@ test('native selected-case XP and saved receipt restore preserve exactly one rew
  assert.throws(()=>b.award({...r,patientUid:'p2',closed:false}),/invalid/);
  assert.throws(()=>createProgressionLedger({receipts:[r,r]}),/duplicate/);
 });
+
+test('death penalty is unique, capped at existing XP and persists after restore',()=>{
+ const reward={kind:'clinical.closure',eventId:'win',patientUid:'prior',actorId:'a',closed:true,xp:133};
+ const p=createProgressionLedger();p.award(reward);
+ const first=p.penalizeDeath({patientUid:'dead',eventId:'death',actorId:'a'});
+ assert.equal(first.loss,15);
+ assert.equal(p.penalizeDeath({patientUid:'dead',eventId:'death',actorId:'a'}).loss,15);
+ assert.equal(p.read().xp,118);
+ const restored=createProgressionLedger(p.read());
+ assert.equal(restored.read().xp,118);
+ assert.equal(restored.read().penalties.length,1);
+ const empty=createProgressionLedger();
+ assert.equal(empty.penalizeDeath({patientUid:'first',eventId:'death',actorId:'a'}).loss,0);
+ assert.equal(empty.read().level,1);
+});

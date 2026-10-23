@@ -34,7 +34,7 @@ export function readProfile(storage){
 export async function createApplication({document,window,content,signal}){
  const rootLifecycle=new Lifecycle(),scope=rootLifecycle.enter('application');
  let progress;try{progress=createProgressionLedger(JSON.parse(window.localStorage.getItem(PROGRESS_KEY)||'{}'));}catch{progress=createProgressionLedger();}
- let savedRewardCount=progress.read().receipts.length;
+ let savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
@@ -436,8 +436,8 @@ export async function createApplication({document,window,content,signal}){
   clinicalUI.render();
   const closure=guardSession.read().patient.closure;
   if(coopRoomId&&closure?.closed)progress.award(closure);
-  if(progress.read().receipts.length!==savedRewardCount){
-   try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));savedRewardCount=progress.read().receipts.length;}
+  if(progress.read().receipts.length+progress.read().penalties.length!==savedRewardCount){
+   try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;}
    catch{toast('Progreso confirmado en esta sesión; no se pudo guardar en este dispositivo.');}
   }
   updateHud();
@@ -448,7 +448,13 @@ export async function createApplication({document,window,content,signal}){
  function announceDeath(p){
   if(!p?.patientDied||announcedDeathUid===p.uid)return;
   announcedDeathUid=p.uid;world.stop();patientWheel.hide();clinicalChecklist.hide();
-  open('<h2>Guardia finalizada</h2><p>El paciente falleció tras una alteración crítica sostenida de sus signos vitales. Se cancelaron las intervenciones pendientes.</p><p>No se otorgó experiencia por este caso.</p><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button></div>');
+  const penalty=guardSession?.read()?.progress?.penalties?.find(x=>x.patientUid===p.uid);
+  const loss=penalty?.loss||0;
+  open('<h2>Guardia finalizada</h2><p>El paciente falleció tras una alteración crítica sostenida de sus signos vitales. Se cancelaron las intervenciones pendientes.</p>'+
+   '<div class="case-scorecard"><h3>Resultado · paciente fallecido</h3><p>Experiencia ganada: 0 XP</p>'+
+   '<p class="score-loss">Experiencia descontada: -'+loss+' XP</p>'+
+   '<p>La penalización no supera el saldo de experiencia anterior. No se inventa una evaluación después de la muerte.</p></div>'+
+   '<div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button></div>');
   updateHud();
  }
  function advanceClinicalTo(now){

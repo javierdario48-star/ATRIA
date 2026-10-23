@@ -331,6 +331,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    if(nativePatient.patientDied&&!deathPublished){
     deathPublished=true;
+    progress.penalizeDeath({patientUid:nativePatient.uid,
+     actorId,eventId:roomId+':death:'+nativePatient.uid});
     care.dispose(); // cancel native medication and consultation preparations
     const reject=eventId=>port.complete({eventId,patientUid:nativePatient.uid,
      status:'rejected',reason:'patient-not-active'});
