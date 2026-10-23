@@ -79,5 +79,5 @@ export function patientHTML(p,{readOnly=false}={}){return `
  <details><summary>Intervenciones confirmadas</summary><div id="therapyRecords"></div></details>
  ${diagnosisEditorHTML(p,{readOnly})}
  <p id="caseReadiness" class="note"></p><div id="caseDestinations" class="actions"></div><div id="caseResult" role="status"></div>
- <p class="note">${p.caseId==='APP-001'?'La derivación a quirófano requiere valoración quirúrgica y continuidad del cuidado; no acredita una apendicectomía realizada.':p.caseId==='PERI-SEC-001'?'La derivación requiere valoración quirúrgica y soporte confirmado. El control del foco se realizará en quirófano.':p.caseId==='PERI-PBE-001'?'La PBE requiere cobertura apropiada, albúmina y vigilancia renal. La paracentesis diagnóstica no acredita una cirugía.':p.caseId==='PERI-TER-001'?'La infección persistente requiere soporte, cobertura y respuesta del receptor. El traslado no acredita una nueva operación.':'La espironolactona no produce una reducción inmediata de ascitis en este escenario. Continuá el seguimiento.'}</p>`;}
+ <p class="note">La impresión diagnóstica y las indicaciones son responsabilidad del médico. La respuesta de interconsultas y tratamientos depende de los criterios clínicos confirmados, no de esta guía.</p>`;}
 export const cirrPatientHTML=patientHTML,appPatientHTML=patientHTML;
