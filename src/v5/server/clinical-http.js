@@ -23,7 +23,7 @@ export function createClinicalHttp({authority,verifiedRoom,probe,onUnavailable=(
      members:room.members.map(x=>({id:x.userId,name:x.name}))});return {status:200,body:result};
    }
    if(body.action!=='sync')return {status:400,body:{error:'invalid clinical operation'}};
-   const result=await authority.transact({roomId:body.roomId,actorId,commands:body.commands??[],motion:body.motion??null,
+   const result=await authority.transact({roomId:body.roomId,actorId,commands:body.commands??[],motion:body.motion??null,motionSequence:body.motionSequence??null,
     typing:body.typing??null,confirmation:body.confirmation??null});
    return {status:200,body:result};
   }catch(error){
