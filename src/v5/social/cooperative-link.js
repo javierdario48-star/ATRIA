@@ -1,4 +1,5 @@
 import {createWardPeer} from './ward-peer.js';
+import {privateRoomMotionPrefix} from './room-motion-scope.js';
 const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
 /** Existing authenticated social registration/invitations and V4 SDP relay.
  * Clinical commands/snapshots travel on one reliable ordered ward channel.
@@ -9,7 +10,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  const temporary=new Map();let storage;try{storage=window.localStorage;storage.getItem(SESSION_KEY);}catch{storage={getItem:k=>temporary.get(k),setItem:(k,v)=>temporary.set(k,v),removeItem:k=>temporary.delete(k)};}
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
- const motionSession=window.crypto.randomUUID(),motionEpoch=Math.max(Date.now(),Number(storage.getItem('atria.v5.motionEpoch')||0)+1);
+ let motionSession=window.crypto.randomUUID(),motionEpoch=Math.max(Date.now(),Number(storage.getItem('atria.v5.motionEpoch')||0)+1),motionScope='';
  try{storage.setItem('atria.v5.motionEpoch',String(motionEpoch));}catch{}
  let savedRoom=storage.getItem(ROOM_KEY),presenceSequence=0;
  async function api(path,body,signalEndpoint=false){
@@ -39,6 +40,14 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   const epoch=roomEpoch,active=()=>!disposed&&roomEpoch===epoch;
   await connect();
   if(!active())return;
+  const scope=pose.phase==='guard'?privateRoomMotionPrefix(pose.roomId):'';
+  if(scope!==motionScope){
+   // New spatial scene = new presence session/epoch. The old social backend
+   // already rejects out-of-order packets; no V4 server schema changes.
+   motionScope=scope;motionSession=scope+window.crypto.randomUUID();
+   motionEpoch=Math.max(Date.now(),motionEpoch+1);presenceSequence=0;
+   try{storage.setItem('atria.v5.motionEpoch',String(motionEpoch));}catch{}
+  }
   // V4's HTTP movement/roster fallback travels concurrently: an unrelated
   // directory read must never add a full RTT before the next motion packet.
   const [,social]=await Promise.all([
