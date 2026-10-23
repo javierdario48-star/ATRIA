@@ -100,6 +100,22 @@ try{
  await page.locator('#modalClose').click();await tapEntity('patient');
  const wheel=page.locator('#patientWheel');
  assert.equal(await wheel.locator('button').count(),6);
+ const checklist=page.locator('#bedsideChecklist');
+ assert.equal(await checklist.isVisible(),true,'patient tap reveals the floating checklist');
+ assert.equal(await checklist.locator('.bedside-checklist-steps li').count(),7);
+ assert.match(await checklist.innerText(),/Anamnesis.*Examen físico.*Estudios/s);
+ await checklist.locator('[data-action="toggle-clinical-checklist"]').click();
+ assert.equal(await checklist.locator('.bedside-checklist-steps li').count(),0,'checklist can collapse');
+ await checklist.locator('[data-action="toggle-clinical-checklist"]').click();
+ assert.equal(await checklist.locator('.bedside-checklist-steps li').count(),7);
+ await wheel.locator('[data-patient-action="patient"]').click();
+ assert.equal(await page.locator('#modal').getAttribute('data-panel'),'case-close');
+ assert.match(await page.locator('#modalContent').innerText(),/Cierre de atención/);
+ assert.equal(await page.locator('#caseDestinations button').count(),0,
+  'the server has not approved disposition yet, and the new panel cannot invent it');
+ assert.equal(await checklist.isVisible(),true,'guidance remains available beside the case close decision');
+ await page.locator('[data-action="close"]').click();
+ await tapEntity('patient');
  await page.screenshot({path:out+'/contextual-patient-wheel.png'});
  await wheel.locator('[data-patient-action="examination"]').click();
  assert.match(await page.locator('#examProgressiveSummary').innerText(),/Pendiente de exploración/);
