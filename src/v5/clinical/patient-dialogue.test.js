@@ -147,3 +147,16 @@ test('broad status, compound context and specific followups remain separate inte
  assert.equal(unknown.clinical[0].status,'rejected');
  f.s.dispose();
 });
+
+test('colloquial symptom requests remain patient-specific across additional phrasings',async()=>{
+ const f=setup('CIRR-001');
+ for(const question of ['¿Qué síntomas tenés?','¿Cuáles son tus síntomas?','¿Qué molestias tienes?',
+  'Contame qué te pasa','¿Me podés decir qué te pasó?','¿En qué puedo ayudarte?']){
+  const result=await f.send(question);
+  assert.equal(result.clinical[0].status,'executed',question);
+  assert.match(answer(result),/hinchando.*cansado/,question);
+ }
+ assert.equal(f.s.read().patient.reassessments,0);
+ assert.deepEqual(f.s.read().patient.treatments,[]);
+ f.s.dispose();
+});
