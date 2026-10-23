@@ -162,7 +162,7 @@ export function createWorld(content,profile,checkpoint=null){
   stopRemote(id){const other=others.find(x=>x.id===id);if(other){other.path=[];other.pathIndex=0;other.target=null;other.moving=false;}},
   patientInRangeFor(id,uid){const a=id===profile.id?player:others.find(x=>x.id===id),p=patients.find(x=>x.uid===uid);
    return a&&p&&Math.hypot(a.x-p.x,a.y-p.y)<=PATIENT_RANGE?uid:null;},
-  applySharedSpatial({nurses:sharedNurses,doctors},now=Date.now()){
+  applySharedSpatial({nurses:sharedNurses,doctors},now=Date.now(),acknowledgedMotion=null){
    if(authoritative||mode!=='coop')return false;
    // The server owns all bedside receipts and nurse journeys. Clients only
    // interpolate the committed pose between clinical snapshots. Reuse the
@@ -202,16 +202,15 @@ export function createWorld(content,profile,checkpoint=null){
     const old=previous.get(remote.id),other=structuredClone(remote);
     if(old?.speechBubble?.until>now)other.speechBubble=old.speechBubble;
     let track=guardRemotes.get(remote.id);
-    if(track?.source==='social'&&now-track.lastSocialAt<1800){
-     // Live private-room presence animates the doctor. Server snapshots
-     // remain authoritative for clinical interactions, not visual poses.
+    if(track?.source==='social'){
+     // Never switch this avatar back to a late clinical position: that
+     // causes a second, backwards traversal when the next live social packet
+     // arrives. A missing packet holds the last displayed pose; the server
+     // remains authoritative for all interaction ranges and treatment.
      Object.assign(other,{x:old?.x??track.pose.x,y:old?.y??track.pose.y,
       dir:old?.dir??remote.dir,moving:old?.moving??remote.moving,
       walkPhase:old?.walkPhase??remote.walkPhase});
      return other;
-    }
-    if(track?.source==='social'){
-     guardRemotes.delete(remote.id);track=null;
     }
     if(!track){
      track={pose:createRemotePose({x:remote.x,y:remote.y,now,cadence:320,speed:205}),seq:0,source:'clinical'};
@@ -231,10 +230,20 @@ export function createWorld(content,profile,checkpoint=null){
    });
    for(const id of guardRemotes.keys())if(!remoteIds.has(id))guardRemotes.delete(id);
    const self=doctors.find(x=>x.id===profile.id);
-   if(self&&!player.moving&&Math.hypot(self.x-player.x,self.y-player.y)>3){
-    player.x=self.x;player.y=self.y;
-    const target=lastMotionIntent?.target||self.target;
-    if(target)navigation.target(player,...target);
+   if(self&&!player.moving){
+    // Local prediction must never be rewound to a server pose that predates
+    // its input. Accept a final position only when the server has processed
+    // this exact input sequence AND arrived at that destination.
+    const intent=lastMotionIntent;
+    const settled=(!self.moving&&!self.target);
+    const admitted=intent&&Number.isSafeInteger(acknowledgedMotion)&&acknowledgedMotion>=intent.sequence;
+    const arrived=intent&&Math.hypot(self.x-intent.target[0],self.y-intent.target[1])<2;
+    if(!intent&&settled){
+     player.x=self.x;player.y=self.y;
+    }else if(admitted&&settled&&arrived&&Math.hypot(self.x-player.x,self.y-player.y)>1){
+     // Final correction only. Do not reconstruct a path or walk it twice.
+     player.x=self.x;player.y=self.y;
+    }
    }
    return true;
   },
