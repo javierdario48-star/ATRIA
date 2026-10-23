@@ -174,7 +174,12 @@ export async function createApplication({document,window,content,signal}){
    if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Invitación enviada</h2><p>Esperando que los colegas acepten la guardia compartida.</p>');
   }catch(error){if(cooperativeFlow.current(intent))toast(error.message);}
  }
- function clinicalChanged(){renderGuardCommunication();if(outcomeId(guardSession?.read().patient))publishCooperativeState(window.performance.now(),true);}
+ function clinicalChanged(){
+  renderGuardCommunication();
+  const patient=guardSession?.read()?.patient;
+  if(durableClient)announceDeath(patient);
+  if(outcomeId(patient))publishCooperativeState(window.performance.now(),true);
+ }
  function maybeBeginCooperativeRoom(now=window.performance.now()){
   if(now<nextCooperativeAdmission||coopRoomId||durableStarting||durableJoining)return;
   const state=social.state(),room=state.room,role=social.isHost()?'host':'guest';
@@ -378,18 +383,22 @@ export async function createApplication({document,window,content,signal}){
    open('<div id="caseResult">'+caseDebriefHTML(closure)+'</div><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button><button data-action="close">Seguir viendo el caso</button></div>','outcome');}
  }
  function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;focusedPatientUid=null;line('ATRIA',message,true);}
+ function announceDeath(p){
+  if(!p?.patientDied||announcedDeathUid===p.uid)return;
+  announcedDeathUid=p.uid;world.stop();patientWheel.hide();
+  open('<h2>Guardia finalizada</h2><p>El paciente falleció tras una alteración crítica sostenida de sus signos vitales. Se cancelaron las intervenciones pendientes.</p><p>No se otorgó experiencia por este caso.</p><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button></div>');
+  updateHud();
+ }
  function advanceClinicalTo(now){
   now=Math.max(lastClinicalFrame??now,now);
   const previous=lastClinicalFrame;lastClinicalFrame=now;
-  if(guardSession&&previous!==null){
-   guardSession.advance(Math.max(0,(now-previous)/1000),{typing:clinicalTyping});
-   const p=guardSession.read()?.patient;if(!p)return;
-   if(p.patientDied&&announcedDeathUid!==p.uid){
-    announcedDeathUid=p.uid;world.stop();patientWheel.hide();
-    open('<h2>Guardia finalizada</h2><p>El paciente falleció tras una alteración crítica sostenida de sus signos vitales. Se cancelaron las intervenciones pendientes.</p><p>No se otorgó experiencia por este caso.</p><div class="actions"><button class="primary" data-action="return-lobby">Volver al lobby</button></div>');
-    updateHud();
-   }
-  }
+  if(!guardSession||previous===null)return;
+  // The durable session's physiology runs only on the server. Its advance()
+  // is a no-op; cloning a complete clinical snapshot 60 times/second here
+  // blocked the mobile render loop. Death is handled on fresh snapshots.
+  if(durableClient)return;
+  guardSession.advance(Math.max(0,(now-previous)/1000),{typing:clinicalTyping});
+  announceDeath(guardSession.read()?.patient);
  }
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard',clinical=guardSession?.read();
