@@ -1,5 +1,22 @@
 # ATRIA 5.0 — C5.b.3 Cooperativo persistente
 
+## C5.b.3 — movimiento del lobby en la sala clínica privada (22-10-2026)
+
+**Motivo:** el usuario confirmó que el lobby era fluido, pero la guardia Cooperativa seguía con lag o empeoraba después de aumentar las consultas clínicas a 300 ms. No repetir ese remedio.
+
+**Causa verificada en código:** `src/v5/social/cooperative-link.js` compartía un único `busy` y un período de **1000 ms** para la presencia en guardia, además de esperar negociación de sala, intercambio SDP/ICE y otras respuestas. El lobby usa **260 ms** y no espera negociación RTC. En paralelo, `src/v5/social/durable-cooperative-replica.js` mezclaba movimiento con `/api/clinical`, que restaura sesión, simula la fisiología y exige CAS persistente. La frecuencia de 300 ms podía añadir contención sin mejorar la animación remota. Esto explica un mecanismo concreto de saltos, aunque falta verificar latencia WAN real.
+
+**Cambio de arquitectura limpio y acotado al V5 experimental:**
+- `src/v5/social/cooperative-link.js`: una vía de presencia **260 ms** independiente de la negociación de sala **1000 ms**, ambas accionadas por el RAF original; no se añaden loops, timers, servidores ni motores nuevos.
+- `src/v5/social/room-motion-scope.js`: crea un identificador visual de sesión privado por sala a partir de un fingerprint determinista y UUID. El V5 rota `motionSession` y `motionEpoch` al entrar/salir, usando campos **ya existentes** en el servidor social V4. Se revirtió explícitamente cualquier cambio de `src/social/qa-social-server.js` para respetar el hash del módulo histórico. El fingerprint sirve solo para presentar avatares, no otorga admisión ni permisos.
+- `src/v5/app/world.js`: solo integra presencia remota cuando el médico ya pertenece a la sala clínica autenticada, filtrando por sesión de sala; interpola con `remote-motion.js` original y evita que un snapshot PostgreSQL lento rebobine su posición visual. Si dejan de llegar paquetes nuevos, recurre al snapshot persistente. Las distancias y posiciones clínicas siguen siendo exclusivas del servidor.
+- `src/v5/app/application.js`: publica la pose con contexto visual y aplica los mensajes de movimiento privados exclusivamente a los compañeros de la guardia durable. Ninguna intervención clínica usa esa pose social para autorizar actos médicos.
+- `src/v5/social/durable-cooperative-replica.js`: se devuelve el polling clínico a **900 ms** para no convertir la base PostgreSQL en el canal de animación, conservando envío inmediato serializado de mensajes del paciente y ACK idempotentes.
+- Pruebas añadidas en `src/v5/app/world.test.js` y `src/v5/social/cooperative-link.test.js`: miembro válido en sala, rechazo visual de lobby/salas ajenas, continuidad ante snapshots lentos, paquetes sociales de 260 ms incluso si la negociación RTC se bloquea. `migration-inventory.test.js` volvió a aprobar conservando referencias V4 byte a byte.
+
+**Resultados locales sobre código `791952e4e6c3d0cb4d978286b615c92940f9e2cf`:** `npm run build:v5` verde y `npm run test:v5` **480/480** aprobadas. CI remota del último HEAD aún puede estar en cola; no declarar 15/15 sin observarla. **Pendiente de aceptación:** dos teléfonos físicos en la misma URL Preview, medir fluidez de compañero en guardia, comparar con lobby, tiempos de interacción clínica y continuidad tras salida del anfitrión. No se han modificado Production, main, V4, fisiología, tratamientos, enfermería, evaluación ni XP.
+
+
 ## C5.b.3 — UI de amistades y latencia de guardia (22-10-2026)
 
 **Reporte de aceptación manual:** el usuario confirmó que ya funciona el Cooperativo y que caminar en el lobby va fluido, pero pidió (1) solicitud de amistad visible como la invitación a guardia; (2) contador de notificaciones arriba a la derecha; (3) reducir lag al caminar y hablar al paciente en una guardia; (4) burbujas de mensajes sobre médicos en guardia. El tiempo de respuesta de dispositivos físicos permanece **sin certificar**.
