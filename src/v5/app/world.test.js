@@ -322,3 +322,26 @@ test('reload starts movement IDs above the persisted server receipt',async()=>{
  world.applySharedSpatial({nurses:existing.nurses,doctors:[{...existing.player,id:'A'}]},1100,15);
  assert.equal(world.motionIntent().sequence,18,'old ACK cannot decrease the local counter');
 });
+
+
+test('the same original nurse and patient speak in timed bubbles without modifying clinical state',async()=>{
+ const {createWorld}=await import('./world.js');
+ const content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
+ const w=createWorld(content,{id:'A',name:'Ana'});
+ w.enterGuard({mode:'solo',caseId:'PERI-PBE-001'});
+ const before=w.snapshot(),nurse=before.nurses[0].id,patient=before.patients[0].uid;
+ assert(w.showNpcMessage('nurse','Doctor, ¿qué hacemos?',1000));
+ assert(w.showNpcMessage('patient','Me duele el abdomen.',1100));
+ let value=w.snapshot();
+ assert.equal(value.nurses[0].id,nurse);
+ assert.equal(value.nurses[0].speechBubble.role,'nurse');
+ assert.equal(value.patients[0].speechBubble.role,'patient');
+ assert.equal(value.patients[0].uid,patient);
+ assert.equal(value.nurses.length,before.nurses.length,'no additional nurse NPC');
+ assert.equal(w.showNpcMessage('patient','Tengo una sensación de dolor.',1100),true);
+ for(let t=1140;t<=6200;t+=40)w.step(.04,t);
+ value=w.snapshot();
+ assert.equal(value.nurses[0].speechBubble,undefined);
+ assert.equal(value.patients[0].speechBubble,undefined);
+ assert.equal(value.patients[0].uid,patient);
+});
