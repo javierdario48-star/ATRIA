@@ -350,8 +350,11 @@ export async function createApplication({document,window,content,signal}){
   for(const row of rows){
    if(row.role!=='player'||seenGuardMessages.has(row.id))continue;
    seenGuardMessages.add(row.id);
+   const actorId=social.state().user?.id;
    const author=actors.find(a=>row.id.startsWith('player:'+a.id+':'));
-   if(author)world.showGuardMessage(author.id,row.text,window.performance.now());
+   if(actorId&&row.id.startsWith('player:'+actorId+':'))
+    world.showGuardMessage('local-player',row.text,window.performance.now());
+   else if(author)world.showGuardMessage(author.id,row.text,window.performance.now());
    else if(!coopRoomId)world.showGuardMessage('local-player',row.text,window.performance.now());
   }
   if(seenGuardMessages.size>800)for(const id of [...seenGuardMessages].slice(0,seenGuardMessages.size-500))
