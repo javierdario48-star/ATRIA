@@ -22,19 +22,19 @@ test('on-demand bedside checklist contains all seven stages without clinical spo
  assert.match(clinicalChecklistHTML(s,{collapsed:true}),/aria-expanded="false"/);
  assert(!clinicalChecklistHTML(s,{collapsed:true}).includes('Examen físico'));
 });
-test('closing case offers only server-authorized destinations and cannot skip missing care',()=>{
+test('closure panel offers partial destination attempts but never authorizes or awards them',()=>{
  const s=state();
  let html=closureDecisionHTML(s);
- assert.match(html,/El servidor aún no habilita/);
- assert(!html.includes('data-destination='));
+ assert.match(html,/Seleccioná un destino/);
  assert(html.includes('data-action="close-diagnosis"'));
+ for(const destination of ['observacion','sala','alta','quirofano','uti','procedimiento'])
+  assert(html.includes('data-destination="'+destination+'"'));
+ assert(!/100\/100|\+133 XP|aceptado por cirug[ií]a/i.test(html));
  s.patient.diagnosis='Peritonitis secundaria';
  s.eligibleDestinations=['observacion','uti'];
  html=closureDecisionHTML(s);
  assert.match(html,/Peritonitis secundaria/);
- assert.match(html,/data-destination="observacion"/);
- assert.match(html,/data-destination="uti"/);
- assert(!html.includes('data-destination="quirofano"'),'no case-dependent invented close choices');
+ assert.match(html,/data-destination="quirofano"/,'a destination attempt is not acceptance');
  s.canEdit=false;
  html=closureDecisionHTML(s);
  assert(!html.includes('data-destination='));

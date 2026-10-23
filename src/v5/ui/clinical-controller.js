@@ -71,7 +71,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    pendingDisposition={patientUid:patient.uid,destination:id,service,
     priorConsults:(s.patient.consults||[]).filter(c=>c.id===service).length};
    notify('Enfermera: aviso a '+(service==='cirugia'?'Cirugía':'UTI')+'. Aguardamos su respuesta.');
-   const reply=await post('/consulta '+service);
+   const reply=await post('Enfermera, interconsulta a '+service);
    if(reply?.status==='rejected'||reply?.routeError)pendingDisposition=null;
    return;
   }
