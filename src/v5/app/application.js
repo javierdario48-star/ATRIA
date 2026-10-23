@@ -57,7 +57,7 @@ export async function createApplication({document,window,content,signal}){
  const patientClinical=createPatientClinicalOverlay({document,window,cases:content.cases});
  const clinicalChecklist=createClinicalChecklist({document});
  const hospitalAudio=createHospitalAudio({window,storage:window.localStorage});
- let audioPatient=null;
+ let audioPatient=null,lastAudioRead=-Infinity;
  const chatSuggestions=ui('chatSuggestions'),nurseQuick=ui('nurseQuickButton');
  let autocompleteCaseId=null;
  const atriaKeyboard=createAtriaKeyboard({document,window,input,host:ui('chatDock'),
@@ -819,8 +819,14 @@ export async function createApplication({document,window,content,signal}){
  listen(document,'focusout',event=>{advanceClinicalTo(window.performance.now());clinicalTyping=/INPUT|TEXTAREA/.test(event.relatedTarget?.tagName);});
  function frame(now){
   if(destroyed)return;raf=null;frames++;atriaKeyboard.advance(now);
-  hospitalAudio.tick(now,{phase:document.body.dataset.phase,patient:audioPatient});
   advanceClinicalTo(now);
+  // Audio follows the confirmed ECG monitor reading, not a cached HUD copy.
+  if(now-lastAudioRead>=100){
+   lastAudioRead=now;
+   const sample=guardSession&&audioPatient?.uid?
+    guardSession.monitorRead(audioPatient.uid):null;
+   hospitalAudio.tick(now,{phase:document.body.dataset.phase,patient:sample});
+  }
   scheduler.tick(now,{simulate:dt=>{world.step(dt,now);presentation.advance(world.snapshot());},maintain:()=>{guardSession?.finishNurseArrivals();
    const s=world.snapshot();if(s.phase!=='title'&&(socialEnabled||coopRoomId||social.state().recovering))social.maintain(now,{...s.player,phase:s.phase,roomId:coopRoomId});
    // Admission can retry while RTC signaling is stalled inside social.poll.

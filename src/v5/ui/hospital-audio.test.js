@@ -83,3 +83,18 @@ test('background suspends both music and heart monitor; patient death mutes beat
  assert.equal(audio.state().monitorHR,null);
  audio.destroy();
 });
+
+test('measured monitor sound tracks variable ECG HR without fixed bpm presets',()=>{
+ const {audio}=fixture();audio.unlock();
+ const p=patient(78);
+ audio.tick(100,{phase:'guard',patient:p});
+ assert.equal(audio.state().monitorHR,78);
+ p.lastVitalsKnown.vitals.hr=109;
+ audio.tick(220,{phase:'guard',patient:p});
+ assert.equal(audio.state().monitorHR,109);
+ assert.equal(monitorBeatIntervalMs(audio.state().monitorHR),60000/109);
+ p.procedures.monitor.connected=false;
+ audio.tick(340,{phase:'guard',patient:p});
+ assert.equal(audio.state().monitorHR,null);
+ audio.destroy();
+});

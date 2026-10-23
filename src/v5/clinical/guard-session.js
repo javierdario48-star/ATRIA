@@ -406,6 +406,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   monitorRead(uid){
    if(disposed||uid!==nativePatient.uid)return null;
    return {uid:nativePatient.uid,caseEnded:!!nativePatient.caseEnded,
+    patientDied:!!nativePatient.patientDied,
     ecg:nativePatient.ecg?copy(nativePatient.ecg):null,
     procedures:{monitor:{connected:!!nativePatient.procedures?.monitor?.connected}},
     lastVitalsKnown:nativePatient.lastVitalsKnown?{vitals:copy(nativePatient.lastVitalsKnown.vitals)}:null};
