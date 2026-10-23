@@ -1,0 +1,28 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {guardScoreModelV5,guardScoreboardHTML} from './guard-scoreboard.js';
+test('solo and cooperative share only a confirmed outcome, never multiply EXP by players',()=>{
+ const waiting={uid:'P',caseEnded:false,closure:null};
+ assert.deepEqual(guardScoreModelV5({mode:'solo',patient:waiting}),{mode:'solo',resolved:0,xp:0});
+ const p={uid:'P',caseEnded:true,patientDied:false,
+  closure:{closed:true,xp:71,quality:{score:45}}};
+ assert.deepEqual(guardScoreModelV5({mode:'solo',patient:p}),{mode:'solo',resolved:1,xp:71});
+ assert.deepEqual(guardScoreModelV5({mode:'coop',patient:p,players:[
+  {id:'a'},{id:'b'},{id:'c'},{id:'d'}]}),{mode:'coop',resolved:1,xp:71});
+ assert.match(guardScoreboardHTML(guardScoreModelV5({mode:'coop',patient:p})),/EQUIPO/);
+ assert.deepEqual(guardScoreModelV5({mode:'solo',patient:{...p,patientDied:true}}),
+  {mode:'solo',resolved:0,xp:0});
+});
+test('the competitive scoreboard ranks only real assigned outcomes; ties do not fabricate a leader',()=>{
+ const players=[{id:'a',name:'Médica Uno'},{id:'b',name:'Médico Dos'}];
+ let model=guardScoreModelV5({mode:'competitive',players,outcomes:[]});
+ assert.equal(model.players.length,2);
+ assert(model.players.every(p=>p.leader===false));
+ const outcomes=[{ownerId:'a',closed:true,survived:true,score:85,xp:120,points:140},
+ {ownerId:'b',closed:true,survived:true,score:75,xp:110,points:100}];
+ model=guardScoreModelV5({mode:'competitive',players,outcomes});
+ assert(model.players[0].leader&&!model.players[1].leader);
+ assert.equal(model.players[0].resolved,1);
+ assert(guardScoreboardHTML(model).includes('Médica Uno'));
+ assert(!guardScoreboardHTML(model).includes('<script'));
+});
