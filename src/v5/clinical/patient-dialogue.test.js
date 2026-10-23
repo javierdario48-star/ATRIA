@@ -110,3 +110,40 @@ test('pain dimensions take precedence over broad appetite keywords without grant
  assert.match(answer(await f.send('¿Tiene apetito?')),/hambre/);
  assert(f.s.read().patient.intentHistory.some(x=>x.id==='anorexia'));f.s.dispose();
 });
+
+
+test('five migrated patients understand common open questions without exposing other case facts',async()=>{
+ for(const [caseId,expected] of [
+  ['APP-001',/ombligo.*derecha/],
+  ['CIRR-001',/hinchando/],
+  ['PERI-PBE-001',/hinchada.*fiebre/],
+  ['PERI-SEC-001',/duele muchísimo.*vomité/],
+  ['PERI-TER-001',/operaciones.*fiebre/]
+ ]){
+  const f=setup(caseId);
+  for(const question of ['¿Por qué estás acá?','¿Qué sientes?','¿Qué te pasó?',
+   '¿Síntomas?','¿Qué te pasa?','¿Qué te trae por acá?']){
+   const a=await f.send(question);
+   assert.equal(a.clinical[0].status,'executed',caseId+': '+question);
+   assert.match(answer(a),expected,caseId+': '+question);
+  }
+  const patient=f.s.read().patient;
+  assert(patient.intentHistory.some(x=>x.id==='interview:symptoms'));
+  assert.equal(patient.examDone,false);
+  assert.equal(patient.lastVitalsKnown,null);
+  assert.deepEqual(patient.treatments,[]);
+  f.s.dispose();
+ }
+});
+test('broad status, compound context and specific followups remain separate intents',async()=>{
+ const f=setup('APP-001');
+ assert.match(answer(await f.send('¿Cómo estás?')),/Sigo como cuando llegué/);
+ const both=await f.send('¿Qué te pasó? ¿Desde cuándo empezó el dolor?');
+ assert.match(answer(both),/ombligo.*ocho horas/);
+ assert(f.s.read().patient.intentHistory.some(x=>x.id==='onset'));
+ assert.match(answer(await f.send('¿Dónde te duele?')),/abajo a la derecha/);
+ assert.match(answer(await f.send('¿Cuánto te duele?')),/7 de 10/);
+ const unknown=await f.send('¿De qué color es tu planeta favorito?');
+ assert.equal(unknown.clinical[0].status,'rejected');
+ f.s.dispose();
+});
