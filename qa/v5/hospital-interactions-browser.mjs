@@ -152,7 +152,7 @@ try{
  assert.match(await page.locator('#fullClinicalHistory').innerText(),/Esplenomegalia/);assert.match(await page.locator('#fullClinicalHistory').innerText(),/15/);
  await page.locator('#modalClose').click();await tapEntity('monitor');
  await page.locator('#monitorOrderInput').fill('paracentesis');
- await page.locator('#monitorOrderSuggestions [data-action="monitor-suggestion"]').first().click();
+ await page.locator('#monitorOrderSuggestions [data-action="monitor-suggestion"]').filter({hasText:/Paracentesis terapéutica/}).first().click();
  await page.locator('[data-action="monitor-order-submit"]').click();
  assert.equal(await page.locator('#monitorOrderFeedback').getAttribute('data-status'),'pending',
   'monitor cannot announce administration before actual nurse preparation');
