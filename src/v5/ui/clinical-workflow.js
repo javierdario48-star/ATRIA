@@ -30,6 +30,7 @@ export function clinicalWorkflow(state){
  let cue=null;
  if(!ended){
   if(unstable)cue={id:'unstable',text:'Doctor, los signos registrados siguen comprometidos. ¿Qué hacemos?'};
+  else if(studies&&!diagnosis)cue={id:'results',text:'Doctor, ya hay resultados disponibles. ¿Cuál es su impresión diagnóstica?'};
   else if(!diagnosis&&(assessed||examined||studies||therapy))cue={id:'diagnosis',text:'Doctor, ya tenemos información del paciente. ¿Cuál es su impresión diagnóstica?'};
   else if(diagnosis&&surgicalImpression&&!consulted(p,'cirugia'))
    cue={id:'surgery:'+normalize(diagnosis),text:'Doctor, según su impresión diagnóstica, ¿quiere que avise a cirugía?'};
