@@ -58,7 +58,9 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   if(line)lines.push(line);
   const visible=lines.slice(0,3),w=Math.min(max,Math.max(62*scale,...visible.map(t=>ctx.measureText(t).width+20*scale))),
    h=(visible.length*font*1.4)+12*scale,top=y-94*scale-h;
-  ctx.fillStyle='rgba(255,255,250,.96)';ctx.strokeStyle='#23506b';ctx.lineWidth=1.3;
+  const role=bubble.role||'doctor';
+  ctx.fillStyle=role==='patient'?'rgba(221,243,254,.98)':role==='nurse'?'rgba(255,241,207,.98)':'rgba(255,255,250,.96)';
+  ctx.strokeStyle=role==='patient'?'#408fb8':role==='nurse'?'#c88e37':'#23506b';ctx.lineWidth=1.3;
   ctx.beginPath();ctx.roundRect(x-w/2,top,w,h,8*scale);ctx.fill();ctx.stroke();
   ctx.fillStyle='#102f45';
   for(let i=0;i<visible.length;i++)ctx.fillText(visible[i],x,top+12*scale+font*.65+i*font*1.4);
@@ -126,6 +128,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   if(world.phase!=='title')label(world.player,world.player.name,world.player.level);
   for(const a of world.others||[])label(a,a.name,a.level);
   if(world.phase==='lobby'||world.phase==='guard')for(const a of [world.player,...world.others])speechBubble(a,now);
+  if(world.phase==='guard')for(const a of [...world.patients,...world.nurses,...(world.expert?[world.expert]:[])])speechBubble(a,now);
   if(world.expert)label(world.expert,'Dr. Vega');
   if(world.player.target){const [x,y]=screen(...world.player.target);ctx.strokeStyle='#ffd25f';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,9*scale,0,Math.PI*2);ctx.stroke();}
  }
