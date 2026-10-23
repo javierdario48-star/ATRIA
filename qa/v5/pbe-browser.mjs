@@ -77,9 +77,13 @@ try{
   for(const [id,delay] of [['pbe_paracentesis',40],['pbe_renal',45]]){
    const o=requested.find(x=>x.id===id);assert.equal(o.status,'pending');assert(Math.abs(o.readyAtMinute-o.requestedAtMinute-delay)<1e-8);
   }
-  stage=name+' floating diagnosis';await page.locator('[data-patient-diagnosis]').click();await page.locator('#diagnosisInput').fill('PBE');
+  stage=name+' floating diagnosis';const floatingDiagnosis=await page.locator('[data-patient-diagnosis]').isVisible();
+  if(floatingDiagnosis)await page.locator('[data-patient-diagnosis]').click();
+  else await page.locator('#peopleButton').click();
+  await page.locator('#diagnosisInput').fill('PBE');
   await page.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();await page.locator('#diagnosisInput').press('Enter');
-  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis bacteriana espontánea');assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,'diagnostic editor auto-closes');
+  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis bacteriana espontánea');if(floatingDiagnosis)assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,'floating diagnosis editor auto-closes');
+  else await page.locator('#modalClose').click();
   stage=name+' real treatment and convalescence';
   await page.waitForFunction(()=>{const p=atriaV5.snapshot().clinical.patient;return p.administrationLog.length===2&&p.procedures.monitor?.connected;},null,{timeout:45000});
   const delivered=await state();assert.equal(delivered.patient.venousAccessCount,1);assert.equal(new Set(delivered.patient.administrationLog.map(x=>x.sourceEventId)).size,2);

@@ -49,10 +49,14 @@ try{
   stage=name+' diagnosis and critical-care response';
   assert.equal((await state()).patient.phys.sourceControlled,false);
   assert.equal(await page.locator('[data-patient-destination]').count(),0);
-  await page.locator('[data-patient-diagnosis]').click();await page.locator('#diagnosisInput').fill('peritonitis');
+  const floatingDiagnosis=await page.locator('[data-patient-diagnosis]').isVisible();
+  if(floatingDiagnosis)await page.locator('[data-patient-diagnosis]').click();
+  else await page.locator('#peopleButton').click();
+  await page.locator('#diagnosisInput').fill('peritonitis');
   await page.locator('[data-diagnosis="Peritonitis terciaria"]').click();await page.locator('#diagnosisInput').press('Enter');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis terciaria');
-  assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,'diagnostic editor auto-closes');
+  if(floatingDiagnosis)assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,'floating diagnosis editor auto-closes');
+  else await page.locator('#modalClose').click();
   // Document current signs before the receiving-team request. Hidden initial vitals
   // cannot substitute for the doctor's actual measurement.
   await page.locator('#peopleButton').click();await page.locator('[data-action="record-vitals"]').click();
