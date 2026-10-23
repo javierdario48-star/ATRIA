@@ -18,7 +18,7 @@ const SHARED_IV=Object.freeze([
 const ORDERS=Object.freeze({
  'CIRR-001':[
   ['monitor','Conectar monitor','monitor'],
-  ['vitals','Registrar signos vitales','signos'],
+  ['vitals','Registrar signos vitales','signos vitales'],
   ...SHARED_IV,
   ['sodium','Restricción de sodio','restricción de sodio'],
   ['spironolactone','Espironolactona 100 mg oral','espironolactona 100 mg oral'],
@@ -26,10 +26,10 @@ const ORDERS=Object.freeze({
  ],
  'APP-001':[
   ['monitor','Conectar monitor','monitor'],
-  ['vitals','Registrar signos vitales','signos'],
+  ['vitals','Registrar signos vitales','signos vitales'],
   ...SHARED_IV,
   ['npo','Nada por boca','nada por boca'],
-  ['consult','Interconsulta a cirugía','/consulta cirugia']
+  ['consult','Interconsulta a cirugía','interconsulta a cirugía']
  ]
 });
 export const normalizeOrderQuery=value=>String(value||'').normalize('NFD')
