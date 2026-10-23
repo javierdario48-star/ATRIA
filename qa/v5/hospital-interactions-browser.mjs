@@ -15,6 +15,7 @@ try{
   await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,n);};
  // The chart is readable from the HUD; recording an exam still requires actual range.
  await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
+ await page.locator('.exam-advanced > summary').click();
  await page.locator('[data-exam-section="general"]').focus();await page.waitForTimeout(1200);
  assert.equal(await page.evaluate(()=>document.activeElement?.dataset.examSection),'general','periodic refresh must preserve keyboard focus');
  let beforePress=(await state()).room.transcript.length;
@@ -104,30 +105,31 @@ try{
  assert.equal(await page.locator('#examBodyMarkers .exam-map-pin').count(),0,
   'unexplored patient must not show any visual clinical clue');
  const choose=async region=>page.locator('#examRegions [data-exam-region="'+region+'"]').click();
- await page.locator('svg [data-exam-region="abdomen"]').click();assert.deepEqual((await state()).patient.examFindings,{});
- await page.locator('[data-exam-section="palpation"]').click();await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings.abdomen?.palpation);
+ await choose('abdomen');
+ await page.waitForFunction(()=>['inspection','auscultation','palpation','percussion'].every(
+  m=>!!atriaV5.snapshot().clinical.patient.examFindings.abdomen?.[m]),null,{timeout:30000});
  assert.match(await page.locator('#examProgressiveSummary').innerText(),/Abdomen.*Ascitis/);
  assert.match(await page.locator('#examBodyFindings').innerText(),/Ascitis/);
  assert.equal(await page.locator('#examBodyMarkers .exam-map-pin').count(),1);
- assert.match(await page.locator('#examResults').innerText(),/Ascitis/);assert.doesNotMatch(await page.locator('#examResults').innerText(),/Esplenomegalia/);
- assert(!(await state()).patient.examDone);assert.deepEqual((await state()).patient.lastVitalsKnown,measured);
- await choose('thorax');await page.locator('[data-exam-section="auscultation"]').click();
- await choose('general');await page.locator('[data-exam-section="general"]').click();
+ assert.equal(await page.locator('#examRegions [data-exam-region="abdomen"]').getAttribute('aria-pressed'),'true');
+ const abdomenCard=page.locator('#examRegions [data-exam-region="abdomen"] .exam-flip-back');
+ for(const technique of ['Inspección','Auscultación','Percusión','Palpación'])
+  assert.match(await abdomenCard.innerText(),new RegExp(technique));
+ assert.doesNotMatch(await abdomenCard.innerText(),/Esplenomegalia/);
+ assert(!(await state()).patient.examDone,'general impression is still required');
+ assert.deepEqual((await state()).patient.lastVitalsKnown,measured);
  await choose('abdomen');
- for(const tech of ['inspection','percussion'])await page.locator('[data-exam-section="'+tech+'"]').click();
- assert(!(await state()).patient.examDone,'thorax auscultation cannot count as abdominal auscultation');
- await page.locator('[data-exam-section="auscultation"]').click();await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.examDone);
- await choose('spleen');await page.locator('[data-exam-section="palpation"]').click();
- assert.match(await page.locator('#examResults').innerText(),/Esplenomegalia/);
+ assert.equal(await page.locator('#examRegions [data-exam-region="abdomen"]').getAttribute('aria-pressed'),'true');
+ await choose('general');
+ await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examDone);
+ assert.match(await page.locator('#examRegions [data-exam-region="general"] .exam-flip-back').innerText(),/Adelgazado/);
+ await choose('spleen');
+ await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings.spleen?.palpation);
+ assert.match(await page.locator('#examRegions [data-exam-region="spleen"] .exam-flip-back').innerText(),/Esplenomegalia/);
  assert.match(await page.locator('#examProgressiveSummary').innerText(),/Esplenomegalia/);
- const method=page.locator('#examResults details[data-exam-method="palpation"]');
- await method.locator('summary').click();
- assert.match(await method.innerText(),/Esplenomegalia/);
- assert.equal(await method.getAttribute('open'),'',
-  'all original maneuver detail remains available on demand');
- await choose('neurological');await page.locator('[data-glasgow="eye"]').click();
- assert.equal((await state()).patient.glasgow.total,null);await page.locator('[data-glasgow="verbal"]').click();await page.locator('[data-glasgow="motor"]').click();
- assert.equal((await state()).patient.glasgow.total,15);
+ await choose('neurological');
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.glasgow?.total===15);
+ assert.match(await page.locator('#examRegions [data-exam-region="neurological"] .exam-flip-back').innerText(),/15|Abre los ojos/);
  await page.screenshot({path:out+'/regional-examination.png'});
  await page.locator('[data-action="patient-chart"]').click();await page.locator('[data-action="clinical-history"]').click();
  assert.match(await page.locator('#fullClinicalHistory').innerText(),/Esplenomegalia/);assert.match(await page.locator('#fullClinicalHistory').innerText(),/15/);
