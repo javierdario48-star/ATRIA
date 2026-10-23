@@ -98,7 +98,16 @@ export function createDurableCooperativeReplica({
    });
    return new Promise(resolve=>{
     pending.set(envelope.id,{envelope:clone(envelope),resolve});save();
-    synchronize().catch(()=>{/* on next RAF retry same id */});
+    const busy=inflight;
+    if(busy){
+     // The current HTTP request took its command snapshot before this input.
+     // Flush this new utterance immediately after its response, rather than
+     // making the player wait for the next 900 ms idle refresh.
+     busy.then(()=>{
+      if(!disposed&&pending.has(envelope.id))
+       synchronize().catch(()=>{/* bounded retry on existing RAF */});
+     },()=>{/* failed request: existing RAF backs off and retains the command */});
+    }else synchronize().catch(()=>{/* on next RAF retry same id */});
    });
   },
   motion(target){
