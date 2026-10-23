@@ -16,6 +16,8 @@ import {createHospitalAudio} from '../ui/hospital-audio.js';
 import {clinicalCompletions,spellingSuggestions} from '../ui/clinical-autocomplete.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
 import {clinicalWorkflow} from '../ui/clinical-workflow.js';
+import {publicClinicalText,activeNurseGuidance,selectNurseGuidance,
+ finalNurseMessage,visibleClinicalRows} from '../ui/guard-message-policy.js';
 import {caseDebriefHTML} from '../ui/case-debrief.js';
 import {guardScoreModelV5,guardScoreboardHTML} from '../ui/guard-scoreboard.js';
 import {createPatientActionWheel} from '../ui/patient-actions.js';
@@ -23,11 +25,6 @@ import {createPatientClinicalOverlay} from '../ui/diagnostic-impression.js';
 import {createClinicalChecklist} from '../ui/clinical-checklist.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-// Replace metadata about the game's clinical coverage only at the display layer.
-const publicClinicalText=value=>String(value||'')
- .replace(/Sin hallazgo específico modelado en este escenario\.?/gi,'—')
- .replace(/(?:Inspección|Auscultación|Percusión|Palpación) no disponible en esta simulación\.?/gi,'—')
- .replace(/,?\s*sin focalidad neurológica modelada\.?/gi,'.');
 const PROFILE_KEY='atria.v5.profile.v1';
 const PROGRESS_KEY='atria.v5.progress.v1';
 const supportedColors=new Set(['navy','green','gray','pink','teal']);
@@ -401,25 +398,19 @@ export async function createApplication({document,window,content,signal}){
   const workflow=clinicalWorkflow(clinicalState),cue=workflow?.cue,patientId=clinicalState.patient.uid;
    // Old guidance is not a medical message: invalidate it as soon as the
    // authoritative case state changes (especially after a consult refusal).
-   for(let i=nurseCueRows.length-1;i>=0;i--)
-    if(!workflow?.cue||nurseCueRows[i].id!=='nurse-guidance:'+patientId+':'+workflow.cue.id)
-     nurseCueRows.splice(i,1);
+   const currentGuidance=activeNurseGuidance(nurseCueRows,cue,patientId);
+   nurseCueRows.splice(0,nurseCueRows.length,...currentGuidance);
    const concluded=!!clinicalState.patient.caseEnded||!!clinicalState.patient.patientDied||
     !!clinicalState.patient.closure?.closed;
-   if(concluded){
-    nurseCueRows.length=0;
-    // The final scorecard already presents XP; leave the nurse ONE natural
-    // acknowledgement rather than a generic automated close receipt.
-    for(let i=rows.length-1;i>=0;i--)
-     if(rows[i].role==='nurse'&&/^Caso cerrado\s*:/i.test(rows[i].text))rows.splice(i,1);
-   }
+   if(concluded)nurseCueRows.length=0;
+   rows.splice(0,rows.length,...visibleClinicalRows(rows,{concluded}));
   const cueTime=window.performance.now();
   const freshPatient=rows.some(row=>row.role==='patient'&&!seenNpcMessages.has(row.id));
-  const canCue=!freshPatient&&cueTime-lastNurseCueAt>=28000&&cueTime-lastPatientSpeechAt>=12000;
-  if(!concluded&&cue&&canCue&&!seenNurseCues.has(patientId+':'+cue.id)){
+  const message=selectNurseGuidance({cue,patientId,concluded,freshPatient,
+   now:cueTime,lastCueAt:lastNurseCueAt,lastPatientAt:lastPatientSpeechAt,
+   seen:seenNurseCues});
+  if(message){
    seenNurseCues.add(patientId+':'+cue.id);lastNurseCueAt=cueTime;
-   const message={id:'nurse-guidance:'+patientId+':'+cue.id,
-    name:'Enfermera',role:'nurse',text:cue.text};
    nurseCueRows.push(message);
    if(nurseCueRows.length>5)nurseCueRows.shift();
    world.showNpcMessage('nurse',message.text,window.performance.now());
@@ -451,18 +442,8 @@ export async function createApplication({document,window,content,signal}){
   for(const [id,preview] of fastWardSpeech)
    if(ids.has(id)||time-preview.time>15000)fastWardSpeech.delete(id);
   history.length=0;
-  // Only a completed clinical receipt authorizes the nurse's final message.
-   const closingReceipt=clinicalState.patient.closure,destination=closingReceipt?.destination;
-   const closing={
-    observacion:'De acuerdo, queda en observación.',
-    sala:'De acuerdo, preparo la internación en sala.',
-    alta:'De acuerdo, preparo el alta y las indicaciones.',
-    quirofano:'Cirugía aceptó al paciente. Preparo el traslado a quirófano.',
-    uti:'UTI aceptó al paciente. Preparo el traslado.',
-    procedimiento:'El servicio receptor aceptó. Preparo el traslado al procedimiento.'
-   };
-   const farewell=concluded&&closingReceipt?.closed&&closing[destination]?{
-    id:'nurse-final:'+patientId+':'+closingReceipt.eventId,name:'Enfermera',role:'nurse',text:closing[destination]}:null;
+  // The final sentence is derived from one authenticated clinical receipt.
+   const farewell=finalNurseMessage(clinicalState);
    if(farewell&&!seenNpcMessages.has(farewell.id)){
     seenNpcMessages.add(farewell.id);
     world.showNpcMessage('nurse',farewell.text,window.performance.now());
