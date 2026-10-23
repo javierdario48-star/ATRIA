@@ -232,16 +232,19 @@ test('durable cooperative nurse walks between clinical snapshots without adminis
  const doctors=[{...base.player,id:'A'}];
  w.applySharedSpatial({nurses:[first,...base.nurses.slice(1)],doctors},1000);
  w.applySharedSpatial({nurses:[second,...base.nurses.slice(1)],doctors},1900);
- assert.equal(w.snapshot().nurses[0].x,n.x,
-  'a remote clinical checkpoint must not instantly teleport the nurse');
+ assert.equal(w.snapshot().nurses[0].x,n.x+84,
+  'the exact authoritative nurse coordinate is retained for clinical state');
+ assert.equal(w.presentNurses(w.snapshot()).nurses[0].x,n.x,
+  'the rendered nurse is buffered instead of teleported');
  for(let now=1950;now<=2270;now+=40)w.step(.04,now);
- const middle=w.snapshot().nurses[0];
+ const middle=w.presentNurses(w.snapshot()).nurses[0];
  assert(middle.x>n.x&&middle.x<n.x+84,
   'the nurse interpolates a visible path between authoritative receipts');
  const before=middle.x;
  w.applySharedSpatial({nurses:[{...second,x:n.x+108},...base.nurses.slice(1)],doctors},2400);
- assert.equal(w.snapshot().nurses[0].x,before,
-  'subsequent snapshots keep the rendered nurse pose without snapping');
+ assert.equal(w.snapshot().nurses[0].x,n.x+108,'new server positions remain exact');
+ assert.equal(w.presentNurses(w.snapshot()).nurses[0].x,before,
+  'subsequent snapshots keep the displayed pose without snapping');
  assert.equal(w.nurseJourneySnapshot().length,0,
   'a nonauthoritative client cannot create nurse journeys or medication receipts');
  assert.equal(w.snapshot().patients[0].uid,'shared-patient');
