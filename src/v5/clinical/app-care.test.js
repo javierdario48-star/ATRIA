@@ -87,7 +87,9 @@ test('invalid dose, invented surgery and hemogram cannot administer medication',
  f.s.dispose();
 });
 test('APP surgical referral requires completed studies, both IV drugs and confirmed consultation; closure and XP once',async()=>{
- const f=fixture();const premature=await f.send('/disposicion quirofano');assert.equal(premature.clinical[0].status,'rejected');
+ const f=fixture();const premature=await f.send('/disposicion quirofano');assert.equal(premature.clinical[0].status,'pending');
+ f.s.advance(3.5);await f.s.flush();assert.equal(f.s.read().patient.consults.at(-1).accepted,false);
+ assert.equal(f.s.read().patient.caseEnded,false,'rejected surgical request leaves the patient in ED');
  await evaluate(f);
  await f.send('/estudio app_cbc');await f.send('/estudio app_us');
  await f.send('Enfermera una vía');
@@ -104,7 +106,7 @@ test('APP surgical referral requires completed studies, both IV drugs and confir
  assert.equal(p.consults[0].accepted,true);
  assert(p.orders.every(o=>o.status==='done'));
  const settled=await f.send('/consulta cirugia','consult');assert.equal(settled.clinical[0].status,'executed');
- assert.equal((await f.send('/disposicion quirofano')).clinical[0].status,'rejected','must reassess');
+ assert.deepEqual(f.s.read().eligibleDestinations,[],'full-care readiness still needs reassessment');
  await f.send('/reevaluar');
  const closed=await f.send('/disposicion quirofano','close');
  assert.equal(closed.clinical[0].status,'executed');

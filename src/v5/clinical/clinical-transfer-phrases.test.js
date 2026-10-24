@@ -33,7 +33,7 @@ test('bare "Enfermera cirugía" first requests surgery; after accepted consult r
  assert.deepEqual(after.intents.map(x=>[x.kind,x.id]),[['case.close','quirofano']]);
 });
 
-test('natural referral and discharge are rejected without native clinical prerequisites',async()=>{
+test('natural surgical transfer waits for specialist review; discharge without prerequisites is still rejected',async()=>{
  for(const [caseId,text] of [['APP-001','Enfermera derivar a cirugía'],
   ['CIRR-001','Enfermera dar de alta']]){
   const s=createGuardSession({roomId:'natural-'+caseId,mode:'solo',actorId:'doc',
@@ -41,8 +41,16 @@ test('natural referral and discharge are rejected without native clinical prereq
    resolveContext:()=>({patientUid:'P1'})});
   try{
    const result=await s.post({id:'premature',text});
-   assert.equal(result.clinical[0]?.status,'rejected');
-   assert.equal(result.clinical[0]?.reason,'closure-not-ready');
+   if(caseId==='APP-001'){
+    assert.equal(result.clinical[0]?.status,'pending');
+    s.advance(3.5);await s.flush();
+    const settled=await s.post({id:'premature',text});
+    assert.equal(settled.clinical[0]?.status,'rejected');
+    assert.equal(settled.clinical[0]?.reason,'transfer-rejected');
+   }else{
+    assert.equal(result.clinical[0]?.status,'rejected');
+    assert.equal(result.clinical[0]?.reason,'closure-not-ready');
+   }
    assert.equal(s.read().patient.caseEnded,false);
    assert.equal(s.read().progress.xp,0);
   }finally{s.dispose();}

@@ -53,7 +53,11 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
   request(cmd,clock){
    const {intent}=cmd;
    const destination=intent.kind==='case.close'&&!intent.partial?intent.id:null;
-   if(destination&&typeof acceptTransfer!=='function')return null;
+   // Only case-authorized accepting transfer routes use automatic closure.
+   // PBE/TER preserve their proven direct ICU disposition contract.
+   const permitted=c.id==='CHOLANG-001'?['procedimiento','uti']:
+     ['APP-001','CHOLE-001','PERI-SEC-001'].includes(c.id)?['quirofano']:[];
+   if(destination&&(!permitted.includes(destination)||typeof acceptTransfer!=='function'))return null;
    const service=destination==='quirofano'?'cirugia':destination==='uti'?'uti':destination==='procedimiento'?'gastro':null;
    if(!service&&(!['cirugia','uti','gastro'].includes(intent.id)||
       !['consult.request','procedure.request'].includes(intent.kind)))return null;
