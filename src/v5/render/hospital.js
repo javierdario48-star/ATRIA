@@ -124,7 +124,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   }
   const [mx,my]=screen(0,0);ctx.drawImage(images.hospital,mx,my,mapWidth*scale,mapHeight*scale);
   for(const m of world.entities||[])if(m.kind==='monitor'&&m.added)monitor(m);
-  for(const p of world.patients){
+  for(const p of world.patients.filter(p=>!p.departed)){
    const [x,y]=screen(p.x,p.y),im=images.patient,h=40*scale,w=h*im.width/im.height;ctx.drawImage(im,x-w/2,y-h/2,w,h);
   }
   const actors=[...world.nurses,...(world.others||[]),...(world.expert?[world.expert]:[]),world.player].sort((a,b)=>a.y-b.y);
@@ -132,7 +132,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   if(world.phase!=='title')label(world.player,world.player.name,world.player.level);
   for(const a of world.others||[])label(a,a.name,a.level);
   if(world.phase==='lobby'||world.phase==='guard')for(const a of [world.player,...world.others])speechBubble(a,now);
-  if(world.phase==='guard')for(const a of [...world.patients,...world.nurses,...(world.expert?[world.expert]:[])])speechBubble(a,now);
+  if(world.phase==='guard')for(const a of [...world.patients.filter(p=>!p.departed),...world.nurses,...(world.expert?[world.expert]:[])])speechBubble(a,now);
   if(world.expert)label(world.expert,'Dr. Vega');
   if(world.player.target){const [x,y]=screen(...world.player.target);ctx.strokeStyle='#ffd25f';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,9*scale,0,Math.PI*2);ctx.stroke();}
  }

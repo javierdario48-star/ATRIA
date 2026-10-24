@@ -17,5 +17,5 @@ test('reception separates current cases from accepted departures, with an availa
  assert.match(html,/Atenciones finalizadas · 1/);
  assert.match(html,/Derivado a Quirófano · Box liberado/);
  assert.match(html,/data-patient-uid="a" disabled/);
- assert.match(html,/data-patient-uid="b">Ir al box/);
+ assert.match(html,/data-patient-uid="b"\s*>Ir al box/);
 });

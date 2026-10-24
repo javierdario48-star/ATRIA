@@ -348,7 +348,8 @@ test('the same original nurse and patient speak in timed bubbles without modifyi
  assert.equal(value.patients[0].uid,patient);
 });
 
-test('accepted disposition vacates the world box without erasing native patient checkpoint identity',()=>{
+test('accepted disposition vacates the world box without erasing native patient checkpoint identity',async()=>{
+ const {createWorld}=await import('./world.js');
  const c={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
  const w=createWorld(c,{id:'owner',name:'Clinico'});
  w.enterGuard({mode:'solo',caseId:'APP-001',patientUid:'p1',bedId:'B1'});
@@ -363,7 +364,8 @@ test('accepted disposition vacates the world box without erasing native patient 
  assert(!recovered.snapshot().entities.some(e=>e.patientUid==='p1'));
  assert(recovered.snapshot().entities.some(e=>e.patientUid==='p2'));
 });
-test('durable client processes departures before reuse of the same bed',()=>{
+test('durable client processes departures before reuse of the same bed',async()=>{
+ const {createWorld}=await import('./world.js');
  const c={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};
  const client=createWorld(c,{id:'a',name:'Ana'});
  client.enterGuard({mode:'coop',caseId:'APP-001',patientUid:'p1',bedId:'B1',

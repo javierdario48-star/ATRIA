@@ -130,7 +130,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(envelope.targetPatientUid&&envelope.targetPatientUid!==uid)
     return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-selection-changed'};
    if(shift.ended())return {roomId,commandId:envelope.id,status:'rejected',reason:'shift-ended'};
-   if(!record)return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-not-active'};
+   if(!record||record.closed)return {roomId,commandId:envelope.id,status:'rejected',
+    reason:'patient-not-active',clinical:[{kind:'case.close',status:'rejected',reason:'patient-not-active'}]};
    if(mode==='competitive'){
     if(record.ownerId&&record.ownerId!==actorId)
      return {roomId,commandId:envelope.id,status:'rejected',reason:'other-player-owns-patient'};
