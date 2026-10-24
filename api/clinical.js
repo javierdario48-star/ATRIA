@@ -1,6 +1,6 @@
 import * as blob from '@vercel/blob';
 import {getCache} from '@vercel/functions';
-import {createQaSocialServer} from '../src/social/qa-social-server.js';
+import {createV5QaSocialServer} from '../src/v5/social/room-membership-store.js';
 import {createPrivateBlobGuardStore} from '../src/v5/server/private-blob-guard-store.js';
 import {createPostgresGuardStore} from '../src/v5/server/postgres-guard-store.js';
 import {createDurableGuardAuthority} from '../src/v5/server/durable-guard-authority.js';
@@ -14,7 +14,9 @@ const store=sqlConfigured?createPostgresGuardStore({
  url:process.env.SUPABASE_URL,secretKey:process.env.SUPABASE_SECRET_KEY
 }):createPrivateBlobGuardStore(blob);
 const authority=createDurableGuardAuthority({store,content:clinicalContent});
-const social=createQaSocialServer(getCache(undefined,'atria-social-qa-v1',':'));
+// Match api/_core.js: verified clinical admission must see guest acceptance
+// in the dedicated membership slots, not the host-only legacy room record.
+const social=createV5QaSocialServer(getCache(undefined,'atria-social-qa-v1',':'));
 const route=createClinicalHttp({authority,
  // C5.b.3: activation requires an explicit Preview-only server variable.
  // Production is always disabled, even if the variable is accidentally set.
