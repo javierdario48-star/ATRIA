@@ -10,7 +10,7 @@ export function createDurableCooperativeReplica({
  if(!/^[A-Za-z0-9_-]{1,100}$/.test(roomId)||!/^[-a-zA-Z0-9]{32,120}$/.test(clientKey))
   throw Error('invalid durable cooperative credentials');
  const key='atria.v5.durable.pending:'+roomId;
- let disposed=false,current=null,epoch=-1,lastPoll=-Infinity,inflight=null,queuedMotion=null,queuedMotionSequence=null,latestMotionSequence=0,typing=null,confirmation=null;
+ let disposed=false,current=null,epoch=-1,lastPoll=-Infinity,inflight=null,queuedMotion=null,queuedClaim=null,queuedMotionSequence=null,latestMotionSequence=0,typing=null,confirmation=null;
  const pending=new Map();
  const clone=x=>structuredClone(x);
  function save(){try{storage?.setItem(key,JSON.stringify([...pending.values()].map(x=>x.envelope)));}catch{}}
@@ -51,9 +51,9 @@ export function createDurableCooperativeReplica({
   if(disposed)return Promise.reject(Error('replica-disposed'));
   if(inflight)return inflight;
   const batch=[...pending.values()].slice(0,16).map(x=>clone(x.envelope));
-  const motion=queuedMotion,motionSequence=queuedMotionSequence,typingState=typing,receipt=confirmation;
+  const motion=queuedMotion,motionSequence=queuedMotionSequence,claim=queuedClaim,typingState=typing,receipt=confirmation;
   inflight=request('sync',{commands:batch,...(motion?{motion,...(motionSequence!==null?{motionSequence}:{})}:{}),
-   ...(typingState!==null?{typing:typingState}:{}),...(receipt?{confirmation:receipt}:{})})
+   ...(claim?{claim}:{}),...(typingState!==null?{typing:typingState}:{}),...(receipt?{confirmation:receipt}:{})})
    .then(response=>{
     if(disposed)return null;
     accept(response);
@@ -61,6 +61,7 @@ export function createDurableCooperativeReplica({
     // admit new commands, movement or confirmations during catch-up.
     if(!response.recovering){
      if(queuedMotion===motion){queuedMotion=null;queuedMotionSequence=null;}
+      if(queuedClaim===claim&&response.clinical?.competition?.ownerId)queuedClaim=null;
      if(confirmation===receipt)confirmation=null;
     }
     return response;
@@ -109,6 +110,10 @@ export function createDurableCooperativeReplica({
      },()=>{/* failed request: existing RAF backs off and retains the command */});
     }else synchronize().catch(()=>{/* on next RAF retry same id */});
    });
+  },
+  claim(patientUid){
+   if(typeof patientUid!=='string'||!patientUid||disposed)return false;
+   queuedClaim=patientUid;return true;
   },
   motion(target,sequence=null){
    if(!Array.isArray(target)||target.length!==2||!target.every(Number.isFinite))return false;

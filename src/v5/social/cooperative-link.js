@@ -31,7 +31,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  }
  function setRoom(value){
   if(disposed)return;
-  if(value.mode!=='coop')throw Error('competitive-mode-not-enabled');
+  if(!['coop','competitive'].includes(value.mode))throw Error('unsupported-room-mode');
   if(room?.id&&room.id!==value.id){for(const peer of peers.values())peer.link.dispose();peers.clear();recovery.reset();}
   if(roomSpeechRoom!==value.id){roomSpeechCursor=0;roomSpeechRoom=value.id;}
   room=value;desiredRoomId=room.id;savedRoom=room.id;invites=invites.filter(x=>x.roomId!==room.id);
@@ -68,7 +68,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   if(!room&&!savedRoom&&now-lastContactsAt>=780){
    const me=await api('me');if(!active())return;
    lastContactsAt=now;
-   invites=me.invites.filter(x=>x.mode==='coop'&&x.roomId!==room?.id&&x.roomId!==savedRoom);
+   invites=me.invites.filter(x=>['coop','competitive'].includes(x.mode)&&x.roomId!==room?.id&&x.roomId!==savedRoom);
    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};
   }
   onSocial();
@@ -156,8 +156,9 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
   async declineInvitation(roomId){await connect();await api('rooms/'+roomId+'/invite/decline',{});
    invites=invites.filter(x=>x.roomId!==roomId);onSocial();},
-  async invite(ids){const epoch=++roomEpoch;desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
-   const result=await api('rooms',{mode:'coop',invitees:ids,peerId});if(disposed||epoch!==roomEpoch){try{await api('rooms/'+result.room.id+'/cancel',{});}catch{}throw Error('Invitación cancelada.');}setRoom(result.room);return structuredClone(room);},
+  async invite(ids,mode='coop'){const epoch=++roomEpoch;desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
+   if(!['coop','competitive'].includes(mode))throw Error('Modalidad de guardia inválida');
+   const result=await api('rooms',{mode,invitees:ids,peerId});if(disposed||epoch!==roomEpoch){try{await api('rooms/'+result.room.id+'/cancel',{});}catch{}throw Error('Invitación cancelada.');}setRoom(result.room);return structuredClone(room);},
   async join(id){const epoch=++roomEpoch;desiredRoomId=id;await connect();
    let result;try{result=await api('rooms/join',{roomId:id,peerId});}
    catch(error){if(epoch===roomEpoch){desiredRoomId=null;if(room?.id!==id)try{await api('rooms/'+id+'/leave',{});}catch{}}throw error;}

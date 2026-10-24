@@ -17,13 +17,13 @@ export function createClinicalHttp({authority,verifiedRoom,probe,onUnavailable=(
    if(typeof body.roomId!=='string'||!/^[-a-zA-Z0-9_]{1,100}$/.test(body.roomId))return {status:400,body:{error:'invalid room'}};
    if(body.action==='start'){
     const room=await verifiedRoom(headers,body.roomId,actorId);
-    if(!room||room.id!==body.roomId||room.mode!=='coop'||!room.allAccepted||room.hostUserId!==actorId||room.members.length<2||room.members.length>4)
+    if(!room||room.id!==body.roomId||!['coop','competitive'].includes(room.mode)||!room.allAccepted||room.hostUserId!==actorId||room.members.length<2||room.members.length>4)
      return {status:403,body:{error:'verified accepted cooperative invitation required'}};
     const result=await authority.bootstrap({roomId:room.id,caseId:body.caseId,actorId,hostId:room.hostUserId,
-     members:room.members.map(x=>({id:x.userId,name:x.name}))});return {status:200,body:result};
+     mode:room.mode,members:room.members.map(x=>({id:x.userId,name:x.name}))});return {status:200,body:result};
    }
    if(body.action!=='sync')return {status:400,body:{error:'invalid clinical operation'}};
-   const result=await authority.transact({roomId:body.roomId,actorId,commands:body.commands??[],motion:body.motion??null,motionSequence:body.motionSequence??null,
+   const result=await authority.transact({roomId:body.roomId,actorId,commands:body.commands??[],motion:body.motion??null,motionSequence:body.motionSequence??null,claim:body.claim??null,
     typing:body.typing??null,confirmation:body.confirmation??null});
    return {status:200,body:result};
   }catch(error){

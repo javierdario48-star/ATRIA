@@ -187,15 +187,15 @@ export async function createApplication({document,window,content,signal}){
    '</select></label><button class="primary" data-action="invite-friend" data-user="'+esc(userId)+'">Invitar a una guardia</button>'+
    '<button data-action="close">Cerrar</button></div>','lobby-person');
  }
- async function inviteColleagues(ids,caseId){
+ async function inviteColleagues(ids,caseId,mode='coop'){
   if(invitingColleagues||coopRoomId)return;
   if(!Object.hasOwn(CLINICAL_EXECUTORS,caseId)){toast('Este caso todavía no tiene atención completa.');return;}
   if(!ids.length){toast('Elegí al menos un médico conectado.');return;}
   invitingColleagues=true;
   cancelSharedIntent();coopCaseId=caseId;
   const intent=cooperativeFlow.begin('host');
-  try{await social.invite(ids);
-   if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Invitación enviada</h2><p>Esperando que los colegas acepten la guardia compartida.</p>');
+  try{await social.invite(ids,mode);
+   if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Invitación enviada</h2><p>Esperando que los colegas acepten la guardia '+(mode==='competitive'?'competitiva':'compartida')+'.</p>');
   }catch(error){if(cooperativeFlow.current(intent))toast(error.message);}
   finally{invitingColleagues=false;}
  }
@@ -251,7 +251,7 @@ export async function createApplication({document,window,content,signal}){
    throw Error('Invalid persistent clinical session');
   coopRoomId=room.id;cooperativeFlow.bind(room.id);announcedClosure=null;announcedDeathUid=null;
   world=createWorld(content,{...profile,id:social.state().user?.id||profile.id});
-  world.enterGuard({mode:'coop',caseId:current.patient.caseId,patientUid:current.patient.uid,
+  world.enterGuard({mode:current.competition?.mode==='competitive'?'competitive':'coop',caseId:current.patient.caseId,patientUid:current.patient.uid,
    members:room.members.map(x=>({id:x.userId,name:x.name,color:'navy'})),authoritative:false});
   // Recovery uses a newly created world; its first input must be newer than
   // the sequence persisted for this same doctor in the previous session.
@@ -259,7 +259,7 @@ export async function createApplication({document,window,content,signal}){
   durableClient=client;replica=client;guardSession=client;lastRemoteRevision=-1;
   if(spatial)world.applySharedSpatial(spatial,window.performance.now(),client.lastAcknowledgedMotion(social.state().user?.id));
   lastClinicalFrame=window.performance.now();clinicalUI.reset();close();
-  seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;lastNurseCueAt=-Infinity;lastPatientSpeechAt=-Infinity;fastWardSpeech.clear();resetChat('Guardia cooperativa persistente: el servidor controla la clínica.');
+  seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;lastNurseCueAt=-Infinity;lastPatientSpeechAt=-Infinity;fastWardSpeech.clear();resetChat(current.competition?.mode==='competitive'?'Guardia competitiva: el primer médico en atender al paciente obtiene su responsabilidad clínica.':'Guardia cooperativa persistente: el servidor controla la clínica.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;
   clinicalChanged();updateHud();
  }
@@ -297,7 +297,9 @@ export async function createApplication({document,window,content,signal}){
     cooperativeCapability={roomId:room.id,clinicalEnabled:capability.clinicalEnabled};
    }
    if(destroyed||coopRoomId||social.state().room?.id!==room.id||host&&!coopCaseId)return;
-   if(!cooperativeCapability.clinicalEnabled){if(host&&room.allAccepted)startCooperativeHost(room);return;}
+   if(!cooperativeCapability.clinicalEnabled){
+    if(room.mode==='competitive')throw Error('La modalidad competitiva necesita autoridad clínica persistente');
+    if(host&&room.allAccepted)startCooperativeHost(room);return;}
    // Durable admission depends on the authenticated HTTP room, not an RTC
    // hello. A guest retries a not-yet-created room on the next social poll.
    client=makeDurableClient(room);
@@ -476,8 +478,11 @@ export async function createApplication({document,window,content,signal}){
   ui('chatHistory').replaceChildren(fragment);ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
   clinicalUI.render();
   const closure=guardSession.read().patient.closure;
-  if(coopRoomId&&closure?.closed)progress.award(closure);
-  if(closure?.closed)localShift.record(closure);
+  if(coopRoomId&&closure?.closed&&clinicalState?.competition?.mode==='competitive'){
+   const ownerId=clinicalState.competition.ownerId;
+   if(ownerId===social.state().user?.id)progress.award({...closure,actorId:ownerId});
+  }else if(coopRoomId&&closure?.closed)progress.award(closure);
+  if(closure?.closed&&clinicalState?.competition?.mode!=='competitive')localShift.record(closure);
   if(progress.read().receipts.length+progress.read().penalties.length!==savedRewardCount){
    try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;}
    catch{toast('Progreso confirmado en esta sesión; no se pudo guardar en este dispositivo.');}
@@ -523,7 +528,10 @@ export async function createApplication({document,window,content,signal}){
    scoreHost.hidden=!guard;
    if(guard){
     const score=guardScoreboardHTML(guardScoreModelV5({
-     mode:s.mode,patient:clinical?.patient,outcomes:localShift.outcomes()}));
+     mode:s.mode,patient:clinical?.patient,
+     players:s.mode==='competitive'?(social.state().room?.members||[]).map(p=>({id:p.userId,name:p.name})):[],
+     ownerId:clinical?.competition?.ownerId||null,
+     outcomes:s.mode==='competitive'?clinical?.competition?.outcomes||[]:localShift.outcomes()}));
     if(score!==scoreMarkup){scoreHost.innerHTML=score;scoreMarkup=score;}
    }else{scoreMarkup='';scoreHost.replaceChildren();}
   }
@@ -531,7 +539,7 @@ export async function createApplication({document,window,content,signal}){
   autocompleteCaseId=guard?clinical?.patient?.caseId??null:null;
   const minute=Math.floor(localShift.totalMinutes(clinical?.clock?.gameMinute||0)),
    total=8*60+15+minute;
-  ui('status').textContent=guard&&clinical?.patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='coop'?'Cooperativo':s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':social.state().user?'Lobby social · 5.0 experimental':'Lobby local · 5.0 experimental';
+  ui('status').textContent=guard&&clinical?.patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='competitive'?'Competitivo':s.mode==='coop'?'Cooperativo':s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':social.state().user?'Lobby social · 5.0 experimental':'Lobby local · 5.0 experimental';
   if(guard)patientClinical.update(s.patients.find(p=>p.uid===clinical?.patient.uid),clinical);else patientClinical.hide();
   if(guard)clinicalChecklist.update(clinical);else clinicalChecklist.hide();
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
@@ -583,14 +591,14 @@ export async function createApplication({document,window,content,signal}){
    toast('No fue posible recibir al siguiente paciente.');
  }
  function guardSetup(){
-  if(draftMode==='coop')socialEnabled=true;
+  if(['coop','competitive'].includes(draftMode))socialEnabled=true;
   open(`<h2>Hacer guardia</h2><p>Elegí la modalidad y el caso de práctica.</p><div class="modes">
    <button class="mode ${draftMode==='apprentice'?'active':''}" data-mode="apprentice"><b>Aprendiz</b><small>Con Dr. Vega. Navegación disponible; tutor clínico en migración.</small></button>
    <button class="mode ${draftMode==='solo'?'active':''}" data-mode="solo"><b>Solitario</b><small>Explorá el hospital con los recursos originales.</small></button>
    <button class="mode ${draftMode==='coop'?'active':''}" data-mode="coop"><b>Cooperativo</b><small>2–4 médicos comparten la misma atención.</small></button>
-   <button class="mode" disabled><b>Competitivo</b><small>2–4 jugadores · pendiente de integrar.</small></button></div>
+   <button class="mode ${draftMode==='competitive'?'active':''}" data-mode="competitive"><b>Competitivo</b><small>2–4 médicos · el primero que atiende al paciente lo controla; los demás observan.</small></button></div>
    <label class="field">Caso<select id="caseChoice">${content.cases.map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join('')}</select></label>
-   ${draftMode==='coop'?'<p>Invitar colegas conectados</p><div id="coopDoctors"></div>':''}
+   ${['coop','competitive'].includes(draftMode)?'<p>Invitar colegas conectados</p><div id="coopDoctors"></div>':''}
    <p class="note">CIRR, APP-001, peritonitis secundaria, PBE y terciaria: evaluación, estudios, tratamiento y cierre con XP. Otros casos: navegación y estudios. Tutor, voz y multijugador siguen en migración.</p>
    <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);renderSocialLists();
  }
@@ -637,6 +645,17 @@ export async function createApplication({document,window,content,signal}){
     toast('No se pudo enviar al lobby.');}
    return;
   }
+  if(guardSession.read()?.competition?.mode==='competitive'){
+   const owner=guardSession.read().competition.ownerId;
+   if(owner&&owner!==social.state().user?.id){
+    // The observer may still speak to colleagues; only clinical commands
+    // are suppressed. The server independently rejects all rival commands.
+    world.showGuardMessage('local-player',text,window.performance.now());
+    social.postRoomSpeech({id:'observer-'+messageEpoch+'-'+(++messageNumber),text}).catch(()=>{});
+    toast('Otro médico está a cargo del paciente. Tus mensajes no ejecutan órdenes.');
+    return {status:'observer'};
+   }
+  }
   advanceClinicalTo(window.performance.now());
   // Speech is a visual local action, NOT an executed treatment. Display it
   // without waiting for PostgreSQL; clinical replies still require an ACK.
@@ -650,7 +669,12 @@ export async function createApplication({document,window,content,signal}){
    social.postRoomSpeech({id,text}).catch(()=>{});
   }
   const session=guardSession;
-  try{return await session.post({id,text,...(patientUid?{targetPatientUid:patientUid}:{})});}
+  try{
+   const receipt=await session.post({id,text,...(patientUid?{targetPatientUid:patientUid}:{})});
+   if(receipt?.status==='rejected'&&receipt.reason==='other-player-owns-patient')
+    toast('Otro médico está a cargo del paciente. Podés observar, pero no ordenar.');
+   return receipt;
+  }
   catch{if(guardSession===session)toast('No pude confirmar el mensaje.');}
  }
  function canvasDown(event){
@@ -677,6 +701,12 @@ export async function createApplication({document,window,content,signal}){
   world.stop();
   if(entity.patientUid){
    const p=world.snapshot().patients.find(p=>p.uid===entity.patientUid);if(!p)return;
+   if(world.snapshot().mode==='competitive'&&durableClient){
+    const owner=guardSession.read()?.competition?.ownerId;
+    if(owner&&owner!==social.state().user?.id)
+     toast('Paciente a cargo de otro médico. Podés observar sus decisiones.');
+    else durableClient.claim(p.uid);
+   }
    if(pendingPatientAction?.uid===p.uid){
     const action=pendingPatientAction;pendingPatientAction=null;
     if(action.destination)clinicalUI.chooseDestination(p,action.destination);
@@ -762,7 +792,7 @@ export async function createApplication({document,window,content,signal}){
  listen(dialog,'click',async event=>{
   if(await clinicalUI.handle(event.target))return;
   const button=event.target.closest('button');if(!button)return;
-  if(button.dataset.mode){if(button.dataset.mode!=='coop')cancelSharedIntent();draftMode=button.dataset.mode;guardSetup();}
+  if(button.dataset.mode){if(!['coop','competitive'].includes(button.dataset.mode))cancelSharedIntent();draftMode=button.dataset.mode;guardSetup();}
   if(button.dataset.action==='inspect-player'){showLobbyPlayerCard(button.dataset.user);return;}
   if(button.dataset.action==='add-friend'||button.dataset.action==='accept-friend'){
    try{
@@ -783,8 +813,8 @@ export async function createApplication({document,window,content,signal}){
    await acceptCooperativeInvitation(button.dataset.room);return;
   }
   if(button.dataset.action==='start-guard'){
-   if(draftMode==='coop'){
-    await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),ui('caseChoice').value);return;
+   if(['coop','competitive'].includes(draftMode)){
+    await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),ui('caseChoice').value,draftMode);return;
    }
    cancelSharedIntent();
    beginLocalPatient(ui('caseChoice').value);

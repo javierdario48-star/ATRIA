@@ -34,7 +34,7 @@ export function createWorld(content,profile,checkpoint=null){
  function enterLobby(){lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
  function enterGuard(options={}){
   lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();const selected=options.mode||'solo';
-  if(!['solo','apprentice','coop'].includes(selected))throw Error('multiplayer mode not migrated');
+  if(!['solo','apprentice','coop','competitive'].includes(selected))throw Error('multiplayer mode not migrated');
   const c=content.cases.find(c=>c.id===options.caseId);if(!c)throw Error('unknown clinical case');
   nursing?.dispose();nursing=null;
   generation++;phase='guard';mode=selected;caseId=c.id;pendingInteraction=null;resetPlayer(start);
@@ -45,7 +45,7 @@ export function createWorld(content,profile,checkpoint=null){
   patients=[{id:'patient-'+generation,uid:'patient-'+generation,caseId:c.id,bedId:bed.id,
    x:bed.patient[0],y:bed.patient[1],approach:[...bed.approach],name:c.demo,chief:c.chief}];
   patients[0].uid=identity+':'+patients[0].uid;
-  if(selected==='coop'&&typeof options.patientUid==='string'&&options.patientUid)patients[0].uid=options.patientUid;
+  if(['coop','competitive'].includes(selected)&&typeof options.patientUid==='string'&&options.patientUid)patients[0].uid=options.patientUid;
   expert=selected==='apprentice'?actor('vega',point([14,45]),{kind:'vega',name:'Dr. Vega',r:9.5,speed:220}):null;
   if(authoritative)nursing=createNurseDispatcher({navigation,nurses,patients});
  }
@@ -129,7 +129,7 @@ export function createWorld(content,profile,checkpoint=null){
    if(speaker)speaker.speechBubble={text:String(text).slice(0,120),until:now+4500};
   },
   showGuardSocialPlayers(list,roomId,members,now=Date.now()){
-   if(phase!=='guard'||mode!=='coop'||authoritative||!roomId)return false;
+   if(phase!=='guard'||!['coop','competitive'].includes(mode)||authoritative||!roomId)return false;
    const allowed=new Set(members),scope=privateRoomMotionPrefix(roomId);
    for(const remote of list){
     if(remote.userId===profile.id||!allowed.has(remote.userId)||
@@ -167,12 +167,12 @@ export function createWorld(content,profile,checkpoint=null){
    if(speaker)speaker.speechBubble={text:String(text).slice(0,120),until:now+4500};
   },
   targetRemote(id,x,y){const other=others.find(x=>x.id===id);return !!other&&authoritative&&navigation.target(other,x,y);},
-  reconcileDoctors(members){if(phase==='guard'&&mode==='coop'&&authoritative)others=others.filter(x=>members.some(m=>m.userId===x.id));},
+  reconcileDoctors(members){if(phase==='guard'&&['coop','competitive'].includes(mode)&&authoritative)others=others.filter(x=>members.some(m=>m.userId===x.id));},
   stopRemote(id){const other=others.find(x=>x.id===id);if(other){other.path=[];other.pathIndex=0;other.target=null;other.moving=false;}},
   patientInRangeFor(id,uid){const a=id===profile.id?player:others.find(x=>x.id===id),p=patients.find(x=>x.uid===uid);
    return a&&p&&Math.hypot(a.x-p.x,a.y-p.y)<=PATIENT_RANGE?uid:null;},
   applySharedSpatial({nurses:sharedNurses,doctors},now=Date.now(),acknowledgedMotion=null){
-   if(authoritative||mode!=='coop')return false;
+   if(authoritative||!['coop','competitive'].includes(mode))return false;
    // A browser recovering an existing durable room starts its local counter
    // after the last sequence committed for this doctor, not at #1 again.
    if(Number.isSafeInteger(acknowledgedMotion)&&acknowledgedMotion>motionSequence)

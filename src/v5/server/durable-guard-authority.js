@@ -8,15 +8,15 @@ const fail=(code,message)=>Object.assign(Error(message),{code});
  * whose lease expired while suspended. No ACK/view escapes before commit. */
 export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uuid=()=>crypto.randomUUID(),leaseMs=10000,maxSteps=3600}){
  if(typeof store?.read!=='function'||typeof store?.compareAndSwap!=='function'||leaseMs<1000)throw Error('atomic durable guard store required');
- async function bootstrap({roomId,caseId,members,hostId,actorId}){
+ async function bootstrap({roomId,caseId,members,hostId,actorId,mode='coop'}){
   if(actorId!==hostId)throw fail('forbidden','only the verified host can create a clinical guard');
-  const runtime=await createGuardRuntime({content,roomId,caseId,members,hostId,nowMs:now()});
+  const runtime=await createGuardRuntime({content,roomId,caseId,members,hostId,mode,nowMs:now()});
   try{const value={schemaVersion:1,roomId,epoch:0,lease:null,runtime:await runtime.checkpoint()};
    const etag=await store.compareAndSwap(roomId,null,value);if(!etag)throw fail('exists','clinical guard already exists');
    return {epoch:0,...runtime.view()};
   }finally{runtime.dispose();}
  }
- async function transact({roomId,actorId,commands=[],motion=null,motionSequence=null,typing=null,confirmation=null}){
+ async function transact({roomId,actorId,commands=[],motion=null,motionSequence=null,claim=null,typing=null,confirmation=null}){
   if(!Array.isArray(commands)||commands.length>16)throw fail('invalid','invalid command batch');
   const before=await store.read(roomId);if(!before)throw fail('missing','clinical guard not found');
   const record=before.value;
@@ -34,6 +34,7 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
    const acknowledgements=[];let confirmationAccepted=null;
    if(!recovery.recovering){
     if(motion)runtime.motion(actorId,motion,motionSequence);
+    if(claim)runtime.claim(actorId,claim);
     if(typeof typing==='boolean')runtime.typing(actorId,typing,at);
     if(confirmation)confirmationAccepted=runtime.confirm(actorId,confirmation.revision,confirmation.outcomeId);
     for(const command of commands)acknowledgements.push(await runtime.post(actorId,command));

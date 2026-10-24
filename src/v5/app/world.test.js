@@ -78,7 +78,9 @@ test('one world owns lobby and guard navigation; repeated transitions reset rath
   world.enterLobby();const lobby=world.snapshot();assert.equal(lobby.patients.length,0);assert.equal(lobby.nurses.length,0);
   assert.equal(lobby.player.x,spawn.x);assert.equal(lobby.player.y,spawn.y);
  }
- assert.throws(()=>world.enterGuard({mode:'competitive',caseId:'CIRR-001'}),/not migrated/);
+ world.enterGuard({mode:'competitive',caseId:'CIRR-001',members:[{id:'a',name:'A'},{id:'b',name:'B'}]});
+ assert.equal(world.snapshot().mode,'competitive');
+ assert.equal(world.snapshot().patients.length,1);
  const external=world.snapshot();external.player.x=-999;assert.notEqual(world.snapshot().player.x,-999);
 });
 

@@ -426,6 +426,28 @@ jobs:
           path: qa/v5-browser-results/
           retention-days: 14
 
+  competitive-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    strategy:
+      fail-fast: false
+      matrix:
+        doctors: [2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - run: npm run build:v5
+      - name: Verified competitive patient claim, rival fencing and independent-browser care
+        env:
+          V5_COMPETITIVE_PLAYERS: ${{ matrix.doctors }}
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/competitive-browser.mjs
+
   preserved-historical-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 20
