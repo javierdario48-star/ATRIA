@@ -48,3 +48,53 @@ test('cooperative admits second different native case after three real minutes o
   assert(Math.abs(next.clinical.shift.elapsedSeconds-180)<.01);
  }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('accepted surgical handoff is reflected in durable reception, vacates the real box and survives a later admission and restart',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'atria-handoff-'));
+ const store=createSqliteGuardStore(path.join(dir,'handoff.sqlite'));
+ let now=1700000000000;
+ const server=()=>createDurableGuardAuthority({store,content,now:()=>now,maxSteps:11400});
+ let authority=server();
+ const call=extra=>authority.transact({roomId:'handoff',actorId:'a',...extra});
+ try{
+  const first=await authority.bootstrap({roomId:'handoff',caseId:'APP-001',
+   members:[{id:'a',name:'A'},{id:'b',name:'B'}],hostId:'a',actorId:'a'});
+  const original=first.clinical.shift.patients[0];
+  const nav=createWorld(content,{id:'a',name:'A'}).navigation;
+  const at=nav.center(...content.beds.find(b=>b.id===original.bedId).approach);
+  await call({motion:[at.x,at.y],motionSequence:1});
+  now+=20000;await call();
+  for(const text of ['/diagnostico apendicitis aguda','/signos',
+    '/examen general','/examen inspection','/examen auscultation',
+    '/examen percussion','/examen palpation'])
+   await call({commands:[{id:'e'+text,text}]});
+  const request=await call({commands:[{id:'handoff-transfer',text:'/disposicion quirofano'}]});
+  assert.equal(request.acknowledgements[0].clinical[0].status,'pending');
+  assert.equal(request.clinical.shift.patients[0].closed,false);
+  now+=4000;
+  const accepted=await call();
+  const concluded=accepted.clinical.shift.patients[0];
+  assert.equal(concluded.closed,true);
+  assert.equal(concluded.departed,true);
+  assert.equal(concluded.destination,'quirofano');
+  assert.equal(accepted.clinical.shift.outcomes.length,1);
+  assert.equal(accepted.claims.length,2,'the cooperative XP receipt is still unique per doctor');
+  const snapshot=(await store.read('handoff')).value;
+  assert.equal(snapshot.runtime.world.state.patients.find(p=>p.uid===original.uid).departed,true);
+  now+=180000;
+  const admitted=await call();
+  assert.equal(admitted.clinical.shift.patients.length,2);
+  const next=admitted.clinical.shift.patients[1];
+  assert.equal(next.bedId,original.bedId,'a later patient can occupy the vacated box');
+  assert.equal(next.closed,false);
+  assert.equal(admitted.clinical.shift.patients[0].departed,true);
+  const selected=await call({claim:next.uid});
+  assert.equal(selected.clinical.patient.uid,next.uid);
+  assert.equal(selected.clinical.shift.outcomes.length,1);
+  authority=server();
+  const restored=await call();
+  assert.equal(restored.clinical.patient.uid,next.uid);
+  assert.equal(restored.clinical.shift.patients[0].destination,'quirofano');
+  assert.equal(restored.claims.length,2,'reloading cannot award the transfer twice');
+ }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
+});
