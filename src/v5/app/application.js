@@ -518,6 +518,7 @@ export async function createApplication({document,window,content,signal}){
   clinicalUI.render();
   const closure=guardSession.read().patient.closure;
   if(!durableClient&&closure?.closed){
+   if(localAdmissions)settleLocalPatient(closure);
    if(coopRoomId){
     if(clinicalState?.competition?.mode==='competitive'){
      const ownerId=clinicalState.competition.ownerId;
@@ -533,8 +534,10 @@ export async function createApplication({document,window,content,signal}){
   updateHud();
   if(closure?.closed&&announcedClosure!==closure.eventId){announcedClosure=closure.eventId;
     hospitalAudio.cue(closure.quality?.score>=90?'level':'ok');
-   const canNext=localShift.canContinue({previous:guardSession?.read(),
-    mode:world.snapshot().mode});
+   const canNext=!!localAdmissions&&localAdmissions.records().some(r=>{
+    const p=localSessions.get(r.uid)?.read().patient;
+    return r.uid!==closure.patientUid&&!r.closed&&!p?.caseEnded&&!p?.patientDied;
+   });
    open('<div id="caseResult">'+caseDebriefHTML(closure)+'</div><div class="actions">'+
     (canNext?'<button class="primary" data-action="next-local-patient">Recibir otro paciente</button>':'')+
     '<button data-action="reception">Recepción</button>'+
@@ -571,8 +574,8 @@ export async function createApplication({document,window,content,signal}){
     toast('Recepción: nuevo ingreso en '+r.bedId+'. Consultá el tablero.');
    }
    for(const session of localSessions.values()){
-    const patient=session.read().patient;
-    if(patient.closure?.closed)localShift.record(patient.closure);
+    const closure=session.read().patient.closure;
+    if(closure?.closed)settleLocalPatient(closure);
    }
    if(localAdmissions.ended()&&!shiftEndedAnnounced){
     shiftEndedAnnounced=true;
@@ -645,6 +648,15 @@ export async function createApplication({document,window,content,signal}){
    }});
   localSessions.set(r.uid,session);return session;
  }
+ function settleLocalPatient(closure){
+  if(!localAdmissions||!closure?.closed)return false;
+  const updated=localAdmissions.close(closure.patientUid,'local-player',closure.destination);
+  if(updated){
+   world.departPatient(closure.patientUid);
+   localShift.record(closure);
+  }
+  return updated;
+ }
  function localReceptionSnapshot(){
   if(!localAdmissions)return null;
   return {mode:world.snapshot().mode,elapsedSeconds:localAdmissions.elapsed(),
@@ -679,7 +691,10 @@ export async function createApplication({document,window,content,signal}){
  function receiveNextLocalPatient(){
   if(!localAdmissions)return false;
   const uid=guardSession?.read()?.patient.uid;
-  const next=localAdmissions.records().find(r=>r.uid!==uid&&!localSessions.get(r.uid)?.read().patient.caseEnded);
+  const next=localAdmissions.records().find(r=>{
+   const patient=localSessions.get(r.uid)?.read().patient;
+   return r.uid!==uid&&!r.closed&&!patient?.caseEnded&&!patient?.patientDied;
+  });
   if(!next){toast('Recepción no tiene otro paciente disponible.');return false;}
   guardSession=localSessions.get(next.uid);clinicalUI.reset();patientWheel.hide();announcedClosure=null;
   close();renderGuardCommunication();updateHud();return true;
@@ -938,7 +953,7 @@ export async function createApplication({document,window,content,signal}){
   }
   if(button.dataset.action==='reception-approach'){
    const patient=world.snapshot().patients.find(p=>p.uid===button.dataset.patientUid);
-   if(!patient)return toast('El paciente ya no está disponible.');
+   if(!patient||patient.departed)return toast('El paciente ya fue derivado y el box está liberado.');
    close();const target=world.navigation.center(...patient.approach);
    if(world.target(target.x,target.y))toast('Dirigiéndote a '+patient.bedId+'.');
    else toast('No hay una ruta libre hacia el box.');

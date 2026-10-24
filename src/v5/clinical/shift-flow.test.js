@@ -58,3 +58,20 @@ test('reception derives changes from patient measurements and never fabricates d
  assert.equal(receptionAcuity({caseData:c,patient:monitored}).state,'urgent');
  assert.equal(receptionAcuity({caseData:{vitals:{}}}).state,'unknown');
 });
+
+test('accepted handoff frees a box, preserves its destination and admits another case',()=>{
+ const s=createShiftFlow({content,mode:'solo',firstCaseId:'APP-001',roomId:'handoff-bed'});
+ const [first]=s.advance(0);
+ assert(s.close(first.uid,'doctor','quirofano'));
+ assert.equal(s.close(first.uid,'doctor','quirofano'),false);
+ assert.deepEqual(s.record(first.uid),{...first,closed:true,departed:true,ownerId:'doctor',destination:'quirofano'});
+ const [next]=s.advance(180);
+ assert(next);
+ assert.equal(next.bedId,first.bedId,'released box is available to later admissions');
+ assert.notEqual(next.uid,first.uid);
+ const restored=createShiftFlow({content,mode:'solo',firstCaseId:'APP-001',
+  roomId:'handoff-bed',snapshot:s.checkpoint()});
+ assert.equal(restored.record(first.uid).destination,'quirofano');
+ assert.equal(restored.record(first.uid).departed,true);
+ assert.equal(restored.records().length,2);
+});

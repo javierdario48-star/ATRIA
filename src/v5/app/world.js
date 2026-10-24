@@ -17,7 +17,7 @@ export function createWorld(content,profile,checkpoint=null){
  let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true,
   motionSequence=0,lastMotionIntent=null;
  const lobbyRemotes=new Map(),guardRemotes=new Map(),nurseRemotes=new Map();
- const entities=()=>hospitalEntities({patients,nurses,expert,phase},content.map,content.beds);
+ const entities=()=>hospitalEntities({patients:patients.filter(p=>!p.departed),nurses,expert,phase},content.map,content.beds);
  function lobbyTile(){
   let hash=0;for(const char of profile.name||'Medico')hash=(hash*31+char.charCodeAt(0))>>>0;
   const offsets=[[-3,-2],[0,-3],[3,-2],[-4,1],[4,1],[-2,3],[2,3],[0,1]],d=offsets[hash%offsets.length];
@@ -51,16 +51,29 @@ export function createWorld(content,profile,checkpoint=null){
   for(const extra of options.additionalPatients||[])addPatient(extra);
  }
  function addPatient({uid,caseId:incomingCase,bedId}={}){
-  if(phase!=='guard'||!uid||patients.some(p=>p.uid===uid)||patients.some(p=>p.bedId===bedId))return false;
+  if(phase!=='guard'||!uid||patients.some(p=>p.uid===uid)||patients.some(p=>p.bedId===bedId&&!p.departed))return false;
   const c=content.cases.find(item=>item.id===incomingCase),bed=content.beds.find(b=>b.id===bedId);
   if(!c||!bed)return false;
   const patient={id:'patient-'+(++generation),uid,caseId:c.id,bedId:bed.id,
    x:bed.patient[0],y:bed.patient[1],approach:[...bed.approach],name:c.demo,chief:c.chief};
   patients.push(patient);nursing?.register(patient);return true;
  }
+ /** Departure is committed only after a native closure receipt. Keep the
+  * patient's checkpoint identity, but free their bedside and interactions.
+  */
+ function departPatient(uid){
+  if(phase!=='guard')return false;
+  const p=patients.find(item=>item.uid===uid);
+  if(!p||p.departed)return false;
+  p.departed=true;
+  if(['patient:'+uid,'monitor:'+uid].includes(pendingInteraction))pendingInteraction=null;
+  return true;
+ }
  function reconcilePatients(records){
   if(phase!=='guard'||authoritative||!Array.isArray(records))return false;
-  for(const p of records)if(!patients.some(item=>item.uid===p.uid))addPatient(p);
+  // A new arrival can take a freed bed in this exact same server revision.
+  for(const p of records)if(p.departed)departPatient(p.uid);
+  for(const p of records)if(!p.departed&&!patients.some(item=>item.uid===p.uid))addPatient(p);
   return true;
  }
  function step(dt,now=Date.now()){
@@ -108,7 +121,7 @@ export function createWorld(content,profile,checkpoint=null){
   authoritative=saved.authoritative;pendingInteraction=saved.pendingInteraction;
   if(authoritative)nursing=createNurseDispatcher({navigation,nurses,patients,checkpoint:saved.nursing});
  }
- return Object.freeze({navigation,enterLobby,enterGuard,addPatient,reconcilePatients,step,snapshot,
+ return Object.freeze({navigation,enterLobby,enterGuard,addPatient,departPatient,reconcilePatients,step,snapshot,
   presentNurses(frame){
    if(phase!=='guard'||authoritative)return frame;
    for(const nurse of frame.nurses||[]){
@@ -170,7 +183,7 @@ export function createWorld(content,profile,checkpoint=null){
    if(phase!=='guard'||!['patient','nurse','mentor'].includes(role))return false;
    // One consistent speaking nurse across the entire guard, never a
    // fabricated NPC. All messages remain presentation-only.
-   const speaker=role==='patient'?patients[0]:role==='mentor'?expert:nurses[0];
+   const speaker=role==='patient'?patients.find(p=>!p.departed):role==='mentor'?expert:nurses[0];
    if(!speaker)return false;
    speaker.speechBubble={text:String(text).slice(0,150),until:now+5000,role};
    return true;
@@ -183,7 +196,7 @@ export function createWorld(content,profile,checkpoint=null){
   targetRemote(id,x,y){const other=others.find(x=>x.id===id);return !!other&&authoritative&&navigation.target(other,x,y);},
   reconcileDoctors(members){if(phase==='guard'&&['coop','competitive'].includes(mode)&&authoritative)others=others.filter(x=>members.some(m=>m.userId===x.id));},
   stopRemote(id){const other=others.find(x=>x.id===id);if(other){other.path=[];other.pathIndex=0;other.target=null;other.moving=false;}},
-  patientInRangeFor(id,uid){const a=id===profile.id?player:others.find(x=>x.id===id),p=patients.find(x=>x.uid===uid);
+  patientInRangeFor(id,uid){const a=id===profile.id?player:others.find(x=>x.id===id),p=patients.find(x=>x.uid===uid&&!x.departed);
    return a&&p&&Math.hypot(a.x-p.x,a.y-p.y)<=PATIENT_RANGE?uid:null;},
   applySharedSpatial({nurses:sharedNurses,doctors},now=Date.now(),acknowledgedMotion=null){
    if(authoritative||!['coop','competitive'].includes(mode))return false;
@@ -307,7 +320,7 @@ export function createWorld(content,profile,checkpoint=null){
   stop(){pendingInteraction=null;player.path=[];player.pathIndex=0;player.target=null;player.moving=false;
    lastMotionIntent={sequence:++motionSequence,target:[player.x,player.y]};},
   interactionAt:(x,y)=>structuredClone(hitWorldEntity(entities(),x,y)),
-  patientInRange(uid){const p=patients.find(p=>p.uid===uid);return p&&Math.hypot(player.x-p.x,player.y-p.y)<=PATIENT_RANGE?uid:null;},
+  patientInRange(uid){const p=patients.find(p=>p.uid===uid&&!p.departed);return p&&Math.hypot(player.x-p.x,player.y-p.y)<=PATIENT_RANGE?uid:null;},
   beginInteraction(id){
    pendingInteraction=null;
    const entity=entities().find(e=>e.id===id);if(!entity)return {status:'missing'};
@@ -324,7 +337,7 @@ export function createWorld(content,profile,checkpoint=null){
    const entity=entities().find(e=>e.id===pendingInteraction);pendingInteraction=null;
    return entity&&canInteract(player,entity,patients)?structuredClone(entity):null;
   },
-  nearby(){return patients.filter(p=>Math.hypot(player.x-p.x,player.y-p.y)<=PATIENT_RANGE).sort((a,b)=>
+  nearby(){return patients.filter(p=>!p.departed&&Math.hypot(player.x-p.x,player.y-p.y)<=PATIENT_RANGE).sort((a,b)=>
    Math.hypot(player.x-a.x,player.y-a.y)-Math.hypot(player.x-b.x,player.y-b.y))[0]?.uid||null;}
  });
 }

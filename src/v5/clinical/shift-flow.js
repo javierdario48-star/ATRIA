@@ -65,7 +65,8 @@ export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null})
   elapsed:()=>elapsedSeconds,remaining:()=>SHIFT_DURATION_SECONDS-elapsedSeconds,
   ended:()=>elapsedSeconds>=SHIFT_DURATION_SECONDS,records:()=>clone(records),
   record:uid=>clone(records.find(r=>r.uid===uid)||null),
-  close(uid,ownerId){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;r.closed=true;r.ownerId=ownerId;return true;},
+  close(uid,ownerId,destination=null){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;
+   r.closed=true;r.departed=true;r.ownerId=ownerId;r.destination=destination;return true;},
   owner(uid,id){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;if(r.ownerId)return r.ownerId===id;r.ownerId=id;return true;},
   checkpoint:()=>clone({records,elapsedSeconds,nextIndex})
  });

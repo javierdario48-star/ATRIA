@@ -73,7 +73,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   for(const r of shift.records()){
    const receipt=sessions.get(r.uid)?.read().patient.closure;
    if(!receipt?.closed)continue;
-   shift.close(r.uid,r.ownerId);
+   shift.close(r.uid,r.ownerId,receipt.destination);
+   world.departPatient(r.uid);
    for(const m of members){
     if(mode==='competitive'&&m.id!==r.ownerId)continue;
     const key=r.index===0?m.id:m.id+':'+r.index;
