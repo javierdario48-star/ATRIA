@@ -139,7 +139,7 @@ test('a pending rate does not survive room disposal or become an administered do
  assert.throws(()=>f.s.advance(2),/disposed/);
 });
 test('unsupported case stop requests are interpreted without creating an infusion or throwing on missing native state',async()=>{
- const f=fixture('CHOLANG-001');
+ const f=fixture('MESI-001');
  const reply=await f.send('Enfermera monitor y suspender noradrenalina');
  assert.equal(reply.routeError,'unsafe-compound-order');assert.deepEqual(reply.clinical,[]);
  assert.deepEqual(f.s.read().patient.administrationLog,undefined);f.s.dispose();

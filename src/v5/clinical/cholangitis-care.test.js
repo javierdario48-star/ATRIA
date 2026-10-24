@@ -30,7 +30,7 @@ test('CHOLANG is the sixth certified executor with sepsis source and no fictitio
   assert.equal(p.liveVitals.sys,86);
   assert.equal(p.liveVitals.hr,132);
   assert.deepEqual(p.administrationLog,[]);
-  assert.equal(p.closure.ready,false);
+  assert.equal(f.session.read().closure.ready,false);
   assert.deepEqual(f.session.read().eligibleDestinations,[]);
  }finally{f.session.dispose();}
 });
