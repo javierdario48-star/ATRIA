@@ -442,3 +442,17 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 .device-trace[data-acuity="critical"] path{stroke:#ff8d87;filter:drop-shadow(0 0 3px #ff8d8799)}
 .device-top[data-acuity="warning"] .device-indicator{background:#ffcf61;box-shadow:0 0 8px #ffcf6199}
 .device-top[data-acuity="critical"] .device-indicator{background:#ff8881;box-shadow:0 0 8px #ff888199}
+
+
+/* Read-only reception triage. Do not reuse the monitor's live-data styling. */
+.reception-patients{display:grid;gap:10px;margin-top:12px}
+.reception-patient{display:grid;gap:5px;padding:12px;border-radius:12px;
+ border:1px solid #49636b;background:#0c2730}
+.reception-patient strong{font-size:13px}.reception-patient small{font-size:11px;color:#b3cdd1}
+.reception-label{justify-self:start;padding:3px 9px;border-radius:30px;font-size:11px;font-weight:750}
+.reception-patient[data-acuity="critical"] .reception-label{background:#67202a;color:#fff3f4;border:1px solid #f77f8b}
+.reception-patient[data-acuity="urgent"] .reception-label{background:#693c0e;color:#ffda9d;border:1px solid #f5ab55}
+.reception-patient[data-acuity="warning"] .reception-label{background:#635619;color:#fff4a1;border:1px solid #f4d74c}
+.reception-patient[data-acuity="stable"] .reception-label{background:#194939;color:#a6f3c6;border:1px solid #65c8a2}
+.reception-patient[data-acuity="unknown"] .reception-label{background:#33434d;color:#d1e0e6}
+#receptionButton[hidden]{display:none}

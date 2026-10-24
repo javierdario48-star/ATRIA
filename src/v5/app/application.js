@@ -25,6 +25,7 @@ import {createPatientActionWheel} from '../ui/patient-actions.js';
 import {createPatientClinicalOverlay} from '../ui/diagnostic-impression.js';
 import {createClinicalChecklist} from '../ui/clinical-checklist.js';
 import {createLobbyDirectory} from '../ui/lobby-directory.js';
+import {receptionBoardHTML} from '../ui/reception-board.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PROFILE_KEY='atria.v5.profile.v1';
@@ -544,6 +545,7 @@ export async function createApplication({document,window,content,signal}){
   if(guard)clinicalChecklist.update(clinical);else clinicalChecklist.hide();
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
   ui('peopleButton').textContent=guard?'Historia':'Personas';
+  ui('receptionButton').hidden=!guard;
   const career=progress.read();ui('playerProgress').textContent='Nivel '+career.level+' · '+(career.xp%200)+'/200 XP';world.setLevel(career.level);
   ui('recipientButton').textContent=guard?({nurse:'Enfermera',vega:'Dr. Vega'}[focusedNpc]||'Paciente cercano'):'Lobby · público';
   if(nurseQuick)nurseQuick.hidden=!guard;
@@ -746,6 +748,13 @@ export async function createApplication({document,window,content,signal}){
   world=createWorld(content,profile);enterLobby();
  });
  listen(ui('notificationsButton'),'click',showPeople);
+ listen(ui('receptionButton'),'click',()=>{
+  const snapshot=world.snapshot();
+  if(snapshot.phase!=='guard')return;
+  open(receptionBoardHTML({patients:snapshot.patients,cases:content.cases,
+   clinical:guardSession?.read(),
+   elapsedSeconds:localShift.totalMinutes(guardSession?.read()?.clock?.gameMinute||0)}));
+ });
  listen(ui('audioButton'),'click',()=>{hospitalAudio.unlock();showAudioSettings();});
  listen(ui('friendRequestAccept'),'click',async()=>{
   const id=ui('friendRequestNotice').dataset.user;if(!id)return;
