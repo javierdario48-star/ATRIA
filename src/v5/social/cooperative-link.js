@@ -7,7 +7,7 @@ const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
  * Only the caller's existing RAF invokes maintain(); there is no timer here.
  */
 export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onRoomSpeech=()=>{},onClose=()=>{}}){
- const peers=new Map(),recovery=createPeerRecoveryPolicy();let token=null,user=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoom=null,busySpeech=null,nextPoll=0,nextRoomPoll=0,nextSpeechPoll=0,roomSpeechCursor=0,roomSpeechRoom=null,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
+ const peers=new Map(),recovery=createPeerRecoveryPolicy();let token=null,user=null,connecting=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoster=null,busyRoom=null,busySpeech=null,nextPoll=0,nextRosterPoll=0,nextRoomPoll=0,nextSpeechPoll=0,roomSpeechCursor=0,roomSpeechRoom=null,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
  const temporary=new Map();let storage;try{storage=window.localStorage;storage.getItem(SESSION_KEY);}catch{storage={getItem:k=>temporary.get(k),setItem:(k,v)=>temporary.set(k,v),removeItem:k=>temporary.delete(k)};}
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
@@ -22,7 +22,12 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  }
  async function connect(){
   if(user&&token)return user;
-  const result=await api('resume',{clientKey,name:profile.name.length<2?'Dr. '+profile.name:profile.name});token=result.token;user=result.user;return user;
+  // Presence, roster and room requests share one authenticated identity,
+  // even if the first animation frame launches their network lanes together.
+  if(!connecting)connecting=api('resume',{clientKey,name:profile.name.length<2?'Dr. '+profile.name:profile.name})
+   .then(result=>{token=result.token;user=result.user;return user;})
+   .finally(()=>{connecting=null;});
+  return connecting;
  }
  function setRoom(value){
   if(disposed)return;
@@ -39,38 +44,33 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    onMessage:packet=>{if(!disposed&&peers.get(entry.id)===entry&&room?.id===entry.roomId&&packet.roomId===entry.roomId&&room.members.some(x=>x.userId===entry.id))onPacket(entry.id,packet);}});
   peers.set(member.userId,entry);return entry;
  }
- async function poll(now,pose){
+ async function pollPresence(now,pose){
   const epoch=roomEpoch,active=()=>!disposed&&roomEpoch===epoch;
-  await connect();
-  if(!active())return;
+  await connect();if(!active())return;
   const scope=pose.phase==='guard'?privateRoomMotionPrefix(pose.roomId):'';
   if(scope!==motionScope){
-   // New spatial scene = new presence session/epoch. The old social backend
-   // already rejects out-of-order packets; no V4 server schema changes.
    motionScope=scope;motionSession=scope+window.crypto.randomUUID();
    motionEpoch=Math.max(Date.now(),motionEpoch+1);presenceSequence=0;
    try{storage.setItem('atria.v5.motionEpoch',String(motionEpoch));}catch{}
   }
-  // V4's HTTP movement/roster fallback travels concurrently: an unrelated
-  // directory read must never add a full RTT before the next motion packet.
-  const [,social]=await Promise.all([
-   api('',{presence:{peerId,motionSession,motionEpoch,motionAt:window.performance.now(),sentAt:Date.now(),motionCadence:260,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,phase:pose.phase,roomId:pose.roomId||'',seq:++presenceSequence}},true),
-   api('lobby?after=0')
-  ]);
-  if(!active())return;
+  // Never hold the next spatial packet behind directory reads or invitations.
+  // Both lanes use the original authenticated API and existing RAF; no new timer.
+  await api('',{presence:{peerId,motionSession,motionEpoch,motionAt:window.performance.now(),sentAt:Date.now(),
+   motionCadence:260,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,
+   walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,
+   phase:pose.phase,roomId:pose.roomId||'',seq:++presenceSequence}},true);
+ }
+ async function pollRoster(now){
+  const epoch=roomEpoch,active=()=>!disposed&&roomEpoch===epoch;
+  await connect();if(!active())return;
+  const social=await api('lobby?after=0');if(!active())return;
   roster=social.players;lobbyMessages=social.messages||[];
-  if(!active())return;
-  if(!room&&!savedRoom){
-   // Movement is the V4 260ms fallback; invitation/friend discovery needn't
-   // fetch profiles at that frequency. Keep a visible notice under 1 second.
-   if(now-lastContactsAt>=780){
-    const me=await api('me');if(!active())return;
-    lastContactsAt=now;
-    invites=me.invites.filter(x=>x.mode==='coop'&&x.roomId!==room?.id&&x.roomId!==savedRoom);
-    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};
-   }
-   onSocial();return;}
-  // Pose packets are not held behind room signaling, SDP or ICE negotiation.
+  if(!room&&!savedRoom&&now-lastContactsAt>=780){
+   const me=await api('me');if(!active())return;
+   lastContactsAt=now;
+   invites=me.invites.filter(x=>x.mode==='coop'&&x.roomId!==room?.id&&x.roomId!==savedRoom);
+   friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};
+  }
   onSocial();
  }
  async function pollRoom(now){
@@ -132,7 +132,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  }
  return Object.freeze({
   connect,
-  flush:()=>Promise.all([busy,busyRoom,busySpeech].filter(Boolean)),
+  flush:()=>Promise.all([busy,busyRoster,busyRoom,busySpeech].filter(Boolean)),
   setProfile(value){profile={...value};},
   async postRoomSpeech({id,text}){
    if(!room||!user||typeof id!=='string'||!id||typeof text!=='string'||!text.trim())return false;
@@ -175,7 +175,11 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    // driven by the existing RAF (no added timers or transport stack).
    if(!busy&&now>=nextPoll){
     nextPoll=now+260;
-    busy=poll(now,pose).catch(()=>{}).finally(()=>busy=null);
+    busy=pollPresence(now,pose).catch(()=>{}).finally(()=>busy=null);
+   }
+   if(!busyRoster&&now>=nextRosterPoll){
+    nextRosterPoll=now+260;
+    busyRoster=pollRoster(now).catch(()=>{}).finally(()=>busyRoster=null);
    }
    if(room&&!busySpeech&&now>=nextSpeechPoll){
     nextSpeechPoll=now+320;

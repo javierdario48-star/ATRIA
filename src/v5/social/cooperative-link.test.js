@@ -182,3 +182,24 @@ test('private physician speech reaches the second room member without clinical s
  assert.equal(await stranger.postRoomSpeech({id:'intrusion',text:'No autorizado'}),false);
  await ana.leave();bruno.dispose();ana.dispose();stranger.dispose();
 });
+
+test('slow lobby directory reads cannot hold back subsequent authenticated movement packets',async()=>{
+ const f=fixture(),a=f.make();
+ await a.connect();
+ f.delayBefore('/api/lobby');
+ a.maintain(1000,{x:40,y:40,phase:'lobby',moving:true});
+ while(!f.beforeHeld())await Promise.resolve();
+ await new Promise(resolve=>setImmediate(resolve));
+ const before=f.requests.filter(x=>x==='/api/lobby-sync').length;
+ assert.equal(before,1);
+ // The directory request is deliberately still unresolved. Movement must
+ // continue on the original 260ms RAF cadence, not wait for that GET.
+ a.maintain(1300,{x:93,y:40,phase:'lobby',moving:true});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(f.requests.filter(x=>x==='/api/lobby-sync').length,2);
+ const roster=await f.backend.roster();
+ assert.equal(roster[0].x,93);
+ f.releaseBefore();
+ await a.flush();
+ a.dispose();
+});

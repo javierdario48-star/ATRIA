@@ -23,6 +23,7 @@ import {guardScoreModelV5,guardScoreboardHTML} from '../ui/guard-scoreboard.js';
 import {createPatientActionWheel} from '../ui/patient-actions.js';
 import {createPatientClinicalOverlay} from '../ui/diagnostic-impression.js';
 import {createClinicalChecklist} from '../ui/clinical-checklist.js';
+import {createLobbyDirectory} from '../ui/lobby-directory.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PROFILE_KEY='atria.v5.profile.v1';
@@ -47,6 +48,7 @@ export async function createApplication({document,window,content,signal}){
   coopRoomId=null,replica=null,durableClient=null,lastSharedPublish=0,sharedSequence=0,lastMotion='',lastRemoteRevision=-1,socialEnabled=false,
   durableStarting=false,durableJoining=false,lastDurableErrorAt=-Infinity,nextCooperativeAdmission=0,cooperativeCapability=null;
  const messageEpoch=window.crypto.randomUUID(),cooperativeFlow=createCooperativeLifecycle();let pendingCoopLeave=false;
+ let invitingColleagues=false;
  let restoreRoomId=null;try{restoreRoomId=window.localStorage.getItem('atria.v5.coop.room');}catch{}
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
  const renderer=await createHospitalRenderer(canvas,content,{signal,window});
@@ -55,6 +57,7 @@ export async function createApplication({document,window,content,signal}){
  const patientWheel=createPatientActionWheel({document,window});
  const patientClinical=createPatientClinicalOverlay({document,window,cases:content.cases});
  const clinicalChecklist=createClinicalChecklist({document});
+ const lobbyDirectory=createLobbyDirectory({document,escape:esc});
  let scoreMarkup='';
  // Unsupported catalog cases remain navigable, but subsequent arrivals rotate
  // only among cases with certified clinical executors.
@@ -126,18 +129,7 @@ export async function createApplication({document,window,content,signal}){
    maybeBeginCooperativeRoom();
    if(pendingCoopLeave&&outcomeDelivered())enterLobby(true);},
   onPacket:receiveCooperativePacket,onRoomSpeech:showWardSpeech,onClose:()=>{if(durableClient)return;if(coopRoomId&&!guardSession?.read().patient.caseEnded)enterLobby(false);}});
- function renderSocialLists(){
-  const s=social.state(),list=ui('coopDoctors'),invitations=ui('coopInvitations');
-  if(list){const selected=new Set([...list.querySelectorAll('input:checked')].map(x=>x.value));
-   list.innerHTML=s.roster.filter(x=>x.userId!==s.user?.id).map(x=>'<label><input type="checkbox" value="'+esc(x.userId)+'" '+(selected.has(x.userId)?'checked':'')+'>'+esc(x.name)+'</label>').join('')||'<p>Esperando colegas conectados…</p>';}
-  if(invitations)invitations.innerHTML=s.invites.map(x=>'<div><b>'+esc(x.host.name)+'</b> invita a una guardia cooperativa. <button data-action="join-coop" data-room="'+esc(x.roomId)+'">Aceptar</button></div>').join('')||'<p>Sin invitaciones pendientes.</p>';
-  const requests=ui('friendRequests'),contacts=ui('lobbyContacts');
-  if(requests)requests.innerHTML=(s.requests?.incoming||[]).map(x=>
-   '<p>'+esc(x.name)+' te agregó. <button data-action="accept-friend" data-user="'+esc(x.id)+'">Aceptar amistad</button></p>').join('');
-  if(contacts)contacts.innerHTML=s.roster.filter(x=>x.userId!==s.user?.id).map(x=>
-   '<button data-action="inspect-player" data-user="'+esc(x.userId)+'">'+esc(x.name)+
-   ((s.friends||[]).some(f=>f.id===x.userId)?' · Amigo':'')+'</button>').join('')||'<p>No hay otros médicos conectados.</p>';
- }
+ function renderSocialLists(){lobbyDirectory.render(social.state());}
  function renderNotifications(s){
   const incoming=s.requests?.incoming||[],invites=s.invites||[];
   const number=incoming.length+invites.length,count=ui('notificationsCount');
@@ -173,7 +165,7 @@ export async function createApplication({document,window,content,signal}){
    if(cooperativeFlow.current(intent)){toast(error.message);renderInvitationNotice(social.state());}
   }
  }
- function showPeople(){socialEnabled=true;open('<h2>Personas</h2><div id="friendRequests"></div><div id="coopInvitations"></div><p>Colegas conectados · tocá para agregar o invitar</p><div id="lobbyContacts"></div><p>Invitación múltiple (hasta 3 colegas)</p><div id="coopDoctors"></div><div class="actions"><button data-action="close">Cerrar</button></div>','people');renderSocialLists();}
+ function showPeople(){socialEnabled=true;open('<h2>Personas</h2><p>Colegas conectados: <strong id="onlineDoctorsCount">0</strong> · tocá para agregar o invitar</p><div id="friendRequests"></div><div id="coopInvitations"></div><div id="lobbyContacts"></div><p>Invitación múltiple (hasta 3 colegas)</p><div id="coopDoctors"></div><div class="actions"><button data-action="close">Cerrar</button></div>','people');renderSocialLists();}
  function friendStatus(s,id){
   return s.friends?.some(x=>x.id===id)?'friend':
    s.requests?.incoming?.some(x=>x.id===id)?'incoming':
@@ -195,13 +187,16 @@ export async function createApplication({document,window,content,signal}){
    '<button data-action="close">Cerrar</button></div>','lobby-person');
  }
  async function inviteColleagues(ids,caseId){
+  if(invitingColleagues||coopRoomId)return;
   if(!Object.hasOwn(CLINICAL_EXECUTORS,caseId)){toast('Este caso todavía no tiene atención completa.');return;}
   if(!ids.length){toast('Elegí al menos un médico conectado.');return;}
+  invitingColleagues=true;
   cancelSharedIntent();coopCaseId=caseId;
   const intent=cooperativeFlow.begin('host');
   try{await social.invite(ids);
    if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Invitación enviada</h2><p>Esperando que los colegas acepten la guardia compartida.</p>');
   }catch(error){if(cooperativeFlow.current(intent))toast(error.message);}
+  finally{invitingColleagues=false;}
  }
  function clinicalChanged(){
   renderGuardCommunication();

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {browserHarness} from './browser-harness.mjs';
 
-const h=await browserHarness({apiLatency:25}),guestBrowser=await h.newBrowser(),contexts=[],pages=[],errors=[];
+const h=await browserHarness({apiLatency:110}),guestBrowser=await h.newBrowser(),contexts=[],pages=[],errors=[];
 let stage='boot';
 try{
  for(const [i,browser] of [h.browser,guestBrowser].entries()){
@@ -21,6 +21,12 @@ try{
   bruno.waitForFunction(()=>atriaV5.snapshot().others.some(x=>x.name==='Dra. Ana'))
  ]);
  stage='real HTTP lobby movement across two independent browsers';
+ // Keep the directory open on the observing device: fast roster updates must
+ // not replace the button the player is about to tap.
+ await ana.locator('#peopleButton').click();
+ assert.match(await ana.locator('#peopleButton').innerText(),/Personas · 1/);
+ assert.equal(await ana.locator('#onlineDoctorsCount').innerText(),'1');
+ await ana.evaluate(()=>window.__contactBeforeMotion=document.querySelector('#lobbyContacts [data-action="inspect-player"]'));
  const sampled=ana.evaluate(async()=>{
   const frames=[],start=performance.now();
   await new Promise(resolve=>{
@@ -47,6 +53,9 @@ try{
  await bruno.mouse.click(movementTap.x,movementTap.y);
  await bruno.waitForFunction(()=>{const p=atriaV5.snapshot().player;return p.moving||p.pathIndex>0;});
  const frames=await sampled;
+ assert.equal(await ana.evaluate(()=>document.querySelector('#lobbyContacts [data-action="inspect-player"]')===window.__contactBeforeMotion),true,
+  'frequent remote pose updates must not destroy the opened directory or pressed contacts');
+ await ana.locator('#modalClose').click();
  const distances=frames.slice(1).map((p,i)=>Math.hypot(p.x-frames[i].x,p.y-frames[i].y));
  const remoteTravel=distances.reduce((a,b)=>a+b,0),maxRemoteJump=Math.max(0,...distances);
  assert(frames.length>60,'observe many distinct rendering frames on the other device');
@@ -84,7 +93,7 @@ try{
  await ana.locator('#lobbyContacts [data-action="inspect-player"]').filter({hasText:'Dr. Bruno'}).click();
  await ana.locator('[data-action="invite-friend"]').waitFor();
  assert.equal(await ana.locator('#friendCase').inputValue(),'PERI-PBE-001');
- await ana.locator('[data-action="invite-friend"]').click();
+ await ana.locator('[data-action="invite-friend"]').dblclick();
  await ana.getByRole('heading',{name:'Invitación enviada'}).waitFor();
  stage='unilateral notification, acceptance without making another invitation';
  await bruno.locator('#coopInviteNotice').waitFor({state:'visible',timeout:30000});
@@ -97,7 +106,7 @@ try{
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().phase==='guard'&&
   atriaV5.snapshot().mode==='coop',null,{timeout:75000})));
  assert.equal(h.requests.filter(x=>x.path==='/api/rooms'&&x.status===201).length,1,
-  'only the host creates an invitation; guest accepts it without a counterinvitation');
+  'even a double tap creates one room; guest accepts without a counterinvitation');
  assert.deepEqual(errors,[]);
  console.log('V5 LOBBY SOCIAL UI PASS',JSON.stringify({chatBoth:true,bubble:true,friendTap:true,
   friendAccepted:true,unilateralInvitation:true,joinByNotification:true,remoteTravel,maxRemoteJump,phonesPhysical:false}));
