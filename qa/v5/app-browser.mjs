@@ -188,6 +188,21 @@ try{
  assert.equal(closed.patient.treatments.some(x=>x.id==='source_control'),false);
  assert.match(await page.locator('#caseResult').innerText(),/100\/100/);
  await page.screenshot({path:out+'/app-surgical-handoff.png'});
+ // One actual on-screen accepted transfer must release the box and update
+ // reception; reading at the public game diagnostic API cannot mutate care.
+ await page.waitForFunction(uid=>atriaV5.snapshot().patients.some(p=>p.uid===uid&&p.departed),closed.patient.uid);
+ const afterHandoff=await page.evaluate(()=>atriaV5.snapshot());
+ const released=afterHandoff.patients.find(p=>p.uid===closed.patient.uid);
+ assert.equal(released.departed,true,'the native closure must vacate the ward bed');
+ assert(!afterHandoff.entities.some(e=>e.patientUid===closed.patient.uid),
+  'neither the old patient nor their monitor may remain interactive');
+ await page.locator('#modalContent [data-action="reception"]').click();
+ const row=page.locator('.reception-patient[data-patient-uid="'+closed.patient.uid+'"]');
+ assert.match(await row.innerText(),/Derivado a Quirófano · Box liberado/);
+ assert.equal(await row.locator('[data-action="reception-approach"]').isDisabled(),true);
+ assert.match(await page.locator('#modalContent').innerText(),/Atenciones finalizadas/);
+ assert.equal((await state()).progress.receipts.length,1,'reception is strictly read-only');
+ await page.screenshot({path:out+'/app-reception-departed.png'});
  await page.locator('#modalClose').click();
  await send('/disposicion quirofano');await send('Enfermera ceftriaxona');
  assert.equal((await state()).progress.xp,133);
