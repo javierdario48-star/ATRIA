@@ -87,9 +87,9 @@ test('invalid dose, invented surgery and hemogram cannot administer medication',
  f.s.dispose();
 });
 test('APP surgical referral requires completed studies, both IV drugs and confirmed consultation; closure and XP once',async()=>{
- const f=fixture();const premature=await f.send('/disposicion quirofano');assert.equal(premature.clinical[0].status,'pending');
- f.s.advance(3.5);await f.s.flush();assert.equal(f.s.read().patient.consults.at(-1).accepted,false);
- assert.equal(f.s.read().patient.caseEnded,false,'rejected surgical request leaves the patient in ED');
+ const f=fixture();const premature=await f.send('/disposicion quirofano');assert.equal(premature.clinical[0].status,'rejected');
+ assert.equal(premature.clinical[0].reason,'transfer-not-accepted');
+ assert.equal(f.s.read().patient.caseEnded,false,'unsubstantiated surgical request cannot leave ED');
  await evaluate(f);
  await f.send('/estudio app_cbc');await f.send('/estudio app_us');
  await f.send('Enfermera una vía');

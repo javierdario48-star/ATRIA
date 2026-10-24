@@ -33,7 +33,7 @@ test('bare "Enfermera cirugía" first requests surgery; after accepted consult r
  assert.deepEqual(after.intents.map(x=>[x.kind,x.id]),[['case.close','quirofano']]);
 });
 
-test('natural surgical transfer waits for specialist review; discharge without prerequisites is still rejected',async()=>{
+test('natural surgical transfer without evidence is rejected at request time; discharge remains gated',async()=>{
  for(const [caseId,text] of [['APP-001','Enfermera derivar a cirugía'],
   ['CIRR-001','Enfermera dar de alta']]){
   const s=createGuardSession({roomId:'natural-'+caseId,mode:'solo',actorId:'doc',
@@ -42,11 +42,9 @@ test('natural surgical transfer waits for specialist review; discharge without p
   try{
    const result=await s.post({id:'premature',text});
    if(caseId==='APP-001'){
-    assert.equal(result.clinical[0]?.status,'pending');
-    s.advance(3.5);await s.flush();
-    const settled=await s.post({id:'premature',text});
-    assert.equal(settled.clinical[0]?.status,'rejected');
-    assert.equal(settled.clinical[0]?.reason,'transfer-rejected');
+    assert.equal(result.clinical[0]?.status,'rejected');
+    assert.equal(result.clinical[0]?.reason,'transfer-not-accepted');
+    assert.equal(s.read().patient.pendingConsults.length,0);
    }else{
     assert.equal(result.clinical[0]?.status,'rejected');
     assert.equal(result.clinical[0]?.reason,'closure-not-ready');

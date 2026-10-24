@@ -61,14 +61,14 @@ test('asking surgery for an opinion is distinct from asking to transfer',async()
   assert(after.patient.closure.quality.score<100,'omitted care lowers score rather than blocks accepted transfer');
  }finally{f.s.dispose();}
 });
-test('transfer rejection never closes, and diagnosis correction allows a later accepted request',async()=>{
+test('an unsubstantiated transfer never queues and diagnosis correction permits subsequent acceptance',async()=>{
  const f=fixture('APP-001','transfer-reject');
  try{
   await f.post('/diagnostico resfriado');
   const initial=await f.post('/disposicion quirofano');
-  assert.equal(initial.clinical[0].status,'pending');
-  await f.advance(3.5);
-  assert.equal(f.s.read().patient.consults.at(-1).accepted,false);
+  assert.equal(initial.clinical[0].status,'rejected');
+  assert.equal(initial.clinical[0].reason,'transfer-not-accepted');
+  assert.equal(f.s.read().patient.consults.length,0);
   assert.equal(f.s.read().patient.caseEnded,false);
   assert.equal(f.s.read().progress.receipts.length,0);
   await basicWorkup(f,'apendicitis aguda');

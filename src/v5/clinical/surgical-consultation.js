@@ -66,6 +66,15 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
    const id=service||intent.id;
    const prior=p.consults.find(x=>x.id===id&&x.status==='done'&&x.accepted);
    if(prior)return destination?acceptTransfer(cmd,prior):receipt(cmd,prior,true);
+   // Check the clinical basis when the transfer is REQUESTED, not 3.5s
+   // later. New findings documented while awaiting the response cannot
+   // retroactively justify a premature disposition request.
+   if(destination&&id!=='uti'){
+    const review=id==='gastro'?gastroReview():
+     csSurgicalReview487(surgicalReviewSnapshot(p,c,cases),c);
+    if(!review.accepted)return {status:'rejected',eventId:cmd.eventId,patientUid:p.uid,
+     reason:'transfer-not-accepted',receipt:{patientUid:p.uid,eventId:cmd.eventId,message:review.reason}};
+   }
    const existing=[...pending].find(t=>t.id===id);
    if(existing){existing.commands.push(structuredClone(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
    const task={id,sourceEventId:cmd.eventId,patientUid:p.uid,
