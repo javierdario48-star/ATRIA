@@ -207,9 +207,7 @@ export async function createApplication({document,window,content,signal}){
  function maybeBeginCooperativeRoom(now=window.performance.now()){
   if(now<nextCooperativeAdmission||coopRoomId||durableStarting||durableJoining)return;
   const state=social.state(),room=state.room,role=social.isHost()?'host':'guest';
-  // Only the accepted host roster may request clinical bootstrap. An early
-  // server call reads a pending invitation as forbidden and shows a false error.
-  if(!room||role==='host'&&(!coopCaseId||!room.allAccepted)||
+  if(!room||role==='host'&&!coopCaseId||
    !cooperativeFlow.mayEnter(role,{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:state.recovering}))return;
   nextCooperativeAdmission=now+1000;
   beginCooperativeRoom(room);
