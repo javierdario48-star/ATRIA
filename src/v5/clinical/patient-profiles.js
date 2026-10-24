@@ -1,5 +1,12 @@
 // Effective ns421-patient-dialogue profiles. Only existing complete V5 cases.
 export const PATIENT_PROFILES=Object.freeze({
+ 'CHOLE-001':{place:'Me duele fuerte arriba a la derecha de la panza.',
+  onset:'Empezó ayer; esta vez no se me pasó como en los cólicos anteriores.',
+  radiation:'A veces siento el dolor hacia el hombro derecho.',
+  character:'Es un dolor constante, bastante distinto del cólico que tenía antes.',
+  intensity:8,worse:'Al inspirar hondo o al tocarme debajo de las costillas duele más.',
+  relief:'No se me alivia del todo con ninguna posición.',
+  symptoms:'Me duele mucho debajo de las costillas a la derecha, tengo fiebre, náuseas y vomité.'},
  'CHOLANG-001':{place:'Me duele fuerte debajo de las costillas del lado derecho.',
   onset:'Desde ayer; hoy empecé con escalofríos y mucho decaimiento.',
   radiation:'El dolor queda más que nada del lado derecho del abdomen.',

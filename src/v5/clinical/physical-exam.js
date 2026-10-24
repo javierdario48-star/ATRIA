@@ -5,6 +5,12 @@ import {readNeurologicalState,readPatientObservations} from './patient-observati
 export {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
 const unspecified='Sin hallazgo específico modelado en este escenario.';
 const findings={
+ 'CHOLE-001':{appearance:'Febril, dolorida, mantiene la mano sobre el hipocondrio derecho.',
+  skin:'Sin ictericia manifiesta en el examen inicial documentado.',
+  inspection:'Abdomen sin distensión marcada; respiración superficial por dolor.',
+  palpation:'Dolor localizado en hipocondrio derecho; Murphy clínico positivo con interrupción inspiratoria. Sin contractura difusa.',
+  bowel:'Ruidos hidroaéreos presentes.',
+  liver:'Dolor en proyección vesicular, sin hepatomegalia palpable documentada.'},
  'CHOLANG-001':{appearance:'Febril, sudoroso y decaído; compromiso del estado general.',
   skin:'Escleras y piel ictéricas.',
   inspection:'Coloración amarillenta visible; respiración rápida.',
