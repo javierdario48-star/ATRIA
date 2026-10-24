@@ -29,7 +29,8 @@ export function surgicalReviewSnapshot(p,c,cases=[c]){
   imagingDone:p.orders.some(o=>o.status==='done'&&/^(peri_ct|peri_rx|ter_ct)|ct|rx|imagen|radiografia|tomografia/i.test(o.id))};
 }
 export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acceptTransfer,checkpoint=null}){
- if(typeof acceptTransfer!=='function')throw Error('consultation requires native transfer owner');
+ // Native transfer callback is optional: CIRR's historical consultations have
+ // no direct transfer finalizer and must retain their existing behavior.
  const pending=new Set(structuredClone(checkpoint?.pending??[]));
  function gastroReview(){
   if(c.id!=='CHOLANG-001')return {accepted:false,status:'review',
@@ -52,6 +53,7 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
   request(cmd,clock){
    const {intent}=cmd;
    const destination=intent.kind==='case.close'&&!intent.partial?intent.id:null;
+   if(destination&&typeof acceptTransfer!=='function')return null;
    const service=destination==='quirofano'?'cirugia':destination==='uti'?'uti':destination==='procedimiento'?'gastro':null;
    if(!service&&(!['cirugia','uti','gastro'].includes(intent.id)||
       !['consult.request','procedure.request'].includes(intent.kind)))return null;
