@@ -11,8 +11,16 @@ from PIL import Image, ImageChops, ImageStat
 reference, candidate = [Image.open(p).convert("RGB") for p in sys.argv[1:3]]
 assert reference.size == candidate.size, "reference and candidate viewports differ"
 w, h = reference.size
-regions = [(0, round(h * .09), w, round(h * .40)),
-           (0, round(h * .54), w, round(h * .82))]
+# Keep the original strict pixel tolerance, but compare only static artwork.
+# The center of the upper zone includes the player sprite, and the lower-left
+# of the bottom zone includes mobile controls. They are not background pixels.
+# These five regions cover the stable upper, side and lower map at the same
+# camera origin in the reference and standalone V5 screenshot.
+regions = [(0, round(h * .09), w, round(h * .27)),
+           (0, round(h * .27), round(w * .27), round(h * .40)),
+           (round(w * .74), round(h * .27), w, round(h * .40)),
+           (0, round(h * .54), w, round(h * .76)),
+           (round(w * .58), round(h * .76), w, round(h * .80))]
 results = []
 for box in regions:
     diff = ImageChops.difference(reference.crop(box), candidate.crop(box))
