@@ -360,7 +360,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function startCooperativeHost(room){
   coopRoomId=room.id;cooperativeFlow.bind(room.id);announcedClosure=null;announcedDeathUid=null;
-  lastReceivedPatientCount=current.shift?.patients.length||1;lastSelectedPatientUid=current.patient.uid;shiftEndedAnnounced=false;
+  lastReceivedPatientCount=1;lastSelectedPatientUid=room.id+':patient';shiftEndedAnnounced=false;
   world=createWorld(content,{...profile,id:social.state().user.id});
   const members=room.members.map(x=>({id:x.userId,name:x.name,color:'navy'}));
   world.enterGuard({mode:'coop',caseId:coopCaseId,patientUid:room.id+':patient',members});
@@ -387,7 +387,7 @@ export async function createApplication({document,window,content,signal}){
   if(!coopRoomId&&packet.kind==='state'&&sender===social.state().room?.hostUserId&&cooperativeFlow.mayEnter('guest',{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:social.state().recovering})){
    const room=social.state().room;if(packet.roomId!==room.id||!Object.hasOwn(CLINICAL_EXECUTORS,packet.clinical?.patient?.caseId))return;
    coopRoomId=room.id;cooperativeFlow.bind(room.id);announcedClosure=null;announcedDeathUid=null;
-  lastReceivedPatientCount=current.shift?.patients.length||1;lastSelectedPatientUid=current.patient.uid;shiftEndedAnnounced=false;
+   lastReceivedPatientCount=1;lastSelectedPatientUid=packet.clinical.patient.uid;shiftEndedAnnounced=false;
    world=createWorld(content,{...profile,id:social.state().user.id});world.enterGuard({mode:'coop',caseId:packet.clinical.patient.caseId,
     patientUid:packet.clinical.patient.uid,members:room.members.map(x=>({id:x.userId,name:x.name})),authoritative:false});
    replica=createCooperativeReplica({roomId:room.id,hostId:sender,send:social.send,storage:window.sessionStorage,onSnapshot:value=>{
@@ -517,7 +517,15 @@ export async function createApplication({document,window,content,signal}){
   ui('chatHistory').replaceChildren(fragment);ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
   clinicalUI.render();
   const closure=guardSession.read().patient.closure;
-  if(!durableClient&&closure?.closed)localShift.record(closure);
+  if(!durableClient&&closure?.closed){
+   if(coopRoomId){
+    if(clinicalState?.competition?.mode==='competitive'){
+     const ownerId=clinicalState.competition.ownerId;
+     if(ownerId===social.state().user?.id)progress.award({...closure,actorId:ownerId});
+    }else progress.award(closure);
+   }
+   if(clinicalState?.competition?.mode!=='competitive')localShift.record(closure);
+  }
   if(progress.read().receipts.length+progress.read().penalties.length!==savedRewardCount){
    try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;}
    catch{toast('Progreso confirmado en esta sesión; no se pudo guardar en este dispositivo.');}
