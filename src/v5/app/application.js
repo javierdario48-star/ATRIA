@@ -8,6 +8,7 @@ import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {createCooperativeLink} from '../social/cooperative-link.js';
 import {createCooperativeReplica} from '../social/cooperative-replica.js';
 import {createDurableCooperativeReplica} from '../social/durable-cooperative-replica.js';
+import {createClinicalConnectionNotice} from '../social/clinical-connection-notice.js';
 import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecycle.js';
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createLocalShift} from './local-shift.js';
@@ -46,7 +47,7 @@ export async function createApplication({document,window,content,signal}){
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
   announcedDeathUid=null,pendingPatientAction=null,announcedClosure=null,coopCaseId=null,
   coopRoomId=null,replica=null,durableClient=null,lastSharedPublish=0,sharedSequence=0,lastMotion='',lastRemoteRevision=-1,socialEnabled=false,
-  durableStarting=false,durableJoining=false,lastDurableErrorAt=-Infinity,nextCooperativeAdmission=0,cooperativeCapability=null;
+  durableStarting=false,durableJoining=false,nextCooperativeAdmission=0,cooperativeCapability=null;
  const messageEpoch=window.crypto.randomUUID(),cooperativeFlow=createCooperativeLifecycle();let pendingCoopLeave=false;
  let invitingColleagues=false;
  let restoreRoomId=null;try{restoreRoomId=window.localStorage.getItem('atria.v5.coop.room');}catch{}
@@ -225,12 +226,16 @@ export async function createApplication({document,window,content,signal}){
  function makeDurableClient(room){
   const credentials=social.credentials();
   let client;
+  const connectionNotice=createClinicalConnectionNotice();
   client=createDurableCooperativeReplica({window,roomId:room.id,clientKey:credentials.clientKey,
    authorization:()=>social.credentials().authorization,storage:window.sessionStorage,
-   onError:()=>{const now=window.performance.now();if(now-lastDurableErrorAt>12000){
-    lastDurableErrorAt=now;toast('Esperando la conexión clínica persistente. Las órdenes pendientes se conservan.');
-   }},
+   onError:error=>{
+    if(destroyed||coopRoomId!==room.id)return;
+    const message=connectionNotice.failed(error,window.performance.now());
+    if(message)toast(message);
+   },
    onSnapshot:value=>{
+    connectionNotice.succeeded();
     if(durableClient!==client||coopRoomId!==room.id||destroyed)return;
     world.applySharedSpatial(value.spatial,window.performance.now(),client.lastAcknowledgedMotion(social.state().user?.id));
     const revision=value.clinical.room.revision;
