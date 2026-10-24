@@ -30,18 +30,27 @@ export function surgicalReviewSnapshot(p,c,cases=[c]){
 }
 export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,checkpoint=null}){
  const pending=new Set(structuredClone(checkpoint?.pending??[]));
+ function gastroReview(){
+  if(c.id!=='CHOLANG-001')return {accepted:false,status:'review',
+   reason:'Este caso no tiene indicación de endoscopía terapéutica urgente modelada.'};
+  const evidence=surgicalReviewSnapshot(p,c,cases);
+  if(!evidence.diagnosticCompatible||!evidence.vitalsKnown||!evidence.examDone)
+   return {accepted:false,status:'missing-evidence',
+    reason:'Gastroenterología solicita una sospecha diagnóstica compatible, signos vitales y exploración documentada antes de aceptar el traslado.'};
+  return {accepted:true,status:'accepted',reason:'Gastroenterología acepta la derivación urgente para valoración y posible drenaje biliar por CPRE. El drenaje todavía no se realizó; mantener soporte y antibióticos durante el traslado.'};
+ }
  function receipt(cmd,consult,reused=false){
-  const missing=consult.accepted?(readiness(consult.id==='uti'?'uti':'quirofano')?.missing||[]):[];
+  const missing=consult.accepted?(readiness(consult.id==='uti'?'uti':consult.id==='gastro'?'procedimiento':'quirofano')?.missing||[]):[];
   return executed(cmd,{consultId:consult.id,sourceEventId:consult.sourceEventId,
    accepted:consult.accepted,consultStatus:consult.status,reviewStatus:consult.reviewStatus,
    respondedAtRealSecond:consult.respondedAtRealSecond,reused,
-   message:(consult.id==='uti'?'UTI: ':'Cirugía: ')+consult.advice+(missing.length?' Pendiente para la derivación: '+missing.join(' '):'')});
+   message:(consult.id==='uti'?'UTI: ':consult.id==='gastro'?'Gastroenterología: ':'Cirugía: ')+consult.advice+(missing.length?' Pendiente para la derivación: '+missing.join(' '):'')});
  }
  return Object.freeze({
   checkpoint:()=>structuredClone({pending:[...pending]}),
   request(cmd,clock){
    const {intent}=cmd;
-   if(!['cirugia','uti'].includes(intent.id)||!['consult.request','procedure.request'].includes(intent.kind))return null;
+   if(!['cirugia','uti','gastro'].includes(intent.id)||!['consult.request','procedure.request'].includes(intent.kind))return null;
    const prior=p.consults.find(x=>x.id===intent.id&&x.status==='done'&&x.accepted);
    if(prior)return receipt(cmd,prior,true);
    const existing=[...pending].find(t=>t.id===intent.id);
@@ -58,7 +67,8 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,che
   finish(task,at){
    if(!pending.delete(task))return [];
    p.pendingConsults=p.pendingConsults.filter(x=>x.sourceEventId!==task.sourceEventId);
-   const review=task.id==='uti'?criticalCareReview487(p.liveVitals,{recentShock:Number(String(c.vitals.bp).split('/')[0])<90}):csSurgicalReview487(surgicalReviewSnapshot(p,c,cases),c);
+   const review=task.id==='uti'?criticalCareReview487(p.liveVitals,{recentShock:Number(String(c.vitals.bp).split('/')[0])<90}):
+    task.id==='gastro'?gastroReview():csSurgicalReview487(surgicalReviewSnapshot(p,c,cases),c);
    const consult={id:task.id,patientUid:p.uid,sourceEventId:task.sourceEventId,
     status:review.accepted?'done':'rejected',accepted:review.accepted,
     reviewStatus:review.status,advice:review.reason,respondedAtRealSecond:at};

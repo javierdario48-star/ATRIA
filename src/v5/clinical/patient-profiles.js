@@ -1,5 +1,12 @@
 // Effective ns421-patient-dialogue profiles. Only existing complete V5 cases.
 export const PATIENT_PROFILES=Object.freeze({
+ 'CHOLANG-001':{place:'Me duele fuerte debajo de las costillas del lado derecho.',
+  onset:'Desde ayer; hoy empecé con escalofríos y mucho decaimiento.',
+  radiation:'El dolor queda más que nada del lado derecho del abdomen.',
+  character:'Es un dolor constante, y me siento cada vez más débil.',intensity:8,
+  worse:'Cuando me muevo o me aprietan duele más.',
+  relief:'No encontré una posición que lo calme.',
+  symptoms:'Tengo fiebre con escalofríos, dolor debajo de las costillas a la derecha y los ojos amarillos.'},
  'PERI-TER-001':{place:'Me sigue doliendo toda la panza.',onset:'Desde las operaciones no terminé de mejorar.',
   radiation:'Me duele en toda la panza, no en un solo lugar.',character:'Es un dolor continuo que no termina de aflojar.',intensity:7,
   worse:'Moverme y que me toquen me molesta.',relief:'No encontré algo que lo alivie del todo.',

@@ -5,6 +5,7 @@ import {createStudyService} from './studies.js';
 import {createCirrCare} from './cirr-care.js';
 import {createAppCare} from './app-care.js';
 import {createPeritonitisCare} from './peritonitis-care.js';
+import {createCholangitisCare} from './cholangitis-care.js';
 import {createProgressionLedger} from './progression.js';
 import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
@@ -55,7 +56,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // do not yet have an active clinical executor). This is a PURE interpreter,
  // not a replacement for the native APP/CIRR physiological owner.
  const pharmacology=createCasePharmacology({cases:content.cases,therapies:content.therapies});
- const factory={cirr:createCirrCare,app:createAppCare,peritonitis:createPeritonitisCare}[CLINICAL_EXECUTORS[caseData.id]];
+ const factory={cirr:createCirrCare,app:createAppCare,peritonitis:createPeritonitisCare,
+   cholangitis:createCholangitisCare}[CLINICAL_EXECUTORS[caseData.id]];
  const care=factory?factory(nativePatient,caseData,options):null;
  // Factories initialize their native fields. Restore the SAME owned object
  // afterwards so every executor and pending task keeps its original reference.
@@ -294,7 +296,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    // A long presentation frame must preserve adverse episodes, support changes
    // and fatal exposure in the SAME clock/executor path. A pending medicine
    // only selects time resolution; effects still require actual administration.
-   if((CLINICAL_EXECUTORS[caseData.id]==='peritonitis'||nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
+   if((['peritonitis','cholangitis'].includes(CLINICAL_EXECUTORS[caseData.id])||nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
      nativePatient.pendingTreatments?.some(x=>survivalSensitiveIV.has(x.id)))&&deltaRealSeconds>.25){
     const ready=[];
     for(let elapsed=0;elapsed<deltaRealSeconds-1e-9;elapsed+=.25)
@@ -417,7 +419,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    eligibleDestinations:eligibleDestinations(),
-   closure:copy(closureReadiness(CLINICAL_EXECUTORS[caseData.id]==='peritonitis'?undefined:caseData.id==='APP-001'?'quirofano':'sala'))};},
+   closure:copy(closureReadiness(CLINICAL_EXECUTORS[caseData.id]==='peritonitis'?undefined:
+    caseData.id==='APP-001'?'quirofano':caseData.id==='CHOLANG-001'?'procedimiento':'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }

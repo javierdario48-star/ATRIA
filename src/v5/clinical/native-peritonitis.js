@@ -12,10 +12,14 @@ const axes=['temp','hr','rr','sys','dia','spo2'];
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
 export function initialPeritonitisVitals(c){
- if(CLINICAL_EXECUTORS[c.id]!=='peritonitis')throw Error('peritonitis case policy is not connected');
+ if(!['peritonitis','cholangitis'].includes(CLINICAL_EXECUTORS[c.id])||
+  !['peritonitis','sepsis_source'].includes(c.physiology?.engine))
+  throw Error('unsupported native sepsis policy');
  const [sys,dia]=c.vitals.bp.split('/').map(Number);
  return {temp:c.vitals.temp,hr:c.vitals.hr,rr:c.vitals.rr,sys,dia,spo2:c.vitals.spo2};
 }
+// The V4 sepsis_source physiology is already shared by obstructive cholangitis.
+// Keep one set of vital writers and one existing case clock.
 export function initializeNativePeritonitis(p,c){
  p.phys=initialLegacySepsisPhysiology487(c);p.physBaseline=structuredClone(p.phys);
 }

@@ -5,6 +5,11 @@ import {readNeurologicalState,readPatientObservations} from './patient-observati
 export {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
 const unspecified='Sin hallazgo específico modelado en este escenario.';
 const findings={
+ 'CHOLANG-001':{appearance:'Febril, sudoroso y decaído; compromiso del estado general.',
+  skin:'Escleras y piel ictéricas.',
+  inspection:'Coloración amarillenta visible; respiración rápida.',
+  palpation:'Dolor a la palpación del hipocondrio derecho, sin rigidez abdominal generalizada.',
+  bowel:'Ruidos hidroaéreos presentes.',liver:'Dolor en proyección hepática.'},
  'PERI-TER-001':{appearance:'Aspecto muy comprometido; múltiples operaciones previas.',
   inspection:'Abdomen distendido; heridas quirúrgicas recientes.',palpation:'Dolor difuso; sin colección focal palpable.'},
  'PERI-PBE-001':{appearance:'Respuestas lentas al ingreso.',inspection:'Abdomen distendido por ascitis abundante.',
