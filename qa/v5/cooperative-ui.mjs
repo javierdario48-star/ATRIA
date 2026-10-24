@@ -34,17 +34,29 @@ export async function walk(p,lastX=144){
   arrival?.catch(()=>{}); // A failed click still closes the browser in finally.
   // Check the hit target and dispatch a real pointer immediately. Locator
   // actionability can wait while a reconciled camera invalidates old pixels.
-  const point=await p.evaluate(({x,y})=>{
-   const r=atriaV5.diagnostics().renderer,b=document.getElementById('game').getBoundingClientRect();
-   const px=b.x+(x-r.camera.x)*r.scale+r.anchorX,py=b.y+(y-r.camera.y)*r.scale+r.anchorY;
-   const hit=document.elementFromPoint(px,py);
-   return {x:px,y:py,unobstructed:hit?.id==='game',
-    blockingElement:hit?.tagName+'#'+(hit?.id||'')+'.'+(typeof hit?.className==='string'?hit.className:''),
-    viewport:{width:b.width,height:b.height}};
-
-  },aim);
-  assert(point.unobstructed,'the intended waypoint must be visible and unobstructed: '+JSON.stringify({point,aim}));
-  await p.mouse.click(point.x,point.y);
+  // An animation-frame camera correction can move the projected target
+  // between evaluation and the real pointerdown. Confirm that this physical
+  // click produced the intended navigation target, not a neighbouring tile.
+  // One reprojected user tap is allowed; the server must still acknowledge
+  // arrival at the original goal. No engine APIs or synthetic movement.
+  let targetAccepted=false,lastPoint=null,lastPlayer=null;
+  for(let attempt=0;attempt<2&&!targetAccepted;attempt++){
+   const point=await p.evaluate(({x,y})=>{
+    const r=atriaV5.diagnostics().renderer,b=document.getElementById('game').getBoundingClientRect();
+    const px=b.x+(x-r.camera.x)*r.scale+r.anchorX,py=b.y+(y-r.camera.y)*r.scale+r.anchorY;
+    const hit=document.elementFromPoint(px,py);
+    return {x:px,y:py,unobstructed:hit?.id==='game',
+     blockingElement:hit?.tagName+'#'+(hit?.id||'')+'.'+(typeof hit?.className==='string'?hit.className:''),
+     viewport:{width:b.width,height:b.height}};
+   },aim);
+   assert(point.unobstructed,'the intended waypoint must be visible and unobstructed: '+JSON.stringify({point,aim}));
+   await p.mouse.click(point.x,point.y);
+   lastPoint=point;lastPlayer=(await state(p)).player;
+   targetAccepted=!!lastPlayer.target&&Math.hypot(lastPlayer.target[0]-goal[0],lastPlayer.target[1]-goal[1])<3||
+    !lastPlayer.moving&&Math.hypot(lastPlayer.x-goal[0],lastPlayer.y-goal[1])<3;
+  }
+  assert(targetAccepted,'real canvas pointer did not select its projected waypoint: '+
+   JSON.stringify({waypoint:[x,y],goal,lastPoint,player:lastPlayer}));
   if(arrival)try{await arrival;}catch(error){
    error.message+='; '+JSON.stringify({doctor:name,waypoint:[x,y],goal,observed});throw error;
   }
