@@ -1,126 +1,72 @@
-// Case admissions and reception triage for the original 24-minute / 24-hour
-// shift. This module owns only the scheduling/bed occupancy policy. Every
-// patient must still be created by the native per-patient clinical executor.
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
-
-export const SHIFT_DURATION_SECONDS=24*60;
-export const SHIFT_ARRIVALS=Object.freeze({
- solo:Object.freeze([0,180,420,720,1020,1260]),
- apprentice:Object.freeze([0,180,420,720,1020,1260]),
- coop:Object.freeze([0,180,420,720,1020,1260]),
- competitive:Object.freeze([0,0,180,420,720,1020,1260])
-});
+import {clinicalAcuity} from './acuity.js';
+// One deterministic admission schedule; the native patient session remains
+// the only clinical owner. One real second = one displayed game minute.
+export const SHIFT_DURATION_SECONDS=1440;
+export const SHIFT_ARRIVAL_SECONDS=Object.freeze([0,180,420,720,1020,1260]);
 const clone=x=>structuredClone(x);
-const number=x=>x==null||String(x).trim()===''?NaN:Number.isFinite(Number(x))?Number(x):NaN;
-const pressure=(sys,dia)=>(sys+2*dia)/3;
-
-// The unconnected bedside monitor MUST remain 'unmonitored'. Reception has
-// initial triage measurements, which are not continuous ECG/vital readings.
-// Risk/queue delay may raise priority, but NEVER change a patient's vitals.
-export function receptionAcuity(caseData,patient=null,waitingSeconds=0){
- const recorded=patient?.lastVitalsKnown?.vitals||patient?.baselineVitals||caseData?.vitals||{};
- const bp=String(recorded.bp||'').split('/').map(number);
- const sys=number(recorded.sys??bp[0]),dia=number(recorded.dia??bp[1]);
- const hr=number(recorded.hr),spo2=number(recorded.spo2),rr=number(recorded.rr);
- const risk=String(caseData?.risk||'');
- const highRisk=['shock','bleed','peritonitis'].includes(risk)||
-  !!caseData?.physiology?.sourceControlRequired;
- const measurements=[sys,dia,hr,spo2,rr];
- if(patient?.patientDied||sys<80||(Number.isFinite(sys)&&Number.isFinite(dia)&&pressure(sys,dia)<55)||
-  spo2<90||hr>=150||rr>=35)
-  return {state:'critical',label:'CRÍTICO',color:'red',priority:3};
- if(highRisk||sys<95||hr>115||spo2<94||rr>=26||
-  (waitingSeconds>=300&&(sys<105||hr>=100)))
-  return {state:'urgent',label:'URGENTE',color:'orange',priority:2};
- if(sys<105||hr>=100||number(recorded.temp)>=38||
-  (waitingSeconds>=600&&Number.isFinite(sys)&&sys<110))
-  return {state:'warning',label:'VIGILANCIA',color:'yellow',priority:1};
- if(measurements.some(v=>!Number.isFinite(v)))
-  return {state:'unknown',label:'PENDIENTE',color:'gray',priority:0};
- return {state:'stable',label:'ESTABLE',color:'green',priority:0};
+export function receptionAcuity({caseData,patient=null,waitingSeconds=0}={}){
+ // Native case evolution is already advanced by the one patient executor.
+ // Never synthesize altered blood pressures from queue duration.
+ const confirmed=patient?.lastVitalsKnown?.vitals||patient?.baselineVitals||null;
+ const highRisk=!confirmed&&(['shock','bleed','peritonitis'].includes(caseData?.risk)||
+  !!caseData?.physiology?.sourceControlRequired);
+ return clinicalAcuity(confirmed||caseData?.vitals,{dead:!!patient?.patientDied,
+  rhythm:patient?.ecg?.rhythm,highRisk});
 }
-
-export function createShiftFlow({content,roomId,firstCaseId,mode,snapshot=null}){
- if(!['solo','apprentice','coop','competitive'].includes(mode))
-  throw Error('invalid shift mode');
+export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null}){
  if(typeof roomId!=='string'||!roomId||roomId.length>100)throw Error('invalid shift room');
- const cases=content?.cases?.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id))||[];
- const beds=content?.beds||[];
- if(!cases.some(c=>c.id===firstCaseId)||!beds.length)throw Error('uncertified shift seed or no beds');
- if(new Set(beds.map(b=>b.id)).size!==beds.length)throw Error('duplicate shift beds');
- const byId=new Map(cases.map(c=>[c.id,c])),byBed=new Map(beds.map(b=>[b.id,b]));
- const schedule=SHIFT_ARRIVALS[mode];
+ const playable=content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id));
+ if(!playable.some(c=>c.id===firstCaseId)||!['solo','apprentice','coop','competitive'].includes(mode))
+  throw Error('invalid certified shift');
+ const cases=new Map(playable.map(c=>[c.id,c])),beds=content.beds;
+ if(!Array.isArray(beds)||!beds.length||new Set(beds.map(b=>b.id)).size!==beds.length)
+  throw Error('invalid shift beds');
+ const records=clone(snapshot?.records??[]);
  let elapsedSeconds=snapshot?.elapsedSeconds??0,nextIndex=snapshot?.nextIndex??0;
- const patients=clone(snapshot?.patients??[]);
  if(!Number.isFinite(elapsedSeconds)||elapsedSeconds<0||elapsedSeconds>SHIFT_DURATION_SECONDS||
-  !Number.isSafeInteger(nextIndex)||nextIndex<0||nextIndex>schedule.length||
-  !Array.isArray(patients)||patients.length!==nextIndex)
+  !Number.isSafeInteger(nextIndex)||nextIndex<0||nextIndex>SHIFT_ARRIVAL_SECONDS.length||
+  !Array.isArray(records)||records.length!==nextIndex||
+  records.some((r,i)=>r.uid!==roomId+(i===0?':patient':':patient-'+(i+1))||
+   r.index!==i||!beds.some(b=>b.id===r.bedId)||!cases.has(r.caseId)||
+   !Number.isFinite(r.arrivalAt)||r.arrivalAt<0||r.arrivalAt>elapsedSeconds)||
+  new Set(records.filter(r=>!r.departed).map(r=>r.bedId)).size!==records.filter(r=>!r.departed).length)
   throw Error('invalid shift checkpoint');
- if(patients.some((p,i)=>p.uid!==roomId+':patient-'+(i+1)||!byBed.has(p.bedId)||
-  !byId.has(p.caseId)||!Number.isFinite(p.arrivedAt)||p.arrivedAt>elapsedSeconds))
-  throw Error('invalid shift patient records');
- const activeBeds=()=>new Set(patients.filter(p=>!p.departed).map(p=>p.bedId));
- function caseAt(index){
-  if(index===0)return firstCaseId;
-  const start=cases.findIndex(c=>c.id===firstCaseId);
-  return cases[(start+index)%cases.length].id;
- }
- function chooseBed(caseId,index){
-  const used=activeBeds(),c=byId.get(caseId);
-  let eligible=beds.filter(b=>!used.has(b.id));
-  if(!eligible.length)return null;
+ function admit(index){
+  const caseId=index===0?firstCaseId:playable[(playable.findIndex(c=>c.id===firstCaseId)+index)%playable.length].id;
+  const c=cases.get(caseId),used=new Set(records.filter(r=>!r.departed).map(r=>r.bedId));
+  let allowed=beds.filter(b=>!used.has(b.id));
   if(mode==='competitive'&&index===1){
-   // The second starting patient belongs to the opposite hospital wing.
-   const other=patients[0]&&byBed.get(patients[0].bedId);
-   if(other){
-    const opposite=eligible.filter(b=>Math.abs(b.patient[0]-other.patient[0])>=500);
-    if(opposite.length)eligible=opposite;
-   }
+   const first=beds.find(b=>b.id===records[0]?.bedId);
+   const far=allowed.filter(b=>first&&Math.abs(b.patient[0]-first.patient[0])>=500);
+   if(far.length)allowed=far;
   }
-  const acuity=receptionAcuity(c);
-  if(acuity.priority>=2){
-   const monitored=eligible.filter(b=>['critical','monitored'].includes(b.acuity));
-   if(monitored.length)eligible=monitored;
-  }else{
-   const standard=eligible.filter(b=>b.acuity!=='critical');
-   if(standard.length)eligible=standard;
-  }
-  return eligible[0]||null;
- }
- function advance(deltaSeconds){
-  if(!Number.isFinite(deltaSeconds)||deltaSeconds<0)throw Error('invalid shift delta');
-  elapsedSeconds=Math.min(SHIFT_DURATION_SECONDS,elapsedSeconds+deltaSeconds);
-  const arrivals=[];
-  while(nextIndex<schedule.length&&schedule[nextIndex]<=elapsedSeconds){
-   const caseId=caseAt(nextIndex),bed=chooseBed(caseId,nextIndex);
-   if(!bed)break; // A full hospital preserves the pending entry.
-   const record={uid:roomId+':patient-'+(nextIndex+1),index:nextIndex,
-    caseId,bedId:bed.id,arrivedAt:schedule[nextIndex],departed:false,closed:false,ownerId:null};
-   patients.push(record);nextIndex++;arrivals.push(clone(record));
-  }
-  return arrivals;
- }
- function close(uid,ownerId=null){
-  const p=patients.find(p=>p.uid===uid);
-  if(!p||p.closed)return false;
-  p.closed=true;p.departed=true;p.ownerId=ownerId;return true;
- }
- function claim(uid,actorId){
-  const p=patients.find(p=>p.uid===uid);
-  if(!p||p.closed||!actorId)return false;
-  if(p.ownerId)return p.ownerId===actorId;
-  p.ownerId=actorId;return true;
+  const risk=receptionAcuity({caseData:c}).priority;
+  const critical=allowed.filter(b=>['monitored','critical'].includes(b.acuity));
+  if(risk>=2&&critical.length)allowed=critical;
+  if(!allowed.length)return null;
+  const bed=allowed[0],uid=roomId+(index===0?':patient':':patient-'+(index+1));
+  const record={uid,index,caseId,bedId:bed.id,arrivalAt:elapsedSeconds,ownerId:null,closed:false,departed:false};
+  records.push(record);return clone(record);
  }
  return Object.freeze({
-  advance,claim,close,
-  ended:()=>elapsedSeconds>=SHIFT_DURATION_SECONDS,
-  elapsed:()=>elapsedSeconds,
-  remaining:()=>SHIFT_DURATION_SECONDS-elapsedSeconds,
-  records:()=>clone(patients),
-  get:uid=>clone(patients.find(p=>p.uid===uid)||null),
-  reception:()=>patients.filter(p=>!p.departed).map(p=>({
-   ...clone(p),waitingSeconds:Math.max(0,elapsedSeconds-p.arrivedAt),
-   acuity:receptionAcuity(byId.get(p.caseId),null,elapsedSeconds-p.arrivedAt)})),
-  checkpoint:()=>clone({elapsedSeconds,nextIndex,patients})
+  advance(deltaSeconds){
+   if(!Number.isFinite(deltaSeconds)||deltaSeconds<0)throw Error('invalid shift delta');
+   elapsedSeconds=Math.min(SHIFT_DURATION_SECONDS,elapsedSeconds+deltaSeconds);
+   const arrivals=[];
+   while(nextIndex<SHIFT_ARRIVAL_SECONDS.length){
+    const due=mode==='competitive'&&nextIndex>0?SHIFT_ARRIVAL_SECONDS[nextIndex-1]:SHIFT_ARRIVAL_SECONDS[nextIndex];
+    if(due>elapsedSeconds)break;
+    const r=admit(nextIndex);if(!r)break;
+    arrivals.push(r);nextIndex++;
+   }
+   return arrivals;
+  },
+  elapsed:()=>elapsedSeconds,remaining:()=>SHIFT_DURATION_SECONDS-elapsedSeconds,
+  ended:()=>elapsedSeconds>=SHIFT_DURATION_SECONDS,records:()=>clone(records),
+  record:uid=>clone(records.find(r=>r.uid===uid)||null),
+  close(uid,ownerId){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;r.closed=true;r.ownerId=ownerId;return true;},
+  owner(uid,id){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;if(r.ownerId)return r.ownerId===id;r.ownerId=id;return true;},
+  checkpoint:()=>clone({records,elapsedSeconds,nextIndex})
  });
 }

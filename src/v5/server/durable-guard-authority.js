@@ -13,7 +13,7 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
   const runtime=await createGuardRuntime({content,roomId,caseId,members,hostId,mode,nowMs:now()});
   try{const value={schemaVersion:1,roomId,epoch:0,lease:null,runtime:await runtime.checkpoint()};
    const etag=await store.compareAndSwap(roomId,null,value);if(!etag)throw fail('exists','clinical guard already exists');
-   return {epoch:0,...runtime.view()};
+   return {epoch:0,...runtime.view(actorId)};
   }finally{runtime.dispose();}
  }
  async function transact({roomId,actorId,commands=[],motion=null,motionSequence=null,claim=null,typing=null,confirmation=null}){
@@ -43,7 +43,7 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
    // Every external effect is clinical data in this aggregate. A stale worker
    // can calculate privately but cannot publish, ACK or execute a second dose.
    if(now()>=lease.untilMs||!await store.compareAndSwap(roomId,acquired,next))throw fail('fenced','previous clinical authority fenced');
-   return {epoch,recovering:recovery.recovering,acknowledgements,confirmationAccepted,...runtime.view()};
+   return {epoch,recovering:recovery.recovering,acknowledgements,confirmationAccepted,...runtime.view(actorId)};
   }finally{runtime?.dispose();}
  }
  return Object.freeze({bootstrap,transact});

@@ -10,6 +10,12 @@ export function hospitalEntities(world,map,beds=[]){
  }
  for(const n of world.nurses)entities.push({...n,kind:'nurse',x:n.x,y:n.y-22,width:44,height:62});
  if(world.expert)entities.push({...world.expert,kind:'vega',x:world.expert.x,y:world.expert.y-22,width:44,height:70});
+ if(world.phase==='guard')for(const spot of map.interactions||[]){
+  if(spot.action!=='use_front_desk')continue;
+  const [col,row]=spot.tile;
+  entities.push({id:'reception:'+spot.id,kind:'reception',tile:spot.tile,
+   x:(col+.5)*map.grid.tile_width_px,y:(row+.5)*map.grid.tile_height_px,width:48,height:46});
+ }
  return entities;
 }
 export function hitWorldEntity(entities,x,y){
@@ -23,5 +29,6 @@ export function canInteract(player,entity,patients){
   const patient=patients.find(p=>p.uid===entity.patientUid);
   return !!patient&&Math.hypot(player.x-patient.x,player.y-patient.y)<=PATIENT_RANGE;
  }
- return Math.hypot(player.x-entity.x,player.y-(entity.y+22))<=(entity.kind==='nurse'?78:150);
+ return entity.kind==='reception'?Math.hypot(player.x-entity.x,player.y-entity.y)<=125:
+  Math.hypot(player.x-entity.x,player.y-(entity.y+22))<=(entity.kind==='nurse'?78:150);
 }

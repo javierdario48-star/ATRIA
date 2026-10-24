@@ -46,6 +46,14 @@ try{
   return s.mode==='competitive'&&d.cooperative.durable&&!d.cooperative.authority
    &&s.clinical?.competition?.mode==='competitive';
  },null,{timeout:90000})));
+ const opening=(await clinical(host)).shift;
+ assert.equal(opening.patients.length,2,'competitive should begin with two patients');
+ assert.notEqual(opening.patients[0].uid,opening.patients[1].uid);
+ assert.notEqual(opening.patients[0].bedId,opening.patients[1].bedId);
+ assert(opening.remainingSeconds>1430&&opening.remainingSeconds<=1440);
+ await host.locator('#receptionButton').click();
+ assert.equal(await host.locator('.reception-patient').count(),2);
+ await host.locator('#modalClose').click();
  assert((await clinical(host)).competition.ownerId===null);
  assert.match(await host.locator('#guardScoreboard').innerText(),/GUARDIA COMPETITIVA/);
  stage='first physician physically approaches the patient';

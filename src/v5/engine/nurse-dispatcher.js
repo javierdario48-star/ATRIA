@@ -76,7 +76,17 @@ export function createNurseDispatcher({navigation,nurses,patients,checkpoint=nul
    queuedRetryTime+=dt;
    if(queuedRetryTime>=1){queuedRetryTime%=1;assignWaiting();}
   },
-  takeArrivals(){if(disposed)return [];return copy(arrivals.splice(0));},
+  register(patient){
+   if(disposed||!id(patient?.uid)||byUid.has(patient.uid)||!Array.isArray(patient.approach))return false;
+   byUid.set(patient.uid,patient);return true;
+  },
+  takeArrivals(patientUid=null){
+   if(disposed)return [];
+   if(patientUid===null)return copy(arrivals.splice(0));
+   const picked=arrivals.filter(a=>a.patientUid===patientUid);
+   for(let i=arrivals.length-1;i>=0;i--)if(arrivals[i].patientUid===patientUid)arrivals.splice(i,1);
+   return copy(picked);
+  },
   /** Only a caller holding a native *matching receipt* may mark execution.
    * This remains presentation state and never mutates the clinical patient.
    */

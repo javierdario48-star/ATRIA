@@ -126,7 +126,7 @@ export function createHospitalAudio({window,storage}){
   // Visual severity and audible alarm use the same original V4-derived
   // thresholds. This derives sound only, never modifies patient physiology.
   const visual=monitorAcuity(patient,{rhythm:patient.ecg?.rhythm}).state;
-  const severity=visual==='critical'?'high':visual==='warning'?'medium':'none';
+  const severity=visual==='critical'?'high':['warning','urgent'].includes(visual)?'medium':'none';
   if(severity!==alarm){alarm=severity;lastAlarm=-Infinity;}
   if(severity!=='none'&&now-lastAlarm>=(severity==='high'?3.6:7)){
    (severity==='high'?[0,.18,.36,.72,.9]:[0,.24,.48]).forEach((offset,i)=>

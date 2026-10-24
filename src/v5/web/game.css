@@ -442,24 +442,17 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 .device-trace[data-acuity="critical"] path{stroke:#ff8d87;filter:drop-shadow(0 0 3px #ff8d8799)}
 .device-top[data-acuity="warning"] .device-indicator{background:#ffcf61;box-shadow:0 0 8px #ffcf6199}
 .device-top[data-acuity="critical"] .device-indicator{background:#ff8881;box-shadow:0 0 8px #ff888199}
+.reception-list{display:grid;gap:8px;max-height:min(58vh,540px);overflow:auto}
+.reception-patient{display:grid;grid-template-columns:78px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px;border:1px solid #335369;border-left:5px solid #7898a8;border-radius:11px;background:#0a2533;color:#e9f6fa}
+.reception-patient strong,.reception-patient small{display:block}.reception-patient strong{font-size:12px}.reception-patient small{font-size:10px;color:#b5cbd5;margin-top:4px}
+.reception-patient button{padding:8px;font-size:11px}.reception-priority{font-size:10px;font-weight:800;text-align:center}
+.reception-patient[data-acuity="critical"]{border-left-color:#fb6565}.reception-patient[data-acuity="critical"] .reception-priority{color:#ff8b8b}
+.reception-patient[data-acuity="urgent"]{border-left-color:#ffa75c}.reception-patient[data-acuity="urgent"] .reception-priority{color:#ffbb82}
+.reception-patient[data-acuity="warning"]{border-left-color:#f6d766}.reception-patient[data-acuity="warning"] .reception-priority{color:#f6df8c}
+.reception-patient[data-acuity="stable"]{border-left-color:#67d9a3}.reception-patient[data-acuity="stable"] .reception-priority{color:#8be9b5}
+@media(max-width:560px){.reception-patient{grid-template-columns:64px minmax(0,1fr)}.reception-patient button{grid-column:2;justify-self:start}#receptionButton{font-size:0!important;padding:5px 6px!important;min-width:32px}#receptionButton::before{content:'🏥';font-size:16px}}
 
-
-/* Read-only reception triage. Do not reuse the monitor's live-data styling. */
-.reception-patients{display:grid;gap:10px;margin-top:12px}
-.reception-patient{display:grid;gap:5px;padding:12px;border-radius:12px;
- border:1px solid #49636b;background:#0c2730}
-.reception-patient strong{font-size:13px}.reception-patient small{font-size:11px;color:#b3cdd1}
-.reception-label{justify-self:start;padding:3px 9px;border-radius:30px;font-size:11px;font-weight:750}
-.reception-patient[data-acuity="critical"] .reception-label{background:#67202a;color:#fff3f4;border:1px solid #f77f8b}
-.reception-patient[data-acuity="urgent"] .reception-label{background:#693c0e;color:#ffda9d;border:1px solid #f5ab55}
-.reception-patient[data-acuity="warning"] .reception-label{background:#635619;color:#fff4a1;border:1px solid #f4d74c}
-.reception-patient[data-acuity="stable"] .reception-label{background:#194939;color:#a6f3c6;border:1px solid #65c8a2}
-.reception-patient[data-acuity="unknown"] .reception-label{background:#33434d;color:#d1e0e6}
-#receptionButton[hidden]{display:none}
-/* On phones, reception sits just below the HUD rather than shrinking its
- * existing lobby, profile, audio and notification actions. */
-@media(max-width:560px){
- #hud #receptionButton:not([hidden]){position:absolute;right:8px;top:calc(100% + 6px);
-  z-index:11;min-height:31px;padding:5px 10px;font-size:9px;
-  border-color:#568e99;background:#103943ed;color:#e5f8fb}
-}
+/* Four physiological states share the same colour in reception and the connected monitor. */
+.device-top[data-acuity="urgent"] .device-acuity{color:#ffc497;background:#66391f}
+.device-top[data-acuity="urgent"] .device-indicator{background:#ffab63;box-shadow:0 0 8px #ffab6399}
+.device-trace[data-acuity="urgent"] path{stroke:#ffab63;filter:drop-shadow(0 0 3px #ffab6388)}

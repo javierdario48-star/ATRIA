@@ -61,7 +61,7 @@ export function createDurableCooperativeReplica({
     // admit new commands, movement or confirmations during catch-up.
     if(!response.recovering){
      if(queuedMotion===motion){queuedMotion=null;queuedMotionSequence=null;}
-      if(queuedClaim===claim&&response.clinical?.competition?.ownerId)queuedClaim=null;
+      if(queuedClaim===claim&&response.clinical?.shift?.focusPatientUid===claim)queuedClaim=null;
      if(confirmation===receipt)confirmation=null;
     }
     return response;
@@ -113,7 +113,11 @@ export function createDurableCooperativeReplica({
   },
   claim(patientUid){
    if(typeof patientUid!=='string'||!patientUid||disposed)return false;
-   queuedClaim=patientUid;return true;
+   queuedClaim=patientUid;
+   const busy=inflight;
+   if(busy)busy.then(()=>{if(!disposed&&queuedClaim===patientUid)synchronize().catch(()=>{});},()=>{});
+   else synchronize().catch(()=>{});
+   return true;
   },
   motion(target,sequence=null){
    if(!Array.isArray(target)||target.length!==2||!target.every(Number.isFinite))return false;

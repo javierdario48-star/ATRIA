@@ -23,3 +23,10 @@ test('monitor display shows readable changes without pretending disconnected rea
  assert.match(monitorHTML(p({},false)),/SIN VIGILANCIA/);
  assert.match(monitorHTML(p({},false)),/Monitor desconectado/);
 });
+
+test('four acuity states distinguish urgent from surveillance on real connected measurements',()=>{
+ assert.equal(monitorAcuity(p({hr:124})).state,'urgent');
+ assert.equal(monitorAcuity(p({hr:115})).state,'warning');
+ assert.equal(monitorAcuity(p({sys:83})).state,'urgent');
+ assert.match(monitorHTML(p({hr:124})),/data-acuity="urgent"/);
+});

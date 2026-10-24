@@ -17,7 +17,7 @@ export function createWorld(content,profile,checkpoint=null){
  let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true,
   motionSequence=0,lastMotionIntent=null;
  const lobbyRemotes=new Map(),guardRemotes=new Map(),nurseRemotes=new Map();
- const entities=()=>hospitalEntities({patients,nurses,expert},content.map,content.beds);
+ const entities=()=>hospitalEntities({patients,nurses,expert,phase},content.map,content.beds);
  function lobbyTile(){
   let hash=0;for(const char of profile.name||'Medico')hash=(hash*31+char.charCodeAt(0))>>>0;
   const offsets=[[-3,-2],[0,-3],[3,-2],[-4,1],[4,1],[-2,3],[2,3],[0,1]],d=offsets[hash%offsets.length];
@@ -45,9 +45,23 @@ export function createWorld(content,profile,checkpoint=null){
   patients=[{id:'patient-'+generation,uid:'patient-'+generation,caseId:c.id,bedId:bed.id,
    x:bed.patient[0],y:bed.patient[1],approach:[...bed.approach],name:c.demo,chief:c.chief}];
   patients[0].uid=identity+':'+patients[0].uid;
-  if(['coop','competitive'].includes(selected)&&typeof options.patientUid==='string'&&options.patientUid)patients[0].uid=options.patientUid;
+  if(typeof options.patientUid==='string'&&options.patientUid)patients[0].uid=options.patientUid;
   expert=selected==='apprentice'?actor('vega',point([14,45]),{kind:'vega',name:'Dr. Vega',r:9.5,speed:220}):null;
   if(authoritative)nursing=createNurseDispatcher({navigation,nurses,patients});
+  for(const extra of options.additionalPatients||[])addPatient(extra);
+ }
+ function addPatient({uid,caseId:incomingCase,bedId}={}){
+  if(phase!=='guard'||!uid||patients.some(p=>p.uid===uid)||patients.some(p=>p.bedId===bedId))return false;
+  const c=content.cases.find(item=>item.id===incomingCase),bed=content.beds.find(b=>b.id===bedId);
+  if(!c||!bed)return false;
+  const patient={id:'patient-'+(++generation),uid,caseId:c.id,bedId:bed.id,
+   x:bed.patient[0],y:bed.patient[1],approach:[...bed.approach],name:c.demo,chief:c.chief};
+  patients.push(patient);nursing?.register(patient);return true;
+ }
+ function reconcilePatients(records){
+  if(phase!=='guard'||authoritative||!Array.isArray(records))return false;
+  for(const p of records)if(!patients.some(item=>item.uid===p.uid))addPatient(p);
+  return true;
  }
  function step(dt,now=Date.now()){
   if(phase==='title')return;
@@ -94,7 +108,7 @@ export function createWorld(content,profile,checkpoint=null){
   authoritative=saved.authoritative;pendingInteraction=saved.pendingInteraction;
   if(authoritative)nursing=createNurseDispatcher({navigation,nurses,patients,checkpoint:saved.nursing});
  }
- return Object.freeze({navigation,enterLobby,enterGuard,step,snapshot,
+ return Object.freeze({navigation,enterLobby,enterGuard,addPatient,reconcilePatients,step,snapshot,
   presentNurses(frame){
    if(phase!=='guard'||authoritative)return frame;
    for(const nurse of frame.nurses||[]){
@@ -268,7 +282,7 @@ export function createWorld(content,profile,checkpoint=null){
    */
   enqueueNurseJourney:task=>nursing?.enqueue(task)||{status:'no-guard'},
   nurseJourneySnapshot:()=>nursing?.snapshot()||[],
-  takeNurseArrivals:()=>nursing?.takeArrivals()||[],
+  takeNurseArrivals:uid=>nursing?.takeArrivals(uid)||[],
   acceptNurseClinicalResult:result=>nursing?.acceptClinicalResult(result)||{status:'no-guard'},
   cancelNurseJourney:eventId=>nursing?.cancel(eventId)||false,
   /** Appearance is an actor property, never a reason to recreate the room. */
@@ -299,8 +313,9 @@ export function createWorld(content,profile,checkpoint=null){
    const entity=entities().find(e=>e.id===id);if(!entity)return {status:'missing'};
    if(canInteract(player,entity,patients))return {status:'ready',entity:structuredClone(entity)};
    const p=patients.find(p=>p.uid===entity.patientUid);
-   if(!p?.approach)return {status:'out-of-range'};
-   const goal=navigation.center(...(navigation.nearest(...p.approach,8)||p.approach));
+   const approach=p?.approach||(entity.kind==='reception'?entity.tile:null);
+   if(!approach)return {status:'out-of-range'};
+   const goal=navigation.center(...(navigation.nearest(...approach,8)||approach));
    if(!targetPlayer(goal.x,goal.y))return {status:'unreachable'};
    pendingInteraction=id;return {status:'walking'};
   },
