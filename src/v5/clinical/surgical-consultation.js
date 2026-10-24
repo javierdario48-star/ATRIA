@@ -28,7 +28,8 @@ export function surgicalReviewSnapshot(p,c,cases=[c]){
   initialShock:Number(String(c.vitals.bp).split('/')[0])<90,
   imagingDone:p.orders.some(o=>o.status==='done'&&/^(peri_ct|peri_rx|ter_ct)|ct|rx|imagen|radiografia|tomografia/i.test(o.id))};
 }
-export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,checkpoint=null}){
+export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acceptTransfer,checkpoint=null}){
+ if(typeof acceptTransfer!=='function')throw Error('consultation requires native transfer owner');
  const pending=new Set(structuredClone(checkpoint?.pending??[]));
  function gastroReview(){
   if(c.id!=='CHOLANG-001')return {accepted:false,status:'review',
@@ -50,12 +51,18 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,che
   checkpoint:()=>structuredClone({pending:[...pending]}),
   request(cmd,clock){
    const {intent}=cmd;
-   if(!['cirugia','uti','gastro'].includes(intent.id)||!['consult.request','procedure.request'].includes(intent.kind))return null;
-   const prior=p.consults.find(x=>x.id===intent.id&&x.status==='done'&&x.accepted);
-   if(prior)return receipt(cmd,prior,true);
-   const existing=[...pending].find(t=>t.id===intent.id);
+   const destination=intent.kind==='case.close'&&!intent.partial?intent.id:null;
+   const service=destination==='quirofano'?'cirugia':destination==='uti'?'uti':destination==='procedimiento'?'gastro':null;
+   if(!service&&(!['cirugia','uti','gastro'].includes(intent.id)||
+      !['consult.request','procedure.request'].includes(intent.kind)))return null;
+   if(destination&&p.pendingTreatments.length)
+    return {status:'rejected',patientUid:p.uid,eventId:cmd.eventId,reason:'pending-clinical-treatment'};
+   const id=service||intent.id;
+   const prior=p.consults.find(x=>x.id===id&&x.status==='done'&&x.accepted);
+   if(prior)return destination?acceptTransfer(cmd,prior):receipt(cmd,prior,true);
+   const existing=[...pending].find(t=>t.id===id);
    if(existing){existing.commands.push(structuredClone(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
-   const task={id:intent.id,sourceEventId:cmd.eventId,patientUid:p.uid,
+   const task={id,sourceEventId:cmd.eventId,patientUid:p.uid,
     readyAtRealSecond:clock.clinicalMinute+3.5,commands:[structuredClone(cmd)]};
    pending.add(task);
    p.pendingConsults.push({id:task.id,sourceEventId:task.sourceEventId,
@@ -73,7 +80,8 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,che
     status:review.accepted?'done':'rejected',accepted:review.accepted,
     reviewStatus:review.status,advice:review.reason,respondedAtRealSecond:at};
    p.consults.push(consult);
-   return task.commands.map(cmd=>receipt(cmd,consult));
+   return task.commands.map(cmd=>cmd.intent.kind==='case.close'&&!cmd.intent.partial?
+    acceptTransfer(cmd,consult):receipt(cmd,consult));
   },
   dispose(){pending.clear();p.pendingConsults=[];}
  });

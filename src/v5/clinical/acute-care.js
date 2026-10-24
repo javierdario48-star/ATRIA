@@ -30,7 +30,30 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
   proof,rejected,checkpoint:checkpoint?.iv});
- const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,checkpoint:checkpoint?.surgery});
+ const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,
+  acceptTransfer:completeAcceptedTransfer,checkpoint:checkpoint?.surgery});
+ function finalize(cmd,evaluation){
+  const xp=nativeCaseXP({score:evaluation.quality.score,mode});
+  const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,
+   caseId:c.id,destination:cmd.intent.id,quality:copy(evaluation.quality),
+   debrief:createClosureDebrief(p,c,evaluation.quality),xp,closed:true};
+  progress.award(receipt);p.caseEnded=true;p.closure=copy(receipt);
+  return executed(cmd,{closure:copy(receipt),message:policy.closureMessage(receipt)});
+ }
+ function completeAcceptedTransfer(cmd,consult){
+  if(p.caseEnded)return rejected(cmd,'patient-not-active');
+  if(!consult.accepted||consult.status!=='done')
+   return rejected(cmd,'transfer-rejected',consult.advice);
+  // The accepting service owns definitive surgery/procedure AFTER transfer.
+  // Missing nonessential studies and treatments affect XP, not the handoff gate.
+  // A confirmed pending drug is not discarded while the patient is leaving.
+  if(p.pendingTreatments.length)return rejected(cmd,'pending-clinical-treatment',
+   'Esperá la administración pendiente antes de completar el traslado.');
+  const assessed=readiness(cmd.intent.id);
+  const evaluation=partialDisposition(p,c,cmd.intent.id,assessed,{cases});
+  if(!evaluation.ready)return rejected(cmd,'transfer-not-authorized',evaluation.missing.join(' '));
+  return finalize(cmd,evaluation);
+ }
  function readiness(destination){
   const out=policy.evaluate(p,c,destination);
   if(!out)return null;
@@ -77,16 +100,13 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
     p.diagnosis=intent.value;return executed(cmd,{diagnosis:p.diagnosis,message:p.diagnosis?'Impresión diagnóstica: '+p.diagnosis+'.':'Impresión diagnóstica borrada.'});
    }
    if(intent.kind==='case.close'){
+    // For a requested transfer surgery.request() above either returns a
+    // patient-scoped pending acceptance or commits the same native closure.
+    // Other destinations retain the existing clinical decision path.
     const strict=readiness(intent.id);
     const evaluation=intent.partial?partialDisposition(p,c,intent.id,strict,{cases}):strict;
     if(!evaluation?.ready)return rejected(cmd,'closure-not-ready',(evaluation?.missing||['Destino no disponible.']).join(' '));
-    const xp=nativeCaseXP({score:evaluation.quality.score,mode});
-    const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,
-     caseId:c.id,destination:intent.id,quality:copy(evaluation.quality),
-     debrief:createClosureDebrief(p,c,evaluation.quality),xp,closed:true};
-    progress.award(receipt);p.caseEnded=true;p.closure=copy(receipt);
-    return executed(cmd,{closure:copy(receipt),
-     message:policy.closureMessage(receipt)});
+    return finalize(cmd,evaluation);
    }
    return rejected(cmd,'clinical-action-not-migrated');
   },

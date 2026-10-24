@@ -49,6 +49,15 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
   const original=seen.get(binding.key)?.ack,entry=original?.clinical[binding.index];
   if(!entry||entry.status!=='pending'||original.patientUid!==binding.patientUid||
      entry.kind!==binding.kind||entry.id!==binding.id)return;
+  if(binding.kind==='case.close'&&result.status==='executed'){
+   const proof=result.receipt?.closure;
+   if(!proof||proof.closed!==true||proof.eventId!==result.eventId||
+      proof.patientUid!==binding.patientUid||proof.actorId!==binding.actorId)
+    return; // Quarantine invalid asynchronous handoff; never mint a closure.
+   const patient=byPatient.get(binding.patientUid);
+   if(!patient||patient.closed)return;
+   patient.closed=true;
+  }
   const clinical={...entry,status:result.status,reason:result.reason??null,receipt:copy(result.receipt??null)};
   const event={type:'clinical.completed',roomId,eventId:result.eventId,
    commandId:binding.commandId,actorId:binding.actorId,patientUid:binding.patientUid,
