@@ -37,21 +37,18 @@ try{
   const s=atriaV5.snapshot(),p=s.patients.find(p=>p.uid===uid);
   return p&&Math.hypot(p.x-s.player.x,p.y-s.player.y)<145&&!s.player.moving;
  },records[1].uid);
- const second=await host.evaluate(uid=>{
-  const e=atriaV5.snapshot().entities.find(e=>e.patientUid===uid&&e.kind==='patient'),r=atriaV5.diagnostics().renderer;
-  return {x:(e.x-r.camera.x)*r.scale+r.anchorX,y:(e.y-r.camera.y)*r.scale+r.anchorY};
- },records[1].uid);
- // Regression: the other physician owns bed 1, but this physician is
- // physically alongside bed 2 with the OLD bed-1 snapshot on screen.
- // A normal typed hello must route to bed 2, not trigger the rival warning.
- assert.equal((await clinical(host)).patient.uid,records[0].uid);
- await send(host,'hola');
- await host.waitForFunction(uid=>atriaV5.snapshot().clinical?.patient.uid===uid&&
-  atriaV5.snapshot().clinical?.competition.ownerId,records[1].uid);
+ // Reception must assign this doctor automatically after reaching bed 2.
+ // Neither tapping the patient nor typing a greeting is required to claim.
+ await host.waitForFunction(uid=>{
+  const c=atriaV5.snapshot().clinical;
+  return c?.patient.uid===uid&&!!c.competition?.ownerId&&
+   c.shift.patients.some(p=>p.uid===uid&&p.ownerId===c.competition.ownerId);
+ },records[1].uid,{timeout:70000});
  assert.notEqual((await clinical(host)).shift.patients[1].ownerId,owner,
-  'the second case is owned by the nearby physician, never the remote first owner');
- await host.locator('#game').click({position:second});
- await host.waitForFunction(uid=>atriaV5.snapshot().clinical?.patient.uid===uid&&atriaV5.snapshot().clinical?.competition.ownerId,records[1].uid);
+  'the second patient belongs to this doctor, never the distant rival');
+ assert.equal((await clinical(host)).shift.patients[0].ownerId,owner);
+ await send(host,'hola');
+ assert.equal((await clinical(host)).patient.uid,records[1].uid);
  assert.notEqual((await clinical(host)).competition.ownerId,owner);
  // Physically separated attending physicians should each hear only their
  // own bedside history, even though their server is one persistent guard.

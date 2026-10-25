@@ -119,6 +119,9 @@ export function createDurableCooperativeReplica({
    else synchronize().catch(()=>{});
    return true;
   },
+  cancelClaim(uid){
+   if(queuedClaim===uid)queuedClaim=null;
+  },
   motion(target,sequence=null){
    if(!Array.isArray(target)||target.length!==2||!target.every(Number.isFinite))return false;
    if(sequence!==null&&(!Number.isSafeInteger(sequence)||sequence<1||sequence>1e9))return false;

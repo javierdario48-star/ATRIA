@@ -12,13 +12,16 @@ export function receptionBoardHTML(shift,cases=[],selfId=null){
  const render=p=>{
   const c=lookup.get(p.caseId),triage=p.triage||{state:'unknown',label:'SIN DATOS'};
   const owner=p.ownerId?(p.ownerId===selfId?'A tu cargo':'A cargo de otro médico'):'Sin asignar';
+  const occupied=shift.mode==='competitive'&&!!p.ownerId&&p.ownerId!==selfId;
+  const unavailable=p.closed||p.departed||p.patientDied;
+  const action=shift.mode==='competitive'?(occupied?'Ocupado':p.ownerId?'Volver a mi box':'Atender y asignarme'):'Ir al box';
   return '<div class="reception-patient" data-acuity="'+esc(triage.state)+'" data-patient-uid="'+esc(p.uid)+'">'+
    '<span class="reception-priority">'+esc(triage.label)+'</span>'+
    '<div><strong>'+esc(p.bedId)+' · '+esc(c?.demo||'Paciente')+'</strong>'+
    '<small>'+esc(c?.chief||c?.selector||'Consulta clínica')+'</small>'+
    '<small>'+esc(p.closed?(p.departed?'Derivado a '+(names[p.destination]||'otro servicio')+' · Box liberado':'Atención cerrada'):
     p.patientDied?'Paciente fallecido':owner)+' · Ingreso min '+Math.floor((p.arrivalAt||0)/60)+'</small></div>'+
-   '<button type="button" data-action="reception-approach" data-patient-uid="'+esc(p.uid)+'" '+(p.closed||p.departed||p.patientDied?'disabled':'')+'>Ir al box</button></div>';
+   '<button type="button" data-action="reception-approach" data-patient-uid="'+esc(p.uid)+'" '+(unavailable||occupied?'disabled':'')+'>'+action+'</button></div>';
  };
  const items='<h3>Pacientes en atención · '+active.length+'</h3>'+
   (active.map(render).join('')||'<p>Sin pacientes pendientes en este momento.</p>')+

@@ -19,3 +19,15 @@ test('reception separates current cases from accepted departures, with an availa
  assert.match(html,/data-patient-uid="a" disabled/);
  assert.match(html,/data-patient-uid="b"\s*>Ir al box/);
 });
+
+test('competitive reception distinguishes available patients, owned beds and rival cases',()=>{
+ const h=receptionBoardHTML({mode:'competitive',remainingSeconds:900,patients:[
+  {uid:'free',bedId:'B1',caseId:'C',triage:{state:'stable',label:'ESTABLE'}},
+  {uid:'mine',bedId:'B2',caseId:'C',ownerId:'a',triage:{state:'stable',label:'ESTABLE'}},
+  {uid:'busy',bedId:'B3',caseId:'C',ownerId:'b',triage:{state:'urgent',label:'URGENTE'}}
+ ]},[{id:'C',demo:'Paciente'}],'a');
+ assert.match(h,/data-patient-uid="free"[^>]*>Atender y asignarme/);
+ assert.match(h,/data-patient-uid="mine"[^>]*>Volver a mi box/);
+ assert.match(h,/data-patient-uid="busy" disabled>Ocupado/);
+ assert.match(h,/A cargo de otro médico/);
+});

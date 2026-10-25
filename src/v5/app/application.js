@@ -52,6 +52,12 @@ export async function createApplication({document,window,content,signal}){
   coopRoomId=null,replica=null,durableClient=null,lastSharedPublish=0,sharedSequence=0,lastMotion='',lastRemoteRevision=-1,socialEnabled=false,
   durableStarting=false,durableJoining=false,nextCooperativeAdmission=0,cooperativeCapability=null;
  let localAdmissions=null,localSessions=new Map(),localRoomId=null,pendingPatientSelection=null,lastReceivedPatientCount=0,lastSelectedPatientUid=null,shiftEndedAnnounced=false;
+ // Reception selection is navigation intent; server alone grants ownership.
+ let receptionAssignment=null;
+ function cancelReceptionAssignment(){
+  if(receptionAssignment&&durableClient)durableClient.cancelClaim(receptionAssignment.uid);
+  receptionAssignment=null;
+ }
  const messageEpoch=window.crypto.randomUUID(),cooperativeFlow=createCooperativeLifecycle();let pendingCoopLeave=false;
  let invitingColleagues=false;
  let restoreRoomId=null;try{restoreRoomId=window.localStorage.getItem('atria.v5.coop.room');}catch{}
@@ -222,6 +228,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function outcomeDelivered(){if(durableClient)return true;const s=social.state();return cooperativeFlow.delivered(guardSession?.read().patient,s.user?.id,s.room?.members||[]);}
  function requestLobby(){
+  cancelReceptionAssignment();
   if(coopRoomId&&social.isHost()&&outcomeId(guardSession?.read().patient)&&!outcomeDelivered()){
    pendingCoopLeave=true;publishCooperativeState(window.performance.now(),true);toast('Esperando que tus colegas reciban el resultado. Si están desconectados, deben reconectarse.');return;
   }enterLobby(true);
@@ -248,6 +255,20 @@ export async function createApplication({document,window,content,signal}){
      lastSelectedPatientUid=patientUid;clinicalUI.reset();patientWheel.hide();clinicalChecklist.hide();
     }
     const self=social.state().user?.id;
+    if(receptionAssignment){
+     const requested=receptionAssignment,record=value.clinical.shift?.patients.find(p=>p.uid===requested.uid);
+     if(!record||record.closed||record.departed||record.patientDied||value.clinical.shift?.ended){
+      cancelReceptionAssignment();toast('El paciente ya no está disponible en recepción.');
+     }else if(value.clinical.patient.uid===requested.uid&&
+       (value.clinical.shift.mode!=='competitive'||record.ownerId===self)){
+      cancelReceptionAssignment();
+      toast('Paciente asignado en '+record.bedId+'. Ya podés atenderlo.');
+      const p=world.snapshot().patients.find(p=>p.uid===requested.uid);
+      if(p){patientWheel.show(p);clinicalChecklist.show(p.uid,guardSession?.read());}
+     }else if(value.clinical.shift.mode==='competitive'&&record.ownerId&&record.ownerId!==self){
+      cancelReceptionAssignment();toast('Otro médico tomó este paciente. Elegí otro en recepción.');
+     }
+    }
     for(const [,receipt] of value.claims||[])if(receipt?.actorId===self){
      try{progress.award(receipt);}catch{/* persisted receipt wins */}
     }
@@ -799,6 +820,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function canvasDown(event){
   if(world.snapshot().phase==='title')return;
+  cancelReceptionAssignment();
   const [x,y]=renderer.toWorld(event.clientX,event.clientY);
   if(world.snapshot().phase==='lobby'){
    const player=world.snapshot().others.find(p=>Math.hypot(p.x-x,p.y-y)<=25);
@@ -960,10 +982,19 @@ export async function createApplication({document,window,content,signal}){
   }
   if(button.dataset.action==='reception-approach'){
    const patient=world.snapshot().patients.find(p=>p.uid===button.dataset.patientUid);
-   if(!patient||patient.departed)return toast('El paciente ya fue derivado y el box está liberado.');
-   close();const target=world.navigation.center(...patient.approach);
-   if(world.target(target.x,target.y))toast('Dirigiéndote a '+patient.bedId+'.');
-   else toast('No hay una ruta libre hacia el box.');
+   const current=guardSession?.read()?.shift?.patients?.find(p=>p.uid===button.dataset.patientUid);
+   if(!patient||patient.departed||current?.closed||current?.patientDied)
+    return toast('El paciente ya no está disponible en recepción.');
+   const competitive=world.snapshot().mode==='competitive';
+   const self=social.state().user?.id;
+   if(competitive&&current?.ownerId&&current.ownerId!==self)
+    return toast('Ese paciente está a cargo de otro médico. Elegí uno disponible.');
+   cancelReceptionAssignment();close();
+   const target=world.navigation.center(...patient.approach);
+   if(world.target(target.x,target.y)||world.patientInRange(patient.uid)){
+    if(durableClient)receptionAssignment={uid:patient.uid,phase:'walking'};
+    toast('Yendo a '+patient.bedId+(competitive?' · te lo asignaré al llegar.':'.'));
+   }else toast('No hay una ruta libre hacia el box.');
    return;
   }
   if(button.dataset.action==='patient-chart'){
@@ -1042,7 +1073,8 @@ export async function createApplication({document,window,content,signal}){
   if(event.key==='Escape'){pendingPatientAction=null;patientWheel.hide();close();input.blur();world.stop();return;}
   if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)||dialog.open)return;
   const v={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[event.key];
-  if(v){event.preventDefault();const p=world.snapshot().player;world.target(p.x+v[0]*32,p.y+v[1]*30);}
+  if(v){event.preventDefault();cancelReceptionAssignment();
+   const p=world.snapshot().player;world.target(p.x+v[0]*32,p.y+v[1]*30);}
  });
  function resize(){if(document.activeElement!==input||window.innerWidth!==renderer.metrics().width){renderer.resize();}}
  listen(window,'resize',resize);
@@ -1076,6 +1108,16 @@ export async function createApplication({document,window,content,signal}){
     durableClient.setTyping(clinicalTyping);
     const intent=world.motionIntent(),key=JSON.stringify(intent);
     if(intent&&key!==lastMotion){lastMotion=key;durableClient.motion(intent.target,intent.sequence);}
+    // Arrival first, then the server checks physical proximity and ownership.
+    if(receptionAssignment?.phase==='walking'&&!s.player.moving&&!s.player.target&&
+      s.player.pathIndex>=s.player.path.length){
+     if(world.patientInRange(receptionAssignment.uid)){
+      receptionAssignment.phase='claiming';
+      durableClient.claim(receptionAssignment.uid);
+     }else{
+      cancelReceptionAssignment();toast('No llegaste al box. Elegí de nuevo en recepción.');
+     }
+    }
     durableClient.maintain(now,{moving:s.player.moving});
    }else if(replica){replica.maintain(now);const key=JSON.stringify(s.player.target||[s.player.x,s.player.y]);
     if(key!==lastMotion){lastMotion=key;const host=social.state().room?.hostUserId;if(host)social.send(host,{kind:'motion',target:s.player.target||[s.player.x,s.player.y]});}}
@@ -1095,7 +1137,7 @@ export async function createApplication({document,window,content,signal}){
  function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
   clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);presentation.reset(world.snapshot());raf=window.requestAnimationFrame(frame);}}
  function pause(){hospitalAudio.pause();advanceClinicalTo(window.performance.now());lastClinicalFrame=null;if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
- function destroy(){if(destroyed)return;destroyed=true;guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();rootLifecycle.leave();}
+ function destroy(){if(destroyed)return;destroyed=true;cancelReceptionAssignment();guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
