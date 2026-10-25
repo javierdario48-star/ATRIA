@@ -76,13 +76,19 @@ for(const caseId of cases){
    const commands=[...(p.history||[]),'/signos',
     ...['general','inspection','auscultation','percussion','palpation'].map(x=>'/examen '+x),
     '/diagnostico '+p.dx,...(p.studies||[]).map(x=>'/estudio '+x),
-    ...p.meds,...(p.consult?[p.consult]:[])];
+    ...(caseId==='PERI-SEC-001'?
+      ['Enfermera una vía',
+       'Enfermera monitor y Ringer 1000 ml y ceftriaxona 1 g y metronidazol 500 mg y noradrenalina 0.05 mcg/kg/min IV y oxigeno 4 L/min']:
+      p.meds),...(p.consult?[p.consult]:[])];
    for(const text of commands)await send(text);
    now+=p.wait*1000;await call('b');
    await send('/reevaluar');
    const before=await call('b');
    assert(before.clinical.eligibleDestinations.includes(p.dest),
-    caseId+' absent valid handoff: '+JSON.stringify(before.clinical.eligibleDestinations));
+    caseId+' absent valid handoff: '+JSON.stringify({eligible:before.clinical.eligibleDestinations,
+     missing:before.clinical.closure?.missing,
+     consults:before.clinical.patient.consults,pending:before.clinical.patient.pendingTreatments,
+     died:before.clinical.patient.patientDied,vitals:before.clinical.patient.liveVitals}));
    const terminal=await send('/disposicion '+p.dest);
    assert.equal(terminal.clinical.patient.closure?.closed,true,caseId+' failed clinical closure');
    assert.equal(terminal.clinical.patient.closure.destination,p.dest);
