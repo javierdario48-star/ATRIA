@@ -90,7 +90,18 @@ try{
  assert.equal(acks.filter(x=>x.doctor===0&&x.status==='executed').length,0,'observer cannot administer clinical commands');
  await host.waitForFunction(()=>!atriaV5.snapshot().clinical.room.transcript.some(m=>m.text==='/signos'),null,{timeout:10000});
  stage='responsible doctor can treat';
- await owner.locator('#patientWheel').evaluate(e=>e.hidden=true);
+ // A genuine tap on Hablar, not a forced DOM hide, must bind this exact
+ // patient and produce an authenticated native answer to the doctor's question.
+ await owner.locator('#patientWheel [data-patient-action="talk"]').click();
+ await send(owner,'Hola, ¿qué te pasó?');
+ await owner.waitForFunction(()=>{
+  const s=atriaV5.snapshot().clinical;
+  return s.room.events.some(e=>e.type==='chat.posted'&&e.message.text==='Hola, ¿qué te pasó?'&&
+   e.message.patientUid===s.patient.uid&&e.clinical.some(c=>
+    c.kind==='history.ask'&&c.status==='executed'&&!!c.receipt?.message));
+ });
+ assert(await owner.locator('#chatHistory [data-role="patient"]').count()>0,
+  'touching Hablar must show the native patient reply in this physician browser');
  await send(owner,'/signos');
  await send(owner,'¿Tiene ascitis?');
  await send(owner,'Enfermera, mi diagnóstico presuntivo es peritonitis bacteriana espontánea');
