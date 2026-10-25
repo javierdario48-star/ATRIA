@@ -45,7 +45,7 @@ export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFa
      (input.method==='POST'&&input.body.action==='capability'
       ?{status:200,body:{durable:false,kind:'qa-legacy-only',schemaVersion:1,clinicalEnabled:false}}
       :{status:503,body:{code:'recovery-client-not-enabled'}}):
-     (isSignalingEndpoint(input)?await social.signalRoute(input):await social.route(input));
+     (isSignalingEndpoint({path:input.path,route:input.query.route})?await social.signalRoute(input):await social.route(input));
     requests.push({path:pathname,status:response.status});res.writeHead(response.status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(response.body));return;
    }
    const file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':''));
