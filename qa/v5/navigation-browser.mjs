@@ -31,7 +31,7 @@ try{
   await page.screenshot({path:out+'/'+name+'-lobby.png'});
   if(opened)await page.locator('#keyboardToggleButton').click();
   const initial=await page.evaluate(()=>({s:atriaV5.snapshot(),d:atriaV5.diagnostics(),r:resourceMetrics()}));
-  assert.equal(initial.d.renderer.images,13);assert.equal(initial.d.raf,1);assert.equal(initial.r.timers,0);
+  assert.equal(initial.d.renderer.images,22,'13 canonical images + 1 wardrobe atlas + 8 decoded avatar frames');assert.equal(initial.d.raf,1);assert.equal(initial.r.timers,0);
   // Mobile keyboard covers different parts of the canvas. Test actual
   // reachable taps relative to the avatar rather than fixed world pixels.
   const canvas=page.locator('#game'),box=await canvas.boundingBox();
