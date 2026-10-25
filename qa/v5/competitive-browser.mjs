@@ -81,7 +81,8 @@ try{
  stage='rival clinical command cannot mutate the case';
  await host.locator('#dieInput').fill('/signos');
  await host.locator('#chatForm [type="submit"]').click();
- await host.waitForFunction(()=>!!document.querySelector('#toast')?.textContent?.includes('Otro médico'),null,{timeout:10000});
+ await host.waitForFunction(()=>document.querySelector('#toast')?.textContent?.includes('Acercate a una cama'),
+  null,{timeout:10000});
  assert.equal(acks.filter(x=>x.doctor===0&&x.status==='executed').length,0,'observer cannot administer clinical commands');
  await host.waitForFunction(()=>!atriaV5.snapshot().clinical.room.transcript.some(m=>m.text==='/signos'),null,{timeout:10000});
  stage='responsible doctor can treat';
