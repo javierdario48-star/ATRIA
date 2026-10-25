@@ -28,6 +28,7 @@ import {publicClinicalText,activeNurseGuidance,selectNurseGuidance,
 import {caseDebriefHTML} from '../ui/case-debrief.js';
 import {guardScoreModelV5,guardScoreboardHTML} from '../ui/guard-scoreboard.js';
 import {createPatientActionWheel} from '../ui/patient-actions.js';
+import {createUnassignedPatientGlow,suggestedBedsideAction} from '../ui/bedside-guidance.js';
 import {createPatientClinicalOverlay} from '../ui/diagnostic-impression.js';
 import {createClinicalChecklist} from '../ui/clinical-checklist.js';
 import {createLobbyDirectory} from '../ui/lobby-directory.js';
@@ -74,6 +75,11 @@ export async function createApplication({document,window,content,signal}){
  const scheduler=new FrameScheduler({mobileRenderHz:60}),listeners=[];
  const presentation=createPresentationTimeline(world.snapshot());
  const patientWheel=createPatientActionWheel({document,window});
+ const unassignedGlow=createUnassignedPatientGlow({document});
+ function guidePatientWheel(){
+  const state=guardSession?.read(),selected=patientWheel.patientUid();
+  patientWheel.guide(selected&&state?.patient.uid===selected?suggestedBedsideAction(state):null);
+ }
  const patientClinical=createPatientClinicalOverlay({document,window,cases:content.cases});
  const clinicalChecklist=createClinicalChecklist({document});
  const lobbyDirectory=createLobbyDirectory({document,escape:esc});
@@ -98,6 +104,8 @@ export async function createApplication({document,window,content,signal}){
   const worldSnapshot=world.snapshot();
   renderer.draw(world.presentNurses(presentation.sample(worldSnapshot,alpha)),now);
   patientWheel.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top);
+  unassignedGlow.position(renderer,ui('hud').getBoundingClientRect().bottom,
+   ui('chatDock').getBoundingClientRect().top);
   patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
    {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard',
     // Read-only collision query from the SAME navigation owner. The badge
@@ -275,7 +283,7 @@ export async function createApplication({document,window,content,signal}){
      updateHud();
      toast('Paciente asignado en '+receptionResult.bedId+'. Ya podés atenderlo.');
      const p=world.snapshot().patients.find(p=>p.uid===receptionResult.uid);
-     if(p){patientWheel.show(p);clinicalChecklist.show(p.uid,guardSession?.read());}
+     if(p){patientWheel.show(p);guidePatientWheel();clinicalChecklist.show(p.uid,guardSession?.read());}
      if(receptionResult.firstContact){
       // Route the greeting through the SAME authenticated clinical transport
       // as the chat input. No synthetic NPC speech or bypass of patient owner.
@@ -297,9 +305,10 @@ export async function createApplication({document,window,content,signal}){
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
     if(pendingPatientSelection?.uid===patientUid){
      const selected=pendingPatientSelection;pendingPatientSelection=null;
+     focusedPatientUid=patientUid;focusedNpc=null;
      close();const p=world.snapshot().patients.find(p=>p.uid===patientUid);
      if(p){if(selected.kind==='monitor')clinicalUI.showMonitor(p);
-      else {patientWheel.show(p);clinicalChecklist.show(p.uid,guardSession?.read());}}
+      else {patientWheel.show(p);guidePatientWheel();clinicalChecklist.show(p.uid,guardSession?.read());}}
     }
     if(dialog.open&&dialog.dataset.panel==='reception')
      ui('modalContent').innerHTML=receptionBoardHTML(value.clinical.shift,content.cases,self);
@@ -627,6 +636,8 @@ export async function createApplication({document,window,content,signal}){
   ui('status').textContent=guard&&clinical?.patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='competitive'?'Competitivo':s.mode==='coop'?'Cooperativo':s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':social.state().user?'Lobby social · 5.0 experimental':'Lobby local · 5.0 experimental';
   if(guard)patientClinical.update(s.patients.find(p=>p.uid===clinical?.patient.uid),clinical);else patientClinical.hide();
   if(guard)clinicalChecklist.update(clinical);else clinicalChecklist.hide();
+  unassignedGlow.update(s.phase,s.mode,s.patients,clinical?.shift?.patients||[]);
+  if(guard&&patientWheel.isOpen())guidePatientWheel();
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
   ui('receptionButton').hidden=!guard;
   receptionOnboarding.update({
@@ -766,7 +777,8 @@ export async function createApplication({document,window,content,signal}){
   if(!text.trim())return;
   if(localAdmissions?.ended()&&!durableClient){toast('La guardia finalizó: no se admiten nuevas órdenes.');return;}
   if(guardSession&&/^\s*enfermer(?:a|o|ia)\b/i.test(text)){
-   focusedNpc=null;focusedPatientUid=null;updateHud();
+   // Keep explicit bedside focus when talking to the nurse.
+   focusedNpc=null;updateHud();
   }
   if(!guardSession){
    const userId=social.state().user?.id;
@@ -874,7 +886,7 @@ export async function createApplication({document,window,content,signal}){
     return;
    }
    if(entity.kind==='monitor')clinicalUI.showMonitor(p);else{
-    patientWheel.show(p);clinicalChecklist.show(p.uid,guardSession?.read());
+    patientWheel.show(p);guidePatientWheel();clinicalChecklist.show(p.uid,guardSession?.read());
    }
   }else selectRecipient(entity.kind);
  }
@@ -1134,7 +1146,7 @@ export async function createApplication({document,window,content,signal}){
  function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
   clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);presentation.reset(world.snapshot());raf=window.requestAnimationFrame(frame);}}
  function pause(){hospitalAudio.pause();advanceClinicalTo(window.performance.now());lastClinicalFrame=null;if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
- function destroy(){if(destroyed)return;destroyed=true;cancelReceptionAssignment();guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();rootLifecycle.leave();}
+ function destroy(){if(destroyed)return;destroyed=true;cancelReceptionAssignment();unassignedGlow.destroy();guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
