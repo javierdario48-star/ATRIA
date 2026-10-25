@@ -13,6 +13,7 @@ import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecy
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createLocalShift} from './local-shift.js';
 import {createReceptionAssignment} from './reception-assignment.js';
+import {createReceptionOnboarding} from '../ui/reception-onboarding.js';
 import {createShiftFlow,receptionAcuity} from '../clinical/shift-flow.js';
 import {receptionBoardHTML} from '../ui/reception-board.js';
 import {canHearWardDoctor,canHearWardPatient} from '../ui/spatial-ward-speech.js';
@@ -61,6 +62,10 @@ export async function createApplication({document,window,content,signal}){
   cancelClaim:uid=>durableClient?.cancelClaim(uid)
  });
  const cancelReceptionAssignment=()=>receptionAssignment.cancel();
+ const receptionOnboarding=createReceptionOnboarding({
+  button:document.getElementById('receptionButton'),
+  guide:document.getElementById('receptionGuide'),window
+ });
  const messageEpoch=window.crypto.randomUUID(),cooperativeFlow=createCooperativeLifecycle();let pendingCoopLeave=false;
  let invitingColleagues=false;
  let restoreRoomId=null;try{restoreRoomId=window.localStorage.getItem('atria.v5.coop.room');}catch{}
@@ -266,9 +271,16 @@ export async function createApplication({document,window,content,signal}){
     else if(receptionResult?.status==='occupied')
      toast('Otro médico tomó este paciente. Elegí otro en recepción.');
     else if(receptionResult?.status==='assigned'){
+     focusedPatientUid=receptionResult.uid;focusedNpc=null;
+     updateHud();
      toast('Paciente asignado en '+receptionResult.bedId+'. Ya podés atenderlo.');
      const p=world.snapshot().patients.find(p=>p.uid===receptionResult.uid);
      if(p){patientWheel.show(p);clinicalChecklist.show(p.uid,guardSession?.read());}
+     if(receptionResult.firstContact){
+      // Route the greeting through the SAME authenticated clinical transport
+      // as the chat input. No synthetic NPC speech or bypass of patient owner.
+      void submitText('Hola ¿Qué te pasó?',{patientUid:receptionResult.uid});
+     }
     }
     for(const [,receipt] of value.claims||[])if(receipt?.actorId===self){
      try{progress.award(receipt);}catch{/* persisted receipt wins */}
@@ -617,6 +629,11 @@ export async function createApplication({document,window,content,signal}){
   if(guard)clinicalChecklist.update(clinical);else clinicalChecklist.hide();
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
   ui('receptionButton').hidden=!guard;
+  receptionOnboarding.update({
+   phase:s.phase,mode:s.mode,patients:clinical?.shift?.patients||[],
+   selfId:social.state().user?.id,ended:clinical?.shift?.ended,
+   selecting:!!receptionAssignment.status()
+  });
   ui('peopleButton').textContent=guard?'Historia':'Personas';
   const career=progress.read();ui('playerProgress').textContent='Nivel '+career.level+' · '+(career.xp%200)+'/200 XP';world.setLevel(career.level);
   ui('recipientButton').textContent=guard?({nurse:'Enfermera',vega:'Dr. Vega'}[focusedNpc]||'Paciente cercano'):'Lobby · público';
@@ -972,7 +989,7 @@ export async function createApplication({document,window,content,signal}){
    cancelReceptionAssignment();close();
    const target=world.navigation.center(...patient.approach);
    if(world.target(target.x,target.y)||world.patientInRange(patient.uid)){
-    if(durableClient)receptionAssignment.begin(patient.uid);
+    if(durableClient)receptionAssignment.begin(patient.uid,{firstContact:competitive&&!current?.ownerId});
     toast('Yendo a '+patient.bedId+(competitive?' · te lo asignaré al llegar.':'.'));
    }else toast('No hay una ruta libre hacia el box.');
    return;

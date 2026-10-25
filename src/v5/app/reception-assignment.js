@@ -12,10 +12,10 @@ export function createReceptionAssignment({claim,cancelClaim}){
   if(requested)cancelClaim(requested.uid);
   requested=null;
  }
- function begin(uid){
+ function begin(uid,{firstContact=false}={}){
   if(typeof uid!=='string'||!uid)return false;
   cancel();
-  requested={uid,phase:'walking'};
+  requested={uid,phase:'walking',firstContact:!!firstContact};
   return true;
  }
  function arrive(player,inRange){
@@ -39,8 +39,13 @@ export function createReceptionAssignment({claim,cancelClaim}){
   }
   if(clinical.patient?.uid===requested.uid&&
    (clinical.shift.mode!=='competitive'||r.ownerId===selfId)){
-   const uid=requested.uid,bedId=r.bedId;cancel();
-   return {status:'assigned',uid,bedId};
+   const uid=requested.uid,bedId=r.bedId;
+   // A greeting is a one-shot consequence of a confirmed NEW bedside claim.
+   // Existing assignments, arrival attempts, and repeated snapshots never
+   // trigger a second clinical message.
+   const firstContact=requested.phase==='claiming'&&requested.firstContact;
+   cancel();
+   return {status:'assigned',uid,bedId,firstContact};
   }
   return null;
  }

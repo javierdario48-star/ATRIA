@@ -22,6 +22,8 @@ try{
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical?.shift?.patients.length===2&&atriaV5.snapshot().mode==='competitive')));
  const records=(await clinical(host)).shift.patients;
  assert.notEqual(records[0].bedId,records[1].bedId);
+ await host.waitForFunction(()=>!document.querySelector('#receptionGuide').hidden);
+ assert.equal(await host.locator('#receptionButton').evaluate(el=>el.classList.contains('reception-highlight')),true);
  for(const p of pages)if(await p.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')await p.locator('#keyboardToggleButton').click();
  await walk(guest,176);
  const at=await guest.evaluate(()=>{
@@ -47,6 +49,16 @@ try{
  assert.notEqual((await clinical(host)).shift.patients[1].ownerId,owner,
   'the second patient belongs to this doctor, never the distant rival');
  assert.equal((await clinical(host)).shift.patients[0].ownerId,owner);
+ await host.waitForFunction(uid=>{
+  const c=atriaV5.snapshot().clinical;
+  return c.patient.uid===uid&&c.messages.some(m=>m.role==='player'&&m.text==='Hola ¿Qué te pasó?')&&
+    c.messages.some(m=>m.role==='patient');
+ },records[1].uid,{timeout:25000});
+ await host.waitForFunction(()=>document.querySelector('#chatHistory')?.textContent?.includes('Paciente:'),
+  null,{timeout:18000});
+ assert.equal(await host.locator('#receptionGuide').isHidden(),true);
+ assert.equal((await clinical(host)).messages.filter(m=>m.role==='player'&&m.text==='Hola ¿Qué te pasó?').length,1,
+  'automatic greeting is an exactly-once authenticated clinical action');
  await send(host,'hola');
  assert.equal((await clinical(host)).patient.uid,records[1].uid);
  assert.notEqual((await clinical(host)).competition.ownerId,owner);

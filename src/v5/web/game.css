@@ -456,3 +456,24 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 .device-top[data-acuity="urgent"] .device-acuity{color:#ffc497;background:#66391f}
 .device-top[data-acuity="urgent"] .device-indicator{background:#ffab63;box-shadow:0 0 8px #ffab6399}
 .device-trace[data-acuity="urgent"] path{stroke:#ffab63;filter:drop-shadow(0 0 3px #ffab6388)}
+
+
+/* First competitive contact: light, anchored guidance; never intercepts taps. */
+#receptionButton.reception-highlight{
+ position:relative;isolation:isolate;border-color:#9ffff0;
+ box-shadow:0 0 0 3px #8efee54a,0 0 19px 5px #67eecb9c;
+ animation:reception-glow 1.7s ease-in-out infinite;
+}
+.reception-guide{
+ position:fixed;z-index:22;display:flex;align-items:center;gap:7px;
+ padding:9px 12px;border-radius:12px;
+ border:1px solid #a4f8e2;background:#0a3139ed;color:#e7fff4;
+ box-shadow:0 8px 30px #0009,0 0 15px #92e8cb69;
+ font-size:12px;font-weight:750;max-width:min(260px,87vw);
+ pointer-events:none;animation:reception-guide-appear .4s ease-out both;
+}
+.reception-guide-arrow{font-size:24px;color:#a2ffdf;line-height:.8;animation:reception-arrow 1s ease-in-out infinite alternate}
+@keyframes reception-glow{0%,100%{box-shadow:0 0 0 2px #8efee548,0 0 13px 2px #67eecb88}50%{box-shadow:0 0 0 5px #8efee57d,0 0 24px 7px #67eecbe6}}
+@keyframes reception-guide-appear{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes reception-arrow{to{transform:translateY(-5px)}}
+@media(prefers-reduced-motion:reduce){#receptionButton.reception-highlight,.reception-guide,.reception-guide-arrow{animation:none}}

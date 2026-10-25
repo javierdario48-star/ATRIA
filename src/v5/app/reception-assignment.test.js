@@ -54,3 +54,26 @@ test('cooperative reception follows confirmed focus without competitive ownershi
  flow.begin('p1');
  assert.equal(flow.observe({...clinical(null),shift:{...clinical(null).shift,mode:'coop'}},'doctor').status,'assigned');
 });
+
+test('first reception claim authorizes exactly one greeting after arrival and server confirmation',()=>{
+ const {flow,claimed}=fixture();
+ assert.equal(flow.begin('p1',{firstContact:true}),true);
+ assert.equal(flow.observe(clinical(null),'doctor'),null);
+ assert.equal(flow.arrive(moving,()=>true),null);
+ assert.deepEqual(claimed,[]);
+ assert.equal(flow.arrive(stopped,()=>true),'claiming');
+ assert.deepEqual(claimed,['p1']);
+ assert.deepEqual(flow.observe(clinical('doctor'),'doctor'),
+  {status:'assigned',uid:'p1',bedId:'B1',firstContact:true});
+ assert.equal(flow.observe(clinical('doctor'),'doctor'),null);
+});
+test('returning to an already assigned patient does not auto-greet or hijack another patient',()=>{
+ const {flow}=fixture();
+ flow.begin('p1',{firstContact:false});
+ flow.arrive(stopped,()=>true);
+ assert.deepEqual(flow.observe(clinical('doctor'),'doctor'),
+  {status:'assigned',uid:'p1',bedId:'B1',firstContact:false});
+ flow.begin('p1',{firstContact:true});
+ assert.deepEqual(flow.observe(clinical('rival'),'doctor'),{status:'occupied',uid:'p1'});
+ assert.equal(flow.status(),null);
+});
