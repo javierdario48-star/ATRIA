@@ -72,7 +72,7 @@ try{
   await p.locator('#keyboardToggleButton').click();
  await Promise.all([walk(host),walk(guest,176)]);
  assert.equal(await host.evaluate(()=>atriaV5.snapshot().others.find(x=>x.name==='Dr. Bruno')?.color),'burgundy',
-  'clinical movement updates must not revert a remote player's scrub to black');
+  'clinical movement updates must not revert a remote scrub color to black');
  assert.equal(await guest.evaluate(()=>atriaV5.snapshot().others.find(x=>x.name==='Dra. Ana')?.sex),'female');
  await send(host,'Hola desde anfitriona');
  await host.waitForFunction(()=>atriaV5.snapshot().player.speechBubble?.text==='Hola desde anfitriona');

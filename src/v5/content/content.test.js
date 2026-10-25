@@ -39,11 +39,8 @@ test('captured effective case rules include the later corrections',()=>{
 });
 
 test('V5 wardrobe atlas is versioned separately from original immutable asset hashes',()=>{
- const assets=read('assets.json');
- const wardrobe=assets.wardrobe;
- assert.equal(wardrobe.path,'assets/player-wardrobe.avif');
- const bytes=fs.readFileSync(path.join(root,wardrobe.path));
- assert.equal(hash(bytes),wardrobe.sha256);
+ const bytes=fs.readFileSync(path.join(root,'assets/player-wardrobe.avif'));
+ assert.equal(hash(bytes),'a41b3bdde87f732ef24c90c0fd7d401b9a70c139c0e18c6967546cf7782738c8');
  assert(bytes.length<20000,'single optimized sprite atlas must remain small for mobile');
  assert.equal(bytes.toString('ascii',4,8),'ftyp');
 });

@@ -8,5 +8,7 @@ export async function loadContent(base=new URL('./',import.meta.url),signal){
  }));
  const content=Object.fromEntries(values);
  content.assetUrls=Object.fromEntries(Object.entries(content.assets).map(([key,asset])=>[key,new URL(asset.path,base).href]));
+ // New V5-only artwork; do not alter canonical 4.8.7 asset manifest hashes.
+ content.assetUrls.wardrobe=new URL('assets/player-wardrobe.avif',base).href;
  return content;
 }
