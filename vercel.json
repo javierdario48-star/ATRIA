@@ -10,6 +10,10 @@
       "destination": "/api/clinical"
     },
     {
+      "source": "/api/lobby-sync",
+      "destination": "/api/lobby-sync"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/social?route=:path*"
     }
