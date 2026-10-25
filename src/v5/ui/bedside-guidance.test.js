@@ -7,7 +7,10 @@ function clinical(){return {patient:{uid:'p',diagnosis:'',intentHistory:[],examF
 test('visual coaching progresses from talk to nurse diagnosis question to valid closure',()=>{
  const s=clinical();
  assert.equal(suggestedBedsideAction(s),'talk');
- s.patient.intentHistory=[{},{}];s.patient.examFindings={abdomen:{palpation:{rows:[]}},
+ s.patient.intentHistory=[{id:'interview:symptoms'}];
+ assert.equal(suggestedBedsideAction(s),'talk','greeting alone must not dismiss Talk coaching');
+ s.patient.intentHistory=[{id:'interview:symptoms'},{id:'onset'}];
+ assert.equal(suggestedBedsideAction(s),null,'real history progress clears Talk before diagnosis is requested');s.patient.examFindings={abdomen:{palpation:{rows:[]}},
   general:{inspection:{rows:[]}}};s.patient.orders=[{status:'done'}];
  assert.equal(suggestedBedsideAction(s),'diagnosis');
  s.patient.diagnosis='apendicitis aguda';

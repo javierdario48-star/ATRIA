@@ -11,7 +11,9 @@ export function suggestedBedsideAction(state){
  const pending=(p.pendingTreatments||[]).length+(p.pendingConsults||[]).length>0;
  if(ready&&!pending)return 'patient';
  if(!p.diagnosis&&flow.cue?.id==='diagnosis')return 'diagnosis';
- if(!(p.intentHistory||[]).length)return 'talk';
+ // One greeting is not a meaningful history. Keep the discoverability cue
+ // until at least two independently recorded interview facts are obtained.
+ if((p.intentHistory||[]).length<2)return 'talk';
  return null;
 }
 
