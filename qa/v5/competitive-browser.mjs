@@ -105,6 +105,35 @@ try{
  const c=await clinical(owner);
  assert(c.room.transcript.some(m=>m.text==='/signos'));
  assert.equal(c.competition.ownerId,ownerId);
+ // The second independent doctor uses RECEPCIÓN (not a debug API or injected
+ // clinical session) and must receive a true patient reply after arrival.
+ stage='reception walk, verified ownership, authentic greeting and patient answer';
+ const nextUid=opening.patients[1].uid;
+ await host.locator('#receptionButton').click();
+ const nextButton=host.locator('.reception-patient[data-patient-uid="'+nextUid+'"] [data-action="reception-approach"]');
+ assert.match(await nextButton.innerText(),/Atender y asignarme/);
+ await nextButton.click();
+ await host.waitForFunction(uid=>{
+  const s=atriaV5.snapshot();
+  return s.clinical?.patient.uid===uid&&s.clinical.shift.patients.some(p=>
+   p.uid===uid&&p.ownerId)&&!s.player.moving&&!s.player.target;
+ },nextUid,{timeout:90000});
+ const second=await clinical(host),secondOwner=second.shift.patients.find(p=>p.uid===nextUid).ownerId;
+ assert.notEqual(secondOwner,ownerId,'different doctors have independently owned patients');
+ const greeting='Hola ¿Qué te pasó?';
+ await host.waitForFunction(({uid,greeting})=>{
+  const s=atriaV5.snapshot().clinical;
+  return s?.patient.uid===uid&&s.room.events.some(e=>e.type==='chat.posted'&&
+   e.message.text===greeting&&e.message.patientUid===uid&&
+   e.clinical.some(x=>x.kind==='history.ask'&&x.status==='executed'&&
+    typeof x.receipt?.message==='string'&&x.receipt.message.length>0));
+ },{uid:nextUid,greeting},{timeout:90000});
+ await host.locator('#chatHistory [data-role="patient"]').filter({hasText:/\\S/}).first().waitFor({timeout:20000});
+ const doctorReply=(await host.locator('#chatHistory [data-role="patient"]').allInnerTexts()).join(' ');
+ assert(doctorReply.trim().length>20,'native patient answer must be visible, not a local greeting bubble');
+ assert((await clinical(host)).patient.intentHistory.length>0,'greeting must update native anamnesis');
+ // Check both beds stay distinct after the second physician arrives.
+ assert.equal((await clinical(owner)).shift.patients.find(p=>p.uid===opening.patients[0].uid).ownerId,ownerId);
  assert.deepEqual(errors,[]);
  console.log('COMPETITIVE BROWSER PASS',JSON.stringify({count,ownerId,blockedRivals:acks.filter(x=>x.status==='rejected').length,authority:true,errors}));
 }finally{
