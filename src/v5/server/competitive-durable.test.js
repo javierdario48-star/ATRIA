@@ -181,3 +181,42 @@ test('two competitive doctors type beside distant beds: each message targets onl
   assert(restored.clinical.room.transcript.some(m=>m.text==='/signos'));
  }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('competitive manual claim on a rival bed never hijacks the physician focus, even after restart',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'atria-rival-focus-'));
+ const store=createSqliteGuardStore(path.join(dir,'room.sqlite'));
+ let now=1700000000000;
+ const server=()=>createDurableGuardAuthority({store,content,now:()=>now,maxSteps:11400});
+ let authority=server();
+ const call=(actorId,extra={})=>authority.transact({roomId:'rival-focus',actorId,...extra});
+ try{
+  const start=await authority.bootstrap({roomId:'rival-focus',caseId:'CIRR-001',
+   members:[{id:'a',name:'Ana'},{id:'b',name:'Bruno'}],hostId:'a',actorId:'a',mode:'competitive'});
+  const [first,second]=start.clinical.shift.patients;
+  const navigation=createWorld(content,{id:'a',name:'Ana'}).navigation;
+  const place=record=>navigation.center(...content.beds.find(x=>x.id===record.bedId).approach);
+  const one=place(first),two=place(second);
+  await call('a',{motion:[two.x,two.y],motionSequence:1});
+  await call('b',{motion:[one.x,one.y],motionSequence:1});
+  now+=20000;
+  assert.equal((await call('a',{claim:second.uid})).clinical.patient.uid,second.uid);
+  assert.equal((await call('b',{claim:first.uid})).clinical.patient.uid,first.uid);
+  await call('a',{motion:[one.x,one.y],motionSequence:2});
+  now+=25000;
+  const blocked=await call('a',{claim:first.uid});
+  assert.equal(blocked.clinical.shift.patients[0].ownerId,'b');
+  assert.equal(blocked.clinical.shift.patients[1].ownerId,'a');
+  assert.equal(blocked.clinical.patient.uid,second.uid,
+   'touching an occupied rival bed cannot switch the clinical snapshot');
+  const speech=await call('a',{commands:[{id:'attempt-rival-order',text:'/signos'}]});
+  assert.equal(speech.acknowledgements[0].reason,'other-player-owns-patient');
+  assert.equal(speech.clinical.patient.uid,second.uid);
+  assert.equal(speech.claims.length,0);
+  authority=server();
+  const restored=await call('a');
+  assert.equal(restored.clinical.patient.uid,second.uid);
+  assert.equal(restored.clinical.shift.patients[0].ownerId,'b');
+  assert.equal(restored.clinical.shift.patients[1].ownerId,'a');
+ }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
+});

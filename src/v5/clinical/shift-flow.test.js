@@ -75,3 +75,20 @@ test('accepted handoff frees a box, preserves its destination and admits another
  assert.equal(restored.record(first.uid).departed,true);
  assert.equal(restored.records().length,2);
 });
+
+
+test('reception triage follows current native deterioration and recovery, not stale measured vitals',()=>{
+ const caseData={risk:null,vitals:{bp:'120/80',hr:80,spo2:99,rr:16,temp:37}};
+ const previous={sys:120,dia:80,hr:80,spo2:99,rr:16,temp:37};
+ const patient={baselineVitals:{...previous},lastVitalsKnown:{vitals:{...previous}},liveVitals:{...previous}};
+ assert.equal(receptionAcuity({caseData,patient}).state,'stable');
+ patient.liveVitals={...previous,sys:75,dia:42,hr:145,spo2:87,rr:37};
+ assert.equal(receptionAcuity({caseData,patient,waitingSeconds:600}).state,'critical',
+  'deterioration must change real reception priority even without a new monitor measurement');
+ assert.equal(patient.lastVitalsKnown.vitals.sys,120,'triage is read-only');
+ patient.lastVitalsKnown.vitals={...patient.liveVitals};
+ patient.liveVitals={...previous,hr:112,spo2:96,rr:20};
+ assert.equal(receptionAcuity({caseData,patient}).state,'warning',
+  'recovery must be reflected immediately, even if the last documented measurement was critical');
+ assert.equal(receptionAcuity({caseData:{vitals:{}},patient:null}).state,'unknown');
+});

@@ -62,8 +62,13 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   const r=shift.record(uid);
   if(!members.some(m=>m.id===actorId)||!r||r.closed||shift.ended())return false;
   if(!world.patientInRangeFor(actorId,uid))return false;
-  // Selection is an explicit bedside action. Remote chat never claims a bed.
-  if(mode==='competitive'&&!r.ownerId&&!shift.owner(uid,actorId))return false;
+  // Reject a rival's occupied bed BEFORE changing the actor's clinical focus.
+  // Otherwise clicking an occupied bedside silently switches the active
+  // patient, even though the order dispatcher correctly blocks that patient.
+  if(mode==='competitive'){
+   if(r.ownerId&&r.ownerId!==actorId)return false;
+   if(!r.ownerId&&!shift.owner(uid,actorId))return false;
+  }
   focused.set(actorId,uid);return true;
  }
  function awardMembers(){

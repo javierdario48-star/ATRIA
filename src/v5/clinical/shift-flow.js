@@ -8,7 +8,10 @@ const clone=x=>structuredClone(x);
 export function receptionAcuity({caseData,patient=null,waitingSeconds=0}={}){
  // Native case evolution is already advanced by the one patient executor.
  // Never synthesize altered blood pressures from queue duration.
- const confirmed=patient?.lastVitalsKnown?.vitals||patient?.baselineVitals||null;
+ // Reception labels the patient's current authoritative native physiology,
+ // not a historical measurement that may already be stale after deterioration
+ // or rescue. Measurements remain separately timestamped in the clinical record.
+ const confirmed=patient?.liveVitals||patient?.lastVitalsKnown?.vitals||patient?.baselineVitals||null;
  const highRisk=!confirmed&&(['shock','bleed','peritonitis'].includes(caseData?.risk)||
   !!caseData?.physiology?.sourceControlRequired);
  return clinicalAcuity(confirmed||caseData?.vitals,{dead:!!patient?.patientDied,
