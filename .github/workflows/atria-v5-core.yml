@@ -118,6 +118,17 @@ jobs:
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/local-direct-map-browser.mjs
 
+  full-guard-24h-bots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: True server physiology, three doctors, every admission and all 24 simulated hours in shared and competitive modes
+        run: node qa/v5/full-guard-24h.mjs
+
   durable-guard-recovery:
     runs-on: ubuntu-latest
     timeout-minutes: 5
