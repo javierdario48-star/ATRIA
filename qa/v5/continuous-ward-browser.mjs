@@ -44,6 +44,18 @@ try{
  await host.locator('#game').click({position:second});
  await host.waitForFunction(uid=>atriaV5.snapshot().clinical?.patient.uid===uid&&atriaV5.snapshot().clinical?.competition.ownerId,records[1].uid);
  assert.notEqual((await clinical(host)).competition.ownerId,owner);
+ // Physically separated attending physicians should each hear only their
+ // own bedside history, even though their server is one persistent guard.
+ await send(guest,'¿Tiene ascitis?');
+ await guest.waitForFunction(()=>atriaV5.snapshot().clinical.messages.some(m=>m.role==='patient'),
+  null,{timeout:18000});
+ await host.waitForFunction(()=>atriaV5.snapshot().clinical.shift?.patients.some(p=>p.ownerId),
+  null,{timeout:18000});
+ assert(!(await host.locator('#chatHistory').innerText()).includes('¿Tiene ascitis?'),
+  'far-away physician cannot see the first bed conversation');
+ await send(host,'¿Desde cuándo empezó?');
+ assert(!(await guest.locator('#chatHistory').innerText()).includes('¿Desde cuándo empezó?'),
+  'the other bedside must not see this physician conversation');
  assert.deepEqual(errors,[]);
  console.log('CONTINUOUS WARD TWO OWNERS PASS',JSON.stringify({beds:records.map(r=>r.bedId),errors}));
 }finally{await other.close();await h.close();}

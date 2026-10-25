@@ -56,6 +56,13 @@ try{
  await host.locator('#modalClose').click();
  assert((await clinical(host)).competition.ownerId===null);
  assert.match(await host.locator('#guardScoreboard').innerText(),/GUARDIA COMPETITIVA/);
+ stage='greeting before bedside contact cannot claim clinical ownership';
+ await owner.locator('#dieInput').fill('hola');
+ await owner.locator('#chatForm [type="submit"]').click();
+ await owner.waitForFunction(()=>document.querySelector('#toast')?.textContent?.includes('Acercate y tocá'),
+  null,{timeout:18000});
+ assert.equal((await clinical(owner)).competition.ownerId,null);
+ assert.equal((await clinical(owner)).room.transcript.length,0,'a distant hello is not clinical first contact');
  stage='first physician physically approaches the patient';
  for(const p of pages)if(await p.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')
   await p.locator('#keyboardToggleButton').click();
@@ -80,6 +87,13 @@ try{
  stage='responsible doctor can treat';
  await owner.locator('#patientWheel').evaluate(e=>e.hidden=true);
  await send(owner,'/signos');
+ await send(owner,'¿Tiene ascitis?');
+ await host.waitForFunction(()=>atriaV5.snapshot().clinical.room.transcript.some(x=>x.text==='¿Tiene ascitis?'),
+  null,{timeout:18000});
+ const hostChat=await host.locator('#chatHistory').innerText();
+ assert(!hostChat.includes('¿Tiene ascitis?'),'doctor far away must not see the bedside dialogue');
+ assert(!hostChat.includes('Paciente:'),'the patient cannot answer in a remote physician chat');
+ assert((await owner.locator('#chatHistory').innerText()).includes('¿Tiene ascitis?'));
  const c=await clinical(owner);
  assert(c.room.transcript.some(m=>m.text==='/signos'));
  assert.equal(c.competition.ownerId,ownerId);
