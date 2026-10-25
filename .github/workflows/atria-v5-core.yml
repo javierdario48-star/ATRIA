@@ -95,6 +95,24 @@ jobs:
             qa/v5-browser-results/*parity.json
           retention-days: 14
 
+  local-reception-onboarding-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Build independent V5 game
+        run: npm run build:v5
+      - name: Pixel Aprendiz and Solitario follow guided reception, arrive and receive a native patient answer
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/local-shift-browser.mjs
+
   durable-guard-recovery:
     runs-on: ubuntu-latest
     timeout-minutes: 5
