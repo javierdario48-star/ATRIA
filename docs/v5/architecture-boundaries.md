@@ -22,8 +22,9 @@ Rama exclusiva: `atria-5.0-core-rebuild-experimental`. V4 es referencia históri
 3. **Sin duplicación de transporte ni temporizadores.** El ciclo de aplicación mantiene presencia y señalización. `src/v5/social/peer-recovery-policy.js` determina exclusivamente cuándo reintentar conexiones RTC.
 4. **Miembros de una sala sin pérdida por concurrencia.** `src/v5/social/room-membership-store.js` separa las aceptaciones individuales y mantiene intacto el servidor histórico caracterizado.
 5. **UI nunca decide lo clínico.** `src/v5/ui/guard-message-policy.js` determina el texto, pero no crea interconsultas. `src/v5/ui/patient-overlay-layout.js` posiciona controles sin alterar navegación.
-6. **La guardia dura 24 minutos reales.** Los siguientes pacientes locales comparten el tiempo acumulado; el multijugador necesita una transición aprobada por su autoridad común.
-7. **Competitivo permanece no habilitado** hasta que exista propiedad clínica por jugador, resolución y marcador independientes certificados.
+6. **Guardia continua de 24 minutos reales = 24 horas simuladas.** `createShiftFlow` controla un único calendario de hasta seis ingresos en los cuatro modos. Cada paciente tiene su propia sesión clínica nativa y su cama; el servidor conserva el reloj compartido, las salidas y el historial.
+7. **Competitivo está habilitado para 2–4 médicos.** El servidor arbitra propietario por UID y primer contacto junto a la cama. La recepción permite elegir y caminar, pero no atribuye clínicamente hasta verificar llegada; rivales no pueden robar el foco ni obtener XP. Las pruebas de navegador cubren 2, 3 y 4 médicos.
+8. **Proximidad y conversaciones:** `src/v5/ui/spatial-ward-speech.js` calcula solamente visibilidad acústica (rango, paredes y puertas); nunca concede acceso clínico. El backend valida en cada orden posición y propiedad por UID.
 
 ## Flujo de mantenimiento obligatorio
 
@@ -35,7 +36,7 @@ Rama exclusiva: `atria-5.0-core-rebuild-experimental`. V4 es referencia históri
 
 ## Deuda explícita que no debe ocultarse
 
-- `src/v5/app/application.js` sigue siendo un coordinador grande. Se extrajeron la política de enfermería y la rotación local, pero quedan tareas de separar render de conversaciones y admisión cooperativa **tras** cerrar las regresiones actuales. Hacerlo todo de una sola vez aumentaría el riesgo.
-- Los cinco ejecutores clínicos certificados son los únicos habilitados para rotación local. El resto del catálogo requiere migración fisiológica antes de habilitar cierres y EXP.
+- `src/v5/app/application.js` sigue siendo un coordinador grande (más de 1.000 líneas). La selección temporal de recepción está encapsulada en `src/v5/app/reception-assignment.js` (no en el motor clínico); faltan extracciones progresivas de conversación, presentación y conexión, siempre con pruebas antes de cada cambio. Evitar una reescritura simultánea.
+- Hay **siete ejecutores clínicos** registrados explícitamente en `src/v5/content/clinical-cases.js`: CIRR, APP, CHOLANG, CHOLE, PERI-SEC, PERI-PBE y PERI-TER. No inferir disponibilidad de otros casos por su presencia en el catálogo.
 - Las pruebas de navegador pueden descubrir conflictos entre el botón flotante de diagnóstico y los toques de movimiento. El diseño debe resolverlos geométricamente; nunca se deben forzar clics a través de controles visibles.
 - Las pruebas de CI y el Preview deben reportarse por separado. Un despliegue READY no equivale a jugabilidad clínica certificada.

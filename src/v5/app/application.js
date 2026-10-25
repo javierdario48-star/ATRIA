@@ -12,6 +12,7 @@ import {createClinicalConnectionNotice} from '../social/clinical-connection-noti
 import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecycle.js';
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createLocalShift} from './local-shift.js';
+import {createReceptionAssignment} from './reception-assignment.js';
 import {createShiftFlow,receptionAcuity} from '../clinical/shift-flow.js';
 import {receptionBoardHTML} from '../ui/reception-board.js';
 import {canHearWardDoctor,canHearWardPatient} from '../ui/spatial-ward-speech.js';
@@ -52,12 +53,13 @@ export async function createApplication({document,window,content,signal}){
   coopRoomId=null,replica=null,durableClient=null,lastSharedPublish=0,sharedSequence=0,lastMotion='',lastRemoteRevision=-1,socialEnabled=false,
   durableStarting=false,durableJoining=false,nextCooperativeAdmission=0,cooperativeCapability=null;
  let localAdmissions=null,localSessions=new Map(),localRoomId=null,pendingPatientSelection=null,lastReceivedPatientCount=0,lastSelectedPatientUid=null,shiftEndedAnnounced=false;
- // Reception selection is navigation intent; server alone grants ownership.
- let receptionAssignment=null;
- function cancelReceptionAssignment(){
-  if(receptionAssignment&&durableClient)durableClient.cancelClaim(receptionAssignment.uid);
-  receptionAssignment=null;
- }
+ // Transient reception travel state is UI-only; the server remains the sole
+ // authority for physical proximity, patient ownership and clinical commands.
+ const receptionAssignment=createReceptionAssignment({
+  claim:uid=>durableClient?.claim(uid),
+  cancelClaim:uid=>durableClient?.cancelClaim(uid)
+ });
+ const cancelReceptionAssignment=()=>receptionAssignment.cancel();
  const messageEpoch=window.crypto.randomUUID(),cooperativeFlow=createCooperativeLifecycle();let pendingCoopLeave=false;
  let invitingColleagues=false;
  let restoreRoomId=null;try{restoreRoomId=window.localStorage.getItem('atria.v5.coop.room');}catch{}
@@ -255,19 +257,15 @@ export async function createApplication({document,window,content,signal}){
      lastSelectedPatientUid=patientUid;clinicalUI.reset();patientWheel.hide();clinicalChecklist.hide();
     }
     const self=social.state().user?.id;
-    if(receptionAssignment){
-     const requested=receptionAssignment,record=value.clinical.shift?.patients.find(p=>p.uid===requested.uid);
-     if(!record||record.closed||record.departed||record.patientDied||value.clinical.shift?.ended){
-      cancelReceptionAssignment();toast('El paciente ya no está disponible en recepción.');
-     }else if(value.clinical.patient.uid===requested.uid&&
-       (value.clinical.shift.mode!=='competitive'||record.ownerId===self)){
-      cancelReceptionAssignment();
-      toast('Paciente asignado en '+record.bedId+'. Ya podés atenderlo.');
-      const p=world.snapshot().patients.find(p=>p.uid===requested.uid);
-      if(p){patientWheel.show(p);clinicalChecklist.show(p.uid,guardSession?.read());}
-     }else if(value.clinical.shift.mode==='competitive'&&record.ownerId&&record.ownerId!==self){
-      cancelReceptionAssignment();toast('Otro médico tomó este paciente. Elegí otro en recepción.');
-     }
+    const receptionResult=receptionAssignment.observe(value.clinical,self);
+    if(receptionResult?.status==='unavailable')
+     toast('El paciente ya no está disponible en recepción.');
+    else if(receptionResult?.status==='occupied')
+     toast('Otro médico tomó este paciente. Elegí otro en recepción.');
+    else if(receptionResult?.status==='assigned'){
+     toast('Paciente asignado en '+receptionResult.bedId+'. Ya podés atenderlo.');
+     const p=world.snapshot().patients.find(p=>p.uid===receptionResult.uid);
+     if(p){patientWheel.show(p);clinicalChecklist.show(p.uid,guardSession?.read());}
     }
     for(const [,receipt] of value.claims||[])if(receipt?.actorId===self){
      try{progress.award(receipt);}catch{/* persisted receipt wins */}
@@ -992,7 +990,7 @@ export async function createApplication({document,window,content,signal}){
    cancelReceptionAssignment();close();
    const target=world.navigation.center(...patient.approach);
    if(world.target(target.x,target.y)||world.patientInRange(patient.uid)){
-    if(durableClient)receptionAssignment={uid:patient.uid,phase:'walking'};
+    if(durableClient)receptionAssignment.begin(patient.uid);
     toast('Yendo a '+patient.bedId+(competitive?' · te lo asignaré al llegar.':'.'));
    }else toast('No hay una ruta libre hacia el box.');
    return;
@@ -1108,16 +1106,10 @@ export async function createApplication({document,window,content,signal}){
     durableClient.setTyping(clinicalTyping);
     const intent=world.motionIntent(),key=JSON.stringify(intent);
     if(intent&&key!==lastMotion){lastMotion=key;durableClient.motion(intent.target,intent.sequence);}
-    // Arrival first, then the server checks physical proximity and ownership.
-    if(receptionAssignment?.phase==='walking'&&!s.player.moving&&!s.player.target&&
-      s.player.pathIndex>=s.player.path.length){
-     if(world.patientInRange(receptionAssignment.uid)){
-      receptionAssignment.phase='claiming';
-      durableClient.claim(receptionAssignment.uid);
-     }else{
-      cancelReceptionAssignment();toast('No llegaste al box. Elegí de nuevo en recepción.');
-     }
-    }
+    // The reception controller requests a claim only after local arrival.
+    // The server independently verifies the bedside pose and ownership.
+    if(receptionAssignment.arrive(s.player,uid=>!!world.patientInRange(uid))==='missed')
+     toast('No llegaste al box. Elegí de nuevo en recepción.');
     durableClient.maintain(now,{moving:s.player.moving});
    }else if(replica){replica.maintain(now);const key=JSON.stringify(s.player.target||[s.player.x,s.player.y]);
     if(key!==lastMotion){lastMotion=key;const host=social.state().room?.hostUserId;if(host)social.send(host,{kind:'motion',target:s.player.target||[s.player.x,s.player.y]});}}

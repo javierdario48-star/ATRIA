@@ -1,5 +1,7 @@
 # ATRIA 5.0 — Ruta de producto: lobby compartido, cuatro modos y app escalable
 
+> **Archivo histórico (16 de octubre de 2026).** Las secciones siguientes describen decisiones y bloqueos anteriores; **no son el estado actual del juego**. Actualmente están habilitados los cuatro modos, guardia continua y siete casos clínicos certificados. Para límites y puertas de calidad vigentes, consultar [`docs/v5/architecture-boundaries.md`](../v5/architecture-boundaries.md) y la CI del último commit de la rama experimental. Este roadmap se conserva como antecedente, sin reescribir los hitos históricos.
+
 Actualizado: 2026-10-16. Fuente de verdad: rama `atria-5.0-core-rebuild-experimental`. **No añadir casos clínicos** hasta que sistemas y multiplayer funcionen de extremo a extremo. Conservar `main` y V4/golden master intactos. CIRR-001 y APP-001 son suficientes para probar cada etapa.
 
 ## 1. Inventario funcional: 4.8.7 efectiva frente a V5
