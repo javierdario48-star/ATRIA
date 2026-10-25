@@ -1,3 +1,4 @@
+import {playerSpriteKey} from '../app/avatar-appearance.js';
 /** Canvas presentation consumes snapshots. It never executes clinical actions. */
 export async function createHospitalRenderer(canvas,content,{signal,window}={}){
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('El navegador no admite Canvas 2D.');
@@ -18,7 +19,8 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   scale=Math.min(1.38,Math.max(.74,width/590*1.15));anchorX=pixel(width/2);
  }
  function sprite(key,a,h=62){
-  const img=images[key]||(key.startsWith('player-')?images['player-navy']:null);if(!img)return;const [x,y]=screen(a.x,a.y),hh=h*scale,w=hh*img.width/img.height;
+  const img=images[key]||(key.startsWith('player-female-')?images['player-female-navy']:
+    key.startsWith('player-')?images['player-navy']:null);if(!img)return;const [x,y]=screen(a.x,a.y),hh=h*scale,w=hh*img.width/img.height;
   const east=/^(E|NE|SE)$/.test(a.dir),west=/^(W|NW|SW)$/.test(a.dir),right=key==='vega';
   const flip=right?(west?-1:east?1:(a.lastSide||1)<0?-1:1):(east?-1:west?1:(a.lastSide||-1)>0?-1:1);
   const phase=(a.walkPhase||0)*Math.PI*2,swing=Math.sin(phase),moving=a.moving;
@@ -128,7 +130,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
    const [x,y]=screen(p.x,p.y),im=images.patient,h=40*scale,w=h*im.width/im.height;ctx.drawImage(im,x-w/2,y-h/2,w,h);
   }
   const actors=[...world.nurses,...(world.others||[]),...(world.expert?[world.expert]:[]),world.player].sort((a,b)=>a.y-b.y);
-  for(const a of actors){sprite(a.id==='self'||a.kind==='doctor'?'player-'+a.color:a.kind==='vega'?'vega':'nurse',a,a.kind==='vega'?72:a.kind==='nurse'?57:62);}
+  for(const a of actors){sprite(a.id==='self'||a.kind==='doctor'?playerSpriteKey(a):a.kind==='vega'?'vega':'nurse',a,a.kind==='vega'?72:a.kind==='nurse'?57:62);}
   if(world.phase!=='title')label(world.player,world.player.name,world.player.level);
   for(const a of world.others||[])label(a,a.name,a.level);
   if(world.phase==='lobby'||world.phase==='guard')for(const a of [world.player,...world.others])speechBubble(a,now);

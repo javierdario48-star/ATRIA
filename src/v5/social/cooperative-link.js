@@ -1,4 +1,5 @@
 import {createWardPeer} from './ward-peer.js';
+import {socialAppearance} from '../app/avatar-appearance.js';
 import {privateRoomMotionPrefix} from './room-motion-scope.js';
 import {createPeerRecoveryPolicy} from './peer-recovery-policy.js';
 const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
@@ -66,7 +67,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   // Both lanes use the original authenticated API and existing RAF; no new timer.
   await api('',{presence:{peerId,motionSession,motionEpoch,motionAt:window.performance.now(),sentAt:Date.now(),
    motionCadence:260,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,
-   walkPhase:pose.walkPhase,level:pose.level,color:profile.scrubColor,
+   walkPhase:pose.walkPhase,level:pose.level,color:socialAppearance(profile.scrubColor,profile.sex),
    phase:pose.phase,roomId:pose.roomId||'',seq:++presenceSequence}},true);
  }
  async function pollRoster(now){
