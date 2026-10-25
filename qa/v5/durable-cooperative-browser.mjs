@@ -44,6 +44,16 @@ try{
  const initial=await Promise.all(pages.map(clinical));
  assert.equal(initial[0].patient.uid,initial[1].patient.uid);
  assert.equal(initial[0].room.roomId,initial[1].room.roomId);
+ // Shared care has no exclusive bed ownership. Reception and patient
+ // highlights must still onboard both independent clinicians.
+ await Promise.all(pages.map(p=>p.waitForFunction(()=>
+  document.querySelector('#receptionGuide')?.hidden===false&&
+  document.querySelectorAll('.unassigned-patient-marker').length>0,
+  null,{timeout:20000})));
+ for(const page of pages){
+  assert.equal(await page.locator('#receptionButton').evaluate(el=>el.classList.contains('reception-highlight')),true);
+  assert(await page.locator('.unassigned-patient-marker').count()>0);
+ }
  assert.equal((await host.evaluate(()=>atriaV5.diagnostics())).cooperative.authority,false,
   'even host has no independent browser clinical authority');
  stage='remote navigation and shared transcript';

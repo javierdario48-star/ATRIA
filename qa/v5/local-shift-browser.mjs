@@ -18,7 +18,8 @@ try{
    const state=await p.evaluate(()=>atriaV5.snapshot());
    assert.equal(!!state.expert,mode==='apprentice','Dr. Vega belongs to apprentice mode only');
    assert.equal(state.patients.length,1,'the first arrival must be at the initial bed');
-   await p.waitForFunction(()=>document.querySelector('#receptionGuide')?.hidden===false);
+   await p.waitForFunction(()=>document.querySelector('#receptionGuide')?.hidden===false&&
+    document.querySelectorAll('.unassigned-patient-marker').length>0);
    assert.equal(await p.locator('#receptionButton').evaluate(e=>e.classList.contains('reception-highlight')),true);
    await p.locator('#receptionButton').click();
    assert.equal(await p.locator('.reception-patient').count(),1);
@@ -36,6 +37,9 @@ try{
    assert.equal(await p.locator('#receptionGuide').isHidden(),true);
    assert.equal(await p.locator('#patientWheel').isHidden(),false,
     'arrival from reception must expose the existing bedside wheel');
+   assert.equal(await p.locator('#patientWheel [data-patient-action="talk"]').evaluate(
+    e=>e.classList.contains('patient-wheel-guided')),true,
+    'shared bedside policy must guide Talk for both local modes');
    assert.equal((await p.evaluate(()=>atriaV5.snapshot().clinical)).messages.filter(
     m=>m.role==='player'&&m.text==='Hola ¿Qué te pasó?').length,1);
    results.push({mode,triage,mentor:!!state.expert,firstPatient:true,nativeConversation:true});
