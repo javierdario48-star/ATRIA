@@ -46,6 +46,12 @@ test('320 simultaneous lobby clients move through the spatial index; reconnects 
   time+=46000;
   await assert.rejects(hub.nearby('token-0',{sessionId:resumed[0].sessionId}),
    /stale-or-unknown-lobby-session|lobby-session-expired/);
+  // A read rejects its own stale session but does not scan every idle user.
+  // Expiry sweeps occur on the next mutation; forcing one from every read
+  // would turn nearby() into O(all users), defeating spatial indexing.
+  const fresh=await hub.join('token-0',{name:'Fresh after expiry',x:110,y:110});
+  assert.equal(hub.diagnostics().players,1,'expired peers must be gone after the next mutation');
+  await hub.disconnect('token-0',{sessionId:fresh.sessionId});
   assert.equal(hub.diagnostics().players,0,'idle clients must not remain as connected ghosts');
   assert.equal(hub.diagnostics().spatialCells,0,'spatial grid must be drained after expiry');
  }finally{hub.dispose();}
