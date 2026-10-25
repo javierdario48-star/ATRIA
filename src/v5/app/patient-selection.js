@@ -11,7 +11,8 @@ export function directPatientIntent(state,uid,actorId){
   if(record.ownerId&&record.ownerId!==actorId)return 'occupied';
   return state.patient?.uid===uid&&record.ownerId===actorId?'selected':'claim';
  }
- return state.patient?.uid===uid?'selected':'claim';
+ return state.patient?.uid===uid&&
+  state.shift.confirmedFocusPatientUid===uid?'selected':'claim';
 }
 
 /**

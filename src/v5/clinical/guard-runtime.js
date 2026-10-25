@@ -100,7 +100,10 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     xp:p.closure?.xp??0,points:p.closure?.quality?.score??0};
   });
   state.shift={mode,elapsedSeconds:shift.elapsed(),remainingSeconds:shift.remaining(),ended:shift.ended(),
-   focusPatientUid:state.patient.uid,patients:items,outcomes};
+   focusPatientUid:state.patient.uid,
+   // The default first patient is not necessarily physically claimed.
+   // This UID exists only after this actor's server-side proximity validation.
+   confirmedFocusPatientUid:focused.get(actorId)||null,patients:items,outcomes};
   if(mode==='competitive')state.competition={mode,ownerId:items.find(r=>r.uid===state.patient.uid)?.ownerId||null,
    patientUid:state.patient.uid,outcomes};
   return state;

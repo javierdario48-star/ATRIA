@@ -40,7 +40,9 @@ export function createReceptionAssignment({claim,cancelClaim}){
   // In a shared guard the first patient may already be the default clinical
   // snapshot before walking. That is NOT a bedside claim: wait for physical
   // arrival and the server transaction requested by arrive().
-  if(requested.phase==='claiming'&&clinical.patient?.uid===requested.uid&&
+  if(requested.phase==='claiming'&&
+   clinical.shift.confirmedFocusPatientUid===requested.uid&&
+   clinical.patient?.uid===requested.uid&&
    (clinical.shift.mode!=='competitive'||r.ownerId===selfId)){
    const uid=requested.uid,bedId=r.bedId;
    // A greeting is a one-shot consequence of a confirmed NEW bedside claim.

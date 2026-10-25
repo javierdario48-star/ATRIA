@@ -11,7 +11,8 @@ function fixture(){
 }
 const stopped={moving:false,target:null,pathIndex:2,path:[1,2]};
 const moving={moving:true,target:[10,20],pathIndex:0,path:[1,2]};
-const clinical=(owner=null)=>({shift:{mode:'competitive',ended:false,patients:[
+const clinical=(owner=null,confirmed=!!owner)=>({shift:{mode:'competitive',ended:false,
+ confirmedFocusPatientUid:confirmed?'p1':null,patients:[
  {uid:'p1',bedId:'B1',ownerId:owner,closed:false,departed:false,patientDied:false}
  ]},patient:{uid:'p1'}});
 
@@ -57,7 +58,9 @@ test('cooperative reception requires arrival even when shared focus already poin
  assert.deepEqual(claimed,[]);
  assert.equal(flow.arrive(stopped,()=>true),'claiming');
  assert.deepEqual(claimed,['p1']);
- assert.deepEqual(flow.observe(state,'doctor'),
+ assert.equal(flow.observe(state,'doctor'),null,
+  'shared default focus is not a confirmed server-side claim');
+ assert.deepEqual(flow.observe({...state,shift:{...state.shift,confirmedFocusPatientUid:'p1'}},'doctor'),
   {status:'assigned',uid:'p1',bedId:'B1',firstContact:true});
  assert.equal(flow.observe(state,'doctor'),null,'never repeat after a server reconnection');
 });

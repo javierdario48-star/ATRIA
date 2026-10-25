@@ -61,7 +61,7 @@ export function createDurableCooperativeReplica({
     // admit new commands, movement or confirmations during catch-up.
     if(!response.recovering){
      if(queuedMotion===motion){queuedMotion=null;queuedMotionSequence=null;}
-      if(queuedClaim===claim&&response.clinical?.shift?.focusPatientUid===claim)queuedClaim=null;
+      if(queuedClaim===claim&&response.clinical?.shift?.confirmedFocusPatientUid===claim)queuedClaim=null;
      if(confirmation===receipt)confirmation=null;
     }
     return response;
