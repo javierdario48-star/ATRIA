@@ -3,6 +3,9 @@ import {clinicalAcuity} from './acuity.js';
 // One deterministic admission schedule; the native patient session remains
 // the only clinical owner. One real second = one displayed game minute.
 export const SHIFT_DURATION_SECONDS=1440;
+// 1/60-second simulation steps accumulate IEEE-754 error at exact hours.
+// This epsilon is far below one frame; it never admits a patient a frame early.
+const CLOCK_EPSILON=1e-8;
 export const SHIFT_ARRIVAL_SECONDS=Object.freeze([0,180,420,720,1020,1260]);
 const clone=x=>structuredClone(x);
 export function receptionAcuity({caseData,patient=null,waitingSeconds=0}={}){
@@ -56,10 +59,11 @@ export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null})
   advance(deltaSeconds){
    if(!Number.isFinite(deltaSeconds)||deltaSeconds<0)throw Error('invalid shift delta');
    elapsedSeconds=Math.min(SHIFT_DURATION_SECONDS,elapsedSeconds+deltaSeconds);
+   if(SHIFT_DURATION_SECONDS-elapsedSeconds<CLOCK_EPSILON)elapsedSeconds=SHIFT_DURATION_SECONDS;
    const arrivals=[];
    while(nextIndex<SHIFT_ARRIVAL_SECONDS.length){
     const due=mode==='competitive'&&nextIndex>0?SHIFT_ARRIVAL_SECONDS[nextIndex-1]:SHIFT_ARRIVAL_SECONDS[nextIndex];
-    if(due>elapsedSeconds)break;
+    if(due-elapsedSeconds>CLOCK_EPSILON)break;
     const r=admit(nextIndex);if(!r)break;
     arrivals.push(r);nextIndex++;
    }

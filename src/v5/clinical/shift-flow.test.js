@@ -92,3 +92,20 @@ test('reception triage follows current native deterioration and recovery, not st
   'recovery must be reflected immediately, even if the last documented measurement was critical');
  assert.equal(receptionAcuity({caseData:{vitals:{}},patient:null}).state,'unknown');
 });
+
+test('1/60-frame accumulation still admits on exact 7h and ends at 24h without clock drift',()=>{
+ for(const mode of ['solo','apprentice','coop','competitive']){
+  const roomId='frames-'+mode,s=createShiftFlow({content,mode,firstCaseId:'CIRR-001',roomId});
+  s.advance(0);
+  // 420 simulated seconds, one renderer-sized step at a time, the actual
+  // server runtime cadence. It must never wait a spurious extra frame.
+  for(let i=0;i<420*60;i++)s.advance(1/60);
+  assert.equal(s.records().length,mode==='competitive'?4:3,
+   mode+' missed exactly scheduled admissions after accumulated float additions');
+  for(let i=420*60;i<1440*60;i++)s.advance(1/60);
+  assert.equal(s.elapsed(),1440,'shift end must snap to exact 24 simulated hours');
+  assert.equal(s.remaining(),0);assert(s.ended());
+  assert.equal(s.records().length,6);
+  assert.equal(s.advance(1/60).length,0);
+ }
+});
