@@ -9,7 +9,15 @@ try{
    const p=await ctx.newPage();p.setDefaultTimeout(20000);
    p.on('pageerror',e=>errors.push({mode,message:e.message}));
    await p.goto(h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
-   await p.locator('#playerName').fill('Guardia '+mode);await p.locator('#enterButton').click();
+   await p.locator('#playerName').fill('Guardia '+mode);
+   await p.locator('#startingSex').selectOption(mode==='apprentice'?'female':'male');
+   await p.locator('#startingColor').selectOption(mode==='apprentice'?'pink':'burgundy');
+   await p.locator('#enterButton').click();
+   await p.waitForFunction(mode=>{
+    const player=atriaV5.snapshot().player;
+    return player.color===(mode==='apprentice'?'pink':'burgundy')&&
+      player.sex===(mode==='apprentice'?'female':'male');
+   },mode);
    await p.locator('#guardButton').click();
    await p.locator('[data-mode="'+mode+'"]').click();
    await p.locator('#caseChoice').selectOption('PERI-TER-001');
@@ -17,6 +25,10 @@ try{
    await p.waitForFunction(expected=>atriaV5.snapshot().mode===expected,mode);
    const state=await p.evaluate(()=>atriaV5.snapshot());
    assert.equal(!!state.expert,mode==='apprentice','Dr. Vega belongs to apprentice mode only');
+   assert.equal(state.player.color,mode==='apprentice'?'pink':'burgundy');
+   assert.equal(state.player.sex,mode==='apprentice'?'female':'male');
+   assert.equal((await p.evaluate(()=>atriaV5.diagnostics().renderer.images)),22,
+    'the selected wardrobe has all decoded sprites, rather than a default placeholder');
    assert.equal(state.patients.length,1,'the first arrival must be at the initial bed');
    await p.waitForFunction(()=>document.querySelector('#receptionGuide')?.hidden===false&&
     document.querySelectorAll('.unassigned-patient-marker').length>0);

@@ -37,3 +37,13 @@ test('captured effective case rules include the later corrections',()=>{
  const beds=read('beds.json');assert.equal(beds.length,8);
  assert.deepEqual(beds.find(b=>b.id==='B4').patient,[947,424]);
 });
+
+test('V5 wardrobe atlas is versioned separately from original immutable asset hashes',()=>{
+ const assets=read('assets.json');
+ const wardrobe=assets.wardrobe;
+ assert.equal(wardrobe.path,'assets/player-wardrobe.avif');
+ const bytes=fs.readFileSync(path.join(root,wardrobe.path));
+ assert.equal(hash(bytes),wardrobe.sha256);
+ assert(bytes.length<20000,'single optimized sprite atlas must remain small for mobile');
+ assert.equal(bytes.toString('ascii',4,8),'ftyp');
+});
