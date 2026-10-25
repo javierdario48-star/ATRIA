@@ -13,6 +13,7 @@ import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecy
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createLocalShift} from './local-shift.js';
 import {createReceptionAssignment} from './reception-assignment.js';
+import {directPatientIntent} from './patient-selection.js';
 import {createReceptionOnboarding} from '../ui/reception-onboarding.js';
 import {createShiftFlow,receptionAcuity} from '../clinical/shift-flow.js';
 import {receptionBoardHTML} from '../ui/reception-board.js';
@@ -303,12 +304,22 @@ export async function createApplication({document,window,content,signal}){
     lastReceivedPatientCount=count;
     const revision=patientUid+':'+value.clinical.room.revision;
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
-    if(pendingPatientSelection?.uid===patientUid){
-     const selected=pendingPatientSelection;pendingPatientSelection=null;
-     focusedPatientUid=patientUid;focusedNpc=null;
-     close();const p=world.snapshot().patients.find(p=>p.uid===patientUid);
-     if(p){if(selected.kind==='monitor')clinicalUI.showMonitor(p);
-      else {patientWheel.show(p);guidePatientWheel();clinicalChecklist.show(p.uid,guardSession?.read());}}
+    if(pendingPatientSelection){
+     const status=directPatientIntent(value.clinical,pendingPatientSelection.uid,self);
+     if(status==='occupied'||status==='unavailable'){
+      pendingPatientSelection=null;pendingPatientAction=null;
+      toast(status==='occupied'?'Otro médico ya atiende ese paciente.':'El paciente ya no está disponible.');
+     }else if(status==='selected'){
+      const selected=pendingPatientSelection;pendingPatientSelection=null;
+      focusedPatientUid=selected.uid;focusedNpc=null;
+      close();const p=world.snapshot().patients.find(p=>p.uid===selected.uid);
+      if(p){if(selected.kind==='monitor')clinicalUI.showMonitor(p);
+       else if(pendingPatientAction?.uid===p.uid){
+        const action=pendingPatientAction;pendingPatientAction=null;
+        if(action.destination)clinicalUI.chooseDestination(p,action.destination);
+        else clinicalUI.showDiagnosis(p);
+       }else {patientWheel.show(p);guidePatientWheel();clinicalChecklist.show(p.uid,guardSession?.read());}}
+     }
     }
     if(dialog.open&&dialog.dataset.panel==='reception')
      ui('modalContent').innerHTML=receptionBoardHTML(value.clinical.shift,content.cases,self);
@@ -870,16 +881,16 @@ export async function createApplication({document,window,content,signal}){
      renderGuardCommunication();updateHud();}
    }
    if(durableClient){
-    if(guardSession.read()?.patient.uid!==p.uid){
+    const selection=directPatientIntent(guardSession.read(),p.uid,social.state().user?.id);
+    if(selection==='unavailable')return toast('El paciente ya no está disponible.');
+    if(selection==='occupied')return toast('Ese paciente está a cargo de otro médico.');
+    if(selection==='claim'){
      pendingPatientSelection={uid:p.uid,kind:entity.kind};durableClient.claim(p.uid);
      toast('Seleccionando el paciente y verificando el responsable…');return;
     }
-    if(world.snapshot().mode==='competitive'){
-     const owner=guardSession.read()?.competition?.ownerId;
-     if(owner&&owner!==social.state().user?.id)
-      toast('Paciente a cargo de otro médico. Podés observar sus decisiones.');
-     else durableClient.claim(p.uid);
-    }
+    // This UID is already the server-confirmed bedside focus for this actor.
+    // Do not let a previously visited bed retain the chat/clinical target.
+    focusedPatientUid=p.uid;focusedNpc=null;
    }
    if(pendingPatientAction?.uid===p.uid){
     const action=pendingPatientAction;pendingPatientAction=null;
