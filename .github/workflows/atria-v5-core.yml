@@ -393,6 +393,11 @@ jobs:
           do
             node qa/v5/durable-cooperative-browser.mjs
           done
+      - name: Two independent cooperative doctors claim their bedside, greet once and share one native transcript
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/cooperative-reception-browser.mjs
       - name: Delayed bootstrap and three doctors with RTC signaling still pending
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
