@@ -1,6 +1,7 @@
 import {FrameScheduler} from '../../app/frame-scheduler.js';
 import {Lifecycle} from '../../app/lifecycle.js';
 import {createWorld} from './world.js';
+import {SCRUB_COLORS,AVATAR_SEXES} from './avatar-appearance.js';
 import {createHospitalRenderer} from '../render/hospital.js';
 import {createPresentationTimeline} from '../render/presentation-timeline.js';
 import {createGuardSession} from '../clinical/guard-session.js';
@@ -37,12 +38,12 @@ import {createLobbyDirectory} from '../ui/lobby-directory.js';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PROFILE_KEY='atria.v5.profile.v1';
 const PROGRESS_KEY='atria.v5.progress.v1';
-const supportedColors=new Set(['navy','green','gray','pink','teal']);
+const supportedColors=new Set(SCRUB_COLORS);
 export function readProfile(storage){
  try{
   const saved=JSON.parse(storage.getItem(PROFILE_KEY)||storage.getItem('clinicalShift.profile.v1')||'null');
-  return {name:String(saved?.name||'Médico').slice(0,32),scrubColor:supportedColors.has(saved?.scrubColor)?saved.scrubColor:'navy'};
- }catch{return {name:'Médico',scrubColor:'navy'};}
+  return {name:String(saved?.name||'Médico').slice(0,32),scrubColor:supportedColors.has(saved?.scrubColor)?saved.scrubColor:'navy',sex:AVATAR_SEXES.includes(saved?.sex)?saved.sex:'male'};
+ }catch{return {name:'Médico',scrubColor:'navy',sex:'male'};}
 }
 
 /** Exactly one owner for boot, input listeners, RAF and all mode transitions. */
@@ -931,12 +932,14 @@ export async function createApplication({document,window,content,signal}){
   const s=world.snapshot();
   open(`<h2>Perfil</h2><p>${esc(profile.name)} · Nivel ${progress.read().level} · ${progress.read().xp} XP</p><p>Los progresos de la versión estable se conservan separados de esta prueba.</p>
    <label class="field">Alias<input id="aliasChoice" value="${esc(profile.name)}" maxlength="32"></label>
-   <label class="field">Ambo<select id="colorChoice">${['navy','green','gray','pink','teal'].filter(k=>content.assets['player-'+k]).map(k=>`<option value="${k}" ${k===profile.scrubColor?'selected':''}>${esc(content.colors[k]?.[0]||k)}</option>`).join('')}</select></label>
+   <label class="field">Sexo del personaje<select id="sexChoice"><option value="male" ${profile.sex!=='female'?'selected':''}>Masculino</option><option value="female" ${profile.sex==='female'?'selected':''}>Femenino</option></select></label>
+   <label class="field">Ambo<select id="colorChoice">${SCRUB_COLORS.filter(k=>content.assets['player-'+k]).map(k=>`<option value="${k}" ${k===profile.scrubColor?'selected':''}>${esc(content.colors[k]?.[0]||k)}</option>`).join('')}</select></label>
    <div class="actions"><button data-action="close">Cerrar</button><button data-action="save-profile" ${s.phase==='guard'?'disabled':''}>Guardar</button></div>`);
  }
- ui('playerName').value=profile.name;ui('enterButton').textContent='Entrar al hospital →';ui('enterButton').disabled=false;
+ ui('playerName').value=profile.name;ui('startingSex').value=profile.sex;ui('startingColor').value=profile.scrubColor;ui('enterButton').textContent='Entrar al hospital →';ui('enterButton').disabled=false;
  listen(ui('profileForm'),'submit',event=>{
-  event.preventDefault();hospitalAudio.unlock();profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico'};
+  event.preventDefault();hospitalAudio.unlock();profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico',
+   sex:ui('startingSex').value,scrubColor:ui('startingColor').value};
   social.setProfile(profile);
   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{/* session still usable */}
   world=createWorld(content,profile);enterLobby();
@@ -1040,7 +1043,7 @@ export async function createApplication({document,window,content,signal}){
    const p=world.snapshot().patients.find(p=>p.uid===clinicalUI.patientUid());if(p)clinicalUI.showPatient(p);
   }
   if(button.dataset.action==='save-profile'){
-   const next={name:ui('aliasChoice').value.trim().slice(0,32)||'Médico',scrubColor:ui('colorChoice').value};
+   const next={name:ui('aliasChoice').value.trim().slice(0,32)||'Médico',scrubColor:ui('colorChoice').value,sex:ui('sexChoice').value};
    world.setAppearance(next);profile=next;
    social.setProfile(profile);
    try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
