@@ -26,4 +26,4 @@ export const CLINICAL_BOT_PLAYBOOK=Object.freeze({
   studies:['chole_us'],meds:['Enfermera nada por boca','Enfermera una vía',
    'Enfermera Ringer 500 ml y ceftriaxona 1 g y metronidazol 500 mg'],
   consult:'/consulta cirugia',wait:75}
-};);
+});
