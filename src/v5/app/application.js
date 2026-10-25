@@ -22,6 +22,7 @@ import {canHearWardDoctor,canHearWardPatient} from '../ui/spatial-ward-speech.js
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {createHospitalAudio} from '../ui/hospital-audio.js';
 import {createChatTranscript} from '../ui/chat-transcript.js';
+import {visibleWardChatRows,pruneWardSpeechPreviews} from '../ui/guard-chat-view.js';
 import {clinicalCompletions,spellingSuggestions} from '../ui/clinical-autocomplete.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
 import {clinicalWorkflow} from '../ui/clinical-workflow.js';
@@ -506,11 +507,8 @@ export async function createApplication({document,window,content,signal}){
   if(!guardSession)return;
   const clinicalState=guardSession.read(),scene=world.snapshot(),self=social.state().user?.id,
     nearBed=canHearWardPatient(scene,clinicalState.patient.uid,world.navigation),
-    rows=clinicalState.messages.slice(-300)
-     .filter(row=>!coopRoomId||row.role==='player'
-      ?(!coopRoomId||canHearWardDoctor(scene,row.actorId,self,world.navigation))
-      :nearBed)
-     .map(row=>({...row,text:publicClinicalText(row.text)}));
+    rows=visibleWardChatRows({clinicalState,scene,self,roomId:coopRoomId,
+     navigation:world.navigation});
   // One contextual nurse, always modest: asks about the next decision based
   // only on confirmed state or the doctor's OWN diagnostic impression.
   const workflow=clinicalWorkflow(clinicalState),cue=workflow?.cue,patientId=clinicalState.patient.uid;
@@ -556,10 +554,8 @@ export async function createApplication({document,window,content,signal}){
   }
   if(seenGuardMessages.size>800)for(const id of [...seenGuardMessages].slice(0,seenGuardMessages.size-500))
    seenGuardMessages.delete(id);
-  const ids=new Set(rows.map(row=>row.id)),time=window.performance.now();
-  for(const [id,preview] of fastWardSpeech)
-   if(ids.has(id)||time-preview.time>15000||
-      !canHearWardDoctor(scene,preview.actorId,self,world.navigation))fastWardSpeech.delete(id);
+  pruneWardSpeechPreviews(fastWardSpeech,{rows,scene,self,
+   navigation:world.navigation,now:window.performance.now()});
   // The final sentence is derived from one authenticated clinical receipt.
   const farewell=finalNurseMessage(clinicalState);
   if(farewell&&(!coopRoomId||nearBed)&&!seenNpcMessages.has(farewell.id)){
