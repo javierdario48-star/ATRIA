@@ -299,9 +299,11 @@ export async function createApplication({document,window,content,signal}){
      const p=world.snapshot().patients.find(p=>p.uid===receptionResult.uid);
      if(p){patientWheel.show(p);guidePatientWheel();clinicalChecklist.show(p.uid,guardSession?.read());}
      if(receptionResult.firstContact){
-      // Route the greeting through the SAME authenticated clinical transport
-      // as the chat input. No synthetic NPC speech or bypass of patient owner.
-      void submitText('Hola ¿Qué te pasó?',{patientUid:receptionResult.uid});
+      // Server-confirmed focus is required. On returning to a shared patient,
+      // authenticated transcript history prevents repeating this greeting.
+      const alreadySpoken=value.clinical.messages?.some(row=>
+       row.role==='player'&&row.actorId===self);
+      if(!alreadySpoken)void submitText('Hola ¿Qué te pasó?',{patientUid:receptionResult.uid});
      }
     }
     for(const [,receipt] of value.claims||[])if(receipt?.actorId===self){
@@ -1029,7 +1031,7 @@ export async function createApplication({document,window,content,signal}){
    cancelReceptionAssignment();close();
    const target=world.navigation.center(...patient.approach);
    if(world.target(target.x,target.y)||world.patientInRange(patient.uid)){
-    receptionAssignment.begin(patient.uid,{firstContact:competitive&&!current?.ownerId});
+    receptionAssignment.begin(patient.uid,{firstContact:!competitive||!current?.ownerId});
     toast('Yendo a '+patient.bedId+(competitive?' · te lo asignaré al llegar.':'.'));
    }else toast('No hay una ruta libre hacia el box.');
    return;

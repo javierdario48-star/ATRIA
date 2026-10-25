@@ -49,10 +49,17 @@ test('failed approach, changed destination and user cancellation never create gh
  assert.equal(flow.arrive(stopped,()=>true),null);
  assert.equal(flow.status(),null);
 });
-test('cooperative reception follows confirmed focus without competitive ownership gating',()=>{
- const {flow}=fixture();
- flow.begin('p1');
- assert.equal(flow.observe({...clinical(null),shift:{...clinical(null).shift,mode:'coop'}},'doctor').status,'assigned');
+test('cooperative reception requires arrival even when shared focus already points at the patient',()=>{
+ const {flow,claimed}=fixture(),state={...clinical(null),shift:{...clinical(null).shift,mode:'coop'}};
+ flow.begin('p1',{firstContact:true});
+ assert.equal(flow.observe(state,'doctor'),null,'default room focus is not a bedside arrival');
+ assert.equal(flow.arrive(moving,()=>true),null);
+ assert.deepEqual(claimed,[]);
+ assert.equal(flow.arrive(stopped,()=>true),'claiming');
+ assert.deepEqual(claimed,['p1']);
+ assert.deepEqual(flow.observe(state,'doctor'),
+  {status:'assigned',uid:'p1',bedId:'B1',firstContact:true});
+ assert.equal(flow.observe(state,'doctor'),null,'never repeat after a server reconnection');
 });
 
 test('first reception claim authorizes exactly one greeting after arrival and server confirmation',()=>{
