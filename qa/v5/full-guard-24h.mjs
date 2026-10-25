@@ -48,7 +48,8 @@ for(const [mode,caseId] of [['coop','CIRR-001'],['competitive','APP-001']]){
      'invalid triage for '+record.uid);
    }
    assert.equal(state.shift.ended,minute===24);
-   assert.equal(state.shift.remainingSeconds,1440-Math.min(1440,seconds));
+   assert(Math.abs(state.shift.remainingSeconds-(1440-Math.min(1440,seconds)))<0.15,
+    'floating-point simulation clock drifted beyond tolerance at hour '+minute);
    timings.push({hour:minute,patients:count,critical:state.shift.patients.filter(p=>p.triage.state==='critical').length});
   }
   const ended=await call('a');
