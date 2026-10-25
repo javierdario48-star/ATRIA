@@ -112,6 +112,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/local-shift-browser.mjs
+      - name: Pixel map taps select their own patient, open Talk, receive native replies and cannot mint XP
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/local-direct-map-browser.mjs
 
   durable-guard-recovery:
     runs-on: ubuntu-latest
