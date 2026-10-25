@@ -81,6 +81,27 @@ export function createNavigation(map) {
     }
     return true;
   }
+  /** For short-range speech, reuse the authored wall and door topology.
+   * Furniture (state 3) blocks movement, not human voices. Closed doors
+   * (state 2) and solid walls (state 1) isolate adjacent treatment bays.
+   * This is a line-of-sight test, NOT another navigation or clinical owner.
+   */
+  function soundClear(ax,ay,bx,by) {
+    if (![ax,ay,bx,by].every(Number.isFinite)||
+      Math.min(ax,bx)<0||Math.min(ay,by)<0||
+      Math.max(ax,bx)>=width||Math.max(ay,by)>=height) return false;
+    const lowC=Math.floor(Math.min(ax,bx)/tileWidth);
+    const highC=Math.floor(Math.max(ax,bx)/tileWidth);
+    const lowR=Math.floor(Math.min(ay,by)/tileHeight);
+    const highR=Math.floor(Math.max(ay,by)/tileHeight);
+    for(let r=lowR;r<=highR;r++)for(let c=lowC;c<=highC;c++){
+      const state=states[r][c];
+      if(state!==1&&!(state===2&&!passable(c,r)))continue;
+      if(segmentRectangleDistanceSquared(ax,ay,bx,by,
+        c*tileWidth,r*tileHeight,(c+1)*tileWidth,(r+1)*tileHeight)<=1e-9)return false;
+    }
+    return true;
+  }
   const circleBlocked=(x,y,radius=PLAYER_RADIUS)=>!segmentClear(x,y,x,y,radius);
   function clearCenter(c,r,radius) {
     const point=center(c,r);
@@ -178,6 +199,6 @@ export function createNavigation(map) {
     if (complete) actor.target=null;
     return complete;
   }
-  return Object.freeze({tileAt,center,passable,nearest,route,move,target,circleBlocked,setDoor,
+  return Object.freeze({tileAt,center,passable,nearest,route,move,target,circleBlocked,setDoor,soundClear,
     tileWidth,tileHeight,width,height});
 }

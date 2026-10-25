@@ -171,3 +171,20 @@ test('invalid input cannot move an actor or replace its existing route', () => {
   nav.move(actor,-1);nav.move(actor,NaN);
   assert.deepEqual(actor,before);
 });
+
+test('sound occlusion uses the navigation wall and door state but not furniture',()=>{
+ const map=makeMap([
+  [0,0,1,0,0],
+  [0,0,2,0,0],
+  [0,0,3,0,0],
+ ],32,32,{doors:[{id:'divider',tiles:[[2,1]],initial_open:false}],
+  door_state:{divider:false}});
+ const nav=createNavigation(map);
+ assert.equal(nav.soundClear(48,48,112,48),false,'closed door');
+ assert.equal(nav.setDoor('divider',true),true);
+ assert.equal(nav.soundClear(48,48,112,48),true,'open door');
+ assert.equal(nav.soundClear(48,16,112,16),false,'solid wall');
+ assert.equal(nav.soundClear(48,80,112,80),true,'furniture is not soundproof');
+ assert.equal(nav.soundClear(-2,30,10,30),false);
+ assert.equal(nav.soundClear(NaN,30,10,30),false);
+});

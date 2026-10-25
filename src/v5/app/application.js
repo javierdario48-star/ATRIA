@@ -432,7 +432,7 @@ export async function createApplication({document,window,content,signal}){
      typeof text!=='string'||text.length>280||!social.isMember(userId))return;
   const key='player:'+userId+':'+id;
   if(seenGuardMessages.has(key)||fastWardSpeech.has(key)||
-    !canHearWardDoctor(world.snapshot(),userId,social.state().user?.id))return;
+    !canHearWardDoctor(world.snapshot(),userId,social.state().user?.id,world.navigation))return;
   const name=social.state().room?.members.find(m=>m.userId===userId)?.name||'Médico';
   const time=window.performance.now();
   fastWardSpeech.set(key,{id:key,name,text,time,actorId:userId});
@@ -444,10 +444,10 @@ export async function createApplication({document,window,content,signal}){
  function renderGuardCommunication(){
   if(!guardSession)return;
   const clinicalState=guardSession.read(),scene=world.snapshot(),self=social.state().user?.id,
-    nearBed=canHearWardPatient(scene,clinicalState.patient.uid),
+    nearBed=canHearWardPatient(scene,clinicalState.patient.uid,world.navigation),
     rows=clinicalState.messages.slice(-300)
      .filter(row=>!coopRoomId||row.role==='player'
-      ?(!coopRoomId||canHearWardDoctor(scene,row.actorId,self))
+      ?(!coopRoomId||canHearWardDoctor(scene,row.actorId,self,world.navigation))
       :nearBed)
      .map(row=>({...row,text:publicClinicalText(row.text)})),
     fragment=document.createDocumentFragment();
@@ -499,7 +499,7 @@ export async function createApplication({document,window,content,signal}){
   const ids=new Set(rows.map(row=>row.id)),time=window.performance.now();
   for(const [id,preview] of fastWardSpeech)
    if(ids.has(id)||time-preview.time>15000||
-      !canHearWardDoctor(scene,preview.actorId,self))fastWardSpeech.delete(id);
+      !canHearWardDoctor(scene,preview.actorId,self,world.navigation))fastWardSpeech.delete(id);
   history.length=0;
   // The final sentence is derived from one authenticated clinical receipt.
    const farewell=finalNurseMessage(clinicalState);
