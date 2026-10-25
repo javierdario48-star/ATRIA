@@ -13,7 +13,7 @@ import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecy
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createLocalShift} from './local-shift.js';
 import {createReceptionAssignment} from './reception-assignment.js';
-import {createDirectPatientSelection,directPatientIntent} from './patient-selection.js';
+import {createDirectPatientSelection,directPatientIntent,resolveClinicalMessageTarget} from './patient-selection.js';
 import {createReceptionOnboarding} from '../ui/reception-onboarding.js';
 import {createShiftFlow,receptionAcuity} from '../clinical/shift-flow.js';
 import {receptionBoardHTML} from '../ui/reception-board.js';
@@ -821,17 +821,13 @@ export async function createApplication({document,window,content,signal}){
   }
   const session=guardSession;
   try{
-   const competitive=durableClient&&session.read()?.competition?.mode==='competitive';
-   // Free chat does not carry the globally displayed patient UID. Explicit
-   // patient-modal commands can still commit their immutable target.
-   // Explicit reception focus is authoritative only for this doctor's OWN bed.
-   // Never fall back to the global room patient in competitive mode.
-   const selected=patientUid||focusedPatientUid;
-   const self=social.state().user?.id;
-   const record=session.read()?.shift?.patients?.find(p=>p.uid===selected);
-   const permitted=!!selected&&(!competitive||record?.ownerId===self);
-   const committedUid=permitted?selected:(!competitive&&durableClient?session.read()?.patient.uid:null);
-   const receipt=await session.post({id,text,...(committedUid?{targetPatientUid:committedUid}:{})});
+   // The view's patient may be another doctor's. Keep the one read-only
+   // target policy beside direct selection, not inside the UI coordinator.
+   const targetPatientUid=resolveClinicalMessageTarget({
+    clinical:session.read(),explicitUid:patientUid,focusedUid:focusedPatientUid,
+    actorId:social.state().user?.id,durable:!!durableClient
+   });
+   const receipt=await session.post({id,text,...(targetPatientUid?{targetPatientUid}:{})});
    if(receipt?.status==='rejected'&&receipt.reason==='approach-patient-to-claim')
     toast('Acercate a una cama para hablar con ese paciente.');
    if(receipt?.status==='rejected'&&receipt.reason==='ambiguous-patient-selection')

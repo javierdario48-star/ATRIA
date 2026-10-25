@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createDirectPatientSelection,directPatientIntent} from './patient-selection.js';
+import {createDirectPatientSelection,directPatientIntent,resolveClinicalMessageTarget} from './patient-selection.js';
 
 const state=(focus='B1',owner1='doctorA',owner2='doctorA',mode='competitive')=>({
  patient:{uid:focus},shift:{mode,ended:false,patients:[
@@ -64,4 +64,20 @@ test('new explicit tap replaces old pending selection, without implicit claim',(
  assert.equal(selection.begin('', 'patient'),false);
  assert.equal(selection.begin('B1','invalid'),false);
  assert.equal(selection.status(),null);
+});
+
+test('outgoing competitive messages choose the explicitly focused owned patient, not another physician view',()=>{
+ const clinical={...state('B1','doctorB','doctorA'),competition:{mode:'competitive'}};
+ assert.equal(resolveClinicalMessageTarget({clinical,focusedUid:'B2',actorId:'doctorA',durable:true}),'B2');
+ assert.equal(resolveClinicalMessageTarget({clinical,explicitUid:'B2',focusedUid:'B1',actorId:'doctorA',durable:true}),'B2');
+ assert.equal(resolveClinicalMessageTarget({clinical,focusedUid:'B1',actorId:'doctorA',durable:true}),null);
+ assert.equal(resolveClinicalMessageTarget({clinical,actorId:'doctorA',durable:true}),null,
+  'a global rival snapshot must never become the default clinical destination');
+});
+test('cooperative and local messages retain their existing context resolution',()=>{
+ const coop=state('B1',null,null,'coop');
+ assert.equal(resolveClinicalMessageTarget({clinical:coop,durable:true}), 'B1');
+ assert.equal(resolveClinicalMessageTarget({clinical:coop,explicitUid:'B2',durable:true}), 'B2');
+ assert.equal(resolveClinicalMessageTarget({clinical:coop,focusedUid:'B2',durable:false}), 'B2');
+ assert.equal(resolveClinicalMessageTarget({clinical:coop,durable:false}), null);
 });

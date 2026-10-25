@@ -39,3 +39,18 @@ export function createDirectPatientSelection(){
   status:()=>requested?{...requested}:null
  });
 }
+
+/**
+ * The outgoing UID is a hint, never clinical authorization. Competitive
+ * snapshots may show another doctor's patient; only our confirmed owned UID
+ * can be forwarded. The single server authority checks proximity again.
+ */
+export function resolveClinicalMessageTarget({clinical,explicitUid=null,focusedUid=null,actorId=null,durable=false}={}){
+ const competitive=durable&&clinical?.competition?.mode==='competitive';
+ const selected=explicitUid||focusedUid;
+ const record=clinical?.shift?.patients?.find(p=>p.uid===selected);
+ if(selected&&(!competitive||record?.ownerId===actorId))return selected;
+ // In cooperative guard the shared active patient is a valid default;
+ // competitive must not borrow the last published global patient snapshot.
+ return durable&&!competitive?clinical?.patient?.uid??null:null;
+}
