@@ -645,14 +645,15 @@ export async function createApplication({document,window,content,signal}){
   ui('status').textContent=guard&&clinical?.patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='competitive'?'Competitivo':s.mode==='coop'?'Cooperativo':s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':social.state().user?'Lobby social · 5.0 experimental':'Lobby local · 5.0 experimental';
   if(guard)patientClinical.update(s.patients.find(p=>p.uid===clinical?.patient.uid),clinical);else patientClinical.hide();
   if(guard)clinicalChecklist.update(clinical);else clinicalChecklist.hide();
-  unassignedGlow.update(s.phase,s.mode,s.patients,clinical?.shift?.patients||[]);
+  const receptionPatients=(clinical?.shift||localReceptionSnapshot())?.patients||[];
+  unassignedGlow.update(s.phase,s.mode,s.patients,receptionPatients,focusedPatientUid);
   if(guard&&patientWheel.isOpen())guidePatientWheel();
   ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
   ui('receptionButton').hidden=!guard;
   receptionOnboarding.update({
-   phase:s.phase,mode:s.mode,patients:clinical?.shift?.patients||[],
-   selfId:social.state().user?.id,ended:clinical?.shift?.ended,
-   selecting:!!receptionAssignment.status()
+   phase:s.phase,mode:s.mode,patients:receptionPatients,
+   selfId:social.state().user?.id,ended:clinical?.shift?.ended||localAdmissions?.ended(),
+   focusedPatientUid,selecting:!!receptionAssignment.status()||!!directSelection.status()
   });
   ui('peopleButton').textContent=guard?'Historia':'Personas';
   const career=progress.read();ui('playerProgress').textContent='Nivel '+career.level+' · '+(career.xp%200)+'/200 XP';world.setLevel(career.level);
@@ -884,6 +885,8 @@ export async function createApplication({document,window,content,signal}){
     }
     // This UID is already the server-confirmed bedside focus for this actor.
     // Do not let a previously visited bed retain the chat/clinical target.
+    focusedPatientUid=p.uid;focusedNpc=null;
+   }else if(guardSession?.read()?.patient.uid===p.uid){
     focusedPatientUid=p.uid;focusedNpc=null;
    }
    if(pendingPatientAction?.uid===p.uid){

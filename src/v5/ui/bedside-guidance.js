@@ -19,20 +19,24 @@ export function suggestedBedsideAction(state){
 
 /** Map highlight is a visual hint, never a click target or owner claim.
  * The original map interaction remains responsible for patient selection. */
-export function unassignedPatientMarkers(phase,mode,patients=[],records=[]){
- if(phase!=='guard'||mode!=='competitive'||!Array.isArray(patients))return [];
+export function unassignedPatientMarkers(phase,mode,patients=[],records=[],focusedPatientUid=null){
+ if(phase!=='guard'||!['competitive','coop','solo','apprentice'].includes(mode)||
+  !Array.isArray(patients))return [];
  const byUid=new Map((records||[]).map(p=>[p.uid,p]));
  return patients.filter(p=>{
   const r=byUid.get(p.uid);
-  return r&&!r.ownerId&&!r.closed&&!r.departed&&!r.patientDied&&
-   !p.departed&&Number.isFinite(p.x)&&Number.isFinite(p.y);
+  if(!r||r.closed||r.departed||r.patientDied||p.departed||
+   !Number.isFinite(p.x)||!Number.isFinite(p.y))return false;
+  // Competitive ownership is exclusive. Other modes guide the player toward
+  // beds other than their focused patient without inventing ownership.
+  return mode==='competitive'?!r.ownerId:p.uid!==focusedPatientUid;
  }).map(p=>({uid:p.uid,x:p.x,y:p.y}));
 }
 
 export function createUnassignedPatientGlow({document}){
  const elements=new Map();
- function update(phase,mode,patients,records){
-  const shown=unassignedPatientMarkers(phase,mode,patients,records);
+ function update(phase,mode,patients,records,focusedPatientUid=null){
+  const shown=unassignedPatientMarkers(phase,mode,patients,records,focusedPatientUid);
   const active=new Set(shown.map(p=>p.uid));
   for(const [uid,item] of elements)if(!active.has(uid)){item.element.remove();elements.delete(uid);}
   for(const p of shown){

@@ -22,11 +22,25 @@ test('visual coaching progresses from talk to nurse diagnosis question to valid 
  s.patient.pendingTreatments=[];s.patient.caseEnded=true;
  assert.equal(suggestedBedsideAction(s),null);
 });
-test('unassigned glow is only for available competitive patients',()=>{
+test('selectable glow respects availability and mode ownership',()=>{
  const points=[{uid:'a',x:100,y:120},{uid:'b',x:200,y:150},{uid:'c',x:30,y:20}];
  const records=[{uid:'a',ownerId:null},{uid:'b',ownerId:'other'},
   {uid:'c',closed:true,ownerId:null}];
  assert.deepEqual(unassignedPatientMarkers('guard','competitive',points,records).map(x=>x.uid),['a']);
- assert.deepEqual(unassignedPatientMarkers('guard','coop',points,records),[]);
+ assert.deepEqual(unassignedPatientMarkers('guard','coop',points,records).map(x=>x.uid),['a','b']);
+ assert.deepEqual(unassignedPatientMarkers('guard','solo',points,records,'a').map(x=>x.uid),['b']);
+ assert.deepEqual(unassignedPatientMarkers('guard','apprentice',points,records,'b').map(x=>x.uid),['a']);
  assert.deepEqual(unassignedPatientMarkers('lobby','competitive',points,records),[]);
+});
+
+test('departed, deceased, and focused shared beds do not glow',()=>{
+ const points=[{uid:'a',x:5,y:8},{uid:'b',x:8,y:9,departed:true},
+  {uid:'c',x:9,y:12},{uid:'d',x:20,y:21}];
+ const records=[{uid:'a',patientDied:true},{uid:'b'},{uid:'c',closed:true},{uid:'d'}];
+ for(const mode of ['competitive','coop','solo','apprentice']){
+  assert.deepEqual(unassignedPatientMarkers('guard',mode,points,records).map(x=>x.uid),['d']);
+  assert.deepEqual(unassignedPatientMarkers('guard',mode,points,records,'d').map(x=>x.uid),
+   mode==='competitive'?['d']:[]);
+  assert.deepEqual(unassignedPatientMarkers('lobby',mode,points,records),[]);
+ }
 });

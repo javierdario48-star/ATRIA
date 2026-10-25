@@ -1,8 +1,14 @@
-/** Presentation-only competitive reception hint. No ownership or clinical mutations. */
-export function needsReceptionOnboarding({phase,mode,patients=[],selfId,ended=false,selecting=false}={}){
- return phase==='guard'&&mode==='competitive'&&!ended&&!selecting&&!!selfId&&
-  Array.isArray(patients)&&patients.some(p=>!p.closed&&!p.departed&&!p.patientDied&&!p.ownerId)&&
-  !patients.some(p=>p.ownerId===selfId&&!p.closed&&!p.departed&&!p.patientDied);
+/** Presentation-only reception hint for every guard mode. No ownership or clinical mutations. */
+export function needsReceptionOnboarding({phase,mode,patients=[],selfId,
+ ended=false,selecting=false,focusedPatientUid=null}={}){
+ if(phase!=='guard'||ended||selecting||!Array.isArray(patients))return false;
+ const active=patients.filter(p=>!p.closed&&!p.departed&&!p.patientDied);
+ if(!active.length)return false;
+ // Shared/local guards do not claim exclusive ownership: stop the cue only
+ // after this player selects a real bedside, regardless of teammate activity.
+ if(['solo','apprentice','coop'].includes(mode))return !focusedPatientUid;
+ return mode==='competitive'&&!!selfId&&active.some(p=>!p.ownerId)&&
+  !active.some(p=>p.ownerId===selfId);
 }
 export function createReceptionOnboarding({button,guide,window}){
  if(!button||!guide||!window)throw Error('reception hint needs its host elements');

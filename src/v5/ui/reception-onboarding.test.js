@@ -7,7 +7,11 @@ test('first patient onboarding is visible only until first competitive bedside s
  assert.equal(needsReceptionOnboarding(base),true);
  assert.equal(needsReceptionOnboarding({...base,selecting:true}),false);
  assert.equal(needsReceptionOnboarding({...base,phase:'lobby'}),false);
- assert.equal(needsReceptionOnboarding({...base,mode:'coop'}),false);
+ assert.equal(needsReceptionOnboarding({...base,mode:'coop'}),true);
+ assert.equal(needsReceptionOnboarding({...base,mode:'solo',selfId:null}),true);
+ assert.equal(needsReceptionOnboarding({...base,mode:'apprentice',selfId:null}),true);
+ assert.equal(needsReceptionOnboarding({...base,mode:'coop',focusedPatientUid:'a'}),false);
+ assert.equal(needsReceptionOnboarding({...base,mode:'solo',focusedPatientUid:'b'}),false);
  assert.equal(needsReceptionOnboarding({...base,ended:true}),false);
  assert.equal(needsReceptionOnboarding({...base,patients:base.patients.map(p=>({...p,ownerId:'rival'}))}),false);
  assert.equal(needsReceptionOnboarding({...base,patients:[{uid:'a',ownerId:'doctor'},base.patients[1]]}),false);
@@ -27,4 +31,12 @@ test('onboarding only updates button highlighting and an inert guide',()=>{
  assert.equal(view.update({...base,selecting:true}),false);
  assert(!classes.has('reception-highlight'));
  assert.equal(guide.hidden,true);
+});
+
+test('a shared reception cue follows personal selection, not other doctor ownership',()=>{
+ const room={...base,mode:'coop',patients:[{uid:'a',ownerId:'teammate'}]};
+ assert.equal(needsReceptionOnboarding(room),true);
+ assert.equal(needsReceptionOnboarding({...room,focusedPatientUid:'a'}),false);
+ assert.equal(needsReceptionOnboarding({...room,selecting:true}),false);
+ assert.equal(needsReceptionOnboarding({...room,patients:[{uid:'a',closed:true}]}),false);
 });
