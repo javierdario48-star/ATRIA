@@ -220,3 +220,60 @@ test('competitive manual claim on a rival bed never hijacks the physician focus,
   assert.equal(restored.clinical.shift.patients[1].ownerId,'a');
  }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('one competitive physician retains two independent patient histories when switching beds and reconnecting',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'atria-own-bed-switch-'));
+ const store=createSqliteGuardStore(path.join(dir,'guard.sqlite'));
+ let now=1700000000000,authority;
+ const makeAuthority=()=>createDurableGuardAuthority({store,content,now:()=>now,maxSteps:11000});
+ authority=makeAuthority();
+ const roomId='two-beds-one-owner';
+ const call=(actorId,extra={})=>authority.transact({roomId,actorId,...extra});
+ try{
+  const opened=await authority.bootstrap({roomId,caseId:'PERI-PBE-001',
+   members:[{id:'a',name:'Ana'},{id:'b',name:'Bruno'}],hostId:'a',actorId:'a',mode:'competitive'});
+  const [first,second]=opened.clinical.shift.patients;
+  const navigation=createWorld(content,{id:'a',name:'Ana'}).navigation;
+  const position=record=>navigation.center(...content.beds.find(x=>x.id===record.bedId).approach);
+  const greeting='Hola ¿Qué te pasó?';
+  async function go(record,sequence){
+   const point=position(record);
+   const sent=await call('b',{motion:[point.x,point.y],motionSequence:sequence});
+   assert.equal(sent.clinical.shift.patients.length,2);
+   now+=25000;
+   const selected=await call('b',{claim:record.uid});
+   assert.equal(selected.clinical.patient.uid,record.uid,'server must accept intended bedside UID');
+   assert.equal(selected.clinical.shift.patients.find(x=>x.uid===record.uid).ownerId,'b');
+   return selected;
+  }
+  await go(first,1);
+  const a=await call('b',{commands:[{id:'first-history',text:greeting,targetPatientUid:first.uid}]});
+  assert(a.acknowledgements[0].clinical.some(x=>x.kind==='history.ask'&&x.status==='executed'&&x.receipt?.message));
+  assert.equal(a.clinical.patient.uid,first.uid);
+  const firstFacts=structuredClone(a.clinical.patient.intentHistory);
+  assert(firstFacts.length>0);
+  await go(second,2);
+  const b=await call('b',{commands:[{id:'second-history',text:greeting,targetPatientUid:second.uid}]});
+  assert(b.acknowledgements[0].clinical.some(x=>x.kind==='history.ask'&&x.status==='executed'&&x.receipt?.message));
+  assert.equal(b.clinical.patient.uid,second.uid);
+  const secondFacts=structuredClone(b.clinical.patient.intentHistory);
+  assert(secondFacts.length>0);
+  assert(!b.clinical.room.transcript.some(x=>x.id==='first-history'),'another bed cannot inherit dialogue');
+  await go(first,3);
+  const returned=await call('b');
+  assert.deepEqual(returned.clinical.patient.intentHistory,firstFacts);
+  assert(returned.clinical.room.transcript.some(x=>x.id==='first-history'));
+  assert(!returned.clinical.room.transcript.some(x=>x.id==='second-history'));
+  assert(returned.clinical.shift.patients.slice(0,2).every(x=>x.ownerId==='b'));
+  assert.equal(returned.claims.length,0,'switching focus cannot mint experience');
+  authority=makeAuthority();
+  const restored=await call('b');
+  assert.equal(restored.clinical.patient.uid,first.uid);
+  assert.deepEqual(restored.clinical.patient.intentHistory,firstFacts);
+  await go(second,4);
+  const back=await call('b');
+  assert.deepEqual(back.clinical.patient.intentHistory,secondFacts);
+  assert(back.clinical.room.transcript.some(x=>x.id==='second-history'));
+ }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
+});
