@@ -48,6 +48,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  function peer(member,initiator){
   const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roster.find(x=>x.userId===member.userId)?.motionSession,link:null};
   entry.link=createWardPeer({RTCPeerConnection:window.RTCPeerConnection,initiator,
+   scope:privateRoomMotionPrefix(room.id),
    signal:description=>api('',{signal:{type:description.type,fromUserId:user.id,fromPeerId:peerId,toPeerId:member.peerId,description}},true),
    onMessage:packet=>{if(!disposed&&peers.get(entry.id)===entry&&room?.id===entry.roomId&&packet.roomId===entry.roomId&&room.members.some(x=>x.userId===entry.id))onPacket(entry.id,packet);}});
   peers.set(member.userId,entry);return entry;

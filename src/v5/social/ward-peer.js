@@ -18,8 +18,11 @@ export function createWardPacketCodec(){
 /** Signaling is supplied by the existing authenticated social API. SDP uses
  * the same STUN configuration as V4. Polling is driven by the application RAF.
  */
-export function createWardPeer({RTCPeerConnection,initiator,signal,onMessage,onState=()=>{}}){
- let pc,codec=createWardPacketCodec(),negotiationId=initiator?crypto.randomUUID():null;
+export function createWardPeer({RTCPeerConnection,initiator,signal,onMessage,onState=()=>{},scope=''}) {
+ if(typeof scope!=='string'||scope.length>50)throw Error('invalid ward SDP scope');
+ // SDP mailboxes are addressed by peer, not room. Fence stale offers/ICE
+ // from a previous guard before touching the *new* peer connection.
+ let pc,codec=createWardPacketCodec(),negotiationId=initiator?scope+crypto.randomUUID():null;
  let channel=null,disposed=false,started=false,lastDescription='',sending=false,lastCandidates='';
  const candidates=[],remoteCandidates=new Map(),acceptedCandidates=new Set();
  function reset(){
@@ -42,6 +45,7 @@ export function createWardPeer({RTCPeerConnection,initiator,signal,onMessage,onS
   async start(){if(started||disposed||!initiator)return;started=true;attach(pc.createDataChannel('atria-v5-coop',{ordered:true}));await pc.setLocalDescription(await pc.createOffer());},
   async receive(description){
    if(disposed||typeof description?.negotiationId!=='string'||description.negotiationId.length>100)return;
+   if(scope&&!description.negotiationId.startsWith(scope))return;
    if(description.type==='offer'&&!initiator){
     if(negotiationId&&negotiationId!==description.negotiationId)reset();negotiationId=description.negotiationId;
    }else if(description.negotiationId!==negotiationId)return;

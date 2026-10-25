@@ -38,3 +38,36 @@ test('a resumed guest replaces its provisional old offer instead of mixing two R
  assert.equal(pcs.length,2);assert(pcs[0].closed);assert.equal(pcs[1].remoteDescription.sdp,'new offer');
  retired.onmessage({data:createWardPacketCodec().encode({text:'stale command'})[0]});assert.equal(messages.length,0);link.dispose();
 });
+
+test('new room RTC scope ignores previous room SDP and ICE before the guest may reset its peer',async()=>{
+ const pcs=[],signals=[];
+ class Peer{
+  constructor(){pcs.push(this);this.connectionState='new';}
+  createDataChannel(){return {readyState:'connecting',close(){}};}
+  async createOffer(){return {type:'offer',sdp:'a=ice-ufrag:new'};}
+  async createAnswer(){return {type:'answer',sdp:'a=ice-ufrag:accepted'};}
+  async setRemoteDescription(v){this.remoteDescription=v;}
+  async setLocalDescription(v){this.localDescription=v;}
+  async addIceCandidate(v){this.ice=v;}
+  close(){this.closed=true;}
+ }
+ const scope='ward-ccccaaaa-',old='ward-bbbbaaaa-';
+ const host=createWardPeer({RTCPeerConnection:Peer,initiator:true,scope,
+  signal:async v=>signals.push(v),onMessage:()=>{}});
+ await host.start();await host.maintain();
+ assert(signals[0].negotiationId.startsWith(scope));
+ const guest=createWardPeer({RTCPeerConnection:Peer,initiator:false,scope,
+  signal:async()=>{},onMessage:()=>{}});
+ const current=pcs.at(-1),count=pcs.length;
+ await guest.receive({type:'offer',sdp:'old-room-offer',negotiationId:old+'previous'});
+ await guest.receive({type:'ice',candidates:[{candidate:'stale'}],negotiationId:old+'previous'});
+ assert.equal(pcs.length,count,'stale room offer cannot create a replacement RTC connection');
+ assert.equal(current.remoteDescription,undefined);
+ await guest.receive({type:'offer',sdp:'new-room-offer',negotiationId:signals[0].negotiationId});
+ assert.equal(current.remoteDescription.sdp,'new-room-offer');
+ assert.equal(current.localDescription.type,'answer');
+ await guest.receive({type:'offer',sdp:'old-room-late-retry',negotiationId:old+'retry'});
+ assert.equal(pcs.length,count);
+ assert.equal(current.remoteDescription.sdp,'new-room-offer');
+ host.dispose();guest.dispose();
+});
