@@ -60,7 +60,19 @@ export async function createApplication({document,window,content,signal}){
  // Transient reception travel state is UI-only; the server remains the sole
  // authority for physical proximity, patient ownership and clinical commands.
  const receptionAssignment=createReceptionAssignment({
-  claim:uid=>durableClient?.claim(uid),
+  claim:uid=>{
+   if(durableClient)return durableClient.claim(uid);
+   // Same physical arrival controller for local guard. Reuse the already
+   // instantiated patient session and map interaction; no parallel owner.
+   const next=localSessions.get(uid);
+   if(!next)return false;
+   const firstContact=!next.read().messages.some(row=>row.role==='player');
+   receptionAssignment.cancel();
+   activateEntity({kind:'patient',patientUid:uid});
+   if(guardSession!==next)return false;
+   if(firstContact)void submitText('Hola ¿Qué te pasó?',{patientUid:uid});
+   return true;
+  },
   cancelClaim:uid=>durableClient?.cancelClaim(uid)
  });
  const cancelReceptionAssignment=()=>receptionAssignment.cancel();
@@ -1017,7 +1029,7 @@ export async function createApplication({document,window,content,signal}){
    cancelReceptionAssignment();close();
    const target=world.navigation.center(...patient.approach);
    if(world.target(target.x,target.y)||world.patientInRange(patient.uid)){
-    if(durableClient)receptionAssignment.begin(patient.uid,{firstContact:competitive&&!current?.ownerId});
+    receptionAssignment.begin(patient.uid,{firstContact:competitive&&!current?.ownerId});
     toast('Yendo a '+patient.bedId+(competitive?' · te lo asignaré al llegar.':'.'));
    }else toast('No hay una ruta libre hacia el box.');
    return;
@@ -1135,11 +1147,13 @@ export async function createApplication({document,window,content,signal}){
     if(intent&&key!==lastMotion){lastMotion=key;durableClient.motion(intent.target,intent.sequence);}
     // The reception controller requests a claim only after local arrival.
     // The server independently verifies the bedside pose and ownership.
-    if(receptionAssignment.arrive(s.player,uid=>!!world.patientInRange(uid))==='missed')
-     toast('No llegaste al box. Elegí de nuevo en recepción.');
     durableClient.maintain(now,{moving:s.player.moving});
    }else if(replica){replica.maintain(now);const key=JSON.stringify(s.player.target||[s.player.x,s.player.y]);
     if(key!==lastMotion){lastMotion=key;const host=social.state().room?.hostUserId;if(host)social.send(host,{kind:'motion',target:s.player.target||[s.player.x,s.player.y]});}}
+   // The local client also confirms arrival, but only durable server claims
+   // can assign a multiplayer patient.
+   if(receptionAssignment.arrive(s.player,uid=>!!world.patientInRange(uid))==='missed')
+    toast('No llegaste al box. Elegí de nuevo en recepción.');
    publishCooperativeState(now);
    if(toastUntil&&now>=toastUntil){ui('toast').hidden=true;toastUntil=0;}
    const interaction=world.takeInteraction();if(interaction)activateEntity(interaction);
