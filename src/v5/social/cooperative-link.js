@@ -14,6 +14,14 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
  let motionSession=window.crypto.randomUUID(),motionEpoch=Math.max(Date.now(),Number(storage.getItem('atria.v5.motionEpoch')||0)+1),motionScope='';
  try{storage.setItem('atria.v5.motionEpoch',String(motionEpoch));}catch{}
  let savedRoom=storage.getItem(ROOM_KEY),presenceSequence=0;
+ let presenceFailures=0,rosterFailures=0,connectionIssue=false;
+ function markTransport(kind,ok){
+  const before=connectionIssue;
+  if(kind==='presence')presenceFailures=ok?0:Math.min(10,presenceFailures+1);
+  if(kind==='roster')rosterFailures=ok?0:Math.min(10,rosterFailures+1);
+  connectionIssue=presenceFailures>=2||rosterFailures>=2;
+  if(connectionIssue!==before)onSocial();
+ }
  async function api(path,body,signalEndpoint=false){
   const response=await window.fetch((signalEndpoint?'/api/lobby-sync':'/api/')+path,{method:body?'POST':'GET',cache:'no-store',keepalive:!!body,
    headers:{...(token?{Authorization:'Bearer '+token}:{}),...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
@@ -176,11 +184,13 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
    // driven by the existing RAF (no added timers or transport stack).
    if(!busy&&now>=nextPoll){
     nextPoll=now+260;
-    busy=pollPresence(now,pose).catch(()=>{}).finally(()=>busy=null);
+    busy=pollPresence(now,pose).then(()=>markTransport('presence',true),
+     ()=>markTransport('presence',false)).finally(()=>busy=null);
    }
    if(!busyRoster&&now>=nextRosterPoll){
     nextRosterPoll=now+260;
-    busyRoster=pollRoster(now).catch(()=>{}).finally(()=>busyRoster=null);
+    busyRoster=pollRoster(now).then(()=>markTransport('roster',true),
+     ()=>markTransport('roster',false)).finally(()=>busyRoster=null);
    }
    if(room&&!busySpeech&&now>=nextSpeechPoll){
     nextSpeechPoll=now+320;
@@ -196,7 +206,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   isMember:id=>!!room?.members.some(x=>x.userId===id),
   isHost:()=>!!user&&room?.hostUserId===user.id,
   credentials:()=>({clientKey,authorization:token?'Bearer '+token:null}),
-  state:()=>structuredClone({user,room,roster,lobbyMessages,friends,requests,invites,recovering:!!savedRoom,connections:[...peers.values()].map(p=>({id:p.id,state:p.link.state()}))}),
+  state:()=>structuredClone({user,room,roster,lobbyMessages,friends,requests,invites,connectionIssue,recovering:!!savedRoom,connections:[...peers.values()].map(p=>({id:p.id,state:p.link.state()}))}),
   dispose(){disposed=true;roomEpoch++;desiredRoomId=null;for(const p of peers.values())p.link.dispose();peers.clear();recovery.reset();}
  });
 }

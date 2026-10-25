@@ -3,13 +3,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createRequire} from 'node:module';
 import {createV5QaSocialServer} from '../../src/v5/social/room-membership-store.js';
+import {isSignalingEndpoint} from '../../src/v5/social/social-route-policy.js';
 import {createSqliteGuardStore} from './sqlite-guard-store.mjs';
 import {createDurableGuardAuthority} from '../../src/v5/server/durable-guard-authority.js';
 import {createClinicalHttp} from '../../src/v5/server/clinical-http.js';
 import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 
-export async function browserHarness({apiLatency=0,durable=false}={}){
+export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFallback=false}={}){
  const require=createRequire(import.meta.url);
  const {chromium,devices}=require(process.env.PLAYWRIGHT_MODULE_PATH||
   (process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright':'playwright'));
@@ -34,14 +35,17 @@ export async function browserHarness({apiLatency=0,durable=false}={}){
    const url=new URL(req.url,'http://localhost'),pathname=decodeURIComponent(url.pathname);
    if(pathname.startsWith('/api/')){
     let raw='';for await(const chunk of req)raw+=chunk;if(apiLatency)await new Promise(r=>setTimeout(r,apiLatency));
-    const input={method:req.method,path:pathname,query:Object.fromEntries(url.searchParams),headers:req.headers,body:raw?JSON.parse(raw):{}};
+    const fallback=vercelRewriteFallback&&pathname==='/api/lobby-sync';
+    const input={method:req.method,path:fallback?'/api/social':pathname,
+     query:{...Object.fromEntries(url.searchParams),...(fallback?{route:'lobby-sync'}:{})},
+     headers:req.headers,body:raw?JSON.parse(raw):{}};
     // C5.a baseline tests keep the new server authority disabled; C5.b
     // acceptance has a separate durable backend, never this ephemeral fixture.
     const response=pathname==='/api/clinical'&&durable?await clinicalRoute(input):pathname==='/api/clinical'?
      (input.method==='POST'&&input.body.action==='capability'
       ?{status:200,body:{durable:false,kind:'qa-legacy-only',schemaVersion:1,clinicalEnabled:false}}
       :{status:503,body:{code:'recovery-client-not-enabled'}}):
-     (pathname==='/api/lobby-sync'?await social.signalRoute(input):await social.route(input));
+     (isSignalingEndpoint(input)?await social.signalRoute(input):await social.route(input));
     requests.push({path:pathname,status:response.status});res.writeHead(response.status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(response.body));return;
    }
    const file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':''));

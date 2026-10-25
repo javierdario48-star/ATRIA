@@ -3,7 +3,8 @@
 import assert from 'node:assert/strict';
 import {browserHarness} from './browser-harness.mjs';
 
-const h=await browserHarness(),guestBrowser=await h.newBrowser(),contexts=[],pages=[],errors=[];
+// Exercise the actual Vercel catch-all fallback, not just a direct QA route.
+const h=await browserHarness({vercelRewriteFallback:true}),guestBrowser=await h.newBrowser(),contexts=[],pages=[],errors=[];
 try{
  for(const [i,browser] of [h.browser,guestBrowser].entries()){
   const context=await browser.newContext(i?h.devices['Pixel 5']:{viewport:{width:1280,height:960}});

@@ -25,9 +25,11 @@ export function createLobbyDirectory({document,escape}){
    if(count)count.textContent=String(online);
    update('coopInvitations',(s.invites||[]).map(x=>'<div><b>'+escape(x.host.name)+'</b> invita a una guardia cooperativa. <button data-action="join-coop" data-room="'+escape(x.roomId)+'">Aceptar</button></div>').join('')||'<p>Sin invitaciones pendientes.</p>');
    update('friendRequests',(s.requests?.incoming||[]).map(x=>'<p>'+escape(x.name)+' te agregó. <button data-action="accept-friend" data-user="'+escape(x.id)+'">Aceptar amistad</button></p>').join(''));
-   update('lobbyContacts',connected.map(x=>
+   const cards=connected.map(x=>
     '<button data-action="inspect-player" data-user="'+escape(x.userId)+'">'+escape(x.name)+
-    (friends.has(x.userId)?' · Amigo':'')+'</button>').join('')||'<p>No hay otros médicos conectados.</p>');
+    (friends.has(x.userId)?' · Amigo':'')+'</button>').join('');
+   update('lobbyContacts',(cards||'<p>No hay otros médicos conectados.</p>')+
+    (s.connectionIssue?'<p role="status">No se pudo sincronizar el lobby. Verificá la conexión y actualizá la página.</p>':''));
   }
  });
 }

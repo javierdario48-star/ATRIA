@@ -51,3 +51,12 @@ test('directory updates once on friendship or roster changes, retaining valid se
  assert.equal(element('onlineDoctorsCount').textContent,'0');
  assert.doesNotMatch(element('lobbyContacts').innerHTML,/Bruno/);
 });
+
+test('lobby shows a connection diagnostic instead of silently reporting zero peers when presence is failing',()=>{
+ const {view,me,element}=fixture();
+ view.render({...me,roster:[me.roster[0]],connectionIssue:true});
+ assert.match(element('lobbyContacts').innerHTML,/No se pudo sincronizar el lobby/);
+ view.render({...me,connectionIssue:false});
+ assert.doesNotMatch(element('lobbyContacts').innerHTML,/No se pudo sincronizar el lobby/);
+ assert.match(element('lobbyContacts').innerHTML,/Bruno/);
+});
