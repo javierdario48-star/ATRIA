@@ -24,5 +24,12 @@ export function canHearWardPatient(scene,patientUid,navigation){
  // patient coordinates as the fallback for synthetic/open-map tests.
  const entrance=Array.isArray(patient.approach)&&patient.approach.length===2?
   navigation.center(...patient.approach):patient;
- return finitePose(entrance)&&navigation.soundClear(scene.player.x,scene.player.y,entrance.x,entrance.y)===true;
+ // The approach tile is a NAVIGATION goal, not necessarily the patient's
+ // acoustic location. In some hospital boxes a wall corner lies between the
+ // doctor's arrival tile and that approach point, although the patient is
+ // visible directly inside the same box. Test both authored sources with
+ // the SAME solid-wall/closed-door occlusion; never bypass walls by distance.
+ const fromBed=navigation.soundClear(scene.player.x,scene.player.y,patient.x,patient.y)===true;
+ const fromApproach=finitePose(entrance)&&navigation.soundClear(scene.player.x,scene.player.y,entrance.x,entrance.y)===true;
+ return fromBed||fromApproach;
 }

@@ -80,3 +80,20 @@ test('actual ATRIA beds are audible from their authored bedside approach',()=>{
   patients:[{uid:'p',x:patient.patient[0],y:patient.patient[1],approach:patient.approach}]};
  assert(canHearWardPatient(scene,'p',nav),'normal care beside B1 remains audible');
 });
+
+test('all eight authored ATRIA beds have audible speech from their respective bedside approach tiles',()=>{
+ const map=JSON.parse(fs.readFileSync(new URL('../content/hospital.json',import.meta.url)));
+ const beds=JSON.parse(fs.readFileSync(new URL('../content/beds.json',import.meta.url)));
+ const navigation=createNavigation(map);
+ for(const bed of beds){
+  const doctor={id:'doctor',...navigation.center(...bed.approach)};
+  const scene={player:doctor,patients:[{uid:'own',x:bed.patient[0],y:bed.patient[1],approach:bed.approach}]};
+  assert(canHearWardPatient(scene,'own',navigation),bed.id+' must allow patient replies at the bedside');
+ }
+});
+test('blocked solid walls still prevent patient speech through adjacent bays, even when close',()=>{
+ const map=openMap(6,5);for(let y=0;y<5;y++)map.state_matrix[y][3]=1;
+ const nav=createNavigation(map),doctor=nav.center(2,2),patient=nav.center(4,2);
+ assert.equal(canHearWardPatient({player:doctor,patients:[{uid:'other',...patient,approach:[4,2]}]},
+  'other',nav),false);
+});
