@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createDirectPatientSelection,directPatientIntent,resolveClinicalMessageTarget} from './patient-selection.js';
 
 const state=(focus='B1',owner1='doctorA',owner2='doctorA',mode='competitive')=>({
- patient:{uid:focus},shift:{mode,ended:false,patients:[
+ patient:{uid:focus},shift:{mode,ended:false,confirmedFocusPatientUid:focus,patients:[
   {uid:'B1',ownerId:owner1},{uid:'B2',ownerId:owner2},
  ]},
 });
@@ -80,4 +80,12 @@ test('cooperative and local messages retain their existing context resolution',(
  assert.equal(resolveClinicalMessageTarget({clinical:coop,explicitUid:'B2',durable:true}), 'B2');
  assert.equal(resolveClinicalMessageTarget({clinical:coop,focusedUid:'B2',durable:false}), 'B2');
  assert.equal(resolveClinicalMessageTarget({clinical:coop,durable:false}), null);
+});
+
+test('cooperative default patient snapshot cannot bypass physical claim confirmation',()=>{
+ const s=state('B1',null,null,'coop');
+ s.shift.confirmedFocusPatientUid=null;
+ assert.equal(directPatientIntent(s,'B1','doctorA'),'claim');
+ s.shift.confirmedFocusPatientUid='B1';
+ assert.equal(directPatientIntent(s,'B1','doctorA'),'selected');
 });

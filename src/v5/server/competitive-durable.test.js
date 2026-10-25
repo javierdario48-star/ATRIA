@@ -29,6 +29,8 @@ for(const n of [2,3,4]){
    assert.equal(start.status,200);
    const patientUid=start.body.clinical.patient.uid;
    assert.equal(start.body.clinical.competition.ownerId,null);
+   assert.equal(start.body.clinical.shift.confirmedFocusPatientUid,null,
+    'first-patient default snapshot must not masquerade as a verified bedside claim');
    assert.equal((await call(1,'sync',{claim:patientUid})).body.clinical.competition.ownerId,null);
    const world=createWorld(content,{id:ids[0],name:members[0].name});
    const point=world.navigation.center(...content.beds[0].approach);
@@ -37,6 +39,7 @@ for(const n of [2,3,4]){
    const claimed=await call(1,'sync',{claim:patientUid});
    assert.equal(claimed.status,200);
    assert.equal(claimed.body.clinical.competition.ownerId,ids[1]);
+   assert.equal(claimed.body.clinical.shift.confirmedFocusPatientUid,patientUid);
    for(let rival=0;rival<n;rival++)if(rival!==1){
     const blocked=await call(rival,'sync',{commands:[{id:'rival-'+rival,text:'/signos'}]});
     assert.equal(blocked.body.acknowledgements[0].status,'rejected');
