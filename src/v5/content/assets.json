@@ -50,5 +50,9 @@
   "player-teal": {
     "path": "assets/player-teal.png",
     "sha256": "67fa7a4eb37689f39ef013358297c889e524311864b92e6e63876215ee12c0eb"
+  },
+  "wardrobe": {
+    "path": "assets/player-wardrobe.avif",
+    "sha256": "a41b3bdde87f732ef24c90c0fd7d401b9a70c139c0e18c6967546cf7782738c8"
   }
 }

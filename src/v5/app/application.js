@@ -929,7 +929,7 @@ export async function createApplication({document,window,content,signal}){
   open(`<h2>Perfil</h2><p>${esc(profile.name)} · Nivel ${progress.read().level} · ${progress.read().xp} XP</p><p>Los progresos de la versión estable se conservan separados de esta prueba.</p>
    <label class="field">Alias<input id="aliasChoice" value="${esc(profile.name)}" maxlength="32"></label>
    <label class="field">Sexo del personaje<select id="sexChoice"><option value="male" ${profile.sex!=='female'?'selected':''}>Masculino</option><option value="female" ${profile.sex==='female'?'selected':''}>Femenino</option></select></label>
-   <label class="field">Ambo<select id="colorChoice">${SCRUB_COLORS.filter(k=>content.assets['player-'+k]).map(k=>`<option value="${k}" ${k===profile.scrubColor?'selected':''}>${esc(content.colors[k]?.[0]||k)}</option>`).join('')}</select></label>
+   <label class="field">Ambo<select id="colorChoice">${SCRUB_COLORS.map(k=>`<option value="${k}" ${k===profile.scrubColor?'selected':''}>${esc(content.colors[k]?.[0]||({burgundy:'Burdeos clínico',black:'Negro'}[k]||k))}</option>`).join('')}</select></label>
    <div class="actions"><button data-action="close">Cerrar</button><button data-action="save-profile" ${s.phase==='guard'?'disabled':''}>Guardar</button></div>`);
  }
  ui('playerName').value=profile.name;ui('startingSex').value=profile.sex;ui('startingColor').value=profile.scrubColor;ui('enterButton').textContent='Entrar al hospital →';ui('enterButton').disabled=false;

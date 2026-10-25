@@ -1,6 +1,6 @@
 // UI-only avatar appearance carried in V5 through the existing authenticated
 // social presence color field. It never touches clinical authority or movement.
-export const SCRUB_COLORS=Object.freeze(['navy','green','gray','pink','teal','burgundy']);
+export const SCRUB_COLORS=Object.freeze(['navy','green','gray','pink','teal','burgundy','black']);
 export const AVATAR_SEXES=Object.freeze(['male','female']);
 export function scrubAppearance(color='navy',sex='male'){
  return {color:SCRUB_COLORS.includes(color)?color:'navy',

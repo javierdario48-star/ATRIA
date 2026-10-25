@@ -29,7 +29,7 @@ export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFa
    const result=await social.route({method:'GET',path:'/api/rooms/'+roomId+'/messages',headers,query:{after:0}});
    return result.status===200?result.body.room:null;
   }}):null;
- const types={'.js':'text/javascript','.json':'application/json','.html':'text/html','.css':'text/css','.webp':'image/webp','.png':'image/png'};
+ const types={'.js':'text/javascript','.json':'application/json','.html':'text/html','.css':'text/css','.webp':'image/webp','.png':'image/png','.avif':'image/avif'};
  const server=createServer(async(req,res)=>{
   try{
    const url=new URL(req.url,'http://localhost'),pathname=decodeURIComponent(url.pathname);

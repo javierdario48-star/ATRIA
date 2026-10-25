@@ -6,6 +6,20 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   const image=new window.Image();image.src=url;await image.decode();
   if(signal?.aborted)throw new DOMException('disposed','AbortError');return [key,image];
  })));
+ // One compressed atlas, decoded once into draw-ready frames; no per-frame
+ // asset allocation and no alternate sprite animation implementation.
+ if(images.wardrobe&&canvas.ownerDocument?.createElement){
+  const coords={'player-female-black':[0,0],'player-female-navy':[1,0],
+   'player-female-green':[2,0],'player-female-gray':[3,0],
+   'player-female-pink':[0,1],'player-female-teal':[1,1],
+   'player-female-burgundy':[2,1],'player-burgundy':[3,1]};
+  for(const [key,[col,row]] of Object.entries(coords)){
+   const frame=canvas.ownerDocument.createElement('canvas');
+   frame.width=72;frame.height=108;
+   frame.getContext('2d').drawImage(images.wardrobe,col*72,row*108,72,108,0,0,72,108);
+   images[key]=frame;
+  }
+ }
  let width=0,height=0,dpr=1,scale=1,camera={x:496,y:1348};
  let playBounds=null,anchorX=0,anchorY=null,lastAnchorTime=null,cameraScene=null,lastCameraTime=null;
  const pixel=value=>Math.round(value*dpr)/dpr;

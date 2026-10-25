@@ -319,7 +319,7 @@ export function createWorld(content,profile,checkpoint=null){
   /** Appearance is an actor property, never a reason to recreate the room. */
   setAppearance({name,scrubColor,sex=profile.sex||'male'}){
    if(typeof name!=='string'||!name.trim()||name.length>32||
-      !['navy','green','gray','pink','teal','burgundy'].includes(scrubColor)||
+      !['navy','green','gray','pink','teal','burgundy','black'].includes(scrubColor)||
       !['male','female'].includes(sex))throw Error('invalid appearance');
    profile={...profile,name,scrubColor,sex};
    player.name=name;player.color=scrubColor;player.sex=sex;
