@@ -19,7 +19,8 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   scale=Math.min(1.38,Math.max(.74,width/590*1.15));anchorX=pixel(width/2);
  }
  function sprite(key,a,h=62){
-  const img=images[key]||(key.startsWith('player-female-')?images['player-female-navy']:
+  const img=images[key]||(key.startsWith('player-female-')?
+    images['player-female-navy']||images['player-navy']:
     key.startsWith('player-')?images['player-navy']:null);if(!img)return;const [x,y]=screen(a.x,a.y),hh=h*scale,w=hh*img.width/img.height;
   const east=/^(E|NE|SE)$/.test(a.dir),west=/^(W|NW|SW)$/.test(a.dir),right=key==='vega';
   const flip=right?(west?-1:east?1:(a.lastSide||1)<0?-1:1):(east?-1:west?1:(a.lastSide||-1)>0?-1:1);
