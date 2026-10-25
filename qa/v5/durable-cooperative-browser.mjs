@@ -24,6 +24,8 @@ try{
   await page.goto(h.url);
   await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#playerName').fill(i===0?'Dra. Ana':'Dr. Bruno');
+  await page.locator('#startingSex').selectOption(i===0?'female':'male');
+  await page.locator('#startingColor').selectOption(i===0?'green':'burgundy');
   await page.locator('#enterButton').click();
   await page.locator('#peopleButton').click();await page.locator('#modalClose').click();
  }
@@ -41,6 +43,15 @@ try{
   const snapshot=atriaV5.snapshot(),debug=atriaV5.diagnostics();
   return snapshot.mode==='coop'&&!!snapshot.clinical&&debug.cooperative.durable===true;
  },null,{timeout:90000})));
+ // Server spatial snapshots may carry navy defaults, but only validated
+ // social presence owns the remote wardrobe and character sex.
+ await host.waitForFunction(()=>atriaV5.snapshot().others.some(x=>
+  x.name==='Dr. Bruno'&&x.color==='burgundy'&&x.sex==='male'),null,{timeout:30000});
+ await guest.waitForFunction(()=>atriaV5.snapshot().others.some(x=>
+  x.name==='Dra. Ana'&&x.color==='green'&&x.sex==='female'),null,{timeout:30000});
+ assert.deepEqual(await host.evaluate(()=>{
+  const p=atriaV5.snapshot().player;return [p.color,p.sex];
+ }),['green','female']);
  const initial=await Promise.all(pages.map(clinical));
  assert.equal(initial[0].patient.uid,initial[1].patient.uid);
  assert.equal(initial[0].room.roomId,initial[1].room.roomId);
@@ -60,6 +71,9 @@ try{
  for(const p of pages)if(await p.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')
   await p.locator('#keyboardToggleButton').click();
  await Promise.all([walk(host),walk(guest,176)]);
+ assert.equal(await host.evaluate(()=>atriaV5.snapshot().others.find(x=>x.name==='Dr. Bruno')?.color),'burgundy',
+  'clinical movement updates must not revert a remote player's scrub to black');
+ assert.equal(await guest.evaluate(()=>atriaV5.snapshot().others.find(x=>x.name==='Dra. Ana')?.sex),'female');
  await send(host,'Hola desde anfitriona');
  await host.waitForFunction(()=>atriaV5.snapshot().player.speechBubble?.text==='Hola desde anfitriona');
  await guest.waitForFunction(()=>atriaV5.snapshot().others.some(x=>x.name==='Dra. Ana'&&
