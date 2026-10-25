@@ -128,7 +128,7 @@ try{
    e.clinical.some(x=>x.kind==='history.ask'&&x.status==='executed'&&
     typeof x.receipt?.message==='string'&&x.receipt.message.length>0));
  },{uid:nextUid,greeting},{timeout:90000});
- await host.locator('#chatHistory [data-role="patient"]').filter({hasText:/\\S/}).first().waitFor({timeout:20000});
+ await host.locator('#chatHistory [data-role="patient"]').first().waitFor({timeout:20000});
  const doctorReply=(await host.locator('#chatHistory [data-role="patient"]').allInnerTexts()).join(' ');
  assert(doctorReply.trim().length>20,'native patient answer must be visible, not a local greeting bubble');
  assert((await clinical(host)).patient.intentHistory.length>0,'greeting must update native anamnesis');
