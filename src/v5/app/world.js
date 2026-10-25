@@ -1,4 +1,5 @@
 import {createNavigation} from '../engine/navigation.js';
+import {scrubAppearance,presenceAppearance} from './avatar-appearance.js';
 import {createRemotePose,receiveRemotePose,sampleRemotePose} from '../../social/remote-motion.js';
 import {privateRoomMotionPrefix} from '../social/room-motion-scope.js';
 import {createNurseDispatcher} from '../engine/nurse-dispatcher.js';
@@ -16,14 +17,15 @@ export function createWorld(content,profile,checkpoint=null){
  const point=tile=>navigation.center(...(navigation.nearest(...tile,8)||start));
  let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true,
   motionSequence=0,lastMotionIntent=null;
- const lobbyRemotes=new Map(),guardRemotes=new Map(),nurseRemotes=new Map();
+ const lobbyRemotes=new Map(),guardRemotes=new Map(),nurseRemotes=new Map(),wardAppearances=new Map();
  const entities=()=>hospitalEntities({patients:patients.filter(p=>!p.departed),nurses,expert,phase},content.map,content.beds);
  function lobbyTile(){
   let hash=0;for(const char of profile.name||'Medico')hash=(hash*31+char.charCodeAt(0))>>>0;
   const offsets=[[-3,-2],[0,-3],[3,-2],[-4,1],[4,1],[-2,3],[2,3],[0,1]],d=offsets[hash%offsets.length];
   return [start[0]+d[0],start[1]+d[1]];
  }
- function resetPlayer(tile){player=actor('self',point(tile),{name:profile.name,color:profile.scrubColor||'navy',level:1});lastMotionIntent=null;}
+ function resetPlayer(tile){const appearance=scrubAppearance(profile.scrubColor,profile.sex);
+  player=actor('self',point(tile),{name:profile.name,...appearance,level:1});lastMotionIntent=null;}
  // Outbound movement represents explicit input, never a pose received from
  // another authority. Navigation may finish or reconcile without canceling it.
  function targetPlayer(x,y){
@@ -31,15 +33,15 @@ export function createWorld(content,profile,checkpoint=null){
   lastMotionIntent={sequence:++motionSequence,target:[...player.target]};return true;
  }
  resetPlayer(lobbyTile());
- function enterLobby(){lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
+ function enterLobby(){lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();wardAppearances.clear();nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
  function enterGuard(options={}){
-  lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();const selected=options.mode||'solo';
+  lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();wardAppearances.clear();const selected=options.mode||'solo';
   if(!['solo','apprentice','coop','competitive'].includes(selected))throw Error('multiplayer mode not migrated');
   const c=content.cases.find(c=>c.id===options.caseId);if(!c)throw Error('unknown clinical case');
   nursing?.dispose();nursing=null;
   generation++;phase='guard';mode=selected;caseId=c.id;pendingInteraction=null;resetPlayer(start);
   authoritative=options.authoritative!==false;
-  others=(options.members||[]).filter(x=>x.id!==profile.id).map(x=>actor(x.id,point(start),{kind:'doctor',name:x.name,color:x.color||'navy',level:1}));
+  others=(options.members||[]).filter(x=>x.id!==profile.id).map(x=>actor(x.id,point(start),{kind:'doctor',name:x.name,...presenceAppearance(x.color),level:1}));
   nurses=nurseHomes.map((home,index)=>actor('nurse-'+index,point(home),{kind:'nurse',r:8.5,speed:140,home:[...home],patrolAt:index*2}));
   const bed=content.beds.find(b=>b.id===(options.bedId||'B1'))||content.beds[0];
   patients=[{id:'patient-'+generation,uid:'patient-'+generation,caseId:c.id,bedId:bed.id,
@@ -144,7 +146,7 @@ export function createWorld(content,profile,checkpoint=null){
     if(!track){track=createRemotePose({x:remote.x,y:remote.y,now,cadence:260,speed:205});lobbyRemotes.set(remote.userId,track);}
     receiveRemotePose(track,{...remote,now,transport:'http',motionCadence:remote.motionCadence||260});
     if(!other)other=actor(remote.userId,{x:track.x,y:track.y},{kind:'doctor'});
-    Object.assign(other,{name:remote.name,color:remote.color||'navy',level:remote.level||1});
+    Object.assign(other,{name:remote.name,...presenceAppearance(remote.color),level:remote.level||1});
     updated.push(other);
    }
    others=updated;
@@ -165,6 +167,9 @@ export function createWorld(content,profile,checkpoint=null){
     // can only move an already-authorized avatar on the client display.
     const other=others.find(p=>p.id===remote.userId);
     if(!other)continue;
+    const appearance=presenceAppearance(remote.color);
+    wardAppearances.set(remote.userId,appearance);
+    Object.assign(other,appearance);
     let track=guardRemotes.get(other.id);
     if(!track||track.source!=='social'){
      track={pose:createRemotePose({x:other.x,y:other.y,now,cadence:260,speed:205}),
@@ -254,6 +259,8 @@ export function createWorld(content,profile,checkpoint=null){
    others=doctors.filter(x=>x.id!==profile.id).map(remote=>{
     remoteIds.add(remote.id);
     const old=previous.get(remote.id),other=structuredClone(remote);
+    Object.assign(other,wardAppearances.get(remote.id)||
+     (old?scrubAppearance(old.color,old.sex):scrubAppearance(remote.color,remote.sex)));
     if(old?.speechBubble?.until>now)other.speechBubble=old.speechBubble;
     let track=guardRemotes.get(remote.id);
     if(track?.source==='social'){
@@ -310,11 +317,12 @@ export function createWorld(content,profile,checkpoint=null){
   acceptNurseClinicalResult:result=>nursing?.acceptClinicalResult(result)||{status:'no-guard'},
   cancelNurseJourney:eventId=>nursing?.cancel(eventId)||false,
   /** Appearance is an actor property, never a reason to recreate the room. */
-  setAppearance({name,scrubColor}){
+  setAppearance({name,scrubColor,sex=profile.sex||'male'}){
    if(typeof name!=='string'||!name.trim()||name.length>32||
-      !['navy','green','gray','pink','teal'].includes(scrubColor))throw Error('invalid appearance');
-   profile={...profile,name,scrubColor};
-   player.name=name;player.color=scrubColor;
+      !['navy','green','gray','pink','teal','burgundy'].includes(scrubColor)||
+      !['male','female'].includes(sex))throw Error('invalid appearance');
+   profile={...profile,name,scrubColor,sex};
+   player.name=name;player.color=scrubColor;player.sex=sex;
   },
   setLevel(level){if(!Number.isSafeInteger(level)||level<1)throw Error('invalid player level');player.level=level;},
   motionIntent:()=>lastMotionIntent?structuredClone(lastMotionIntent):null,

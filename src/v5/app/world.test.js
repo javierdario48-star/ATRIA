@@ -375,3 +375,30 @@ test('durable client processes departures before reuse of the same bed',async()=
  assert(!client.snapshot().entities.some(e=>e.patientUid==='p1'));
  assert(client.snapshot().entities.some(e=>e.patientUid==='p2'));
 });
+
+test('ward appearance keeps authorized sex/color after any clinical snapshot',async()=>{
+ const {createWorld}=await import('./world.js');
+ const w=createWorld({map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')},
+  {id:'A',name:'Ana',scrubColor:'pink',sex:'female'});
+ const roomId='colors-ward';
+ w.enterGuard({mode:'competitive',caseId:'CIRR-001',
+  members:[{id:'A',name:'Ana'},{id:'B',name:'Bruno'}],authoritative:false});
+ const self=w.snapshot().player;
+ const remote={id:'B',kind:'doctor',name:'Bruno',color:'navy',x:self.x+10,y:self.y,dir:'E'};
+ const server={nurses:[],doctors:[{...self,id:'A'},remote]};
+ w.applySharedSpatial(server,1000);
+ const pose={userId:'B',color:'female-burgundy',x:remote.x,y:remote.y,
+  roomId,phase:'guard',motionSession:privateRoomMotionPrefix(roomId)+'B',
+  motionEpoch:12,seq:1};
+ w.showGuardSocialPlayers([pose],roomId,['A','B'],1001);
+ assert.deepEqual([w.snapshot().others[0].color,w.snapshot().others[0].sex],['burgundy','female']);
+ w.applySharedSpatial(server,1400);
+ assert.deepEqual([w.snapshot().others[0].color,w.snapshot().others[0].sex],['burgundy','female']);
+ assert.deepEqual([w.snapshot().player.color,w.snapshot().player.sex],['pink','female']);
+ w.showGuardSocialPlayers([{...pose,userId:'intruder'}],roomId,['A','B'],1500);
+ w.showGuardSocialPlayers([{...pose,color:'female-green',motionSession:'wrong-room'}],roomId,['A','B'],1510);
+ w.applySharedSpatial(server,1520);
+ assert.equal(w.snapshot().others[0].color,'burgundy');
+ w.enterLobby();
+ assert.equal(w.snapshot().others.length,0);
+});
