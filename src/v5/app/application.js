@@ -460,13 +460,13 @@ export async function createApplication({document,window,content,signal}){
    nurseCueRows.splice(0,nurseCueRows.length,...currentGuidance);
    const concluded=!!clinicalState.patient.caseEnded||!!clinicalState.patient.patientDied||
     !!clinicalState.patient.closure?.closed;
-   if(concluded)nurseCueRows.length=0;
+   if(concluded||coopRoomId&&!nearBed)nurseCueRows.length=0;
    rows.splice(0,rows.length,...visibleClinicalRows(rows,{concluded}));
   const cueTime=window.performance.now();
   const freshPatient=rows.some(row=>row.role==='patient'&&!seenNpcMessages.has(row.id));
-  const message=selectNurseGuidance({cue,patientId,concluded,freshPatient,
+  const message=(!coopRoomId||nearBed)?selectNurseGuidance({cue,patientId,concluded,freshPatient,
    now:cueTime,lastCueAt:lastNurseCueAt,lastPatientAt:lastPatientSpeechAt,
-   seen:seenNurseCues});
+   seen:seenNurseCues}):null;
   if(message){
    seenNurseCues.add(patientId+':'+cue.id);lastNurseCueAt=cueTime;
    nurseCueRows.push(message);
@@ -503,12 +503,12 @@ export async function createApplication({document,window,content,signal}){
   history.length=0;
   // The final sentence is derived from one authenticated clinical receipt.
    const farewell=finalNurseMessage(clinicalState);
-   if(farewell&&!seenNpcMessages.has(farewell.id)){
+   if(farewell&&(!coopRoomId||nearBed)&&!seenNpcMessages.has(farewell.id)){
     seenNpcMessages.add(farewell.id);
     world.showNpcMessage('nurse',farewell.text,window.performance.now());
     hospitalAudio.speech('nurse');
    }
-   for(const row of [...rows,...nurseCueRows,...(farewell?[farewell]:[])]){
+   for(const row of [...rows,...nurseCueRows,...(farewell&&(!coopRoomId||nearBed)?[farewell]:[])]){
    history.push({name:row.name,text:row.text,system:row.role!=='player'});
    const el=document.createElement('div'),who=document.createElement('b');
    el.className='line'+(['patient','nurse'].includes(row.role)?' '+row.role:'');
