@@ -231,7 +231,7 @@ test('one competitive physician retains two independent patient histories when s
  const roomId='two-beds-one-owner';
  const call=(actorId,extra={})=>authority.transact({roomId,actorId,...extra});
  try{
-  const opened=await authority.bootstrap({roomId,caseId:'PERI-PBE-001',
+  const opened=await authority.bootstrap({roomId,caseId:'CIRR-001',
    members:[{id:'a',name:'Ana'},{id:'b',name:'Bruno'}],hostId:'a',actorId:'a',mode:'competitive'});
   const [first,second]=opened.clinical.shift.patients;
   const navigation=createWorld(content,{id:'a',name:'Ana'}).navigation;
