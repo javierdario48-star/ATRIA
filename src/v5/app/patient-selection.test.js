@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {directPatientIntent} from './patient-selection.js';
+import {createDirectPatientSelection,directPatientIntent} from './patient-selection.js';
 
 const state=(focus='B1',owner1='doctorA',owner2='doctorA',mode='competitive')=>({
  patient:{uid:focus},shift:{mode,ended:false,patients:[
@@ -34,4 +34,34 @@ test('rival-owned, unavailable and ended patients are not selectable',()=>{
 test('cooperative bedside focus is independent of competitive ownership',()=>{
  assert.equal(directPatientIntent(state('B1',null,null,'coop'),'B1','doctorB'),'selected');
  assert.equal(directPatientIntent(state('B1',null,null,'coop'),'B2','doctorB'),'claim');
+});
+
+test('direct selection resolves only from authenticated patient focus',()=>{
+ const selection=createDirectPatientSelection();
+ assert.equal(selection.begin('B2','patient'),true);
+ assert.equal(selection.observe(state('B1','doctorA',null),'doctorA'),null);
+ assert.deepEqual(selection.status(),{uid:'B2',kind:'patient'});
+ assert.deepEqual(selection.observe(state('B2','doctorA','doctorA'),'doctorA'),
+  {status:'selected',uid:'B2',kind:'patient'});
+ assert.equal(selection.observe(state('B2','doctorA','doctorA'),'doctorA'),null,
+  'replayed server snapshots cannot reopen the wheel');
+});
+test('a rival claim or canceled interaction never switches direct focus',()=>{
+ const selection=createDirectPatientSelection();
+ selection.begin('B2','monitor');
+ assert.deepEqual(selection.observe(state('B1','doctorA','doctorB'),'doctorA'),
+  {status:'occupied',uid:'B2',kind:'monitor'});
+ assert.equal(selection.status(),null);
+ selection.begin('B1','patient');selection.cancel();
+ assert.equal(selection.observe(state('B1'),'doctorA'),null);
+});
+test('new explicit tap replaces old pending selection, without implicit claim',()=>{
+ const selection=createDirectPatientSelection();
+ selection.begin('B1','patient');
+ selection.begin('B2','monitor');
+ assert.deepEqual(selection.observe(state('B2'),'doctorA'),
+  {status:'selected',uid:'B2',kind:'monitor'});
+ assert.equal(selection.begin('', 'patient'),false);
+ assert.equal(selection.begin('B1','invalid'),false);
+ assert.equal(selection.status(),null);
 });

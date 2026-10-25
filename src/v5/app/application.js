@@ -13,7 +13,7 @@ import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecy
 import {createProgressionLedger} from '../clinical/progression.js';
 import {createLocalShift} from './local-shift.js';
 import {createReceptionAssignment} from './reception-assignment.js';
-import {directPatientIntent} from './patient-selection.js';
+import {createDirectPatientSelection,directPatientIntent} from './patient-selection.js';
 import {createReceptionOnboarding} from '../ui/reception-onboarding.js';
 import {createShiftFlow,receptionAcuity} from '../clinical/shift-flow.js';
 import {receptionBoardHTML} from '../ui/reception-board.js';
@@ -56,7 +56,7 @@ export async function createApplication({document,window,content,signal}){
   announcedDeathUid=null,pendingPatientAction=null,announcedClosure=null,coopCaseId=null,
   coopRoomId=null,replica=null,durableClient=null,lastSharedPublish=0,sharedSequence=0,lastMotion='',lastRemoteRevision=-1,socialEnabled=false,
   durableStarting=false,durableJoining=false,nextCooperativeAdmission=0,cooperativeCapability=null;
- let localAdmissions=null,localSessions=new Map(),localRoomId=null,pendingPatientSelection=null,lastReceivedPatientCount=0,lastSelectedPatientUid=null,shiftEndedAnnounced=false;
+ let localAdmissions=null,localSessions=new Map(),localRoomId=null,lastReceivedPatientCount=0,lastSelectedPatientUid=null,shiftEndedAnnounced=false;
  // Transient reception travel state is UI-only; the server remains the sole
  // authority for physical proximity, patient ownership and clinical commands.
  const receptionAssignment=createReceptionAssignment({
@@ -64,6 +64,7 @@ export async function createApplication({document,window,content,signal}){
   cancelClaim:uid=>durableClient?.cancelClaim(uid)
  });
  const cancelReceptionAssignment=()=>receptionAssignment.cancel();
+ const directSelection=createDirectPatientSelection();
  const receptionOnboarding=createReceptionOnboarding({
   button:document.getElementById('receptionButton'),
   guide:document.getElementById('receptionGuide'),window
@@ -304,22 +305,19 @@ export async function createApplication({document,window,content,signal}){
     lastReceivedPatientCount=count;
     const revision=patientUid+':'+value.clinical.room.revision;
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
-    if(pendingPatientSelection){
-     const status=directPatientIntent(value.clinical,pendingPatientSelection.uid,self);
-     if(status==='occupied'||status==='unavailable'){
-      pendingPatientSelection=null;pendingPatientAction=null;
-      toast(status==='occupied'?'Otro médico ya atiende ese paciente.':'El paciente ya no está disponible.');
-     }else if(status==='selected'){
-      const selected=pendingPatientSelection;pendingPatientSelection=null;
-      focusedPatientUid=selected.uid;focusedNpc=null;
-      close();const p=world.snapshot().patients.find(p=>p.uid===selected.uid);
-      if(p){if(selected.kind==='monitor')clinicalUI.showMonitor(p);
-       else if(pendingPatientAction?.uid===p.uid){
-        const action=pendingPatientAction;pendingPatientAction=null;
-        if(action.destination)clinicalUI.chooseDestination(p,action.destination);
-        else clinicalUI.showDiagnosis(p);
-       }else {patientWheel.show(p);guidePatientWheel();clinicalChecklist.show(p.uid,guardSession?.read());}}
-     }
+    const confirmedDirect=directSelection.observe(value.clinical,self);
+    if(confirmedDirect?.status==='occupied'||confirmedDirect?.status==='unavailable'){
+     pendingPatientAction=null;
+     toast(confirmedDirect.status==='occupied'?'Otro médico ya atiende ese paciente.':'El paciente ya no está disponible.');
+    }else if(confirmedDirect?.status==='selected'){
+     focusedPatientUid=confirmedDirect.uid;focusedNpc=null;
+     close();const p=world.snapshot().patients.find(p=>p.uid===confirmedDirect.uid);
+     if(p){if(confirmedDirect.kind==='monitor')clinicalUI.showMonitor(p);
+      else if(pendingPatientAction?.uid===p.uid){
+       const action=pendingPatientAction;pendingPatientAction=null;
+       if(action.destination)clinicalUI.chooseDestination(p,action.destination);
+       else clinicalUI.showDiagnosis(p);
+      }else {patientWheel.show(p);guidePatientWheel();clinicalChecklist.show(p.uid,guardSession?.read());}}
     }
     if(dialog.open&&dialog.dataset.panel==='reception')
      ui('modalContent').innerHTML=receptionBoardHTML(value.clinical.shift,content.cases,self);
@@ -673,7 +671,7 @@ export async function createApplication({document,window,content,signal}){
    else guardSession?.dispose();
   }else guardSession?.dispose();
   localSessions.clear();localAdmissions=null;localRoomId=null;
-  pendingPatientSelection=null;lastReceivedPatientCount=0;lastSelectedPatientUid=null;shiftEndedAnnounced=false;
+  directSelection.cancel();lastReceivedPatientCount=0;lastSelectedPatientUid=null;shiftEndedAnnounced=false;
   guardSession=null;localShift.reset();audioPatient=null;replica=null;durableClient=null;coopRoomId=null;coopCaseId=null;lastMotion='';announcedClosure=null;announcedDeathUid=null;pendingPatientAction=null;clinicalUI.reset();patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();close();// Everyone joining the lobby participates in the existing social presence loop;
   // opening Personas or choosing Cooperativo must not be a prerequisite.
   world.enterLobby();socialEnabled=true;resetChat('El lobby está listo para hablar.');
@@ -885,7 +883,7 @@ export async function createApplication({document,window,content,signal}){
     if(selection==='unavailable')return toast('El paciente ya no está disponible.');
     if(selection==='occupied')return toast('Ese paciente está a cargo de otro médico.');
     if(selection==='claim'){
-     pendingPatientSelection={uid:p.uid,kind:entity.kind};durableClient.claim(p.uid);
+     directSelection.begin(p.uid,entity.kind);durableClient.claim(p.uid);
      toast('Seleccionando el paciente y verificando el responsable…');return;
     }
     // This UID is already the server-confirmed bedside focus for this actor.
@@ -1159,7 +1157,7 @@ export async function createApplication({document,window,content,signal}){
  function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
   clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);presentation.reset(world.snapshot());raf=window.requestAnimationFrame(frame);}}
  function pause(){hospitalAudio.pause();advanceClinicalTo(window.performance.now());lastClinicalFrame=null;if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
- function destroy(){if(destroyed)return;destroyed=true;cancelReceptionAssignment();unassignedGlow.destroy();guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();rootLifecycle.leave();}
+ function destroy(){if(destroyed)return;destroyed=true;cancelReceptionAssignment();directSelection.cancel();unassignedGlow.destroy();guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});

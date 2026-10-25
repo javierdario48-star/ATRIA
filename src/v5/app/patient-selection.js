@@ -13,3 +13,29 @@ export function directPatientIntent(state,uid,actorId){
  }
  return state.patient?.uid===uid?'selected':'claim';
 }
+
+/**
+ * A client-only selection intent. A tap does not own, focus, or mutate a
+ * patient; observe() resolves it only from the authenticated server view.
+ * The server remains the unique owner of actual claims and patient sessions.
+ */
+export function createDirectPatientSelection(){
+ let requested=null;
+ function begin(uid,kind='patient'){
+  if(typeof uid!=='string'||!uid||!['patient','monitor'].includes(kind))return false;
+  requested={uid,kind};
+  return true;
+ }
+ function observe(clinical,actorId){
+  if(!requested)return null;
+  const status=directPatientIntent(clinical,requested.uid,actorId);
+  if(status==='claim')return null; // an older snapshot is not confirmation
+  const result={status,...requested};
+  requested=null; // terminal notifications are one-shot, even on repeated snapshots
+  return result;
+ }
+ return Object.freeze({
+  begin,observe,cancel(){requested=null;},
+  status:()=>requested?{...requested}:null
+ });
+}
