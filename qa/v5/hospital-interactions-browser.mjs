@@ -103,7 +103,8 @@ try{
  const measured=(await state()).patient.lastVitalsKnown;
  await page.locator('#modalClose').click();await tapEntity('patient');
  const wheel=page.locator('#patientWheel');
- assert.equal(await wheel.locator('button').count(),6);
+ assert.equal(await wheel.locator('button').count(),7);
+ assert.equal(await wheel.locator('[data-patient-action="diagnosis"]').count(),1);
  const checklist=page.locator('#bedsideChecklist');
  assert.equal(await checklist.isVisible(),true,'patient tap reveals the floating checklist');
  assert.equal(await checklist.locator('.bedside-checklist-steps li').count(),7);

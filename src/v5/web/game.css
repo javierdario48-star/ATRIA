@@ -75,7 +75,7 @@ body.atria-keyboard-open #chatHistory.expanded{height:auto;max-height:min(33dvh,
 /* C05.c — world-anchored bedside actions, not a second clinical interface.
    Only the small buttons intercept touches; the surrounding hospital is walkable. */
 .patient-wheel{
- position:fixed;z-index:19;width:220px;height:217px;
+ position:fixed;z-index:19;width:230px;height:224px;
  transform:translate(-50%,-50%);pointer-events:none;
  filter:drop-shadow(0 5px 10px #0007);
 }
@@ -111,13 +111,13 @@ dialog[data-panel="diagnosis"]{max-width:460px}
  font-size:21px;line-height:1;color:#d9f9f1;text-shadow:none;
 }
 .patient-wheel-action:focus-visible .patient-wheel-glyph{outline:2px solid #b1f2ed;outline-offset:2px}
-.action-talk{left:75px;top:0}
-.action-diagnosis{left:75px;top:82px}
-.action-examination{left:150px;top:37px}
-.action-history{left:150px;top:119px}
-.action-studies{left:75px;top:163px}
-.action-treatment{left:0;top:119px}
-.action-patient{left:0;top:37px}
+.action-talk{left:80px;top:0}
+.action-diagnosis{left:0;top:30px}
+.action-examination{left:157px;top:30px}
+.action-history{left:157px;top:101px}
+.action-studies{left:116px;top:168px}
+.action-treatment{left:40px;top:168px}
+.action-patient{left:0;top:101px}
 @media(max-width:350px), (max-height:620px){
  .patient-wheel{zoom:.82}
 }

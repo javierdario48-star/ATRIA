@@ -127,3 +127,21 @@ test('C05.e ECG monitor projection is UID-scoped, read-only and does not expose 
  session.dispose();
  assert.equal(session.monitorRead('P1'),null);
 });
+
+test('nurse-addressed provisional diagnosis persists through the native clinical session and is reeditable',async()=>{
+ const {session,setNear}=await setup();
+ const first=await session.post({id:'spoken-dx',text:'Enfermera, mi diagnóstico presuntivo es cirrosis descompensada'});
+ assert.equal(first.recipient,'nurse');
+ assert.equal(first.clinical[0]?.kind,'diagnosis.record');
+ assert.equal(first.clinical[0]?.status,'executed');
+ assert.equal(session.read().patient.diagnosis,'cirrosis descompensada');
+ const second=await session.post({id:'editor-dx',text:'/diagnostico ascitis por cirrosis'});
+ assert.equal(second.clinical[0]?.kind,'diagnosis.record');
+ assert.equal(session.read().patient.diagnosis,'ascitis por cirrosis');
+ setNear(null);
+ const out=await session.post({id:'far-dx',text:'Enfermera, creo que tiene apendicitis'});
+ assert.equal(out.status,'received-not-executed');
+ assert.equal(session.read().patient.diagnosis,'ascitis por cirrosis',
+  'a nurse conversation outside the bedside cannot rewrite the actual diagnosis');
+ session.dispose();
+});

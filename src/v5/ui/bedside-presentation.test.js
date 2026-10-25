@@ -32,8 +32,8 @@ test('C05.c connected monitor uses only known readings and labels pulse trace no
  assert(!monitorHTML(p).includes('<svg'),'completed care cannot show continuous monitor activity');
  assert.match(monitorHTML(p),/Atención cerrada/);
 });
-test('C05.c patient actions map only to the six existing clinical destinations',()=>{
- assert.deepEqual(PATIENT_ACTIONS.map(a=>a.id),['talk','examination','history','studies','treatment','patient']);
+test('C05.c patient actions include the shared clinical diagnosis editor as a seventh bedside route',()=>{
+ assert.deepEqual(PATIENT_ACTIONS.map(a=>a.id),['talk','diagnosis','examination','history','studies','treatment','patient']);
  assert.equal(new Set(PATIENT_ACTIONS.map(a=>a.id)).size,PATIENT_ACTIONS.length);
 });
 
