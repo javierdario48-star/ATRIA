@@ -93,3 +93,41 @@ test('competitive PBE closes once: only bedside owner receives clinical XP; riva
   assert.equal(attempted.claims.length,1);
  }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('competitive chat while far cannot claim a patient or elicit a remote patient reply',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'atria-spatial-claim-')),store=createSqliteGuardStore(path.join(dir,'guard.sqlite'));
+ let now=100000;
+ const authority=createDurableGuardAuthority({store,content,now:()=>now});
+ const call=(actorId,extra={})=>authority.transact({roomId:'spatial',actorId,...extra});
+ try{
+  const start=await authority.bootstrap({roomId:'spatial',caseId:'PERI-PBE-001',
+   members:[{id:'a',name:'Ana'},{id:'b',name:'Bruno'}],hostId:'a',actorId:'a',mode:'competitive'});
+  const first=start.clinical.shift.patients[0],second=start.clinical.shift.patients[1];
+  for(const [actor,id] of [['a','greet-far'],['b','greet-other']]){
+   const result=await call(actor,{commands:[{id,text:'hola'}]});
+   assert.equal(result.acknowledgements[0].reason,'approach-patient-to-claim');
+   assert.equal(result.clinical.shift.patients[0].ownerId,null);
+   assert.equal(result.clinical.shift.patients[1].ownerId,null);
+   assert.equal(result.clinical.room.transcript.length,0);
+  }
+  const point=createWorld(content,{id:'a',name:'Ana'}).navigation.center(
+   ...content.beds.find(b=>b.id===second.bedId).approach);
+  await call('b',{motion:[point.x,point.y],motionSequence:1});
+  now+=20000;await call('b');
+  const greeting=await call('b',{commands:[{id:'near-but-unclaimed',text:'hola'}]});
+  assert.equal(greeting.acknowledgements[0].reason,'approach-patient-to-claim');
+  assert.equal(greeting.clinical.shift.patients[1].ownerId,null);
+  const touched=await call('b',{claim:second.uid});
+  assert.equal(touched.clinical.patient.uid,second.uid);
+  assert.equal(touched.clinical.shift.patients[1].ownerId,'b');
+  assert.equal(touched.clinical.shift.patients[0].ownerId,null);
+  const talk=await call('b',{commands:[{id:'bedside-hello',text:'hola'}]});
+  assert.equal(talk.acknowledgements[0].status,'received');
+  assert.equal(talk.clinical.patient.uid,second.uid);
+  assert(talk.clinical.room.transcript.some(x=>x.text==='hola'&&x.patientUid===second.uid));
+  assert(talk.clinical.messages.some(x=>x.role==='patient'));
+  const rival=await call('a',{commands:[{id:'other-bed-hello',text:'hola'}]});
+  assert.equal(rival.acknowledgements[0].reason,'approach-patient-to-claim');
+  assert.equal(rival.clinical.shift.patients[0].ownerId,null);
+ }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
+});

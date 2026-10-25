@@ -14,6 +14,7 @@ import {createProgressionLedger} from '../clinical/progression.js';
 import {createLocalShift} from './local-shift.js';
 import {createShiftFlow,receptionAcuity} from '../clinical/shift-flow.js';
 import {receptionBoardHTML} from '../ui/reception-board.js';
+import {canHearWardDoctor,canHearWardPatient} from '../ui/spatial-ward-speech.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {createHospitalAudio} from '../ui/hospital-audio.js';
 import {clinicalCompletions,spellingSuggestions} from '../ui/clinical-autocomplete.js';
@@ -430,10 +431,11 @@ export async function createApplication({document,window,content,signal}){
   if(!durableClient||roomId!==coopRoomId||typeof id!=='string'||
      typeof text!=='string'||text.length>280||!social.isMember(userId))return;
   const key='player:'+userId+':'+id;
-  if(seenGuardMessages.has(key)||fastWardSpeech.has(key))return;
+  if(seenGuardMessages.has(key)||fastWardSpeech.has(key)||
+    !canHearWardDoctor(world.snapshot(),userId,social.state().user?.id))return;
   const name=social.state().room?.members.find(m=>m.userId===userId)?.name||'Médico';
   const time=window.performance.now();
-  fastWardSpeech.set(key,{id:key,name,text,time});
+  fastWardSpeech.set(key,{id:key,name,text,time,actorId:userId});
   seenGuardMessages.add(key);
   world.showGuardMessage(userId,text,time);
   line(name,text); // social speech preview: not a medication or medical receipt
@@ -441,8 +443,13 @@ export async function createApplication({document,window,content,signal}){
  }
  function renderGuardCommunication(){
   if(!guardSession)return;
-  const clinicalState=guardSession.read(),
-    rows=clinicalState.messages.slice(-300).map(row=>({...row,text:publicClinicalText(row.text)})),
+  const clinicalState=guardSession.read(),scene=world.snapshot(),self=social.state().user?.id,
+    nearBed=canHearWardPatient(scene,clinicalState.patient.uid),
+    rows=clinicalState.messages.slice(-300)
+     .filter(row=>!coopRoomId||row.role==='player'
+      ?(!coopRoomId||canHearWardDoctor(scene,row.actorId,self))
+      :nearBed)
+     .map(row=>({...row,text:publicClinicalText(row.text)})),
     fragment=document.createDocumentFragment();
   // One contextual nurse, always modest: asks about the next decision based
   // only on confirmed state or the doctor's OWN diagnostic impression.
@@ -471,7 +478,7 @@ export async function createApplication({document,window,content,signal}){
    if(!['patient','nurse','mentor'].includes(row.role)||seenNpcMessages.has(row.id))continue;
    seenNpcMessages.add(row.id);
    if(row.role==='patient')lastPatientSpeechAt=window.performance.now();
-   world.showNpcMessage(row.role,row.text,window.performance.now());
+   world.showNpcMessage(row.role,row.text,window.performance.now(),patientId);
    hospitalAudio.speech(row.role);
    if(row.role==='nurse'&&row.text.includes('solicitado; pendiente de resultado'))hospitalAudio.cue('studyOrder');
    if(row.role==='nurse'&&row.text.includes('resultado disponible'))hospitalAudio.cue('studyReady');
@@ -491,7 +498,8 @@ export async function createApplication({document,window,content,signal}){
    seenGuardMessages.delete(id);
   const ids=new Set(rows.map(row=>row.id)),time=window.performance.now();
   for(const [id,preview] of fastWardSpeech)
-   if(ids.has(id)||time-preview.time>15000)fastWardSpeech.delete(id);
+   if(ids.has(id)||time-preview.time>15000||
+      !canHearWardDoctor(scene,preview.actorId,self))fastWardSpeech.delete(id);
   history.length=0;
   // The final sentence is derived from one authenticated clinical receipt.
    const farewell=finalNurseMessage(clinicalState);
@@ -782,6 +790,8 @@ export async function createApplication({document,window,content,signal}){
   try{
    const committedUid=patientUid||(durableClient?session.read()?.patient.uid:null);
    const receipt=await session.post({id,text,...(committedUid?{targetPatientUid:committedUid}:{})});
+   if(receipt?.status==='rejected'&&receipt.reason==='approach-patient-to-claim')
+    toast('Acercate y tocá al paciente para hacer el primer contacto.');
    if(receipt?.status==='rejected'&&receipt.reason==='other-player-owns-patient')
     toast('Otro médico está a cargo del paciente. Podés observar, pero no ordenar.');
    if(receipt?.status==='rejected'&&receipt.reason==='patient-selection-changed')

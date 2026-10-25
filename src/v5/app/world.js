@@ -179,11 +179,11 @@ export function createWorld(content,profile,checkpoint=null){
    }
    return true;
   },
-  showNpcMessage(role,text,now=Date.now()){
+  showNpcMessage(role,text,now=Date.now(),patientUid=null){
    if(phase!=='guard'||!['patient','nurse','mentor'].includes(role))return false;
    // One consistent speaking nurse across the entire guard, never a
    // fabricated NPC. All messages remain presentation-only.
-   const speaker=role==='patient'?patients.find(p=>!p.departed):role==='mentor'?expert:nurses[0];
+   const speaker=role==='patient'?patients.find(p=>!p.departed&&(!patientUid||p.uid===patientUid)):role==='mentor'?expert:nurses[0];
    if(!speaker)return false;
    speaker.speechBubble={text:String(text).slice(0,150),until:now+5000,role};
    return true;

@@ -237,7 +237,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     // A menu selection retains its exact protocol ID; the shared presentation
     // uses the familiar clinical label rather than exposing that internal ID.
     const text=selected&&labels.has(selected[1])?'Enfermera, '+labels.get(selected[1]):message.text;
-    rows.push({id:'player:'+message.id,name:memberNames.get(message.actorId)||actorName,text,role:'player'});
+    rows.push({id:'player:'+message.id,name:memberNames.get(message.actorId)||actorName,
+     actorId:message.actorId,patientUid:message.patientUid,text,role:'player'});
     if(event.routeError)rows.push({id:'route:'+message.id,name:'Enfermera',role:'nurse',
      text:routeReason[event.routeError]||'No pude ejecutar esa indicación.'});
     for(let i=0;i<event.clinical.length;i++){

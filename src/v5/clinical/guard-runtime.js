@@ -62,12 +62,9 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   const r=shift.record(uid);
   if(!members.some(m=>m.id===actorId)||!r||r.closed||shift.ended())return false;
   if(!world.patientInRangeFor(actorId,uid))return false;
-  focused.set(actorId,uid);
-  if(mode==='competitive'){
-   if(r.ownerId)return r.ownerId===actorId;
-   return shift.owner(uid,actorId);
-  }
-  return true;
+  // Selection is an explicit bedside action. Remote chat never claims a bed.
+  if(mode==='competitive'&&!r.ownerId&&!shift.owner(uid,actorId))return false;
+  focused.set(actorId,uid);return true;
  }
  function awardMembers(){
   for(const r of shift.records()){
@@ -135,7 +132,10 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(mode==='competitive'){
     if(record.ownerId&&record.ownerId!==actorId)
      return {roomId,commandId:envelope.id,status:'rejected',reason:'other-player-owns-patient'};
-    if(!record.ownerId&&!claimPatient(actorId,uid))
+    // Never turn a generic utterance (including "hola") into first
+    // contact or a competitive ownership claim. A physical patient tap
+    // or explicit bedside claim must happen first.
+    if(!record.ownerId||focused.get(actorId)!==uid)
      return {roomId,commandId:envelope.id,status:'rejected',reason:'approach-patient-to-claim'};
    }
    const session=activeSession(actorId),ack=await session.post({...envelope,targetPatientUid:uid},actorId);
