@@ -83,7 +83,14 @@ for(const caseId of cases){
    for(const text of commands)await send(text);
    now+=p.wait*1000;await call('b');
    await send('/reevaluar');
-   const before=await call('b');
+   let before=await call('b');
+   // Secondary sepsis uses a physical nursing dispatcher in multiplayer.
+   // Reassess again after actual bedside delivery, rather than pretending
+   // that a queued IV order has already stabilized the patient.
+   if(caseId==='PERI-SEC-001'&&!before.clinical.eligibleDestinations.includes(p.dest)&&
+      !before.clinical.patient.caseEnded){
+    now+=40000;await call('b');await send('/reevaluar');before=await call('b');
+   }
    assert(before.clinical.eligibleDestinations.includes(p.dest),
     caseId+' absent valid handoff: '+JSON.stringify({eligible:before.clinical.eligibleDestinations,
      missing:before.clinical.closure?.missing,
