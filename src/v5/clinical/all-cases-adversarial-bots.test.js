@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {createGuardSession} from './guard-session.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
+import {CLINICAL_BOT_PLAYBOOK as playbook} from './clinical-bot-playbooks.js';
 const load=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const content={cases:load('cases'),therapies:load('therapies'),defaultDoses:load('default-doses')};
 const ids=Object.keys(CLINICAL_EXECUTORS);
@@ -20,34 +21,6 @@ function bot(caseId,mode,kind){
   async advance(sec){session.advance(sec);await session.flush();}};
 }
 const exam=['general','inspection','auscultation','percussion','palpation'].map(x=>'/examen '+x);
-const playbook={
- 'CIRR-001':{dx:'cirrosis descompensada',dest:'sala',history:['¿Desde cuándo empezó la hinchazón?','¿Toma alcohol?'],
-  studies:['hepatograma','renal','eco','paracentesis'],meds:['Enfermera dieta sin sal','Enfermera espironolactona 100 mg'],wait:120},
- 'APP-001':{dx:'apendicitis aguda',dest:'quirofano',history:['¿Desde cuándo empezó el dolor?'],
-  studies:['app_cbc','app_us'],meds:['Enfermera una vía','Enfermera ceftriaxona 1 g y metronidazol 500 mg'],
-  consult:'/consulta cirugia',wait:120},
- 'PERI-PBE-001':{dx:'PBE',dest:'sala',
-  history:['¿Tiene cirrosis?','¿Tiene ascitis?','¿Tuvo fiebre?','¿Notó confusión?'],
-  studies:['pbe_paracentesis','pbe_renal'],
-  meds:['Enfermera una vía','Enfermera ceftriaxona 1 g y albumina 1.5 g/kg'],wait:55},
- 'PERI-SEC-001':{dx:'peritonitis secundaria',dest:'quirofano',
-  history:['¿Dónde empezó el dolor?'],meds:['Enfermera una vía',
-   'Enfermera Ringer 500 ml y ceftriaxona 1 g y metronidazol 500 mg'],
-  consult:'/consulta cirugia',wait:4},
- 'PERI-TER-001':{dx:'peritonitis terciaria',dest:'uti',
-  history:['¿Cuántas operaciones previas?','¿Evolución desde la cirugía?','¿Tiene defensas bajas?'],
-  studies:['ter_culture'],meds:['Enfermera una vía',
-   'Enfermera Ringer 1000 ml y piperacilina tazobactam 4.5 g y noradrenalina 0.05 mcg/kg/min IV y oxigeno 4 L/min'],
-  consult:'/consulta uti',wait:5},
- 'CHOLANG-001':{dx:'colangitis aguda',dest:'procedimiento',history:['¿Desde cuándo empezó el dolor?'],
-  studies:['cholang_liver'],meds:['Enfermera una vía',
-  'Enfermera Ringer 500 ml y ceftriaxona 1 g y metronidazol 500 mg'],
-  consult:'/consulta gastro',wait:75},
- 'CHOLE-001':{dx:'colecistitis aguda',dest:'quirofano',history:['¿Desde cuándo comenzó el dolor?'],
-  studies:['chole_us'],meds:['Enfermera nada por boca','Enfermera una vía',
-   'Enfermera Ringer 500 ml y ceftriaxona 1 g y metronidazol 500 mg'],
-  consult:'/consulta cirugia',wait:75}
-};
 assert.deepEqual(new Set(Object.keys(playbook)),new Set(ids),
  'The bots must cover exactly every actual certified clinical executor.');
 const trace=[];
