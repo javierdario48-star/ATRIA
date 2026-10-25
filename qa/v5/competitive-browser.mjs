@@ -51,6 +51,9 @@ try{
  assert.notEqual(opening.patients[0].uid,opening.patients[1].uid);
  assert.notEqual(opening.patients[0].bedId,opening.patients[1].bedId);
  assert(opening.remainingSeconds>1430&&opening.remainingSeconds<=1440);
+ await host.waitForFunction(()=>document.querySelectorAll('.unassigned-patient-marker').length===2);
+ assert.equal(await host.locator('.unassigned-patient-marker').count(),2,
+  'both unclaimed patient beds must glow without intercepting a map tap');
  await host.locator('#receptionButton').click();
  assert.equal(await host.locator('.reception-patient').count(),2);
  await host.locator('#modalClose').click();
@@ -75,6 +78,7 @@ try{
  });
  await owner.locator('#game').click({position:aim});
  await owner.locator('#patientWheel').waitFor({state:'visible'});
+ await owner.locator('#patientWheel [data-patient-action="talk"].patient-wheel-guided').waitFor();
  await owner.waitForFunction(()=>!!atriaV5.snapshot().clinical?.competition?.ownerId,null,{timeout:65000});
  const ownerId=(await clinical(owner)).competition.ownerId;
  for(const p of pages)await p.waitForFunction(id=>atriaV5.snapshot().clinical?.competition?.ownerId===id,ownerId);
@@ -89,6 +93,9 @@ try{
  await owner.locator('#patientWheel').evaluate(e=>e.hidden=true);
  await send(owner,'/signos');
  await send(owner,'¿Tiene ascitis?');
+ await send(owner,'Enfermera, mi diagnóstico presuntivo es peritonitis bacteriana espontánea');
+ await owner.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='peritonitis bacteriana espontánea');
+ assert.equal((await clinical(owner)).patient.diagnosis,'peritonitis bacteriana espontánea');
  await host.waitForFunction(()=>atriaV5.snapshot().clinical.room.transcript.some(x=>x.text==='¿Tiene ascitis?'),
   null,{timeout:18000});
  const hostChat=await host.locator('#chatHistory').innerText();

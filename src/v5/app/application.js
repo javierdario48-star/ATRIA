@@ -768,7 +768,9 @@ export async function createApplication({document,window,content,signal}){
  function selectRecipient(kind,patientUid=null){
   if(composition){deferredRecipient=kind;return;}
   focusedNpc=kind==='patient'?null:kind;
-  focusedPatientUid=kind==='patient'?patientUid:null;
+  // Switching to nurse preserves the bedside patient; the server still
+  // verifies range/ownership before accepting the nurse's diagnosis or order.
+  focusedPatientUid=kind==='patient'?patientUid:kind==='nurse'?focusedPatientUid:null;
   const text=input.value.replace(/^(?:(?:dr\.?\s*)?vega|enfermera|enfermero)\s*[,.:]?\s*/i,'');
   const prefix=kind==='nurse'?'Enfermera, ':kind==='vega'?'Vega, ':'';
   input.value=prefix+text;updateHud();input.focus({preventScroll:true});input.setSelectionRange(prefix.length,prefix.length);updateTypingAssistance();
