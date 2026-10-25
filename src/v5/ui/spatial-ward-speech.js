@@ -3,7 +3,7 @@
 import {PATIENT_RANGE} from '../engine/interactions.js';
 export const WARD_SPEECH_RADIUS=180;
 const finitePose=p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y);
-const near=(a,b,r)=>finitePose(a)&&finitePose(b)&&Math.hypot(a.x-b.x,a.y-b.y)<=r;
+const near=(a,b,r)=>!!(finitePose(a)&&finitePose(b)&&Math.hypot(a.x-b.x,a.y-b.y)<=r);
 export function canHearWardDoctor(scene,actorId,selfId){
  if(!actorId)return false;
  if(actorId===selfId||actorId==='local-player'||actorId===scene?.player?.id)return true;
