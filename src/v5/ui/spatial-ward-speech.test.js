@@ -86,7 +86,9 @@ test('all eight authored ATRIA beds have audible speech from their respective be
  const beds=JSON.parse(fs.readFileSync(new URL('../content/beds.json',import.meta.url)));
  const navigation=createNavigation(map);
  for(const bed of beds){
-  const doctor={id:'doctor',...navigation.center(...bed.approach)};
+  const tile=navigation.nearest(...bed.approach,5);
+  assert(tile,bed.id+' needs a reachable patient approach');
+  const doctor={id:'doctor',...navigation.center(...tile)};
   const scene={player:doctor,patients:[{uid:'own',x:bed.patient[0],y:bed.patient[1],approach:bed.approach}]};
   assert(canHearWardPatient(scene,'own',navigation),bed.id+' must allow patient replies at the bedside');
  }
@@ -96,4 +98,17 @@ test('blocked solid walls still prevent patient speech through adjacent bays, ev
  const nav=createNavigation(map),doctor=nav.center(2,2),patient=nav.center(4,2);
  assert.equal(canHearWardPatient({player:doctor,patients:[{uid:'other',...patient,approach:[4,2]}]},
   'other',nav),false);
+});
+
+test('B3 uses the walkable approach chosen by hospital navigation, not the annotated wall tile',()=>{
+ const map=JSON.parse(fs.readFileSync(new URL('../content/hospital.json',import.meta.url)));
+ const nav=createNavigation(map);
+ const bed=JSON.parse(fs.readFileSync(new URL('../content/beds.json',import.meta.url))).find(b=>b.id==='B3');
+ assert.equal(nav.passable(...bed.approach),false,'B3 authored target is physically blocked');
+ const reachable=nav.nearest(...bed.approach,5);
+ assert(reachable&&nav.passable(...reachable));
+ const doctor={id:'physician',...nav.center(...reachable)};
+ assert(canHearWardPatient({player:doctor,patients:[{
+  uid:'b3',x:bed.patient[0],y:bed.patient[1],approach:bed.approach
+ }]},'b3',nav));
 });

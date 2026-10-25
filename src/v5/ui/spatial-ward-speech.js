@@ -22,8 +22,14 @@ export function canHearWardPatient(scene,patientUid,navigation){
  // The patient sprite sits on a blocked bed tile in ATRIA. The reachable
  // approach tile is their voice location for wall occlusion; use the exact
  // patient coordinates as the fallback for synthetic/open-map tests.
- const entrance=Array.isArray(patient.approach)&&patient.approach.length===2?
-  navigation.center(...patient.approach):patient;
+ // Navigation resolves an authored approach onto a physically reachable
+ // tile. B3's raw [24,15] annotation is a wall tile in the published map;
+ // using that raw point for acoustics silently hides a valid bedside reply.
+ // Share navigation's original nearest-walkable resolution, never a
+ // separate hand-maintained bed list or a global through-wall exception.
+ const approach=Array.isArray(patient.approach)&&patient.approach.length===2?
+  navigation.nearest(...patient.approach,5):null;
+ const entrance=approach?navigation.center(...approach):patient;
  // The approach tile is a NAVIGATION goal, not necessarily the patient's
  // acoustic location. In some hospital boxes a wall corner lies between the
  // doctor's arrival tile and that approach point, although the patient is
@@ -36,8 +42,7 @@ export function canHearWardPatient(scene,patientUid,navigation){
  // valid clinical interaction anchor, so allow patient speech while the
  // physician actually stands on that walkable anchor. This is not a general
  // through-wall hearing exemption: one tile away still requires LOS.
- const atAuthoredBedside=Array.isArray(patient.approach)&&
-  finitePose(entrance)&&navigation.passable(...patient.approach)&&
+ const atAuthoredBedside=!!approach&&finitePose(entrance)&&
   Math.hypot(scene.player.x-entrance.x,scene.player.y-entrance.y)<=20;
  return fromBed||fromApproach||atAuthoredBedside;
 }
