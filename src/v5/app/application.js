@@ -801,7 +801,13 @@ export async function createApplication({document,window,content,signal}){
    const competitive=durableClient&&session.read()?.competition?.mode==='competitive';
    // Free chat does not carry the globally displayed patient UID. Explicit
    // patient-modal commands can still commit their immutable target.
-   const committedUid=patientUid||(!competitive&&durableClient?session.read()?.patient.uid:null);
+   // Explicit reception focus is authoritative only for this doctor's OWN bed.
+   // Never fall back to the global room patient in competitive mode.
+   const selected=patientUid||focusedPatientUid;
+   const self=social.state().user?.id;
+   const record=session.read()?.shift?.patients?.find(p=>p.uid===selected);
+   const permitted=!!selected&&(!competitive||record?.ownerId===self);
+   const committedUid=permitted?selected:(!competitive&&durableClient?session.read()?.patient.uid:null);
    const receipt=await session.post({id,text,...(committedUid?{targetPatientUid:committedUid}:{})});
    if(receipt?.status==='rejected'&&receipt.reason==='approach-patient-to-claim')
     toast('Acercate a una cama para hablar con ese paciente.');
