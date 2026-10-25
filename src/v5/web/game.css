@@ -112,6 +112,7 @@ dialog[data-panel="diagnosis"]{max-width:460px}
 }
 .patient-wheel-action:focus-visible .patient-wheel-glyph{outline:2px solid #b1f2ed;outline-offset:2px}
 .action-talk{left:75px;top:0}
+.action-diagnosis{left:75px;top:82px}
 .action-examination{left:150px;top:37px}
 .action-history{left:150px;top:119px}
 .action-studies{left:75px;top:163px}
@@ -477,3 +478,33 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 @keyframes reception-guide-appear{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 @keyframes reception-arrow{to{transform:translateY(-5px)}}
 @media(prefers-reduced-motion:reduce){#receptionButton.reception-highlight,.reception-guide,.reception-guide-arrow{animation:none}}
+
+/* Read-only progression hints: emphasis never executes a clinical action. */
+.patient-wheel-action.patient-wheel-guided .patient-wheel-glyph{
+ border:2px solid #c5ffed;
+ background:radial-gradient(circle at 36% 25%,#3a9f9c,#14504e);
+ box-shadow:0 0 0 3px #a4ffe844,0 0 21px 8px #8af5d1cc,inset 0 0 8px #dcfff57d;
+ animation:patient-guidance-pulse 1.7s ease-in-out infinite;
+}
+.patient-wheel-action.patient-wheel-guided{color:#d3ffed;font-weight:900}
+@keyframes patient-guidance-pulse{
+ 50%{filter:brightness(1.35);box-shadow:0 0 0 5px #a4ffe855,0 0 30px 13px #8af5d1de}
+}
+.unassigned-patient-marker{
+ position:fixed;z-index:17;width:66px;height:66px;transform:translate(-50%,-50%);
+ border:2px solid #a4ffe2;border-radius:50%;background:#5cf4b313;
+ box-shadow:0 0 15px 6px #70ffd38a,inset 0 0 15px #70ffd355;
+ animation:unassigned-patient-pulse 1.9s ease-in-out infinite;
+ pointer-events:none;
+}
+.unassigned-patient-marker::after{
+ content:'+';position:absolute;right:-5px;top:-10px;border-radius:50%;
+ background:#0b443a;color:#ceffee;font-size:15px;font-weight:900;
+ padding:1px 5px;border:1px solid #a4ffe2;
+}
+@keyframes unassigned-patient-pulse{
+ 50%{box-shadow:0 0 21px 11px #70ffd3bb,inset 0 0 22px #70ffd37c;transform:translate(-50%,-50%) scale(1.08)}
+}
+@media(prefers-reduced-motion:reduce){
+ .patient-wheel-action.patient-wheel-guided .patient-wheel-glyph,.unassigned-patient-marker{animation:none}
+}

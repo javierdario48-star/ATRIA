@@ -17,6 +17,21 @@ export function routeWardSpeech(text,context={}){
    [{kind:'diagnosis.record',id:'diagnostico',value:'',sourceText:original}]:[],
    ...(!patientUid?{error:'no-patient-target'}:{})};
  }
+ // Speaking a specific presumed diagnosis to the nurse is the SAME
+ // authenticated diagnosis.record intent as the editor and /diagnostico.
+ // Require an explicit affirmative diagnostic phrase: ordinary questions,
+ // nursing orders and negations must not silently overwrite an impression.
+ const addressed=/^(?:enfermera|enfermero|enfermer[ií]a)\s*[,.:]?\s*/i.exec(original);
+ const diagnosticSpeech=addressed?original.slice(addressed[0].length):
+  context.focusedNpc==='nurse'?original:null;
+ const said=diagnosticSpeech&&/^(?:(?:mi\s+)?(?:impresi[oó]n\s+diagn[oó]stica|diagn[oó]stico\s+(?:presuntivo|probable))\s*(?::|es|ser[ií]a)\s*|(?:creo|pienso|considero)\s+que\s+(?:el\s+paciente\s+)?(?:tiene|padece|es)\s+|(?:la\s+enfermedad|el\s+diagn[oó]stico)\s+es\s+)(.+)$/i.exec(diagnosticSpeech);
+ if(context.clinicalEvaluation&&said&&!/[¿?]/.test(original)){
+  const value=said[1].trim().replace(/[.!]+$/,'').trim(),patientUid=context.patientUid??null;
+  const error=!value||value.length>200?'invalid-clinical-command':!patientUid?'no-patient-target':null;
+  return {recipient:'nurse',patientUid,original,intents:error?[]:
+   [{kind:'diagnosis.record',id:'diagnostico',value,sourceText:original}],
+   ...(error?{error}:{})};
+ }
  const monitor=/^\/monitor\s+(conectar|desconectar)$/i.exec(normalized);
  if(monitor&&context.clinicalEvaluation){
   const patientUid=context.patientUid??null;
