@@ -18,6 +18,7 @@ import {receptionBoardHTML} from '../ui/reception-board.js';
 import {canHearWardDoctor,canHearWardPatient} from '../ui/spatial-ward-speech.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {createHospitalAudio} from '../ui/hospital-audio.js';
+import {createChatTranscript} from '../ui/chat-transcript.js';
 import {clinicalCompletions,spellingSuggestions} from '../ui/clinical-autocomplete.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
 import {clinicalWorkflow} from '../ui/clinical-workflow.js';
@@ -102,7 +103,9 @@ export async function createApplication({document,window,content,signal}){
      return world.navigation.passable(column,row);
     }});
  }
- const history=[],seenLobbyMessages=new Set(),seenGuardMessages=new Set(),seenNpcMessages=new Set(),seenNurseCues=new Set(),nurseCueRows=[],fastWardSpeech=new Map();let lastNurseCueAt=-Infinity,lastPatientSpeechAt=-Infinity,selectedLobbyPlayerId=null,selectedLobbyCardState=null;
+ const history=[],transcript=createChatTranscript({document,element:ui('chatHistory'),history}),
+  seenLobbyMessages=new Set(),seenGuardMessages=new Set(),seenNpcMessages=new Set(),
+  seenNurseCues=new Set(),nurseCueRows=[],fastWardSpeech=new Map();let lastNurseCueAt=-Infinity,lastPatientSpeechAt=-Infinity,selectedLobbyPlayerId=null,selectedLobbyCardState=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
  function renderLobbyMessages(s){
   if(world.snapshot().phase!=='lobby')return;
@@ -439,13 +442,7 @@ export async function createApplication({document,window,content,signal}){
   social.broadcast({kind:'state',roomId:coopRoomId,sequence:++sharedSequence,clinical:guardSession.read(),catalog:guardSession.catalog(),
    spatial:{nurses:s.nurses,doctors:[{...s.player,id,kind:'doctor'},...s.others]}});
  }
- function line(name,text,system=false){
-  history.push({name,text,system});if(history.length>300)history.shift();
-  const el=document.createElement('div');el.className='line'+(system?' system':'');
-  const who=document.createElement('b');who.textContent=name+':';el.append(who,document.createTextNode(text));
-  ui('chatHistory').append(el);while(ui('chatHistory').children.length>300)ui('chatHistory').firstChild.remove();
-  ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
- }
+ function line(name,text,system=false){transcript.append(name,text,system);}
  function showWardSpeech({roomId,userId,id,text}){
   if(!durableClient||roomId!==coopRoomId||typeof id!=='string'||
      typeof text!=='string'||text.length>280||!social.isMember(userId))return;
@@ -468,8 +465,7 @@ export async function createApplication({document,window,content,signal}){
      .filter(row=>!coopRoomId||row.role==='player'
       ?(!coopRoomId||canHearWardDoctor(scene,row.actorId,self,world.navigation))
       :nearBed)
-     .map(row=>({...row,text:publicClinicalText(row.text)})),
-    fragment=document.createDocumentFragment();
+     .map(row=>({...row,text:publicClinicalText(row.text)}));
   // One contextual nurse, always modest: asks about the next decision based
   // only on confirmed state or the doctor's OWN diagnostic impression.
   const workflow=clinicalWorkflow(clinicalState),cue=workflow?.cue,patientId=clinicalState.patient.uid;
@@ -519,29 +515,15 @@ export async function createApplication({document,window,content,signal}){
   for(const [id,preview] of fastWardSpeech)
    if(ids.has(id)||time-preview.time>15000||
       !canHearWardDoctor(scene,preview.actorId,self,world.navigation))fastWardSpeech.delete(id);
-  history.length=0;
   // The final sentence is derived from one authenticated clinical receipt.
-   const farewell=finalNurseMessage(clinicalState);
-   if(farewell&&(!coopRoomId||nearBed)&&!seenNpcMessages.has(farewell.id)){
-    seenNpcMessages.add(farewell.id);
-    world.showNpcMessage('nurse',farewell.text,window.performance.now());
-    hospitalAudio.speech('nurse');
-   }
-   for(const row of [...rows,...nurseCueRows,...(farewell&&(!coopRoomId||nearBed)?[farewell]:[])]){
-   history.push({name:row.name,text:row.text,system:row.role!=='player'});
-   const el=document.createElement('div'),who=document.createElement('b');
-   el.className='line'+(['patient','nurse'].includes(row.role)?' '+row.role:'');
-   el.dataset.messageId=row.id;el.dataset.role=row.role;
-   who.textContent=row.name+':';el.append(who,document.createTextNode(row.text));fragment.append(el);
+  const farewell=finalNurseMessage(clinicalState);
+  if(farewell&&(!coopRoomId||nearBed)&&!seenNpcMessages.has(farewell.id)){
+   seenNpcMessages.add(farewell.id);
+   world.showNpcMessage('nurse',farewell.text,window.performance.now());
+   hospitalAudio.speech('nurse');
   }
-  for(const preview of fastWardSpeech.values()){
-   history.push({name:preview.name,text:preview.text,system:false});
-   const el=document.createElement('div'),who=document.createElement('b');
-   el.className='line';el.dataset.messageId=preview.id;
-   who.textContent=preview.name+':';el.append(who,document.createTextNode(preview.text));
-   fragment.append(el);
-  }
-  ui('chatHistory').replaceChildren(fragment);ui('chatHistory').scrollTop=ui('chatHistory').scrollHeight;
+  transcript.replace([...rows,...nurseCueRows,...(farewell&&(!coopRoomId||nearBed)?[farewell]:[])],
+   fastWardSpeech.values());
   clinicalUI.render();
   const closure=guardSession.read().patient.closure;
   if(!durableClient&&closure?.closed){
@@ -571,7 +553,7 @@ export async function createApplication({document,window,content,signal}){
     '<button data-action="return-lobby">Volver al lobby</button>'+
     '<button data-action="close">Seguir viendo el caso</button></div>','outcome');}
  }
- function resetChat(message){history.length=0;ui('chatHistory').replaceChildren();input.value='';focusedNpc=null;focusedPatientUid=null;updateTypingAssistance();line('ATRIA',message,true);}
+ function resetChat(message){transcript.clear();input.value='';focusedNpc=null;focusedPatientUid=null;updateTypingAssistance();line('ATRIA',message,true);}
  function announceDeath(p){
   if(!p?.patientDied||announcedDeathUid===p.uid)return;
   announcedDeathUid=p.uid;world.stop();patientWheel.hide();clinicalChecklist.hide();hospitalAudio.cue('death');
