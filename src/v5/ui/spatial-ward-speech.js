@@ -31,5 +31,13 @@ export function canHearWardPatient(scene,patientUid,navigation){
  // the SAME solid-wall/closed-door occlusion; never bypass walls by distance.
  const fromBed=navigation.soundClear(scene.player.x,scene.player.y,patient.x,patient.y)===true;
  const fromApproach=finitePose(entrance)&&navigation.soundClear(scene.player.x,scene.player.y,entrance.x,entrance.y)===true;
- return fromBed||fromApproach;
+ // Some authored patients (notably B3) are visibly behind equipment/wall
+ // corners from their designated bedside tile. The same tile is the ONLY
+ // valid clinical interaction anchor, so allow patient speech while the
+ // physician actually stands on that walkable anchor. This is not a general
+ // through-wall hearing exemption: one tile away still requires LOS.
+ const atAuthoredBedside=Array.isArray(patient.approach)&&
+  finitePose(entrance)&&navigation.passable(...patient.approach)&&
+  Math.hypot(scene.player.x-entrance.x,scene.player.y-entrance.y)<=20;
+ return fromBed||fromApproach||atAuthoredBedside;
 }
