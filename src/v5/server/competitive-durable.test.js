@@ -40,7 +40,8 @@ for(const n of [2,3,4]){
    for(let rival=0;rival<n;rival++)if(rival!==1){
     const blocked=await call(rival,'sync',{commands:[{id:'rival-'+rival,text:'/signos'}]});
     assert.equal(blocked.body.acknowledgements[0].status,'rejected');
-    assert.equal(blocked.body.acknowledgements[0].reason,'other-player-owns-patient');
+    assert.equal(blocked.body.acknowledgements[0].reason,'approach-patient-to-claim',
+     'distant rivals cannot target any patient, owned or otherwise');
    }
    http=makeHttp();
    const owner=await call(1,'sync',{commands:[{id:'owner-signs',text:'/signos'}]});
@@ -115,8 +116,10 @@ test('competitive chat while far cannot claim a patient or elicit a remote patie
   await call('b',{motion:[point.x,point.y],motionSequence:1});
   now+=20000;await call('b');
   const greeting=await call('b',{commands:[{id:'near-but-unclaimed',text:'hola'}]});
-  assert.equal(greeting.acknowledgements[0].reason,'approach-patient-to-claim');
-  assert.equal(greeting.clinical.shift.patients[1].ownerId,null);
+  assert.equal(greeting.acknowledgements[0].status,'received',
+   'a greeting beside exactly one available bed establishes real first contact');
+  assert.equal(greeting.clinical.shift.patients[1].ownerId,'b');
+  assert.equal(greeting.clinical.shift.patients[0].ownerId,null);
   const touched=await call('b',{claim:second.uid});
   assert.equal(touched.clinical.patient.uid,second.uid);
   assert.equal(touched.clinical.shift.patients[1].ownerId,'b');

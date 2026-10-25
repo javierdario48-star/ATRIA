@@ -59,7 +59,7 @@ try{
  stage='greeting before bedside contact cannot claim clinical ownership';
  await owner.locator('#dieInput').fill('hola');
  await owner.locator('#chatForm [type="submit"]').click();
- await owner.waitForFunction(()=>document.querySelector('#toast')?.textContent?.includes('Acercate y tocá'),
+ await owner.waitForFunction(()=>document.querySelector('#toast')?.textContent?.includes('Acercate a una cama'),
   null,{timeout:18000});
  assert.equal((await clinical(owner)).competition.ownerId,null);
  assert.equal((await clinical(owner)).room.transcript.length,0,'a distant hello is not clinical first contact');
