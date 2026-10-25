@@ -123,21 +123,37 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   claim:claimPatient,
   async post(actorId,envelope){
    if(!members.some(m=>m.id===actorId))throw Error('not a clinical member');
-   const uid=preferred(actorId),record=shift.record(uid);
-   if(envelope.targetPatientUid&&envelope.targetPatientUid!==uid)
-    return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-selection-changed'};
    if(shift.ended())return {roomId,commandId:envelope.id,status:'rejected',reason:'shift-ended'};
-   if(!record||record.closed)return {roomId,commandId:envelope.id,status:'rejected',
-    reason:'patient-not-active',clinical:[{kind:'case.close',status:'rejected',reason:'patient-not-active'}]};
+   let uid=preferred(actorId),record=shift.record(uid);
    if(mode==='competitive'){
+    // A generic chat utterance belongs to the actor's OWN physical bedside.
+    // Never route it to firstUid or to a rival's focused patient just because
+    // those are the currently published clinical snapshot.
+    const bedside=world.nearbyPatientsFor(actorId).map(id=>shift.record(id))
+     .filter(r=>r&&!r.closed);
+    const explicit=envelope.targetPatientUid;
+    if(explicit&&explicit!==focused.get(actorId))
+     return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-selection-changed'};
+    if(explicit)record=bedside.find(r=>r.uid===explicit)||null;
+    else{
+     const selected=bedside.find(r=>r.uid===focused.get(actorId)&&r.ownerId===actorId);
+     if(!selected&&bedside.length>1)
+      return {roomId,commandId:envelope.id,status:'rejected',reason:'ambiguous-patient-selection'};
+     record=selected||bedside[0]||null;
+    }
+    if(!record)
+     return {roomId,commandId:envelope.id,status:'rejected',reason:'approach-patient-to-claim'};
     if(record.ownerId&&record.ownerId!==actorId)
      return {roomId,commandId:envelope.id,status:'rejected',reason:'other-player-owns-patient'};
-    // Never turn a generic utterance (including "hola") into first
-    // contact or a competitive ownership claim. A physical patient tap
-    // or explicit bedside claim must happen first.
-    if(!record.ownerId||focused.get(actorId)!==uid)
-     return {roomId,commandId:envelope.id,status:'rejected',reason:'approach-patient-to-claim'};
-   }
+    // Speaking to exactly one reachable, unclaimed patient is valid first
+    // bedside contact. Speaking from a corridor or another box never is.
+    if(!record.ownerId&&!shift.owner(record.uid,actorId))
+     return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-claim-conflict'};
+    focused.set(actorId,record.uid);uid=record.uid;
+   }else if(envelope.targetPatientUid&&envelope.targetPatientUid!==uid)
+    return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-selection-changed'};
+   if(!record||record.closed)return {roomId,commandId:envelope.id,status:'rejected',
+    reason:'patient-not-active',clinical:[{kind:'case.close',status:'rejected',reason:'patient-not-active'}]};
    const session=activeSession(actorId),ack=await session.post({...envelope,targetPatientUid:uid},actorId);
    await session.flush();awardMembers();return ack;
   },

@@ -763,17 +763,9 @@ export async function createApplication({document,window,content,signal}){
     toast('No se pudo enviar al lobby.');}
    return;
   }
-  if(guardSession.read()?.competition?.mode==='competitive'){
-   const owner=guardSession.read().competition.ownerId;
-   if(owner&&owner!==social.state().user?.id){
-    // The observer may still speak to colleagues; only clinical commands
-    // are suppressed. The server independently rejects all rival commands.
-    world.showGuardMessage('local-player',text,window.performance.now());
-    social.postRoomSpeech({id:'observer-'+messageEpoch+'-'+(++messageNumber),text}).catch(()=>{});
-    toast('Otro médico está a cargo del paciente. Tus mensajes no ejecutan órdenes.');
-    return {status:'observer'};
-   }
-  }
+  // The current clinical snapshot can belong to ANOTHER doctor's box.
+  // Never suppress all messages based on its owner. The authority selects
+  // this speaker's physical bedside and enforces that bed's ownership.
   advanceClinicalTo(window.performance.now());
   // Speech is a visual local action, NOT an executed treatment. Display it
   // without waiting for PostgreSQL; clinical replies still require an ACK.
@@ -788,12 +780,17 @@ export async function createApplication({document,window,content,signal}){
   }
   const session=guardSession;
   try{
-   const committedUid=patientUid||(durableClient?session.read()?.patient.uid:null);
+   const competitive=durableClient&&session.read()?.competition?.mode==='competitive';
+   // Free chat does not carry the globally displayed patient UID. Explicit
+   // patient-modal commands can still commit their immutable target.
+   const committedUid=patientUid||(!competitive&&durableClient?session.read()?.patient.uid:null);
    const receipt=await session.post({id,text,...(committedUid?{targetPatientUid:committedUid}:{})});
    if(receipt?.status==='rejected'&&receipt.reason==='approach-patient-to-claim')
-    toast('Acercate y tocá al paciente para hacer el primer contacto.');
+    toast('Acercate a una cama para hablar con ese paciente.');
+   if(receipt?.status==='rejected'&&receipt.reason==='ambiguous-patient-selection')
+    toast('Hay varios pacientes cerca. Tocá la cama que querés atender.');
    if(receipt?.status==='rejected'&&receipt.reason==='other-player-owns-patient')
-    toast('Otro médico está a cargo del paciente. Podés observar, pero no ordenar.');
+    toast('Ese paciente pertenece a otro médico. Acercate a otro box libre.');
    if(receipt?.status==='rejected'&&receipt.reason==='patient-selection-changed')
     toast('El paciente seleccionado cambió. Repetí la orden en el box correcto.');
    return receipt;

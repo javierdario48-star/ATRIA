@@ -131,3 +131,50 @@ test('competitive chat while far cannot claim a patient or elicit a remote patie
   assert.equal(rival.clinical.shift.patients[0].ownerId,null);
  }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('two competitive doctors type beside distant beds: each message targets only their own patient, without tapping a rival',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'atria-competitive-nearby-'));
+ const store=createSqliteGuardStore(path.join(dir,'guard.sqlite'));
+ let now=1700000000000;
+ const create=()=>createDurableGuardAuthority({store,content,now:()=>now});
+ let authority=create();
+ const call=(actorId,extra={})=>authority.transact({roomId:'independent-beds',actorId,...extra});
+ try{
+  const opening=await authority.bootstrap({roomId:'independent-beds',caseId:'PERI-PBE-001',
+   members:[{id:'a',name:'A'},{id:'b',name:'B'}],hostId:'a',actorId:'a',mode:'competitive'});
+  const [first,second]=opening.clinical.shift.patients;
+  assert.notEqual(first.bedId,second.bedId);
+  const nav=createWorld(content,{id:'a',name:'A'}).navigation;
+  const point=uid=>nav.center(...content.beds.find(b=>b.id===(uid===first.uid?first.bedId:second.bedId)).approach);
+  const initial=await call('a',{commands:[{id:'from-far-away',text:'hola'}]});
+  assert.equal(initial.acknowledgements[0].reason,'approach-patient-to-claim');
+  assert(initial.clinical.shift.patients.every(p=>!p.ownerId));
+  const one=point(first.uid),two=point(second.uid);
+  await call('b',{motion:[one.x,one.y],motionSequence:1});
+  await call('a',{motion:[two.x,two.y],motionSequence:1});
+  now+=20000;
+  const other=await call('b',{claim:first.uid});
+  assert.equal(other.clinical.shift.patients[0].ownerId,'b');
+  // Physician A still has the old first-patient snapshot. The unscoped
+  // typed greeting must NOT be sent to B's patient and must not be blocked.
+  assert.equal((await call('a')).clinical.patient.uid,first.uid);
+  const greeting=await call('a',{commands:[{id:'next-box-hello',text:'hola'}]});
+  assert.equal(greeting.acknowledgements[0].status,'received');
+  assert.equal(greeting.clinical.patient.uid,second.uid);
+  assert.equal(greeting.clinical.shift.patients[1].ownerId,'a');
+  assert.equal(greeting.clinical.shift.patients[0].ownerId,'b');
+  assert(greeting.clinical.room.transcript.some(m=>m.text==='hola'&&m.patientUid===second.uid));
+  const stranger=await call('b',{commands:[{id:'first-box-signs',text:'/signos'}]});
+  assert.equal(stranger.clinical.patient.uid,first.uid);
+  assert(stranger.clinical.room.transcript.some(m=>m.text==='/signos'));
+  assert(!stranger.clinical.room.transcript.some(m=>m.text==='hola'&&m.patientUid===second.uid));
+  const stale=await call('a',{commands:[{id:'stale-first-target',text:'/signos',targetPatientUid:first.uid}]});
+  assert.equal(stale.acknowledgements[0].reason,'patient-selection-changed');
+  authority=create();
+  const restored=await call('a',{commands:[{id:'persisted-second-target',text:'/signos'}]});
+  assert.equal(restored.clinical.patient.uid,second.uid);
+  assert.equal(restored.clinical.shift.patients[1].ownerId,'a');
+  assert(restored.clinical.room.transcript.some(m=>m.text==='/signos'));
+ }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
+});

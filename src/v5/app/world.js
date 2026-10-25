@@ -198,6 +198,17 @@ export function createWorld(content,profile,checkpoint=null){
   stopRemote(id){const other=others.find(x=>x.id===id);if(other){other.path=[];other.pathIndex=0;other.target=null;other.moving=false;}},
   patientInRangeFor(id,uid){const a=id===profile.id?player:others.find(x=>x.id===id),p=patients.find(x=>x.uid===uid&&!x.departed);
    return a&&p&&Math.hypot(a.x-p.x,a.y-p.y)<=PATIENT_RANGE?uid:null;},
+  // Server-owned bedside ordering for each physician. Never infer clinical
+  // selection from another player's viewport or shared first-patient fallback.
+  nearbyPatientsFor(id){
+   const a=id===profile.id?player:others.find(x=>x.id===id);
+   if(!a||phase!=='guard')return [];
+   return patients.filter(p=>!p.departed).map(p=>({
+    uid:p.uid,distance:Math.hypot(a.x-p.x,a.y-p.y)
+   })).filter(x=>x.distance<=PATIENT_RANGE)
+    .sort((x,y)=>x.distance-y.distance||x.uid.localeCompare(y.uid))
+    .map(x=>x.uid);
+  },
   applySharedSpatial({nurses:sharedNurses,doctors},now=Date.now(),acknowledgedMotion=null){
    if(authoritative||!['coop','competitive'].includes(mode))return false;
    // A browser recovering an existing durable room starts its local counter
