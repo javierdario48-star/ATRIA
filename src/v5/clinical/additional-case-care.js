@@ -2,6 +2,7 @@
 // existing native acute-care executor; no second authority, XP engine or clock.
 import {createAcuteCare} from './acute-care.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
+import {evaluateGastroDisposition} from './gastro-closure-v5.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {createPancCare} from './panc-care.js';
@@ -45,7 +46,9 @@ export function createAdditionalCaseCare(p,c,options){
  const policy=ADDITIONAL_CASE_DISPOSITIONS[c.id];
  return createAcuteCare(p,c,options,{
   initialVitals:additionalCaseInitialVitals,advanceVitals:advanceAdditionalCaseVitals,
-  evaluate:(patient,caseData,destination)=>csEvaluateClosure487(snapshot(patient,caseData,destination),GASTRO_CASE_RULES),
+  evaluate:(patient,caseData,destination)=>GASTRO_CASE_RULES[caseData.id]?
+   evaluateGastroDisposition(snapshot(patient,caseData,destination)):
+   csEvaluateClosure487(snapshot(patient,caseData,destination)),
   conducts:policy.conducts,reassessmentRequired:true,
   reassessmentMessage:patient=>'Reevaluación: PA '+Math.round(patient.liveVitals.sys)+'/'+Math.round(patient.liveVitals.dia)+
    ', FC '+Math.round(patient.liveVitals.hr)+

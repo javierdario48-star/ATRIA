@@ -1,0 +1,4948 @@
+[
+  {
+    "id": "CIRR-001",
+    "selector": "Abdomen distendido + cansancio",
+    "area": "Hígado · cotidiano",
+    "demo": "Varón, 58 años",
+    "chief": "Aumento progresivo del abdomen y cansancio.",
+    "opening": "Doctor, hace semanas que se me viene hinchando la panza y estoy muy cansado.",
+    "vitals": {
+      "temp": 37.2,
+      "hr": 94,
+      "rr": 20,
+      "bp": "108/68",
+      "spo2": 96
+    },
+    "exam": "Paciente adelgazado, arañas vasculares y eritema palmar. Abdomen globoso con ascitis moderada. Esplenomegalia. Sin asterixis ni desorientación.",
+    "intents": [
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo",
+          "cuanto tiempo",
+          "hace cuanto",
+          "empezo la hinchazon",
+          "se hincha el abdomen",
+          "panza hinchada",
+          "desde cuando empezo",
+          "cuando comenzo",
+          "hace cuanto comenzo",
+          "cuando arranco"
+        ],
+        "answers": [
+          "Hace varias semanas que el abdomen se me va hinchando.",
+          "Empezó de a poco hace unas semanas y cada vez lo noto más grande."
+        ],
+        "reveal": "distensión abdominal de varias semanas"
+      },
+      {
+        "id": "alcohol",
+        "keys": [
+          "alcohol",
+          "cerveza",
+          "vino",
+          "whisky",
+          "bebe",
+          "toma mucho",
+          "bebidas alcoholicas",
+          "toma cerveza",
+          "toma vino"
+        ],
+        "answers": [
+          "Tomé alcohol durante muchos años, prácticamente todos los días.",
+          "Sí, durante años bebí bastante."
+        ],
+        "reveal": "consumo crónico de alcohol"
+      },
+      {
+        "id": "fatigue",
+        "keys": [
+          "cansancio",
+          "cansado",
+          "fatiga",
+          "debil",
+          "astenia",
+          "sin fuerzas"
+        ],
+        "answers": [
+          "Estoy mucho más cansado que antes.",
+          "Me siento débil casi todo el día."
+        ],
+        "reveal": "astenia"
+      },
+      {
+        "id": "weight",
+        "keys": [
+          "bajo de peso",
+          "adelgazo",
+          "perdio peso",
+          "peso",
+          "adelgazamiento"
+        ],
+        "answers": [
+          "Sí, bajé de peso sin proponérmelo.",
+          "Adelgacé en estos últimos meses."
+        ],
+        "reveal": "pérdida de peso"
+      },
+      {
+        "id": "confusion",
+        "keys": [
+          "confundido",
+          "desorientado",
+          "encefalopatia",
+          "cambio de conducta",
+          "sueño invertido",
+          "desorientacion",
+          "esta confundido"
+        ],
+        "answers": [
+          "No, no tuve episodios de confusión ni desorientación.",
+          "Hasta ahora estoy lúcido, no noté cambios de conducta."
+        ],
+        "reveal": "niega encefalopatía manifiesta"
+      },
+      {
+        "id": "bleeding",
+        "keys": [
+          "vomito sangre",
+          "hematemesis",
+          "melena",
+          "materia fecal negra",
+          "sangrado",
+          "sangre digestiva",
+          "perdida de sangre"
+        ],
+        "answers": [
+          "No, nunca vomité sangre ni vi deposiciones negras.",
+          "No tuve ningún sangrado digestivo que yo sepa."
+        ],
+        "reveal": "niega sangrado digestivo previo"
+      },
+      {
+        "id": "jaundice",
+        "keys": [
+          "amarillo",
+          "ictericia",
+          "ojos amarillos",
+          "piel amarilla"
+        ],
+        "answers": [
+          "Sí, mi familia me dijo que me veía algo amarillo últimamente.",
+          "Noté los ojos un poco amarillos."
+        ],
+        "reveal": "refiere ictericia reciente"
+      },
+      {
+        "id": "edema",
+        "keys": [
+          "piernas hinchadas",
+          "edema",
+          "tobillos hinchados",
+          "hinchazon de piernas"
+        ],
+        "answers": [
+          "Sí, a la tarde se me hinchan un poco los tobillos.",
+          "He notado algo de hinchazón en las piernas."
+        ],
+        "reveal": "edema maleolar leve"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "duele",
+          "dolor abdominal",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele"
+        ],
+        "answers": [
+          "No es un dolor fuerte; más bien siento presión por la panza hinchada.",
+          "Dolor como tal no, es más una molestia por la distensión."
+        ],
+        "reveal": "sin dolor abdominal intenso"
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "temperatura",
+          "escalofrios",
+          "tuviste fiebre",
+          "temperatura alta"
+        ],
+        "answers": [
+          "No tuve fiebre ni escalofríos.",
+          "No, fiebre no noté."
+        ],
+        "reveal": "niega fiebre"
+      },
+      {
+        "id": "meds",
+        "keys": [
+          "medicacion",
+          "medicamentos",
+          "que toma",
+          "tratamiento",
+          "pastillas habituales",
+          "que remedios toma",
+          "medicamentos habituales"
+        ],
+        "answers": [
+          "No estoy siguiendo un tratamiento fijo para el hígado.",
+          "Tomo algunas cosas para la presión, pero nada específico para esto."
+        ],
+        "reveal": "sin tratamiento hepático regular"
+      }
+    ],
+    "studies": [
+      {
+        "id": "hepatograma",
+        "label": "Hepatograma + función sintética",
+        "aliases": [
+          "hepatograma",
+          "funcion hepatica",
+          "perfil hepatico",
+          "bilirrubina",
+          "albumina",
+          "quick",
+          "coagulacion",
+          "pruebas hepaticas",
+          "enzimas hepaticas"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "AST 82 UI/L · ALT 74 UI/L · bilirrubina total 3,4 mg/dL · albúmina 2,7 g/dL · Quick prolongado 7 s sobre el control."
+      },
+      {
+        "id": "hemograma",
+        "label": "Hemograma",
+        "aliases": [
+          "hemograma",
+          "cbc",
+          "plaquetas",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "hemogramita"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Anemia leve y trombocitopenia, compatibles con hiperesplenismo en esta simulación."
+      },
+      {
+        "id": "renal",
+        "label": "Función renal + ionograma",
+        "aliases": [
+          "renal",
+          "creatinina",
+          "urea",
+          "ionograma",
+          "sodio",
+          "potasio",
+          "quimica sanguinea",
+          "bioquimica sanguinea",
+          "perfil renal",
+          "funcion renal",
+          "electrolitos plasmaticos",
+          "ionos"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Creatinina 1,0 mg/dL · Na 134 mEq/L · K 4,3 mEq/L."
+      },
+      {
+        "id": "eco",
+        "label": "Ecografía abdominal",
+        "aliases": [
+          "ecografia",
+          "eco abdominal",
+          "ultrasonido",
+          "eco",
+          "ultrasonografia",
+          "sonografia",
+          "ecografita"
+        ],
+        "type": "imaging",
+        "delay": 7,
+        "result": "Hígado pequeño y nodular, esplenomegalia y ascitis."
+      },
+      {
+        "id": "paracentesis",
+        "label": "Paracentesis diagnóstica",
+        "aliases": [
+          "paracentesis",
+          "liquido ascitico",
+          "ascitis diagnostica",
+          "puncion abdominal diagnostica",
+          "paracentesis diagnostica",
+          "analisis de ascitis"
+        ],
+        "type": "procedure",
+        "delay": 6,
+        "result": "Líquido ascítico sin hallazgos compatibles con peritonitis espontánea en esta semilla."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "sal_restriccion",
+        "aliases": [
+          "restriccion de sodio",
+          "dieta sin sal",
+          "restringir sodio",
+          "restriccion de sal",
+          "dieta hiposodica",
+          "dieta baja en sodio",
+          "reducir sodio"
+        ],
+        "label": "Restricción de sodio"
+      },
+      {
+        "id": "espironolactona",
+        "aliases": [
+          "espironolactona",
+          "espironolactona oral",
+          "espiro"
+        ],
+        "label": "Espironolactona"
+      },
+      {
+        "id": "paracentesis_ter",
+        "aliases": [
+          "paracentesis terapeutica",
+          "evacuar ascitis",
+          "paracentesis evacuadora",
+          "paracentesis de gran volumen",
+          "drenaje de ascitis"
+        ],
+        "label": "Paracentesis terapéutica"
+      }
+    ],
+    "dx": [
+      "cirrosis",
+      "cirrosis descompensada"
+    ],
+    "requiredHistory": [
+      "onset",
+      "alcohol"
+    ],
+    "keyStudies": [
+      "hepatograma",
+      "eco",
+      "renal",
+      "paracentesis"
+    ],
+    "keyInterventions": [
+      "sal_restriccion",
+      "espironolactona"
+    ],
+    "source": "Tomo 4 · Cirrosis · pág. 51 del tomo",
+    "risk": null,
+    "common": {
+      "name": "Ricardo",
+      "age": "58",
+      "arrival": "Vine por mis propios medios, acompañado por un familiar.",
+      "reason": [
+        "Vine porque se me viene hinchando mucho la panza y estoy cada vez más cansado.",
+        "Lo que me preocupa es que el abdomen me aumentó bastante y me siento débil."
+      ],
+      "current": [
+        "Ahora estoy cansado y siento mucha presión por la panza hinchada, pero puedo hablar bien.",
+        "Me siento débil y molesto por la distensión abdominal."
+      ],
+      "concern": [
+        "Me preocupa que la panza siga aumentando y que esto sea algo serio del hígado.",
+        "Lo que más me asusta es seguir empeorando y no saber por qué me hincho así."
+      ],
+      "allergies": [
+        "Que yo sepa no tengo alergias a medicamentos.",
+        "No conozco alergias medicamentosas."
+      ],
+      "pmh": [
+        "Tengo presión alta. Y hace tiempo me vienen diciendo que tengo problemas relacionados con el hígado.",
+        "Además de la presión, el problema importante ahora es todo esto del hígado."
+      ],
+      "surgeries": [
+        "No tuve cirugías abdominales importantes.",
+        "No recuerdo operaciones importantes del abdomen."
+      ],
+      "meds": [
+        "Tomo medicación para la presión, pero no llevo un tratamiento hepático regular.",
+        "Tengo medicación habitual para la presión; para el hígado no venía con un tratamiento fijo."
+      ],
+      "pain": [
+        "Dolor fuerte no. Si tengo que ponerle un número, dos de diez; es más presión y molestia.",
+        "Es más molestia por la distensión que dolor, diría dos de diez."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Además de la panza hinchada y el cansancio, bajé de peso. También se me hinchan un poco los tobillos y me dijeron que me ven algo amarillo. No tuve fiebre, vómitos ni sangrado.",
+      "tobacco": "Fumé unos diez cigarrillos por día durante años, pero dejé hace varios años.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco familiares con cirrosis ni una enfermedad hepática hereditaria.",
+      "hospitalizations": "No tuve internaciones recientes por esto.",
+      "occupation": "Estoy jubilado; trabajé muchos años en construcción.",
+      "diet": "Últimamente como menos porque me siento lleno por la distensión. No venía haciendo una dieta especial baja en sal.",
+      "transfusions": "Nunca recibí transfusiones de sangre.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No estuve en contacto con alguien enfermo que yo sepa.",
+      "bowel": "Voy de cuerpo más o menos como siempre. No tengo diarrea ni vi materia fecal negra.",
+      "urinary": "Noté la orina un poco más oscura últimamente.",
+      "dyspnea": "A veces me agito un poco por la distensión, pero no es lo que más me molesta.",
+      "chestPain": "No tuve dolor en el pecho.",
+      "syncope": "No me desmayé.",
+      "nauseaVomiting": "No tuve náuseas ni vómitos.",
+      "sleep": "Duermo peor porque la panza me incomoda, pero no tuve inversión marcada del sueño.",
+      "habitsSummary": "Fumé en el pasado y tomé alcohol durante muchos años. No consumo drogas recreativas.",
+      "historySummary": "Tengo hipertensión y antecedentes de consumo crónico de alcohol. No tuve cirugías abdominales importantes, no conozco alergias medicamentosas y tomo medicación para la presión."
+    }
+  },
+  {
+    "id": "PANC-001",
+    "selector": "Dolor epigástrico intenso + vómitos",
+    "area": "Páncreas · agudo",
+    "demo": "Mujer, 61 años",
+    "chief": "Dolor epigástrico intenso con vómitos.",
+    "opening": "Me duele muchísimo acá arriba y no paro de vomitar.",
+    "vitals": {
+      "temp": 38,
+      "hr": 142,
+      "rr": 28,
+      "bp": "88/54",
+      "spo2": 92
+    },
+    "exam": "Dolor epigástrico intenso, distensión supraumbilical. Abdomen sin signos peritoneales francos. Taquicardia e hipotensión.",
+    "intents": [
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo",
+          "hace cuanto",
+          "inicio",
+          "desde cuando empezo",
+          "cuando comenzo",
+          "hace cuanto comenzo",
+          "cuando arranco"
+        ],
+        "answers": [
+          "Empezó hoy de forma bastante brusca y fue empeorando.",
+          "Hace unas horas empezó y cada vez se hizo más intenso."
+        ],
+        "reveal": "inicio agudo de horas de evolución"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "donde duele",
+          "dolor",
+          "epigastrio",
+          "boca del estomago",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele",
+          "dolor abdominal"
+        ],
+        "answers": [
+          "Me duele muy fuerte en la boca del estómago.",
+          "El dolor está acá arriba, en el medio del abdomen."
+        ],
+        "reveal": "dolor epigástrico intenso"
+      },
+      {
+        "id": "radiation",
+        "keys": [
+          "espalda",
+          "irradia",
+          "cinturon",
+          "se corre el dolor",
+          "a donde se corre el dolor",
+          "donde se irradia"
+        ],
+        "answers": [
+          "Sí, se me va hacia la espalda.",
+          "Lo siento como si me atravesara hacia atrás, casi en cinturón."
+        ],
+        "reveal": "irradiación al dorso/en cinturón"
+      },
+      {
+        "id": "vomit",
+        "keys": [
+          "vomito",
+          "vomita",
+          "nauseas",
+          "bilis",
+          "vomitos",
+          "devolviste",
+          "devolver comida",
+          "arcadas"
+        ],
+        "answers": [
+          "Vomité varias veces y era amarillento, como bilis.",
+          "Sí, no puedo parar de vomitar."
+        ],
+        "reveal": "vómitos repetidos biliosos"
+      },
+      {
+        "id": "gallstones",
+        "keys": [
+          "piedras",
+          "calculos",
+          "vesicula",
+          "biliar",
+          "colico biliar",
+          "piedras en la vesicula",
+          "calculos vesiculares",
+          "litiasis vesicular"
+        ],
+        "answers": [
+          "Ya me habían dicho que tenía piedras en la vesícula.",
+          "Sí, alguna vez tuve cólicos más leves y me dijeron que eran cálculos."
+        ],
+        "reveal": "antecedente de litiasis vesicular"
+      },
+      {
+        "id": "alcohol",
+        "keys": [
+          "alcohol",
+          "bebe",
+          "whisky",
+          "vodka",
+          "bebidas alcoholicas",
+          "toma cerveza",
+          "toma vino"
+        ],
+        "answers": [
+          "No tomo alcohol en cantidad importante.",
+          "No tomo mucho alcohol."
+        ],
+        "reveal": "niega consumo importante de alcohol"
+      },
+      {
+        "id": "meal",
+        "keys": [
+          "comio",
+          "comida",
+          "despues de comer",
+          "copiosa",
+          "relacion con las comidas"
+        ],
+        "answers": [
+          "Había comido bastante antes de que empezara, una comida pesada.",
+          "Sí, venía de una comida bastante copiosa."
+        ],
+        "reveal": "comida copiosa previa"
+      },
+      {
+        "id": "prior",
+        "keys": [
+          "antes",
+          "episodios previos",
+          "le paso antes",
+          "pancreatitis previa",
+          "antes le paso",
+          "le habia ocurrido"
+        ],
+        "answers": [
+          "Tuve dolores biliares antes, pero nunca algo así de fuerte.",
+          "Esto así de intenso nunca me había pasado."
+        ],
+        "reveal": "sin pancreatitis grave previa"
+      },
+      {
+        "id": "meds",
+        "keys": [
+          "medicamentos",
+          "medicacion",
+          "que toma",
+          "pastillas habituales",
+          "que remedios toma",
+          "medicamentos habituales"
+        ],
+        "answers": [
+          "No empecé ningún medicamento nuevo recientemente.",
+          "No hubo ningún cambio importante de medicación."
+        ],
+        "reveal": "sin fármaco nuevo evidente"
+      }
+    ],
+    "studies": [
+      {
+        "id": "hemograma",
+        "label": "Hemograma + química + función renal",
+        "aliases": [
+          "hemograma",
+          "laboratorio",
+          "quimica",
+          "glucemia",
+          "calcio",
+          "ast",
+          "química",
+          "ldh",
+          "urea",
+          "creatinina",
+          "funcion renal",
+          "función renal",
+          "ionograma",
+          "sodio",
+          "potasio",
+          "hematocrito",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita",
+          "quimica sanguinea",
+          "bioquimica sanguinea",
+          "perfil renal",
+          "electrolitos plasmaticos",
+          "ionos"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Hto 49% · Leucocitos 17.200/mm³ · glucemia 220 mg/dL · urea 54 mg/dL · creatinina 1,4 mg/dL · Na 134 mEq/L · K 3,5 mEq/L · calcio 7,6 mg/dL · AST 270 UI/L · LDH 410 UI/L."
+      },
+      {
+        "id": "lipasa",
+        "label": "Lipasa sérica",
+        "aliases": [
+          "lipasa",
+          "enzimas pancreaticas"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Lipasa sérica >3 veces el límite superior normal."
+      },
+      {
+        "id": "gasometria",
+        "label": "Gasometría arterial + lactato",
+        "aliases": [
+          "gasometria",
+          "pao2",
+          "gases arteriales",
+          "gasometría",
+          "gases",
+          "lactato",
+          "deficit de bases",
+          "déficit de bases",
+          "estado acido base",
+          "eab"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "pH 7,31 · PaO₂ 56 mmHg · HCO₃⁻ 18 mEq/L · déficit de bases 5 mEq/L · lactato 3,4 mmol/L."
+      },
+      {
+        "id": "eco",
+        "label": "Ecografía hepatobiliar",
+        "aliases": [
+          "ecografia",
+          "eco hepatobiliar",
+          "eco vesicula",
+          "vesicula",
+          "eco",
+          "ultrasonografia",
+          "sonografia",
+          "ultrasonido",
+          "ecografita"
+        ],
+        "type": "imaging",
+        "delay": 7,
+        "result": "Litiasis vesicular; cuadro compatible con etiología biliar."
+      },
+      {
+        "id": "tc",
+        "label": "TC abdominal con contraste",
+        "aliases": [
+          "tc",
+          "tomografia",
+          "tac",
+          "tomografia con contraste",
+          "tomo",
+          "tomografia computada",
+          "tomografia computarizada",
+          "scanner abdominal"
+        ],
+        "type": "imaging",
+        "delay": 8,
+        "result": "Páncreas heterogéneo con áreas compatibles con necrosis y extensión retroperitoneal."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "fluid",
+        "aliases": [
+          "suero",
+          "hidratacion",
+          "fluidos",
+          "cristaloides",
+          "reposicion de volumen",
+          "expandir",
+          "expansion de volumen",
+          "expansion volemica",
+          "reponer volumen",
+          "reposicion volemica",
+          "reposicion hidrica",
+          "rehidratar",
+          "rehidratacion",
+          "fluidoterapia",
+          "bolo de cristaloides",
+          "bolo de suero",
+          "carga de volumen",
+          "carga de cristaloides",
+          "solucion salina",
+          "salina normal",
+          "cloruro de sodio 0 9",
+          "nacl 0 9",
+          "sf",
+          "solucion fisiologica",
+          "hartmann",
+          "lactato de ringer",
+          "cristaloides balanceados",
+          "solucion balanceada",
+          "expansion"
+        ],
+        "label": "Reposición de volumen"
+      },
+      {
+        "id": "npo",
+        "aliases": [
+          "nada por boca",
+          "ayuno",
+          "reposo digestivo",
+          "nada via oral",
+          "dieta absoluta",
+          "suspender ingesta",
+          "no dar nada por boca",
+          "no darle de comer",
+          "no comer ni beber"
+        ],
+        "label": "Reposo digestivo"
+      },
+      {
+        "id": "analgesia",
+        "aliases": [
+          "analgesia",
+          "analgesico",
+          "dolor",
+          "aliviar el dolor",
+          "tratar el dolor",
+          "control del dolor",
+          "calmante"
+        ],
+        "label": "Analgesia"
+      }
+    ],
+    "dx": [
+      "pancreatitis aguda",
+      "pancreatitis",
+      "pancreatitis necrohemorragica",
+      "pancreatitis necrohemorrágica"
+    ],
+    "requiredHistory": [
+      "pain",
+      "radiation",
+      "vomit",
+      "gallstones"
+    ],
+    "keyStudies": [
+      "hemograma",
+      "lipasa",
+      "gasometria",
+      "eco"
+    ],
+    "keyInterventions": [
+      "fluid",
+      "analgesia"
+    ],
+    "source": "Tomo 4 · Pancreatitis aguda · metodología de estudio, tratamiento inicial y gravedad",
+    "risk": "shock",
+    "common": {
+      "name": "Marta",
+      "age": "61",
+      "arrival": "Me trajeron a la guardia porque el dolor y los vómitos se hicieron insoportables.",
+      "reason": [
+        "Vine por un dolor muy fuerte en la boca del estómago y porque no paro de vomitar.",
+        "Empezó un dolor terrible arriba del abdomen y los vómitos no cedieron."
+      ],
+      "current": [
+        "Ahora mismo me duele muchísimo y sigo con náuseas.",
+        "Estoy muy dolorida, mareada y con ganas de vomitar."
+      ],
+      "concern": [
+        "Me preocupa este dolor porque nunca me había pasado algo tan fuerte.",
+        "Lo que más me asusta es que el dolor no afloja y me siento cada vez peor."
+      ],
+      "allergies": [
+        "No conozco alergias a medicamentos.",
+        "Que yo sepa no soy alérgica a ningún medicamento."
+      ],
+      "pmh": [
+        "Me habían diagnosticado cálculos en la vesícula. No tengo antecedente de una pancreatitis grave.",
+        "Sé que tengo piedras en la vesícula; algo así de fuerte nunca me había pasado."
+      ],
+      "surgeries": [
+        "No tuve cirugías abdominales importantes.",
+        "No me operaron del abdomen."
+      ],
+      "meds": [
+        "No empecé medicamentos nuevos recientemente.",
+        "No hubo cambios importantes en mi medicación antes de esto."
+      ],
+      "pain": [
+        "Nueve de diez. Es muy fuerte.",
+        "Ahora mismo diría nueve sobre diez."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Además del dolor, tengo náuseas, vomité varias veces y me siento mareada. El dolor se me va hacia la espalda. No tengo diarrea ni sangrado.",
+      "tobacco": "No fumo actualmente y nunca fui una fumadora importante.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco casos de pancreatitis en mi familia.",
+      "hospitalizations": "No tuve internaciones previas por un cuadro como éste.",
+      "occupation": "Estoy jubilada.",
+      "diet": "Esto empezó después de una comida bastante abundante.",
+      "transfusions": "Nunca recibí transfusiones.",
+      "travel": "No viajé recientemente.",
+      "contacts": "No tuve contactos enfermos relevantes.",
+      "bowel": "No tuve diarrea ni cambios importantes de las deposiciones.",
+      "urinary": "No noté cambios urinarios.",
+      "dyspnea": "Me cuesta respirar un poco cuando el dolor es muy fuerte, pero no tengo falta de aire como síntoma principal.",
+      "chestPain": "No me duele el pecho; el dolor es en la boca del estómago y hacia la espalda.",
+      "syncope": "No me desmayé, aunque sí me siento mareada.",
+      "nauseaVomiting": "Sí, tengo muchas náuseas y vomité varias veces, con contenido amarillento.",
+      "sleep": "No pude descansar por el dolor.",
+      "habitsSummary": "No fumo ni consumo drogas. Tomo alcohol sólo ocasionalmente y no en cantidad importante.",
+      "historySummary": "Sé que tengo cálculos en la vesícula. No tuve cirugías abdominales importantes, no conozco alergias medicamentosas y no empecé medicamentos nuevos."
+    }
+  },
+  {
+    "id": "CROHN-001",
+    "selector": "Diarrea crónica + dolor en fosa ilíaca derecha",
+    "area": "Intestino · cotidiano",
+    "demo": "Varón, 24 años",
+    "chief": "Dolor en fosa ilíaca derecha, diarrea crónica y pérdida de peso.",
+    "opening": "Hace semanas que tengo diarrea y me duele abajo a la derecha.",
+    "vitals": {
+      "temp": 37.7,
+      "hr": 98,
+      "rr": 18,
+      "bp": "116/72",
+      "spo2": 98
+    },
+    "exam": "Dolor a la palpación profunda en fosa ilíaca derecha, sin signos peritoneales. Sin enfermedad perianal visible en esta semilla.",
+    "intents": [
+      {
+        "id": "diarrhea",
+        "keys": [
+          "diarrea",
+          "deposiciones",
+          "cuantas veces",
+          "va al baño",
+          "materia fecal",
+          "heces liquidas",
+          "heces blandas",
+          "evacuaciones liquidas",
+          "deposiciones liquidas"
+        ],
+        "answers": [
+          "Hace semanas que voy varias veces al día, con deposiciones blandas.",
+          "Tengo diarrea desde hace bastante, no fue algo de un solo día."
+        ],
+        "reveal": "diarrea crónica"
+      },
+      {
+        "id": "frequency",
+        "keys": [
+          "cuantas veces por dia",
+          "frecuencia",
+          "veces al dia",
+          "cuantas deposiciones por dia",
+          "cuantas veces va de cuerpo"
+        ],
+        "answers": [
+          "Unas cuatro veces por día, más o menos.",
+          "Generalmente cuatro deposiciones al día."
+        ],
+        "reveal": "aprox. 4 deposiciones diarias"
+      },
+      {
+        "id": "blood",
+        "keys": [
+          "sangre",
+          "moco",
+          "proctorragia",
+          "hematoquezia",
+          "sangre en las heces",
+          "heces con sangre"
+        ],
+        "answers": [
+          "A veces veo algo de moco, pero sangre franca no suelo ver.",
+          "Moco alguna vez; sangre roja no es algo habitual."
+        ],
+        "reveal": "moco ocasional sin proctorragia franca"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "donde duele",
+          "dolor",
+          "fosa iliaca",
+          "derecha",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele",
+          "dolor abdominal"
+        ],
+        "answers": [
+          "El dolor está sobre todo abajo a la derecha del abdomen.",
+          "Me duele en la fosa ilíaca derecha, a veces con sensación de hinchazón."
+        ],
+        "reveal": "dolor en fosa ilíaca derecha"
+      },
+      {
+        "id": "weight",
+        "keys": [
+          "peso",
+          "adelgazo",
+          "bajo de peso",
+          "adelgazamiento"
+        ],
+        "answers": [
+          "Sí, adelgacé bastante en los últimos meses.",
+          "Perdí alrededor de un diez por ciento de mi peso."
+        ],
+        "reveal": "pérdida de peso"
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "febricula",
+          "temperatura",
+          "tuviste fiebre",
+          "temperatura alta",
+          "escalofrios"
+        ],
+        "answers": [
+          "A veces tengo unas décimas, pero no fiebre muy alta.",
+          "Sí, vengo con febrícula intermitente."
+        ],
+        "reveal": "febrícula"
+      },
+      {
+        "id": "perianal",
+        "keys": [
+          "ano",
+          "perianal",
+          "fistula",
+          "absceso",
+          "secrecion anal",
+          "dolor anal",
+          "problemas alrededor del ano",
+          "fistula perianal"
+        ],
+        "answers": [
+          "No, nunca tuve abscesos ni secreción en esa zona.",
+          "No tuve problemas perianales hasta ahora."
+        ],
+        "reveal": "niega enfermedad perianal"
+      },
+      {
+        "id": "joints",
+        "keys": [
+          "articulaciones",
+          "artritis",
+          "rodillas",
+          "tobillos",
+          "dolor articular",
+          "dolor de articulaciones"
+        ],
+        "answers": [
+          "A veces me duelen las rodillas, pero nada muy importante.",
+          "He tenido algo de dolor articular ocasional."
+        ],
+        "reveal": "artralgias ocasionales"
+      },
+      {
+        "id": "eyes",
+        "keys": [
+          "ojos",
+          "uveitis",
+          "ojo rojo",
+          "ojos rojos",
+          "dolor ocular"
+        ],
+        "answers": [
+          "No, problemas en los ojos no tuve.",
+          "No recuerdo episodios de ojo rojo doloroso."
+        ],
+        "reveal": "niega síntomas oculares"
+      },
+      {
+        "id": "smoke",
+        "keys": [
+          "fuma",
+          "tabaco",
+          "cigarrillo",
+          "cigarrillos",
+          "tabaquismo"
+        ],
+        "answers": [
+          "Sí, fumo algunos cigarrillos por día.",
+          "Fumo, aunque no demasiado."
+        ],
+        "reveal": "tabaquismo activo"
+      },
+      {
+        "id": "family",
+        "keys": [
+          "familia",
+          "familiar",
+          "hereditario",
+          "enfermedades en la familia",
+          "antecedentes de la familia"
+        ],
+        "answers": [
+          "No conozco a nadie de mi familia con algo parecido.",
+          "Que yo sepa, nadie en mi familia tiene esta enfermedad."
+        ],
+        "reveal": "sin antecedente familiar conocido"
+      }
+    ],
+    "studies": [
+      {
+        "id": "inflamatorio",
+        "label": "Hemograma + PCR + albúmina",
+        "aliases": [
+          "hemograma",
+          "pcr",
+          "albumina",
+          "laboratorio",
+          "eritrosedimentacion",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Anemia · PCR elevada · hipoalbuminemia."
+      },
+      {
+        "id": "stool",
+        "label": "Estudios de materia fecal",
+        "aliases": [
+          "materia fecal",
+          "coprocultivo",
+          "parasitos",
+          "clostridium",
+          "c difficile",
+          "toxina",
+          "analisis de heces",
+          "estudio de heces",
+          "estudios de heces",
+          "analisis de materia fecal"
+        ],
+        "type": "lab",
+        "delay": 6,
+        "result": "Coprocultivo sin causa bacteriana identificada · parásitos negativos · toxina de C. difficile negativa."
+      },
+      {
+        "id": "colonoscopia",
+        "label": "Colonoscopía + biopsia",
+        "aliases": [
+          "colonoscopia",
+          "video colonoscopia",
+          "biopsia colon",
+          "ileocolonoscopia",
+          "vcc",
+          "videocolonoscopia"
+        ],
+        "type": "procedure",
+        "delay": 8,
+        "result": "Úlceras aftoides, mucosa en empedrado y compromiso ileocecal en parches. Biopsia con granulomas."
+      },
+      {
+        "id": "enterorm",
+        "label": "Entero-RM",
+        "aliases": [
+          "entero rm",
+          "entero-rm",
+          "resonancia enterografica",
+          "entero resonancia",
+          "enterorresonancia",
+          "resonancia de intestino",
+          "enterografia por resonancia"
+        ],
+        "type": "imaging",
+        "delay": 8,
+        "result": "Engrosamiento segmentario ileocecal sin absceso."
+      },
+      {
+        "id": "b12",
+        "label": "Vitamina B12",
+        "aliases": [
+          "b12",
+          "vitamina b12",
+          "cobalamina"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Vitamina B12 en rango bajo-normal en esta semilla."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "steroid",
+        "aliases": [
+          "corticoide",
+          "meprednisona",
+          "prednisona",
+          "corticoterapia",
+          "corticoesteroides",
+          "corticosteroides",
+          "esteroides",
+          "corticoides"
+        ],
+        "label": "Corticoide"
+      },
+      {
+        "id": "aza",
+        "aliases": [
+          "azatioprina",
+          "azatioprina oral",
+          "aza"
+        ],
+        "label": "Azatioprina"
+      }
+    ],
+    "dx": [
+      "crohn",
+      "enfermedad de crohn"
+    ],
+    "requiredHistory": [
+      "diarrhea",
+      "pain",
+      "weight"
+    ],
+    "keyStudies": [
+      "stool",
+      "colonoscopia",
+      "enterorm",
+      "inflamatorio"
+    ],
+    "keyInterventions": [
+      "steroid"
+    ],
+    "source": "Tomo 3 · Enfermedad de Crohn · pág. 80 del tomo",
+    "risk": null,
+    "common": {
+      "name": "Tomás",
+      "age": "24",
+      "arrival": "Vine por mis propios medios porque la diarrea y el dolor ya llevan semanas.",
+      "reason": [
+        "Vine porque hace semanas tengo diarrea, me duele abajo a la derecha y estoy bajando de peso.",
+        "Consulté porque esto no se me pasa: diarrea, dolor del lado derecho y pérdida de peso."
+      ],
+      "current": [
+        "Ahora me duele moderadamente abajo a la derecha y sigo con el intestino suelto.",
+        "Estoy cansado; el dolor está, pero puedo hablar y moverme."
+      ],
+      "concern": [
+        "Me preocupa estar adelgazando y que la diarrea no pare.",
+        "Lo que más me preocupa es que llevo semanas así y cada vez peso menos."
+      ],
+      "allergies": [
+        "No conozco alergias a medicamentos.",
+        "Que yo sepa no tengo alergias medicamentosas."
+      ],
+      "pmh": [
+        "No tengo una enfermedad digestiva diagnosticada previamente.",
+        "Hasta ahora no me habían diagnosticado ninguna enfermedad intestinal crónica."
+      ],
+      "surgeries": [
+        "No tuve cirugías abdominales.",
+        "Nunca me operaron del intestino ni del abdomen."
+      ],
+      "meds": [
+        "No tomo medicación digestiva de forma regular.",
+        "No venía con un tratamiento crónico para esto."
+      ],
+      "pain": [
+        "Un cinco de diez, más o menos. Molesta bastante pero no es insoportable.",
+        "Diría cinco sobre diez, sobre todo abajo a la derecha."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Además de la diarrea y el dolor, bajé de peso, estoy cansado y a veces tengo unas décimas de fiebre. No vengo con vómitos ni problemas urinarios.",
+      "tobacco": "Sí, fumo algunos cigarrillos por día.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "Que yo sepa nadie de mi familia tiene una enfermedad intestinal parecida.",
+      "hospitalizations": "Nunca estuve internado por este problema.",
+      "occupation": "Estudio y trabajo medio tiempo.",
+      "diet": "No identifiqué una comida específica que lo desencadene. Estoy comiendo menos porque me cae todo pesado.",
+      "transfusions": "Nunca recibí transfusiones.",
+      "travel": "No viajé recientemente antes de que empezara esto.",
+      "contacts": "No conozco a nadie cercano con diarrea prolongada.",
+      "bowel": "Tengo varias deposiciones blandas por día desde hace semanas.",
+      "urinary": "No tengo ardor ni cambios al orinar.",
+      "dyspnea": "No tengo falta de aire.",
+      "chestPain": "No tengo dolor en el pecho.",
+      "syncope": "No me desmayé.",
+      "nauseaVomiting": "No estoy vomitando.",
+      "sleep": "A veces me despierto por ganas de ir al baño.",
+      "habitsSummary": "Fumo algunos cigarrillos por día. Tomo alcohol sólo ocasionalmente y no consumo drogas.",
+      "historySummary": "No tenía una enfermedad intestinal diagnosticada, no tuve cirugías abdominales, no conozco alergias y no tomo medicación digestiva de forma habitual."
+    }
+  },
+  {
+    "id": "HDA-001",
+    "selector": "Vómitos con sangre + deposiciones negras",
+    "area": "Tubo digestivo alto · agudo",
+    "demo": "Varón, 67 años",
+    "chief": "Hematemesis y melena.",
+    "opening": "Vomité sangre dos veces y después empecé a hacer materia fecal negra.",
+    "vitals": {
+      "temp": 36.6,
+      "hr": 118,
+      "rr": 22,
+      "bp": "94/58",
+      "spo2": 97
+    },
+    "exam": "Paciente pálido, piel fría y relleno capilar enlentecido. Hipotensión con taquicardia; diuresis disminuida. Sin estigmas claros de hepatopatía crónica.",
+    "intents": [
+      {
+        "id": "bleeding",
+        "keys": [
+          "vomito sangre",
+          "hematemesis",
+          "sangre",
+          "cuantas veces",
+          "como era la sangre",
+          "sangrado",
+          "perdida de sangre"
+        ],
+        "answers": [
+          "Vomité sangre dos veces, bastante oscura.",
+          "Fueron dos episodios de vómito con sangre."
+        ],
+        "reveal": "dos episodios de hematemesis"
+      },
+      {
+        "id": "melena",
+        "keys": [
+          "materia fecal negra",
+          "melena",
+          "deposiciones negras",
+          "heces negras",
+          "heces como alquitran"
+        ],
+        "answers": [
+          "Sí, después empecé con deposiciones negras, pegajosas y con olor muy fuerte.",
+          "Las heces se pusieron negras y alquitranadas."
+        ],
+        "reveal": "melena"
+      },
+      {
+        "id": "dizziness",
+        "keys": [
+          "mareo",
+          "sincope",
+          "desmayo",
+          "se desmayo",
+          "sensacion de desmayo"
+        ],
+        "answers": [
+          "Estoy mareado al incorporarme, pero no llegué a desmayarme.",
+          "Me mareo bastante cuando me siento o me paro."
+        ],
+        "reveal": "mareo ortostático"
+      },
+      {
+        "id": "nsaid",
+        "keys": [
+          "ibuprofeno",
+          "diclofenac",
+          "aine",
+          "antiinflamatorio",
+          "aspirina",
+          "antiinflamatorios",
+          "toma ibuprofeno",
+          "toma diclofenac"
+        ],
+        "answers": [
+          "Sí, tomo antiinflamatorios seguido por dolores articulares.",
+          "Uso antiinflamatorios casi todos los días."
+        ],
+        "reveal": "uso crónico de AINEs"
+      },
+      {
+        "id": "dyspepsia",
+        "keys": [
+          "ardor",
+          "acidez",
+          "dispepsia",
+          "ulcera",
+          "dolor epigastrico",
+          "ardor de estomago"
+        ],
+        "answers": [
+          "Sí, venía con ardor y molestias en la boca del estómago.",
+          "Hace tiempo tengo acidez y dolor epigástrico."
+        ],
+        "reveal": "síntomas dispépticos previos"
+      },
+      {
+        "id": "liver",
+        "keys": [
+          "cirrosis",
+          "higado",
+          "hepatopatia",
+          "ictericia",
+          "enfermedad hepatica",
+          "problemas de higado"
+        ],
+        "answers": [
+          "No me dijeron nunca que tenga cirrosis ni enfermedad del hígado.",
+          "No tengo antecedentes de hepatopatía."
+        ],
+        "reveal": "niega hepatopatía conocida"
+      },
+      {
+        "id": "alcohol",
+        "keys": [
+          "alcohol",
+          "bebe",
+          "bebidas alcoholicas",
+          "toma cerveza",
+          "toma vino"
+        ],
+        "answers": [
+          "Tomo ocasionalmente, pero no de forma importante.",
+          "No tengo consumo importante de alcohol."
+        ],
+        "reveal": "sin consumo importante de alcohol"
+      },
+      {
+        "id": "vomitprior",
+        "keys": [
+          "vomitos antes",
+          "arcadas",
+          "nauseas antes",
+          "mallory",
+          "vomitos previos",
+          "ya habia vomitado"
+        ],
+        "answers": [
+          "No, la sangre apareció sin una serie de vómitos previos.",
+          "No venía con arcadas repetidas antes del sangrado."
+        ],
+        "reveal": "sin vómitos violentos previos"
+      },
+      {
+        "id": "anticoag",
+        "keys": [
+          "anticoagulante",
+          "warfarina",
+          "acenocumarol",
+          "heparina",
+          "anticoagulantes",
+          "toma heparina"
+        ],
+        "answers": [
+          "No tomo anticoagulantes.",
+          "No, medicación para afinar la sangre no uso."
+        ],
+        "reveal": "niega anticoagulantes"
+      },
+      {
+        "id": "priorbleed",
+        "keys": [
+          "sangro antes",
+          "hemorragia previa",
+          "episodio previo",
+          "sangrados previos",
+          "hemorragias previas"
+        ],
+        "answers": [
+          "Nunca había tenido un sangrado así.",
+          "Es la primera vez que me pasa."
+        ],
+        "reveal": "primer episodio conocido"
+      },
+      {
+        "id": "transfusion",
+        "keys": [
+          "transfusion",
+          "acepta sangre",
+          "sangre donada",
+          "transfusiones previas",
+          "recibio sangre antes"
+        ],
+        "answers": [
+          "Sí, si hace falta acepto una transfusión.",
+          "Sí, no tengo objeciones a recibir sangre."
+        ],
+        "reveal": "acepta transfusión"
+      }
+    ],
+    "studies": [
+      {
+        "id": "hda_lab",
+        "label": "Hemograma + urea/creatinina + coagulación",
+        "aliases": [
+          "hemograma",
+          "urea",
+          "creatinina",
+          "coagulacion",
+          "quick",
+          "kptt",
+          "plaquetas",
+          "laboratorio",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Anemia que se hace evidente con la evolución/reposición. Urea desproporcionadamente elevada respecto de creatinina. Coagulación sin alteración mayor."
+      },
+      {
+        "id": "grupo",
+        "label": "Grupo, factor y disponibilidad de sangre",
+        "aliases": [
+          "grupo y factor",
+          "grupo sanguineo",
+          "reserva de sangre",
+          "pruebas cruzadas",
+          "crossmatch",
+          "tipificacion sanguinea",
+          "compatibilidad sanguinea",
+          "grupo factor",
+          "reservar sangre"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Grupo y factor tipificados; sangre compatible disponible si fuera necesaria."
+      },
+      {
+        "id": "eda",
+        "label": "Endoscopía digestiva alta",
+        "aliases": [
+          "endoscopia",
+          "eda",
+          "videoendoscopia",
+          "gastroscopia",
+          "veda",
+          "videogastroscopia",
+          "endoscopia alta"
+        ],
+        "type": "procedure",
+        "delay": 8,
+        "result": "Úlcera péptica con coágulo adherido, compatible con Forrest 2."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "iv",
+        "aliases": [
+          "via venosa",
+          "dos vias",
+          "canalizar",
+          "via periferica",
+          "acceso endovenoso",
+          "acceso intravenoso",
+          "canalizar via",
+          "canalizacion periferica",
+          "venoclisis",
+          "dos vias perifericas"
+        ],
+        "label": "Acceso venoso periférico"
+      },
+      {
+        "id": "fluid",
+        "aliases": [
+          "suero",
+          "fluidos",
+          "cristaloides",
+          "reposicion de volumen",
+          "hidratacion",
+          "expandir",
+          "expansion de volumen",
+          "expansion volemica",
+          "reponer volumen",
+          "reposicion volemica",
+          "reposicion hidrica",
+          "rehidratar",
+          "rehidratacion",
+          "fluidoterapia",
+          "bolo de cristaloides",
+          "bolo de suero",
+          "carga de volumen",
+          "carga de cristaloides",
+          "solucion salina",
+          "salina normal",
+          "cloruro de sodio 0 9",
+          "nacl 0 9",
+          "sf",
+          "solucion fisiologica",
+          "hartmann",
+          "lactato de ringer",
+          "cristaloides balanceados",
+          "solucion balanceada",
+          "expansion"
+        ],
+        "label": "Reposición de volumen"
+      },
+      {
+        "id": "ppi",
+        "aliases": [
+          "omeprazol",
+          "pantoprazol",
+          "ibp",
+          "inhibidor bomba protones",
+          "inhibidor de bomba de protones",
+          "proteccion gastrica",
+          "protector gastrico",
+          "omepra",
+          "panto"
+        ],
+        "label": "PPI"
+      },
+      {
+        "id": "transfusion",
+        "aliases": [
+          "transfusion",
+          "transfundir",
+          "transfundimos",
+          "concentrado de hematies",
+          "concentrado de globulos rojos",
+          "paquete globular",
+          "unidad de globulos rojos",
+          "hemoderivados",
+          "hemotransfusion"
+        ],
+        "label": "Transfusión"
+      }
+    ],
+    "dx": [
+      "hemorragia digestiva alta",
+      "hda",
+      "ulcera peptica",
+      "úlcera péptica"
+    ],
+    "requiredHistory": [
+      "bleeding",
+      "melena",
+      "nsaid",
+      "transfusion"
+    ],
+    "keyStudies": [
+      "hda_lab",
+      "grupo",
+      "eda"
+    ],
+    "keyInterventions": [
+      "iv",
+      "fluid",
+      "ppi"
+    ],
+    "source": "Tomo 2 · Hemorragia digestiva alta · pág. 144 del tomo",
+    "risk": "bleed",
+    "common": {
+      "name": "Carlos",
+      "age": "67",
+      "arrival": "Me trajeron a la guardia después de vomitar sangre y empezar a marearme.",
+      "reason": [
+        "Vine porque vomité sangre dos veces y después empecé con deposiciones negras.",
+        "Me trajeron por el sangrado: vomité sangre y después hice materia fecal negra."
+      ],
+      "current": [
+        "Ahora estoy mareado y débil, sobre todo cuando intento incorporarme.",
+        "Me siento muy flojo y mareado."
+      ],
+      "concern": [
+        "Me preocupa seguir perdiendo sangre.",
+        "Lo que más me asusta es volver a vomitar sangre y desmayarme."
+      ],
+      "allergies": [
+        "No conozco alergias a medicamentos.",
+        "Que yo sepa no soy alérgico a medicamentos."
+      ],
+      "pmh": [
+        "Tengo dolores articulares por los que tomo antiinflamatorios seguido. No me diagnosticaron cirrosis.",
+        "Lo más relevante es que uso antiinflamatorios con frecuencia; enfermedad hepática conocida no tengo."
+      ],
+      "surgeries": [
+        "No tuve cirugías de aorta ni operaciones abdominales importantes.",
+        "No tengo antecedente de cirugía de la aorta."
+      ],
+      "meds": [
+        "Tomo antiinflamatorios con bastante frecuencia por dolores articulares.",
+        "Uso antiinflamatorios casi todos los días; anticoagulantes no tomo."
+      ],
+      "pain": [
+        "Ahora el dolor no es lo principal; diría tres de diez. Me preocupa más el sangrado y el mareo.",
+        "Dolor leve, tres de diez; lo peor es la debilidad y el sangrado."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Además del sangrado, estoy muy débil y mareado, sobre todo al incorporarme. Tuve deposiciones negras. No tengo fiebre.",
+      "tobacco": "Fumé durante muchos años, aunque ahora fumo muy poco.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco antecedentes familiares importantes de sangrado digestivo.",
+      "hospitalizations": "No tuve internaciones recientes por sangrado digestivo.",
+      "occupation": "Estoy jubilado.",
+      "diet": "No noté una comida puntual relacionada con el sangrado.",
+      "transfusions": "No recibí transfusiones previamente; si hiciera falta, aceptaría una.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No tuve contactos enfermos relevantes.",
+      "bowel": "Desde el sangrado hice materia fecal negra y pegajosa.",
+      "urinary": "Estoy orinando menos desde que me siento tan débil.",
+      "dyspnea": "Me falta un poco el aire al esfuerzo desde que estoy débil.",
+      "chestPain": "No tengo dolor de pecho.",
+      "syncope": "No llegué a desmayarme, pero estuve a punto cuando me levanté.",
+      "nauseaVomiting": "Tuve dos vómitos con sangre; después no volví a vomitar.",
+      "sleep": "No pude descansar bien desde que empezó el sangrado.",
+      "habitsSummary": "Fumé durante años. Tomo alcohol ocasionalmente y no consumo drogas.",
+      "historySummary": "Uso antiinflamatorios con frecuencia por dolores articulares. No tengo hepatopatía conocida, no tuve cirugías de aorta, no conozco alergias y no tomo anticoagulantes."
+    }
+  },
+  {
+    "id": "COLON-001",
+    "selector": "Anemia ferropénica sin causa evidente",
+    "area": "Colon · cotidiano",
+    "demo": "Varón, 68 años",
+    "chief": "Cansancio progresivo y anemia ferropénica sin causa evidente.",
+    "opening": "Me mandaron porque estoy anémico y cada vez me canso más.",
+    "vitals": {
+      "temp": 36.5,
+      "hr": 92,
+      "rr": 18,
+      "bp": "126/76",
+      "spo2": 98
+    },
+    "exam": "Palidez cutaneomucosa. Abdomen blando, sin signos peritoneales. Molestia vaga ocasional en fosa ilíaca derecha.",
+    "intents": [
+      {
+        "id": "fatigue",
+        "keys": [
+          "cansancio",
+          "cansado",
+          "fatiga",
+          "debil",
+          "sin fuerzas"
+        ],
+        "answers": [
+          "Estoy muy cansado, mucho más que antes.",
+          "Me falta energía para cosas que antes hacía sin problema."
+        ],
+        "reveal": "fatiga progresiva"
+      },
+      {
+        "id": "dyspnea",
+        "keys": [
+          "falta de aire",
+          "disnea",
+          "aire al caminar",
+          "palpitaciones",
+          "le cuesta respirar",
+          "te cuesta respirar",
+          "se ahoga"
+        ],
+        "answers": [
+          "Al caminar rápido me falta el aire y a veces siento palpitaciones.",
+          "Me agito con esfuerzos que antes toleraba."
+        ],
+        "reveal": "disnea de esfuerzo asociada a anemia"
+      },
+      {
+        "id": "bowel",
+        "keys": [
+          "ritmo evacuatorio",
+          "constipacion",
+          "diarrea",
+          "va al baño",
+          "deposiciones",
+          "evacuaciones",
+          "como son las heces",
+          "como vas de cuerpo"
+        ],
+        "answers": [
+          "No noté un cambio claro en cómo voy al baño.",
+          "Mi ritmo intestinal es más o menos el mismo."
+        ],
+        "reveal": "sin cambio evacuatorio importante"
+      },
+      {
+        "id": "blood",
+        "keys": [
+          "sangre",
+          "proctorragia",
+          "melena",
+          "heces negras",
+          "roja",
+          "sangre en las heces",
+          "heces con sangre"
+        ],
+        "answers": [
+          "No vi sangre roja ni heces negras.",
+          "Nunca noté sangre a simple vista."
+        ],
+        "reveal": "niega sangrado visible"
+      },
+      {
+        "id": "weight",
+        "keys": [
+          "peso",
+          "adelgazo",
+          "bajo de peso",
+          "adelgazamiento"
+        ],
+        "answers": [
+          "Bajé algo de peso últimamente, sin proponérmelo.",
+          "Perdí unos kilos, aunque sigo comiendo."
+        ],
+        "reveal": "pérdida de peso leve"
+      },
+      {
+        "id": "appetite",
+        "keys": [
+          "apetito",
+          "come",
+          "anorexia",
+          "ganas de comer",
+          "perdida de apetito"
+        ],
+        "answers": [
+          "Como un poco menos, pero no perdí por completo el apetito.",
+          "Tengo algo menos de apetito que antes."
+        ],
+        "reveal": "disminución leve del apetito"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "derecha",
+          "abdomen",
+          "fosa iliaca",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele",
+          "dolor abdominal"
+        ],
+        "answers": [
+          "A veces siento una molestia tipo retortijón abajo a la derecha, pero no es muy fuerte.",
+          "Sólo alguna molestia ocasional del lado derecho."
+        ],
+        "reveal": "molestia ocasional en fosa ilíaca derecha"
+      },
+      {
+        "id": "family",
+        "keys": [
+          "familia",
+          "cancer de colon familiar",
+          "padre",
+          "madre",
+          "hermano",
+          "enfermedades en la familia",
+          "antecedentes de la familia"
+        ],
+        "answers": [
+          "No conozco familiares directos con cáncer de colon.",
+          "Que yo sepa, no hay casos cercanos en mi familia."
+        ],
+        "reveal": "sin antecedente familiar conocido"
+      },
+      {
+        "id": "ibd",
+        "keys": [
+          "colitis ulcerosa",
+          "crohn",
+          "enfermedad inflamatoria intestinal",
+          "crohn conocido"
+        ],
+        "answers": [
+          "Nunca me diagnosticaron Crohn ni colitis ulcerosa.",
+          "No tengo antecedentes de enfermedad inflamatoria intestinal."
+        ],
+        "reveal": "sin EII conocida"
+      },
+      {
+        "id": "smoke",
+        "keys": [
+          "fuma",
+          "tabaco",
+          "cigarrillo",
+          "cigarrillos",
+          "tabaquismo"
+        ],
+        "answers": [
+          "Fumé durante años, aunque ahora mucho menos.",
+          "Tengo antecedente de tabaquismo."
+        ],
+        "reveal": "antecedente de tabaquismo"
+      }
+    ],
+    "studies": [
+      {
+        "id": "iron",
+        "label": "Hemograma + ferremia",
+        "aliases": [
+          "hemograma",
+          "ferremia",
+          "hierro",
+          "ferritina",
+          "anemia",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita",
+          "perfil de hierro",
+          "estudio de anemia"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Anemia microcítica e hipocrómica con ferremia disminuida."
+      },
+      {
+        "id": "fobt",
+        "label": "Sangre oculta en materia fecal",
+        "aliases": [
+          "sangre oculta",
+          "somf",
+          "guayaco",
+          "test de sangre oculta",
+          "analisis de heces",
+          "estudio de heces",
+          "estudios de heces",
+          "analisis de materia fecal",
+          "sangre oculta en heces",
+          "test de guayaco"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Positiva."
+      },
+      {
+        "id": "colonoscopia",
+        "label": "Videocolonoscopía + biopsia",
+        "aliases": [
+          "colonoscopia",
+          "videocolonoscopia",
+          "biopsia colon",
+          "vcc",
+          "ileocolonoscopia"
+        ],
+        "type": "procedure",
+        "delay": 8,
+        "result": "Lesión en colon ascendente. Biopsia compatible con adenocarcinoma."
+      },
+      {
+        "id": "staging",
+        "label": "TC de estadificación",
+        "aliases": [
+          "tc de estadificacion",
+          "tomografia de estadificacion",
+          "tc torax abdomen pelvis",
+          "tac torax abdomen pelvis",
+          "tomo",
+          "tomografia computada",
+          "tomografia computarizada",
+          "tac",
+          "scanner abdominal"
+        ],
+        "type": "imaging",
+        "delay": 8,
+        "result": "Sin metástasis a distancia en esta semilla."
+      },
+      {
+        "id": "cea",
+        "label": "CEA",
+        "aliases": [
+          "cea",
+          "antigeno carcinoembrionario",
+          "marcador carcinoembrionario"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "CEA elevado como línea basal de seguimiento; no confirma por sí solo el diagnóstico."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "surgery",
+        "aliases": [
+          "cirugia",
+          "hemicolectomia",
+          "derivar a cirugia",
+          "cirugia oncológica",
+          "reseccion quirurgica",
+          "reseccion del tumor"
+        ],
+        "label": "Derivación quirúrgica"
+      },
+      {
+        "id": "staging_order",
+        "aliases": [
+          "estadificacion completa",
+          "estadificar",
+          "plan de estadificacion",
+          "estadificar el tumor"
+        ],
+        "label": "Completar estadificación"
+      }
+    ],
+    "dx": [
+      "cancer de colon",
+      "cáncer de colon",
+      "adenocarcinoma de colon",
+      "adenocarcinoma colon"
+    ],
+    "requiredHistory": [
+      "fatigue",
+      "blood",
+      "weight"
+    ],
+    "keyStudies": [
+      "iron",
+      "fobt",
+      "colonoscopia",
+      "staging"
+    ],
+    "keyInterventions": [
+      "surgery"
+    ],
+    "source": "Tomo 3 · Cáncer de colon · pág. 92 del tomo",
+    "risk": null,
+    "common": {
+      "name": "Jorge",
+      "age": "68",
+      "arrival": "Me derivaron para estudiar una anemia que no tiene una causa clara.",
+      "reason": [
+        "Vine porque estoy anémico, me canso cada vez más y no saben de dónde viene.",
+        "Me mandaron a estudiar una anemia ferropénica porque estoy muy cansado."
+      ],
+      "current": [
+        "Ahora me siento cansado, pero no tengo un dolor fuerte.",
+        "Estoy estable, sólo muy fatigado y me agito más con esfuerzos."
+      ],
+      "concern": [
+        "Me preocupa que la anemia tenga una causa que todavía no encontraron.",
+        "Lo que más me preocupa es no saber por qué estoy perdiendo hierro."
+      ],
+      "allergies": [
+        "No conozco alergias a medicamentos.",
+        "Que yo sepa no tengo alergias medicamentosas."
+      ],
+      "pmh": [
+        "No tengo Crohn ni colitis ulcerosa diagnosticados.",
+        "No tengo antecedentes conocidos de enfermedad inflamatoria intestinal."
+      ],
+      "surgeries": [
+        "No tuve cirugías intestinales importantes.",
+        "No me operaron del colon."
+      ],
+      "meds": [
+        "No tomo una medicación que explique por sí sola esta anemia.",
+        "No tengo un tratamiento digestivo crónico."
+      ],
+      "pain": [
+        "Uno o dos de diez. A veces siento una molestia del lado derecho, pero no es fuerte.",
+        "Es una molestia leve, dos de diez como máximo."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Además del cansancio, me agito más al caminar y bajé algunos kilos. No vi sangre a simple vista y no tengo fiebre.",
+      "tobacco": "Fumé durante años, aunque ahora mucho menos.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco familiares directos con cáncer de colon.",
+      "hospitalizations": "No tuve internaciones recientes por esto.",
+      "occupation": "Estoy jubilado.",
+      "diet": "Como más o menos igual, aunque últimamente tengo algo menos de apetito.",
+      "transfusions": "Nunca recibí transfusiones.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No tuve contactos enfermos relevantes.",
+      "bowel": "No noté un cambio claro del ritmo evacuatorio.",
+      "urinary": "No tengo síntomas urinarios.",
+      "dyspnea": "Me falta el aire con esfuerzos que antes toleraba mejor.",
+      "chestPain": "No tengo dolor en el pecho.",
+      "syncope": "No tuve desmayos.",
+      "nauseaVomiting": "No tengo náuseas ni vómitos.",
+      "sleep": "Duermo normalmente.",
+      "habitsSummary": "Tengo antecedente de tabaquismo. Tomo alcohol ocasionalmente y no consumo drogas.",
+      "historySummary": "No tengo enfermedad inflamatoria intestinal conocida, no tuve cirugías de colon, no conozco alergias y no tomo medicación digestiva crónica."
+    }
+  },
+  {
+    "id": "PERI-PBE-001",
+    "selector": "Cirrosis + ascitis que se descompensa + fiebre",
+    "area": "Peritoneo · peritonitis espontánea",
+    "demo": "Varón, 61 años",
+    "chief": "Ascitis que se volvió más difícil de manejar, febrícula y confusión leve.",
+    "opening": "Doctor, desde ayer estoy con fiebre y la panza se me hinchó mucho más; mi familia dice que estoy medio confundido.",
+    "vitals": {
+      "temp": 38.1,
+      "hr": 112,
+      "rr": 24,
+      "bp": "96/58",
+      "spo2": 95
+    },
+    "exam": "Paciente cirrótico con ascitis abundante. Molestia abdominal difusa leve, sin defensa ni Blumberg franco. Está algo lento para responder, sin focalidad neurológica.",
+    "intents": [
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo",
+          "hace cuanto",
+          "inicio",
+          "desde cuando empezo",
+          "cuando comenzo",
+          "hace cuanto comenzo",
+          "cuando arranco"
+        ],
+        "answers": [
+          "Desde ayer empecé con fiebre y me notaron más confundido.",
+          "La descompensación fue bastante brusca, desde ayer."
+        ],
+        "reveal": "inicio agudo de fiebre y descompensación"
+      },
+      {
+        "id": "cirrhosis",
+        "keys": [
+          "cirrosis",
+          "higado",
+          "hígado",
+          "hepatopatia",
+          "hepatopatía",
+          "cirrosis conocida",
+          "cirrosis previa"
+        ],
+        "answers": [
+          "Sí, tengo cirrosis desde hace años.",
+          "Me controlan por cirrosis y ascitis."
+        ],
+        "reveal": "cirrosis conocida"
+      },
+      {
+        "id": "ascites",
+        "keys": [
+          "ascitis",
+          "panza hinchada",
+          "abdomen hinchado",
+          "diureticos",
+          "diuréticos",
+          "liquido en el abdomen"
+        ],
+        "answers": [
+          "La ascitis venía controlada, pero estos días la panza aumentó y los diuréticos casi no me hacen efecto.",
+          "Se me juntó mucho más líquido que de costumbre."
+        ],
+        "reveal": "ascitis súbitamente más refractaria"
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "temperatura",
+          "escalofrios",
+          "escalofríos",
+          "tuviste fiebre",
+          "temperatura alta"
+        ],
+        "answers": [
+          "Sí, tuve fiebre y algo de escalofríos.",
+          "Desde ayer estoy febril."
+        ],
+        "reveal": "fiebre/subfebrícula"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "duele",
+          "abdomen",
+          "panza",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele",
+          "dolor abdominal"
+        ],
+        "answers": [
+          "No es un dolor fuerte, es una molestia difusa.",
+          "Me molesta la panza, pero no tengo ese dolor insoportable que uno imagina."
+        ],
+        "reveal": "molestias abdominales vagas, sin dolor peritoneal intenso"
+      },
+      {
+        "id": "confusion",
+        "keys": [
+          "confusion",
+          "confusión",
+          "desorientado",
+          "encefalopatia",
+          "encefalopatía",
+          "sensorio",
+          "desorientacion",
+          "esta confundido"
+        ],
+        "answers": [
+          "Mi familia dice que estoy más lento y algo confundido.",
+          "Me cuesta un poco concentrarme desde que empezó la fiebre."
+        ],
+        "reveal": "alteración leve del sensorio"
+      },
+      {
+        "id": "bleeding",
+        "keys": [
+          "sangrado",
+          "hematemesis",
+          "melena",
+          "vomito sangre",
+          "vómito sangre",
+          "perdida de sangre"
+        ],
+        "answers": [
+          "No vomité sangre ni vi materia fecal negra.",
+          "No tuve sangrado digestivo que yo sepa."
+        ],
+        "reveal": "niega hemorragia digestiva actual"
+      },
+      {
+        "id": "prior",
+        "keys": [
+          "peritonitis antes",
+          "episodio previo",
+          "pbe previa",
+          "infeccion ascitis",
+          "infección ascitis",
+          "episodios previos",
+          "antes le paso",
+          "le habia ocurrido"
+        ],
+        "answers": [
+          "Nunca me habían dicho que tuviera una infección del líquido de la panza.",
+          "Es la primera vez que me pasa algo así."
+        ],
+        "reveal": "sin episodio previo conocido de peritonitis espontánea"
+      }
+    ],
+    "studies": [
+      {
+        "id": "pbe_paracentesis",
+        "label": "Paracentesis diagnóstica + PMN",
+        "aliases": [
+          "paracentesis",
+          "liquido ascitico",
+          "líquido ascítico",
+          "pmn ascitis",
+          "neutrofilos ascitis",
+          "neutrófilos ascitis",
+          "puncion abdominal diagnostica",
+          "paracentesis diagnostica",
+          "analisis de ascitis"
+        ],
+        "type": "procedure",
+        "delay": 5,
+        "result": "Líquido ascítico: 780 PMN/mm³. El recuento supera el umbral diagnóstico de 250 PMN/mm³."
+      },
+      {
+        "id": "pbe_culture",
+        "label": "Cultivo de líquido ascítico",
+        "aliases": [
+          "cultivo ascitico",
+          "cultivo ascítico",
+          "cultivo liquido ascitico",
+          "hemocultivo ascitis",
+          "cultivar muestra",
+          "microbiologia"
+        ],
+        "type": "lab",
+        "delay": 7,
+        "result": "Cultivo monomicrobiano: Escherichia coli. En esta semilla es compatible con peritonitis bacteriana espontánea."
+      },
+      {
+        "id": "pbe_renal",
+        "label": "Función renal + ionograma",
+        "aliases": [
+          "renal",
+          "creatinina",
+          "urea",
+          "ionograma",
+          "sodio",
+          "potasio",
+          "quimica sanguinea",
+          "bioquimica sanguinea",
+          "perfil renal",
+          "funcion renal",
+          "electrolitos plasmaticos",
+          "ionos"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Creatinina 1,4 mg/dL · urea elevada · Na 131 mEq/L · K 3,5 mEq/L. Requiere vigilancia por riesgo de deterioro renal."
+      },
+      {
+        "id": "pbe_cbc",
+        "label": "Hemograma",
+        "aliases": [
+          "hemograma",
+          "leucocitos",
+          "neutrofilos",
+          "neutrófilos",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Leucocitosis con neutrofilia y trombocitopenia en contexto de cirrosis."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "ceftriaxone",
+        "aliases": [
+          "ceftriaxona",
+          "ceftriazona",
+          "ceftria",
+          "ceftriaxona endovenosa"
+        ],
+        "label": "Ceftriaxona IV"
+      },
+      {
+        "id": "albumin",
+        "aliases": [
+          "albumina",
+          "albúmina",
+          "albumina iv",
+          "albúmina iv",
+          "albumina intravenosa",
+          "albumina endovenosa"
+        ],
+        "label": "Albúmina IV"
+      },
+      {
+        "id": "imipenem",
+        "aliases": [
+          "imipenem",
+          "imi cilastatina",
+          "imipenem cilastatina"
+        ],
+        "label": "Imipenem IV"
+      },
+      {
+        "id": "stop_beta_blocker",
+        "aliases": [
+          "suspender beta bloqueante",
+          "suspender betabloqueante",
+          "suspender propranolol",
+          "suspender carvedilol",
+          "retirar beta bloqueante",
+          "discontinuar beta bloqueante",
+          "suspender el betabloqueante",
+          "retirar el betabloqueante",
+          "pausar betabloqueante"
+        ],
+        "label": "Suspender beta bloqueante"
+      }
+    ],
+    "dx": [
+      "peritonitis bacteriana espontanea",
+      "peritonitis bacteriana espontánea",
+      "peritonitis espontanea del cirrotico",
+      "peritonitis espontánea del cirrótico",
+      "pbe"
+    ],
+    "requiredHistory": [
+      "cirrhosis",
+      "ascites",
+      "fever",
+      "confusion"
+    ],
+    "keyStudies": [
+      "pbe_paracentesis",
+      "pbe_renal"
+    ],
+    "keyInterventions": [
+      "ceftriaxone",
+      "albumin"
+    ],
+    "source": "LIBRO GASTRO · Peritonitis espontánea del cirrótico, págs. 62-64 del tomo; Cap. Peritonitis, págs. 202-208. El texto escribe ‘ceftriazona’; el parser acepta ceftriaxona/ceftriazona.",
+    "risk": "peritonitis",
+    "physiology": {
+      "engine": "peritonitis",
+      "subtype": "pbe",
+      "inflammation": 0.62,
+      "effectiveVolume": 0.72,
+      "svr": 0.78,
+      "contractility": 0.92,
+      "oxygenation": 0.95,
+      "renalReserve": 0.58,
+      "inflammationGrowth": 0.03,
+      "thirdSpaceRate": 0.01,
+      "sourceGrowth": 0.018,
+      "fluidResponsiveness": 0.72,
+      "sourceControlRequired": false,
+      "coverageSets": [
+        [
+          "ceftriaxone"
+        ],
+        [
+          "imipenem"
+        ],
+        [
+          "piptazo"
+        ]
+      ],
+      "preferredSet": [
+        "ceftriaxone"
+      ],
+      "supportive": [
+        "albumin"
+      ],
+      "avoid": [
+        "amikacin",
+        "gentamicin",
+        "beta_blocker"
+      ],
+      "doseRules": {
+        "ceftriaxone": {
+          "amount": 1000,
+          "unit": "mg"
+        },
+        "imipenem": {
+          "amount": 500,
+          "unit": "mg"
+        }
+      }
+    },
+    "common": {
+      "name": "Miguel",
+      "age": "61",
+      "arrival": "Me trajo mi hija porque me vio con fiebre y más confundido.",
+      "reason": [
+        "Tengo cirrosis y ascitis, pero desde ayer la panza aumentó, estoy con fiebre y me siento raro.",
+        "La ascitis empeoró de golpe y empecé con fiebre y confusión."
+      ],
+      "current": [
+        "Estoy cansado, febril y algo lento para pensar; la panza está muy tensa.",
+        "Me siento débil y la ascitis está peor que de costumbre."
+      ],
+      "concern": [
+        "Me preocupa que se me haya infectado algo porque nunca estuve así.",
+        "Mi familia se asustó porque me notó confuso."
+      ],
+      "allergies": [
+        "No conozco alergias a medicamentos."
+      ],
+      "pmh": [
+        "Tengo cirrosis con hipertensión portal y ascitis de larga data."
+      ],
+      "surgeries": [
+        "No tuve cirugías abdominales recientes."
+      ],
+      "meds": [
+        "Uso diuréticos para la ascitis y un beta bloqueante que me indicaron por la hipertensión portal."
+      ],
+      "pain": [
+        "Es más molestia que dolor: cuatro de diez, difuso."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Además de la fiebre y la ascitis, estoy más cansado y algo confundido. No tuve vómitos con sangre ni melena.",
+      "tobacco": "No fumo actualmente.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No hay antecedentes familiares relevantes para este episodio.",
+      "hospitalizations": "He estado internado antes por descompensaciones de la cirrosis, pero no recientemente.",
+      "occupation": "Estoy jubilado.",
+      "diet": "Venía tratando de comer con poca sal.",
+      "transfusions": "Recibí transfusiones años atrás durante una internación.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No tuve contactos enfermos conocidos.",
+      "bowel": "No tengo diarrea; el ritmo intestinal no cambió demasiado.",
+      "urinary": "Estoy orinando algo menos desde ayer.",
+      "dyspnea": "Me falta un poco el aire por la distensión abdominal.",
+      "chestPain": "No tengo dolor torácico.",
+      "syncope": "No me desmayé.",
+      "nauseaVomiting": "Tuve algo de náuseas, sin vómitos importantes.",
+      "sleep": "Dormí mal y mi familia dice que estuve más somnoliento.",
+      "habitsSummary": "No fumo ni consumo drogas; alcohol suspendido desde el diagnóstico de cirrosis.",
+      "historySummary": "Cirrosis con hipertensión portal y ascitis, en tratamiento con diuréticos y beta bloqueante. Sin cirugías abdominales recientes ni alergias conocidas."
+    }
+  },
+  {
+    "id": "PERI-SEC-001",
+    "selector": "Dolor abdominal que se generaliza + abdomen en tabla",
+    "area": "Peritoneo · peritonitis secundaria",
+    "demo": "Mujer, 64 años",
+    "chief": "Dolor inicialmente en fosa ilíaca izquierda que se generalizó, vómitos y ausencia de gases.",
+    "opening": "Doctor, empezó abajo a la izquierda y ahora me duele toda la panza; si me muevo o toso es insoportable.",
+    "vitals": {
+      "temp": 38.9,
+      "hr": 128,
+      "rr": 30,
+      "bp": "86/50",
+      "spo2": 92
+    },
+    "exam": "Paciente inmóvil en decúbito dorsal, respiración abdominal fija. Abdomen distendido con defensa y contractura difusas, Blumberg positivo y ruidos hidroaéreos muy disminuidos.",
+    "intents": [
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo",
+          "inicio",
+          "hace cuanto",
+          "desde cuando empezo",
+          "cuando comenzo",
+          "hace cuanto comenzo",
+          "cuando arranco"
+        ],
+        "answers": [
+          "Empezó esta mañana de forma bastante brusca y fue empeorando.",
+          "Hace unas horas comenzó y cada vez se extendió más."
+        ],
+        "reveal": "inicio brusco y progresivo"
+      },
+      {
+        "id": "migration",
+        "keys": [
+          "donde empezo",
+          "dónde empezó",
+          "se corrio",
+          "se corrió",
+          "se generalizo",
+          "se generalizó",
+          "migro",
+          "migró",
+          "donde empezo el dolor",
+          "cambio de lugar el dolor",
+          "donde te duele el abdomen",
+          "donde le duele el abdomen"
+        ],
+        "answers": [
+          "Primero era abajo a la izquierda y después se me tomó todo el abdomen.",
+          "Empezó localizado y luego se generalizó."
+        ],
+        "reveal": "dolor inicialmente localizado y luego generalizado"
+      },
+      {
+        "id": "movement",
+        "keys": [
+          "movimiento",
+          "moverte",
+          "moverse",
+          "tos",
+          "toser",
+          "respirar profundo",
+          "respiracion profunda",
+          "respiración profunda",
+          "duele al moverte",
+          "duele al caminar"
+        ],
+        "answers": [
+          "Si me muevo, toso o respiro profundo me duele mucho más.",
+          "Trato de quedarme quieta porque cualquier movimiento empeora el dolor."
+        ],
+        "reveal": "dolor exacerbado por movimiento, tos y respiración profunda"
+      },
+      {
+        "id": "ileus",
+        "keys": [
+          "gases",
+          "materia fecal",
+          "deposiciones",
+          "evacuar",
+          "distension",
+          "distensión",
+          "no elimina gases",
+          "no tiene deposiciones"
+        ],
+        "answers": [
+          "Desde que empezó no pude largar gases ni ir de cuerpo y estoy muy hinchada.",
+          "No elimino gases ni materia fecal y el abdomen se distendió."
+        ],
+        "reveal": "íleo con ausencia de gases y deposiciones"
+      },
+      {
+        "id": "vomit",
+        "keys": [
+          "vomito",
+          "vómito",
+          "vomitos",
+          "vómitos",
+          "nauseas",
+          "náuseas",
+          "devolviste",
+          "devolver comida",
+          "arcadas"
+        ],
+        "answers": [
+          "Vomité varias veces desde que empezó el dolor.",
+          "Tengo náuseas y ya vomité varias veces."
+        ],
+        "reveal": "vómitos asociados"
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "escalofrios",
+          "escalofríos",
+          "temperatura",
+          "tuviste fiebre",
+          "temperatura alta"
+        ],
+        "answers": [
+          "Sí, tuve fiebre y escalofríos.",
+          "Estoy con fiebre desde hace unas horas."
+        ],
+        "reveal": "fiebre y escalofríos"
+      },
+      {
+        "id": "diverticulitis",
+        "keys": [
+          "diverticulos",
+          "divertículos",
+          "diverticulitis",
+          "episodios previos",
+          "episodios de diverticulitis"
+        ],
+        "answers": [
+          "Hace un par de años tuve una diverticulitis que se trató con antibióticos.",
+          "Sí, ya me habían dicho que tenía divertículos y una vez se me inflamaron."
+        ],
+        "reveal": "antecedente de diverticulitis"
+      }
+    ],
+    "studies": [
+      {
+        "id": "peri_cbc",
+        "label": "Hemograma + inflamación",
+        "aliases": [
+          "hemograma",
+          "leucocitos",
+          "eritrosedimentacion",
+          "eritrosedimentación",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Leucocitosis marcada con neutrofilia y desviación a la izquierda."
+      },
+      {
+        "id": "peri_gas",
+        "label": "Gases + ionograma + función renal",
+        "aliases": [
+          "gases",
+          "gasometria",
+          "gasometría",
+          "ionograma",
+          "sodio",
+          "potasio",
+          "urea",
+          "creatinina",
+          "gases arteriales",
+          "estado acido base",
+          "eab",
+          "quimica sanguinea",
+          "bioquimica sanguinea",
+          "perfil renal",
+          "funcion renal",
+          "electrolitos plasmaticos",
+          "ionos"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Acidosis metabólica asociada a hipoperfusión · Na 131 mEq/L · K 3,2 mEq/L · urea/creatinina elevadas en patrón prerrenal."
+      },
+      {
+        "id": "peri_rx",
+        "label": "Radiografía de tórax/abdomen",
+        "aliases": [
+          "radiografia",
+          "radiografía",
+          "rx torax",
+          "rx tórax",
+          "rx abdomen",
+          "neumoperitoneo",
+          "placa",
+          "placa simple",
+          "rayos x",
+          "rx",
+          "plaquita"
+        ],
+        "type": "imaging",
+        "delay": 6,
+        "result": "Aire libre subdiafragmático y asas intestinales dilatadas compatibles con perforación de víscera hueca e íleo."
+      },
+      {
+        "id": "peri_ct",
+        "label": "TC abdominopélvica urgente",
+        "aliases": [
+          "tomografia",
+          "tomografía",
+          "tc abdomen",
+          "tac abdomen",
+          "tc abdominopelvica",
+          "tac abdominopelvica",
+          "tomo",
+          "tomografia computada",
+          "tomografia computarizada",
+          "tac",
+          "scanner abdominal"
+        ],
+        "type": "imaging",
+        "delay": 7,
+        "result": "Diverticulitis sigmoidea perforada con aire extraluminal, líquido libre y cambios inflamatorios difusos."
+      },
+      {
+        "id": "peri_fluid",
+        "label": "Análisis de líquido peritoneal",
+        "aliases": [
+          "liquido peritoneal",
+          "líquido peritoneal",
+          "paracentesis",
+          "cultivo peritoneal",
+          "gram peritoneal",
+          "puncion abdominal diagnostica",
+          "paracentesis diagnostica",
+          "analisis de ascitis"
+        ],
+        "type": "lab",
+        "delay": 7,
+        "result": "PMN >1000/mm³, cultivo polimicrobiano. Proteínas >1 g%, glucosa <0,5 g/L y LDH por encima del límite sérico normal: patrón que orienta a peritonitis secundaria."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "fluid",
+        "aliases": [
+          "ringer",
+          "ringer lactato",
+          "cristaloides",
+          "suero",
+          "fisiologica",
+          "fisiológica",
+          "volumen",
+          "expandir",
+          "expansion de volumen",
+          "expansion volemica",
+          "reponer volumen",
+          "reposicion volemica",
+          "reposicion hidrica",
+          "rehidratar",
+          "rehidratacion",
+          "fluidoterapia",
+          "bolo de cristaloides",
+          "bolo de suero",
+          "carga de volumen",
+          "carga de cristaloides",
+          "solucion salina",
+          "salina normal",
+          "cloruro de sodio 0 9",
+          "nacl 0 9",
+          "sf",
+          "solucion fisiologica",
+          "hartmann",
+          "lactato de ringer",
+          "cristaloides balanceados",
+          "solucion balanceada",
+          "expansion"
+        ],
+        "label": "Reposición con cristaloides"
+      },
+      {
+        "id": "ceftriaxone",
+        "aliases": [
+          "ceftriaxona",
+          "ceftriazona",
+          "ceftria",
+          "ceftriaxona endovenosa"
+        ],
+        "label": "Ceftriaxona IV"
+      },
+      {
+        "id": "metronidazole",
+        "aliases": [
+          "metronidazol",
+          "metro",
+          "metronidazol endovenoso"
+        ],
+        "label": "Metronidazol IV"
+      },
+      {
+        "id": "source_control",
+        "aliases": [
+          "cirugia",
+          "cirugía",
+          "operar",
+          "quirófano",
+          "quirofano",
+          "laparotomia",
+          "laparotomía",
+          "control de foco",
+          "lavado peritoneal",
+          "controlar el foco",
+          "resolver el foco",
+          "control de fuente",
+          "control del foco",
+          "tratamiento del foco",
+          "drenar el foco",
+          "drenaje del foco",
+          "control quirurgico del foco"
+        ],
+        "label": "Cirugía + control de foco + lavado"
+      }
+    ],
+    "dx": [
+      "peritonitis secundaria",
+      "peritonitis por perforacion",
+      "peritonitis por perforación",
+      "perforacion de diverticulitis",
+      "perforación diverticular",
+      "diverticulitis perforada"
+    ],
+    "requiredHistory": [
+      "onset",
+      "migration",
+      "movement",
+      "ileus"
+    ],
+    "keyStudies": [
+      "peri_cbc",
+      "peri_ct",
+      "peri_gas"
+    ],
+    "keyInterventions": [
+      "ceftriaxone",
+      "metronidazole",
+      "source_control"
+    ],
+    "source": "LIBRO GASTRO · Cap. Peritonitis, págs. 202-208: dolor peritoneal, íleo, tercer espacio, sepsis, diagnóstico y tratamiento de peritonitis secundaria.",
+    "risk": "peritonitis",
+    "physiology": {
+      "engine": "peritonitis",
+      "subtype": "secondary",
+      "inflammation": 0.78,
+      "effectiveVolume": 0.6,
+      "svr": 0.68,
+      "contractility": 0.88,
+      "oxygenation": 0.9,
+      "renalReserve": 0.7,
+      "inflammationGrowth": 0.044,
+      "thirdSpaceRate": 0.017,
+      "sourceGrowth": 0.035,
+      "fluidResponsiveness": 0.86,
+      "sourceControlRequired": true,
+      "coverageSets": [
+        [
+          "ceftriaxone",
+          "metronidazole"
+        ],
+        [
+          "ceftazidime",
+          "metronidazole"
+        ],
+        [
+          "cefoperazone",
+          "metronidazole"
+        ],
+        [
+          "gentamicin",
+          "metronidazole"
+        ],
+        [
+          "amikacin",
+          "metronidazole"
+        ],
+        [
+          "imipenem",
+          "amikacin",
+          "metronidazole"
+        ],
+        [
+          "piptazo",
+          "amikacin",
+          "metronidazole"
+        ],
+        [
+          "cefepime",
+          "amikacin",
+          "metronidazole"
+        ],
+        [
+          "piptazo"
+        ],
+        [
+          "imipenem"
+        ]
+      ],
+      "preferredSet": [
+        "ceftriaxone",
+        "metronidazole"
+      ],
+      "supportive": [
+        "fluid"
+      ],
+      "avoid": [
+        "beta_blocker",
+        "furosemide"
+      ],
+      "doseRules": {
+        "ceftriaxone": {
+          "amount": 1000,
+          "unit": "mg"
+        },
+        "metronidazole": {
+          "amount": 500,
+          "unit": "mg"
+        },
+        "ceftazidime": {
+          "amount": 1000,
+          "unit": "mg"
+        },
+        "cefoperazone": {
+          "amount": 1000,
+          "unit": "mg"
+        },
+        "gentamicin": {
+          "amount": 80,
+          "unit": "mg"
+        },
+        "amikacin": {
+          "amount": 500,
+          "unit": "mg"
+        },
+        "imipenem": {
+          "amount": 500,
+          "unit": "mg"
+        },
+        "cefepime": {
+          "amount": 1000,
+          "unit": "mg"
+        }
+      }
+    },
+    "common": {
+      "name": "Elena",
+      "age": "64",
+      "arrival": "Me trajo una ambulancia porque el dolor se hizo insoportable y empecé a sentirme muy débil.",
+      "reason": [
+        "El dolor empezó abajo a la izquierda y ahora me duele todo el abdomen; además vomité y no elimino gases.",
+        "Vine porque el dolor se generalizó y cada movimiento me duele muchísimo."
+      ],
+      "current": [
+        "Estoy muy dolorida, con frío y mareada; prefiero no moverme.",
+        "Me siento muy débil y me duele todo el abdomen."
+      ],
+      "concern": [
+        "Siento que esto es distinto de la diverticulitis que tuve antes y estoy muy asustada.",
+        "Me preocupa porque el dolor no afloja y cada vez estoy más débil."
+      ],
+      "allergies": [
+        "No conozco alergias a medicamentos."
+      ],
+      "pmh": [
+        "Tengo hipertensión y antecedente de diverticulitis."
+      ],
+      "surgeries": [
+        "Me operaron de la vesícula hace muchos años, sin otras cirugías abdominales."
+      ],
+      "meds": [
+        "Tomo un antihipertensivo todos los días."
+      ],
+      "pain": [
+        "Es diez de diez cuando me muevo; quieta sigue siendo muy fuerte."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Tengo fiebre, escalofríos, vómitos, distensión y no elimino gases. Me siento muy débil.",
+      "tobacco": "No fumo.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco antecedentes familiares relevantes.",
+      "hospitalizations": "Tuve una internación previa por diverticulitis, sin cirugía.",
+      "occupation": "Trabajo en administración.",
+      "diet": "No pude comer desde que empezó el dolor.",
+      "transfusions": "Nunca recibí transfusiones.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No tuve contactos enfermos.",
+      "bowel": "Desde que empezó el dolor no elimino gases ni materia fecal.",
+      "urinary": "Estoy orinando poco desde que me siento tan débil.",
+      "dyspnea": "Respiro corto porque inspirar profundo me aumenta el dolor.",
+      "chestPain": "No tengo dolor torácico.",
+      "syncope": "No llegué a desmayarme, pero estoy mareada.",
+      "nauseaVomiting": "Vomité varias veces.",
+      "sleep": "No pude dormir por el dolor.",
+      "habitsSummary": "No fumo, no consumo drogas y tomo alcohol sólo ocasionalmente.",
+      "historySummary": "Hipertensión y antecedente de diverticulitis tratada médicamente. Colecistectomía remota, sin alergias conocidas."
+    }
+  },
+  {
+    "id": "PERI-TER-001",
+    "selector": "Postoperatorio abdominal + sepsis persistente",
+    "area": "Peritoneo · peritonitis terciaria",
+    "demo": "Varón, 69 años",
+    "chief": "Fiebre y deterioro persistentes tras múltiples cirugías por peritonitis secundaria.",
+    "opening": "Doctor, llevo varios días operado y sigo con fiebre; me siento cada vez más débil y la panza sigue doliendo.",
+    "vitals": {
+      "temp": 39,
+      "hr": 132,
+      "rr": 30,
+      "bp": "82/48",
+      "spo2": 91
+    },
+    "exam": "Paciente multioperado, tóxico y febril. Abdomen distendido y doloroso de forma difusa, heridas quirúrgicas recientes, sin un plastrón bien delimitado. Perfusión periférica pobre.",
+    "intents": [
+      {
+        "id": "surgery_history",
+        "keys": [
+          "cirugias",
+          "cirugías",
+          "operaciones",
+          "operado",
+          "cuantas veces",
+          "cuántas veces",
+          "operaciones previas",
+          "cirugias previas"
+        ],
+        "answers": [
+          "Me operaron varias veces en estos días por la infección abdominal.",
+          "Ya entré más de una vez a quirófano y sigo sin mejorar."
+        ],
+        "reveal": "múltiples cirugías recientes por peritonitis secundaria"
+      },
+      {
+        "id": "course",
+        "keys": [
+          "desde cuando",
+          "evolucion",
+          "evolución",
+          "mejoro",
+          "mejoró",
+          "empeoro",
+          "empeoró",
+          "evolucion desde la cirugia",
+          "despues de la ultima operacion"
+        ],
+        "answers": [
+          "Nunca terminé de mejorar: sigo con fiebre y cada día me siento más débil.",
+          "Después de las cirugías bajó algo el dolor, pero la sepsis siguió."
+        ],
+        "reveal": "peritonitis persistente pese a cirugía y antibióticos"
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "escalofrios",
+          "escalofríos",
+          "tuviste fiebre",
+          "temperatura alta"
+        ],
+        "answers": [
+          "Sigo con fiebre alta y escalofríos.",
+          "La fiebre no cedió del todo en ningún momento."
+        ],
+        "reveal": "fiebre persistente"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "abdomen",
+          "panza",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele",
+          "dolor abdominal"
+        ],
+        "answers": [
+          "El abdomen sigue doloroso en forma difusa.",
+          "No es un punto solo; me duele casi toda la panza."
+        ],
+        "reveal": "dolor abdominal difuso persistente"
+      },
+      {
+        "id": "immuno",
+        "keys": [
+          "inmunosuprimido",
+          "inmunosupresion",
+          "inmunosupresión",
+          "corticoides",
+          "quimioterapia",
+          "defensas bajas",
+          "medicacion inmunosupresora"
+        ],
+        "answers": [
+          "Estoy con corticoides desde hace tiempo por una enfermedad autoinmune.",
+          "Sí, tengo tratamiento inmunosupresor crónico."
+        ],
+        "reveal": "inmunosupresión crónica"
+      }
+    ],
+    "studies": [
+      {
+        "id": "ter_cbc",
+        "label": "Hemograma + función orgánica",
+        "aliases": [
+          "hemograma",
+          "leucocitos",
+          "renal",
+          "creatinina",
+          "hepatico",
+          "hepático",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita"
+        ],
+        "type": "lab",
+        "delay": 5,
+        "result": "Leucocitosis con neutrofilia, deterioro renal y alteraciones compatibles con sepsis persistente."
+      },
+      {
+        "id": "ter_ct",
+        "label": "TC abdominopélvica",
+        "aliases": [
+          "tomografia",
+          "tomografía",
+          "tc abdomen",
+          "tac abdomen",
+          "tomo",
+          "tomografia computada",
+          "tomografia computarizada",
+          "tac",
+          "scanner abdominal"
+        ],
+        "type": "imaging",
+        "delay": 7,
+        "result": "Inflamación peritoneal difusa persistente sin un absceso intraabdominal único bien delimitado."
+      },
+      {
+        "id": "ter_culture",
+        "label": "Cultivo de material peritoneal",
+        "aliases": [
+          "cultivo peritoneal",
+          "cultivo abdomen",
+          "cultivo intraabdominal",
+          "microbiologia",
+          "microbiología",
+          "cultivar muestra"
+        ],
+        "type": "lab",
+        "delay": 7,
+        "result": "Desarrollo de Enterococcus y Candida en esta semilla. Requiere ajustar cobertura al cultivo."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "fluid",
+        "aliases": [
+          "ringer",
+          "cristaloides",
+          "suero",
+          "volumen",
+          "expandir",
+          "expansion de volumen",
+          "expansion volemica",
+          "reponer volumen",
+          "reposicion volemica",
+          "reposicion hidrica",
+          "rehidratar",
+          "rehidratacion",
+          "fluidoterapia",
+          "bolo de cristaloides",
+          "bolo de suero",
+          "carga de volumen",
+          "carga de cristaloides",
+          "solucion salina",
+          "salina normal",
+          "cloruro de sodio 0 9",
+          "nacl 0 9",
+          "sf",
+          "solucion fisiologica",
+          "hartmann",
+          "lactato de ringer",
+          "cristaloides balanceados",
+          "solucion balanceada",
+          "expansion"
+        ],
+        "label": "Reposición con cristaloides"
+      },
+      {
+        "id": "ampicillin",
+        "aliases": [
+          "ampicilina",
+          "ampi"
+        ],
+        "label": "Ampicilina IV"
+      },
+      {
+        "id": "amikacin",
+        "aliases": [
+          "amikacina",
+          "amika"
+        ],
+        "label": "Amikacina IV"
+      },
+      {
+        "id": "fluconazole",
+        "aliases": [
+          "fluconazol",
+          "fluco"
+        ],
+        "label": "Fluconazol IV"
+      },
+      {
+        "id": "amphotericin",
+        "aliases": [
+          "anfotericina",
+          "anfotericina b",
+          "anfo b"
+        ],
+        "label": "Anfotericina B IV"
+      },
+      {
+        "id": "piptazo",
+        "label": "Cobertura antibiótica amplia ajustable a cultivos",
+        "aliases": [
+          "piperacilina/tazobactam",
+          "piptazo",
+          "pip tazo",
+          "pipera tazo",
+          "piperacilina con tazobactam",
+          "piperacilina tazobactam"
+        ]
+      },
+      {
+        "id": "source_control",
+        "label": "Reevaluación y control de foco residual",
+        "aliases": [
+          "control de foco",
+          "drenaje",
+          "cirugia",
+          "cirugía",
+          "controlar el foco",
+          "resolver el foco",
+          "control de fuente",
+          "control del foco",
+          "tratamiento del foco",
+          "drenar el foco",
+          "drenaje del foco",
+          "control quirurgico del foco"
+        ]
+      }
+    ],
+    "dx": [
+      "peritonitis terciaria",
+      "peritonitis persistente terciaria"
+    ],
+    "requiredHistory": [
+      "surgery_history",
+      "course",
+      "immuno"
+    ],
+    "keyStudies": [
+      "ter_ct",
+      "ter_culture",
+      "ter_cbc"
+    ],
+    "keyInterventions": [
+      "fluid",
+      "piptazo",
+      "source_control"
+    ],
+    "source": "LIBRO GASTRO · Cap. Peritonitis, págs. 203 y 208: peritonitis terciaria, pacientes multioperados/inmunocomprometidos y cobertura de Enterococcus/Candida según cultivo.",
+    "risk": "peritonitis",
+    "physiology": {
+      "engine": "peritonitis",
+      "subtype": "tertiary",
+      "inflammation": 0.9,
+      "effectiveVolume": 0.56,
+      "svr": 0.62,
+      "contractility": 0.82,
+      "oxygenation": 0.87,
+      "renalReserve": 0.42,
+      "inflammationGrowth": 0.04,
+      "thirdSpaceRate": 0.014,
+      "sourceGrowth": 0.022,
+      "fluidResponsiveness": 0.62,
+      "sourceControlRequired": true,
+      "coverageSets": [
+        [
+          "piptazo"
+        ]
+      ],
+      "preferredSet": [
+        "piptazo"
+      ],
+      "supportive": [
+        "fluid"
+      ],
+      "avoid": [
+        "beta_blocker",
+        "furosemide"
+      ],
+      "doseRules": {
+        "amikacin": {
+          "amount": 500,
+          "unit": "mg"
+        },
+        "piptazo": {
+          "amount": 4500,
+          "unit": "mg"
+        }
+      }
+    },
+    "common": {
+      "name": "Roberto",
+      "age": "69",
+      "arrival": "Ya estaba internado; me trasladaron nuevamente a un área de mayor complejidad por la sepsis persistente.",
+      "reason": [
+        "Sigo con fiebre y deterioro después de varias cirugías por la infección abdominal.",
+        "No logro salir del cuadro séptico pese a las operaciones previas."
+      ],
+      "current": [
+        "Estoy muy débil, febril y me cuesta respirar con normalidad.",
+        "Me siento peor, con fiebre y dolor abdominal difuso."
+      ],
+      "concern": [
+        "Me preocupa no estar respondiendo a las cirugías y antibióticos.",
+        "Cada vez estoy más débil y mi familia está muy preocupada."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "pmh": [
+        "Tengo una enfermedad autoinmune y uso corticoides crónicamente."
+      ],
+      "surgeries": [
+        "Fui operado varias veces en esta internación por una peritonitis secundaria."
+      ],
+      "meds": [
+        "Además de mis corticoides, ya recibí varios antibióticos durante la internación."
+      ],
+      "pain": [
+        "Seis de diez, difuso; estoy muy agotado."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Fiebre persistente, debilidad extrema, dolor abdominal difuso y sensación de falta de aire.",
+      "tobacco": "No fumo actualmente.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "Sin antecedentes familiares relevantes.",
+      "hospitalizations": "Estoy cursando una internación prolongada con múltiples cirugías.",
+      "occupation": "Estoy jubilado.",
+      "diet": "Estoy con alimentación indicada por el equipo durante la internación.",
+      "transfusions": "Recibí transfusiones durante esta internación.",
+      "travel": "No aplica durante la internación.",
+      "contacts": "No aplica; el cuadro es intrahospitalario.",
+      "bowel": "El tránsito intestinal está muy enlentecido desde las cirugías.",
+      "urinary": "Estoy orinando menos y me están controlando la función renal.",
+      "dyspnea": "Me falta el aire y respiro rápido.",
+      "chestPain": "No tengo dolor torácico típico.",
+      "syncope": "No me desmayé.",
+      "nauseaVomiting": "Tengo náuseas intermitentes.",
+      "sleep": "Duermo muy mal por la internación y el malestar.",
+      "habitsSummary": "Sin hábitos tóxicos actuales relevantes.",
+      "historySummary": "Inmunosupresión crónica y múltiples cirugías recientes por peritonitis secundaria, con exposición previa a antibióticos de amplio espectro."
+    }
+  },
+  {
+    "id": "APP-001",
+    "selector": "Dolor que migra a fosa ilíaca derecha",
+    "area": "Abdomen agudo · apéndice",
+    "demo": "Varón, 24 años",
+    "chief": "Dolor abdominal de horas de evolución que migró hacia fosa ilíaca derecha, con anorexia y náuseas.",
+    "opening": "Me empezó a doler arriba y alrededor del ombligo, y ahora me duele mucho abajo a la derecha.",
+    "vitals": {
+      "temp": 38.1,
+      "hr": 108,
+      "rr": 20,
+      "bp": "118/72",
+      "spo2": 98
+    },
+    "exam": "Dolor máximo en fosa ilíaca derecha, hipersensibilidad en punto de McBurney, defensa localizada y Blumberg positivo. Dolor con maniobra del psoas. Sin abdomen en tabla generalizado.",
+    "intents": [
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo",
+          "hace cuanto",
+          "inicio",
+          "desde cuando empezo",
+          "cuando comenzo",
+          "hace cuanto comenzo",
+          "cuando arranco"
+        ],
+        "answers": [
+          "Empezó hace unas ocho horas, primero más arriba y después se fue abajo a la derecha."
+        ],
+        "reveal": "dolor de 8 horas de evolución"
+      },
+      {
+        "id": "migration",
+        "keys": [
+          "migracion",
+          "migro",
+          "se movio",
+          "donde empezo",
+          "periumbilical",
+          "fosa iliaca",
+          "donde empezo el dolor",
+          "cambio de lugar el dolor",
+          "donde te duele el abdomen",
+          "donde le duele el abdomen"
+        ],
+        "answers": [
+          "Al principio era en el epigastrio y alrededor del ombligo; unas horas después se me fue a la fosa ilíaca derecha."
+        ],
+        "reveal": "migración epigastrio/periumbilical → FID"
+      },
+      {
+        "id": "anorexia",
+        "keys": [
+          "apetito",
+          "anorexia",
+          "comer",
+          "sin ganas de comer",
+          "perdida de apetito"
+        ],
+        "answers": [
+          "No tengo nada de hambre desde que empezó."
+        ],
+        "reveal": "anorexia"
+      },
+      {
+        "id": "vomit",
+        "keys": [
+          "vomito",
+          "vomitos",
+          "nauseas",
+          "devolviste",
+          "devolver comida",
+          "arcadas"
+        ],
+        "answers": [
+          "Tengo náuseas y vomité una vez."
+        ],
+        "reveal": "náuseas y un vómito"
+      },
+      {
+        "id": "bowel",
+        "keys": [
+          "diarrea",
+          "constipacion",
+          "deposiciones",
+          "gases",
+          "evacuaciones",
+          "como son las heces",
+          "como vas de cuerpo"
+        ],
+        "answers": [
+          "Desde que empezó casi no pude ir de cuerpo y estoy largando pocos gases."
+        ],
+        "reveal": "íleo/constipación incipiente"
+      },
+      {
+        "id": "urinary",
+        "keys": [
+          "orina",
+          "disuria",
+          "ardor",
+          "como orina",
+          "ardor al orinar",
+          "hacer pis"
+        ],
+        "answers": [
+          "No tengo ardor ni molestias al orinar."
+        ],
+        "reveal": "niega síntomas urinarios"
+      }
+    ],
+    "studies": [
+      {
+        "id": "app_cbc",
+        "label": "Hemograma + PCR",
+        "aliases": [
+          "hemograma",
+          "leucocitos",
+          "pcr",
+          "proteina c reactiva",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Leucocitos 15.800/mm³ con neutrofilia y desviación a la izquierda. PCR elevada."
+      },
+      {
+        "id": "app_urine",
+        "label": "Orina completa",
+        "aliases": [
+          "orina",
+          "sedimento urinario",
+          "urinalisis",
+          "uroanalisis",
+          "examen de orina",
+          "analisis de orina",
+          "orina completa"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Sin bacteriuria. Sin hallazgos que expliquen el dolor por infección urinaria."
+      },
+      {
+        "id": "app_us",
+        "label": "Ecografía de fosa ilíaca derecha",
+        "aliases": [
+          "ecografia",
+          "eco abdomen",
+          "eco fosa iliaca",
+          "eco",
+          "ultrasonografia",
+          "sonografia",
+          "ultrasonido",
+          "ecografita"
+        ],
+        "type": "imaging",
+        "delay": 6,
+        "result": "Apéndice no compresible, aumentado de calibre, con cambios inflamatorios periapendiculares."
+      },
+      {
+        "id": "app_ct",
+        "label": "TC abdominopélvica",
+        "aliases": [
+          "tomografia",
+          "tc abdomen",
+          "tac abdomen",
+          "tomo",
+          "tomografia computada",
+          "tomografia computarizada",
+          "tac",
+          "scanner abdominal"
+        ],
+        "type": "imaging",
+        "delay": 7,
+        "result": "Apéndice engrosado con inflamación periapendicular. Sin absceso ni plastrón en esta semilla."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "npo",
+        "aliases": [
+          "nada por boca",
+          "ayuno",
+          "npo",
+          "nada via oral",
+          "dieta absoluta",
+          "reposo digestivo",
+          "suspender ingesta",
+          "no dar nada por boca",
+          "no darle de comer",
+          "no comer ni beber"
+        ],
+        "label": "Nada por boca"
+      },
+      {
+        "id": "fluid",
+        "aliases": [
+          "ringer",
+          "cristaloides",
+          "hidratacion",
+          "suero",
+          "expandir",
+          "expansion de volumen",
+          "expansion volemica",
+          "reponer volumen",
+          "reposicion volemica",
+          "reposicion hidrica",
+          "rehidratar",
+          "rehidratacion",
+          "fluidoterapia",
+          "bolo de cristaloides",
+          "bolo de suero",
+          "carga de volumen",
+          "carga de cristaloides",
+          "solucion salina",
+          "salina normal",
+          "cloruro de sodio 0 9",
+          "nacl 0 9",
+          "sf",
+          "solucion fisiologica",
+          "hartmann",
+          "lactato de ringer",
+          "cristaloides balanceados",
+          "solucion balanceada",
+          "expansion"
+        ],
+        "label": "Hidratación IV"
+      },
+      {
+        "id": "ceftriaxone",
+        "aliases": [
+          "ceftriaxona",
+          "ceftriazona",
+          "ceftria",
+          "ceftriaxona endovenosa"
+        ],
+        "label": "Ceftriaxona IV"
+      },
+      {
+        "id": "metronidazole",
+        "aliases": [
+          "metronidazol",
+          "metro",
+          "metronidazol endovenoso"
+        ],
+        "label": "Metronidazol IV"
+      },
+      {
+        "id": "source_control",
+        "aliases": [
+          "apendicectomia",
+          "apendicectomía",
+          "cirugia",
+          "cirugía",
+          "operar",
+          "controlar el foco",
+          "resolver el foco",
+          "control de fuente",
+          "control del foco",
+          "tratamiento del foco",
+          "drenar el foco",
+          "drenaje del foco",
+          "control quirurgico del foco"
+        ],
+        "label": "Apendicectomía"
+      }
+    ],
+    "dx": [
+      "apendicitis aguda",
+      "apendicitis"
+    ],
+    "requiredHistory": [
+      "onset",
+      "migration",
+      "anorexia"
+    ],
+    "keyStudies": [
+      "app_cbc",
+      "app_us"
+    ],
+    "keyInterventions": [
+      "ceftriaxone",
+      "metronidazole",
+      "source_control"
+    ],
+    "source": "LIBRO GASTRO · Apendicitis y síndrome de fosa ilíaca derecha · págs. 158-161",
+    "risk": null,
+    "common": {
+      "name": "Tomás",
+      "age": "24",
+      "arrival": "Vine por mis propios medios porque el dolor se fue haciendo más fuerte.",
+      "reason": [
+        "Vine por este dolor que empezó alrededor del ombligo y se fue abajo a la derecha."
+      ],
+      "current": [
+        "Ahora el dolor está fijo en la fosa ilíaca derecha y empeora al moverme."
+      ],
+      "concern": [
+        "Me preocupa que cada vez me duele más."
+      ],
+      "allergies": [
+        "No conozco alergias a medicamentos."
+      ],
+      "pmh": [
+        "No tengo enfermedades importantes conocidas."
+      ],
+      "surgeries": [
+        "No tuve cirugías relevantes."
+      ],
+      "meds": [
+        "No tomo medicación habitual importante."
+      ],
+      "pain": [
+        "Ahora me duele ocho de diez."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Además del dolor, perdí el apetito, tengo náuseas y vomité una vez. Tengo algo de fiebre.",
+      "tobacco": "No fumo.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco antecedentes familiares relevantes.",
+      "hospitalizations": "No tuve internaciones recientes.",
+      "occupation": "Trabajo normalmente.",
+      "diet": "No sigo una dieta especial.",
+      "transfusions": "Nunca recibí transfusiones.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No tuve contactos enfermos relevantes.",
+      "bowel": "Desde que empezó estoy constipado y elimino pocos gases.",
+      "urinary": "No tengo síntomas urinarios.",
+      "dyspnea": "No tengo falta de aire.",
+      "chestPain": "No tengo dolor en el pecho.",
+      "syncope": "No me desmayé.",
+      "nauseaVomiting": "Tuve náuseas y un vómito.",
+      "sleep": "Duermo normalmente.",
+      "habitsSummary": "No tengo hábitos tóxicos relevantes.",
+      "historySummary": "Soy previamente sano y no tuve cirugías abdominales."
+    }
+  },
+  {
+    "id": "CHOLE-001",
+    "selector": "Dolor en hipocondrio derecho + fiebre",
+    "area": "Vesícula · agudo",
+    "demo": "Mujer, 72 años",
+    "chief": "Dolor intenso en hipocondrio derecho con fiebre, vómitos y antecedente de cólicos biliares.",
+    "opening": "Me duele mucho debajo de las costillas a la derecha y se me va hacia la espalda.",
+    "vitals": {
+      "temp": 38.6,
+      "hr": 114,
+      "rr": 22,
+      "bp": "108/66",
+      "spo2": 97
+    },
+    "exam": "Dolor marcado en hipocondrio derecho. Maniobra de Murphy positiva con detención inspiratoria. Defensa localizada sin abdomen en tabla.",
+    "intents": [
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo",
+          "hace cuanto",
+          "desde cuando empezo",
+          "cuando comenzo",
+          "hace cuanto comenzo",
+          "cuando arranco"
+        ],
+        "answers": [
+          "Empezó anoche y no se me fue; fue aumentando."
+        ],
+        "reveal": "dolor persistente desde la noche anterior"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "donde duele",
+          "irradiacion",
+          "espalda",
+          "hombro",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele",
+          "dolor abdominal"
+        ],
+        "answers": [
+          "Es debajo de las costillas a la derecha y se me corre hacia la espalda y el hombro derecho."
+        ],
+        "reveal": "dolor HCD irradiado a dorso/hombro derecho"
+      },
+      {
+        "id": "prior",
+        "keys": [
+          "antes",
+          "colicos",
+          "calculos",
+          "piedras",
+          "vesicula",
+          "episodios previos",
+          "antes le paso",
+          "le habia ocurrido"
+        ],
+        "answers": [
+          "Ya había tenido cólicos parecidos, pero duraban menos; me dijeron que tenía piedras."
+        ],
+        "reveal": "litiasis y cólicos biliares previos"
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "escalofrios",
+          "tuviste fiebre",
+          "temperatura alta"
+        ],
+        "answers": [
+          "Sí, tuve fiebre y algunos escalofríos."
+        ],
+        "reveal": "fiebre y escalofríos"
+      },
+      {
+        "id": "vomit",
+        "keys": [
+          "vomito",
+          "nauseas",
+          "vomitos",
+          "devolviste",
+          "devolver comida",
+          "arcadas"
+        ],
+        "answers": [
+          "Tengo náuseas y vomité dos veces."
+        ],
+        "reveal": "náuseas y vómitos"
+      }
+    ],
+    "studies": [
+      {
+        "id": "chole_cbc",
+        "label": "Hemograma",
+        "aliases": [
+          "hemograma",
+          "leucocitos",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Leucocitos 16.200/mm³ con neutrofilia."
+      },
+      {
+        "id": "chole_liver",
+        "label": "Hepatograma",
+        "aliases": [
+          "hepatograma",
+          "bilirrubina",
+          "transaminasas",
+          "fosfatasa alcalina",
+          "perfil hepatico",
+          "pruebas hepaticas",
+          "funcion hepatica",
+          "enzimas hepaticas"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Transaminasas discretamente elevadas. Bilirrubina total 1,3 mg/dL. Fosfatasa alcalina levemente elevada."
+      },
+      {
+        "id": "chole_us",
+        "label": "Ecografía hepatobiliar urgente",
+        "aliases": [
+          "ecografia",
+          "eco vesicula",
+          "ultrasonido vesicula",
+          "eco",
+          "ultrasonografia",
+          "sonografia",
+          "ultrasonido",
+          "ecografita"
+        ],
+        "type": "imaging",
+        "delay": 6,
+        "result": "Litiasis vesicular, pared engrosada >3 mm, distensión vesicular y líquido perivesicular. Murphy ecográfico positivo."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "npo",
+        "aliases": [
+          "nada por boca",
+          "ayuno",
+          "npo",
+          "nada via oral",
+          "dieta absoluta",
+          "reposo digestivo",
+          "suspender ingesta",
+          "no dar nada por boca",
+          "no darle de comer",
+          "no comer ni beber"
+        ],
+        "label": "Nada por boca"
+      },
+      {
+        "id": "fluid",
+        "aliases": [
+          "ringer",
+          "suero",
+          "hidratacion",
+          "expandir",
+          "expansion de volumen",
+          "expansion volemica",
+          "reponer volumen",
+          "reposicion volemica",
+          "reposicion hidrica",
+          "rehidratar",
+          "rehidratacion",
+          "fluidoterapia",
+          "bolo de cristaloides",
+          "bolo de suero",
+          "carga de volumen",
+          "carga de cristaloides",
+          "solucion salina",
+          "salina normal",
+          "cloruro de sodio 0 9",
+          "nacl 0 9",
+          "sf",
+          "solucion fisiologica",
+          "hartmann",
+          "lactato de ringer",
+          "cristaloides balanceados",
+          "solucion balanceada",
+          "expansion"
+        ],
+        "label": "Hidratación IV"
+      },
+      {
+        "id": "ceftriaxone",
+        "aliases": [
+          "ceftriaxona",
+          "ceftriazona",
+          "ceftria",
+          "ceftriaxona endovenosa"
+        ],
+        "label": "Ceftriaxona IV"
+      },
+      {
+        "id": "metronidazole",
+        "aliases": [
+          "metronidazol",
+          "metro",
+          "metronidazol endovenoso"
+        ],
+        "label": "Metronidazol IV"
+      },
+      {
+        "id": "source_control",
+        "aliases": [
+          "colecistectomia",
+          "colecistectomía",
+          "cirugia",
+          "cirugía",
+          "controlar el foco",
+          "resolver el foco",
+          "control de fuente",
+          "control del foco",
+          "tratamiento del foco",
+          "drenar el foco",
+          "drenaje del foco",
+          "control quirurgico del foco"
+        ],
+        "label": "Colecistectomía laparoscópica"
+      }
+    ],
+    "dx": [
+      "colecistitis aguda",
+      "colecistitis"
+    ],
+    "requiredHistory": [
+      "onset",
+      "pain",
+      "prior"
+    ],
+    "keyStudies": [
+      "chole_cbc",
+      "chole_us",
+      "chole_liver"
+    ],
+    "keyInterventions": [
+      "npo",
+      "fluid",
+      "ceftriaxone",
+      "metronidazole",
+      "source_control"
+    ],
+    "source": "LIBRO GASTRO · Cólico biliar y colecistitis · págs. 155-157",
+    "risk": null,
+    "common": {
+      "name": "Marta",
+      "age": "72",
+      "arrival": "Me trajo mi hija por dolor y fiebre.",
+      "reason": [
+        "Vine porque el dolor del lado derecho no se me pasa y ahora tengo fiebre."
+      ],
+      "current": [
+        "Sigo con dolor y náuseas."
+      ],
+      "concern": [
+        "Me preocupa que sea la vesícula otra vez."
+      ],
+      "allergies": [
+        "No conozco alergias."
+      ],
+      "pmh": [
+        "Tengo diabetes tipo 2."
+      ],
+      "surgeries": [
+        "No tuve cirugías abdominales."
+      ],
+      "meds": [
+        "Tomo metformina."
+      ],
+      "pain": [
+        "Ocho de diez."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Tengo fiebre, escalofríos, náuseas y vómitos. No noté ictericia franca.",
+      "tobacco": "No fumo.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco antecedentes familiares relevantes.",
+      "hospitalizations": "No tuve internaciones recientes.",
+      "occupation": "Trabajo normalmente.",
+      "diet": "No sigo una dieta especial.",
+      "transfusions": "Nunca recibí transfusiones.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No tuve contactos enfermos relevantes.",
+      "bowel": "Mi hábito intestinal era habitual antes de este episodio.",
+      "urinary": "No tengo síntomas urinarios.",
+      "dyspnea": "No tengo falta de aire.",
+      "chestPain": "No tengo dolor en el pecho.",
+      "syncope": "No me desmayé.",
+      "nauseaVomiting": "Vomité dos veces desde que empezó.",
+      "sleep": "Duermo normalmente.",
+      "habitsSummary": "No tengo hábitos tóxicos relevantes.",
+      "historySummary": "Tengo diabetes tipo 2 y antecedente conocido de cálculos en la vesícula."
+    },
+    "physiology": {
+      "avoid": [
+        "morphine"
+      ],
+      "fluidOverloadThresholdMl": 2200
+    }
+  },
+  {
+    "id": "ILEO-001",
+    "selector": "Distensión + vómitos + no elimina gases",
+    "area": "Intestino · obstrucción",
+    "demo": "Mujer, 59 años",
+    "chief": "Dolor cólico, distensión progresiva, vómitos biliosos y ausencia de gases/deposiciones.",
+    "opening": "Estoy muy hinchada, me vienen cólicos fuertes y no puedo largar gases.",
+    "vitals": {
+      "temp": 37.4,
+      "hr": 128,
+      "rr": 24,
+      "bp": "92/56",
+      "spo2": 97
+    },
+    "exam": "Abdomen distendido y timpánico. Dolor cólico difuso sin signos peritoneales francos. Ruidos hidroaéreos muy disminuidos. Mucosas secas.",
+    "intents": [
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo",
+          "hace cuanto",
+          "desde cuando empezo",
+          "cuando comenzo",
+          "hace cuanto comenzo",
+          "cuando arranco"
+        ],
+        "answers": [
+          "Empezó ayer con cólicos y desde entonces me fui hinchando."
+        ],
+        "reveal": "obstrucción aguda de aproximadamente 24 h"
+      },
+      {
+        "id": "vomit",
+        "keys": [
+          "vomito",
+          "vomitos",
+          "bilis",
+          "fecaloide",
+          "devolviste",
+          "devolver comida",
+          "arcadas"
+        ],
+        "answers": [
+          "Vomité varias veces; al principio comida y después líquido verde amarillento."
+        ],
+        "reveal": "vómitos biliosos repetidos"
+      },
+      {
+        "id": "obstipation",
+        "keys": [
+          "gases",
+          "deposiciones",
+          "materia fecal",
+          "evacuar",
+          "no elimina gases",
+          "no evacua"
+        ],
+        "answers": [
+          "Desde ayer no largo gases ni fui de cuerpo."
+        ],
+        "reveal": "obstipación"
+      },
+      {
+        "id": "surgery",
+        "keys": [
+          "cirugia",
+          "operacion",
+          "operaron",
+          "adherencias",
+          "operaciones anteriores",
+          "lo operaron",
+          "te operaron"
+        ],
+        "answers": [
+          "Me operaron del útero hace diez años."
+        ],
+        "reveal": "cirugía abdominopélvica previa"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "colico",
+          "continuo",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele",
+          "dolor abdominal"
+        ],
+        "answers": [
+          "Viene en oleadas muy fuertes y después afloja un poco."
+        ],
+        "reveal": "dolor cólico"
+      }
+    ],
+    "studies": [
+      {
+        "id": "ileo_lab",
+        "label": "Hemograma + ionograma + función renal",
+        "aliases": [
+          "hemograma",
+          "ionograma",
+          "electrolitos",
+          "renal",
+          "creatinina",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita",
+          "quimica sanguinea",
+          "bioquimica sanguinea",
+          "perfil renal",
+          "funcion renal",
+          "electrolitos plasmaticos",
+          "ionos"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Hemoconcentración leve, creatinina 1,4 mg/dL, Na 132 mEq/L, K 3,1 mEq/L, Cl bajo."
+      },
+      {
+        "id": "ileo_gas",
+        "label": "Gases + lactato",
+        "aliases": [
+          "gases",
+          "lactato",
+          "gasometria",
+          "gases arteriales",
+          "estado acido base",
+          "eab"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Alcalosis metabólica leve por vómitos. Lactato 2,0 mmol/L."
+      },
+      {
+        "id": "ileo_xray",
+        "label": "Radiografía de abdomen de pie y decúbito",
+        "aliases": [
+          "radiografia abdomen",
+          "rx abdomen",
+          "placa abdomen",
+          "placa",
+          "placa simple",
+          "rayos x",
+          "rx",
+          "plaquita"
+        ],
+        "type": "imaging",
+        "delay": 5,
+        "result": "Asas de intestino delgado dilatadas con múltiples niveles hidroaéreos y escaso gas distal."
+      },
+      {
+        "id": "ileo_ct",
+        "label": "TC abdominopélvica",
+        "aliases": [
+          "tomografia",
+          "tc abdomen",
+          "tac abdomen",
+          "tomo",
+          "tomografia computada",
+          "tomografia computarizada",
+          "tac",
+          "scanner abdominal"
+        ],
+        "type": "imaging",
+        "delay": 7,
+        "result": "Obstrucción mecánica de intestino delgado con punto de transición compatible con brida. Sin signos de perforación ni isquemia en esta semilla."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "npo",
+        "aliases": [
+          "nada por boca",
+          "ayuno",
+          "npo",
+          "nada via oral",
+          "dieta absoluta",
+          "reposo digestivo",
+          "suspender ingesta",
+          "no dar nada por boca",
+          "no darle de comer",
+          "no comer ni beber"
+        ],
+        "label": "Nada por boca"
+      },
+      {
+        "id": "fluid",
+        "aliases": [
+          "ringer",
+          "cristaloides",
+          "suero",
+          "hidratacion",
+          "expandir",
+          "expansion de volumen",
+          "expansion volemica",
+          "reponer volumen",
+          "reposicion volemica",
+          "reposicion hidrica",
+          "rehidratar",
+          "rehidratacion",
+          "fluidoterapia",
+          "bolo de cristaloides",
+          "bolo de suero",
+          "carga de volumen",
+          "carga de cristaloides",
+          "solucion salina",
+          "salina normal",
+          "cloruro de sodio 0 9",
+          "nacl 0 9",
+          "sf",
+          "solucion fisiologica",
+          "hartmann",
+          "lactato de ringer",
+          "cristaloides balanceados",
+          "solucion balanceada",
+          "expansion"
+        ],
+        "label": "Reposición hidroelectrolítica IV"
+      },
+      {
+        "id": "ngt",
+        "aliases": [
+          "sonda nasogastrica",
+          "sonda nasogástrica",
+          "sng",
+          "aspiracion nasogastrica",
+          "descompresion nasogastrica",
+          "descompresion con sonda"
+        ],
+        "label": "Sonda nasogástrica y descompresión"
+      },
+      {
+        "id": "surgery",
+        "aliases": [
+          "cirugia",
+          "cirugía",
+          "valoracion quirurgica",
+          "valoración quirúrgica",
+          "cirugia oncológica",
+          "reseccion quirurgica",
+          "reseccion del tumor"
+        ],
+        "label": "Valoración quirúrgica urgente"
+      }
+    ],
+    "dx": [
+      "ileo mecanico",
+      "íleo mecánico",
+      "obstruccion intestinal",
+      "obstrucción intestinal"
+    ],
+    "requiredHistory": [
+      "onset",
+      "vomit",
+      "obstipation",
+      "surgery"
+    ],
+    "keyStudies": [
+      "ileo_lab",
+      "ileo_xray",
+      "ileo_ct",
+      "ileo_gas"
+    ],
+    "keyInterventions": [
+      "npo",
+      "fluid",
+      "ngt"
+    ],
+    "source": "LIBRO GASTRO · El paciente con íleo · págs. 168-173",
+    "risk": "shock",
+    "common": {
+      "name": "Graciela",
+      "age": "59",
+      "arrival": "Me trajeron porque no paro de vomitar y estoy cada vez más hinchada.",
+      "reason": [
+        "Vine por la distensión, los cólicos y porque no elimino gases."
+      ],
+      "current": [
+        "Estoy seca, mareada y con el abdomen muy hinchado."
+      ],
+      "concern": [
+        "Me preocupa que no pueda evacuar."
+      ],
+      "allergies": [
+        "No conozco alergias."
+      ],
+      "pmh": [
+        "Hipertensión arterial."
+      ],
+      "surgeries": [
+        "Histerectomía abdominal hace diez años."
+      ],
+      "meds": [
+        "Tomo losartán."
+      ],
+      "pain": [
+        "Siete de diez cuando viene el cólico."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Estoy muy distendida y algo mareada. No tengo fiebre alta.",
+      "tobacco": "No fumo.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco antecedentes familiares relevantes.",
+      "hospitalizations": "No tuve internaciones recientes.",
+      "occupation": "Trabajo normalmente.",
+      "diet": "No sigo una dieta especial.",
+      "transfusions": "Nunca recibí transfusiones.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No tuve contactos enfermos relevantes.",
+      "bowel": "No elimino gases ni materia fecal desde ayer.",
+      "urinary": "No tengo síntomas urinarios.",
+      "dyspnea": "No tengo falta de aire.",
+      "chestPain": "No tengo dolor en el pecho.",
+      "syncope": "No me desmayé.",
+      "nauseaVomiting": "Vomité repetidamente, ahora contenido bilioso.",
+      "sleep": "Duermo normalmente.",
+      "habitsSummary": "No tengo hábitos tóxicos relevantes.",
+      "historySummary": "Tengo hipertensión y una cirugía abdominal previa: histerectomía."
+    }
+  },
+  {
+    "id": "MESI-001",
+    "selector": "Dolor abdominal súbito desproporcionado al examen",
+    "area": "Vascular intestinal · crítico",
+    "demo": "Varón, 76 años",
+    "chief": "Dolor abdominal súbito muy intenso con examen inicialmente poco llamativo y antecedente de fibrilación auricular.",
+    "opening": "Me agarró de golpe un dolor terrible en toda la panza.",
+    "vitals": {
+      "temp": 37.3,
+      "hr": 132,
+      "rr": 26,
+      "bp": "98/62",
+      "spo2": 96
+    },
+    "exam": "Paciente con dolor intenso y gran inquietud. Abdomen inicialmente blando, con dolor difuso pero pocos hallazgos en relación con la intensidad referida. Pulso irregular.",
+    "intents": [
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo",
+          "brusco",
+          "repentino",
+          "desde cuando empezo",
+          "cuando comenzo",
+          "hace cuanto comenzo",
+          "cuando arranco"
+        ],
+        "answers": [
+          "Empezó de golpe hace unas dos horas, estaba bien antes."
+        ],
+        "reveal": "inicio súbito hace 2 h"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "intensidad",
+          "donde duele",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele",
+          "dolor abdominal"
+        ],
+        "answers": [
+          "Es un dolor insoportable, mucho más de lo que parece cuando me tocan."
+        ],
+        "reveal": "dolor intenso desproporcionado al examen"
+      },
+      {
+        "id": "af",
+        "keys": [
+          "fibrilacion",
+          "arritmia",
+          "corazon",
+          "cardiaco",
+          "pulso",
+          "fibrilacion auricular",
+          "ritmo irregular"
+        ],
+        "answers": [
+          "Tengo fibrilación auricular desde hace años."
+        ],
+        "reveal": "fibrilación auricular"
+      },
+      {
+        "id": "anticoag",
+        "keys": [
+          "anticoagul",
+          "warfarina",
+          "apixaban",
+          "rivaroxaban",
+          "anticoagulantes",
+          "toma heparina"
+        ],
+        "answers": [
+          "Me habían indicado anticoagulante, pero hace varias semanas que no lo tomo bien."
+        ],
+        "reveal": "mala adherencia a anticoagulación"
+      },
+      {
+        "id": "blood",
+        "keys": [
+          "sangre",
+          "heces",
+          "deposiciones",
+          "sangre en las heces",
+          "heces con sangre"
+        ],
+        "answers": [
+          "Hace un rato tuve diarrea y vi algo de sangre."
+        ],
+        "reveal": "diarrea con sangre"
+      }
+    ],
+    "studies": [
+      {
+        "id": "mesi_lab",
+        "label": "Hemograma + bioquímica + LDH",
+        "aliases": [
+          "hemograma",
+          "ldh",
+          "bioquimica",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita",
+          "quimica sanguinea",
+          "bioquimica sanguinea",
+          "perfil renal",
+          "funcion renal",
+          "electrolitos plasmaticos",
+          "ionos"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Leucocitos 17.500/mm³. Hemoconcentración. LDH elevada."
+      },
+      {
+        "id": "mesi_gas",
+        "label": "Gases + lactato",
+        "aliases": [
+          "gases",
+          "lactato",
+          "gasometria",
+          "gases arteriales",
+          "estado acido base",
+          "eab"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Acidosis metabólica con lactato 5,1 mmol/L."
+      },
+      {
+        "id": "mesi_cta",
+        "label": "Angio-TC mesentérica",
+        "aliases": [
+          "angiotc",
+          "angio tc",
+          "tc angiografia",
+          "tomografia con contraste",
+          "angio tomografia",
+          "tomo",
+          "tomografia computada",
+          "tomografia computarizada",
+          "tac",
+          "scanner abdominal",
+          "angiotomografia",
+          "angio tac"
+        ],
+        "type": "imaging",
+        "delay": 6,
+        "result": "Oclusión arterial proximal de la arteria mesentérica superior compatible con embolia."
+      },
+      {
+        "id": "mesi_angio",
+        "label": "Angiografía mesentérica",
+        "aliases": [
+          "angiografia",
+          "arteriografia",
+          "angiografia mesenterica"
+        ],
+        "type": "procedure",
+        "delay": 7,
+        "result": "Confirma oclusión embólica de arteria mesentérica superior y define anatomía para repermeabilización."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "npo",
+        "aliases": [
+          "nada por boca",
+          "ayuno",
+          "npo",
+          "nada via oral",
+          "dieta absoluta",
+          "reposo digestivo",
+          "suspender ingesta",
+          "no dar nada por boca",
+          "no darle de comer",
+          "no comer ni beber"
+        ],
+        "label": "Nada por boca"
+      },
+      {
+        "id": "fluid",
+        "aliases": [
+          "ringer",
+          "cristaloides",
+          "suero",
+          "hidratacion",
+          "expandir",
+          "expansion de volumen",
+          "expansion volemica",
+          "reponer volumen",
+          "reposicion volemica",
+          "reposicion hidrica",
+          "rehidratar",
+          "rehidratacion",
+          "fluidoterapia",
+          "bolo de cristaloides",
+          "bolo de suero",
+          "carga de volumen",
+          "carga de cristaloides",
+          "solucion salina",
+          "salina normal",
+          "cloruro de sodio 0 9",
+          "nacl 0 9",
+          "sf",
+          "solucion fisiologica",
+          "hartmann",
+          "lactato de ringer",
+          "cristaloides balanceados",
+          "solucion balanceada",
+          "expansion"
+        ],
+        "label": "Reposición hidroelectrolítica"
+      },
+      {
+        "id": "source_control",
+        "aliases": [
+          "embolectomia",
+          "revascularizacion",
+          "revascularización",
+          "cirugia",
+          "cirugía",
+          "laparotomia",
+          "controlar el foco",
+          "resolver el foco",
+          "control de fuente",
+          "control del foco",
+          "tratamiento del foco",
+          "drenar el foco",
+          "drenaje del foco",
+          "control quirurgico del foco"
+        ],
+        "label": "Revascularización urgente / cirugía según viabilidad intestinal"
+      },
+      {
+        "id": "piptazo",
+        "label": "Antibiótico de amplio espectro",
+        "aliases": [
+          "piperacilina/tazobactam",
+          "piptazo",
+          "pip tazo",
+          "pipera tazo",
+          "piperacilina con tazobactam",
+          "piperacilina tazobactam"
+        ]
+      },
+      {
+        "id": "anticoagulation",
+        "label": "Anticoagulación con heparina IV",
+        "aliases": [
+          "heparina",
+          "anticoagulacion",
+          "anticoagulación",
+          "heparina intravenosa",
+          "heparinizacion",
+          "heparinizar",
+          "anticoagular"
+        ]
+      }
+    ],
+    "dx": [
+      "isquemia mesenterica aguda",
+      "isquemia mesentérica aguda",
+      "oclusion aguda de arteria mesenterica superior",
+      "embolia mesenterica"
+    ],
+    "requiredHistory": [
+      "onset",
+      "pain",
+      "af",
+      "anticoag"
+    ],
+    "keyStudies": [
+      "mesi_cta",
+      "mesi_gas",
+      "mesi_lab"
+    ],
+    "keyInterventions": [
+      "fluid",
+      "piptazo",
+      "anticoagulation",
+      "source_control"
+    ],
+    "source": "LIBRO GASTRO · Oclusión aguda de la arteria mesentérica superior · págs. 187-189",
+    "risk": "shock",
+    "common": {
+      "name": "Héctor",
+      "age": "76",
+      "arrival": "Me trajo la ambulancia por un dolor abdominal súbito insoportable.",
+      "reason": [
+        "El dolor empezó de golpe y es fortísimo."
+      ],
+      "current": [
+        "Sigo con muchísimo dolor y estoy mareado."
+      ],
+      "concern": [
+        "Me preocupa porque nunca tuve un dolor así."
+      ],
+      "allergies": [
+        "No conozco alergias."
+      ],
+      "pmh": [
+        "Tengo fibrilación auricular e insuficiencia cardíaca leve."
+      ],
+      "surgeries": [
+        "No tuve cirugías abdominales."
+      ],
+      "meds": [
+        "Debería tomar anticoagulante, pero no lo vengo tomando bien."
+      ],
+      "pain": [
+        "Diez de diez."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Tuve náuseas, diarrea y vi algo de sangre. Estoy muy inquieto por el dolor.",
+      "tobacco": "No fumo.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco antecedentes familiares relevantes.",
+      "hospitalizations": "No tuve internaciones recientes.",
+      "occupation": "Trabajo normalmente.",
+      "diet": "No sigo una dieta especial.",
+      "transfusions": "Nunca recibí transfusiones.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No tuve contactos enfermos relevantes.",
+      "bowel": "Tuve diarrea poco después de comenzar el dolor y luego algo de sangre.",
+      "urinary": "No tengo síntomas urinarios.",
+      "dyspnea": "No tengo falta de aire.",
+      "chestPain": "No tengo dolor en el pecho.",
+      "syncope": "No me desmayé.",
+      "nauseaVomiting": "Tengo náuseas y vomité una vez.",
+      "sleep": "Duermo normalmente.",
+      "habitsSummary": "No tengo hábitos tóxicos relevantes.",
+      "historySummary": "Tengo fibrilación auricular y no estoy cumpliendo bien la anticoagulación."
+    }
+  },
+  {
+    "id": "CHOLANG-001",
+    "selector": "Fiebre + dolor HCD + ictericia",
+    "area": "Vía biliar · sepsis",
+    "demo": "Varón, 70 años",
+    "chief": "Fiebre con escalofríos, dolor en hipocondrio derecho e ictericia, con hipotensión.",
+    "opening": "Tengo fiebre, me duele acá a la derecha y mi familia dice que estoy amarillo.",
+    "vitals": {
+      "temp": 39.4,
+      "hr": 132,
+      "rr": 28,
+      "bp": "86/50",
+      "spo2": 94
+    },
+    "exam": "Paciente febril, ictérico, con dolor en hipocondrio derecho. Taquicardia e hipotensión. Sin abdomen en tabla.",
+    "intents": [
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo",
+          "desde cuando empezo",
+          "cuando comenzo",
+          "hace cuanto comenzo",
+          "cuando arranco"
+        ],
+        "answers": [
+          "Empezó ayer con escalofríos y después apareció el dolor."
+        ],
+        "reveal": "inicio agudo desde el día previo"
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "hipocondrio",
+          "derecha",
+          "dolor de abdomen",
+          "donde le duele",
+          "donde te duele",
+          "dolor abdominal"
+        ],
+        "answers": [
+          "Me duele fuerte debajo de las costillas a la derecha."
+        ],
+        "reveal": "dolor en hipocondrio derecho"
+      },
+      {
+        "id": "jaundice",
+        "keys": [
+          "amarillo",
+          "ictericia",
+          "orina oscura",
+          "acolia",
+          "piel amarilla",
+          "ojos amarillos"
+        ],
+        "answers": [
+          "Sí, me notaron amarillo y la orina está muy oscura."
+        ],
+        "reveal": "ictericia y coluria"
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "escalofrios",
+          "tuviste fiebre",
+          "temperatura alta"
+        ],
+        "answers": [
+          "Tengo fiebre alta y escalofríos fuertes."
+        ],
+        "reveal": "fiebre séptica con escalofríos"
+      },
+      {
+        "id": "stones",
+        "keys": [
+          "calculos",
+          "piedras",
+          "vesicula",
+          "coledoco",
+          "piedras en la vesicula",
+          "calculos biliares"
+        ],
+        "answers": [
+          "Sé que tengo cálculos en la vesícula desde hace años."
+        ],
+        "reveal": "litiasis biliar conocida"
+      }
+    ],
+    "studies": [
+      {
+        "id": "cholang_cbc",
+        "label": "Hemograma + función renal",
+        "aliases": [
+          "hemograma",
+          "creatinina",
+          "funcion renal",
+          "biometria hematica",
+          "cuadro hematico",
+          "recuento sanguineo",
+          "cbc",
+          "hemogramita",
+          "quimica sanguinea",
+          "bioquimica sanguinea",
+          "perfil renal",
+          "electrolitos plasmaticos",
+          "ionos"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Leucocitos 19.200/mm³ con neutrofilia. Creatinina 1,6 mg/dL."
+      },
+      {
+        "id": "cholang_liver",
+        "label": "Hepatograma",
+        "aliases": [
+          "hepatograma",
+          "bilirrubina",
+          "fosfatasa alcalina",
+          "gamma gt",
+          "perfil hepatico",
+          "pruebas hepaticas",
+          "funcion hepatica",
+          "enzimas hepaticas"
+        ],
+        "type": "lab",
+        "delay": 4,
+        "result": "Bilirrubina directa muy elevada, fosfatasa alcalina y GGT elevadas. Patrón colestásico."
+      },
+      {
+        "id": "cholang_us",
+        "label": "Ecografía hepatobiliar",
+        "aliases": [
+          "ecografia",
+          "eco biliar",
+          "eco colédoco",
+          "eco",
+          "ultrasonografia",
+          "sonografia",
+          "ultrasonido",
+          "ecografita"
+        ],
+        "type": "imaging",
+        "delay": 5,
+        "result": "Vía biliar dilatada con sospecha de coledocolitiasis."
+      },
+      {
+        "id": "cholang_ercp",
+        "label": "CPRE diagnóstica/terapéutica",
+        "aliases": [
+          "cpre",
+          "ercp",
+          "colangiopancreatografia",
+          "colangiografia endoscopica",
+          "colangiopancreatografia retrograda endoscopica"
+        ],
+        "type": "procedure",
+        "delay": 7,
+        "result": "Obstrucción distal de colédoco por cálculo, con drenaje de bilis infectada tras esfinterotomía/extracción."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "fluid",
+        "aliases": [
+          "ringer",
+          "cristaloides",
+          "suero",
+          "hidratacion",
+          "expandir",
+          "expansion de volumen",
+          "expansion volemica",
+          "reponer volumen",
+          "reposicion volemica",
+          "reposicion hidrica",
+          "rehidratar",
+          "rehidratacion",
+          "fluidoterapia",
+          "bolo de cristaloides",
+          "bolo de suero",
+          "carga de volumen",
+          "carga de cristaloides",
+          "solucion salina",
+          "salina normal",
+          "cloruro de sodio 0 9",
+          "nacl 0 9",
+          "sf",
+          "solucion fisiologica",
+          "hartmann",
+          "lactato de ringer",
+          "cristaloides balanceados",
+          "solucion balanceada",
+          "expansion"
+        ],
+        "label": "Reposición de volumen"
+      },
+      {
+        "id": "ceftriaxone",
+        "aliases": [
+          "ceftriaxona",
+          "ceftriazona",
+          "ceftria",
+          "ceftriaxona endovenosa"
+        ],
+        "label": "Ceftriaxona IV"
+      },
+      {
+        "id": "metronidazole",
+        "aliases": [
+          "metronidazol",
+          "metro",
+          "metronidazol endovenoso"
+        ],
+        "label": "Metronidazol IV"
+      },
+      {
+        "id": "source_control",
+        "aliases": [
+          "drenaje biliar",
+          "cpre",
+          "ercp",
+          "desobstruccion",
+          "desobstrucción",
+          "controlar el foco",
+          "resolver el foco",
+          "control de fuente",
+          "control del foco",
+          "tratamiento del foco",
+          "drenar el foco",
+          "drenaje del foco",
+          "control quirurgico del foco"
+        ],
+        "label": "Drenaje urgente de la vía biliar"
+      }
+    ],
+    "dx": [
+      "colangitis aguda",
+      "colangitis infecciosa"
+    ],
+    "requiredHistory": [
+      "onset",
+      "pain",
+      "jaundice",
+      "fever"
+    ],
+    "keyStudies": [
+      "cholang_liver",
+      "cholang_us",
+      "cholang_cbc",
+      "cholang_ercp"
+    ],
+    "keyInterventions": [
+      "fluid",
+      "ceftriaxone",
+      "metronidazole",
+      "source_control"
+    ],
+    "source": "LIBRO GASTRO · Síndrome coledociano y colangitis aguda · pág. 158 y capítulo correspondiente",
+    "risk": "shock",
+    "common": {
+      "name": "Raúl",
+      "age": "70",
+      "arrival": "Me trajo la ambulancia por fiebre, dolor y presión baja.",
+      "reason": [
+        "Vine por fiebre, dolor a la derecha y porque me puse amarillo."
+      ],
+      "current": [
+        "Estoy con escalofríos, mareado y me duele el lado derecho."
+      ],
+      "concern": [
+        "Me preocupa sentirme cada vez más débil."
+      ],
+      "allergies": [
+        "No conozco alergias."
+      ],
+      "pmh": [
+        "Hipertensión y litiasis vesicular conocida."
+      ],
+      "surgeries": [
+        "No tuve cirugías biliares."
+      ],
+      "meds": [
+        "Tomo enalapril."
+      ],
+      "pain": [
+        "Siete de diez."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Tengo fiebre alta, escalofríos, ictericia, coluria y mucha debilidad.",
+      "tobacco": "No fumo.",
+      "drugs": "No consumo drogas recreativas.",
+      "familyHistory": "No conozco antecedentes familiares relevantes.",
+      "hospitalizations": "No tuve internaciones recientes.",
+      "occupation": "Trabajo normalmente.",
+      "diet": "No sigo una dieta especial.",
+      "transfusions": "Nunca recibí transfusiones.",
+      "travel": "No hice viajes recientes.",
+      "contacts": "No tuve contactos enfermos relevantes.",
+      "bowel": "Mi hábito intestinal era habitual antes de este episodio.",
+      "urinary": "La orina se puso muy oscura.",
+      "dyspnea": "No tengo falta de aire.",
+      "chestPain": "No tengo dolor en el pecho.",
+      "syncope": "No me desmayé.",
+      "nauseaVomiting": "Tengo náuseas y vomité una vez.",
+      "sleep": "Duermo normalmente.",
+      "habitsSummary": "No tengo hábitos tóxicos relevantes.",
+      "historySummary": "Tengo hipertensión y cálculos biliares conocidos."
+    },
+    "physiology": {
+      "engine": "sepsis_source",
+      "subtype": "cholangitis",
+      "inflammation": 0.78,
+      "effectiveVolume": 0.64,
+      "svr": 0.66,
+      "contractility": 0.9,
+      "oxygenation": 0.94,
+      "renalReserve": 0.66,
+      "inflammationGrowth": 0.038,
+      "thirdSpaceRate": 0.012,
+      "sourceGrowth": 0.03,
+      "fluidResponsiveness": 0.82,
+      "sourceControlRequired": true,
+      "coverageSets": [
+        [
+          "ceftriaxone",
+          "metronidazole"
+        ]
+      ],
+      "preferredSet": [
+        "ceftriaxone",
+        "metronidazole"
+      ],
+      "supportive": [
+        "fluid"
+      ],
+      "avoid": [
+        "beta_blocker",
+        "furosemide"
+      ],
+      "doseRules": {
+        "ceftriaxone": {
+          "amount": 1000,
+          "unit": "mg"
+        },
+        "metronidazole": {
+          "amount": 500,
+          "unit": "mg"
+        }
+      }
+    }
+  }
+]

@@ -5,9 +5,6 @@ export const EXTRA_EMERGENCY_STUDIES=Object.freeze([{"id":"amilasa","label":"Ami
 // Nonurgent cultures/procedures intentionally take longer; workflow scheduling is a separate concern.
 export const STUDY_TAT_MINUTES=Object.freeze({"amilasa":60,"hepatograma":70,"hemograma":35,"renal":45,"eco":75,"paracentesis":45,"lipasa":60,"gasometria":10,"tc":120,"inflamatorio":65,"stool":150,"colonoscopia":240,"enterorm":240,"b12":180,"hda_lab":60,"grupo":50,"eda":120,"iron":90,"fobt":45,"staging":180,"cea":120,"pbe_paracentesis":40,"pbe_culture":1440,"pbe_renal":45,"pbe_cbc":35,"peri_cbc":45,"peri_gas":20,"peri_rx":45,"peri_ct":110,"peri_fluid":70,"ter_cbc":55,"ter_ct":120,"ter_culture":1440,"app_cbc":45,"app_urine":35,"app_us":75,"app_ct":110,"chole_cbc":35,"chole_liver":65,"chole_us":75,"ileo_lab":55,"ileo_gas":15,"ileo_xray":40,"ileo_ct":105,"mesi_lab":70,"mesi_gas":15,"mesi_cta":95,"mesi_angio":135,"cholang_cbc":50,"cholang_liver":70,"cholang_us":85,"cholang_ercp":150,"tc_torax":90,"tc_cerebral":90,"rm_cerebral":180,"glucemia":15,"creatinina":30,"urea":30,"ionograma":30,"sodio":30,"potasio":30,"calcio":45,"magnesio":45,"pcr":60,"vsg":60,"lactato":21,"coagulograma":42,"inr":42,"orina_completa":42,"hemocultivos":1440,"troponina":60,"electrocardiograma":10,"rx_torax":39});
 export function studyTurnaroundMinutes(study){
- // New GI study identifiers use their own bounded, explicit simulator times;
- // original V4 turnaround values remain untouched.
- if(String(study?.id||'').startsWith('g_')&&Number.isFinite(study?.delay)&&study.delay>=5&&study.delay<=1440)return study.delay;
  const explicit=STUDY_TAT_MINUTES[String(study?.id||'')];
  if(Number.isFinite(explicit)&&explicit>0)return explicit;
  const hours=Number(study?.gameHours??study?.delayHours??study?.delay);

@@ -153,10 +153,10 @@ test('unknown studies, unknown cases and invalid request times leave orders unch
  assert.deepEqual(p.orders,[]);
 });
 
-test('all 13 canonical cases can complete every global study without changing their content',()=>{
+test('all 25 cases can complete global studies without changing their original case content',()=>{
  const canonical=JSON.parse(readFileSync(new URL('../content/cases.json',import.meta.url),'utf8'));
  const before=structuredClone(canonical),service=createStudyService(canonical),catalog=service.catalog();
- assert.equal(canonical.length,13);
+ assert.equal(canonical.length,25);
  let ordered=0,completed=0;
  for(const c of canonical){
   const p=patient('canonical:'+c.id,c.id);
@@ -174,7 +174,7 @@ test('all 13 canonical cases can complete every global study without changing th
   assert(p.orders.every(o=>o.status==='done'));
   assert.deepEqual(service.advance(p,end+1),[]);
  }
- assert.equal(ordered,13*catalog.length);
+ assert.equal(ordered,25*catalog.length);
  assert.equal(completed,ordered);
  assert.deepEqual(canonical,before);
 });

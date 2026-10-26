@@ -11,6 +11,10 @@ export function createStudyService(cases,checkpoint=null){
  if(!Array.isArray(cases)||cases.some(c=>!identity(c?.id)||!Array.isArray(c.studies))||
     new Set(cases.map(c=>c.id)).size!==cases.length)throw Error('valid unique study cases required');
  const definitions=copy(cases),byCase=new Map(definitions.map(c=>[c.id,c]));
+ // New V5 study timings are isolated here. Never mutate the legacy V4 registry.
+ const localTiming=new Map(definitions.flatMap(c=>(c.studies||[])
+  .filter(s=>String(s.id).startsWith('g_')&&Number.isFinite(s.delay)&&s.delay>=5&&s.delay<=1440)
+  .map(s=>[s.id,s.delay])));
  const catalog=buildStudyCatalog(definitions),events=new Map(copy(checkpoint?.events??[]));
  const patientValid=p=>identity(p?.uid)&&byCase.has(p.caseId)&&Array.isArray(p.orders);
  const rejected=(p,eventId,reason)=>({status:'rejected',patientUid:p?.uid??null,eventId:eventId??null,reason});
@@ -24,7 +28,7 @@ export function createStudyService(cases,checkpoint=null){
  }
  return Object.freeze({
   checkpoint:()=>copy({events:[...events]}),
-  catalog:()=>copy(catalog),
+  catalog:()=>copy(catalog.map(s=>localTiming.has(s.id)?{...s,gameHours:localTiming.get(s.id)/60}:s)),
   request(patient,command={}){
    const {id,eventId,actorId,atMinute}=command||{};
    if(!patientValid(patient))return rejected(patient,eventId,'invalid-patient');
@@ -55,7 +59,7 @@ export function createStudyService(cases,checkpoint=null){
     resultSource:definition.nativeResult?'native':'universal-fallback',
     nativeResult:definition.nativeResult,universalFallback:definition.universalFallback,
     status:'pending',requestedAtMinute:atMinute,
-    readyAtMinute:atMinute+studyTurnaroundMinutes(definition),sourceEventId:eventId,actorId};
+    readyAtMinute:atMinute+(localTiming.get(definition.id)??studyTurnaroundMinutes(definition)),sourceEventId:eventId,actorId};
    patient.orders.push(order);
    events.set(eventId,{fingerprint,sourceEventId:eventId});
    return acknowledged(patient,eventId,order);
