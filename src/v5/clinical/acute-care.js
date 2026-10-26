@@ -27,6 +27,8 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
   message:(reused?'Ya confirmado por la orden original: ':t.action==='stop'?'Suspensión confirmada: ':t.id==='npo'?'Conducta registrada: ':'Administración confirmada: ')+t.label+
    (t.dose?' · '+t.dose.display:'')+'.'});
+ const pendingConducts=new Map(copy(checkpoint?.conducts??[]));
+ const conductSeconds=Object.freeze({steroid:.8,aza:.8,ppi:.8,ngt:1.2,staging_order:.55});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
   proof,rejected,checkpoint:checkpoint?.iv});
@@ -66,7 +68,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   return out;
  }
  return Object.freeze({
-  checkpoint:()=>({iv:ivMedicines.checkpoint(),surgery:surgery.checkpoint()}),
+  checkpoint:()=>({iv:ivMedicines.checkpoint(),surgery:surgery.checkpoint(),conducts:[...pendingConducts]}),
   readiness,
   execute(cmd,clock){
    if(cmd.patientUid!==p.uid)return rejected(cmd,'wrong-patient');
@@ -80,12 +82,23 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
    const consult=surgery.request(cmd,clock);if(consult)return consult;
    const iv=ivMedicines.request(cmd,clock);if(iv)return iv;
    if(intent.kind==='therapy.request'&&(policy.conducts||[]).includes(intent.id)){
-    const existing=p.treatments.find(t=>t.id==='npo');
+    const id=intent.id,label=c.interventions.find(i=>i.id===id)?.label||id;
+    const existing=p.treatments.find(t=>t.id===id&&t.patientUid===p.uid);
     if(existing)return proof(cmd,existing,true);
-    const label=c.interventions.find(i=>i.id==='npo')?.label||'Nada por boca';
-    const t={id:'npo',label,dose:null,sourceEventId:cmd.eventId,actorId:cmd.actorId,
-     patientUid:p.uid,administeredAtRealSecond:clock.clinicalMinute,administeredAtNativeMinute:clock.nativeMinute};
-    p.treatments.push(t);return proof(cmd,t);
+    if(id==='npo'){
+     const t={id,label,dose:null,sourceEventId:cmd.eventId,actorId:cmd.actorId,
+      patientUid:p.uid,administeredAtRealSecond:clock.clinicalMinute,administeredAtNativeMinute:clock.nativeMinute};
+     p.treatments.push(t);return proof(cmd,t);
+    }
+    if(!Object.hasOwn(conductSeconds,id))return rejected(cmd,'unmodeled-conduct');
+    const prior=[...pendingConducts.values()].find(t=>t.id===id);
+    if(prior){prior.commands.push(copy(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
+    // One native due queue. No effect is credited until the task completes.
+    const task={id,label,sourceEventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,
+     readyAtRealSecond:clock.clinicalMinute+conductSeconds[id],commands:[copy(cmd)]};
+    pendingConducts.set(cmd.eventId,task);
+    p.pendingTreatments.push({id,patientUid:p.uid,sourceEventId:cmd.eventId,readyAtRealSecond:task.readyAtRealSecond});
+    return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
    }
    if(intent.kind==='patient.reassess'){
     p.reassessments++;
@@ -113,7 +126,8 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   advance(clockBefore,clockAfter,dt){
    const results=[];if(p.caseEnded)return results;
    let cursor=clockBefore.clinicalMinute;
-   const due=[...ivMedicines.due(clockBefore,clockAfter),...surgery.due(clockBefore,clockAfter)]
+   const due=[...ivMedicines.due(clockBefore,clockAfter),...surgery.due(clockBefore,clockAfter),
+    ...[...pendingConducts.values()].filter(t=>t.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9)]
     .sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond);
    for(const task of due){
     const at=Math.max(cursor,task.readyAtRealSecond);
@@ -121,16 +135,26 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
     const fraction=dt>0?(at-clockBefore.clinicalMinute)/dt:0;
     const nativeMinute=clockBefore.nativeMinute+
       (clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction;
-    const consultation=surgery.owns(task);
-    results.push(...(consultation?surgery.finish(task,at):ivMedicines.finish(task,at,nativeMinute)));
-    if(!consultation){
-     const administered=p.administrationLog.find(row=>row.sourceEventId===task.sourceEventId);
-     if(administered)policy.onAdministration?.(p,c,administered);
+    const consultation=surgery.owns(task),conduct=pendingConducts.get(task.sourceEventId)===task;
+    if(conduct){
+     pendingConducts.delete(task.sourceEventId);
+     p.pendingTreatments=p.pendingTreatments.filter(x=>x.sourceEventId!==task.sourceEventId);
+     const done={id:task.id,label:task.label,dose:null,sourceEventId:task.sourceEventId,
+      patientUid:p.uid,actorId:task.actorId,administeredAtRealSecond:at,
+      administeredAtNativeMinute:nativeMinute,kind:'documented-clinical-conduct'};
+     p.treatments.push(done);
+     for(const command of task.commands)results.push(proof(command,done,command.eventId!==task.sourceEventId));
+    }else{
+     results.push(...(consultation?surgery.finish(task,at):ivMedicines.finish(task,at,nativeMinute)));
+     if(!consultation){
+      const administered=p.administrationLog.find(row=>row.sourceEventId===task.sourceEventId);
+      if(administered)policy.onAdministration?.(p,c,administered);
+     }
     }
    }
    policy.advanceVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor),clockAfter.nativeMinute);
    return results;
   },
-  dispose(){ivMedicines.dispose();surgery.dispose();p.pendingTreatments=[];}
+  dispose(){pendingConducts.clear();ivMedicines.dispose();surgery.dispose();p.pendingTreatments=[];}
  });
 }
