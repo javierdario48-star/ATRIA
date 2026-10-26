@@ -64,10 +64,12 @@ Files: new `src/v5/server/competitive-personalities.test.js`, `.github/workflows
 - [x] Assert patient assignment, real nursing, recovery, closed dispositions and unique owner XP.
 - [x] Retain machine-readable outcome evidence and add new browser regressions to CI.
 - [x] Run the full V5 suite, architecture gate, historical regression and appropriate browser flows.
-- [ ] Publish the reviewed commits to the authorized branch and check the final SHA's CI and preview (remote status is reported with the delivery).
+- [x] Publish the reviewed commits to the authorized branch and check CI and preview (the final SHA and definitive remote status are reported with the delivery).
 
 ## Progress notes
 
 The starting branch already contains 375 persona tests and previous GI fixes. They are a baseline, not new work claimed in this task. Their profiles lacked distinct expert and competent doctors, and several tests explicitly expected medically unsupported generic vital improvements. Current work repairs those gaps and the reported visual behavior.
 
-Final local evidence: 2240/2240 V5; historical npm test exit0; 500 physician journeys; 200 mobile panel openings; original exam parity100/100; reviewed gaps fixed with RED→GREEN regression tests. No physical-device claim.
+Final local evidence: 2242/2242 V5; historical npm test exit0; 500 physician journeys; 200 mobile panel openings; original exam parity100/100; reviewed gaps fixed with RED→GREEN regression tests. No physical-device claim.
+
+Final CI follow-up: correct the distant-examination retry expectation and use stable PUD/CELIAC patients for the multi-browser transport/ownership test. Real untreated PERI-SEC shock was shown to impair speech after 45 seconds; dedicated regressions preserve that clinical behavior and verify stable dialogue after delay. No production engine was changed by this follow-up.

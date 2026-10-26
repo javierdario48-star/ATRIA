@@ -25,9 +25,14 @@ try{
  beforePress=(await state()).room.transcript.length;
  await page.mouse.move(buttonBox.x+buttonBox.width/2,buttonBox.y+buttonBox.height/2);await page.mouse.down();
  await page.waitForTimeout(1200);await page.mouse.up();
- // A second tap flips the card without duplicating an assessment; the
- // following tap deliberately repeats the physical examination.
- assert.equal((await state()).room.transcript.length,beforePress);
+ // A refused examination never flips into a fictitious result. Releasing
+ // this second press retries exactly one real request; it is still refused
+ // at a distance. Successful cards retain the later flip-to-review behavior.
+ await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length===n+1,beforePress);
+ assert.equal((await state()).room.transcript.length,beforePress+1);
+ assert.equal(await page.locator('#examFeedback').getAttribute('data-status'),'rejected');
+ assert(!/is-flipped/.test(await page.locator('#examRegions [data-exam-region="general"]').getAttribute('class')||''));
+ beforePress=(await state()).room.transcript.length;
  await page.locator('#examRegions [data-exam-region="general"]').click();
  await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,beforePress);
  assert.deepEqual((await state()).patient.examFindings,{});assert(!(await state()).patient.lastVitalsKnown);
@@ -225,7 +230,7 @@ try{
  const report={test:'hospital-interactions',realBrowser:true,physicalAndroid:false,androidEmulated:true,
   url:page.url(),worldHitboxes:true,visibleNativeMonitorScreen:true,explicitPatientUid:true,unknownMonitorNoLeak:true,spotAndContinuousMeasurement:true,
   anatomyAndTechniques:true,partialExamDoesNotComplete:true,glasgowByComponents:true,historyAcquiredEvidence:true,
-  keyboardOpenAndClosed:true,worldAnchoredPatientActions:true,deviceMonitorReadout:true,periodicRefreshPreservesFocusAndPress:true,rotated:true,cleanLobbyReturn:true,errors};
+  keyboardOpenAndClosed:true,worldAnchoredPatientActions:true,deviceMonitorReadout:true,periodicRefreshPreservesFocusAndPress:true,rejectedExamDoesNotFlip:true,rotated:true,cleanLobbyReturn:true,errors};
  assert.deepEqual(errors,[]);await fs.writeFile(out+'/hospital-interactions-summary.json',JSON.stringify(report,null,2));
  console.log('HOSPITAL INTERACTIONS REAL UI PASS',JSON.stringify(report));await context.close();
 }catch(error){if(page){await page.screenshot({path:out+'/hospital-interactions-failure.png'}).catch(()=>{});

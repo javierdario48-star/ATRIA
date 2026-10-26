@@ -10,7 +10,7 @@ los cuatro modos**, utilizando comandos, estudios, administración y cierre
 reales. Se ejecutan **500 recorridos**: 25 casos × 5 perfiles × 4 modos.
 No se introducen signos vitales, dosis administradas ni XP desde los bots.
 
-La batería V5 integrada terminó con **2240/2240 pruebas aprobadas**, sin
+La batería V5 integrada terminó con **2242/2242 pruebas aprobadas**, sin
 omisiones. `npm test` histórico también terminó con código de salida 0.
 Compilaciones V5 y core aprobadas; el control de arquitectura confirma una
 sola autoridad clínica y un solo propietario de RAF, sin temporizadores
@@ -179,6 +179,28 @@ CI conserva `physician-personas.json`, `competitive-personas.json`, las
 comparaciones de tratamientos y la evidencia visual como artefactos.
 El estado remoto definitivo corresponde al SHA publicado en GitHub Actions;
 una compilación de Vercel por sí sola no acredita esas interacciones.
+
+### Ajustes de las comprobaciones de navegador tras la primera CI
+
+La primera publicación aprobó 22 de 24 trabajos V5 y toda la CI histórica.
+Las otras dos comprobaciones revelaron expectativas incorrectas de QA:
+
+- El navegador de interacciones esperaba que un examen rechazado por distancia
+  diera vuelta una tarjeta de resultados. Ahora comprueba un único reintento,
+  la negativa visible y la ausencia de resultados ficticios.
+- El recorrido competitivo de cuatro médicos usaba una peritonitis secundaria
+  sin tratar como segundo paciente. La demora de preparación de navegadores
+  podía producir hipoperfusión y habla incoherente antes de saludarlo. Se
+  reprodujo mediante el reloj clínico real: a los 45 segundos, la sistólica
+  era menor de 70 y la respuesta era «Dolor… panza…», sin inventar anamnesis.
+  El test de transporte, asignación y chat usa ahora úlcera estable y celiaquía,
+  conserva todas las verificaciones de propiedad y exige evidencia nativa
+  del paciente correcto. Dos regresiones clínicas independientes comprueban
+  tanto la limitación real por shock como el diálogo estable tras la demora.
+
+El recorrido corregido de cuatro navegadores y el de interacciones móviles
+aprobaron localmente. Este ajuste no modifica la fisiología ni debilita las
+pruebas de urgencias, que siguen incluidas en los 500 recorridos clínicos.
 
 ## Referencias clínicas contrastadas
 

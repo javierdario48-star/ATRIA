@@ -160,3 +160,36 @@ test('colloquial symptom requests remain patient-specific across additional phra
  assert.deepEqual(f.s.read().patient.treatments,[]);
  f.s.dispose();
 });
+
+test('real untreated shock limits speech instead of fabricating acquired history after a delayed greeting',async()=>{
+ const f=setup('PERI-SEC-001');
+ f.s.advance(45);
+ const before=f.s.read().patient;
+ assert(before.liveVitals.sys<70,'native untreated deterioration must cause the impairment');
+ assert(before.hypoperfusionNativeMinutes>=2);
+ const reply=await f.send('Hola ¿Qué te pasó?');
+ assert.equal(reply.clinical[0].status,'executed','a limited verbal reply is still delivered');
+ assert.equal(answer(reply),'Dolor… panza…');
+ const after=f.s.read().patient;
+ assert.deepEqual(after.intentHistory,[],'incoherent speech cannot grant a complete symptom history');
+ assert.equal(after.examDone,false);
+ assert.deepEqual(after.treatments,[]);
+ assert.deepEqual(after.liveVitals,before.liveVitals,'chat cannot stabilize shock');
+ f.s.dispose();
+});
+
+test('stable PUD and celiac patients retain factual dialogue after browser setup delays',async()=>{
+ for(const [caseId,expected] of [['PUD-001',/ardor/],['CELIAC-001',/meses con diarrea/]]){
+  const f=setup(caseId);
+  f.s.advance(180);
+  const reply=await f.send('Hola ¿Qué te pasó?');
+  assert.equal(reply.clinical[0].status,'executed');
+  assert.match(answer(reply),expected);
+  const p=f.s.read().patient;
+  assert(p.intentHistory.some(x=>x.id==='interview:symptoms'&&x.patientUid==='P1'));
+  assert.equal(p.caseEnded,false);
+  assert.equal(p.examDone,false);
+  assert.deepEqual(p.treatments,[]);
+  f.s.dispose();
+ }
+});

@@ -32,7 +32,11 @@ try{
  await host.waitForFunction(n=>atriaV5.snapshot().others.length===n-1,count);
  await host.locator('#guardButton').click();
  await host.locator('[data-mode="competitive"]').click();
- await host.locator('#caseChoice').selectOption('PERI-PBE-001');
+ // This test measures chat/ownership after several independent browsers join.
+ // PUD followed by CELIAC remains able to give history during CI latency.
+ // Untreated septic shock correctly loses coherent speech (covered separately
+ // by patient-dialogue.test.js); it cannot be a transport-success fixture.
+ await host.locator('#caseChoice').selectOption('PUD-001');
  for(const name of names.slice(1))
   await host.locator('#coopDoctors label').filter({hasText:name}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
@@ -48,6 +52,7 @@ try{
  },null,{timeout:90000})));
  const opening=(await clinical(host)).shift;
  assert.equal(opening.patients.length,2,'competitive should begin with two patients');
+ assert.deepEqual(opening.patients.map(p=>p.caseId),['PUD-001','CELIAC-001']);
  assert.notEqual(opening.patients[0].uid,opening.patients[1].uid);
  assert.notEqual(opening.patients[0].bedId,opening.patients[1].bedId);
  assert(opening.remainingSeconds>1430&&opening.remainingSeconds<=1440);
@@ -103,18 +108,20 @@ try{
  assert(await owner.locator('#chatHistory [data-role="patient"]').count()>0,
   'touching Hablar must show the native patient reply in this physician browser');
  await send(owner,'/signos');
- await send(owner,'¿Tiene ascitis?');
- await send(owner,'Enfermera, mi diagnóstico presuntivo es peritonitis bacteriana espontánea');
- await owner.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='peritonitis bacteriana espontánea');
- assert.equal((await clinical(owner)).patient.diagnosis,'peritonitis bacteriana espontánea');
- await host.waitForFunction(()=>atriaV5.snapshot().clinical.room.transcript.some(x=>x.text==='¿Tiene ascitis?'),
+ await send(owner,'¿Toma ibuprofeno?');
+ await send(owner,'Enfermera, mi diagnóstico presuntivo es enfermedad ulcerosa peptica');
+ await owner.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='enfermedad ulcerosa peptica');
+ assert.equal((await clinical(owner)).patient.diagnosis,'enfermedad ulcerosa peptica');
+ await host.waitForFunction(()=>atriaV5.snapshot().clinical.room.transcript.some(x=>x.text==='¿Toma ibuprofeno?'),
   null,{timeout:18000});
  const hostChat=await host.locator('#chatHistory').innerText();
- assert(!hostChat.includes('¿Tiene ascitis?'),'doctor far away must not see the bedside dialogue');
+ assert(!hostChat.includes('¿Toma ibuprofeno?'),'doctor far away must not see the bedside dialogue');
  assert(!hostChat.includes('Paciente:'),'the patient cannot answer in a remote physician chat');
- assert((await owner.locator('#chatHistory').innerText()).includes('¿Tiene ascitis?'));
+ assert((await owner.locator('#chatHistory').innerText()).includes('¿Toma ibuprofeno?'));
  const c=await clinical(owner);
  assert(c.room.transcript.some(m=>m.text==='/signos'));
+ assert(c.patient.intentHistory.some(x=>x.id==='nsaid'&&x.patientUid===c.patient.uid),
+  'the real bedside question must acquire this patient\'s NSAID history');
  assert.equal(c.competition.ownerId,ownerId);
  // The second independent doctor uses RECEPCIÓN (not a debug API or injected
  // clinical session) and must receive a true patient reply after arrival.
@@ -142,7 +149,9 @@ try{
  await host.locator('#chatHistory [data-role="patient"]').first().waitFor({timeout:20000});
  const doctorReply=(await host.locator('#chatHistory [data-role="patient"]').allInnerTexts()).join(' ');
  assert(doctorReply.trim().length>20,'native patient answer must be visible, not a local greeting bubble');
- assert((await clinical(host)).patient.intentHistory.length>0,'greeting must update native anamnesis');
+ assert.match(doctorReply,/meses con diarrea/,'the answer must belong to the second patient');
+ assert((await clinical(host)).patient.intentHistory.some(x=>
+  x.id==='interview:symptoms'&&x.patientUid===nextUid),'greeting must update this patient\'s native anamnesis');
  // Check both beds stay distinct after the second physician arrives.
  assert.equal((await clinical(owner)).shift.patients.find(p=>p.uid===opening.patients[0].uid).ownerId,ownerId);
  assert.deepEqual(errors,[]);
