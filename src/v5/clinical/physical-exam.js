@@ -79,6 +79,9 @@ export function physicalExamRows(caseId,p,technique,regionId=null,atNativeMinute
  if(technique==='percussion')rows=[row('abdomen','Abdomen',f.percussion),row('liver','Hígado',f.liverPercussion),row('spleen','Bazo'),row('renal','Región renal')];
  if(technique==='palpation')rows=[row('abdomen','Abdomen',f.palpation),row('liver','Hígado',f.liver),
   row('spleen','Bazo',f.spleen),row('pulses','Pulsos periféricos',v.sys<90?'Pulso débil con compromiso de perfusión.':null)];
+ if(technique==='rectal')rows=[row('perineum','Tacto rectal',caseId==='FECAL-001'?
+  observed.bowelImpactionResolved?'Ampolla rectal sin fecaloma palpable tras la desimpactación confirmada; continuar vigilancia y prevención.':
+   'Ampolla rectal con materia fecal dura; sin masa evidente.':null)];
  return regionId?rows.filter(r=>r.regionId===regionId):rows;
 }
 const response=(p,cmd,data)=>({status:'executed',eventId:cmd.eventId,patientUid:p.uid,
@@ -95,7 +98,7 @@ export function executePhysicalExam(p,c,cmd,clock){
  if(intent.kind==='exam.glasgow'){
   const parts=intent.id==='all'?Object.keys(GLASGOW_COMPONENTS):[intent.id];
   if(parts.some(k=>!Object.hasOwn(GLASGOW_COMPONENTS,k)))return reject(p,cmd);
-  const n=readNeurologicalState(p),g=p.glasgow||(p.glasgow={total:null});
+  const n=readNeurologicalState(p,clock.nativeMinute),g=p.glasgow||(p.glasgow={total:null});
   for(const k of parts){const score=glasgowLabels[k][n[k]]?n[k]:null;
    g[k]={score,text:score==null?'No evaluable'+(n.reason?': '+n.reason:'.'):glasgowLabels[k][score],
     patientUid:p.uid,eventId:cmd.eventId,nativeMinute:clock.nativeMinute};}

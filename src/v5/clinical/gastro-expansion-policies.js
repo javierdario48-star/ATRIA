@@ -5,14 +5,14 @@ const rules={
  'ENCEF-001':{destinations:['sala','uti'],study:[['g_encef_liver'],['g_encef_infect']],treatment:[['lactulose']],consult:{uti:['uti']}},
  'UC-AS-001':{destinations:['sala','uti'],study:[['g_uc_labs'],['g_uc_cdi']],requiredStudies:['g_uc_cdi'],treatment:[['methylprednisolone']],consult:{uti:['uti']}},
  'CDI-001':{destinations:['sala'],study:[['g_cdi_toxin']],treatment:[['fidaxomicin'],['vancomycin_po']]},
- 'DIVERT-001':{destinations:['alta','sala'],study:[['g_divert_ct']],treatment:[]},
+ 'DIVERT-001':{destinations:['alta','sala'],study:[['g_divert_ct']],treatment:[],dischargeTreatments:['followup']},
  'LGIB-001':{destinations:['procedimiento','uti'],study:[['g_lgib_cbc'],['g_lgib_cta']],treatment:[['iv','fluid'],['iv','transfusion']],consult:{procedimiento:['gastro'],uti:['uti']}},
- 'HEPAT-001':{destinations:['alta','observacion'],study:[['g_hepat_inr']],treatment:[]},
+ 'HEPAT-001':{destinations:['alta','observacion'],study:[['g_hepat_inr']],treatment:[],dischargeTreatments:['followup']},
  'DIARR-001':{destinations:['alta','observacion'],study:[['g_diarr_elect']],treatment:[['oral_rehydration'],['fluid']]},
  'FECAL-001':{destinations:['alta','observacion'],study:[['g_fecal_rectal']],treatment:[['disimpaction']]},
- 'PUD-001':{destinations:['alta'],study:[['g_pud_hpy'],['g_pud_egd']],treatment:[['ppi_oral']]},
+ 'PUD-001':{destinations:['alta'],study:[['g_pud_hpy'],['g_pud_egd']],treatment:[['ppi_oral']],dischargeTreatments:['followup']},
  'CELIAC-001':{destinations:['alta'],study:[['g_celiac_biopsy']],treatment:[['followup']]},
- 'ACAL-001':{destinations:['alta','observacion'],study:[['g_achal_manometry'],['g_achal_egd']],treatment:[['followup']]}
+ 'ACAL-001':{destinations:['alta','observacion'],study:[['g_achal_manometry'],['g_achal_egd']],requiredStudies:['g_achal_manometry','g_achal_egd'],treatment:[['followup']]}
 };
 export const GASTRO_CASE_RULES=Object.freeze(Object.fromEntries(Object.entries(rules).map(([id,rule])=>[id,Object.freeze({...rule})])));
 export const GASTRO_CASE_CONDUCTS=Object.freeze({
@@ -31,17 +31,18 @@ export const GASTRO_CASE_CONDUCTS=Object.freeze({
 });
 export const GASTRO_DYNAMICS=Object.freeze({
  // Offsets temp, pulse, respiratory rate, systolic, diastolic, saturation.
- // Each trajectory includes possible deterioration WITHOUT treatment. The
- // cumulative protection is bounded; no ED action cures cirrhosis or IBD.
- 'VARIX-001':{early:[0,21,3,-18,-9,-1],late:[0,14,4,-16,-8,-2],earlyEnd:100,lateEnd:360,therapy:'terlipressin',protection:.36,fluidResponse:.75},
- 'ENCEF-001':{early:[.1,6,1,-2,-1,0],late:[.1,4,1,-2,-1,-.3],earlyEnd:220,lateEnd:800,therapy:'lactulose',protection:.5,fluidResponse:0},
- 'UC-AS-001':{early:[.3,8,2,-5,-2,-.3],late:[.5,10,2,-9,-4,-.5],earlyEnd:150,lateEnd:550,therapy:'methylprednisolone',protection:.45,fluidResponse:.45},
- 'CDI-001':{early:[.3,10,2,-8,-4,-.2],late:[.5,12,3,-12,-7,-.6],earlyEnd:140,lateEnd:500,therapy:['fidaxomicin','vancomycin_po'],protection:.5,fluidResponse:.8},
- 'DIVERT-001':{early:[.1,3,0,-1,0,0],late:[.1,2,0,-1,0,0],earlyEnd:280,lateEnd:1100,therapy:null,protection:0,fluidResponse:.15},
+ // Only volume replacement and vasoactive variceal bridging have a bounded
+ // circulatory response here. Inflammation has a slower, limited fever/pulse
+ // response; it cannot restore blood pressure or oxygenation directly.
+ 'VARIX-001':{early:[0,21,3,-18,-9,-1],late:[0,14,4,-16,-8,-2],earlyEnd:100,lateEnd:360,therapy:'terlipressin',protection:.36,protectionAxes:['hr','sys','dia'],fluidResponse:.75},
+ 'ENCEF-001':{early:[.1,6,1,-2,-1,0],late:[.1,4,1,-2,-1,-.3],earlyEnd:220,lateEnd:800,therapy:'lactulose',protection:0,fluidResponse:0},
+ 'UC-AS-001':{early:[.3,8,2,-5,-2,-.3],late:[.5,10,2,-9,-4,-.5],earlyEnd:150,lateEnd:550,therapy:'methylprednisolone',protection:.2,protectionAxes:['temp','hr'],onset:60,peak:240,fluidResponse:.45},
+ 'CDI-001':{early:[.3,10,2,-8,-4,-.2],late:[.5,12,3,-12,-7,-.6],earlyEnd:140,lateEnd:500,therapy:['fidaxomicin','vancomycin_po'],protection:.3,protectionAxes:['temp','hr'],onset:60,peak:240,fluidResponse:.8},
+ 'DIVERT-001':{early:[.1,3,0,-1,0,0],late:[.1,2,0,-1,0,0],earlyEnd:280,lateEnd:1100,therapy:null,protection:0,fluidResponse:0},
  'LGIB-001':{early:[0,15,3,-12,-7,-.4],late:[0,18,3,-13,-7,-1],earlyEnd:130,lateEnd:460,therapy:null,protection:0,fluidResponse:.9},
  'HEPAT-001':{early:[.1,3,0,-1,-1,0],late:[.1,2,1,-1,0,0],earlyEnd:300,lateEnd:1100,therapy:null,protection:0,fluidResponse:0},
- 'DIARR-001':{early:[.1,10,1,-7,-4,0],late:[.15,11,2,-9,-5,-.1],earlyEnd:180,lateEnd:620,therapy:'oral_rehydration',protection:.5,fluidResponse:.8},
- 'FECAL-001':{early:[0,2,0,-1,0,0],late:[0,2,0,-1,0,0],earlyEnd:350,lateEnd:1200,therapy:'disimpaction',protection:.4,fluidResponse:0},
+ 'DIARR-001':{early:[.1,10,1,-7,-4,0],late:[.15,11,2,-9,-5,-.1],earlyEnd:180,lateEnd:620,therapy:'oral_rehydration',protection:.5,protectionAxes:['hr','sys','dia'],fluidResponse:.8},
+ 'FECAL-001':{early:[0,2,0,-1,0,0],late:[0,2,0,-1,0,0],earlyEnd:350,lateEnd:1200,therapy:'disimpaction',protection:0,fluidResponse:0},
  'PUD-001':{early:[0,2,0,0,0,0],late:[0,1,0,0,0,0],earlyEnd:420,lateEnd:1200,therapy:null,protection:0,fluidResponse:0},
  'CELIAC-001':{early:[0,1,0,0,0,0],late:[0,1,0,0,0,0],earlyEnd:600,lateEnd:1200,therapy:null,protection:0,fluidResponse:0},
  'ACAL-001':{early:[0,1,0,0,0,0],late:[0,1,0,0,0,0],earlyEnd:600,lateEnd:1200,therapy:null,protection:0,fluidResponse:0}

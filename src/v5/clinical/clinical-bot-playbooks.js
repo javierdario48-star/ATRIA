@@ -44,7 +44,7 @@ export const CLINICAL_BOT_PLAYBOOK=Object.freeze({
  'MESI-001':{dx:'isquemia mesentérica aguda',dest:'quirofano',
   history:['¿Tiene una arritmia?','¿Cuándo empezó el dolor?'],
   studies:['mesi_cta'],meds:['Enfermera una vía','Enfermera Ringer 500 ml',
-   'Enfermera heparina'],consult:'/consulta cirugia',wait:105},
+   'Enfermera heparina','Enfermera piperacilina tazobactam 4.5 g'],consult:'/consulta cirugia',wait:105},
 
  'VARIX-001':{dx:'hemorragia digestiva variceal',dest:'procedimiento',
   history:['¿Vomito sangre?','¿Tiene cirrosis?'],
@@ -82,7 +82,7 @@ export const CLINICAL_BOT_PLAYBOOK=Object.freeze({
   studies:['g_fecal_rectal'],meds:['Enfermera desimpactacion'],wait:60},
  'PUD-001':{dx:'enfermedad ulcerosa peptica',dest:'alta',
   history:['¿Dónde le duele?','¿Toma ibuprofeno?'],
-  studies:['g_pud_hpy'],meds:['Enfermera omeprazol oral 20 mg'],wait:120},
+  studies:['g_pud_hpy'],meds:['Enfermera omeprazol oral 20 mg','Enfermera plan de seguimiento y signos de alarma'],wait:120},
  'CELIAC-001':{dx:'enfermedad celiaca',dest:'alta',
   history:['¿Tiene diarrea?','¿Perdió peso?'],
   studies:['g_celiac_biopsy','g_celiac_ttga'],meds:['Enfermera seguimiento'],wait:235},
@@ -94,3 +94,27 @@ export const CLINICAL_BOT_PLAYBOOK=Object.freeze({
    'Enfermera Ringer 500 ml y ceftriaxona 1 g y metronidazol 500 mg'],
   consult:'/consulta cirugia',wait:75}
 });
+
+export const CLINICAL_BOT_PROFILES=Object.freeze(['expert','competent','beginner','dangerous','slow']);
+const examSections=['general','inspection','auscultation','percussion','palpation'];
+// Shared by local and durable competitive QA. Both knowledgeable doctors use
+// indicated case care; the expert also checks medication/allergy risk, connects
+// monitoring early and performs serial reassessment in the bot runner.
+export function clinicalBotAssessmentActions(caseData,profile='competent'){
+ const plan=CLINICAL_BOT_PLAYBOOK[caseData?.id];
+ if(!plan||!CLINICAL_BOT_PROFILES.includes(profile))throw Error('unknown clinical QA plan/profile');
+ const expert=profile==='expert',beginner=profile==='beginner';
+ return [
+  ...(expert?['/signos','/monitor conectar','¿Tiene alergias?',
+   '¿Qué medicación toma?','¿Qué antecedentes tiene?']:[]),
+  ...(beginner?plan.history.slice(0,1):plan.history),
+  ...(!expert?['/signos']:[]),
+  ...(beginner?['general','palpation']:examSections).map(x=>'/examen '+x),
+  '/diagnostico '+plan.dx,
+  ...(!beginner?[
+   ...(plan.exams||[]),
+   ...(plan.studies||[]).map(x=>'/estudio '+x),
+   ...(plan.meds||[]),...(plan.consult?[plan.consult]:[])
+  ]:[])
+ ];
+}

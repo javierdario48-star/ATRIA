@@ -71,6 +71,8 @@ export function executePatientDialogue(p,c,cmd,clock){
  function subjective(){
   let text;
   if(p.liveVitals.spo2<90)text='Me cuesta respirar, siento que me falta el aire. No me siento bien.';
+  else if(observed.bowelImpactionResolved)text='Pude evacuar después de la desimpactación. Tengo menos presión y menos dolor en la panza.';
+  else if(observed.bowelDecompressed)text='Con la sonda tengo menos náuseas y menos distensión, aunque todavía me duele y necesito que me sigan controlando.';
   else if(observed.trend==='worse')text='Me siento peor, estoy muy débil y más mareado que antes.';
   else if(observed.trend==='better')text='Me siento un poco mejor y menos mareado, aunque '+(profile.intensity>3?'la panza todavía me duele.':'todavía tengo molestias.');
   else if(p.treatments.length)text='Por ahora me siento parecido; todavía no noto una mejoría clara. '+profile.place;

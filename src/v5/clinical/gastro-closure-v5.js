@@ -17,12 +17,17 @@ export function evaluateGastroDisposition(a={}){
  const contextual=['anamnesis:reason','anamnesis:pmh','anamnesis:allergies','anamnesis:meds'];
  const history=(a.historyAnswered||[]).filter(x=>(a.historyRelevant||[]).includes(x)||contextual.includes(x));
  if(!history.length&&!critical)missing.push('Obtener al menos un dato relevante de anamnesis.');
- const evidence=rule.study?.some(group=>group.some(id=>studies.has(id)))||false;
- if(!evidence&&!rule.urgentStudyBypass)missing.push('Completar un estudio orientador.');
+ const examined=new Set(a.examPerformed||[]),requiredExams=rule.requiredExams||[];
+ for(const id of requiredExams)if(!examined.has(id))missing.push('Completar la exploración dirigida: '+(id==='perineum:rectal'?'tacto rectal':id)+'.');
+ const evidence=rule.study?.length?rule.study.some(group=>group.some(id=>studies.has(id))):
+  requiredExams.length>0&&requiredExams.every(id=>examined.has(id));
+ if(rule.study?.length&&!evidence&&!rule.urgentStudyBypass)missing.push('Completar un estudio orientador.');
  for(const id of rule.requiredStudies||[])
   if(!studies.has(id))missing.push('Revisar estudio imprescindible '+id+' antes de cerrar el caso.');
  if(rule.treatment?.length&&!rule.treatment.some(group=>group.every(id=>done.has(id))))
   missing.push('Confirmar las intervenciones imprescindibles y su ejecución real.');
+ if(target==='alta'&&(rule.dischargeTreatments||[]).some(id=>!done.has(id)))
+  missing.push('Documentar un plan de seguimiento y signos de alarma antes del alta.');
  if(critical&&!['fluid','vasopressor','transfusion'].some(id=>done.has(id)))
   missing.push('Iniciar soporte para la hipoperfusión.');
  if(Number(a.spo2??98)<90&&!done.has('oxygen'))missing.push('Tratar la hipoxemia.');
@@ -36,8 +41,14 @@ export function evaluateGastroDisposition(a={}){
  if(['sala','observacion'].includes(target)&&(Number(a.sys)<90||Number(a.spo2)<90))
   missing.push('No trasladar a sala/observación con shock o hipoxemia grave.');
  const ready=!missing.length;
+ // The original quality calculator has one diagnostic-evidence slot named
+ // 'studies'. Adapt real required physician observations into that slot;
+ // this never adds an order/result or creates another quality/XP calculator.
+ const examEvidence=requiredExams.map(id=>'exam:'+id),
+  qualityInput={...a,keyStudies:[...(a.keyStudies||[]),...examEvidence]},
+  qualityEvidence=new Set([...studies,...requiredExams.filter(id=>examined.has(id)).map(id=>'exam:'+id)]);
  return {caseId:a.caseId,ready,action:ready?target:null,destination:rule.destinations[0],
   choices:ready?[...rule.destinations]:[],missing,diagnostic:matched,
   historyCount:history.length,studiesSatisfied:evidence,procedurePerformed:false,
-  quality:csClosureQuality487(a,rule,done,studies)};
+  quality:csClosureQuality487(qualityInput,rule,done,qualityEvidence)};
 }

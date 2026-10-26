@@ -528,6 +528,8 @@
     "id": "followup",
     "label": "Plan escrito de seguimiento y signos de alarma",
     "aliases": [
+      "plan de seguimiento y signos de alarma",
+      "plan de seguimiento",
       "seguimiento",
       "control ambulatorio",
       "signos de alarma"

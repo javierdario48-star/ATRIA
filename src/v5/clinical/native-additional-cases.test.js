@@ -26,11 +26,11 @@ test('hemorrhage responds only to administered patient-bound transfusion, not an
  assert(p.liveVitals.sys>untreated.liveVitals.sys);
  assert(p.liveVitals.hr<untreated.liveVitals.hr);
 });
-test('ischemia anticoagulation slows progression but never normalizes untreated shock',()=>{
+test('arterial ischemia anticoagulation does not simulate reperfusion or normalize shock',()=>{
  const {c,p}=factory('MESI-001'),{p:bare}=factory('MESI-001');
  p.administrationLog.push({id:'anticoagulation',patientUid:p.uid,sourceEventId:'hep',dose:{amount:1,unit:'protocolo'},route:'iv',administeredAtNativeMinute:0});
  p.treatments.push({id:'anticoagulation',patientUid:p.uid,sourceEventId:'hep',dose:{amount:1,unit:'protocolo'},route:'iv',administeredAtNativeMinute:0});
  advanceAdditionalCaseVitals(p,c,60,250);advanceAdditionalCaseVitals(bare,c,60,250);
- assert(p.liveVitals.sys>bare.liveVitals.sys);
+ assert.deepEqual(p.liveVitals,bare.liveVitals);
  assert(p.liveVitals.sys<c.vitals.bp.split('/')[0]);
 });
