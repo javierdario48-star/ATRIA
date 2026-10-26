@@ -19,12 +19,20 @@ try{
     mode==='apprentice'?'pink':'burgundy');
    assert.equal(await p.locator('#startingSex').inputValue(),
     mode==='apprentice'?'female':'male');
-   const preview=await p.locator('#avatarPreview').evaluate(canvas=>{
+   // Loading and decoding the HD atlas is asynchronous: assert visible
+   // completion, not the arbitrary timing of a network/paint race.
+   await p.waitForFunction(()=>{
+    const canvas=document.getElementById('avatarPreview');
+    if(!canvas)return false;
     const d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
     let painted=0;for(let i=3;i<d.length;i+=4)if(d[i]>0)painted++;
-    return painted;
-   });
-   assert(preview>10000,'doctor preview must be real and visibly populated before entering');
+    return painted>10000;
+   },null,{timeout:20000});
+   const prev=await p.locator('#startingColor').inputValue();
+   await p.locator('#avatarPreviousColor').click();
+   await p.locator('#avatarNextColor').click();
+   assert.equal(await p.locator('#startingColor').inputValue(),prev,
+    'back/next arrows must round-trip without changing the selected outfit');
    const atlas=await p.evaluate(async()=>{
     const img=new Image();img.src='/src/v5/content/assets/player-wardrobe.avif';
     await img.decode();return [img.naturalWidth,img.naturalHeight];
