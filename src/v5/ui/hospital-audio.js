@@ -24,7 +24,8 @@ export function createHospitalAudio({window,storage}){
  const prefs={enabled:data?.enabled!==false,volume:clamp(Number(data?.volume??DEFAULTS.volume)||0,0,1),
   channels:{...DEFAULTS.channels,...(data?.channels||{})},track:data?.track==='enfoque'?'enfoque':'guardia'};
  let context=null,master=null,lastTick=-Infinity,nextBeat=0,monitorId=null,lastHR=null,alarm='none',
-  lastAlarm=-Infinity,musicStep=0,nextMusic=0,musicTrack=null,nextFoley=0,noise=null;
+  lastAlarm=-Infinity,musicStep=0,nextMusic=0,musicTrack=null,nextFoley=0,noise=null,
+  lastUiCue=-Infinity;
  const active=new Set(),counters={music:0,monitor:0,alarm:0,speech:0,effects:0,ambient:0};
  function save(){try{storage?.setItem('atria.v5.audio.v1',JSON.stringify(prefs));}catch{}}
  const playing=()=>prefs.enabled&&prefs.volume>0&&!window.document?.hidden&&context?.state==='running';
@@ -66,17 +67,42 @@ export function createHospitalAudio({window,storage}){
   osc.start(t);osc.stop(t+duration+.02);return true;
  }
  function cue(kind){
+  // Short, original notification motifs. User can mute effects in Ajustes.
+  const quiet={uiTap:[[590,0,.046],[790,.045,.022]],
+   uiChange:[[730,0,.042],[950,.06,.023]],
+   uiBack:[[630,0,.03],[470,.055,.023]],
+   uiInvite:[[480,0,.043],[620,.08,.036],[810,.16,.027]],
+   uiAccept:[[520,0,.045],[740,.09,.036],[990,.17,.027]]};
+  if(quiet[kind]){
+   const now=context?.currentTime??0;
+   if(now-lastUiCue<.085)return;
+   lastUiCue=now;
+   for(const [hz,offset,peak] of quiet[kind])
+    tone(hz,{group:'effects',offset,duration:.095,peak});
+   if(channel('effects'))counters.effects++;
+   return;
+  }
   const sounds={ok:[620,820],level:[660,880,1100],death:[220,175],
    monitorOpen:[500,740],monitorActivate:[520,880],studyOrder:[390,520,650],
    studyReady:[740,960],iv:[420,600],connect:[520,720]};
-  const notes=sounds[kind]||sounds.ok;
-  notes.forEach((hz,i)=>tone(hz,{group:'effects',offset:.075*i,duration:.11,peak:.12}));
+  (sounds[kind]||sounds.ok).forEach((hz,i)=>
+   tone(hz,{group:'effects',offset:.075*i,duration:.11,peak:.08}));
   if(channel('effects'))counters.effects++;
  }
  function speech(role){
-  const values={patient:[340,385],nurse:[540,600],mentor:[425,480]}[role];
-  if(!values)return;
-  values.forEach((v,i)=>tone(v,{group:'speech',offset:i*.085,duration:.075,peak:.065}));
+  if(role==='patient'){
+   // Distinctive low-volume two-note text alert, not a commercial ringtone.
+   tone(970,{group:'speech',duration:.09,peak:.042});
+   tone(1290,{group:'speech',offset:.11,duration:.10,peak:.036});
+  }else if(role==='nurse'){
+   // Important but soft; second passage is a diminishing synthetic echo.
+   for(const [hz,offset,peak] of [[510,0,.05],[680,.095,.043],[850,.18,.036],
+    [510,.28,.012],[680,.365,.009],[850,.45,.006]])
+    tone(hz,{group:'speech',offset,duration:.11,peak});
+  }else if(role==='mentor'){
+   tone(490,{group:'speech',duration:.09,peak:.029});
+   tone(610,{group:'speech',offset:.085,duration:.09,peak:.027});
+  }else return;
   if(channel('speech'))counters.speech++;
  }
  function musicTick(){

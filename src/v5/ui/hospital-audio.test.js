@@ -98,3 +98,15 @@ test('measured monitor sound tracks variable ECG HR without fixed bpm presets',(
  assert.equal(audio.state().monitorHR,null);
  audio.destroy();
 });
+
+test('subtle patient message, echoed nurse, and independent default-on mute channels',()=>{
+ const {audio}=fixture();audio.unlock();
+ audio.speech('patient');audio.speech('nurse');
+ assert.equal(audio.state().counters.speech,2);
+ assert(audio.state().activeNodes>=8);
+ audio.setChannel('speech',false);assert.equal(audio.state().activeNodes,0);
+ audio.speech('patient');assert.equal(audio.state().counters.speech,2);
+ audio.setChannel('effects',false);audio.cue('uiAccept');
+ assert.equal(audio.state().counters.effects,0);
+ audio.destroy();
+});

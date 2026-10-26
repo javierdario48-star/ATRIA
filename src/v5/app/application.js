@@ -23,6 +23,7 @@ import {receptionBoardHTML} from '../ui/reception-board.js';
 import {canHearWardDoctor,canHearWardPatient} from '../ui/spatial-ward-speech.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {createHospitalAudio} from '../ui/hospital-audio.js';
+import {uiSoundForTarget} from '../ui/ui-sound-policy.js';
 import {createChatTranscript} from '../ui/chat-transcript.js';
 import {visibleWardChatRows,pruneWardSpeechPreviews} from '../ui/guard-chat-view.js';
 import {clinicalCompletions,spellingSuggestions} from '../ui/clinical-autocomplete.js';
@@ -948,6 +949,12 @@ export async function createApplication({document,window,content,signal}){
  ui('playerName').value=profile.name;
  const avatarCreator=createAvatarCreator({document,window,assetUrls:content.assetUrls,profile,listen,signal});
  ui('enterButton').textContent='Entrar al hospital →';ui('enterButton').disabled=false;
+ // Single gesture-gated sound channel for selection, invitation and menus.
+ // This event only drives the existing audio renderer, never any gameplay.
+ listen(document,'click',event=>{
+  const cue=uiSoundForTarget(event.target);
+  if(cue){hospitalAudio.unlock();hospitalAudio.cue(cue);}
+ },{capture:true});
  listen(ui('profileForm'),'submit',event=>{
   event.preventDefault();hospitalAudio.unlock();profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico',
    sex:avatarCreator.read().sex,scrubColor:avatarCreator.read().color};
