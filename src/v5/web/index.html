@@ -37,10 +37,32 @@
   </div>
  </aside>
  <section id="splash" class="overlay">
-  <div class="splash-card"><div class="wordmark"><span class="logo">A</span> ATRIA</div><p class="eyebrow">GUARDIAS QUE ENSEÑAN</p>
-   <h1>La noche empieza acá.</h1><p>Un hospital vivo. Decisiones clínicas. Tu próximo desafío.</p>
-   <form id="profileForm"><label for="playerName">Tu alias</label><input id="playerName" autocomplete="nickname" maxlength="32" value="Médico" required><label for="startingSex">Sexo del personaje</label><select id="startingSex"><option value="male">Masculino</option><option value="female">Femenino</option></select><label for="startingColor">Color del ambo</label><select id="startingColor"><option value="navy">Negro clínico</option><option value="green">Verde oscuro</option><option value="gray">Gris clínico</option><option value="pink">Rosa clínico</option><option value="teal">Verde teal</option><option value="burgundy">Burdeos</option><option value="black">Negro</option></select><button id="enterButton" class="primary" disabled>Cargando hospital…</button></form>
-   <small>5.0 · Experimental · Siete casos clínicos certificados</small>
+  <div class="splash-card avatar-creator">
+   <div class="wordmark"><span class="logo">A</span> ATRIA <span class="creator-kicker">5.0 · TU PERSONAJE</span></div>
+   <h1>¿Cómo quieres que te vean?</h1>
+   <p class="creator-intro">Elegí tu estilo para empezar la guardia.</p>
+   <form id="profileForm">
+    <div class="avatar-sex-choice" role="group" aria-label="Aspecto del personaje">
+     <button type="button" data-avatar-sex="female" aria-pressed="false"><span>M</span> Mujer</button>
+     <button type="button" data-avatar-sex="male" aria-pressed="true"><span>H</span> Hombre</button>
+    </div>
+    <input type="hidden" id="startingSex" value="male">
+    <div class="avatar-display">
+     <span class="avatar-stage-caption">ASÍ TE VERÁN EN ATRIA</span>
+     <canvas id="avatarPreview" width="320" height="380" role="img" aria-label="Vista previa del personaje"></canvas>
+     <span class="avatar-stage-floor" aria-hidden="true"></span>
+    </div>
+    <div class="avatar-carousel" aria-label="Elegir color del ambo">
+     <button id="avatarPreviousColor" type="button" aria-label="Color anterior">‹</button>
+     <div class="avatar-color-title"><span id="avatarColorName" aria-live="polite">Negro clínico</span><small id="avatarColorPosition">1 / 7</small></div>
+     <button id="avatarNextColor" type="button" aria-label="Color siguiente">›</button>
+    </div>
+    <input type="hidden" id="startingColor" value="navy">
+    <label for="playerName" class="avatar-name-label">¿Cómo te llamás?</label>
+    <input id="playerName" autocomplete="nickname" maxlength="32" value="Médico" required placeholder="Tu nombre en el hospital">
+    <button id="enterButton" type="submit" class="primary" disabled>Entrar al hospital →</button>
+   </form>
+   <small class="creator-footer">Tu personaje y tu nombre se pueden editar desde Perfil.</small>
   </div>
  </section>
  <section id="chatDock" hidden aria-label="Consola compartida">

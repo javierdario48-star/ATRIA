@@ -508,3 +508,33 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 @media(prefers-reduced-motion:reduce){
  .patient-wheel-action.patient-wheel-guided .patient-wheel-glyph,.unassigned-patient-marker{animation:none}
 }
+
+/* V5 Doctor creator: an actual stage, not a second miniature of the avatar.
+   Same image coordinates as the world renderer, with uniform aspect scaling. */
+#splash{padding:12px 12px max(12px,env(safe-area-inset-bottom));overflow:auto}
+.splash-card.avatar-creator{width:min(94vw,430px);max-height:min(96dvh,940px);overflow-y:auto;overscroll-behavior:contain;padding:19px 23px 17px;text-align:center}
+.avatar-creator .wordmark{position:relative;font-size:20px;justify-content:flex-start;gap:8px}
+.avatar-creator .wordmark .logo{height:34px;width:34px;font-size:27px}
+.avatar-creator .creator-kicker{font:700 9px system-ui,sans-serif;letter-spacing:.12em;color:#7eb7b8;margin-left:auto}
+.avatar-creator h1{font-size:clamp(24px,6.2vw,31px);line-height:1.1;letter-spacing:-.025em;margin:15px 0 4px}
+.avatar-creator .creator-intro{margin:3px 0 11px!important;font-size:12px!important;color:#a9c2c5!important}
+.avatar-creator #profileForm{margin-top:11px;gap:9px}
+.avatar-sex-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:310px;width:100%;margin:auto}
+.avatar-sex-choice button{min-height:40px;border-radius:13px;font-size:12px;background:#0d2732;border-color:#375761;color:#bdd2d4;display:flex;align-items:center;justify-content:center;gap:8px}
+.avatar-sex-choice button span{display:grid;place-items:center;border:1px solid currentColor;border-radius:50%;width:25px;height:25px;font-size:12px}
+.avatar-sex-choice button[aria-pressed=true]{color:#102d33;background:#9de4d9;border-color:#9de4d9;box-shadow:0 3px 18px #61ccb31d}
+.avatar-display{position:relative;display:flex;justify-content:center;align-items:center;min-height:clamp(214px,37dvh,294px);max-height:294px;overflow:hidden;border:1px solid #3658629c;border-radius:17px;background:radial-gradient(ellipse at 50% 63%,#1c576c75 1%,#0e313e 39%,#071d27 78%);}
+.avatar-stage-caption{position:absolute;top:12px;letter-spacing:.19em;font-size:9px;font-weight:800;color:#82b7c5;z-index:1}
+#avatarPreview{position:relative;z-index:2;display:block;height:clamp(206px,35dvh,286px);width:auto;max-width:95%;object-fit:contain}
+.avatar-stage-floor{position:absolute;width:56%;height:17px;bottom:8%;background:#0009;filter:blur(13px);border-radius:50%}
+.avatar-carousel{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;max-width:290px;margin:1px auto}
+.avatar-carousel>button{width:44px;height:44px;font-size:27px;line-height:1;padding:0;border-radius:13px;background:#153d49;color:#c6fff8}
+.avatar-color-title{display:grid;gap:2px;font-size:14px;font-weight:850;color:#e6f7f6}
+.avatar-color-title small{font-size:9px;letter-spacing:.10em;color:#8aaeb7}
+#profileForm .avatar-name-label{font-size:11px;color:#bbd3d5;font-weight:800;margin:5px 0 -4px}
+#profileForm #playerName{min-height:45px;width:100%;text-align:center;font-size:16px}
+#profileForm #enterButton{min-height:50px;font-size:15px;letter-spacing:.01em;margin-top:3px}
+.avatar-creator .creator-footer{margin-top:10px;font-size:10px}
+@media(max-width:380px){.splash-card.avatar-creator{padding:12px 14px}.avatar-creator h1{font-size:23px}.avatar-display{min-height:202px}#avatarPreview{height:200px}}
+@media(max-height:660px){.splash-card.avatar-creator{padding:10px 15px}.avatar-creator h1{margin:8px 0 3px}.avatar-creator .creator-intro{margin:0 0 3px!important}.avatar-display{min-height:164px;height:clamp(160px,29dvh,220px)}#avatarPreview{height:clamp(156px,28dvh,216px)}#profileForm .avatar-name-label{margin:0}.avatar-creator .creator-footer{margin-top:4px}}
+@media(prefers-reduced-motion:no-preference){.avatar-sex-choice button,.avatar-carousel>button{transition:background .16s ease,border-color .16s ease,transform .16s ease}.avatar-carousel>button:active{transform:scale(.94)}}

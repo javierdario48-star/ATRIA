@@ -15,8 +15,8 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
    'player-female-burgundy':[2,1],'player-burgundy':[3,1]};
   for(const [key,[col,row]] of Object.entries(coords)){
    const frame=canvas.ownerDocument.createElement('canvas');
-   frame.width=72;frame.height=108;
-   frame.getContext('2d').drawImage(images.wardrobe,col*72,row*108,72,108,0,0,72,108);
+   frame.width=images.wardrobe.naturalWidth/4;frame.height=images.wardrobe.naturalHeight/2;
+   frame.getContext('2d').drawImage(images.wardrobe,col*frame.width,row*frame.height,frame.width,frame.height,0,0,frame.width,frame.height);
    images[key]=frame;
   }
  }
@@ -127,7 +127,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   cameraScene=scene;lastCameraTime=now;
   // Device-pixel alignment avoids canvas texture shimmer on mobile.
   if(valid)camera={x:pixel(camera.x*scale)/scale,y:pixel(camera.y*scale)/scale};
-  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.clearRect(0,0,width,height);
   const tile=512*scale,left=camera.x-anchorX/scale,top=camera.y-anchorY/scale;
   const sx=-((left*scale)%tile+tile)%tile,sy=-((top*scale)%tile+tile)%tile;
   for(let y=sy-tile;y<height+tile;y+=tile)for(let x=sx-tile;x<width+tile;x+=tile)ctx.drawImage(images.pavement,x,y,tile+1,tile+1);
@@ -145,7 +145,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
    const [x,y]=screen(p.x,p.y),im=images.patient,h=40*scale,w=h*im.width/im.height;ctx.drawImage(im,x-w/2,y-h/2,w,h);
   }
   const actors=[...world.nurses,...(world.others||[]),...(world.expert?[world.expert]:[]),world.player].sort((a,b)=>a.y-b.y);
-  for(const a of actors){sprite(a.id==='self'||a.kind==='doctor'?playerSpriteKey(a):a.kind==='vega'?'vega':'nurse',a,a.kind==='vega'?72:a.kind==='nurse'?57:62);}
+  for(const a of actors){sprite(a.id==='self'||a.kind==='doctor'?playerSpriteKey(a):a.kind==='vega'?'vega':'nurse',a,a.kind==='vega'?72:a.kind==='nurse'?57:69);}
   if(world.phase!=='title')label(world.player,world.player.name,world.player.level);
   for(const a of world.others||[])label(a,a.name,a.level);
   if(world.phase==='lobby'||world.phase==='guard')for(const a of [world.player,...world.others])speechBubble(a,now);
