@@ -39,6 +39,7 @@ export function confirmedClinicalMissteps(patient,caseDef){
  const traits=caseDef?.pharmacology?.traits||BASE_CASE_PHARMACOLOGY_487[caseDef?.id]||[];
  if(!traits.includes('infection')){
   for(const [id,exposure] of Object.entries(exposures))
+   if(caseDef?.id==='VARIX-001'&&id==='ceftriaxone')continue; // guideline-directed prophylaxis is NOT empiric treatment for invented sepsis
    if(exposure.administrations&&['antibiotic','aminoglycoside','antifungal'].includes(PHARMA_RULES_487[id]?.classId)){
     const label=patient.administrationLog.find(x=>x.id===id)?.label||id;
     notes.push(label+' sin foco infeccioso identificado en '+caseDef?.id);

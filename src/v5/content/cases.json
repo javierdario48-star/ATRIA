@@ -5137,6 +5137,13 @@
     "anamnesis": {
       "otherSymptoms": "Doctor, vomité muchísima sangre y me estoy mareando.",
       "historySummary": "Doctor, vomité muchísima sangre y me estoy mareando."
+    },
+    "pharmacology": {
+      "traits": [
+        "hepatic",
+        "bleed",
+        "portalHypertension"
+      ]
     }
   },
   {
@@ -5312,6 +5319,12 @@
     "anamnesis": {
       "otherSymptoms": "Estoy confundida, no sé bien dónde estoy...",
       "historySummary": "Estoy confundida, no sé bien dónde estoy..."
+    },
+    "pharmacology": {
+      "traits": [
+        "hepatic",
+        "neuro"
+      ]
     }
   },
   {
@@ -5499,6 +5512,12 @@
     "anamnesis": {
       "otherSymptoms": "Voy al baño con sangre muchas veces y tengo fiebre.",
       "historySummary": "Voy al baño con sangre muchas veces y tengo fiebre."
+    },
+    "pharmacology": {
+      "traits": [
+        "immuneInflammation",
+        "bleed"
+      ]
     }
   },
   {
@@ -5691,6 +5710,12 @@
     "anamnesis": {
       "otherSymptoms": "Desde que tomé antibióticos tengo diarrea muy fuerte.",
       "historySummary": "Desde que tomé antibióticos tengo diarrea muy fuerte."
+    },
+    "pharmacology": {
+      "traits": [
+        "infectiousDiarrhea",
+        "dehydration"
+      ]
     }
   },
   {
@@ -5853,6 +5878,12 @@
     "anamnesis": {
       "otherSymptoms": "Me duele abajo a la izquierda y tuve algo de fiebre.",
       "historySummary": "Me duele abajo a la izquierda y tuve algo de fiebre."
+    },
+    "pharmacology": {
+      "traits": [
+        "gastrointestinal",
+        "inflammation"
+      ]
     }
   },
   {
@@ -6027,6 +6058,12 @@
     "anamnesis": {
       "otherSymptoms": "Tuve mucha sangre roja por el recto y me mareé.",
       "historySummary": "Tuve mucha sangre roja por el recto y me mareé."
+    },
+    "pharmacology": {
+      "traits": [
+        "bleed",
+        "hypovolemia"
+      ]
     }
   },
   {
@@ -6202,6 +6239,12 @@
     "anamnesis": {
       "otherSymptoms": "Me notaron los ojos amarillos y la orina oscura.",
       "historySummary": "Me notaron los ojos amarillos y la orina oscura."
+    },
+    "pharmacology": {
+      "traits": [
+        "hepatic",
+        "hepatitis"
+      ]
     }
   },
   {
@@ -6363,6 +6406,12 @@
     "anamnesis": {
       "otherSymptoms": "Tengo mucha diarrea líquida y estoy sediento.",
       "historySummary": "Tengo mucha diarrea líquida y estoy sediento."
+    },
+    "pharmacology": {
+      "traits": [
+        "gastrointestinal",
+        "dehydration"
+      ]
     }
   },
   {
@@ -6532,6 +6581,12 @@
     "anamnesis": {
       "otherSymptoms": "Hace una semana que no puedo evacuar y me siento muy hinchado.",
       "historySummary": "Hace una semana que no puedo evacuar y me siento muy hinchado."
+    },
+    "pharmacology": {
+      "traits": [
+        "obstruction",
+        "stable"
+      ]
     }
   },
   {
@@ -6696,6 +6751,12 @@
     "anamnesis": {
       "otherSymptoms": "Me arde la boca del estómago desde hace semanas.",
       "historySummary": "Me arde la boca del estómago desde hace semanas."
+    },
+    "pharmacology": {
+      "traits": [
+        "ulcer",
+        "stable"
+      ]
     }
   },
   {
@@ -6868,6 +6929,12 @@
     "anamnesis": {
       "otherSymptoms": "Hace meses tengo diarrea, cansancio y bajé de peso.",
       "historySummary": "Hace meses tengo diarrea, cansancio y bajé de peso."
+    },
+    "pharmacology": {
+      "traits": [
+        "malabsorption",
+        "stable"
+      ]
     }
   },
   {
@@ -7044,6 +7111,12 @@
     "anamnesis": {
       "otherSymptoms": "Me cuesta pasar incluso agua y a veces la devuelvo.",
       "historySummary": "Me cuesta pasar incluso agua y a veces la devuelvo."
+    },
+    "pharmacology": {
+      "traits": [
+        "motility",
+        "stable"
+      ]
     }
   }
 ]
