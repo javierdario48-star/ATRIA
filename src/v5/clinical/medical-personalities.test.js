@@ -36,6 +36,7 @@ async function assess(bot,plan,advanced){
 }
 async function scenario(bot,caseId,mode,skill){
  const plan=book[caseId],s=bot.session;
+ let clinicalDelay=0;
  assert(plan,'there must be exactly one knowledgeable playbook for '+caseId);
  const start=s.read(),initial={...start.patient.liveVitals};
  if(skill==='ignorant'){
@@ -89,7 +90,8 @@ async function scenario(bot,caseId,mode,skill){
   // assessment delay while stable cases can be deferred by 90 game minutes.
   const urgent=new Set(['PERI-SEC-001','PERI-TER-001','CHOLANG-001',
    'VARIX-001','MESI-001','PANC-001','HDA-001','LGIB-001']);
-  await bot.advance(urgent.has(caseId)?3:90);
+  clinicalDelay=urgent.has(caseId)?3:90;
+  await bot.advance(clinicalDelay);
  }
  await assess(bot,plan,true);
  await bot.advance(plan.wait);
@@ -119,7 +121,7 @@ async function scenario(bot,caseId,mode,skill){
  assert.equal(s.read().progress.xp,xp,'repeated disposition must never duplicate XP');
  assert(s.read().progress.receipts.length<=1,'at most one authenticated closure');
  report.push({caseId,mode,skill,destination:state.patient.closure?.destination||null,
-  died:!!state.patient.patientDied,spent:plan.wait+(skill==='slow'?90:0),xp});
+  died:!!state.patient.patientDied,spent:plan.wait+clinicalDelay,xp});
 }
 for(const mode of modes)for(const caseId of cases)
  for(const skill of ['ignorant','beginner','intelligent','slow','reckless']){
@@ -135,6 +137,9 @@ test('375 authentic clinical personas cover all 25 cases, 3 local/team modes and
  assert.equal(new Set(report.map(x=>x.caseId)).size,25);
  assert.deepEqual([...new Set(report.map(x=>x.mode))].sort(),[...modes].sort());
  assert.equal(report.filter(x=>x.skill==='intelligent'&&x.xp>0).length,75);
+ fs.mkdirSync('qa/v5-medical-bot-results',{recursive:true});
+ fs.writeFileSync('qa/v5-medical-bot-results/physician-personas.json',
+  JSON.stringify({scope:'25 cases / 3 game modes / 5 physician profiles',runs:report},null,2));
  console.log('ATRIA_MEDICAL_375_PERSONALITY_BOTS='+JSON.stringify({
   cases:cases.length,scenarios:report.length,
   skillCount:Object.fromEntries(['ignorant','beginner','intelligent','slow','reckless']

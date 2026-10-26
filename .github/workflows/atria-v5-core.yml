@@ -21,6 +21,14 @@ jobs:
         run: npm run test:v5-core
       - name: Canonical content, navigation, study and independent game contracts
         run: npm run test:v5
+      - name: Publish 25-case clinical bot evidence for manual medical review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atria-v5-25-case-medical-qa
+          path: qa/v5-medical-bot-results/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Native compact ATRIA keyboard editing contracts
         run: node --test src/v5/ui/atria-keyboard.test.js
       - name: Original CIRR dose, preparation and physiological trajectories remain equivalent

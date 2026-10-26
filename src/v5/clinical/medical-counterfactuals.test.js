@@ -12,6 +12,7 @@ import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 const read=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const cases=read('cases'),doses=read('default-doses');
 const byId=new Map(cases.map(c=>[c.id,c]));
+const comparisons=[];
 const sample=id=>({uid:'patient-'+id,treatments:[],administrationLog:[],pendingTreatments:[],
  procedures:{},adverseEvents:[],liveVitals:additionalCaseInitialVitals(byId.get(id))});
 const medicine=(p,id)=>{
@@ -47,6 +48,8 @@ for(const [id,rule] of Object.entries(ADDITIONAL_CASE_TRAJECTORIES)){
   if(therapy){
    medicine(treated,therapy);
    const after=additionalCaseTargets(treated,c,220);
+   comparisons.push({caseId:id,therapy,minute:220,heartRateUntreated:untreated.hr,
+    heartRateTreated:after.hr,systolicUntreated:untreated.sys,systolicTreated:after.sys});
    assert(after.hr<untreated.hr,
     id+' actually administered indicated therapy should attenuate, not worsen, modeled tachycardia');
    assert(after.sys>=untreated.sys-1e-9,id+' indicated treatment cannot invent hypoperfusion');
@@ -115,4 +118,11 @@ test('severe ulcerative colitis must not be handed off without CDI screening evi
  assert(noScreen.missing.some(m=>m.includes('g_uc_cdi')));
  const screened=evaluateGastroDisposition({...base,studiesDone:['g_uc_labs','g_uc_cdi']});
  assert(!screened.missing.some(m=>m.includes('g_uc_cdi')));
+});
+
+test('export matched pharmacology comparison for manual clinical review',()=>{
+ assert(comparisons.length>=5,'must have meaningful pharmacological comparators');
+ fs.mkdirSync('qa/v5-medical-bot-results',{recursive:true});
+ fs.writeFileSync('qa/v5-medical-bot-results/matched-pharmacology.json',
+  JSON.stringify({model:'bounded educational physiological trajectories',comparisons},null,2));
 });
