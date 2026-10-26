@@ -28,7 +28,8 @@ test('canonical content preserves effective original map, cases and artwork',()=
   assert.equal(bytes.toString('ascii',0,4),'RIFF');
  }
  for(const [name,expected] of Object.entries(provenance.files)){
-  const canonicalPath=name==='cases.json'?'cases-original.json':name;
+  const canonicalPath=name==='cases.json'?'cases-original.json':
+   name==='therapies.json'?'therapies-original.json':name;
   assert.equal(hash(fs.readFileSync(path.join(root,canonicalPath))),expected,canonicalPath);
  }
 });
@@ -49,4 +50,18 @@ test('V5 wardrobe atlas is versioned separately from original immutable asset ha
  assert.equal(hash(bytes),'93a7f7bf8fb36a3dc808cc5c7f923e633697a6b48729a647e37320d37171e69b');
  assert(bytes.length<250000,'HD AVIF atlas should stay below a quarter megabyte for mobile');
  assert.equal(bytes.toString('ascii',4,8),'ftyp');
+});
+
+test('the 30 original therapies are immutable and the 14 V5 additions are additive',()=>{
+ const legacy=read('therapies-original.json'),active=read('therapies.json');
+ assert.equal(legacy.length,30);
+ assert.equal(active.length,44);
+ assert.deepEqual(active.slice(0,legacy.length),legacy,
+  'a newly modeled treatment cannot silently rewrite the original formulary');
+ const newEntries=active.slice(legacy.length);
+ assert.equal(new Set(newEntries.map(x=>x.id)).size,14);
+ for(const x of newEntries){
+  assert(x.id&&x.label&&Array.isArray(x.aliases)&&x.aliases.length,
+   'new medicines must have a real UI identity and speech aliases');
+ }
 });

@@ -1,0 +1,454 @@
+[
+  {
+    "id": "oxygen",
+    "label": "Oxígeno suplementario",
+    "aliases": [
+      "oxigeno",
+      "o2",
+      "canula",
+      "cánula",
+      "mascara",
+      "máscara",
+      "oxigenoterapia",
+      "oxigeno suplementario",
+      "canula nasal",
+      "bigotera",
+      "bigoteras",
+      "mascara de oxigeno"
+    ],
+    "effects": {
+      "spo2": 6,
+      "rr": -2
+    }
+  },
+  {
+    "id": "fluid",
+    "label": "Cristaloides / reposición de volumen",
+    "aliases": [
+      "suero",
+      "fisiologica",
+      "fisiológica",
+      "ringer",
+      "ringer lactato",
+      "cristaloide",
+      "cristaloides",
+      "volumen",
+      "hidratacion",
+      "hidratación",
+      "expandir",
+      "expansion de volumen",
+      "expansion volemica",
+      "reponer volumen",
+      "reposicion volemica",
+      "reposicion hidrica",
+      "rehidratar",
+      "rehidratacion",
+      "fluidoterapia",
+      "bolo de cristaloides",
+      "bolo de suero",
+      "carga de volumen",
+      "carga de cristaloides",
+      "solucion salina",
+      "salina normal",
+      "cloruro de sodio 0 9",
+      "nacl 0 9",
+      "sf",
+      "solucion fisiologica",
+      "hartmann",
+      "lactato de ringer",
+      "cristaloides balanceados",
+      "solucion balanceada",
+      "expansion"
+    ],
+    "effects": {
+      "sys": 14,
+      "dia": 7,
+      "hr": -12,
+      "rr": -1
+    }
+  },
+  {
+    "id": "albumin",
+    "label": "Albúmina IV",
+    "aliases": [
+      "albumina",
+      "albúmina",
+      "albumina iv",
+      "albúmina iv",
+      "albumina intravenosa",
+      "albumina endovenosa"
+    ],
+    "effects": {
+      "sys": 5,
+      "dia": 3,
+      "hr": -3
+    }
+  },
+  {
+    "id": "vasopressor",
+    "label": "Noradrenalina / vasopresor",
+    "aliases": [
+      "noradrenalina",
+      "norepinefrina",
+      "nora",
+      "vasopresor",
+      "soporte vasoactivo",
+      "soporte vasopresor",
+      "noradrena"
+    ],
+    "effects": {
+      "sys": 20,
+      "dia": 10,
+      "hr": -4
+    }
+  },
+  {
+    "id": "morphine",
+    "label": "Morfina",
+    "aliases": [
+      "morfina",
+      "morfina iv",
+      "morfina endovenosa"
+    ],
+    "effects": {
+      "hr": -5,
+      "rr": -3
+    }
+  },
+  {
+    "id": "analgesia",
+    "label": "Analgesia",
+    "aliases": [
+      "analgesia",
+      "analgesico",
+      "analgésico",
+      "paracetamol",
+      "fentanilo",
+      "aliviar el dolor",
+      "tratar el dolor",
+      "control del dolor",
+      "calmante"
+    ],
+    "effects": {
+      "hr": -7,
+      "rr": -2
+    }
+  },
+  {
+    "id": "antiemetic",
+    "label": "Antiemético",
+    "aliases": [
+      "ondansetron",
+      "metoclopramida",
+      "antiemetico",
+      "antiemético",
+      "controlar vomitos",
+      "control de vomitos"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "ppi",
+    "label": "PPI",
+    "aliases": [
+      "omeprazol",
+      "pantoprazol",
+      "ppi",
+      "ibp",
+      "inhibidor de bomba de protones",
+      "proteccion gastrica",
+      "protector gastrico",
+      "omepra",
+      "panto"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "transfusion",
+    "label": "Transfusión",
+    "aliases": [
+      "transfusion",
+      "transfusión",
+      "globulos rojos",
+      "glóbulos rojos",
+      "transfundir",
+      "transfundimos",
+      "concentrado de hematies",
+      "concentrado de globulos rojos",
+      "paquete globular",
+      "unidad de globulos rojos",
+      "hemoderivados",
+      "hemotransfusion"
+    ],
+    "effects": {
+      "sys": 10,
+      "dia": 5,
+      "hr": -9,
+      "spo2": 1
+    }
+  },
+  {
+    "id": "paracentesis_ter",
+    "label": "Paracentesis terapéutica",
+    "aliases": [
+      "paracentesis terapeutica",
+      "paracentesis terapéutica",
+      "evacuar ascitis",
+      "paracentesis evacuadora",
+      "paracentesis de gran volumen",
+      "drenaje de ascitis"
+    ],
+    "effects": {
+      "rr": -2,
+      "hr": -3
+    }
+  },
+  {
+    "id": "espironolactona",
+    "label": "Espironolactona",
+    "aliases": [
+      "espironolactona",
+      "espironolactona oral",
+      "espiro"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "steroid",
+    "label": "Corticoide",
+    "aliases": [
+      "corticoide",
+      "corticoides",
+      "prednisona",
+      "metilprednisolona",
+      "corticoterapia",
+      "corticoesteroides",
+      "corticosteroides",
+      "esteroides"
+    ],
+    "effects": {
+      "temp": -0.2
+    }
+  },
+  {
+    "id": "aza",
+    "label": "Azatioprina",
+    "aliases": [
+      "azatioprina",
+      "azatioprina oral",
+      "aza"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "ceftriaxone",
+    "label": "Ceftriaxona IV",
+    "aliases": [
+      "ceftriaxona",
+      "ceftriazona",
+      "ceftria",
+      "ceftriaxona endovenosa"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "metronidazole",
+    "label": "Metronidazol IV",
+    "aliases": [
+      "metronidazol",
+      "metro",
+      "metronidazol endovenoso"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "imipenem",
+    "label": "Imipenem IV",
+    "aliases": [
+      "imipenem",
+      "imi cilastatina",
+      "imipenem cilastatina"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "ceftazidime",
+    "label": "Ceftazidima IV",
+    "aliases": [
+      "ceftazidima",
+      "ceftazidime"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "cefoperazone",
+    "label": "Cefoperazona IV",
+    "aliases": [
+      "cefoperazona"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "cefepime",
+    "label": "Cefepime IV",
+    "aliases": [
+      "cefepime",
+      "cefepima"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "piptazo",
+    "label": "Piperacilina/tazobactam",
+    "aliases": [
+      "piperacilina tazobactam",
+      "piperacilina/tazobactam",
+      "pip tazo",
+      "piptazo",
+      "pipera tazo",
+      "piperacilina con tazobactam"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "ampicillin",
+    "label": "Ampicilina IV",
+    "aliases": [
+      "ampicilina",
+      "ampi"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "amikacin",
+    "label": "Amikacina IV",
+    "aliases": [
+      "amikacina",
+      "amika"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "gentamicin",
+    "label": "Gentamicina IV",
+    "aliases": [
+      "gentamicina",
+      "genta"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "fluconazole",
+    "label": "Fluconazol IV",
+    "aliases": [
+      "fluconazol",
+      "fluco"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "amphotericin",
+    "label": "Anfotericina B IV",
+    "aliases": [
+      "anfotericina",
+      "anfotericina b",
+      "anfo b"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "source_control",
+    "label": "Cirugía / control de foco",
+    "aliases": [
+      "cirugia",
+      "cirugía",
+      "operar",
+      "quirofano",
+      "quirófano",
+      "laparotomia",
+      "laparotomía",
+      "control de foco",
+      "lavado peritoneal",
+      "apendicectomia",
+      "apendicectomía",
+      "colecistectomia",
+      "colecistectomía",
+      "drenaje biliar",
+      "cpre",
+      "ercp",
+      "revascularizacion",
+      "revascularización",
+      "embolectomia",
+      "controlar el foco",
+      "resolver el foco",
+      "control de fuente",
+      "control del foco",
+      "tratamiento del foco",
+      "drenar el foco",
+      "drenaje del foco",
+      "control quirurgico del foco"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "stop_beta_blocker",
+    "label": "Suspender beta bloqueante",
+    "aliases": [
+      "suspender beta bloqueante",
+      "suspender betabloqueante",
+      "suspender propranolol",
+      "suspender carvedilol",
+      "retirar beta bloqueante",
+      "discontinuar beta bloqueante",
+      "suspender el betabloqueante",
+      "retirar el betabloqueante",
+      "pausar betabloqueante"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "furosemide",
+    "label": "Furosemida",
+    "aliases": [
+      "furosemida",
+      "furo",
+      "furosemida iv"
+    ],
+    "effects": {
+      "sys": -6,
+      "dia": -3,
+      "hr": 5
+    }
+  },
+  {
+    "id": "beta_blocker",
+    "label": "Beta bloqueante",
+    "aliases": [
+      "propranolol",
+      "carvedilol",
+      "beta bloqueante",
+      "betabloqueante",
+      "betabloqueador"
+    ],
+    "effects": {
+      "hr": -14,
+      "sys": -8,
+      "dia": -4
+    }
+  },
+  {
+    "id": "anticoagulation",
+    "label": "Heparina IV / anticoagulación",
+    "aliases": [
+      "heparina",
+      "heparina iv",
+      "anticoagulacion",
+      "anticoagulación",
+      "heparina intravenosa",
+      "heparinizacion",
+      "heparinizar",
+      "anticoagular"
+    ],
+    "effects": {}
+  }
+]
