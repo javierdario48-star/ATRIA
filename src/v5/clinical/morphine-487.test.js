@@ -5,7 +5,9 @@ import {confirmedMorphineResponse487,morphineOrderIssue487,parseMorphineIVDose48
 import {morphineOrderIssue487 as originalIssue} from '../../integration/morphine-487.js';
 import {createLiveNativeJourney487,advanceLiveNativeJourney487 as advanceLegacy}
  from '../../../qa/physiology-live/native-journey-487.mjs';
-const cases=JSON.parse(readFileSync(new URL('../content/cases.json',import.meta.url)));
+// V4 reference runtime was certified only against these original 13 cases.
+// The additional 12 cases are separately tested in the V5 clinical matrix.
+const cases=JSON.parse(readFileSync(new URL('../content/cases.json',import.meta.url))).slice(0,13);
 // Reidentify real legacy receipts for the pure V5 boundary. No fabricated
 // administration is inserted into either running game.
 function originalPatient(runtime){

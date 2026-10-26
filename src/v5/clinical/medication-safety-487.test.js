@@ -6,12 +6,12 @@ import {createGuardSession} from './guard-session.js';
 const read=n=>JSON.parse(readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const content={cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')};
 const c=id=>content.cases.find(x=>x.id===id);
-test('all 390 V4 case/drug safety combinations classified independently',()=>{
+test('the full universal 25-case safety matrix preserves the original V4 behavior',()=>{
  let n=0;for(const x of content.cases)for(const d of content.therapies){
   const verdict=medicationSafety487(x,{},d.id);
   assert.equal(verdict.blocked,false);
   assert(Array.isArray(verdict.cautions));n++;
- }assert.equal(n,390);
+ }assert.equal(n,content.cases.length*content.therapies.length);
  assert(medicationSafety487(c('CIRR-001'),{},'ceftriaxone').cautions.includes('no-established-infection'));
  assert.equal(medicationSafety487(c('APP-001'),{},'ceftriaxone').cautions.includes('no-established-infection'),false);
 });

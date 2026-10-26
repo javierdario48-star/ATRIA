@@ -30,14 +30,14 @@ const give=(p,id,atNativeMinute,seq=1,action)=>{
   moleculeId:'norepinephrine',sourceEventId:row.sourceEventId,dose:structuredClone(dose)};
  return row;
 };
-test('C12d all 30 global items and every existing case compile from inherited pure registry',()=>{
+test('all 25 cases and all globally registered drugs compile; 29 V4 drug rules remain intact',()=>{
  const catalog=createCasePharmacology({cases,therapies});
- assert.equal(catalog.caseIds().length,13);
- assert.equal(catalog.drugs().length,30);
+ assert.equal(catalog.caseIds().length,25);
+ assert.equal(catalog.drugs().length,therapies.length);
  assert.equal(Object.keys(PHARMA_RULES_487).length,29);
  for(const c of cases){
   const view=catalog.forCase(c.id);
-  assert.equal(view.drugs.length,30,c.id);
+  assert.equal(view.drugs.length,therapies.length,c.id);
   for(const r of view.drugs){
    assert.equal(typeof r.route,'string');
    assert(Array.isArray(r.hazards)&&Array.isArray(r.indications));
@@ -156,7 +156,7 @@ test('C12d live solo APP uses the same inherited drug catalogue but only confirm
   actorName:'Doctor',patient:{uid:'P1',caseId:'APP-001'},content,
   resolveContext:()=>({patientUid:'P1'})});
  try{
-  assert.equal(session.pharmacologyRules().drugs.length,30);
+  assert.equal(session.pharmacologyRules().drugs.length,therapies.length);
   let state=session.pharmacologyRead();
   assert.equal(state.outcomes.coverageComplete,false);
   assert.equal(state.drugs.filter(d=>d.state==='confirmed').length,0);
@@ -185,7 +185,7 @@ test('C12d solo CIRR exposes every inherited medication without authorizing unim
   actorName:'Doctor',patient:{uid:'P2',caseId:'CIRR-001'},content,
   resolveContext:()=>({patientUid:'P2'})});
  try{
-  assert.equal(session.pharmacologyRules().drugs.length,30);
+  assert.equal(session.pharmacologyRules().drugs.length,therapies.length);
   const attempted=await session.post({id:'unsupported',text:'Enfermera vasopresor'});
   assert.equal(attempted.clinical[0].status,'rejected');
   assert.equal(session.pharmacologyRead().drugs.find(d=>d.id==='vasopressor').state,'not-administered');
