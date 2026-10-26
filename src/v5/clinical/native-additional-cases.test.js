@@ -20,7 +20,7 @@ for(const id of Object.keys(ADDITIONAL_CASE_TRAJECTORIES)){
 test('hemorrhage responds only to administered patient-bound transfusion, not an order',()=>{
  const {c,p}=factory('HDA-001'),{p:untreated}=factory('HDA-001');
  p.treatments.push({id:'transfusion',patientUid:p.uid,sourceEventId:'tx1',dose:{amount:1,unit:'unidad'},route:'iv',administeredAtNativeMinute:0});
- p.administrationLog.push({id:'transfusion',patientUid:p.uid,sourceEventId:'tx1',dose:{amount:1,unit:'unidad'}});
+ p.administrationLog.push({id:'transfusion',patientUid:p.uid,sourceEventId:'tx1',dose:{amount:1,unit:'unidad'},route:'iv',administeredAtNativeMinute:0});
  advanceAdditionalCaseVitals(p,c,60,120);
  advanceAdditionalCaseVitals(untreated,c,60,120);
  assert(p.liveVitals.sys>untreated.liveVitals.sys);
