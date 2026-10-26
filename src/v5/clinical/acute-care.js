@@ -9,6 +9,8 @@ import {createClosureDebrief} from './closure-debrief.js';
 import {partialDisposition} from './partial-closure.js';
 import {createIVAdministration} from './native-medications.js';
 import {createSurgicalConsultation} from './surgical-consultation.js';
+import {GASTRO_CASE_CONDUCTS} from './gastro-expansion-policies.js';
+import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 
 const copy=x=>structuredClone(x);
 export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null},policy){
@@ -28,7 +30,8 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   message:(reused?'Ya confirmado por la orden original: ':t.action==='stop'?'Suspensión confirmada: ':t.id==='npo'?'Conducta registrada: ':'Administración confirmada: ')+t.label+
    (t.dose?' · '+t.dose.display:'')+'.'});
  const pendingConducts=new Map(copy(checkpoint?.conducts??[]));
- const conductSeconds=Object.freeze({steroid:.8,aza:.8,ppi:.8,ngt:1.2,staging_order:.55});
+ const conductSeconds=Object.freeze({steroid:.8,aza:.8,ppi:.8,ngt:1.2,staging_order:.55,
+  ...Object.fromEntries([...new Set(Object.values(GASTRO_CASE_CONDUCTS).flat())].map(id=>[id,1.1]))});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
   proof,rejected,checkpoint:checkpoint?.iv});
@@ -91,10 +94,26 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
      p.treatments.push(t);return proof(cmd,t);
     }
     if(!Object.hasOwn(conductSeconds,id))return rejected(cmd,'unmodeled-conduct');
+    // Exact oral dose contract. Never turn 'IV vancomycin' into a confirmed
+    // oral CDI treatment, or accept accidental 10x doses. Case-specific
+    // response starts only after this clinically scheduled completion.
+    const recipe=GASTRO_CONDUCT_DOSES[id],raw=String(intent.clause||intent.sourceText||'')
+     .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/,/g,'.');
+    if(recipe){
+     if(/\b(iv|intravenos[ao]|endovenos[ao]|intramuscular|subcutan[eo])\b/.test(raw))
+      return rejected(cmd,'unsupported-dose-route','Este fármaco está registrado únicamente para la vía oral.');
+     const matches=[...raw.matchAll(/(?:^|\s)(\d+(?:\.\d+)?)\s*(mg|ml)\b/g)];
+     if(matches.length>1||matches.length===1&&
+       (Number(matches[0][1])!==recipe.amount||matches[0][2]!==recipe.unit)||
+       !matches.length&&/\d/.test(raw))
+      return rejected(cmd,'unsupported-dose','Dosis no validada para esta presentación; no administrada.');
+    }
     const prior=[...pendingConducts.values()].find(t=>t.id===id);
     if(prior){prior.commands.push(copy(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
     // One native due queue. No effect is credited until the task completes.
     const task={id,label,sourceEventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,
+     ...(recipe?{dose:{amount:recipe.amount,unit:recipe.unit,display:recipe.amount+' '+recipe.unit},
+       route:recipe.route}:{}),
      readyAtRealSecond:clock.clinicalMinute+conductSeconds[id],commands:[copy(cmd)]};
     pendingConducts.set(cmd.eventId,task);
     p.pendingTreatments.push({id,patientUid:p.uid,sourceEventId:cmd.eventId,readyAtRealSecond:task.readyAtRealSecond});
@@ -139,10 +158,16 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
     if(conduct){
      pendingConducts.delete(task.sourceEventId);
      p.pendingTreatments=p.pendingTreatments.filter(x=>x.sourceEventId!==task.sourceEventId);
-     const done={id:task.id,label:task.label,dose:null,sourceEventId:task.sourceEventId,
+     const done={id:task.id,label:task.label,dose:task.dose||null,route:task.route||'documented',
+      sourceEventId:task.sourceEventId,
       patientUid:p.uid,actorId:task.actorId,administeredAtRealSecond:at,
       administeredAtNativeMinute:nativeMinute,kind:'documented-clinical-conduct'};
      p.treatments.push(done);
+     if(task.dose){
+      p.administrationLog.push({id:task.id,label:task.label,dose:copy(task.dose),route:task.route,
+       patientUid:p.uid,sourceEventId:task.sourceEventId,actorId:task.actorId,
+       administeredAtRealSecond:at,administeredAtNativeMinute:nativeMinute});
+     }
      for(const command of task.commands)results.push(proof(command,done,command.eventId!==task.sourceEventId));
     }else{
      results.push(...(consultation?surgery.finish(task,at):ivMedicines.finish(task,at,nativeMinute)));
