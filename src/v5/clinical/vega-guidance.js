@@ -3,6 +3,7 @@
  * No orders, timers, hidden clinical effects, new diagnoses or second chat state.
  * The room authority commits the exact response with the original utterance.
  */
+import {diagnosticRequirements,physicianExaminationsPerformed} from './diagnostic-evidence.js';
 const normal=s=>String(s||'').toLowerCase().normalize('NFD')
  .replace(/[\u0300-\u036f]/g,'').replace(/^(?:(?:doctor|dr)\.?\s*)?vega\b[,.:]?\s*/,'').trim();
 export function vegaGuidance(patient,caseData,text,{mode='solo'}={}){
@@ -25,7 +26,10 @@ export function vegaGuidance(patient,caseData,text,{mode='solo'}={}){
  const required=caseData.requiredHistory||[];
  if(required.some(id=>!patient.intentHistory?.some(h=>h.id===id)))
   return 'Antes de cerrar una hipótesis, profundizá la anamnesis: inicio, evolución, antecedentes y síntomas asociados.';
- if((caseData.keyStudies||[]).some(id=>!patient.orders?.some(o=>o.id===id&&o.status==='done')))
+ const evidence=diagnosticRequirements(caseData),performed=new Set(physicianExaminationsPerformed(patient));
+ if(evidence.examinations.some(id=>!performed.has(id)))
+  return 'Completá la exploración dirigida requerida. Sus hallazgos se registran en Examen físico, no como un estudio de enfermería.';
+ if(evidence.studies.some(id=>!patient.orders?.some(o=>o.id===id&&o.status==='done')))
   return 'La evaluación clínica orienta los estudios. Elegí los pertinentes, esperá los resultados reales y contrastalos con la hipótesis.';
  if(patient.pendingTreatments?.length)
   return 'Hay intervenciones indicadas aún en preparación. No las cuentes como administradas; esperá el comprobante y reevaluá.';

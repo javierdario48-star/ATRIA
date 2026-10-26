@@ -1,6 +1,6 @@
 import {patientHTML,vitalsHTML,therapyHTML,monitorHTML,historyHTML,esc} from './clinical-panels.js';
 import {examinationHTML,renderExamination} from './examination-panel.js';
-import {EXAM_REGIONS} from '../clinical/exam-contract.js';
+import {EXAM_REGIONS,isExaminationKind} from '../clinical/exam-contract.js';
 import {clinicalWorkflow} from './clinical-workflow.js';
 import {closureDecisionHTML} from './clinical-closure-panel.js';
 import {setHTML} from './render-content.js';
@@ -17,7 +17,7 @@ import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} fro
  */
 export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[],therapies=[],onMonitorOpen=()=>{}}){
  const ui=id=>document.getElementById(id);
- let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='',pendingDisposition=null;
+ let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,examFeedback=null,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='',pendingDisposition=null;
  const ecgSweep=createEcgSweep();
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
  const post=text=>send(text,{patientUid});
@@ -125,7 +125,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(!s||s.patient.uid!==patient?.uid){notify('Paciente no disponible en esta guardia.');return;}
   patientUid=patient.uid;
   if(section==='talk'){onTalk(patient.uid);return;}
-  if(section==='examination'){regionId='general';flippedRegion=null;open(examinationHTML());render();return;}
+  if(section==='examination'){regionId='general';flippedRegion=null;examFeedback=null;open(examinationHTML());render();return;}
   if(section==='history'){showHistory();return;}
   if(section==='studies'){showStudies();return;}
   if(section==='treatment'){showTreatment();return;}
@@ -260,8 +260,9 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   renderMonitorRecords(s);
   const monitorButton=document.querySelector('[data-action="toggle-monitor"]');
   if(monitorButton){monitorButton.textContent=p.procedures?.monitor?.connected?'Desconectar monitor':'Conectar monitor';monitorButton.disabled=p.caseEnded;}
-  setHTML(ui('fullClinicalHistory'),historyHTML(p));
-  setHTML(ui('therapyRecords'),therapyHTML(p));
+  const caseDef=cases.find(c=>c.id===p.caseId);
+  setHTML(ui('fullClinicalHistory'),historyHTML(p,caseDef));
+  setHTML(ui('therapyRecords'),therapyHTML(p,caseDef));
   setHTML(ui('clinicalHistory'),p.intentHistory.map(x=>'<p>'+esc(x.answer)+'</p>').join('')||'<p>Sin datos interrogados.</p>');
   const workflow=clinicalWorkflow(s),progress=ui('clinicalWorkflow');
   if(progress&&workflow)setHTML(progress,'<h3>Estado de la atención</h3><div class="care-checkpoints">'+workflow.steps.map(step=>
@@ -271,7 +272,31 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(ui('caseReadiness'))ui('caseReadiness').textContent=p.caseEnded?'Atención cerrada.':s.eligibleDestinations?.length?'Evaluación completa. Elegí cómo continúa el cuidado.':(s.closure?.missing||[]).join(' ');
   setHTML(ui('caseDestinations'),p.caseEnded||s.canEdit===false?'':destinationButtonsHTML(s.eligibleDestinations));
   setHTML(ui('caseResult'),caseDebriefHTML(p.closure));
+  const feedback=ui('examFeedback');
+  if(feedback){feedback.hidden=!examFeedback;feedback.textContent=examFeedback?.text||'';feedback.dataset.status=examFeedback?.status||'';}
   renderExamination(document,p,regionId,flippedRegion);
+ }
+ async function recordExamination(text){
+  const reply=await post(text),items=reply?.clinical?.filter(item=>isExaminationKind(item.kind))||[],
+   failure=items.find(item=>item.status!=='executed'),reason=reply?.reason||reply?.routeError||failure?.reason;
+  if(reply?.status==='received'&&items.length&&!failure){
+   examFeedback={status:'executed',text:'Exploración registrada. Los hallazgos están en este panel.'};return true;
+  }
+  const explanations={
+   'no-patient-target':'Acercate al paciente para explorarlo.',
+   'approach-patient-to-claim':'Acercate al paciente para explorarlo.',
+   'other-player-owns-patient':'Ese paciente está a cargo de otro médico. Seleccioná un paciente disponible.',
+   'patient-selection-changed':'Cambió el paciente seleccionado. Abrí su examen nuevamente.',
+   'ambiguous-patient-selection':'Hay varios pacientes cerca. Seleccioná la cama que querés explorar.',
+   'patient-not-active':'La atención de este paciente ya terminó.',
+   'invalid-clinical-command':'Revisá la región y la maniobra seleccionadas.',
+   'unknown-exam':'Revisá la región y la maniobra seleccionadas.'
+  };
+  const unconfirmed=!reply||reply.status==='unconfirmed'||failure?.status==='unconfirmed';
+  examFeedback={status:unconfirmed?'unconfirmed':'rejected',text:unconfirmed?
+   'No se pudo confirmar la exploración. Revisá la conexión y volvé a intentarlo.':
+   'Examen no registrado. '+(explanations[reason]||'No se autorizó esta exploración. Volvé a seleccionar al paciente.')};
+  return false;
  }
  async function handle(target){
   const region=target.closest('[data-exam-region]');
@@ -279,13 +304,19 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    const selected=region.dataset.examRegion;
    if(examBusy)return true;
    regionId=selected;
+   if(state()?.patient.caseEnded){
+    flippedRegion=flippedRegion===selected?null:selected;
+    examFeedback={status:'review',text:'Atención cerrada. Mostrando el examen registrado.'};
+    render();return true;
+   }
    if(flippedRegion===selected){flippedRegion=null;render();return true;}
-   examBusy=true;render();
+   examBusy=true;examFeedback={status:'pending',text:'Explorando la región seleccionada…'};render();
    try{
     const techniques=selected==='neurological'?['all']:
      (EXAM_REGIONS[selected]?.techniques||[]);
     // One region click, existing validated maneuvers (same nurse/clinical
     // server authority). No client-side findings or fictitious completion.
+    let confirmed=true;
     for(const technique of techniques){
      const before=state()?.patient;if(!before||before.caseEnded)break;
      // Deliberate examination must remain repeatable after physiological
@@ -293,17 +324,22 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
      // the admission score even after treatment improved consciousness.
      // An active panel is still protected by examBusy and flip-to-close.
      if(!before.uid)break;
-     const receipt=await post(selected==='neurological'?'/glasgow all':
+     const recorded=await recordExamination(selected==='neurological'?'/glasgow all':
       '/examen '+selected+' '+technique);
-     if(receipt?.status==='rejected'||receipt?.status==='unconfirmed')break;
+     if(!recorded){confirmed=false;break;}
     }
-    flippedRegion=selected;
+    if(confirmed)flippedRegion=selected;
    }finally{examBusy=false;render();}
    return true;
   }
   const b=target.closest('button');if(!b||b.disabled)return false;
-  if(b.dataset.examSection){await post('/examen '+regionId+' '+b.dataset.examSection);render();return true;}
-  if(b.dataset.glasgow){await post('/glasgow '+b.dataset.glasgow);render();return true;}
+  if(b.dataset.examSection||b.dataset.glasgow){
+   if(examBusy)return true;
+   examBusy=true;
+   try{await recordExamination(b.dataset.glasgow?'/glasgow '+b.dataset.glasgow:
+    '/examen '+regionId+' '+b.dataset.examSection);}finally{examBusy=false;render();}
+   return true;
+  }
   if(b.dataset.destination){await chooseDestination(state()?.patient,b.dataset.destination);render();return true;}
   switch(b.dataset.action){
    case 'monitor-hint':showOrderHints=!showOrderHints;renderOrderSuggestions();return true;
@@ -317,7 +353,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    case 'patient-chart':return false; // World supplies the current identity and spatial metadata.
    case 'clinical-history':showHistory();return true;
    case 'studies':showStudies();return true;
-   case 'examination':regionId='general';flippedRegion=null;open(examinationHTML());render();return true;
+   case 'examination':regionId='general';flippedRegion=null;examFeedback=null;open(examinationHTML());render();return true;
    case 'treatment':showTreatment();return true;
    case 'record-vitals':await post('/signos');break;
    case 'toggle-monitor':await post('/monitor '+(state()?.patient.procedures?.monitor?.connected?'desconectar':'conectar'));break;
@@ -336,5 +372,5 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   render();return true;
  }
  return Object.freeze({showPatient,showClosure,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
-  reset(){patientUid=null;pendingDisposition=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
+  reset(){patientUid=null;pendingDisposition=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }

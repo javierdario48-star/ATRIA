@@ -9,7 +9,7 @@ const rules={
  'LGIB-001':{destinations:['procedimiento','uti'],study:[['g_lgib_cbc'],['g_lgib_cta']],treatment:[['iv','fluid'],['iv','transfusion']],consult:{procedimiento:['gastro'],uti:['uti']}},
  'HEPAT-001':{destinations:['alta','observacion'],study:[['g_hepat_inr']],treatment:[],dischargeTreatments:['followup']},
  'DIARR-001':{destinations:['alta','observacion'],study:[['g_diarr_elect']],treatment:[['oral_rehydration'],['fluid']]},
- 'FECAL-001':{destinations:['alta','observacion'],study:[['g_fecal_rectal']],treatment:[['disimpaction']]},
+ 'FECAL-001':{destinations:['alta','observacion'],study:[],requiredExams:['perineum:rectal'],treatment:[['disimpaction']]},
  'PUD-001':{destinations:['alta'],study:[['g_pud_hpy'],['g_pud_egd']],treatment:[['ppi_oral']],dischargeTreatments:['followup']},
  'CELIAC-001':{destinations:['alta'],study:[['g_celiac_biopsy']],treatment:[['followup']]},
  'ACAL-001':{destinations:['alta','observacion'],study:[['g_achal_manometry'],['g_achal_egd']],requiredStudies:['g_achal_manometry','g_achal_egd'],treatment:[['followup']]}

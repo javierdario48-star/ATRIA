@@ -1,5 +1,6 @@
 import {buildStudyCatalog,resolveStudyById,materializeStudy,studyTurnaroundMinutes}
  from '../../clinical/study-registry.js';
+import {isPhysicianExamStudy} from './exam-contract.js';
 
 const identity=x=>typeof x==='string'&&x.trim().length>0;
 const minute=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
@@ -15,7 +16,7 @@ export function createStudyService(cases,checkpoint=null){
  const localTiming=new Map(definitions.flatMap(c=>(c.studies||[])
   .filter(s=>String(s.id).startsWith('g_')&&Number.isFinite(s.delay)&&s.delay>=5&&s.delay<=1440)
   .map(s=>[s.id,s.delay])));
- const catalog=buildStudyCatalog(definitions),events=new Map(copy(checkpoint?.events??[]));
+ const catalog=buildStudyCatalog(definitions).filter(s=>!isPhysicianExamStudy(s.id)),events=new Map(copy(checkpoint?.events??[]));
  const patientValid=p=>identity(p?.uid)&&byCase.has(p.caseId)&&Array.isArray(p.orders);
  const rejected=(p,eventId,reason)=>({status:'rejected',patientUid:p?.uid??null,eventId:eventId??null,reason});
  function acknowledged(p,eventId,order){
@@ -34,6 +35,7 @@ export function createStudyService(cases,checkpoint=null){
    if(!patientValid(patient))return rejected(patient,eventId,'invalid-patient');
    if(!identity(id)||!identity(eventId)||!identity(actorId)||!minute(atMinute))
     return rejected(patient,eventId,'invalid-study-request');
+   if(isPhysicianExamStudy(id))return rejected(patient,eventId,'physician-exam-required');
    const fingerprint=JSON.stringify([patient.uid,patient.caseId,id,actorId]);
    const prior=events.get(eventId);
    if(prior&&prior.fingerprint!==fingerprint)

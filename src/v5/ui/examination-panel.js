@@ -1,5 +1,5 @@
 import {EXAM_REGIONS,EXAM_TECHNIQUES,GLASGOW_COMPONENTS} from '../clinical/physical-exam.js';
-import {examinedRegions,examRegionStatus,progressiveExamImpression,examMissing} from './exam-summary.js';
+import {examinedRegions,progressiveExamImpression} from './exam-summary.js';
 import {esc,examHTML} from './clinical-panels.js';
 import {setHTML} from './render-content.js';
 
@@ -7,6 +7,7 @@ import {setHTML} from './render-content.js';
 // The source is p.examFindings (server-confirmed); no speculative normal exam.
 export function examinationHTML(){return `<h2>Examen físico</h2>
  <p class="note">Elegí una región: se evaluarán sus maniobras y la tarjeta mostrará el resultado. Tocá nuevamente para darla vuelta.</p>
+ <p id="examFeedback" class="note" role="status" aria-live="polite" hidden></p>
  <section class="exam-progressive" aria-label="Impresión clínica progresiva">
   <div class="exam-progress-heading"><h3>Impresión en construcción</h3><small id="examProgressCount"></small></div>
   <div id="examProgressiveSummary" aria-live="polite"></div>

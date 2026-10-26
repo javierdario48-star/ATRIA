@@ -8,29 +8,40 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
  })));
  // One compressed atlas, decoded once into draw-ready frames; no per-frame
  // asset allocation and no alternate sprite animation implementation.
- if(images.wardrobe&&canvas.ownerDocument?.createElement){
+ function rebuildWardrobe(){if(images.wardrobe&&canvas.ownerDocument?.createElement){
   const coords={'player-female-black':[0,0],'player-female-navy':[1,0],
    'player-female-green':[2,0],'player-female-gray':[3,0],
    'player-female-pink':[0,1],'player-female-teal':[1,1],
    'player-female-burgundy':[2,1],'player-burgundy':[3,1]};
   for(const [key,[col,row]] of Object.entries(coords)){
-   const frame=canvas.ownerDocument.createElement('canvas');
+   const frame=images[key]||canvas.ownerDocument.createElement('canvas');
    frame.width=images.wardrobe.naturalWidth/4;frame.height=images.wardrobe.naturalHeight/2;
    frame.getContext('2d').drawImage(images.wardrobe,col*frame.width,row*frame.height,frame.width,frame.height,0,0,frame.width,frame.height);
    images[key]=frame;
   }
- }
+ }}
+ rebuildWardrobe();
  let width=0,height=0,dpr=1,scale=1,camera={x:496,y:1348};
  let playBounds=null,anchorX=0,anchorY=null,lastAnchorTime=null,cameraScene=null,lastCameraTime=null;
+ let disposed=false,contextLost=false,resetNeeded=false,wardrobeDirty=false,
+  draws=0,contextLosses=0,restorations=0,recoveries=0,failures=0,lastError=null,lastDrawAt=null;
  const pixel=value=>Math.round(value*dpr)/dpr;
  const [mapWidth,mapHeight]=content.map.source_size_px;
  const screen=(x,y)=>[(x-camera.x)*scale+anchorX,(y-camera.y)*scale+(anchorY??height/2)];
  const toWorld=(x,y)=>{const rect=canvas.getBoundingClientRect();
   return [(x-rect.left-anchorX)/scale+camera.x,(y-rect.top-(anchorY??height/2))/scale+camera.y];};
- function resize(){
-  const rect=canvas.getBoundingClientRect();width=rect.width;height=rect.height;
-  dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+ function resize(force=false){
+  const rect=canvas.getBoundingClientRect();
+  // Mobile viewport/keyboard transitions can briefly have no layout. Keep the
+  // last usable surface instead of destroying it with a zero-sized bitmap.
+  if(!(rect.width>0&&rect.height>0))return false;
+  width=rect.width;height=rect.height;dpr=Math.min(window.devicePixelRatio||1,2);
+  const nextWidth=Math.max(1,Math.round(width*dpr)),nextHeight=Math.max(1,Math.round(height*dpr));
+  // An assignment clears the bitmap and all context state even when unchanged.
+  if(force||canvas.width!==nextWidth)canvas.width=nextWidth;
+  if(force||canvas.height!==nextHeight)canvas.height=nextHeight;
   scale=Math.min(1.38,Math.max(.74,width/590*1.15));anchorX=pixel(width/2);
+  return true;
  }
  function sprite(key,a,h=62){
   const img=images[key]||(key.startsWith('player-female-')?
@@ -96,7 +107,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   [[-11,0],[-6,0],[-3,-4],[0,5],[3,-6],[5,0],[11,0]].forEach(([a,b],i)=>i?ctx.lineTo(x+a*s,y+b*s):ctx.moveTo(x+a*s,y+b*s));ctx.stroke();
   ctx.fillStyle='#97d8e4';ctx.fillRect(x+8*s,y-8*s,3*s,2*s);ctx.restore();
  }
- function draw(world,now=window.performance.now()){
+ function paint(world,now){
   const valid=playBounds&&playBounds.bottom>playBounds.top+100;
   const desiredY=valid?playBounds.top+(playBounds.bottom-playBounds.top)*.55:height/2;
   const dt=lastAnchorTime===null?.1:Math.max(0,Math.min(.12,(now-lastAnchorTime)/1000));
@@ -157,7 +168,33 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   playBounds=bounds&&Number.isFinite(bounds.top)&&Number.isFinite(bounds.bottom)?
    {top:Math.max(0,bounds.top),bottom:Math.min(height,bounds.bottom)}:null;
  }
- resize();return Object.freeze({draw,resize,setPlayableBounds,toWorld,screen,
+ function lost(){if(!contextLost){contextLost=true;contextLosses++;}}
+ function restored(){contextLost=false;resetNeeded=true;wardrobeDirty=true;restorations++;}
+ // Canvas2D restores by default. Unlike WebGL, preventDefault() here would
+ // disable browser restoration and leave a permanently empty hospital.
+ canvas.addEventListener('contextlost',lost);canvas.addEventListener('contextrestored',restored);
+ function draw(world,now=window.performance.now()){
+  if(disposed)return false;
+  if(ctx.isContextLost?.())lost();
+  if(contextLost)return false;
+  try{
+   // Recheck layout/backing dimensions on the next real frame as viewport
+   // notifications can be coalesced or missed around mobile resume and IME.
+   if(!resize(resetNeeded))return false;
+   if(wardrobeDirty){rebuildWardrobe();wardrobeDirty=false;}
+   if(resetNeeded){resetNeeded=false;recoveries++;}
+   paint(world,now);draws++;lastDrawAt=now;return true;
+  }catch(error){
+   // A partially painted frame may also have an unmatched save/transform.
+   // Recreate only the bitmap/context state; keep camera, assets and world.
+   resetNeeded=true;failures++;lastError=String(error?.message||error);throw error;
+  }
+ }
+ function destroy(){if(disposed)return;disposed=true;
+  canvas.removeEventListener('contextlost',lost);canvas.removeEventListener('contextrestored',restored);
+ }
+ resize();return Object.freeze({draw,resize,setPlayableBounds,toWorld,screen,destroy,
   metrics:()=>({width,height,scale,dpr,anchorX,anchorY,camera:{...camera},
-   playableBounds:playBounds?{...playBounds}:null,images:Object.keys(images).length})});
+   playableBounds:playBounds?{...playBounds}:null,images:Object.keys(images).length,
+   draws,lastDrawAt,contextLost,contextLosses,restorations,recoveries,failures,lastError,listeners:disposed?0:2})});
 }

@@ -91,6 +91,8 @@ test('suggestions remain display-only; the real speech router enforces patient i
 
 test('every offered nursing command is recognized by the real interpreter in its case',()=>{
  for(const c of cases){
+  assert(!clinicalVocabulary({...context(c.id),studies:c.studies}).some(x=>x.id==='study:g_fecal_rectal'),
+   'a physician examination must not be offered as a nursing command');
   for(const item of clinicalVocabulary({...context(c.id),studies:c.studies})){
    const r=routeWardSpeech('Enfermera, '+item.command,{
     patientUid:'P',clinicalEvaluation:true,studies:c.studies,

@@ -23,11 +23,13 @@ import {patientAllergyFacts487} from './medication-safety-487.js';
 import {documentMedicationComplications487} from './medication-harms-487.js';
 import {CASE_CLOSURE_RULES_487,CLOSURE_DEST_LABELS_487} from '../../clinical/case-completion-487.js';
 import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
+import {isExaminationCommand,isExaminationKind,isPhysicianExamStudy} from './exam-contract.js';
 
 const copy=value=>structuredClone(value);
 const survivalSensitiveIV=new Set(['anticoagulation','morphine','albumin','transfusion','vasopressor','ppi']);
 const routeReason={
  'no-patient-target':'Acercate al paciente para indicar el estudio.',
+ 'physician-exam-required':'El tacto rectal lo realizás desde Examen físico → Periné.',
  'question-or-negation':'Pregunta o indicación negada: no ejecuté ninguna acción.',
  'unknown-clause':'La indicación necesita una aclaración; no ejecuté acciones.',
  'unsafe-compound-order':'Orden combinada no ejecutada: al menos una dosis, vía o intervención no está validada. Corregí la indicación completa.'
@@ -67,7 +69,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // afterwards so every executor and pending task keeps its original reference.
  if(checkpoint){for(const k of Object.keys(nativePatient))delete nativePatient[k];Object.assign(nativePatient,copy(checkpoint.patient));}
  const studies=createStudyService(content.cases,checkpoint?.studies),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
- const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))];
+ const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))].filter(s=>!isPhysicianExamStudy(s.id));
  const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map(),waitingForAccess=new Map();
  if(checkpoint){
   for(const [k,v] of checkpoint.pendingStudyRequests)pendingStudyRequests.set(k,new Set(v));
@@ -239,15 +241,24 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   for(const event of room.events){
    if(event.type==='chat.posted'){
     const message={...event.message,id:(mode==='coop'?event.message.actorId+':':'')+event.message.id},selected=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(message.text);
+    // The physical exam is the doctor's recorded observation. Keep the full
+    // room event for authority/replay, but present its findings in the exam
+    // panel rather than turn each maneuver into doctor and nurse chat rows.
+    const examination=isExaminationCommand(message.text),examOnly=event.clinical.length>0&&
+     event.clinical.every(item=>isExaminationKind(item.kind)&&item.status==='executed');
     // A menu selection retains its exact protocol ID; the shared presentation
     // uses the familiar clinical label rather than exposing that internal ID.
     const text=selected&&labels.has(selected[1])?'Enfermera, '+labels.get(selected[1]):message.text;
-    rows.push({id:'player:'+message.id,name:memberNames.get(message.actorId)||actorName,
+    if(!examOnly&&!examination)rows.push({id:'player:'+message.id,name:memberNames.get(message.actorId)||actorName,
      actorId:message.actorId,patientUid:message.patientUid,text,role:'player'});
-    if(event.routeError)rows.push({id:'route:'+message.id,name:'Enfermera',role:'nurse',
-     text:routeReason[event.routeError]||'No pude ejecutar esa indicación.'});
+    const physicianGuidance=examination||event.routeError==='physician-exam-required';
+    if(event.routeError)rows.push({id:'route:'+message.id,name:physicianGuidance?'ATRIA':'Enfermera',role:physicianGuidance?'system':'nurse',
+     text:examination?(event.routeError==='no-patient-target'?'Examen no registrado. Acercate al paciente para explorarlo.':
+      'Examen no registrado. Revisá la región y la maniobra seleccionadas.'):
+      routeReason[event.routeError]||'No pude ejecutar esa indicación.'});
     for(let i=0;i<event.clinical.length;i++){
      const item=event.clinical[i],label=labels.get(item.id)||item.id;
+     if(isExaminationKind(item.kind)&&item.status==='executed'||isPhysicianExamStudy(item.id))continue;
      const nativeText=item.receipt?.message;
      const feedback=resultText(item,label)||
       (nativeText|| (item.status==='pending'?
@@ -255,8 +266,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
         label+': orden recibida; pendiente de enfermería o preparación, todavía no ejecutada.':
        label+': resultado disponible.'));
      rows.push({id:'ack:'+message.id+':'+i,
-      name:item.kind==='history.ask'?'Paciente':'Enfermera',
-      role:item.kind==='history.ask'?'patient':'nurse',text:feedback});
+      name:isExaminationKind(item.kind)?'ATRIA':item.kind==='history.ask'?'Paciente':'Enfermera',
+      role:isExaminationKind(item.kind)?'system':item.kind==='history.ask'?'patient':'nurse',text:feedback});
     }
     if(event.npcReply?.role==='mentor')
      rows.push({id:'npc:'+message.id,name:event.npcReply.name,role:'mentor',text:event.npcReply.text});
@@ -272,6 +283,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
       '. Caso finalizado sin XP.'});
    }else if(event.type==='clinical.completed'){
     for(const item of event.clinical){
+     if(isExaminationKind(item.kind)&&item.status==='executed'||isPhysicianExamStudy(item.id))continue;
      const source=item.receipt?.sourceEventId||event.eventId;if(announcedResults.has(source))continue;
      announcedResults.add(source);rows.push({id:'completion:'+source,name:'Enfermera',role:'nurse',
       text:resultText(item,labels.get(item.id)||item.id)||

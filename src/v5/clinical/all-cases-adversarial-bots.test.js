@@ -29,6 +29,7 @@ async function intelligent(f,caseId,mode){
  for(const question of cfg.history)await f.post(question);
  await f.post('/signos');
  for(const section of exam)await f.post(section);
+ for(const text of cfg.exams||[])await f.post(text);
  await f.post('/diagnostico '+cfg.dx);
  for(const study of cfg.studies||[])await f.post('/estudio '+study);
  for(const text of cfg.meds)await f.post(text);

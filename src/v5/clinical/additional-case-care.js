@@ -8,15 +8,17 @@ import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {createPancCare} from './panc-care.js';
 import {GASTRO_CASE_RULES,GASTRO_CASE_CONDUCTS,GASTRO_CLOSURE_TEXT} from './gastro-expansion-policies.js';
 import {additionalCaseInitialVitals,advanceAdditionalCaseVitals,ADDITIONAL_CASE_TRAJECTORIES} from './native-additional-cases.js';
+import {physicianExaminationsPerformed,diagnosticRequirements} from './diagnostic-evidence.js';
 export {createPancCare};
 function snapshot(p,c,destination){
  return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,
   historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
   examDone:p.examDone,examRegionsCount:Object.keys(p.examFindings||{}).length,
+  examPerformed:physicianExaminationsPerformed(p),
   vitalsKnown:!!p.lastVitalsKnown,reassessments:p.reassessments,
   studiesDone:p.orders.filter(x=>x.status==='done').map(x=>x.id),
   extraStudies:p.orders.filter(x=>!c.keyStudies.includes(x.id)).map(x=>x.id),
-  keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,
+  keyStudies:diagnosticRequirements(c).studies,keyInterventions:c.keyInterventions,
   delivered:[...new Set([...p.treatments.filter(x=>!matchesMedicationAllergy487(p,x.id)).map(x=>x.id),
    ...(p.venousAccessCount>0?['iv']:[])])],
   consultsDone:p.consults.filter(x=>x.status==='done'&&x.accepted).map(x=>x.id),

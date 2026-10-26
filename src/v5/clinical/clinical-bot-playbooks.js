@@ -79,7 +79,7 @@ export const CLINICAL_BOT_PLAYBOOK=Object.freeze({
   studies:['g_diarr_elect'],meds:['Enfermera sales de rehidratacion oral'],wait:70},
  'FECAL-001':{dx:'fecaloma',dest:'alta',
   history:['¿Tiene estreñimiento?','¿Toma opioides?'],
-  studies:['g_fecal_rectal'],meds:['Enfermera desimpactacion'],wait:60},
+  exams:['/examen perineum rectal'],studies:[],meds:['Enfermera desimpactacion'],wait:60},
  'PUD-001':{dx:'enfermedad ulcerosa peptica',dest:'alta',
   history:['¿Dónde le duele?','¿Toma ibuprofeno?'],
   studies:['g_pud_hpy'],meds:['Enfermera omeprazol oral 20 mg','Enfermera plan de seguimiento y signos de alarma'],wait:120},

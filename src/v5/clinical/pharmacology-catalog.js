@@ -47,6 +47,7 @@ function normalizeCase(c){
  // exposures. A missing infection/etiology is NOT inferred from fever alone.
  return {...c,pharmacology:{...c.pharmacology,traits:['undifferentiated']}};
 }
+export {normalizeCase as normalizeCasePharmacology};
 function caseModifiers(c,id){
  const input=c.pharmacology?.overrides?.[id]||{};
  const allowed=['responseScale','extraWarnings'];

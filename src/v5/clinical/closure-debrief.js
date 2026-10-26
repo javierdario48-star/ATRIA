@@ -1,6 +1,7 @@
 // Compact V4 scoring breakdown adapted to confirmed V5 closure receipts.
 // It NEVER computes or awards XP. The V4 quality evaluator remains the owner.
 import {confirmedClinicalMissteps} from './clinical-risk.js';
+import {diagnosticRequirements} from './diagnostic-evidence.js';
 // Confirmed gaps are revealed only inside the final case result.
 function conciseMissing(p,c,q){
  const answered=new Set((p.intentHistory||[]).map(x=>x.id));
@@ -21,7 +22,7 @@ function conciseMissing(p,c,q){
  const tx=(c.keyInterventions||[]).filter(x=>!['source_control','surgery'].includes(x)&&!performed.has(x));
  if((q.treatment||0)<25&&tx.length)
   gaps.push('Tratamiento: '+tx.slice(0,2).map(id=>label(c.interventions,id)).join(' y ')+'.');
- const labs=(c.keyStudies||[]).filter(x=>!studies.has(x));
+ const labs=diagnosticRequirements(c).studies.filter(x=>!studies.has(x));
  if((q.studies||0)<15&&labs.length)
   gaps.push('Estudios: '+labs.slice(0,2).map(id=>label(c.studies,id)).join(' y ')+'.');
  const hist=(c.requiredHistory||[]).filter(x=>!answered.has(x));
@@ -39,7 +40,8 @@ const labels={diagnosis:'Impresión diagnóstica',history:'Anamnesis',
 export function createClosureDebrief(p,c,q){
  if(!q||!Number.isFinite(q.score))throw Error('confirmed quality required for debrief');
  const earned=['diagnosis','history','safety','studies','treatment']
-  .map(id=>({label:labels[id],points:q[id]||0}));
+  .map(id=>({label:id==='studies'&&diagnosticRequirements(c).examinations.length?
+   'Hallazgos diagnósticos confirmados':labels[id],points:q[id]||0}));
  earned.push({label:labels.efficiency,points:5});
  if(q.handoffCredit)earned.push({label:'Continuidad del cuidado',points:q.handoffCredit});
  const extraDeduction=q.extraStudyPenalty??Math.min(5,Math.max(0,q.extraStudies||0)*2);

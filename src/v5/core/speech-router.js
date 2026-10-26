@@ -1,5 +1,5 @@
 import {csNurseScan487} from '../../clinical/nurse-scanner-487.js';
-import {EXAM_TECHNIQUES,GLASGOW_COMPONENTS,validExamSelection} from '../clinical/exam-contract.js';
+import {EXAM_TECHNIQUES,GLASGOW_COMPONENTS,validExamSelection,isPhysicianExamStudy} from '../clinical/exam-contract.js';
 import {planNursingIVAccess} from '../clinical/nursing-access-plan.js';
 import {nursingFormulationVocabulary487} from '../clinical/iv-dose-contracts-487.js';
 
@@ -80,7 +80,7 @@ export function routeWardSpeech(text,context={}){
  const explicitStudy=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(original);
  if(explicitStudy){
   const patientUid=context.patientUid??null,study=(context.studies||[]).find(s=>s.id===explicitStudy[1]);
-  const error=!study?'unknown-study':!patientUid?'no-patient-target':null;
+  const error=isPhysicianExamStudy(explicitStudy[1])?'physician-exam-required':!study?'unknown-study':!patientUid?'no-patient-target':null;
   return {recipient:'nurse',patientUid,original,intents:error?[]:[{kind:'study.request',id:study.id,
    sourceText:original,clause:original,count:1}],...(error?{error}:{})};
  }
@@ -90,6 +90,7 @@ export function routeWardSpeech(text,context={}){
  const patientUid=context.patientUid??null;
  if(recipient!=='nurse')return {recipient,patientUid,intents:context.clinicalEvaluation&&recipient==='patient'&&patientUid?
   [{kind:'history.ask',id:'dialogue',sourceText:original}]:[],original};
+ if(/\btacto rectal\b/.test(normalized))return {recipient,patientUid,intents:[],original,error:'physician-exam-required'};
  const vocabulary=nursingFormulationVocabulary487(original,context);
  const parsed=csNurseScan487(vocabulary.text,vocabulary.studies,vocabulary.therapies,context.interventions||[]);
  if(!parsed.active)return {recipient,patientUid,intents:[],original,error:'question-or-negation'};

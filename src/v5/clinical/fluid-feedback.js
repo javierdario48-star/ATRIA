@@ -1,6 +1,7 @@
 // C12.i — legacy pharmacological context and actual V5 IV receipts.
 // Only a pure read model. No timer, second physiology writer or new dose.
 import {csPharmContext487} from '../../clinical/pharmacology-registry-487.js';
+import {normalizeCasePharmacology} from './pharmacology-catalog.js';
 
 export function confirmedFluidFeedback(patient,caseDef){
  if(typeof patient?.uid!=='string'||!patient.uid)throw Error('fluid status requires patient UID');
@@ -17,7 +18,7 @@ export function confirmedFluidFeedback(patient,caseDef){
    throw Error('fluid summary requires uniquely confirmed native treatment');
   seen.add(row.sourceEventId);totalMl+=row.dose.amount;
  }
- const ctx=csPharmContext487(caseDef,patient,patient.liveVitals);
+ const ctx=csPharmContext487(normalizeCasePharmacology(caseDef),patient,patient.liveVitals);
  const tags=ctx.traits;
  return Object.freeze({patientUid:patient.uid,administrations:rows.length,totalMl,
   congestionRisk:tags.has('congestion')||tags.has('overloadRisk'),

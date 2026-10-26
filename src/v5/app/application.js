@@ -6,6 +6,7 @@ import {createHospitalRenderer} from '../render/hospital.js';
 import {createAvatarCreator} from '../ui/avatar-creator.js';
 import {createPresentationTimeline} from '../render/presentation-timeline.js';
 import {createGuardSession} from '../clinical/guard-session.js';
+import {isExaminationCommand} from '../clinical/exam-contract.js';
 import {formatGuardTime} from '../ui/guard-time.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {createCooperativeLink} from '../social/cooperative-link.js';
@@ -61,6 +62,7 @@ export async function createApplication({document,window,content,signal}){
   announcedDeathUid=null,pendingPatientAction=null,announcedClosure=null,coopCaseId=null,
   coopRoomId=null,replica=null,durableClient=null,lastSharedPublish=0,sharedSequence=0,lastMotion='',lastRemoteRevision=-1,socialEnabled=false,
   durableStarting=false,durableJoining=false,nextCooperativeAdmission=0,cooperativeCapability=null;
+ let frameErrorCount=0,lastFrameError=null;
  let localAdmissions=null,localSessions=new Map(),localRoomId=null,lastReceivedPatientCount=0,lastSelectedPatientUid=null,shiftEndedAnnounced=false;
  // Transient reception travel state is UI-only; the server remains the sole
  // authority for physical proximity, patient ownership and clinical commands.
@@ -836,9 +838,10 @@ export async function createApplication({document,window,content,signal}){
   advanceClinicalTo(window.performance.now());
   // Speech is a visual local action, NOT an executed treatment. Display it
   // without waiting for PostgreSQL; clinical replies still require an ACK.
-  world.showGuardMessage('local-player',text,window.performance.now());
+  const examination=isExaminationCommand(text);
+  if(!examination)world.showGuardMessage('local-player',text,window.performance.now());
   const id='message-'+(coopRoomId?messageEpoch+'-':'')+(++messageNumber);
-  if(durableClient&&coopRoomId){
+  if(durableClient&&coopRoomId&&!examination){
    const sender=social.state().user?.id;
    if(sender)showWardSpeech({roomId:coopRoomId,userId:sender,id,text});
    // Room speech is a display preview, never an order or a second authority.
@@ -1136,7 +1139,7 @@ export async function createApplication({document,window,content,signal}){
   if(v){event.preventDefault();cancelReceptionAssignment();
    const p=world.snapshot().player;world.target(p.x+v[0]*32,p.y+v[1]*30);}
  });
- function resize(){if(document.activeElement!==input||window.innerWidth!==renderer.metrics().width){renderer.resize();}}
+ function resize(){renderer.resize();}
  listen(window,'resize',resize);
  const keyboard=()=>{
   const vp=window.visualViewport,gap=vp&&document.activeElement===input?Math.max(0,window.innerHeight-vp.height-vp.offsetTop):0;
@@ -1148,9 +1151,21 @@ export async function createApplication({document,window,content,signal}){
  // clinical study/preparation time remains independent of text editing.
  listen(document,'focusin',event=>{advanceClinicalTo(window.performance.now());clinicalTyping=/INPUT|TEXTAREA/.test(event.target?.tagName);});
  listen(document,'focusout',event=>{advanceClinicalTo(window.performance.now());clinicalTyping=/INPUT|TEXTAREA/.test(event.relatedTarget?.tagName);});
+ function recordFrameError(error,stage,now){
+  frameErrorCount++;
+  const message=String(error?.message||error),previous=lastFrameError;
+  lastFrameError={stage,message,name:error?.name||'Error',at:now};
+  // Keep the failure observable without flooding the console if it persists.
+  if(!previous||previous.message!==message||previous.stage!==stage||now-previous.at>=5000)
+   console.error('ATRIA 5 frame failed ('+stage+')',error);
+ }
  function frame(now){
-  if(destroyed)return;raf=null;frames++;atriaKeyboard.advance(now);
+  if(destroyed)return;raf=null;frames++;
+  let stage='keyboard',painted=false;
+  try{
+  atriaKeyboard.advance(now);stage='clinical';
   advanceClinicalTo(now);
+  stage='audio';
   // Audio follows the confirmed ECG monitor reading, not a cached HUD copy.
   if(now-lastAudioRead>=100){
    lastAudioRead=now;
@@ -1158,7 +1173,8 @@ export async function createApplication({document,window,content,signal}){
     guardSession.monitorRead(audioPatient.uid):null;
    hospitalAudio.tick(now,{phase:document.body.dataset.phase,patient:sample});
   }
-  scheduler.tick(now,{simulate:dt=>{world.step(dt,now);presentation.advance(world.snapshot());},maintain:()=>{if(localSessions.size)for(const s of localSessions.values())s.finishNurseArrivals();
+  stage='scheduler';
+  scheduler.tick(now,{simulate:dt=>{stage='simulation';world.step(dt,now);presentation.advance(world.snapshot());},maintain:()=>{stage='maintenance';if(localSessions.size)for(const s of localSessions.values())s.finishNurseArrivals();
    else guardSession?.finishNurseArrivals();
    const s=world.snapshot();if(s.phase!=='title'&&(socialEnabled||coopRoomId||social.state().recovering))social.maintain(now,{...s.player,phase:s.phase,roomId:coopRoomId});
    // Admission can retry while RTC signaling is stalled inside social.poll.
@@ -1187,19 +1203,33 @@ export async function createApplication({document,window,content,signal}){
      if(cue&&!seenNurseCues.has(s.patient.uid+':'+cue.id))renderGuardCommunication();
     }
    }
-  },render:()=>{drawWorld(now);clinicalUI.animate(now);},isMobile:window.innerWidth<700});
-  raf=window.requestAnimationFrame(frame);
+  },render:()=>{stage='render';drawWorld(now);painted=true;stage='clinical-animation';clinicalUI.animate(now);},isMobile:window.innerWidth<700});
+  }catch(error){
+   recordFrameError(error,stage,now);
+   // A failed HUD/clinical/maintenance update must not starve the hospital
+   // canvas. Present the current world without replaying clinical actions.
+   if(!painted&&stage!=='render')try{drawWorld(now);}catch(renderError){recordFrameError(renderError,'render',now);}
+  }finally{
+   // A transient Canvas2D failure used to bypass this line and permanently
+   // stop the sole RAF, leaving an empty bitmap behind live DOM controls.
+   if(!destroyed&&!document.hidden)raf=window.requestAnimationFrame(frame);
+  }
  }
  function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
   clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);presentation.reset(world.snapshot());raf=window.requestAnimationFrame(frame);}}
- function pause(){hospitalAudio.pause();advanceClinicalTo(window.performance.now());lastClinicalFrame=null;if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}world.stop();}
- function destroy(){if(destroyed)return;destroyed=true;cancelReceptionAssignment();directSelection.cancel();unassignedGlow.destroy();guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();rootLifecycle.leave();}
+ function pause(){if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}
+  const now=window.performance.now();
+  try{hospitalAudio.pause();advanceClinicalTo(now);}catch(error){recordFrameError(error,'pause',now);}
+  finally{lastClinicalFrame=null;world.stop();}
+ }
+ function destroy(){if(destroyed)return;destroyed=true;cancelReceptionAssignment();directSelection.cancel();unassignedGlow.destroy();guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();renderer.destroy();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
  drawWorld();resume();
  return Object.freeze({snapshot:()=>({...world.snapshot(),history:structuredClone(history),clinical:guardSession?.read()||null}),
-  diagnostics:()=>({destroyed,raf:raf===null?0:1,listeners:destroyed?0:listeners.length+atriaKeyboard.listenerCount(),timers:0,frames,
+  diagnostics:()=>({destroyed,raf:raf===null?0:1,listeners:destroyed?0:listeners.length+atriaKeyboard.listenerCount()+renderer.metrics().listeners,timers:0,frames,
+   frameErrors:{count:frameErrorCount,last:lastFrameError?{...lastFrameError}:null},
    renderer:renderer.metrics(),keyboard:{open:atriaKeyboard.isOpen()},audio:hospitalAudio.state(),generation:world.snapshot().generation,
    cooperative:{roomId:coopRoomId,authority:!!coopRoomId&&!replica,replica:!!replica,durable:!!durableClient,connections:social.state().connections}}),destroy});
 }

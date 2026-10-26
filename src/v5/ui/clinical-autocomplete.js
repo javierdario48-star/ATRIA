@@ -1,4 +1,5 @@
 import {monitorOrderExamples,normalizeOrderQuery} from './monitor-order-suggestions.js';
+import {isPhysicianExamStudy} from '../clinical/exam-contract.js';
 import {spanishWordSuggestions,spanishAutoReplace,spanishCorrectCase,
  spanishKnownWord,spanishAccentSuggestions} from './spanish-spellcheck.js';
 
@@ -120,6 +121,7 @@ export function clinicalVocabulary({caseId,cases=[],therapies=[],studies=[]}={})
  for(const value of monitorOrderExamples(caseId,'',{hint:true,limit:12}))
   add(option('known:'+value.id,'order',value.label,value.command));
  for(const item of studyList){
+  if(isPhysicianExamStudy(item.id))continue;
   // Single-letter/abbreviated first aliases may be valid search keys but
   // invalid spoken orders (e.g. `tc`). Prefer a documented full alias.
   const spoken=item.aliases?.find(a=>normalizeClinicalQuery(a).length>=5)||

@@ -50,6 +50,11 @@ test('every native study label routes to its own current-case finding',async()=>
   const session=createGuardSession({roomId:'R-'+c.id+'-'+study.id,mode:'solo',actorId:'doctor',actorName:'Javier',
    patient:{uid:'P1',caseId:c.id},content,resolveContext:()=>({patientUid:'P1'})});
   const ack=await session.post({id:'native',text:'Enfermera, '+study.label});
+  if(study.id==='g_fecal_rectal'){
+   assert.equal(ack.routeError,'physician-exam-required');
+   assert.equal(ack.clinical.length,0);assert.equal(session.read().patient.orders.length,0);
+   session.dispose();continue;
+  }
   assert.deepEqual(ack.clinical.map(x=>[x.kind,x.id,x.status]),[['study.request',study.id,'pending']],c.id+': '+study.label);
   assert.equal(session.read().patient.orders[0].result,study.result,c.id+': native result');
   session.dispose();

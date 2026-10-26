@@ -75,7 +75,7 @@ for(const caseId of cases){
    assert.equal(selected.clinical.shift.patients[0].ownerId,'b');
    const commands=[...(p.history||[]),'/signos',
     ...['general','inspection','auscultation','percussion','palpation'].map(x=>'/examen '+x),
-    '/diagnostico '+p.dx,...(p.studies||[]).map(x=>'/estudio '+x),
+    ...(p.exams||[]),'/diagnostico '+p.dx,...(p.studies||[]).map(x=>'/estudio '+x),
     ...(caseId==='PERI-SEC-001'?
       ['Enfermera una vía',
        'Enfermera monitor y Ringer 1000 ml y ceftriaxona 1 g y metronidazol 500 mg y noradrenalina 0.05 mcg/kg/min IV y oxigeno 4 L/min']:

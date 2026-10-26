@@ -47,9 +47,9 @@ export function monitorHTML(patient){
 }
 export function examHTML(patient){return Object.entries(patient.exam||{}).map(([id,data])=>
  '<section class="clinical-section"><b>'+esc(examNames[id])+'</b>'+data.rows.map(row=>'<p><strong>'+esc(row.organ)+':</strong> '+esc(visibleExamFinding(row.text))+'</p>').join('')+'</section>').join('')||'<p>Elegí una técnica para explorar al paciente.</p>';}
-export function therapyHTML(patient){
+export function therapyHTML(patient,caseDef=null){
  const fluid=patient.uid&&patient.caseId?
-  confirmedFluidFeedback(patient,{id:patient.caseId,vitals:patient.baselineVitals}):null;
+  confirmedFluidFeedback(patient,caseDef||{id:patient.caseId,vitals:patient.baselineVitals}):null;
  const fluidRow=fluid?.administrations?'<div class="clinical-section" data-fluid-total-ml="'+fluid.totalMl+
   '"><b>Ringer acumulado, realmente administrado</b><small>'+
   esc(fluidFeedbackLabel(fluid))+'</small></div>':'';
@@ -61,13 +61,13 @@ export function therapyHTML(patient){
  const pendingConsults=(patient.pendingConsults||[]).map(c=>'<div class="clinical-section"><b>'+(c.id==='uti'?'UTI':'Cirugía')+'</b><small>Respuesta pendiente · no aceptada aún</small></div>');
  return [venous,fluidRow,...pending,...pendingConsults,...confirmed,...consults].join('')||'<p>Sin intervenciones ejecutadas.</p>';
 }
-export function historyHTML(p){
+export function historyHTML(p,caseDef=null){
  const sections=[['Anamnesis adquirida',p.intentHistory?.map(x=>'<p>'+esc(x.answer)+'</p>').join('')||'<p>Todavía no interrogado.</p>'],
   ['Signos registrados',vitalsHTML(p)],['Examen realizado',examHTML(p)],
   ['Glasgow',p.glasgow?Object.entries(p.glasgow).filter(([k])=>['eye','verbal','motor'].includes(k)).map(([,v])=>'<p>'+esc(v.text)+' · '+(v.score??'NT')+'</p>').join('')+
    '<p>Total: '+(p.glasgow.total??'incompleto o no evaluable')+'</p>':'<p>Todavía no evaluado.</p>'],
   ['Estudios y resultados',(p.orders||[]).map(o=>'<p><b>'+esc(o.label)+'</b> · '+(o.status==='done'?'Resultado disponible: '+esc(o.result):'Pendiente')+'</p>').join('')||'<p>No solicitados.</p>'],
-  ['Tratamiento y consultas',therapyHTML(p)],
+  ['Tratamiento y consultas',therapyHTML(p,caseDef)],
   ...((p.adverseEvents||[]).length?[['Complicaciones documentadas',p.adverseEvents.map(x=>
    '<p>'+esc(x.message)+' · '+(x.status==='resolved'?'Resuelta':'En seguimiento')+'</p>').join('')]]:[])];
  const interview=p.interview,labels={place:'Localización',onset:'Antigüedad',radiation:'Irradiación / desplazamiento',character:'Carácter',intensity:'Intensidad',worse:'Agravantes',relief:'Atenuantes'};
