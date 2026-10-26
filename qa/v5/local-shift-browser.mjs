@@ -54,6 +54,17 @@ try{
    await p.locator('#caseChoice').selectOption('PERI-TER-001');
    await p.locator('[data-action="start-guard"]').click();
    await p.waitForFunction(expected=>atriaV5.snapshot().mode===expected,mode);
+   const clock=await p.evaluate(()=>{
+    const time=document.querySelector('#guardTime'),score=document.querySelector('#guardScoreboard');
+    return {hidden:time.hidden,day:document.querySelector('#guardTimeNow')?.textContent,
+     progress:document.querySelector('#guardTimeProgress')?.textContent,
+     timer:time.getBoundingClientRect().toJSON(),score:score.getBoundingClientRect().toJSON()};
+   });
+   assert.equal(clock.hidden,false,'the game-day clock must be visible above the ward');
+   assert.match(clock.day,/^\\d{2}:\\d{2}$/);
+   assert.match(clock.progress,/^\\d{2}:\\d{2} \\/ 24:00$/);
+   assert(clock.timer.bottom<=clock.score.top||clock.timer.left>=clock.score.right,
+    'top-right game clock cannot obscure the clinical scoreboard on Pixel 5');
    const state=await p.evaluate(()=>atriaV5.snapshot());
    assert.equal(!!state.expert,mode==='apprentice','Dr. Vega belongs to apprentice mode only');
    assert.equal(state.player.color,mode==='apprentice'?'pink':'burgundy');
