@@ -555,3 +555,7 @@ body[data-phase="guard"] .guard-scoreboard{top:calc(141px + env(safe-area-inset-
  #guardTimeNow{font-size:18px}
  body[data-phase="guard"] .guard-scoreboard{top:calc(130px + env(safe-area-inset-top))}
 }
+
+/* The creator canvas retains its source aspect ratio; raster backing is
+   allocated at device pixel density by avatar-creator.js. */
+#avatarPreview{aspect-ratio:320 / 380;image-rendering:auto;flex:none}

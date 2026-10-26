@@ -16,6 +16,19 @@ const names=Object.freeze({navy:'Azul oscuro',green:'Verde',gray:'Gris',pink:'Ro
  teal:'Verde petróleo',burgundy:'Burdeos',black:'Negro'});
 const atlasCoords=Object.freeze({black:[0,0],navy:[1,0],green:[2,0],gray:[3,0],
  pink:[0,1],teal:[1,1],burgundy:[2,1]});
+/** The preview and the world extract the same original frame. */
+export function avatarDrawRect(sw,sh,width,height){
+ if(![sw,sh,width,height].every(n=>Number.isFinite(n)&&n>0))return null;
+ const scale=Math.min((width-32)/sw,(height-18)/sh);
+ if(scale<=0)return null;
+ const w=sw*scale,h=sh*scale;
+ return {x:(width-w)/2,y:height-h-7,width:w,height:h};
+}
+export function avatarCanvasResolution(width,height,dpr=1){
+ const ratio=Math.min(2.5,Math.max(1,Number.isFinite(dpr)?dpr:1));
+ return {width:Math.max(1,Math.round(width*ratio)),
+  height:Math.max(1,Math.round(height*ratio))};
+}
 /** No second sprite generator, tinting engine or divergent aspect ratios. */
 export function avatarAssetSpec({sex,color}){
  const a=scrubAppearance(color,sex);
@@ -45,21 +58,27 @@ export function createAvatarCreator({document,window,assetUrls,profile,listen,si
   canvas.setAttribute('aria-label',(a.sex==='female'?'Mujer':'Hombre')+' con ambo '+names[a.color]);
   const img=await load(spec.key);
   if(signal?.aborted||id!==revision)return;
+  const bounds=canvas.getBoundingClientRect();
+  const pixels=avatarCanvasResolution(bounds.width||320,bounds.height||380,window.devicePixelRatio);
+  if(canvas.width!==pixels.width||canvas.height!==pixels.height){
+   canvas.width=pixels.width;canvas.height=pixels.height;
+  }
   ctx.clearRect(0,0,canvas.width,canvas.height);
   if(!img)return;
   const [sx,sy,sw,sh]=spec.frame?
    [spec.frame[0]*img.naturalWidth/4,spec.frame[1]*img.naturalHeight/2,
     img.naturalWidth/4,img.naturalHeight/2]:
    [0,0,img.naturalWidth,img.naturalHeight];
-  const scale=Math.min((canvas.width-42)/sw,(canvas.height-20)/sh);
-  const dw=sw*scale,dh=sh*scale;
+  const frame=avatarDrawRect(sw,sh,canvas.width,canvas.height);
+  if(!frame)return;
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  ctx.drawImage(img,sx,sy,sw,sh,(canvas.width-dw)/2,canvas.height-dh-7,dw,dh);
+  ctx.drawImage(img,sx,sy,sw,sh,frame.x,frame.y,frame.width,frame.height);
  }
  for(const b of document.querySelectorAll('[data-avatar-sex]'))
   listen(b,'click',()=>{model.chooseSex(b.dataset.avatarSex);void paint();});
  listen(document.getElementById('avatarPreviousColor'),'click',()=>{model.cycle(-1);void paint();});
  listen(document.getElementById('avatarNextColor'),'click',()=>{model.cycle(1);void paint();});
+ listen(window,'resize',()=>{void paint();});
  void paint();
  return Object.freeze({read:model.read});
 }

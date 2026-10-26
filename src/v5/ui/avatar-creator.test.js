@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAvatarSelection,avatarAssetSpec} from './avatar-creator.js';
+import {createAvatarSelection,avatarAssetSpec,avatarDrawRect,avatarCanvasResolution} from './avatar-creator.js';
 import {SCRUB_COLORS} from '../app/avatar-appearance.js';
 
 test('changing sex keeps color and cycling colors keeps sex across all 14 choices',()=>{
@@ -25,4 +25,17 @@ test('the creator frame is exactly the frame that the world sprite renderer extr
  assert.deepEqual(avatarAssetSpec({sex:'male',color:'burgundy'}),{key:'wardrobe',frame:[3,1]});
  assert.deepEqual(avatarAssetSpec({sex:'female',color:'teal'}),{key:'wardrobe',frame:[1,1]});
  assert.deepEqual(avatarAssetSpec({sex:'male',color:'gray'}),{key:'player-gray',frame:null});
+});
+
+test('HD preview is device-pixel-resolved and cannot distort native proportions',()=>{
+ const css={width:240,height:285};
+ const hd=avatarCanvasResolution(css.width,css.height,3);
+ assert.deepEqual(hd,{width:600,height:713});
+ const source={width:384,height:576};
+ const fit=avatarDrawRect(source.width,source.height,hd.width,hd.height);
+ assert(fit&&fit.x>=0&&fit.y>=0);
+ assert(Math.abs(fit.width/fit.height-source.width/source.height)<1e-12);
+ assert(fit.x+fit.width<=hd.width);
+ assert(fit.y+fit.height<=hd.height);
+ assert.equal(avatarDrawRect(0,576,hd.width,hd.height),null);
 });
