@@ -50,8 +50,10 @@ const administered=(p,id)=>p.treatments?.some(t=>t.id===id&&t.patientUid===p.uid
 export function additionalCaseTargets(p,c,minute){
  const rule=ADDITIONAL_CASE_TRAJECTORIES[c?.id];
  if(!rule||!Number.isFinite(minute)||minute<0)throw Error('invalid disease target');
- const protective=rule.therapy&&administered(p,rule.therapy)?
-  rule.protection*ramp(minute-(p.treatments.find(t=>t.id===rule.therapy)?.administeredAtNativeMinute??0),10,130):0;
+ const therapyIds=Array.isArray(rule.therapy)?rule.therapy:rule.therapy?[rule.therapy]:[];
+ const confirmed=therapyIds.map(id=>p.treatments?.find(t=>t.id===id&&administered(p,id))).find(Boolean);
+ const protective=confirmed?rule.protection*ramp(
+  minute-(confirmed.administeredAtNativeMinute??0),10,130):0;
  const first=ramp(minute,20,rule.earlyEnd)*(1-protective),second=ramp(minute,rule.earlyEnd,rule.lateEnd)*(1-protective);
  const out=Object.fromEntries(axes.map((axis,i)=>[axis,rule.early[i]*first+rule.late[i]*second]));
  // Volume resuscitation must be ADMINISTERED. A pending order cannot

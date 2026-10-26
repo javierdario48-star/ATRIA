@@ -36,7 +36,7 @@ export const GASTRO_DYNAMICS=Object.freeze({
  'VARIX-001':{early:[0,21,3,-18,-9,-1],late:[0,14,4,-16,-8,-2],earlyEnd:100,lateEnd:360,therapy:'terlipressin',protection:.36,fluidResponse:.75},
  'ENCEF-001':{early:[.1,6,1,-2,-1,0],late:[.1,4,1,-2,-1,-.3],earlyEnd:220,lateEnd:800,therapy:'lactulose',protection:.5,fluidResponse:0},
  'UC-AS-001':{early:[.3,8,2,-5,-2,-.3],late:[.5,10,2,-9,-4,-.5],earlyEnd:150,lateEnd:550,therapy:'methylprednisolone',protection:.45,fluidResponse:.45},
- 'CDI-001':{early:[.3,10,2,-8,-4,-.2],late:[.5,12,3,-12,-7,-.6],earlyEnd:140,lateEnd:500,therapy:'fidaxomicin',protection:.5,fluidResponse:.8},
+ 'CDI-001':{early:[.3,10,2,-8,-4,-.2],late:[.5,12,3,-12,-7,-.6],earlyEnd:140,lateEnd:500,therapy:['fidaxomicin','vancomycin_po'],protection:.5,fluidResponse:.8},
  'DIVERT-001':{early:[.1,3,0,-1,0,0],late:[.1,2,0,-1,0,0],earlyEnd:280,lateEnd:1100,therapy:null,protection:0,fluidResponse:.15},
  'LGIB-001':{early:[0,15,3,-12,-7,-.4],late:[0,18,3,-13,-7,-1],earlyEnd:130,lateEnd:460,therapy:null,protection:0,fluidResponse:.9},
  'HEPAT-001':{early:[.1,3,0,-1,-1,0],late:[.1,2,1,-1,0,0],earlyEnd:300,lateEnd:1100,therapy:null,protection:0,fluidResponse:0},
