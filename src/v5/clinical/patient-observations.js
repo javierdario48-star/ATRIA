@@ -6,6 +6,8 @@ import {confirmedMorphineResponse487} from './morphine-487.js';
 export function readNeurologicalState(p){
  if(p.neurology)return {...p.neurology};
  const impaired=Number(p.hypoperfusionNativeMinutes||0);
+ const hepatic=p.caseId==='ENCEF-001';
+ if(hepatic)return {eye:4,verbal:4,motor:6};
  const confused=p.caseId==='PERI-PBE-001',recovered=confused&&
   p.phys?.inflammation<Number(p.physBaseline?.inflammation||.62)*.8&&p.liveVitals?.sys>=100;
  return impaired>=6?{eye:2,verbal:2,motor:4}:impaired>=2?{eye:3,verbal:3,motor:5}:
