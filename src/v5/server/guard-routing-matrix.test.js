@@ -77,8 +77,8 @@ for(const mode of modes)for(const count of rosterSizes)for(const caseId of cases
   }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
  });
 }
-test('42 multiplayer routing combinations cover all native cases',()=>{
- assert.equal(cases.length,7);assert.equal(reports.length,42);
+test('78 multiplayer routing combinations cover all native cases',()=>{
+ assert.equal(cases.length,13);assert.equal(reports.length,78);
  console.log('ATRIA_ROUTING_42_BOT_MATRIX='+JSON.stringify({
   scenarios:reports.length,caseIds:cases,
   modeCounts:Object.fromEntries(modes.map(m=>[m,reports.filter(x=>x.mode===m).length])),
