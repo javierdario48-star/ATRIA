@@ -6,6 +6,7 @@ import {crystalloidOverloadOffsets} from './crystalloid-overload.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {GASTRO_CASE_RULES,GASTRO_DYNAMICS} from './gastro-expansion-policies.js';
+import {evaluateGastroDisposition} from './gastro-closure-v5.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 
 const read=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
@@ -98,4 +99,20 @@ test('chronic illness has no imaginary immediate hemodynamic cure',()=>{
   const c=byId.get(id),p=sample(id),v=additionalCaseTargets(p,c,320);
   assert(v.hr>=0,id+' gained a fictitious immediate cure');
  }
+});
+
+test('severe ulcerative colitis must not be handed off without CDI screening evidence',()=>{
+ const c=byId.get('UC-AS-001');
+ const base={caseId:c.id,diagnosis:c.dx[0],acceptedDiagnoses:c.dx,
+  historyAnswered:c.requiredHistory,historyRelevant:c.requiredHistory,
+  examDone:true,examRegionsCount:5,vitalsKnown:true,reassessments:1,
+  studiesDone:['g_uc_labs'],delivered:['methylprednisolone'],
+  consultsDone:[],disposition:'sala',sys:104,hr:124,rr:22,spo2:97,initialSys:104,
+  dead:false,ended:false,extraStudies:[],keyStudies:c.keyStudies,
+  keyInterventions:c.keyInterventions,adverseCount:0,uid:'screening-qa'};
+ const noScreen=evaluateGastroDisposition(base);
+ assert.equal(noScreen.ready,false);
+ assert(noScreen.missing.some(m=>m.includes('g_uc_cdi')));
+ const screened=evaluateGastroDisposition({...base,studiesDone:['g_uc_labs','g_uc_cdi']});
+ assert(!screened.missing.some(m=>m.includes('g_uc_cdi')));
 });

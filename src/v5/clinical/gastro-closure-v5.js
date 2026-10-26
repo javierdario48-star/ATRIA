@@ -19,6 +19,8 @@ export function evaluateGastroDisposition(a={}){
  if(!history.length&&!critical)missing.push('Obtener al menos un dato relevante de anamnesis.');
  const evidence=rule.study?.some(group=>group.some(id=>studies.has(id)))||false;
  if(!evidence&&!rule.urgentStudyBypass)missing.push('Completar un estudio orientador.');
+ for(const id of rule.requiredStudies||[])
+  if(!studies.has(id))missing.push('Revisar estudio imprescindible '+id+' antes de cerrar el caso.');
  if(rule.treatment?.length&&!rule.treatment.some(group=>group.every(id=>done.has(id))))
   missing.push('Confirmar las intervenciones imprescindibles y su ejecución real.');
  if(critical&&!['fluid','vasopressor','transfusion'].some(id=>done.has(id)))
