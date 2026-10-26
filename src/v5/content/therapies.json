@@ -450,5 +450,134 @@
       "anticoagular"
     ],
     "effects": {}
+  },
+  {
+    "id": "terlipressin",
+    "label": "Terlipresina IV",
+    "aliases": [
+      "terlipresina",
+      "terlipressin",
+      "terlipresina iv"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "methylprednisolone",
+    "label": "Metilprednisolona IV",
+    "aliases": [
+      "metilprednisolona iv",
+      "metilprednisolona 60 mg",
+      "corticoide IV en colitis"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "lactulose",
+    "label": "Lactulosa oral",
+    "aliases": [
+      "lactulosa",
+      "lactulosa por boca"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "rifaximin",
+    "label": "Rifaximina oral",
+    "aliases": [
+      "rifaximina"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "fidaxomicin",
+    "label": "Fidaxomicina oral",
+    "aliases": [
+      "fidaxomicina"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "vancomycin_po",
+    "label": "Vancomicina oral",
+    "aliases": [
+      "vancomicina oral",
+      "vancomicina por boca"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "oral_hydration",
+    "label": "Hidratación oral y tolerancia",
+    "aliases": [
+      "hidratacion oral",
+      "beber liquidos"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "oral_rehydration",
+    "label": "Sales de rehidratación oral",
+    "aliases": [
+      "sales de rehidratacion",
+      "rehidratacion oral",
+      "sro"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "followup",
+    "label": "Plan escrito de seguimiento y signos de alarma",
+    "aliases": [
+      "seguimiento",
+      "control ambulatorio",
+      "signos de alarma"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "disimpaction",
+    "label": "Desimpactación rectal cuidadosa",
+    "aliases": [
+      "desimpactacion",
+      "extraccion manual",
+      "desimpactar"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "enema",
+    "label": "Enema terapéutico",
+    "aliases": [
+      "enema terapeutico",
+      "enema"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "ppi_oral",
+    "label": "Omeprazol oral",
+    "aliases": [
+      "omeprazol oral",
+      "inhibidor bomba oral"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "glutenfree_plan",
+    "label": "Plan nutricional sin gluten tras diagnóstico",
+    "aliases": [
+      "dieta sin gluten",
+      "plan sin gluten"
+    ],
+    "effects": {}
+  },
+  {
+    "id": "swallow_precaution",
+    "label": "Precauciones contra aspiración",
+    "aliases": [
+      "prevencion de aspiracion",
+      "recomendaciones deglucion"
+    ],
+    "effects": {}
   }
 ]

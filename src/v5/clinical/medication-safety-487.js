@@ -1,12 +1,13 @@
 // Reuses only registered V4 pharmacology IDs, classes and documented case risks.
 // Pure safety metadata: NEVER administers a drug or writes patient physiology.
 import {PHARMA_RULES_487,csCasePharmProfile487} from '../../clinical/pharmacology-registry-487.js';
+import {GASTRO_REVIEW_ONLY} from './gastro-medication-rules.js';
 const nephro=new Set(['amikacin','gentamicin','amphotericin']);
 const groups=Object.freeze({
  penicillin:['ampicillin','piptazo'],cephalosporin:['ceftriaxone','ceftazidime','cefoperazone','cefepime'],
  carbapenem:['imipenem'],aminoglycoside:['amikacin','gentamicin']
 });
-const known=new Set([...Object.keys(PHARMA_RULES_487),'anticoagulation']);
+const known=new Set([...Object.keys(PHARMA_RULES_487),...Object.keys(GASTRO_REVIEW_ONLY),'anticoagulation']);
 const classes=new Set(Object.values(PHARMA_RULES_487).map(x=>x.classId));
 export function normalizeDocumentedAllergies487(raw=[]){
  if(!Array.isArray(raw)||raw.length>32)throw Error('invalid documented allergy list');
@@ -41,7 +42,7 @@ export function matchesMedicationAllergy487(p,id,severe=false){
 }
 export function medicationSafety487(c,p,id){
  if(!known.has(id))throw Error('unreviewed medication '+String(id));
- const rule=PHARMA_RULES_487[id]||{classId:'anticoagulant',hazards:['bleeding'],indications:['mesentericIschemia']};
+ const rule=PHARMA_RULES_487[id]||GASTRO_REVIEW_ONLY[id]||{classId:'anticoagulant',hazards:['bleeding'],indications:['mesentericIschemia']};
  const allergy=matchesMedicationAllergy487(p,id);
  const traits=new Set(csCasePharmProfile487(c).traits),warnings=[];
  if(c?.physiology?.avoid?.includes(id))warnings.push('case-avoid');

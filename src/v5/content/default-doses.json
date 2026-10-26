@@ -103,5 +103,40 @@
     "amount": 50,
     "unit": "mg",
     "display": "50 mg"
+  },
+  "terlipressin": {
+    "amount": 2,
+    "unit": "mg",
+    "display": "2 mg"
+  },
+  "methylprednisolone": {
+    "amount": 60,
+    "unit": "mg",
+    "display": "60 mg"
+  },
+  "lactulose": {
+    "amount": 30,
+    "unit": "ml",
+    "display": "30 ml"
+  },
+  "rifaximin": {
+    "amount": 550,
+    "unit": "mg",
+    "display": "550 mg"
+  },
+  "fidaxomicin": {
+    "amount": 200,
+    "unit": "mg",
+    "display": "200 mg"
+  },
+  "vancomycin_po": {
+    "amount": 125,
+    "unit": "mg",
+    "display": "125 mg"
+  },
+  "ppi_oral": {
+    "amount": 20,
+    "unit": "mg",
+    "display": "20 mg"
   }
 }

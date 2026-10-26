@@ -48,8 +48,8 @@ export function csClosureSnapshot487(s,c){
   autonomy:typeof s.vegaRescues==='number'?Math.max(0,100-s.vegaRescues*15):100,
   uid:s.patientInstance?.uid||null};
 }
-export function csEvaluateClosure487(a={}){
- const rule=CASE_CLOSURE_RULES_487[a.caseId];if(!rule)return null;
+export function csEvaluateClosure487(a={},ruleOverrides=null){
+ const rule=ruleOverrides?.[a.caseId]||CASE_CLOSURE_RULES_487[a.caseId];if(!rule)return null;
  const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
  const missing=[],done=new Set(a.delivered||[]),studies=new Set(a.studiesDone||[]);
  const dest=a.disposition||null;

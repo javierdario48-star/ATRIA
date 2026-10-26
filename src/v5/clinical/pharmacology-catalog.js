@@ -10,6 +10,7 @@ import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 import {confirmedMorphineResponse487} from './morphine-487.js';
 import {confirmedNativeSupportEffects487} from './native-support-487.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {GASTRO_REVIEW_ONLY} from './gastro-medication-rules.js';
 
 const clone=x=>structuredClone(x);
 const VITALS=['temp','hr','rr','sys','dia','spo2'];
@@ -23,6 +24,7 @@ const clamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 // therapeutic efficacy. Native execution and inherited bleeding are handled by
 // native-medications/medication-harms; this general projection adds no second effect.
 const REVIEW_ONLY=Object.freeze({
+ ...GASTRO_REVIEW_ONLY,
  anticoagulation:Object.freeze({classId:'anticoagulant',route:'iv',
   mechanism:'unmodeled',indications:['mesentericIschemia'],
   hazards:['bleeding','hit'],onsetMin:null,peakMin:null})
