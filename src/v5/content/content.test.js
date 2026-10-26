@@ -40,7 +40,7 @@ test('captured effective case rules include the later corrections',()=>{
 
 test('V5 wardrobe atlas is versioned separately from original immutable asset hashes',()=>{
  const bytes=fs.readFileSync(path.join(root,'assets/player-wardrobe.avif'));
- assert.equal(hash(bytes),'a41b3bdde87f732ef24c90c0fd7d401b9a70c139c0e18c6967546cf7782738c8');
- assert(bytes.length<20000,'single optimized sprite atlas must remain small for mobile');
+ assert.equal(hash(bytes),'09fa1b5c34b9a2394537b61a3e4ecf1f6498ec92d23e1a03126f683229df8344');
+ assert(bytes.length<65000,'one HD AVIF wardrobe atlas must stay lightweight for mobile');
  assert.equal(bytes.toString('ascii',4,8),'ftyp');
 });

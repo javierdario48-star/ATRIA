@@ -24,8 +24,10 @@ try{
   await page.goto(h.url);
   await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#playerName').fill(i===0?'Dra. Ana':'Dr. Bruno');
-  await page.locator('#startingSex').selectOption(i===0?'female':'male');
-  await page.locator('#startingColor').selectOption(i===0?'green':'burgundy');
+  await page.locator('[data-avatar-sex="'+(i===0?'female':'male')+'"]').click();
+  for(let j=0;j<(i===0?1:5);j++)await page.locator('#avatarNextColor').click();
+  assert.equal(await page.locator('#startingColor').inputValue(),i===0?'green':'burgundy');
+  assert.equal(await page.locator('#startingSex').inputValue(),i===0?'female':'male');
   await page.locator('#enterButton').click();
   await page.locator('#peopleButton').click();await page.locator('#modalClose').click();
  }
