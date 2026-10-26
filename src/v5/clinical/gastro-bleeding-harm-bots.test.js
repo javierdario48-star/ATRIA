@@ -61,7 +61,7 @@ for(const caseId of cases)for(const mode of modes){
    assert.equal(a.progress.xp,0);
    assert.equal(b.progress.receipts.length,0,'no accidental closure during medication harm');
    assert(b.closure.quality.penalty>=5,'debrief must account for the confirmed harm');
-   await harmed.s.post({id:'bot-2',text:'Enfermera heparina IV'}); // transport retry
+   await harmed.s.post({id:'bot-3',text:'Enfermera heparina IV'}); // replay exact accepted request
    await harmed.advance(1);
    assert.equal(harmed.s.read().patient.administrationLog.filter(x=>x.id==='anticoagulation').length,1,
     'network retry cannot re-administer anticoagulant');
