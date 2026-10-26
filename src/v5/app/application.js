@@ -6,6 +6,7 @@ import {createHospitalRenderer} from '../render/hospital.js';
 import {createAvatarCreator} from '../ui/avatar-creator.js';
 import {createPresentationTimeline} from '../render/presentation-timeline.js';
 import {createGuardSession} from '../clinical/guard-session.js';
+import {formatGuardTime} from '../ui/guard-time.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {createCooperativeLink} from '../social/cooperative-link.js';
 import {createCooperativeReplica} from '../social/cooperative-replica.js';
@@ -652,8 +653,19 @@ export async function createApplication({document,window,content,signal}){
   }
   audioPatient=guard?clinical?.patient??null:null;
   autocompleteCaseId=guard?clinical?.patient?.caseId??null:null;
-  const minute=Math.floor(clinical?.shift?.elapsedSeconds??localAdmissions?.elapsed()??localShift.totalMinutes(clinical?.clock?.gameMinute||0)),
-   total=8*60+15+minute;
+  const elapsed=clinical?.shift?.elapsedSeconds??localAdmissions?.elapsed()??
+   localShift.totalMinutes(clinical?.clock?.gameMinute||0);
+  const clock=formatGuardTime(elapsed),minute=Math.floor(elapsed),total=8*60+15+minute;
+  const timeBadge=ui('guardTime');
+  if(timeBadge){
+   timeBadge.hidden=!guard;
+   if(guard){
+    ui('guardTimeNow').textContent=clock.time;
+    ui('guardTimeProgress').textContent=clock.progress;
+    timeBadge.setAttribute('aria-label',clock.accessible);
+    timeBadge.dataset.ended=String(clock.ended);
+   }
+  }
   ui('status').textContent=guard&&clinical?.patient.patientDied?'Caso finalizado · Paciente fallecido':guard?(s.mode==='competitive'?'Competitivo':s.mode==='coop'?'Cooperativo':s.mode==='apprentice'?'Aprendiz':'Solitario')+' · '+String(Math.floor(total/60)%24).padStart(2,'0')+':'+String(total%60).padStart(2,'0')+' · 5.0':social.state().user?'Lobby social · 5.0 experimental':'Lobby local · 5.0 experimental';
   if(guard)patientClinical.update(s.patients.find(p=>p.uid===clinical?.patient.uid),clinical);else patientClinical.hide();
   if(guard)clinicalChecklist.update(clinical);else clinicalChecklist.hide();
