@@ -19,10 +19,11 @@ export const ADDITIONAL_CASE_TRAJECTORIES=Object.freeze({
  // response over time but cannot instantaneously cure chronic bowel disease.
  'CROHN-001':{early:[.25,7,1,-3,-2,-.3],late:[.35,7,1,-4,-2,-.4],earlyEnd:180,lateEnd:600,
   therapy:'steroid',protection:.60,fluidResponse:.15},
- // Acute bleed: ongoing blood loss can destabilize perfusion. Only actual
- // transfusion restores modeled circulating volume; PPI does not replace blood.
+ // An IV PPI suppresses acid, not active hemorrhage. Do not grant a
+ // false perfusion benefit before endoscopic hemostasis (which is a handoff,
+ // NOT a performed operation in this shift).
  'HDA-001':{early:[0,17,3,-13,-7,-.6],late:[0,15,3,-13,-8,-1.2],earlyEnd:130,lateEnd:360,
-  therapy:'ppi',protection:.30,fluidResponse:1.0},
+  therapy:null,protection:0,fluidResponse:1.0},
  // Colon neoplasm/anemia is NOT reversed by an ED encounter or imaging.
  'COLON-001':{early:[0,3,0,-1,0,0],late:[0,3,0,-2,-1,0],earlyEnd:360,lateEnd:1000,
   therapy:null,protection:0,fluidResponse:0},
