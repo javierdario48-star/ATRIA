@@ -20,7 +20,7 @@ export const ADDITIONAL_CASE_TRAJECTORIES=Object.freeze({
  // Acute bleed: ongoing blood loss can destabilize perfusion. Only actual
  // transfusion restores modeled circulating volume; PPI does not replace blood.
  'HDA-001':{early:[0,17,3,-13,-7,-.6],late:[0,15,3,-13,-8,-1.2],earlyEnd:130,lateEnd:360,
-  therapy:'ppi',protection:.30,fluidResponse:1.0,transfusionResponse:1.0},
+  therapy:'ppi',protection:.30,fluidResponse:1.0},
  // Colon neoplasm/anemia is NOT reversed by an ED encounter or imaging.
  'COLON-001':{early:[0,3,0,-1,0,0],late:[0,3,0,-2,-1,0],earlyEnd:360,lateEnd:1000,
   therapy:null,protection:0,fluidResponse:0},
@@ -54,10 +54,7 @@ export function additionalCaseTargets(p,c,minute){
  const iv=summarizeIVExposures(p);
  const fluid=clamp(iv.confirmedCrystalloidMl/1000,0,1.25)*rule.fluidResponse;
  out.sys+=14*fluid;out.dia+=7*fluid;out.hr-=11*fluid;
- if(c.id==='HDA-001'&&administered(p,'transfusion')){
-  const units=p.administrationLog.filter(a=>a.id==='transfusion'&&a.patientUid===p.uid).length;
-  const dose=clamp(units,0,3);out.sys+=8*dose;out.dia+=4*dose;out.hr-=8*dose;
- }
+ // Transfusion physiology is owned ONLY by applyConfirmedNativeSupportTargets487.
  if(c.id==='ILEO-001'&&administered(p,'ngt')){out.hr-=5;out.rr-=1.5;}
  return out;
 }
