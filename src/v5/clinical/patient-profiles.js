@@ -1,5 +1,10 @@
 // Effective ns421-patient-dialogue profiles. Only existing complete V5 cases.
 export const PATIENT_PROFILES=Object.freeze({
+ 'PANC-001':{place:'Me duele muchísimo en la boca del estómago.',
+  onset:'Empezó hace varias horas y no me deja descansar.',
+  radiation:'Me corre hacia la espalda.',character:'Es un dolor constante y muy intenso.',
+  intensity:9,worse:'Me empeora cuando intento moverme.',relief:'Me calma un poco al inclinarme hacia adelante.',
+  symptoms:'Tengo dolor muy fuerte arriba del abdomen, náuseas y vomité varias veces.'},
  'CHOLE-001':{place:'Me duele fuerte arriba a la derecha de la panza.',
   onset:'Empezó ayer; esta vez no se me pasó como en los cólicos anteriores.',
   radiation:'A veces siento el dolor hacia el hombro derecho.',

@@ -5,6 +5,10 @@ import {readNeurologicalState,readPatientObservations} from './patient-observati
 export {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
 const unspecified='Sin hallazgo específico modelado en este escenario.';
 const findings={
+ 'PANC-001':{appearance:'Dolor intenso, taquicardia y signos de hipoperfusión en el ingreso.',
+  inspection:'Respiración rápida; abdomen distendido predominantemente en epigastrio.',
+  palpation:'Dolor a la palpación epigástrica, sin signos de irritación peritoneal generalizada documentados.',
+  bowel:'Ruidos hidroaéreos disminuidos por íleo reflejo en esta semilla.'},
  'CHOLE-001':{appearance:'Febril, dolorida, mantiene la mano sobre el hipocondrio derecho.',
   skin:'Sin ictericia manifiesta en el examen inicial documentado.',
   inspection:'Abdomen sin distensión marcada; respiración superficial por dolor.',
