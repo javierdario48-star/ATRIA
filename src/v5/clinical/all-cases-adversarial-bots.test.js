@@ -123,9 +123,9 @@ for(const mode of modes)for(const caseId of ids){
   });
  }
 }
-test('all seven clinical engines are tested with all three local session modes and three strategies',()=>{
+test('all thirteen clinical engines are tested with all three local session modes and three strategies',()=>{
  assert.equal(ids.length,13);
  assert.equal(modes.length,3);
- assert.equal(ids.length*modes.length*3,63);
+ assert.equal(ids.length*modes.length*3,117);
  console.log('ATRIA_MULTIMODE_CLINICAL_BOTS='+JSON.stringify(trace));
 });
