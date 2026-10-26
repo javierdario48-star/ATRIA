@@ -20,6 +20,11 @@ const observations=excerpt(stateScript,' function neurological(',' function care
  excerpt(dialogue,' function symptoms(',' window.nsSymptoms=');
 const cases=JSON.parse(fs.readFileSync('src/v5/content/cases.json','utf8'));
 let comparisons=0;
+// Compare the complete ORIGINAL technique contract. Rectal examination is an
+// additive V5 physician action with its own production-route regression; the
+// immutable original has no corresponding finding to compare against.
+const nativeTechniques=['general','inspection','auscultation','percussion','palpation'];
+assert(nativeTechniques.every(id=>Object.hasOwn(EXAM_TECHNIQUES,id)),'an original technique was removed');
 for(const caseId of ['CIRR-001','APP-001','PERI-SEC-001','PERI-PBE-001','PERI-TER-001']){
  const c=cases.find(c=>c.id===caseId),[sys,dia]=c.vitals.bp.split('/').map(Number),base={...c.vitals,sys,dia};
  for(const change of [{},{sys:85,rr:28},{spo2:88},{hr:75,sys:120,dia:78,temp:37,rr:18}]){
@@ -31,7 +36,7 @@ for(const caseId of ['CIRR-001','APP-001','PERI-SEC-001','PERI-PBE-001','PERI-TE
     return {vitals:sim.liveVitals,trend:delta>.8?'worse':delta<-.8?'better':'unchanged'};};
    window.nsSymptoms=symptoms;
   `+script.slice(start,end)+'\nglobalThis.observe=currentFindings;',ctx,{timeout:1000});
-  for(const technique of Object.keys(EXAM_TECHNIQUES)){
+  for(const technique of nativeTechniques){
    const expected=JSON.parse(JSON.stringify(ctx.observe(technique)));
    const actual=physicalExamRows(caseId,p,technique).map(({organ,text})=>({organ,text}));
    if(caseId==='CIRR-001'&&['percussion','palpation'].includes(technique)){

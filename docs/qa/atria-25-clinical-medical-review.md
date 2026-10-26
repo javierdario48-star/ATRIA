@@ -2,6 +2,13 @@
 
 Fecha de revisión: 26 de octubre de 2026. Versión experimental. **No constituye una validación científica de un modelo fisiológico ni una guía de prescripción para pacientes reales.**
 
+**Actualización posterior:** los resultados de implementación y verificación
+vigentes están en [Control clínico y visual final](2026-10-26-quality-results.md).
+Incluyen 500 recorridos en cuatro modos, perfiles experto y competente
+distintos, respuesta neurológica diferida de lactulosa, tacto rectal como
+exploración médica y corrección del fallo de paneles de los 12 casos nuevos.
+Los puntos que siguen describen el checkpoint previo a esa corrección.
+
 ## Qué se verificó realmente
 
 1. Se añadieron 375 recorridos clínicos (25 enfermedades × Aprendiz, Solitario y Cooperativo × cinco perfiles: desinformado, principiante, inteligente, lento e imprudente). Todos utilizan el ejecutor real de guardia y nunca introducen XP o tratamientos fuera de la autoridad clínica.

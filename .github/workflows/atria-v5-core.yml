@@ -517,6 +517,41 @@ jobs:
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/local-shift-browser.mjs
 
+  clinical-visual-quality-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - run: npm run build:v5
+      - name: Recover the same mobile guard after draw faults, real GPU context loss and viewport changes
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/render-recovery-browser.mjs
+      - name: Physician examination panel, proximity, Glasgow, rotation and unchanged nursing responsibilities
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/examination-panel-browser.mjs
+      - name: Every one of the 25 cases opens its panels in both local modes, including physician rectal examination
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/all-case-panels-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-clinical-visual-quality
+          path: |
+            qa/v5-browser-results/
+            qa/v5-render-recovery-results/
+          retention-days: 14
+
   preserved-historical-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 20
