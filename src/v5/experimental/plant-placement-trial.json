@@ -1,0 +1,61 @@
+{
+  "schema": "atria-v5-plant-visual-trial-v1",
+  "status": "preview-only",
+  "sourceMap": "src/v5/content/assets/hospital.webp",
+  "prototypeSprite": "ATRIA_planta_maestra_512.webp",
+  "spriteSource": "generated asset attached in chat, not committed as GitHub binary",
+  "positions": [
+    {
+      "id": "PL-38",
+      "x": 348,
+      "y": 1155,
+      "width": 51,
+      "height": 57,
+      "topOffset": -19,
+      "baseY": 1185,
+      "potRadius": 10
+    },
+    {
+      "id": "PL-39",
+      "x": 670,
+      "y": 1153,
+      "width": 51,
+      "height": 57,
+      "topOffset": -19,
+      "baseY": 1183,
+      "potRadius": 10
+    },
+    {
+      "id": "PL-41",
+      "x": 383,
+      "y": 1305,
+      "width": 49,
+      "height": 59,
+      "topOffset": -19,
+      "baseY": 1337,
+      "potRadius": 10
+    },
+    {
+      "id": "PL-42",
+      "x": 637,
+      "y": 1305,
+      "width": 49,
+      "height": 59,
+      "topOffset": -19,
+      "baseY": 1337,
+      "potRadius": 10
+    }
+  ],
+  "rules": {
+    "collider": "pot only",
+    "foliage": "non-solid",
+    "occlusion": "depth sorting by character feet versus plant base",
+    "shadow": "separate"
+  },
+  "caveats": [
+    "original map has plants baked into background",
+    "full replacement requires background clean plate at targeted positions",
+    "dimensions are candidate estimates, not verified masks",
+    "no changes to clinical engine or runtime"
+  ]
+}
