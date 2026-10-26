@@ -19,8 +19,8 @@ for(const id of Object.keys(ADDITIONAL_CASE_TRAJECTORIES)){
 }
 test('hemorrhage responds only to administered patient-bound transfusion, not an order',()=>{
  const {c,p}=factory('HDA-001'),{p:untreated}=factory('HDA-001');
- p.treatments.push({id:'transfusion',patientUid:p.uid,sourceEventId:'tx1'});
- p.administrationLog.push({id:'transfusion',patientUid:p.uid,sourceEventId:'tx1'});
+ p.treatments.push({id:'transfusion',patientUid:p.uid,sourceEventId:'tx1',dose:{amount:1,unit:'unidad'}});
+ p.administrationLog.push({id:'transfusion',patientUid:p.uid,sourceEventId:'tx1',dose:{amount:1,unit:'unidad'}});
  advanceAdditionalCaseVitals(p,c,60,120);
  advanceAdditionalCaseVitals(untreated,c,60,120);
  assert(p.liveVitals.sys>untreated.liveVitals.sys);
@@ -28,8 +28,8 @@ test('hemorrhage responds only to administered patient-bound transfusion, not an
 });
 test('ischemia anticoagulation slows progression but never normalizes untreated shock',()=>{
  const {c,p}=factory('MESI-001'),{p:bare}=factory('MESI-001');
- p.administrationLog.push({id:'anticoagulation',patientUid:p.uid,sourceEventId:'hep'});
- p.treatments.push({id:'anticoagulation',patientUid:p.uid,sourceEventId:'hep',administeredAtNativeMinute:0});
+ p.administrationLog.push({id:'anticoagulation',patientUid:p.uid,sourceEventId:'hep',dose:{amount:1,unit:'protocolo'}});
+ p.treatments.push({id:'anticoagulation',patientUid:p.uid,sourceEventId:'hep',dose:{amount:1,unit:'protocolo'},administeredAtNativeMinute:0});
  advanceAdditionalCaseVitals(p,c,60,250);advanceAdditionalCaseVitals(bare,c,60,250);
  assert(p.liveVitals.sys>bare.liveVitals.sys);
  assert(p.liveVitals.sys<c.vitals.bp.split('/')[0]);

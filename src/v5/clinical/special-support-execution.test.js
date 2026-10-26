@@ -142,7 +142,7 @@ test('unsupported case stop requests are interpreted without creating an infusio
  const f=fixture('MESI-001');
  const reply=await f.send('Enfermera monitor y suspender noradrenalina');
  assert.equal(reply.routeError,'unsafe-compound-order');assert.deepEqual(reply.clinical,[]);
- assert.deepEqual(f.s.read().patient.administrationLog,undefined);f.s.dispose();
+ assert.deepEqual(f.s.read().patient.administrationLog,[]);f.s.dispose();
 });
 test('explicit VO, PO and other non-IV routes cannot silently become an IV blood or weight-based medicine',async()=>{
  const f=fixture();await f.send('Enfermera una vía');
