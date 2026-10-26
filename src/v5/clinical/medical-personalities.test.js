@@ -86,11 +86,11 @@ async function scenario(bot,caseId,mode,skill){
   return;
  }
  if(skill==='slow'){
-  // The delay has a real opportunity cost; emergent cases get a 3-min
-  // assessment delay while stable cases can be deferred by 90 game minutes.
+  // The delay has a real opportunity cost: 65 game minutes for an
+  // emergency and 90 for a stable outpatient, not merely three minutes.
   const urgent=new Set(['PERI-SEC-001','PERI-TER-001','CHOLANG-001',
    'VARIX-001','MESI-001','PANC-001','HDA-001','LGIB-001']);
-  clinicalDelay=urgent.has(caseId)?3:90;
+  clinicalDelay=urgent.has(caseId)?65:90;
   await bot.advance(clinicalDelay);
  }
  await assess(bot,plan,true);
