@@ -73,3 +73,24 @@ test('invalid anatomy/technique, wrong or distant target and repeated envelopes 
  assert.equal(f.s.read().patient.examLog.length,1);assert.deepEqual(other.s.read().patient.examFindings||{},{});
  assert.equal(f.s.read().patient.lastVitalsKnown,null);f.s.dispose();other.s.dispose();
 });
+
+test('cirrhosis has a specific liver examination with no invented palpable hepatomegaly',async()=>{
+ const f=setup('CIRR-001');const original=f.s.read().patient.liveVitals;
+ const palp=await f.send('/examen liver palpation');
+ const perc=await f.send('/examen liver percussion');
+ assert.equal(palp.clinical[0]?.status,'executed');
+ assert.equal(perc.clinical[0]?.status,'executed');
+ const liver=f.s.read().patient.examFindings.liver;
+ assert.match(liver.palpation.rows[0].text,/Borde hepático difícil de delimitar/);
+ assert.match(liver.percussion.rows[0].text,/Matidez hepática/);
+ assert.doesNotMatch(liver.palpation.rows[0].text,/hepatomegalia palpable afirmada/);
+ assert(!f.s.read().patient.examFindings.spleen,
+  'no spleen examination must be fabricated when touching liver');
+ assert.deepEqual(f.s.read().patient.liveVitals,original);
+ assert.equal(f.s.read().patient.examDone,false);
+ f.s.dispose();
+ const app=setup('APP-001');
+ await app.send('/examen liver palpation');
+ assert.match(app.s.read().patient.examFindings.liver.palpation.rows[0].text,/Sin hallazgo específico modelado/);
+ app.s.dispose();
+});

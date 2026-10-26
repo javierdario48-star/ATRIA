@@ -23,6 +23,10 @@ const findings={
   neuro:'Atención enlentecida, sin focalidad neurológica modelada.'},
  'CIRR-001':{appearance:'Adelgazado.',skin:'Arañas vasculares y eritema palmar.',
   inspection:'Abdomen globoso, con distensión por líquido.',palpation:'Ascitis moderada; abdomen globoso.',
+  // Ecografía inicial: hígado pequeño, nodular y ascitis. Examinar el hígado
+  // no equivale a afirmar hepatomegalia palpable en un abdomen ascítico.
+  liver:'Borde hepático difícil de delimitar por la ascitis. No se documenta hepatomegalia palpable; el tamaño y la morfología se precisan con ecografía.',
+  liverPercussion:'Matidez hepática presente, con límites inferiores difíciles de precisar por ascitis; no permite medir con fiabilidad el tamaño hepático.',
   spleen:'Esplenomegalia.',percussion:'Matidez compatible con líquido abdominal.'},
  'PERI-SEC-001':{appearance:'Permanece inmóvil para evitar dolor.',
   inspection:'Abdomen distendido; respiración costal y superficial.',
@@ -46,7 +50,7 @@ export function physicalExamRows(caseId,p,technique,regionId=null,atNativeMinute
   row('thorax','Tórax / patrón respiratorio',v.rr>=26?'Respiración rápida, '+Math.round(v.rr)+' por minuto.':null),
   row('abdomen','Abdomen',f.inspection),row('perineum','Periné',f.perineum)];
  if(technique==='auscultation')rows=[row('abdomen','Intestino / abdomen',f.bowel),row('thorax','Corazón'),row('thorax','Pulmones')];
- if(technique==='percussion')rows=[row('abdomen','Abdomen',f.percussion),row('liver','Hígado'),row('spleen','Bazo'),row('renal','Región renal')];
+ if(technique==='percussion')rows=[row('abdomen','Abdomen',f.percussion),row('liver','Hígado',f.liverPercussion),row('spleen','Bazo'),row('renal','Región renal')];
  if(technique==='palpation')rows=[row('abdomen','Abdomen',f.palpation),row('liver','Hígado',f.liver),
   row('spleen','Bazo',f.spleen),row('pulses','Pulsos periféricos',v.sys<90?'Pulso débil con compromiso de perfusión.':null)];
  return regionId?rows.filter(r=>r.regionId===regionId):rows;
