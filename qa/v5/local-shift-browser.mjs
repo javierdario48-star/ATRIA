@@ -10,8 +10,26 @@ try{
    p.on('pageerror',e=>errors.push({mode,message:e.message}));
    await p.goto(h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
    await p.locator('#playerName').fill('Guardia '+mode);
-   await p.locator('#startingSex').selectOption(mode==='apprentice'?'female':'male');
-   await p.locator('#startingColor').selectOption(mode==='apprentice'?'pink':'burgundy');
+   // The player sees and controls the EXACT outfit they will wear in game;
+   // hidden form values must never be used as a shortcut in browser QA.
+   await p.locator('[data-avatar-sex="'+(mode==='apprentice'?'female':'male')+'"]').click();
+   const clicks=mode==='apprentice'?3:5; // navy -> pink / burgundy
+   for(let i=0;i<clicks;i++)await p.locator('#avatarNextColor').click();
+   assert.equal(await p.locator('#startingColor').inputValue(),
+    mode==='apprentice'?'pink':'burgundy');
+   assert.equal(await p.locator('#startingSex').inputValue(),
+    mode==='apprentice'?'female':'male');
+   const preview=await p.locator('#avatarPreview').evaluate(canvas=>{
+    const d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+    let painted=0;for(let i=3;i<d.length;i+=4)if(d[i]>0)painted++;
+    return painted;
+   });
+   assert(preview>10000,'doctor preview must be real and visibly populated before entering');
+   const atlas=await p.evaluate(async()=>{
+    const img=new Image();img.src='/src/v5/content/assets/player-wardrobe.avif';
+    await img.decode();return [img.naturalWidth,img.naturalHeight];
+   });
+   assert.deepEqual(atlas,[768,576],'never use the old low-resolution 72×108 miniature atlas');
    await p.locator('#enterButton').click();
    await p.waitForFunction(mode=>{
     const player=atriaV5.snapshot().player;
