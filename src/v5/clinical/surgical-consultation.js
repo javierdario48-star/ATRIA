@@ -33,13 +33,13 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
  // no direct transfer finalizer and must retain their existing behavior.
  const pending=new Set(structuredClone(checkpoint?.pending??[]));
  function gastroReview(){
-  if(c.id!=='CHOLANG-001')return {accepted:false,status:'review',
+  if(!['CHOLANG-001','HDA-001'].includes(c.id))return {accepted:false,status:'review',
    reason:'Este caso no tiene indicación de endoscopía terapéutica urgente modelada.'};
   const evidence=surgicalReviewSnapshot(p,c,cases);
   if(!evidence.diagnosticCompatible||!evidence.vitalsKnown||!evidence.examDone)
    return {accepted:false,status:'missing-evidence',
     reason:'Gastroenterología solicita una sospecha diagnóstica compatible, signos vitales y exploración documentada antes de aceptar el traslado.'};
-  return {accepted:true,status:'accepted',reason:'Gastroenterología acepta la derivación urgente para valoración y posible drenaje biliar por CPRE. El drenaje todavía no se realizó; mantener soporte y antibióticos durante el traslado.'};
+  return {accepted:true,status:'accepted',reason:c.id==='HDA-001'? 'Endoscopía acepta evaluar la hemorragia y considerar hemostasia; todavía NO se realizó hemostasia. Mantener reanimación durante el traslado.':'Gastroenterología acepta la derivación urgente para valoración y posible drenaje biliar por CPRE. El drenaje todavía no se realizó; mantener soporte y antibióticos durante el traslado.'};
  }
  function receipt(cmd,consult,reused=false){
   const missing=consult.accepted?(readiness(consult.id==='uti'?'uti':consult.id==='gastro'?'procedimiento':'quirofano')?.missing||[]):[];
@@ -55,8 +55,9 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
    const destination=intent.kind==='case.close'&&!intent.partial?intent.id:null;
    // Only case-authorized accepting transfer routes use automatic closure.
    // PBE/TER preserve their proven direct ICU disposition contract.
-   const permitted=c.id==='CHOLANG-001'?['procedimiento','uti']:
-     ['APP-001','CHOLE-001','PERI-SEC-001'].includes(c.id)?['quirofano']:[];
+   const permitted=['CHOLANG-001','HDA-001'].includes(c.id)?['procedimiento','uti']:
+     ['APP-001','CHOLE-001','PERI-SEC-001','MESI-001','ILEO-001'].includes(c.id)?['quirofano']:
+     c.id==='PANC-001'?['uti']:[];
    if(destination&&(!permitted.includes(destination)||typeof acceptTransfer!=='function'))return null;
    const service=destination==='quirofano'?'cirugia':destination==='uti'?'uti':destination==='procedimiento'?'gastro':null;
    if(!service&&(!['cirugia','uti','gastro'].includes(intent.id)||

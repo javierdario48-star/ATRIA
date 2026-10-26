@@ -7,6 +7,7 @@ import {createAppCare} from './app-care.js';
 import {createPeritonitisCare} from './peritonitis-care.js';
 import {createCholangitisCare} from './cholangitis-care.js';
 import {createCholeCare} from './chole-care.js';
+import {createPancCare,createAdditionalCaseCare,ADDITIONAL_CASE_DISPOSITIONS} from './additional-case-care.js';
 import {createProgressionLedger} from './progression.js';
 import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
@@ -58,7 +59,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // not a replacement for the native APP/CIRR physiological owner.
  const pharmacology=createCasePharmacology({cases:content.cases,therapies:content.therapies});
  const factory={cirr:createCirrCare,app:createAppCare,peritonitis:createPeritonitisCare,
-   cholangitis:createCholangitisCare,chole:createCholeCare}[CLINICAL_EXECUTORS[caseData.id]];
+   cholangitis:createCholangitisCare,chole:createCholeCare,panc:createPancCare,
+   additional:createAdditionalCaseCare}[CLINICAL_EXECUTORS[caseData.id]];
  const care=factory?factory(nativePatient,caseData,options):null;
  // Factories initialize their native fields. Restore the SAME owned object
  // afterwards so every executor and pending task keeps its original reference.
@@ -79,7 +81,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // same native case formulary and dose/device parsers; never preview effects.
  // Single orders still return their existing per-intervention rejection.
  const migratedTherapies=new Set(['oxygen',...Object.keys(IV_MEDICINES),
-  ...(['APP-001','CHOLE-001'].includes(caseData.id)?['npo']:caseData.id==='CIRR-001'?['espironolactona','sal_restriccion','paracentesis_ter']:[])]);
+  ...(['APP-001','CHOLE-001','PANC-001'].includes(caseData.id)?['npo']:
+   caseData.id==='CIRR-001'?['espironolactona','sal_restriccion','paracentesis_ter']:
+   ADDITIONAL_CASE_DISPOSITIONS[caseData.id]?.conducts||[])]);
  function validateClinicalBatch(intents){
   if(intents.length<2)return null;
   for(const intent of intents){
@@ -298,7 +302,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    // A long presentation frame must preserve adverse episodes, support changes
    // and fatal exposure in the SAME clock/executor path. A pending medicine
    // only selects time resolution; effects still require actual administration.
-   if((['peritonitis','cholangitis'].includes(CLINICAL_EXECUTORS[caseData.id])||nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
+   if((['peritonitis','cholangitis','panc','additional'].includes(CLINICAL_EXECUTORS[caseData.id])||nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
      nativePatient.pendingTreatments?.some(x=>survivalSensitiveIV.has(x.id)))&&deltaRealSeconds>.25){
     const ready=[];
     for(let elapsed=0;elapsed<deltaRealSeconds-1e-9;elapsed+=.25)
