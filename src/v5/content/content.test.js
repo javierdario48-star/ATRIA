@@ -29,7 +29,8 @@ test('canonical content preserves effective original map, cases and artwork',()=
  }
  for(const [name,expected] of Object.entries(provenance.files)){
   const canonicalPath=name==='cases.json'?'cases-original.json':
-   name==='therapies.json'?'therapies-original.json':name;
+   name==='therapies.json'?'therapies-original.json':
+   name==='default-doses.json'?'default-doses-original.json':name;
   assert.equal(hash(fs.readFileSync(path.join(root,canonicalPath))),expected,canonicalPath);
  }
 });
@@ -64,4 +65,17 @@ test('the 30 original therapies are immutable and the 14 V5 additions are additi
   assert(x.id&&x.label&&Array.isArray(x.aliases)&&x.aliases.length,
    'new medicines must have a real UI identity and speech aliases');
  }
+});
+
+test('the seven V5 standard doses preserve all 21 original dosing defaults',()=>{
+ const legacy=read('default-doses-original.json'),active=read('default-doses.json');
+ assert.equal(Object.keys(legacy).length,21);
+ assert.equal(Object.keys(active).length,28);
+ for(const [id,value] of Object.entries(legacy))
+  assert.deepEqual(active[id],value,'the reference regimen changed for '+id);
+ const newIds=Object.keys(active).filter(id=>!Object.hasOwn(legacy,id));
+ assert.equal(newIds.length,7);
+ for(const id of newIds)
+  assert(Number.isFinite(active[id].amount)&&active[id].amount>0&&
+   active[id].unit&&active[id].display,id+' missing a validated default dose');
 });
