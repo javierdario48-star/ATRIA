@@ -15,6 +15,7 @@ export function pancClosureSnapshot(p,c,destination){
   extraStudies:p.orders.filter(o=>!c.keyStudies.includes(o.id)).map(o=>o.id),
   keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,
   delivered:[...new Set([...p.treatments.filter(x=>!matchesMedicationAllergy487(p,x.id)).map(x=>x.id),
+   ...(p.treatments.some(x=>x.id==='morphine'&&p.administrationLog.some(a=>a.sourceEventId===x.sourceEventId))?['analgesia']:[]),
    ...(p.venousAccessCount>0?['iv']:[])])],
   consultsDone:p.consults.filter(x=>x.status==='done'&&x.accepted).map(x=>x.id),
   disposition:destination,sys:p.liveVitals.sys,hr:p.liveVitals.hr,

@@ -5,6 +5,7 @@ import {parseMorphineIVDose487} from './morphine-487.js';
 import {parseSpecialIVDose487} from './iv-dose-contracts-487.js';
 export const IV_MEDICINES=Object.freeze({
  fluid:Object.freeze({id:'fluid',label:'Cristaloides / reposición de volumen',seconds:.8}),
+ ppi:Object.freeze({id:'ppi',label:'Pantoprazol IV',seconds:.8}),
  ceftriaxone:Object.freeze({id:'ceftriaxone',label:'Ceftriaxona IV',seconds:1.5}),
  metronidazole:Object.freeze({id:'metronidazole',label:'Metronidazol IV',seconds:1.5}),
  furosemide:Object.freeze({id:'furosemide',label:'Furosemida IV',seconds:.55}),

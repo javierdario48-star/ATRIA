@@ -27,7 +27,7 @@ function snapshot(p,c,destination){
 export const ADDITIONAL_CASE_DISPOSITIONS=Object.freeze({
  'CROHN-001':{conducts:['steroid','aza'],destinations:['sala','observacion'],
   summary:'Enfermedad inflamatoria intestinal: la internación permite seguimiento; no se presume remisión.'},
- 'HDA-001':{conducts:['ppi'],destinations:['procedimiento','uti'],
+ 'HDA-001':{conducts:[],destinations:['procedimiento','uti'],
   summary:'Hemorragia digestiva: el equipo receptor acepta la evaluación. No se afirma hemostasia endoscópica.'},
  'COLON-001':{conducts:['staging_order'],destinations:['alta','sala'],
   summary:'Lesión colónica: el plan diagnóstico y oncológico continúa. No se declara resección ni curación.'},

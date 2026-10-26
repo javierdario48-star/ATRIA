@@ -24,7 +24,7 @@ import {documentMedicationComplications487} from './medication-harms-487.js';
 import {CASE_CLOSURE_RULES_487,CLOSURE_DEST_LABELS_487} from '../../clinical/case-completion-487.js';
 
 const copy=value=>structuredClone(value);
-const survivalSensitiveIV=new Set(['anticoagulation','morphine','albumin','transfusion','vasopressor']);
+const survivalSensitiveIV=new Set(['anticoagulation','morphine','albumin','transfusion','vasopressor','ppi']);
 const routeReason={
  'no-patient-target':'Acercate al paciente para indicar el estudio.',
  'question-or-negation':'Pregunta o indicación negada: no ejecuté ninguna acción.',
