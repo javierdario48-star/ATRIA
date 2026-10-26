@@ -14,7 +14,8 @@ const byId=new Map(cases.map(c=>[c.id,c]));
 const sample=id=>({uid:'patient-'+id,treatments:[],administrationLog:[],pendingTreatments:[],
  procedures:{},adverseEvents:[],liveVitals:additionalCaseInitialVitals(byId.get(id))});
 const medicine=(p,id)=>{
- const dose=doses[id]||GASTRO_CONDUCT_DOSES[id]||{amount:1,unit:'mg'};
+ const dose=doses[id]||GASTRO_CONDUCT_DOSES[id]||
+  (id==='anticoagulation'?{amount:1,unit:'protocolo',display:'1 protocolo'}:{amount:1,unit:'mg'});
  const route=GASTRO_CONDUCT_DOSES[id]?.route||(['steroid','ngt','oral_rehydration','disimpaction'].includes(id)?'documented':'iv');
  const eventId='admin-'+id,when=10;
  p.treatments.push({id,sourceEventId:eventId,patientUid:p.uid,administeredAtNativeMinute:when,
