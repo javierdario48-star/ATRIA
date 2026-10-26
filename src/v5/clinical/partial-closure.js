@@ -1,5 +1,6 @@
 import {CASE_CLOSURE_RULES_487} from '../../clinical/case-completion-487.js';
 import {csDxMatchesCase487,csDxNorm487} from '../../clinical/diagnostic-impression-487.js';
+import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
 
 // V5 opt-in partial evaluation using the *existing* native score, safety data,
 // consultation and closure receipt owner. No second case executor or XP ledger.
@@ -25,7 +26,7 @@ export function diagnosticMultiplier(p,c,cases){
 }
 export function partialDisposition(p,c,destination,assessment,{cases}={}){
  if(p.caseEnded||p.patientDied)return {ready:false,missing:['Atención ya finalizada.']};
- const rule=CASE_CLOSURE_RULES_487[c.id];
+ const rule=GASTRO_CASE_RULES[c.id]||CASE_CLOSURE_RULES_487[c.id];
  const allowed=rule?.destinations||[PERITONITIS_DESTINATIONS[c.id]?.({
   sys:p.liveVitals.sys,spo2:p.liveVitals.spo2,baselineVitals:p.baselineVitals
  })].filter(Boolean);

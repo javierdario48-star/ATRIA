@@ -8,11 +8,13 @@ import {applyConfirmedIVTargetOffsets} from './pharmacology-catalog.js';
 import {applyMedicationHarmTargets487} from './medication-harms-487.js';
 import {applyConfirmedMorphineTargetOffsets487} from './morphine-487.js';
 import {applyConfirmedNativeSupportTargets487} from './native-support-487.js';
+import {GASTRO_DYNAMICS} from './gastro-expansion-policies.js';
 const axes=['temp','hr','rr','sys','dia','spo2'];
 const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const ramp=(t,a,b)=>clamp((t-a)/(b-a),0,1);
 export const ADDITIONAL_CASE_TRAJECTORIES=Object.freeze({
+ ...GASTRO_DYNAMICS,
  // Crohn: disease activity persists. Steroids attenuate an inflammatory
  // response over time but cannot instantaneously cure chronic bowel disease.
  'CROHN-001':{early:[.25,7,1,-3,-2,-.3],late:[.35,7,1,-4,-2,-.4],earlyEnd:180,lateEnd:600,
@@ -41,7 +43,10 @@ export function additionalCaseInitialVitals(c){
  return out;
 }
 const administered=(p,id)=>p.treatments?.some(t=>t.id===id&&t.patientUid===p.uid&&
- (['steroid','ppi','ngt'].includes(id)||p.administrationLog?.some(a=>a.sourceEventId===t.sourceEventId&&a.patientUid===p.uid)));
+ (['steroid','ppi','ngt'].includes(id)||t.kind==='documented-clinical-conduct'&&
+  !['lactulose','rifaximin','fidaxomicin','vancomycin_po','ppi_oral'].includes(id)||
+  p.administrationLog?.some(a=>a.sourceEventId===t.sourceEventId&&a.patientUid===p.uid&&a.id===id)));
+
 export function additionalCaseTargets(p,c,minute){
  const rule=ADDITIONAL_CASE_TRAJECTORIES[c?.id];
  if(!rule||!Number.isFinite(minute)||minute<0)throw Error('invalid disease target');

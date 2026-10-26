@@ -5,6 +5,7 @@ import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {createPancCare} from './panc-care.js';
+import {GASTRO_CASE_RULES,GASTRO_CASE_CONDUCTS,GASTRO_CLOSURE_TEXT} from './gastro-expansion-policies.js';
 import {additionalCaseInitialVitals,advanceAdditionalCaseVitals,ADDITIONAL_CASE_TRAJECTORIES} from './native-additional-cases.js';
 export {createPancCare};
 function snapshot(p,c,destination){
@@ -25,6 +26,8 @@ function snapshot(p,c,destination){
   adverseCount:confirmedClinicalMissteps(p,c).adverseCount,uid:p.uid};
 }
 export const ADDITIONAL_CASE_DISPOSITIONS=Object.freeze({
+ ...Object.fromEntries(Object.entries(GASTRO_CASE_RULES).map(([id,rule])=>[id,
+  {conducts:GASTRO_CASE_CONDUCTS[id]||[],destinations:rule.destinations,summary:GASTRO_CLOSURE_TEXT[id]}])),
  'CROHN-001':{conducts:['steroid','aza'],destinations:['sala','observacion'],
   summary:'Enfermedad inflamatoria intestinal: la internación permite seguimiento; no se presume remisión.'},
  'HDA-001':{conducts:[],destinations:['procedimiento','uti'],
@@ -42,7 +45,7 @@ export function createAdditionalCaseCare(p,c,options){
  const policy=ADDITIONAL_CASE_DISPOSITIONS[c.id];
  return createAcuteCare(p,c,options,{
   initialVitals:additionalCaseInitialVitals,advanceVitals:advanceAdditionalCaseVitals,
-  evaluate:(patient,caseData,destination)=>csEvaluateClosure487(snapshot(patient,caseData,destination)),
+  evaluate:(patient,caseData,destination)=>csEvaluateClosure487(snapshot(patient,caseData,destination),GASTRO_CASE_RULES),
   conducts:policy.conducts,reassessmentRequired:true,
   reassessmentMessage:patient=>'Reevaluación: PA '+Math.round(patient.liveVitals.sys)+'/'+Math.round(patient.liveVitals.dia)+
    ', FC '+Math.round(patient.liveVitals.hr)+

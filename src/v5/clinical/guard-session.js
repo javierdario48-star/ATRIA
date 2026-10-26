@@ -22,6 +22,7 @@ import {confirmedFluidFeedback,fluidFeedbackLabel} from './fluid-feedback.js';
 import {patientAllergyFacts487} from './medication-safety-487.js';
 import {documentMedicationComplications487} from './medication-harms-487.js';
 import {CASE_CLOSURE_RULES_487,CLOSURE_DEST_LABELS_487} from '../../clinical/case-completion-487.js';
+import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
 
 const copy=value=>structuredClone(value);
 const survivalSensitiveIV=new Set(['anticoagulation','morphine','albumin','transfusion','vasopressor','ppi']);
@@ -212,7 +213,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  }
  function eligibleDestinations(){
   if(!care||nativePatient.caseEnded)return [];
-  const destinations=CASE_CLOSURE_RULES_487[caseData.id]?.destinations;
+  const destinations=(GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations;
   if(destinations)return destinations.filter(id=>closureReadiness(id)?.ready);
   const out=closureReadiness();return out?.ready?[out.action]:[];
  }
@@ -426,7 +427,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    eligibleDestinations:eligibleDestinations(),
    closure:copy(closureReadiness(CLINICAL_EXECUTORS[caseData.id]==='peritonitis'?undefined:
-    CASE_CLOSURE_RULES_487[caseData.id]?.destinations?.[0]||'sala'))};},
+    (GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations?.[0]||'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }

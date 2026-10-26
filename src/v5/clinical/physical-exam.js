@@ -2,9 +2,11 @@
 // migrated cases. Neither undefined findings nor an untouched organ are normal.
 import {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
 import {readNeurologicalState,readPatientObservations} from './patient-observations.js';
+import {GASTRO_PHYSICAL_FINDINGS} from './gastro-expansion-presentations.js';
 export {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
 const unspecified='Sin hallazgo específico modelado en este escenario.';
 const findings={
+ ...GASTRO_PHYSICAL_FINDINGS,
  'CROHN-001':{appearance:'Paciente adelgazado, sin signos de shock.',
   inspection:'Abdomen sin distensión importante.',
   palpation:'Dolor profundo en fosa ilíaca derecha, sin defensa ni irritación peritoneal.',

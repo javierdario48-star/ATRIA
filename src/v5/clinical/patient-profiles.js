@@ -1,5 +1,7 @@
-// Effective ns421-patient-dialogue profiles. Only existing complete V5 cases.
+// Shared case dialogue profiles, scoped to one authenticated patient.
+import {GASTRO_PATIENT_PROFILES} from './gastro-expansion-presentations.js';
 export const PATIENT_PROFILES=Object.freeze({
+ ...GASTRO_PATIENT_PROFILES,
  'CROHN-001':{place:'Me duele sobre todo abajo a la derecha de la panza.',
   onset:'Hace varias semanas que tengo diarrea y molestias; no se me pasan.',
   radiation:'Lo siento en la parte derecha baja, no se me corre a otro lugar.',
