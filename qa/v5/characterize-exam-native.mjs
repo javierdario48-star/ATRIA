@@ -34,7 +34,16 @@ for(const caseId of ['CIRR-001','APP-001','PERI-SEC-001','PERI-PBE-001','PERI-TE
   for(const technique of Object.keys(EXAM_TECHNIQUES)){
    const expected=JSON.parse(JSON.stringify(ctx.observe(technique)));
    const actual=physicalExamRows(caseId,p,technique).map(({organ,text})=>({organ,text}));
-   assert.deepEqual(actual,expected,caseId+' '+technique+' '+JSON.stringify(vitals));comparisons++;
+   if(caseId==='CIRR-001'&&['percussion','palpation'].includes(technique)){
+    // Intentional, clinically grounded expansion requested for liver.
+    // Keep the original 4.8.7 findings identical for every OTHER organ.
+    assert.deepEqual(actual.filter(x=>x.organ!=='Hígado'),
+     expected.filter(x=>x.organ!=='Hígado'));
+    assert.equal(actual.length,expected.length,'the original anatomy has not changed');
+    const hepatic=actual.find(x=>x.organ==='Hígado');
+    assert.match(hepatic.text,technique==='percussion'?/Matidez hepática/:/Borde hepático difícil/);
+   }else assert.deepEqual(actual,expected,caseId+' '+technique+' '+JSON.stringify(vitals));
+   comparisons++;
   }
  }
 }
