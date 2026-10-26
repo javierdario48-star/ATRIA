@@ -99,7 +99,8 @@ for(const caseId of cases){
    const terminal=await send('/disposicion '+p.dest);
    assert.equal(terminal.clinical.patient.closure?.closed,true,caseId+' failed clinical closure');
    assert.equal(terminal.clinical.patient.closure.destination,p.dest);
-   assert.equal(terminal.clinical.shift.outcomes.length,1);
+   assert.equal(terminal.clinical.shift.outcomes.filter(o=>o.patientUid===patient.uid||o.uid===patient.uid).length,1,
+    'exactly one outcome for the selected patient, even when another case expires');
    assert.equal(terminal.claims.length,1,'only one competitive doctor earns XP');
    assert.equal(terminal.claims[0][0],'b');
    assert(terminal.claims[0][1].xp>0);

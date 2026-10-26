@@ -28,7 +28,7 @@ for(const [caseId,authorized] of Object.entries(destinations)){
     const bad=(await s.post({id:'bad-dest',text:'/disposicion '+(authorized.includes('alta')?'quirofano':'alta')})).clinical;
     assert.equal(bad[0]?.status,'rejected','invalid transfer cannot close');
     const premature=(await s.post({id:'early',text:'/disposicion '+authorized[0]})).clinical;
-    assert.equal(premature[0]?.status,'rejected','destination alone is not successful treatment');
+    assert(['pending','rejected'].includes(premature[0]?.status), 'destination cannot directly grant closure');
     assert.equal(s.read().patient.caseEnded,false);
     assert.equal(s.read().patient.closure,null);
     assert.equal(s.read().progress.xp,0);

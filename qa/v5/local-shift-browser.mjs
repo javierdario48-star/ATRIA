@@ -61,8 +61,8 @@ try{
      timer:time.getBoundingClientRect().toJSON(),score:score.getBoundingClientRect().toJSON()};
    });
    assert.equal(clock.hidden,false,'the game-day clock must be visible above the ward');
-   assert.match(clock.day,/^\\d{2}:\\d{2}$/);
-   assert.match(clock.progress,/^\\d{2}:\\d{2} \\/ 24:00$/);
+   assert.match(clock.day,/^\d{2}:\d{2}$/);
+   assert.match(clock.progress,/^\d{2}:\d{2} \/ 24:00$/);
    assert(clock.timer.bottom<=clock.score.top||clock.timer.left>=clock.score.right,
     'top-right game clock cannot obscure the clinical scoreboard on Pixel 5');
    const state=await p.evaluate(()=>atriaV5.snapshot());
