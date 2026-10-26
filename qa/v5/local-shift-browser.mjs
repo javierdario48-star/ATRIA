@@ -37,7 +37,12 @@ try{
     const img=new Image();img.src='/src/v5/content/assets/player-wardrobe.avif';
     await img.decode();return [img.naturalWidth,img.naturalHeight];
    });
-   assert.deepEqual(atlas,[768,576],'never use the old low-resolution 72×108 miniature atlas');
+   assert.deepEqual(atlas,[1536,1152],'the full-quality 384×576 frame must replace the former miniature');
+   const backing=await p.locator('#avatarPreview').evaluate(canvas=>{
+    const rect=canvas.getBoundingClientRect();
+    return [canvas.width/rect.width,canvas.height/rect.height];
+   });
+   assert(backing[0]>=1.9&&backing[1]>=1.9,'preview backing store must match a retina display');
    await p.locator('#enterButton').click();
    await p.waitForFunction(mode=>{
     const player=atriaV5.snapshot().player;
