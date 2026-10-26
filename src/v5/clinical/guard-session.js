@@ -426,7 +426,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    eligibleDestinations:eligibleDestinations(),
    closure:copy(closureReadiness(CLINICAL_EXECUTORS[caseData.id]==='peritonitis'?undefined:
-    ['APP-001','CHOLE-001'].includes(caseData.id)?'quirofano':caseData.id==='CHOLANG-001'?'procedimiento':'sala'))};},
+    CASE_CLOSURE_RULES_487[caseData.id]?.destinations?.[0]||'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }

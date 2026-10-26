@@ -41,6 +41,18 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
     reason:'Gastroenterología solicita una sospecha diagnóstica compatible, signos vitales y exploración documentada antes de aceptar el traslado.'};
   return {accepted:true,status:'accepted',reason:c.id==='HDA-001'? 'Endoscopía acepta evaluar la hemorragia y considerar hemostasia; todavía NO se realizó hemostasia. Mantener reanimación durante el traslado.':'Gastroenterología acepta la derivación urgente para valoración y posible drenaje biliar por CPRE. El drenaje todavía no se realizó; mantener soporte y antibióticos durante el traslado.'};
  }
+ function specialSurgicalReview(){
+  if(!['MESI-001','ILEO-001'].includes(c.id))return null;
+  const snapshot=surgicalReviewSnapshot(p,c,cases);
+  if(!snapshot.diagnosticCompatible||!snapshot.vitalsKnown||
+   !snapshot.examDone&&snapshot.examRegions<2)return {accepted:false,status:'missing-evidence',
+   reason:'Se requieren una sospecha diagnóstica compatible, signos vitales y exploración dirigida.'};
+  // A surgical opinion can be requested while urgent CTA is pending. This
+  // is not permission to skip the imaging/physiology required for transfer.
+  return {accepted:true,status:'accepted',reason:c.id==='MESI-001'?
+   'Cirugía acepta valoración urgente por posible isquemia mesentérica. La revascularización aún no se realizó; mantener reanimación y completar angio-TC.':
+   'Cirugía acepta valorar obstrucción intestinal y eventual complicación. La cirugía no se realizó; mantener descompresión, soporte y vigilancia.'};
+ }
  function receipt(cmd,consult,reused=false){
   const missing=consult.accepted?(readiness(consult.id==='uti'?'uti':consult.id==='gastro'?'procedimiento':'quirofano')?.missing||[]):[];
   return executed(cmd,{consultId:consult.id,sourceEventId:consult.sourceEventId,
@@ -71,7 +83,7 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
    // later. New findings documented while awaiting the response cannot
    // retroactively justify a premature disposition request.
    if(destination&&id!=='uti'){
-    const review=id==='gastro'?gastroReview():
+    const review=id==='gastro'?gastroReview():specialSurgicalReview()||
      csSurgicalReview487(surgicalReviewSnapshot(p,c,cases),c);
     if(!review.accepted)return {status:'rejected',eventId:cmd.eventId,patientUid:p.uid,
      reason:'transfer-not-accepted',receipt:{patientUid:p.uid,eventId:cmd.eventId,message:review.reason}};
@@ -91,7 +103,7 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
    if(!pending.delete(task))return [];
    p.pendingConsults=p.pendingConsults.filter(x=>x.sourceEventId!==task.sourceEventId);
    const review=task.id==='uti'?criticalCareReview487(p.liveVitals,{recentShock:Number(String(c.vitals.bp).split('/')[0])<90}):
-    task.id==='gastro'?gastroReview():csSurgicalReview487(surgicalReviewSnapshot(p,c,cases),c);
+    task.id==='gastro'?gastroReview():specialSurgicalReview()||csSurgicalReview487(surgicalReviewSnapshot(p,c,cases),c);
    const consult={id:task.id,patientUid:p.uid,sourceEventId:task.sourceEventId,
     status:review.accepted?'done':'rejected',accepted:review.accepted,
     reviewStatus:review.status,advice:review.reason,respondedAtRealSecond:at};
