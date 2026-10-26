@@ -79,8 +79,8 @@ for(const [index,caseId] of cases.entries()){
   }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
  });
 }
-test('all thirteen certified executors have cooperative smart-bot closure and duplicate XP coverage',()=>{
- assert.equal(cases.length,13);assert.equal(report.length,13);
+test('all 25 certified executors have cooperative smart-bot closure and duplicate XP coverage',()=>{
+ assert.equal(cases.length,25);assert.equal(report.length,25);
  assert.deepEqual([...new Set(report.map(x=>x.doctors))].sort(),[2,3,4]);
  console.log('ATRIA_COOP_SMART_CLOSURE_BOTS='+JSON.stringify({runs:report.length,results:report}));
 });

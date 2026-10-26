@@ -40,7 +40,7 @@ for(const [caseId,authorized] of Object.entries(destinations)){
 }
 test('the original seven cases keep their native executors and all six new cases have explicit policies',()=>{
  const ids=Object.keys(CLINICAL_EXECUTORS);
- assert.equal(ids.length,13);
+ assert.equal(ids.length,25);
  assert.equal(Object.keys(destinations).length,6);
  for(const id of Object.keys(destinations))
   assert(Object.hasOwn(CLINICAL_EXECUTORS,id),'no catalogue-only clinically playable case');

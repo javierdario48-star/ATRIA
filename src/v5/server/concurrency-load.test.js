@@ -88,6 +88,6 @@ test('independent durable writers race for 2,4,8,16 clinical writes: CAS admits 
    console.log('ATRIA_CAS_RACE='+JSON.stringify({writers:concurrency,committed:valid.length,
     busy:errors.length,elapsedMs:Math.round(performance.now()-at),uniqueClinicalEvents:seen.length}));
   }
-  assert.equal(Object.keys(CLINICAL_EXECUTORS).length,13);
+  assert.equal(Object.keys(CLINICAL_EXECUTORS).length,25);
  }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
 });

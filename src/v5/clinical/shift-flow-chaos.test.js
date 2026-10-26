@@ -72,8 +72,8 @@ for(const mode of modes)for(const caseId of cases)for(const strategy of schedule
   reports.push({mode,caseId,strategy,admitted:shift.records().length,ended:true});
  });
 }
-test('all 156 cross-mode continuous-guard matrix scenarios are executed',()=>{
- assert.equal(cases.length,13);assert.equal(reports.length,156);
+test('all 300 cross-mode continuous-guard matrix scenarios are executed',()=>{
+ assert.equal(cases.length,25);assert.equal(reports.length,300);
  assert.equal(new Set(reports.map(x=>x.mode)).size,4);
  console.log('ATRIA_SHIFT_84_BOT_MATRIX='+JSON.stringify({
   scenarios:reports.length,modeCounts:Object.fromEntries(modes.map(m=>[m,reports.filter(x=>x.mode===m).length])),

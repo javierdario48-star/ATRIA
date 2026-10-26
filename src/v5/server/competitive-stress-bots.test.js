@@ -118,7 +118,7 @@ for(const caseId of cases){
  });
 }
 
-test('28 competitive bot runs cover all seven cases and the 2/3/4-physician capacities',()=>{
- assert.equal(cases.length,13);
+test('100 competitive bot runs cover all 25 cases and the 2/3/4-physician capacities',()=>{
+ assert.equal(cases.length,25);
  console.log('ATRIA_COMPETITIVE_CHAOS_BOTS='+JSON.stringify(report));
 });

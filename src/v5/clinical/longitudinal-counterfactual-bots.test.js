@@ -62,7 +62,7 @@ for(const caseId of Object.keys(CLINICAL_EXECUTORS))for(const mode of ['solo','a
   }finally{treated.s.dispose();control.s.dispose();}
  });
 }
-test('39 matched-pair physiology simulations cover every active clinical writer',()=>{
- assert.equal(Object.keys(CLINICAL_EXECUTORS).length,13);
+test('75 matched-pair physiology simulations cover every active clinical writer',()=>{
+ assert.equal(Object.keys(CLINICAL_EXECUTORS).length,25);
  console.log('ATRIA_ALL_CASES_LONGITUDINAL_BOTS='+JSON.stringify(results));
 });
