@@ -4944,5 +4944,2106 @@
         }
       }
     }
+  },
+  {
+    "id": "VARIX-001",
+    "selector": "Cirrosis + hematemesis masiva",
+    "area": "Hígado · urgencia",
+    "demo": "Varón, 55 años",
+    "chief": "vomité muchísima sangre y me estoy mareando.",
+    "opening": "Doctor, vomité muchísima sangre y me estoy mareando.",
+    "vitals": {
+      "temp": 36.9,
+      "hr": 133,
+      "rr": 29,
+      "bp": "82/48",
+      "spo2": 93
+    },
+    "exam": "Cirrosis + hematemesis masiva",
+    "intents": [
+      {
+        "id": "bleeding",
+        "keys": [
+          "sangre",
+          "vomito sangre",
+          "hematemesis"
+        ],
+        "answers": [
+          "Vomité mucha sangre roja dos veces."
+        ],
+        "reveal": "Vomité mucha sangre roja dos veces."
+      },
+      {
+        "id": "cirrhosis",
+        "keys": [
+          "cirrosis",
+          "higado",
+          "ascitis"
+        ],
+        "answers": [
+          "Tengo cirrosis y ascitis desde hace años."
+        ],
+        "reveal": "Tengo cirrosis y ascitis desde hace años."
+      },
+      {
+        "id": "melena",
+        "keys": [
+          "heces negras",
+          "melena",
+          "deposiciones"
+        ],
+        "answers": [
+          "Desde ayer hago deposiciones negras."
+        ],
+        "reveal": "Desde ayer hago deposiciones negras."
+      },
+      {
+        "id": "meds",
+        "keys": [
+          "anticoagulantes",
+          "medicamentos",
+          "ibuprofeno"
+        ],
+        "answers": [
+          "No tomo anticoagulantes, pero no recuerdo el resto."
+        ],
+        "reveal": "No tomo anticoagulantes, pero no recuerdo el resto."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Comenzó hace pocas horas."
+        ],
+        "reveal": "Comenzó hace pocas horas."
+      },
+      {
+        "id": "prior",
+        "keys": [
+          "varices",
+          "endoscopia",
+          "ligadura"
+        ],
+        "answers": [
+          "Ya me habían hablado de várices esofágicas."
+        ],
+        "reveal": "Ya me habían hablado de várices esofágicas."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_varix_cbc",
+        "label": "Hemograma y coagulograma",
+        "aliases": [
+          "hemograma y coagulograma",
+          "g varix cbc"
+        ],
+        "type": "lab",
+        "delay": 35,
+        "result": "Hb 7,2 g/dL; INR 1,8; plaquetas 78.000."
+      },
+      {
+        "id": "g_varix_group",
+        "label": "Grupo y compatibilidad",
+        "aliases": [
+          "grupo y compatibilidad",
+          "g varix group"
+        ],
+        "type": "lab",
+        "delay": 40,
+        "result": "Grupo y pruebas cruzadas disponibles."
+      },
+      {
+        "id": "g_varix_egd",
+        "label": "Endoscopía digestiva alta",
+        "aliases": [
+          "endoscopía digestiva alta",
+          "g varix egd"
+        ],
+        "type": "lab",
+        "delay": 120,
+        "result": "Sangrado variceal de alto riesgo; el tratamiento endoscópico queda a cargo del equipo receptor."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "terlipressin",
+        "label": "Terlipresina IV",
+        "aliases": [
+          "terlipresina"
+        ]
+      },
+      {
+        "id": "ceftriaxone",
+        "label": "Ceftriaxona IV",
+        "aliases": [
+          "ceftriaxona"
+        ]
+      },
+      {
+        "id": "transfusion",
+        "label": "Transfusión de glóbulos rojos",
+        "aliases": [
+          "transfusion"
+        ]
+      }
+    ],
+    "dx": [
+      "hemorragia digestiva variceal",
+      "sangrado por varices esofagicas"
+    ],
+    "requiredHistory": [
+      "bleeding",
+      "cirrhosis"
+    ],
+    "keyStudies": [
+      "g_varix_cbc",
+      "g_varix_group"
+    ],
+    "keyInterventions": [
+      "terlipressin",
+      "ceftriaxone"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": "bleed",
+    "common": {
+      "name": "Paciente",
+      "age": "55 años",
+      "reason": [
+        "Doctor, vomité muchísima sangre y me estoy mareando."
+      ],
+      "current": [
+        "Doctor, vomité muchísima sangre y me estoy mareando."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Doctor, vomité muchísima sangre y me estoy mareando.",
+      "historySummary": "Doctor, vomité muchísima sangre y me estoy mareando."
+    }
+  },
+  {
+    "id": "ENCEF-001",
+    "selector": "Cirrosis + desorientación + asterixis",
+    "area": "Hígado · neurológico",
+    "demo": "Mujer, 62 años",
+    "chief": "Estoy confundida, no sé bien dónde estoy...",
+    "opening": "Estoy confundida, no sé bien dónde estoy...",
+    "vitals": {
+      "temp": 37.3,
+      "hr": 104,
+      "rr": 20,
+      "bp": "108/65",
+      "spo2": 96
+    },
+    "exam": "Cirrosis + desorientación + asterixis",
+    "intents": [
+      {
+        "id": "confusion",
+        "keys": [
+          "confusion",
+          "desorientada",
+          "mente",
+          "orientacion"
+        ],
+        "answers": [
+          "Mi familia dice que estoy muy confundida desde ayer."
+        ],
+        "reveal": "Mi familia dice que estoy muy confundida desde ayer."
+      },
+      {
+        "id": "sleep",
+        "keys": [
+          "sueño",
+          "dormir",
+          "noche"
+        ],
+        "answers": [
+          "Duermo de día y paso despierta por la noche."
+        ],
+        "reveal": "Duermo de día y paso despierta por la noche."
+      },
+      {
+        "id": "constipation",
+        "keys": [
+          "constipacion",
+          "estreñimiento",
+          "evacuar"
+        ],
+        "answers": [
+          "Hace varios días que no evacúo."
+        ],
+        "reveal": "Hace varios días que no evacúo."
+      },
+      {
+        "id": "infection",
+        "keys": [
+          "fiebre",
+          "infeccion",
+          "orina"
+        ],
+        "answers": [
+          "No recuerdo fiebre, pero siento ardor al orinar."
+        ],
+        "reveal": "No recuerdo fiebre, pero siento ardor al orinar."
+      },
+      {
+        "id": "bleeding",
+        "keys": [
+          "sangrado",
+          "melena",
+          "vomito sangre"
+        ],
+        "answers": [
+          "No he vomitado sangre ni vi heces negras."
+        ],
+        "reveal": "No he vomitado sangre ni vi heces negras."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_encef_liver",
+        "label": "Función hepática, INR y glucosa",
+        "aliases": [
+          "función hepática, inr y glucosa",
+          "g encef liver"
+        ],
+        "type": "lab",
+        "delay": 45,
+        "result": "Bilirrubina elevada, INR 1,6; glucemia sin hipoglucemia."
+      },
+      {
+        "id": "g_encef_infect",
+        "label": "Orina y pesquisa de infección",
+        "aliases": [
+          "orina y pesquisa de infección",
+          "g encef infect"
+        ],
+        "type": "lab",
+        "delay": 55,
+        "result": "Piuria y bacteriuria; evaluar infección precipitante."
+      },
+      {
+        "id": "g_encef_renal",
+        "label": "Función renal y electrolitos",
+        "aliases": [
+          "función renal y electrolitos",
+          "g encef renal"
+        ],
+        "type": "lab",
+        "delay": 40,
+        "result": "Sodio 132 mEq/L, creatinina 1,1 mg/dL."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "lactulose",
+        "label": "Lactulosa",
+        "aliases": [
+          "lactulosa"
+        ]
+      },
+      {
+        "id": "rifaximin",
+        "label": "Rifaximina",
+        "aliases": [
+          "rifaximina"
+        ]
+      }
+    ],
+    "dx": [
+      "encefalopatia hepatica"
+    ],
+    "requiredHistory": [
+      "confusion",
+      "constipation"
+    ],
+    "keyStudies": [
+      "g_encef_liver",
+      "g_encef_infect"
+    ],
+    "keyInterventions": [
+      "lactulose"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": "hepatic",
+    "common": {
+      "name": "Paciente",
+      "age": "62 años",
+      "reason": [
+        "Estoy confundida, no sé bien dónde estoy..."
+      ],
+      "current": [
+        "Estoy confundida, no sé bien dónde estoy..."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Estoy confundida, no sé bien dónde estoy...",
+      "historySummary": "Estoy confundida, no sé bien dónde estoy..."
+    }
+  },
+  {
+    "id": "UC-AS-001",
+    "selector": "Diarrea sanguinolenta + fiebre + taquicardia",
+    "area": "Intestino · EII",
+    "demo": "Mujer, 29 años",
+    "chief": "Voy al baño con sangre muchas veces y tengo fiebre.",
+    "opening": "Voy al baño con sangre muchas veces y tengo fiebre.",
+    "vitals": {
+      "temp": 38.1,
+      "hr": 124,
+      "rr": 22,
+      "bp": "104/64",
+      "spo2": 97
+    },
+    "exam": "Diarrea sanguinolenta + fiebre + taquicardia",
+    "intents": [
+      {
+        "id": "stool",
+        "keys": [
+          "deposiciones",
+          "diarrea",
+          "cuantas veces"
+        ],
+        "answers": [
+          "Más de ocho deposiciones sanguinolentas al día."
+        ],
+        "reveal": "Más de ocho deposiciones sanguinolentas al día."
+      },
+      {
+        "id": "blood",
+        "keys": [
+          "sangre",
+          "moco",
+          "rectorragia"
+        ],
+        "answers": [
+          "Hay sangre en casi todas las deposiciones."
+        ],
+        "reveal": "Hay sangre en casi todas las deposiciones."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Hace cinco días empeoró mucho."
+        ],
+        "reveal": "Hace cinco días empeoró mucho."
+      },
+      {
+        "id": "steroids",
+        "keys": [
+          "corticoides",
+          "medicamentos",
+          "mesalazina"
+        ],
+        "answers": [
+          "Tomo mesalazina, no inicié corticoides para este brote."
+        ],
+        "reveal": "Tomo mesalazina, no inicié corticoides para este brote."
+      },
+      {
+        "id": "infect",
+        "keys": [
+          "antibioticos",
+          "clostridium",
+          "infeccion"
+        ],
+        "answers": [
+          "No tomé antibióticos recientemente."
+        ],
+        "reveal": "No tomé antibióticos recientemente."
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "hinchazon"
+        ],
+        "answers": [
+          "Me duele la parte baja del abdomen."
+        ],
+        "reveal": "Me duele la parte baja del abdomen."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_uc_labs",
+        "label": "Hemograma, PCR y electrolitos",
+        "aliases": [
+          "hemograma, pcr y electrolitos",
+          "g uc labs"
+        ],
+        "type": "lab",
+        "delay": 45,
+        "result": "Hb 9,8; PCR elevada, potasio 3,2."
+      },
+      {
+        "id": "g_uc_cdi",
+        "label": "Toxina / PCR de C. difficile",
+        "aliases": [
+          "toxina / pcr de c. difficile",
+          "g uc cdi"
+        ],
+        "type": "lab",
+        "delay": 65,
+        "result": "C. difficile negativo en esta semilla."
+      },
+      {
+        "id": "g_uc_xray",
+        "label": "Radiografía abdominal",
+        "aliases": [
+          "radiografía abdominal",
+          "g uc xray"
+        ],
+        "type": "lab",
+        "delay": 45,
+        "result": "Colon sin dilatación tóxica al ingreso."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "methylprednisolone",
+        "label": "Corticoide sistémico hospitalario",
+        "aliases": [
+          "metilprednisolona",
+          "corticoide intravenoso"
+        ]
+      },
+      {
+        "id": "fluid",
+        "label": "Cristaloides IV",
+        "aliases": [
+          "ringer",
+          "suero"
+        ]
+      }
+    ],
+    "dx": [
+      "colitis ulcerosa aguda grave",
+      "colitis ulcerosa"
+    ],
+    "requiredHistory": [
+      "stool",
+      "blood"
+    ],
+    "keyStudies": [
+      "g_uc_labs",
+      "g_uc_cdi"
+    ],
+    "keyInterventions": [
+      "methylprednisolone"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": "colitis",
+    "common": {
+      "name": "Paciente",
+      "age": "29 años",
+      "reason": [
+        "Voy al baño con sangre muchas veces y tengo fiebre."
+      ],
+      "current": [
+        "Voy al baño con sangre muchas veces y tengo fiebre."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Voy al baño con sangre muchas veces y tengo fiebre.",
+      "historySummary": "Voy al baño con sangre muchas veces y tengo fiebre."
+    }
+  },
+  {
+    "id": "CDI-001",
+    "selector": "Diarrea tras antibióticos + leucocitosis",
+    "area": "Colon · infeccioso",
+    "demo": "Varón, 76 años",
+    "chief": "Desde que tomé antibióticos tengo diarrea muy fuerte.",
+    "opening": "Desde que tomé antibióticos tengo diarrea muy fuerte.",
+    "vitals": {
+      "temp": 38.2,
+      "hr": 112,
+      "rr": 22,
+      "bp": "108/66",
+      "spo2": 96
+    },
+    "exam": "Diarrea tras antibióticos + leucocitosis",
+    "intents": [
+      {
+        "id": "antibiotics",
+        "keys": [
+          "antibioticos",
+          "clindamicina",
+          "tratamiento previo"
+        ],
+        "answers": [
+          "Terminé clindamicina hace diez días."
+        ],
+        "reveal": "Terminé clindamicina hace diez días."
+      },
+      {
+        "id": "diarrhea",
+        "keys": [
+          "diarrea",
+          "deposiciones",
+          "cuantas"
+        ],
+        "answers": [
+          "Tengo seis deposiciones líquidas al día."
+        ],
+        "reveal": "Tengo seis deposiciones líquidas al día."
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "temperatura"
+        ],
+        "answers": [
+          "Tengo fiebre desde ayer."
+        ],
+        "reveal": "Tengo fiebre desde ayer."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Comenzó hace cuatro días."
+        ],
+        "reveal": "Comenzó hace cuatro días."
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "colicos"
+        ],
+        "answers": [
+          "Tengo retortijones y molestia difusa."
+        ],
+        "reveal": "Tengo retortijones y molestia difusa."
+      },
+      {
+        "id": "blood",
+        "keys": [
+          "sangre",
+          "moco"
+        ],
+        "answers": [
+          "No vi sangre franca."
+        ],
+        "reveal": "No vi sangre franca."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_cdi_toxin",
+        "label": "Toxina / algoritmo de C. difficile",
+        "aliases": [
+          "toxina / algoritmo de c. difficile",
+          "g cdi toxin"
+        ],
+        "type": "lab",
+        "delay": 60,
+        "result": "Prueba toxigénica compatible con infección activa en paciente sintomático."
+      },
+      {
+        "id": "g_cdi_cbc",
+        "label": "Hemograma y creatinina",
+        "aliases": [
+          "hemograma y creatinina",
+          "g cdi cbc"
+        ],
+        "type": "lab",
+        "delay": 35,
+        "result": "Leucocitos 19.000/mm³, creatinina 1,5 mg/dL."
+      },
+      {
+        "id": "g_cdi_ct",
+        "label": "TC abdomen si complicación",
+        "aliases": [
+          "tc abdomen si complicación",
+          "g cdi ct"
+        ],
+        "type": "lab",
+        "delay": 110,
+        "result": "Engrosamiento colónico; sin perforación en esta presentación."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "fidaxomicin",
+        "label": "Fidaxomicina oral",
+        "aliases": [
+          "fidaxomicina"
+        ]
+      },
+      {
+        "id": "vancomycin_po",
+        "label": "Vancomicina oral",
+        "aliases": [
+          "vancomicina oral",
+          "vancomicina po"
+        ]
+      },
+      {
+        "id": "fluid",
+        "label": "Cristaloides",
+        "aliases": [
+          "ringer",
+          "suero"
+        ]
+      }
+    ],
+    "dx": [
+      "infeccion por clostridioides difficile",
+      "colitis por clostridioides difficile"
+    ],
+    "requiredHistory": [
+      "antibiotics",
+      "diarrhea"
+    ],
+    "keyStudies": [
+      "g_cdi_toxin",
+      "g_cdi_cbc"
+    ],
+    "keyInterventions": [
+      "fidaxomicin"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": "infection",
+    "common": {
+      "name": "Paciente",
+      "age": "76 años",
+      "reason": [
+        "Desde que tomé antibióticos tengo diarrea muy fuerte."
+      ],
+      "current": [
+        "Desde que tomé antibióticos tengo diarrea muy fuerte."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Desde que tomé antibióticos tengo diarrea muy fuerte.",
+      "historySummary": "Desde que tomé antibióticos tengo diarrea muy fuerte."
+    }
+  },
+  {
+    "id": "DIVERT-001",
+    "selector": "Dolor FII + fiebre leve",
+    "area": "Colon · diverticular",
+    "demo": "Mujer, 64 años",
+    "chief": "Me duele abajo a la izquierda y tuve algo de fiebre.",
+    "opening": "Me duele abajo a la izquierda y tuve algo de fiebre.",
+    "vitals": {
+      "temp": 37.9,
+      "hr": 96,
+      "rr": 18,
+      "bp": "122/78",
+      "spo2": 98
+    },
+    "exam": "Dolor FII + fiebre leve",
+    "intents": [
+      {
+        "id": "location",
+        "keys": [
+          "izquierda",
+          "donde duele",
+          "dolor"
+        ],
+        "answers": [
+          "Me duele abajo a la izquierda."
+        ],
+        "reveal": "Me duele abajo a la izquierda."
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "temperatura"
+        ],
+        "answers": [
+          "Tuve temperatura de 37,9."
+        ],
+        "reveal": "Tuve temperatura de 37,9."
+      },
+      {
+        "id": "stool",
+        "keys": [
+          "estreñimiento",
+          "diarrea",
+          "deposiciones"
+        ],
+        "answers": [
+          "Estoy algo estreñida."
+        ],
+        "reveal": "Estoy algo estreñida."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Empezó ayer."
+        ],
+        "reveal": "Empezó ayer."
+      },
+      {
+        "id": "prior",
+        "keys": [
+          "diverticulos",
+          "episodios"
+        ],
+        "answers": [
+          "Ya me habían dicho que tenía divertículos."
+        ],
+        "reveal": "Ya me habían dicho que tenía divertículos."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_divert_ct",
+        "label": "TC abdominal con contraste",
+        "aliases": [
+          "tc abdominal con contraste",
+          "g divert ct"
+        ],
+        "type": "lab",
+        "delay": 100,
+        "result": "Diverticulitis sigmoidea no complicada, sin absceso ni aire libre."
+      },
+      {
+        "id": "g_divert_labs",
+        "label": "Hemograma y PCR",
+        "aliases": [
+          "hemograma y pcr",
+          "g divert labs"
+        ],
+        "type": "lab",
+        "delay": 35,
+        "result": "Leucocitos 11.800/mm³, PCR moderadamente elevada."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "oral_hydration",
+        "label": "Hidratación oral pautada",
+        "aliases": [
+          "hidratacion oral",
+          "beber liquidos"
+        ]
+      },
+      {
+        "id": "followup",
+        "label": "Seguimiento y signos de alarma",
+        "aliases": [
+          "seguimiento",
+          "control"
+        ]
+      }
+    ],
+    "dx": [
+      "diverticulitis aguda",
+      "diverticulitis no complicada"
+    ],
+    "requiredHistory": [
+      "location",
+      "onset"
+    ],
+    "keyStudies": [
+      "g_divert_ct"
+    ],
+    "keyInterventions": [
+      "followup"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": "infection",
+    "common": {
+      "name": "Paciente",
+      "age": "64 años",
+      "reason": [
+        "Me duele abajo a la izquierda y tuve algo de fiebre."
+      ],
+      "current": [
+        "Me duele abajo a la izquierda y tuve algo de fiebre."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Me duele abajo a la izquierda y tuve algo de fiebre.",
+      "historySummary": "Me duele abajo a la izquierda y tuve algo de fiebre."
+    }
+  },
+  {
+    "id": "LGIB-001",
+    "selector": "Rectorragia abundante + mareo",
+    "area": "Colon · hemorragia",
+    "demo": "Varón, 71 años",
+    "chief": "Tuve mucha sangre roja por el recto y me mareé.",
+    "opening": "Tuve mucha sangre roja por el recto y me mareé.",
+    "vitals": {
+      "temp": 36.5,
+      "hr": 119,
+      "rr": 23,
+      "bp": "94/59",
+      "spo2": 96
+    },
+    "exam": "Rectorragia abundante + mareo",
+    "intents": [
+      {
+        "id": "bleeding",
+        "keys": [
+          "sangre",
+          "rectorragia",
+          "heces rojas"
+        ],
+        "answers": [
+          "Evacué sangre roja con coágulos dos veces."
+        ],
+        "reveal": "Evacué sangre roja con coágulos dos veces."
+      },
+      {
+        "id": "melena",
+        "keys": [
+          "heces negras",
+          "melena"
+        ],
+        "answers": [
+          "No vi materia fecal negra."
+        ],
+        "reveal": "No vi materia fecal negra."
+      },
+      {
+        "id": "anticoagulants",
+        "keys": [
+          "anticoagulante",
+          "warfarina",
+          "apixaban"
+        ],
+        "answers": [
+          "Tomo apixabán por fibrilación auricular."
+        ],
+        "reveal": "Tomo apixabán por fibrilación auricular."
+      },
+      {
+        "id": "syncope",
+        "keys": [
+          "mareos",
+          "desmayo",
+          "sincope"
+        ],
+        "answers": [
+          "Me mareé al pararme."
+        ],
+        "reveal": "Me mareé al pararme."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Fue hoy hace dos horas."
+        ],
+        "reveal": "Fue hoy hace dos horas."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_lgib_cbc",
+        "label": "Hemograma, coagulación y grupo",
+        "aliases": [
+          "hemograma, coagulación y grupo",
+          "g lgib cbc"
+        ],
+        "type": "lab",
+        "delay": 40,
+        "result": "Hb 8,1 g/dL, INR no refleja apixabán; pruebas cruzadas enviadas."
+      },
+      {
+        "id": "g_lgib_cta",
+        "label": "Angio-TC para sangrado activo",
+        "aliases": [
+          "angio-tc para sangrado activo",
+          "g lgib cta"
+        ],
+        "type": "lab",
+        "delay": 100,
+        "result": "Extravasación colónica focal en caso de sangrado persistente."
+      },
+      {
+        "id": "g_lgib_colon",
+        "label": "Colonoscopía terapéutica diferida",
+        "aliases": [
+          "colonoscopía terapéutica diferida",
+          "g lgib colon"
+        ],
+        "type": "lab",
+        "delay": 180,
+        "result": "Valoración endoscópica tras estabilización; no equivale a hemostasia."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "fluid",
+        "label": "Cristaloides",
+        "aliases": [
+          "ringer",
+          "suero"
+        ]
+      },
+      {
+        "id": "transfusion",
+        "label": "Transfusión",
+        "aliases": [
+          "transfusion"
+        ]
+      }
+    ],
+    "dx": [
+      "hemorragia digestiva baja",
+      "rectorragia diverticular"
+    ],
+    "requiredHistory": [
+      "bleeding",
+      "anticoagulants"
+    ],
+    "keyStudies": [
+      "g_lgib_cbc",
+      "g_lgib_cta"
+    ],
+    "keyInterventions": [
+      "fluid"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": "bleed",
+    "common": {
+      "name": "Paciente",
+      "age": "71 años",
+      "reason": [
+        "Tuve mucha sangre roja por el recto y me mareé."
+      ],
+      "current": [
+        "Tuve mucha sangre roja por el recto y me mareé."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Tuve mucha sangre roja por el recto y me mareé.",
+      "historySummary": "Tuve mucha sangre roja por el recto y me mareé."
+    }
+  },
+  {
+    "id": "HEPAT-001",
+    "selector": "Ictericia + transaminasas elevadas",
+    "area": "Hígado · hepatitis",
+    "demo": "Mujer, 34 años",
+    "chief": "Me notaron los ojos amarillos y la orina oscura.",
+    "opening": "Me notaron los ojos amarillos y la orina oscura.",
+    "vitals": {
+      "temp": 37.5,
+      "hr": 92,
+      "rr": 17,
+      "bp": "119/74",
+      "spo2": 98
+    },
+    "exam": "Ictericia + transaminasas elevadas",
+    "intents": [
+      {
+        "id": "jaundice",
+        "keys": [
+          "amarillo",
+          "ictericia",
+          "ojos"
+        ],
+        "answers": [
+          "Los ojos se me pusieron amarillos hace dos días."
+        ],
+        "reveal": "Los ojos se me pusieron amarillos hace dos días."
+      },
+      {
+        "id": "meds",
+        "keys": [
+          "paracetamol",
+          "drogas",
+          "medicamentos"
+        ],
+        "answers": [
+          "No tomé paracetamol en exceso ni otros fármacos nuevos."
+        ],
+        "reveal": "No tomé paracetamol en exceso ni otros fármacos nuevos."
+      },
+      {
+        "id": "travel",
+        "keys": [
+          "viaje",
+          "agua",
+          "alimentos"
+        ],
+        "answers": [
+          "Estuve de viaje y comí fuera de casa."
+        ],
+        "reveal": "Estuve de viaje y comí fuera de casa."
+      },
+      {
+        "id": "confusion",
+        "keys": [
+          "confusion",
+          "orientacion",
+          "sueño"
+        ],
+        "answers": [
+          "No estoy confundida."
+        ],
+        "reveal": "No estoy confundida."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Hace una semana empecé con cansancio."
+        ],
+        "reveal": "Hace una semana empecé con cansancio."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_hepat_liver",
+        "label": "Hepatograma y bilirrubina",
+        "aliases": [
+          "hepatograma y bilirrubina",
+          "g hepat liver"
+        ],
+        "type": "lab",
+        "delay": 50,
+        "result": "ALT 1.150, AST 890, bilirrubina total 6,2 mg/dL."
+      },
+      {
+        "id": "g_hepat_inr",
+        "label": "INR y glucosa",
+        "aliases": [
+          "inr y glucosa",
+          "g hepat inr"
+        ],
+        "type": "lab",
+        "delay": 35,
+        "result": "INR 1,2; glucemia normal, sin insuficiencia hepática aguda."
+      },
+      {
+        "id": "g_hepat_viral",
+        "label": "Serologías hepatitis virales",
+        "aliases": [
+          "serologías hepatitis virales",
+          "g hepat viral"
+        ],
+        "type": "lab",
+        "delay": 140,
+        "result": "IgM anti-VHA reactiva; HBV/HCV negativos en esta semilla."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "followup",
+        "label": "Seguimiento hepatológico",
+        "aliases": [
+          "seguimiento",
+          "control"
+        ]
+      },
+      {
+        "id": "oral_hydration",
+        "label": "Hidratación oral",
+        "aliases": [
+          "hidratacion oral"
+        ]
+      }
+    ],
+    "dx": [
+      "hepatitis aguda",
+      "hepatitis viral aguda"
+    ],
+    "requiredHistory": [
+      "jaundice",
+      "meds"
+    ],
+    "keyStudies": [
+      "g_hepat_liver",
+      "g_hepat_inr"
+    ],
+    "keyInterventions": [
+      "followup"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": "hepatitis",
+    "common": {
+      "name": "Paciente",
+      "age": "34 años",
+      "reason": [
+        "Me notaron los ojos amarillos y la orina oscura."
+      ],
+      "current": [
+        "Me notaron los ojos amarillos y la orina oscura."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Me notaron los ojos amarillos y la orina oscura.",
+      "historySummary": "Me notaron los ojos amarillos y la orina oscura."
+    }
+  },
+  {
+    "id": "DIARR-001",
+    "selector": "Diarrea acuosa + deshidratación",
+    "area": "Intestino · gastroenteritis",
+    "demo": "Varón, 28 años",
+    "chief": "Tengo mucha diarrea líquida y estoy sediento.",
+    "opening": "Tengo mucha diarrea líquida y estoy sediento.",
+    "vitals": {
+      "temp": 37.4,
+      "hr": 116,
+      "rr": 20,
+      "bp": "106/66",
+      "spo2": 98
+    },
+    "exam": "Diarrea acuosa + deshidratación",
+    "intents": [
+      {
+        "id": "diarrhea",
+        "keys": [
+          "diarrea",
+          "deposiciones"
+        ],
+        "answers": [
+          "Ocho deposiciones acuosas desde ayer."
+        ],
+        "reveal": "Ocho deposiciones acuosas desde ayer."
+      },
+      {
+        "id": "blood",
+        "keys": [
+          "sangre",
+          "moco"
+        ],
+        "answers": [
+          "No vi sangre ni moco."
+        ],
+        "reveal": "No vi sangre ni moco."
+      },
+      {
+        "id": "fever",
+        "keys": [
+          "fiebre",
+          "temperatura"
+        ],
+        "answers": [
+          "No tuve fiebre alta."
+        ],
+        "reveal": "No tuve fiebre alta."
+      },
+      {
+        "id": "hydration",
+        "keys": [
+          "orina",
+          "sed",
+          "agua"
+        ],
+        "answers": [
+          "Tengo mucha sed y orino poco."
+        ],
+        "reveal": "Tengo mucha sed y orino poco."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Empezó ayer a la noche."
+        ],
+        "reveal": "Empezó ayer a la noche."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_diarr_elect",
+        "label": "Ionograma y función renal",
+        "aliases": [
+          "ionograma y función renal",
+          "g diarr elect"
+        ],
+        "type": "lab",
+        "delay": 35,
+        "result": "Na 134, K 3,4, creatinina 1,1 mg/dL."
+      },
+      {
+        "id": "g_diarr_stool",
+        "label": "Coprocultivo si indicación",
+        "aliases": [
+          "coprocultivo si indicación",
+          "g diarr stool"
+        ],
+        "type": "lab",
+        "delay": 150,
+        "result": "No se indica rutinariamente en la presentación acuosa no disentérica."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "oral_rehydration",
+        "label": "Sales de rehidratación oral",
+        "aliases": [
+          "sales de rehidratacion",
+          "rehidratacion oral"
+        ]
+      },
+      {
+        "id": "fluid",
+        "label": "Cristaloides IV",
+        "aliases": [
+          "ringer",
+          "suero"
+        ]
+      }
+    ],
+    "dx": [
+      "gastroenteritis aguda",
+      "diarrea aguda infecciosa"
+    ],
+    "requiredHistory": [
+      "diarrhea",
+      "hydration"
+    ],
+    "keyStudies": [
+      "g_diarr_elect"
+    ],
+    "keyInterventions": [
+      "oral_rehydration"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": "dehydration",
+    "common": {
+      "name": "Paciente",
+      "age": "28 años",
+      "reason": [
+        "Tengo mucha diarrea líquida y estoy sediento."
+      ],
+      "current": [
+        "Tengo mucha diarrea líquida y estoy sediento."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Tengo mucha diarrea líquida y estoy sediento.",
+      "historySummary": "Tengo mucha diarrea líquida y estoy sediento."
+    }
+  },
+  {
+    "id": "FECAL-001",
+    "selector": "Estreñimiento prolongado + ampolla ocupada",
+    "area": "Colon · urgencia frecuente",
+    "demo": "Varón, 87 años",
+    "chief": "Hace una semana que no puedo evacuar y me siento muy hinchado.",
+    "opening": "Hace una semana que no puedo evacuar y me siento muy hinchado.",
+    "vitals": {
+      "temp": 37,
+      "hr": 93,
+      "rr": 18,
+      "bp": "126/78",
+      "spo2": 97
+    },
+    "exam": "Estreñimiento prolongado + ampolla ocupada",
+    "intents": [
+      {
+        "id": "constipation",
+        "keys": [
+          "estreñimiento",
+          "constipacion",
+          "evacuar"
+        ],
+        "answers": [
+          "Llevo una semana sin deposiciones formadas."
+        ],
+        "reveal": "Llevo una semana sin deposiciones formadas."
+      },
+      {
+        "id": "pain",
+        "keys": [
+          "dolor",
+          "hinchazon"
+        ],
+        "answers": [
+          "Me siento hinchado y con molestia en la parte baja."
+        ],
+        "reveal": "Me siento hinchado y con molestia en la parte baja."
+      },
+      {
+        "id": "meds",
+        "keys": [
+          "opioides",
+          "medicamentos",
+          "morfina"
+        ],
+        "answers": [
+          "Tomo analgésicos opioides desde una cirugía."
+        ],
+        "reveal": "Tomo analgésicos opioides desde una cirugía."
+      },
+      {
+        "id": "vomit",
+        "keys": [
+          "vomito",
+          "nauseas"
+        ],
+        "answers": [
+          "Tengo náuseas leves, sin vómitos fecaloides."
+        ],
+        "reveal": "Tengo náuseas leves, sin vómitos fecaloides."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Hace una semana comenzó."
+        ],
+        "reveal": "Hace una semana comenzó."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_fecal_rectal",
+        "label": "Tacto rectal dirigido",
+        "aliases": [
+          "tacto rectal dirigido",
+          "g fecal rectal"
+        ],
+        "type": "procedure",
+        "delay": 15,
+        "result": "Ampolla rectal con materia fecal dura; sin masa evidente."
+      },
+      {
+        "id": "g_fecal_xray",
+        "label": "Rx abdomen si sospecha de obstrucción",
+        "aliases": [
+          "rx abdomen si sospecha de obstrucción",
+          "g fecal xray"
+        ],
+        "type": "lab",
+        "delay": 55,
+        "result": "Abundante contenido fecal; sin datos de perforación."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "disimpaction",
+        "label": "Desimpactación cuidadosa",
+        "aliases": [
+          "extraccion manual",
+          "desimpactacion"
+        ]
+      },
+      {
+        "id": "enema",
+        "label": "Enema terapéutico según evaluación",
+        "aliases": [
+          "enema"
+        ]
+      },
+      {
+        "id": "followup",
+        "label": "Plan preventivo de estreñimiento",
+        "aliases": [
+          "plan intestinal",
+          "control"
+        ]
+      }
+    ],
+    "dx": [
+      "fecaloma",
+      "impactacion fecal"
+    ],
+    "requiredHistory": [
+      "constipation",
+      "meds"
+    ],
+    "keyStudies": [
+      "g_fecal_rectal"
+    ],
+    "keyInterventions": [
+      "disimpaction"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": "obstruction",
+    "common": {
+      "name": "Paciente",
+      "age": "87 años",
+      "reason": [
+        "Hace una semana que no puedo evacuar y me siento muy hinchado."
+      ],
+      "current": [
+        "Hace una semana que no puedo evacuar y me siento muy hinchado."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Hace una semana que no puedo evacuar y me siento muy hinchado.",
+      "historySummary": "Hace una semana que no puedo evacuar y me siento muy hinchado."
+    }
+  },
+  {
+    "id": "PUD-001",
+    "selector": "Epigastralgia recurrente + AINE",
+    "area": "Estómago · úlcera",
+    "demo": "Mujer, 49 años",
+    "chief": "Me arde la boca del estómago desde hace semanas.",
+    "opening": "Me arde la boca del estómago desde hace semanas.",
+    "vitals": {
+      "temp": 36.7,
+      "hr": 84,
+      "rr": 16,
+      "bp": "127/79",
+      "spo2": 99
+    },
+    "exam": "Epigastralgia recurrente + AINE",
+    "intents": [
+      {
+        "id": "pain",
+        "keys": [
+          "ardor",
+          "dolor",
+          "epigastrio"
+        ],
+        "answers": [
+          "Tengo ardor en la boca del estómago."
+        ],
+        "reveal": "Tengo ardor en la boca del estómago."
+      },
+      {
+        "id": "nsaid",
+        "keys": [
+          "ibuprofeno",
+          "antiinflamatorios",
+          "aine"
+        ],
+        "answers": [
+          "Tomo ibuprofeno casi a diario."
+        ],
+        "reveal": "Tomo ibuprofeno casi a diario."
+      },
+      {
+        "id": "melena",
+        "keys": [
+          "sangrado",
+          "heces negras",
+          "melena"
+        ],
+        "answers": [
+          "No vi heces negras ni vomité sangre."
+        ],
+        "reveal": "No vi heces negras ni vomité sangre."
+      },
+      {
+        "id": "alarm",
+        "keys": [
+          "peso",
+          "vomitos persistentes",
+          "disfagia"
+        ],
+        "answers": [
+          "No perdí peso y puedo comer."
+        ],
+        "reveal": "No perdí peso y puedo comer."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Hace tres semanas que me molesta."
+        ],
+        "reveal": "Hace tres semanas que me molesta."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_pud_hpy",
+        "label": "Prueba de Helicobacter pylori",
+        "aliases": [
+          "prueba de helicobacter pylori",
+          "g pud hpy"
+        ],
+        "type": "lab",
+        "delay": 90,
+        "result": "Antígeno fecal de H. pylori positivo."
+      },
+      {
+        "id": "g_pud_egd",
+        "label": "Endoscopía si alarma",
+        "aliases": [
+          "endoscopía si alarma",
+          "g pud egd"
+        ],
+        "type": "lab",
+        "delay": 150,
+        "result": "Úlcera duodenal pequeña sin sangrado activo."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "ppi_oral",
+        "label": "IBP oral",
+        "aliases": [
+          "omeprazol oral",
+          "pantoprazol oral"
+        ]
+      },
+      {
+        "id": "followup",
+        "label": "Seguimiento y erradicación dirigida",
+        "aliases": [
+          "seguimiento",
+          "control"
+        ]
+      }
+    ],
+    "dx": [
+      "enfermedad ulcerosa peptica",
+      "ulcera duodenal"
+    ],
+    "requiredHistory": [
+      "pain",
+      "nsaid"
+    ],
+    "keyStudies": [
+      "g_pud_hpy"
+    ],
+    "keyInterventions": [
+      "ppi_oral"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": null,
+    "common": {
+      "name": "Paciente",
+      "age": "49 años",
+      "reason": [
+        "Me arde la boca del estómago desde hace semanas."
+      ],
+      "current": [
+        "Me arde la boca del estómago desde hace semanas."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Me arde la boca del estómago desde hace semanas.",
+      "historySummary": "Me arde la boca del estómago desde hace semanas."
+    }
+  },
+  {
+    "id": "CELIAC-001",
+    "selector": "Diarrea crónica + anemia ferropénica",
+    "area": "Intestino · malabsorción",
+    "demo": "Mujer, 31 años",
+    "chief": "Hace meses tengo diarrea, cansancio y bajé de peso.",
+    "opening": "Hace meses tengo diarrea, cansancio y bajé de peso.",
+    "vitals": {
+      "temp": 36.8,
+      "hr": 88,
+      "rr": 17,
+      "bp": "117/72",
+      "spo2": 98
+    },
+    "exam": "Diarrea crónica + anemia ferropénica",
+    "intents": [
+      {
+        "id": "diarrhea",
+        "keys": [
+          "diarrea",
+          "deposiciones"
+        ],
+        "answers": [
+          "Tengo diarrea intermitente desde hace meses."
+        ],
+        "reveal": "Tengo diarrea intermitente desde hace meses."
+      },
+      {
+        "id": "weight",
+        "keys": [
+          "peso",
+          "adelgazamiento"
+        ],
+        "answers": [
+          "Bajé unos seis kilos sin querer."
+        ],
+        "reveal": "Bajé unos seis kilos sin querer."
+      },
+      {
+        "id": "family",
+        "keys": [
+          "familia",
+          "familiares"
+        ],
+        "answers": [
+          "Mi hermana tiene enfermedad celíaca."
+        ],
+        "reveal": "Mi hermana tiene enfermedad celíaca."
+      },
+      {
+        "id": "diet",
+        "keys": [
+          "gluten",
+          "pan",
+          "harina"
+        ],
+        "answers": [
+          "Como pan y pasta normalmente."
+        ],
+        "reveal": "Como pan y pasta normalmente."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Hace meses comenzó."
+        ],
+        "reveal": "Hace meses comenzó."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_celiac_ttga",
+        "label": "Anti-transglutaminasa IgA y IgA total",
+        "aliases": [
+          "anti-transglutaminasa iga y iga total",
+          "g celiac ttga"
+        ],
+        "type": "lab",
+        "delay": 75,
+        "result": "tTG-IgA elevada con IgA total normal."
+      },
+      {
+        "id": "g_celiac_biopsy",
+        "label": "Biopsia duodenal",
+        "aliases": [
+          "biopsia duodenal",
+          "g celiac biopsy"
+        ],
+        "type": "lab",
+        "delay": 200,
+        "result": "Atrofia vellosa y linfocitosis compatible con enfermedad celíaca."
+      },
+      {
+        "id": "g_celiac_iron",
+        "label": "Hierro y ferritina",
+        "aliases": [
+          "hierro y ferritina",
+          "g celiac iron"
+        ],
+        "type": "lab",
+        "delay": 50,
+        "result": "Ferritina 9 ng/mL; anemia ferropénica."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "glutenfree_plan",
+        "label": "Plan sin gluten tras confirmar diagnóstico",
+        "aliases": [
+          "dieta sin gluten"
+        ]
+      },
+      {
+        "id": "followup",
+        "label": "Nutrición y seguimiento",
+        "aliases": [
+          "nutricionista",
+          "seguimiento"
+        ]
+      }
+    ],
+    "dx": [
+      "enfermedad celiaca",
+      "celiaquia"
+    ],
+    "requiredHistory": [
+      "diarrhea",
+      "weight"
+    ],
+    "keyStudies": [
+      "g_celiac_ttga",
+      "g_celiac_biopsy"
+    ],
+    "keyInterventions": [
+      "followup"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": null,
+    "common": {
+      "name": "Paciente",
+      "age": "31 años",
+      "reason": [
+        "Hace meses tengo diarrea, cansancio y bajé de peso."
+      ],
+      "current": [
+        "Hace meses tengo diarrea, cansancio y bajé de peso."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Hace meses tengo diarrea, cansancio y bajé de peso.",
+      "historySummary": "Hace meses tengo diarrea, cansancio y bajé de peso."
+    }
+  },
+  {
+    "id": "ACAL-001",
+    "selector": "Disfagia sólidos y líquidos + regurgitación",
+    "area": "Esófago · motilidad",
+    "demo": "Varón, 46 años",
+    "chief": "Me cuesta pasar incluso agua y a veces la devuelvo.",
+    "opening": "Me cuesta pasar incluso agua y a veces la devuelvo.",
+    "vitals": {
+      "temp": 36.6,
+      "hr": 87,
+      "rr": 17,
+      "bp": "123/77",
+      "spo2": 98
+    },
+    "exam": "Disfagia sólidos y líquidos + regurgitación",
+    "intents": [
+      {
+        "id": "dysphagia",
+        "keys": [
+          "disfagia",
+          "tragar",
+          "solidos",
+          "liquidos"
+        ],
+        "answers": [
+          "Me cuesta pasar alimentos sólidos y también líquidos."
+        ],
+        "reveal": "Me cuesta pasar alimentos sólidos y también líquidos."
+      },
+      {
+        "id": "regurg",
+        "keys": [
+          "regurgitacion",
+          "devuelve",
+          "volver"
+        ],
+        "answers": [
+          "A veces regurgito alimentos sin digerir."
+        ],
+        "reveal": "A veces regurgito alimentos sin digerir."
+      },
+      {
+        "id": "weight",
+        "keys": [
+          "peso",
+          "adelgazo"
+        ],
+        "answers": [
+          "Perdí cuatro kilos en dos meses."
+        ],
+        "reveal": "Perdí cuatro kilos en dos meses."
+      },
+      {
+        "id": "aspiration",
+        "keys": [
+          "tos",
+          "broncoaspiracion",
+          "atragantar"
+        ],
+        "answers": [
+          "A veces toso por la noche."
+        ],
+        "reveal": "A veces toso por la noche."
+      },
+      {
+        "id": "onset",
+        "keys": [
+          "desde cuando",
+          "cuando empezo"
+        ],
+        "answers": [
+          "Empezó lentamente hace varios meses."
+        ],
+        "reveal": "Empezó lentamente hace varios meses."
+      }
+    ],
+    "studies": [
+      {
+        "id": "g_achal_egd",
+        "label": "Endoscopía para descartar pseudoacalasia",
+        "aliases": [
+          "endoscopía para descartar pseudoacalasia",
+          "g achal egd"
+        ],
+        "type": "lab",
+        "delay": 130,
+        "result": "Sin lesión obstructiva tumoral, retención esofágica."
+      },
+      {
+        "id": "g_achal_manometry",
+        "label": "Manometría esofágica de alta resolución",
+        "aliases": [
+          "manometría esofágica de alta resolución",
+          "g achal manometry"
+        ],
+        "type": "lab",
+        "delay": 180,
+        "result": "Aperistalsis y relajación inadecuada del EEI compatible con acalasia."
+      },
+      {
+        "id": "g_achal_barium",
+        "label": "Esofagograma con bario",
+        "aliases": [
+          "esofagograma con bario",
+          "g achal barium"
+        ],
+        "type": "lab",
+        "delay": 100,
+        "result": "Estrechamiento distal en pico de pájaro."
+      }
+    ],
+    "interventions": [
+      {
+        "id": "swallow_precaution",
+        "label": "Prevención de aspiración y seguridad alimentaria",
+        "aliases": [
+          "prevencion de aspiracion",
+          "dieta liquida"
+        ]
+      },
+      {
+        "id": "followup",
+        "label": "Derivación a motilidad digestiva",
+        "aliases": [
+          "derivar motilidad",
+          "seguimiento"
+        ]
+      }
+    ],
+    "dx": [
+      "acalasia esofagica",
+      "acalasia"
+    ],
+    "requiredHistory": [
+      "dysphagia",
+      "regurg"
+    ],
+    "keyStudies": [
+      "g_achal_egd",
+      "g_achal_manometry"
+    ],
+    "keyInterventions": [
+      "followup"
+    ],
+    "source": "ATRIA V5 · Gastroenterología · síntesis académica",
+    "risk": null,
+    "common": {
+      "name": "Paciente",
+      "age": "46 años",
+      "reason": [
+        "Me cuesta pasar incluso agua y a veces la devuelvo."
+      ],
+      "current": [
+        "Me cuesta pasar incluso agua y a veces la devuelvo."
+      ],
+      "concern": [
+        "Quiero saber qué me está pasando y cómo puedo mejorar."
+      ],
+      "allergies": [
+        "No conozco alergias medicamentosas."
+      ],
+      "meds": [
+        "No recuerdo todos los medicamentos; puedo explicar los que tomo."
+      ],
+      "pmh": [
+        "Puedo comentarle mis antecedentes si me pregunta."
+      ],
+      "surgeries": [
+        "No recuerdo cirugías relevantes para este episodio."
+      ]
+    },
+    "anamnesis": {
+      "otherSymptoms": "Me cuesta pasar incluso agua y a veces la devuelvo.",
+      "historySummary": "Me cuesta pasar incluso agua y a veces la devuelvo."
+    }
   }
 ]
