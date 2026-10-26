@@ -50,7 +50,10 @@ export function medicationSafety487(c,p,id){
  if(rule.hazards.includes('renal')||rule.hazards.includes('electrolytes'))warnings.push('renal-dose-review');
  if(rule.hazards.includes('overload')&&(traits.has('congestion')||traits.has('overloadRisk')))warnings.push('fluid-overload-risk');
  if(['antibiotic','aminoglycoside','antifungal'].includes(rule.classId)){
-  if(!traits.has('infection'))warnings.push('no-established-infection');
+  if(!traits.has('infection')&&
+   !(c?.id==='VARIX-001'&&id==='ceftriaxone')&&
+   !(c?.id==='CDI-001'&&['fidaxomicin','vancomycin_po'].includes(id)))
+   warnings.push('no-established-infection');
   const sets=c?.pharmacology?.coverageSets||c?.physiology?.coverageSets||[];
   if(sets.length&&!sets.some(set=>set.includes(id)))warnings.push('not-in-case-coverage-regimen');
  }

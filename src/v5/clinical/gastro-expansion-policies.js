@@ -4,7 +4,7 @@ const rules={
  'VARIX-001':{destinations:['procedimiento','uti'],study:[['g_varix_cbc']],treatment:[['iv','fluid','ceftriaxone','terlipressin'],['iv','transfusion','ceftriaxone','terlipressin']],consult:{procedimiento:['gastro'],uti:['uti']}},
  'ENCEF-001':{destinations:['sala','uti'],study:[['g_encef_liver'],['g_encef_infect']],treatment:[['lactulose']],consult:{uti:['uti']}},
  'UC-AS-001':{destinations:['sala','uti'],study:[['g_uc_labs'],['g_uc_cdi']],treatment:[['methylprednisolone']],consult:{uti:['uti']}},
- 'CDI-001':{destinations:['sala','observacion'],study:[['g_cdi_toxin']],treatment:[['fidaxomicin'],['vancomycin_po']]},
+ 'CDI-001':{destinations:['sala'],study:[['g_cdi_toxin']],treatment:[['fidaxomicin'],['vancomycin_po']]},
  'DIVERT-001':{destinations:['alta','sala'],study:[['g_divert_ct']],treatment:[]},
  'LGIB-001':{destinations:['procedimiento','uti'],study:[['g_lgib_cbc'],['g_lgib_cta']],treatment:[['iv','fluid'],['iv','transfusion']],consult:{procedimiento:['gastro'],uti:['uti']}},
  'HEPAT-001':{destinations:['alta','observacion'],study:[['g_hepat_inr']],treatment:[]},
