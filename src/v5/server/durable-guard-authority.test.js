@@ -103,9 +103,9 @@ test('closing while a colleague is offline durably awards each doctor once acros
  }finally{f.dispose();}
 });
 
-test('an original case without a migrated executor cannot create a durable clinical guard',async()=>{
+test('a nonexistent clinical case cannot create a durable clinical guard',async()=>{
  const f=await fixture();try{
-  await assert.rejects(f.authority.bootstrap({roomId:'unsupported',caseId:'HDA-001',members:[{id:'a',name:'A'},{id:'b',name:'B'}],hostId:'a',actorId:'a'}),/migrated|supported/);
+  await assert.rejects(f.authority.bootstrap({roomId:'unsupported',caseId:'NOT_A_CASE-001',members:[{id:'a',name:'A'},{id:'b',name:'B'}],hostId:'a',actorId:'a'}),/migrated|supported/);
   assert.equal(await f.store.read('unsupported'),null,'no incomplete patient may be committed');
  }finally{f.dispose();}
 });
