@@ -1,7 +1,7 @@
 /** Account navigation only. Cookies and all identity decisions remain on the server. */
-export function createWelcomeFlow({document,window,account,avatar,listen,prepareNew,onEnter,onLogout,clientKey}){
+export function createWelcomeFlow({document,window,account,avatar,listen,prepareNew,onEnter,onLogout,clientKey,legacyProgress=()=>null}){
  const el=id=>document.getElementById(id),root=el('splash'),rememberKey='atria.v5.remembered-doctor';
- let step='loading',available=false,busy=false,name='',returning=null;
+ let step='loading',available=false,busy=false,name='',returning=null,migratePractice=true;
  const fitViewport=()=>{if(!window.visualViewport)return;
   root.style.height=window.visualViewport.height+'px';root.style.top=window.visualViewport.offsetTop+'px';
   if(!root.hidden&&root.contains(document.activeElement))document.activeElement.scrollIntoView({block:'nearest'});
@@ -26,7 +26,7 @@ export function createWelcomeFlow({document,window,account,avatar,listen,prepare
  async function run(fn){if(busy)return;busy=true;root.setAttribute('aria-busy','true');for(const b of root.querySelectorAll('button'))b.disabled=true;
   try{await fn();}catch(e){error(e);}finally{busy=false;root.removeAttribute('aria-busy');for(const b of root.querySelectorAll('button'))b.disabled=false;}}
  function home(){
-  returning=account.read();const saved=returning||remembered();
+  returning=account.read();if(returning)migratePractice=false;const saved=returning||remembered();
   if(saved){show('returning',returning?'Bienvenido de nuevo, '+saved.name:'Vuelve a entrar, '+saved.name,
     returning?.needsUniqueName?'Tu acceso anterior sigue siendo «'+returning.loginName+'». Puedes elegir un nombre único desde Perfil.':returning?'Tu médico está listo para volver al hospital.':'Tu sesión venció. Ingresa tu contraseña para recuperar el progreso.');
    el('welcomeContinue').textContent=returning?'Continuar como '+saved.name:'Entrar como '+saved.name;
@@ -38,7 +38,7 @@ export function createWelcomeFlow({document,window,account,avatar,listen,prepare
   catch(e){home();error(e);}
  }
  async function logout(){await onLogout();returning=null;remember(null,false);}
- async function newDoctor(){if(account.read())await logout();await prepareNew();name='';el('doctorName').value='';el('newDoctorPassword').value='';show('name','¿Cómo quieres que te llamen?','Tu historia en ATRIA comienza con tu nombre.');el('accountLoginButton').textContent='Ya tengo una cuenta';}
+ async function newDoctor(){migratePractice=false;if(account.read())await logout();await prepareNew();name='';el('doctorName').value='';el('newDoctorPassword').value='';show('name','¿Cómo quieres que te llamen?','Tu historia en ATRIA comienza con tu nombre.');el('accountLoginButton').textContent='Ya tengo una cuenta';}
  function login(){show('login','Ya tengo una cuenta','Recupera tu médico y tu progreso desde cualquier dispositivo.');el('loginDoctorName').value=(account.read()||remembered())?.loginName||'';el('loginDoctorPassword').value='';}
  listen(el('welcomeNameForm'),'submit',e=>{e.preventDefault();void run(async()=>{
   const result=await account.call('name-status',{name:el('doctorName').value});
@@ -46,8 +46,8 @@ export function createWelcomeFlow({document,window,account,avatar,listen,prepare
   name=result.displayName;el('playerName').value=name;show('avatar',name,'Elige tu apariencia y el color del ambo.');el('enterButton').textContent='Continuar';await avatar.repaint();
  });});
  listen(el('welcomePasswordForm'),'submit',e=>{e.preventDefault();void run(async()=>{
-  const a=avatar.read();let result;
-  try{result=await account.call('register',{name,password:el('newDoctorPassword').value,remember:el('rememberNewDoctor').checked,sex:a.sex,scrubColor:a.color,clientKey:clientKey(),newCharacter:true});}
+  const a=avatar.read(),retained=migratePractice?legacyProgress():null;let result;
+  try{result=await account.call('register',{name,password:el('newDoctorPassword').value,remember:el('rememberNewDoctor').checked,sex:a.sex,scrubColor:a.color,clientKey:clientKey(),newCharacter:true,...(retained?{legacyProgress:retained}:{})});}
   catch(e){if(e.status===409){show('name','¿Cómo quieres que te llamen?','Elige un nombre disponible.');}throw e;}
   el('newDoctorPassword').value='';remember(result.account,el('rememberNewDoctor').checked);await enter(result.account,true);
  });});

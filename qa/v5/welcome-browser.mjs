@@ -14,11 +14,11 @@ async function register(page,name){
  await page.locator('#newDoctorPassword').fill('safe-test-password-123');await page.locator('#welcomePasswordForm button').click();await lobby(page);
 }
 try{
- const c=await h.browser.newContext({viewport:{width:1280,height:800}}),p=await c.newPage();await boot(p);
+ const c=await h.browser.newContext({viewport:{width:1280,height:800}});await c.addInitScript(()=>localStorage.setItem('atria.v5.progress.v1',JSON.stringify({receipts:[{kind:'clinical.closure',eventId:'legacy-practice',patientUid:'legacy-practice',actorId:'legacy-device',xp:37,closed:true}],penalties:[]})));const p=await c.newPage();await boot(p);
  assert.equal(await p.locator('#welcomeTitle').textContent(),'¿Cómo quieres que te llamen?');assert(!await p.locator('#profileForm').isVisible());
  assert(await p.locator('.welcome-art').evaluate(x=>x.complete&&x.naturalWidth===1536));
  await p.screenshot({path:output+'/desktop-welcome.png'});await register(p,'Darío del Sur');
- const a=[...fixture.rows.values()][0];assert.equal(a.sex,'female');assert.equal(a.scrub_color,'green');
+ const a=[...fixture.rows.values()][0];assert.equal(a.sex,'female');assert.equal(a.scrub_color,'green');assert.equal(a.legacy_progress?.data.xp,37);assert.equal(a.xp,0);
  a.xp=457;a.cases_resolved=3;const actor=a.actor_id;
  await p.reload();await p.waitForFunction(()=>document.body.dataset.boot==='ready');
  assert.equal(await p.locator('#welcomeContinue').textContent(),'Continuar como Darío del Sur');assert.equal(await p.evaluate(()=>atriaV5.snapshot().phase),'title');
@@ -33,7 +33,7 @@ try{
  // Reopen persistent storage: authenticated welcome must require a gesture.
  await c.close();const reopened=await h.browser.newContext({storageState:state}),r=await reopened.newPage();await boot(r);assert(await r.locator('#welcomeContinue').isVisible());
  await r.locator('#welcomeNew').click();await r.locator('#doctorName').fill('DÁRIO DEL SUR');await r.locator('#welcomeNameForm button').click();await r.locator('#welcomeError').waitFor({state:'visible'});assert((await r.locator('#welcomeError').textContent()).includes('ocupado'));
- await register(r,'Doctora Nueva');assert.equal(fixture.rows.size,2);assert.notEqual([...fixture.rows.values()][1].actor_id,actor);assert.equal([...fixture.rows.values()][1].xp,0);
+ await register(r,'Doctora Nueva');assert.equal(fixture.rows.size,2);assert.notEqual([...fixture.rows.values()][1].actor_id,actor);assert.equal([...fixture.rows.values()][1].xp,0);assert.equal([...fixture.rows.values()][1].legacy_progress,null);
  // A revoked session retains only the public hint; it cannot reveal protected stats.
  fixture.sessions.clear();await q.reload();await q.waitForFunction(()=>document.body.dataset.boot==='ready');assert(await q.locator('#welcomeNameForm').isVisible());
  // Real small viewport checks, including keyboard-sized height without hidden fields.

@@ -1,10 +1,11 @@
 # Bienvenida RPG y nombre de médico — 27 de octubre de 2026
 
-Implementación sobre el HEAD remoto `4fa60b9`, exclusivamente en la rama experimental. Checkpoints: `63ad1fd` (nombres/cuentas), `3ea2ffe` (bienvenida e ilustración), `424de68` (sesiones revocadas). El checkpoint que contiene este informe añade la evidencia y corrige la coordinación de los bots; conserva los mismos módulos de producción que `424de68`.
+Implementación sobre el HEAD remoto `4fa60b9`, exclusivamente en la rama experimental. Checkpoints: `63ad1fd` (nombres/cuentas), `3ea2ffe` (bienvenida e ilustración), `424de68` (sesiones revocadas). El cierre añade la evidencia, corrige la coordinación de los bots y conserva el archivo no verificado del historial de práctica al crear la primera cuenta. La creación explícita de otro médico no hereda ese archivo.
 
 ## Resultado funcional
 
 - Primera visita: nombre natural → disponibilidad real → selector original de sexo/ambo → contraseña de al menos 12 caracteres → hospital.
+- La primera cuenta conserva el historial de práctica mediante el archivo no verificado existente; no lo convierte en XP oficial. Se comprobó en navegador con 37 XP locales de fixture y cero XP de cuenta. Otro médico nuevo no hereda ese historial.
 - Regreso: cuenta autenticada, ilustración y botón Continuar; sin entrada automática. Una sesión vencida requiere autenticación. «Recordar» controla realmente la persistencia de la cookie HttpOnly Secure.
 - Otro dispositivo: nombre de médico y contraseña recuperan el mismo actor y su apariencia/progreso. Cambiar o crear cuentas conserva separadas las relaciones y guardias.
 - La transición usa la carga real de cuenta/presencia y el renderer original del hospital. No se añadieron cámara, reloj, controlador de movimiento ni motor clínico.

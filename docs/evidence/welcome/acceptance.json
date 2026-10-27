@@ -114,5 +114,11 @@
     },
     "passed": true,
     "errors": []
+  },
+  "legacy_practice_browser_fixture": {
+    "local_practice_xp": 37,
+    "official_account_xp": 0,
+    "retained_in_unverified_archive": true,
+    "new_identity_inherits_archive": false
   }
 }

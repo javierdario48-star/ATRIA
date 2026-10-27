@@ -1008,7 +1008,7 @@ export async function createApplication({document,window,content,signal}){
  ui('playerName').value=profile.name;
  const avatarCreator=createAvatarCreator({document,window,assetUrls:content.assetUrls,profile,listen,signal});
  const welcome=createWelcomeFlow({document,window,account,avatar:avatarCreator,listen,
-  clientKey:()=>social.credentials().clientKey,
+  clientKey:()=>social.credentials().clientKey,legacyProgress:()=>progress.read(),
   async prepareNew(){socialEnabled=false;await social.flush();await social.leave();restoreRoomId=null;},
   async onLogout(){
    socialEnabled=false;await social.flush();await social.leave();await account.logout();social.useAccount(null);restoreRoomId=null;
