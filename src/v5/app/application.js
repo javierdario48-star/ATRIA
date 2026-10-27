@@ -984,7 +984,7 @@ export async function createApplication({document,window,content,signal}){
   const register=kind==='register';
   open('<h2>'+(register?'Guardá tu identidad médica':'Entrar a tu cuenta')+'</h2>'+
    '<p>'+(register?'Conservá tu personaje y tus amigos. Usá la misma cuenta en tu teléfono o computadora.':'Recuperá tu personaje, amigos y progreso.')+'</p>'+
-   '<form id="accountForm" data-kind="'+kind+'"><label class="field">Usuario<input id="accountUsername" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[a-z][a-z0-9_]{2,23}" minlength="3" maxlength="24" required></label>'+
+   '<form id="accountForm" data-kind="'+kind+'"><label class="field">Usuario<input id="accountUsername" autocomplete="username" autocapitalize="words" spellcheck="false" pattern="[A-Za-z][A-Za-z0-9_]{2,23}" title="Entre 3 y 24 caracteres: letras, números o guion bajo. Se aceptan mayúsculas." minlength="3" maxlength="24" required></label>'+
    '<label class="field">Contraseña<input id="accountPassword" type="password" autocomplete="'+(register?'new-password':'current-password')+'" minlength="'+(register?12:1)+'" maxlength="128" required></label>'+
    (register?'<small>Al menos 12 caracteres. Guardala en tu administrador de contraseñas.</small>':'')+
    '<p id="accountError" role="alert"></p><div class="actions"><button type="button" data-action="close">Volver</button><button class="primary" type="submit">'+(register?'Crear cuenta':'Iniciar sesión')+'</button></div></form>','account');
@@ -1034,7 +1034,7 @@ export async function createApplication({document,window,content,signal}){
   event.preventDefault();const form=event.target,button=form.querySelector('button[type="submit"]');button.disabled=true;
   try{const register=form.dataset.kind==='register';
    await social.leave();await social.flush();
-   const result=await account.call(register?'register':'login',{username:ui('accountUsername').value,password:ui('accountPassword').value,
+   const result=await account.call(register?'register':'login',{username:ui('accountUsername').value.trim().toLowerCase(),password:ui('accountPassword').value,
     ...(register?{...profile,clientKey:social.credentials().clientKey,legacyProgress:progress.read()}:{})});
    await social.flush();applyAccount(result.account);enterLobby();
    if(result.account.activeGuardId)open('<h2>Tenés una guardia en curso</h2><p>Podés recuperarla en este dispositivo.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
