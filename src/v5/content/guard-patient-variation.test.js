@@ -7,3 +7,5 @@ test('reproduces identity and retains existing allergies',()=>{const p=materiali
 test('old cases and checkpoints are untouched',()=>{assert.strictEqual(materializeGuardPatient(patient,{id:'RESP-04'}),patient);assert.strictEqual(materializeGuardPatient(patient,{id:'RESP-04',variation:profile},{schemaVersion:1}),patient);});
 test('complication is metadata, not a physiological event',()=>{const p=materializeGuardPatient(patient,{id:'RESP-04',variation:profile});assert.equal(p.variation.complicationCandidates[0].progressionId,'fatigue');assert.equal(p.vitals,undefined);});
 test('case mismatch is rejected',()=>assert.throws(()=>materializeGuardPatient(patient,{id:'RESP-05',variation:profile}),/mismatch/));
+
+test('identity remains stable for the same patient across re-entry',()=>{const first=materializeGuardPatient(patient,{id:'RESP-04',variation:profile});const again=materializeGuardPatient(patient,{id:'RESP-04',variation:profile});assert.equal(first.name,again.name);assert.equal(first.age,again.age);assert.equal(first.personality,again.personality);assert.equal(first.variation.seed,again.variation.seed);});
