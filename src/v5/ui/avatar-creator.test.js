@@ -39,3 +39,9 @@ test('HD preview is device-pixel-resolved and cannot distort native proportions'
  assert(fit.y+fit.height<=hd.height);
  assert.equal(avatarDrawRect(0,576,hd.width,hd.height),null);
 });
+
+test('male blue and black cannot select the same bitmap; the blue uses its shared palette',()=>{
+ const blue=avatarAssetSpec({sex:'male',color:'navy'}),black=avatarAssetSpec({sex:'male',color:'black'});
+ assert.notEqual(blue.key,black.key);
+ assert.equal(blue.palette,'navy');
+});

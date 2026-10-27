@@ -1,4 +1,5 @@
 import {playerSpriteKey} from '../app/avatar-appearance.js';
+import {createNavyAvatar} from './avatar-palette.js';
 /** Canvas presentation consumes snapshots. It never executes clinical actions. */
 export async function createHospitalRenderer(canvas,content,{signal,window}={}){
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('El navegador no admite Canvas 2D.');
@@ -6,6 +7,8 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   const image=new window.Image();image.src=url;await image.decode();
   if(signal?.aborted)throw new DOMException('disposed','AbortError');return [key,image];
  })));
+ if(images['player-green']&&canvas.ownerDocument?.createElement)
+  images['player-navy']=createNavyAvatar(images['player-green'],canvas.ownerDocument);
  // One compressed atlas, decoded once into draw-ready frames; no per-frame
  // asset allocation and no alternate sprite animation implementation.
  function rebuildWardrobe(){if(images.wardrobe&&canvas.ownerDocument?.createElement){
@@ -44,7 +47,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   return true;
  }
  function sprite(key,a,h=62){
-  const img=images[key]||(key.startsWith('player-female-')?
+  const img=(key==='player-black'?images.player:images[key])||(key.startsWith('player-female-')?
     images['player-female-navy']||images['player-navy']:
     key.startsWith('player-')?images['player-navy']:null);if(!img)return;const [x,y]=screen(a.x,a.y),hh=h*scale,w=hh*img.width/img.height;
   const east=/^(E|NE|SE)$/.test(a.dir),west=/^(W|NW|SW)$/.test(a.dir),right=key==='vega';
@@ -193,7 +196,14 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
  function destroy(){if(disposed)return;disposed=true;
   canvas.removeEventListener('contextlost',lost);canvas.removeEventListener('contextrestored',restored);
  }
- resize();return Object.freeze({draw,resize,setPlayableBounds,toWorld,screen,destroy,
+ function drawAvatar(target,appearance){
+  const key=playerSpriteKey(appearance),img=key==='player-black'?images.player:images[key];
+  if(!img)return false;const context=target.getContext('2d'),ratio=Math.min(2,window.devicePixelRatio||1);
+  target.width=96*ratio;target.height=116*ratio;
+  const size=Math.min((target.width-8)/img.width,(target.height-8)/img.height),w=img.width*size,h=img.height*size;
+  context.clearRect(0,0,target.width,target.height);context.drawImage(img,(target.width-w)/2,target.height-h,w,h);return true;
+ }
+ resize();return Object.freeze({draw,resize,setPlayableBounds,toWorld,screen,destroy,drawAvatar,
   metrics:()=>({width,height,scale,dpr,anchorX,anchorY,camera:{...camera},
    playableBounds:playBounds?{...playBounds}:null,images:Object.keys(images).length,
    draws,lastDrawAt,contextLost,contextLosses,restorations,recoveries,failures,lastError,listeners:disposed?0:2})});

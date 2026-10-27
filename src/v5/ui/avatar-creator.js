@@ -1,4 +1,5 @@
 import {SCRUB_COLORS,scrubAppearance} from '../app/avatar-appearance.js';
+import {createNavyAvatar} from '../render/avatar-palette.js';
 
 // One selection model supplies preview and submission; the world renderer uses
 // the same atlas coordinates. The session lifecycle owns DOM event listeners.
@@ -34,16 +35,18 @@ export function avatarAssetSpec({sex,color}){
  const a=scrubAppearance(color,sex);
  if(a.sex==='female'||a.color==='burgundy')return {key:'wardrobe',frame:a.sex==='female'?
   atlasCoords[a.color]:[3,1]};
- return {key:a.color==='black'?'player-navy':'player-'+a.color,frame:null};
+ return a.color==='navy'?{key:'player-green',frame:null,palette:'navy'}:
+  {key:a.color==='black'?'player-navy':'player-'+a.color,frame:null};
 }
 export function createAvatarCreator({document,window,assetUrls,profile,listen,signal}){
  const model=createAvatarSelection(profile),canvas=document.getElementById('avatarPreview');
  const ctx=canvas.getContext('2d'),assets=new Map(),label=document.getElementById('avatarColorName');
- const load=(key)=>{
-  if(assets.has(key))return assets.get(key);
-  const img=new window.Image(),url=assetUrls[key];
-  const promise=url?(img.src=url,img.decode().then(()=>img).catch(()=>null)):Promise.resolve(null);
-  assets.set(key,promise);return promise;
+ const load=(spec)=>{
+  const cacheKey=spec.key+':'+(spec.palette||'original');
+  if(assets.has(cacheKey))return assets.get(cacheKey);
+  const img=new window.Image(),url=assetUrls[spec.key];
+  const promise=url?(img.src=url,img.decode().then(()=>spec.palette==='navy'?createNavyAvatar(img,document):img).catch(()=>null)):Promise.resolve(null);
+  assets.set(cacheKey,promise);return promise;
  };
  let revision=0;
  async function paint(){
@@ -56,7 +59,7 @@ export function createAvatarCreator({document,window,assetUrls,profile,listen,si
   document.getElementById('avatarColorPosition').textContent=
    String(SCRUB_COLORS.indexOf(a.color)+1)+' / '+SCRUB_COLORS.length;
   canvas.setAttribute('aria-label',(a.sex==='female'?'Mujer':'Hombre')+' con ambo '+names[a.color]);
-  const img=await load(spec.key);
+  const img=await load(spec);
   if(signal?.aborted||id!==revision)return;
   const bounds=canvas.getBoundingClientRect();
   const pixels=avatarCanvasResolution(bounds.width||320,bounds.height||380,window.devicePixelRatio);
@@ -65,10 +68,9 @@ export function createAvatarCreator({document,window,assetUrls,profile,listen,si
   }
   ctx.clearRect(0,0,canvas.width,canvas.height);
   if(!img)return;
+  const iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
   const [sx,sy,sw,sh]=spec.frame?
-   [spec.frame[0]*img.naturalWidth/4,spec.frame[1]*img.naturalHeight/2,
-    img.naturalWidth/4,img.naturalHeight/2]:
-   [0,0,img.naturalWidth,img.naturalHeight];
+   [spec.frame[0]*iw/4,spec.frame[1]*ih/2,iw/4,ih/2]:[0,0,iw,ih];
   const frame=avatarDrawRect(sw,sh,canvas.width,canvas.height);
   if(!frame)return;
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';

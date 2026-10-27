@@ -20,12 +20,12 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     checkpoint.contentHash!==contentHash||checkpoint.roomId!==roomId)throw Error('incompatible runtime checkpoint');
   ({caseId,members,hostId,mode='coop'}=clone(checkpoint));
  }
- if(!['coop','competitive'].includes(mode)||!Number.isSafeInteger(nowMs)||nowMs<0||
-   !Array.isArray(members)||members.length<2||members.length>4||
+ if(!['solo','apprentice','coop','competitive'].includes(mode)||!Number.isSafeInteger(nowMs)||nowMs<0||
+   !Array.isArray(members)||members.length<(['solo','apprentice'].includes(mode)?1:2)||members.length>4||
    new Set(members.map(x=>x.id)).size!==members.length)throw Error('invalid multiplayer clinical runtime');
  if(!Object.hasOwn(CLINICAL_EXECUTORS,caseId))throw Object.assign(Error('clinical case is not migrated'),{code:'invalid'});
  const host=members.find(m=>m.id===hostId);if(!host)throw Error('runtime host not in roster');
- const world=createWorld(content,{id:hostId,name:host.name,scrubColor:'navy'},checkpoint?.world);
+ const world=createWorld(content,{id:hostId,name:host.name,scrubColor:host.scrubColor||'navy',sex:host.sex,level:host.level},checkpoint?.world);
  if(!checkpoint)world.enterGuard({mode,caseId,patientUid:roomId+':patient',members});
  const shift=createShiftFlow({content,mode,firstCaseId:caseId,roomId,snapshot:checkpoint?.shift});
  const sessions=new Map(),focused=new Map(clone(checkpoint?.focused??[]));
@@ -42,7 +42,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   if(!world.snapshot().patients.some(p=>p.uid===r.uid)&&!world.addPatient({uid:r.uid,caseId:r.caseId,bedId:r.bedId}))
    throw Error('bed placement failed');
   const patient=world.snapshot().patients.find(p=>p.uid===r.uid);
-  const session=createGuardSession({roomId,mode:'coop',actorId:hostId,actorName:host.name,members,patient,content,
+  const session=createGuardSession({roomId,mode:['solo','apprentice'].includes(mode)?mode:'coop',actorId:hostId,actorName:host.name,members,patient,content,
    checkpoint:savedSessions.get(r.uid)||null,
    authenticate:id=>members.some(m=>m.id===id)?{id,roomId}:null,
    resolveContext:({actorId,targetPatientUid})=>({patientUid:world.patientInRangeFor(actorId,targetPatientUid||r.uid)}),
@@ -109,6 +109,10 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   return state;
  }
  return Object.freeze({
+  updateDoctorLevel(actorId,level){
+   const member=members.find(x=>x.id===actorId);if(!member)return false;
+   if(!world.setDoctorLevel(actorId,level))return false;member.level=level;return true;
+  },
   async advanceTo(targetMs,{maxSteps=3600}={}){
    if(!Number.isSafeInteger(targetMs)||targetMs<lastWallMs||!Number.isSafeInteger(maxSteps)||maxSteps<1)
     throw Error('invalid recovery wall clock');

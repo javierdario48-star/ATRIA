@@ -70,9 +70,9 @@ export function createDurableCooperativeReplica({
   return inflight;
  }
  return Object.freeze({
-  async start(caseId){
+  async start(caseId,mode=null){
    if(disposed)throw Error('replica-disposed');
-   try{const response=await request('start',{caseId});accept(response);return response;}
+   try{const response=await request('start',{caseId,...(mode?{mode}:{})});accept(response);return response;}
    catch(error){
     // A successful start with a lost HTTP response can return 'exists';
     // only the authenticated durable roster can recover this room.

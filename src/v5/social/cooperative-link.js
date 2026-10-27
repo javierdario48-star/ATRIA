@@ -7,8 +7,8 @@ const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
  * Clinical commands/snapshots travel on one reliable ordered ward channel.
  * Only the caller's existing RAF invokes maintain(); there is no timer here.
  */
-export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onRoomSpeech=()=>{},onClose=()=>{}}){
- const peers=new Map(),recovery=createPeerRecoveryPolicy();let token=null,user=null,connecting=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoster=null,busyRoom=null,busySpeech=null,nextPoll=0,nextRosterPoll=0,nextRoomPoll=0,nextSpeechPoll=0,roomSpeechCursor=0,roomSpeechRoom=null,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
+export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onRoomSpeech=()=>{},onClose=()=>{}}){
+ const peers=new Map(),recovery=createPeerRecoveryPolicy();let cookieIdentity=false,token=null,user=null,connecting=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoster=null,busyRoom=null,busySpeech=null,nextPoll=0,nextRosterPoll=0,nextRoomPoll=0,nextSpeechPoll=0,roomSpeechCursor=0,roomSpeechRoom=null,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
  const temporary=new Map();let storage;try{storage=window.localStorage;storage.getItem(SESSION_KEY);}catch{storage={getItem:k=>temporary.get(k),setItem:(k,v)=>temporary.set(k,v),removeItem:k=>temporary.delete(k)};}
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
@@ -30,11 +30,11 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   if(!response.ok){if(response.status===401)token=null;const error=Error(value.error||'social-'+response.status);error.status=response.status;throw error;}return value;
  }
  async function connect(){
-  if(user&&token)return user;
+  if(user&&(token||cookieIdentity))return user;
   // Presence, roster and room requests share one authenticated identity,
   // even if the first animation frame launches their network lanes together.
   if(!connecting)connecting=api('resume',{clientKey,name:profile.name.length<2?'Dr. '+profile.name:profile.name})
-   .then(result=>{token=result.token;user=result.user;return user;})
+   .then(result=>{token=result.token;cookieIdentity=!!result.account;user=result.user;if(result.account)onAccount(result.account);return user;})
    .finally(()=>{connecting=null;});
   return connecting;
  }
@@ -77,6 +77,7 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   roster=social.players;lobbyMessages=social.messages||[];
   if(!room&&!savedRoom&&now-lastContactsAt>=780){
    const me=await api('me');if(!active())return;
+   if(me.account)onAccount(me.account);
    lastContactsAt=now;
    invites=me.invites.filter(x=>['coop','competitive'].includes(x.mode)&&x.roomId!==room?.id&&x.roomId!==savedRoom);
    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};
@@ -144,6 +145,14 @@ export function createCooperativeLink({window,profile,onSocial=()=>{},onRoom=()=
   connect,
   flush:()=>Promise.all([busy,busyRoster,busyRoom,busySpeech].filter(Boolean)),
   setProfile(value){profile={...value};},
+  useAccount(value){
+   if(room)throw Error('Volvé al lobby antes de cambiar de cuenta.');
+   cookieIdentity=!!value;token=null;user=value?{id:value.actorId,name:value.name,handle:value.username}:null;
+   roomEpoch++;roster=[];friends=[];requests={incoming:[],outgoing:[]};invites=[];lastContactsAt=-Infinity;
+  },
+  async readPlayerProfile(id){await connect();return (await api('profiles/'+encodeURIComponent(id))).profile;},
+  async removeFriend(userId){await connect();await api('friends/remove',{userId});const me=await api('me');
+   friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
   async postRoomSpeech({id,text}){
    if(!room||!user||typeof id!=='string'||!id||typeof text!=='string'||!text.trim())return false;
    const activeRoom=room.id;

@@ -1,4 +1,5 @@
 import {createNavigation} from '../engine/navigation.js';
+import {doctorMovementSpeed} from '../engine/movement-progression.js';
 import {scrubAppearance,presenceAppearance} from './avatar-appearance.js';
 import {createRemotePose,receiveRemotePose,sampleRemotePose} from '../../social/remote-motion.js';
 import {privateRoomMotionPrefix} from '../social/room-motion-scope.js';
@@ -25,7 +26,7 @@ export function createWorld(content,profile,checkpoint=null){
   return [start[0]+d[0],start[1]+d[1]];
  }
  function resetPlayer(tile){const appearance=scrubAppearance(profile.scrubColor,profile.sex);
-  player=actor('self',point(tile),{name:profile.name,...appearance,level:1});lastMotionIntent=null;}
+  player=actor('self',point(tile),{name:profile.name,...appearance,level:Number.isSafeInteger(profile.level)&&profile.level>0?profile.level:1,speed:doctorMovementSpeed(profile.level)});lastMotionIntent=null;}
  // Outbound movement represents explicit input, never a pose received from
  // another authority. Navigation may finish or reconcile without canceling it.
  function targetPlayer(x,y){
@@ -41,7 +42,8 @@ export function createWorld(content,profile,checkpoint=null){
   nursing?.dispose();nursing=null;
   generation++;phase='guard';mode=selected;caseId=c.id;pendingInteraction=null;resetPlayer(start);
   authoritative=options.authoritative!==false;
-  others=(options.members||[]).filter(x=>x.id!==profile.id).map(x=>actor(x.id,point(start),{kind:'doctor',name:x.name,...presenceAppearance(x.color),level:1}));
+  others=(options.members||[]).filter(x=>x.id!==profile.id).map(x=>actor(x.id,point(start),{kind:'doctor',name:x.name,
+   ...(x.scrubColor?scrubAppearance(x.scrubColor,x.sex):presenceAppearance(x.color)),level:Number.isSafeInteger(x.level)&&x.level>0?x.level:1,speed:doctorMovementSpeed(x.level)}));
   nurses=nurseHomes.map((home,index)=>actor('nurse-'+index,point(home),{kind:'nurse',r:8.5,speed:140,home:[...home],patrolAt:index*2}));
   const bed=content.beds.find(b=>b.id===(options.bedId||'B1'))||content.beds[0];
   patients=[{id:'patient-'+generation,uid:'patient-'+generation,caseId:c.id,bedId:bed.id,
@@ -143,7 +145,8 @@ export function createWorld(content,profile,checkpoint=null){
     if(remote.userId===profile.id||ids.has(remote.userId))continue;
     ids.add(remote.userId);
     let other=previous.get(remote.userId),track=lobbyRemotes.get(remote.userId);
-    if(!track){track=createRemotePose({x:remote.x,y:remote.y,now,cadence:260,speed:205});lobbyRemotes.set(remote.userId,track);}
+    if(!track){track=createRemotePose({x:remote.x,y:remote.y,now,cadence:260,speed:doctorMovementSpeed(remote.level)});lobbyRemotes.set(remote.userId,track);}
+    track.speed=doctorMovementSpeed(remote.level);
     receiveRemotePose(track,{...remote,now,transport:'http',motionCadence:remote.motionCadence||260});
     if(!other)other=actor(remote.userId,{x:track.x,y:track.y},{kind:'doctor'});
     Object.assign(other,{name:remote.name,...presenceAppearance(remote.color),level:remote.level||1});
@@ -172,7 +175,7 @@ export function createWorld(content,profile,checkpoint=null){
     Object.assign(other,appearance);
     let track=guardRemotes.get(other.id);
     if(!track||track.source!=='social'){
-     track={pose:createRemotePose({x:other.x,y:other.y,now,cadence:260,speed:205}),
+     track={pose:createRemotePose({x:other.x,y:other.y,now,cadence:260,speed:doctorMovementSpeed(remote.level)}),
       seq:0,source:'social',lastSocialAt:now};
      guardRemotes.set(other.id,track);
     }
@@ -215,7 +218,7 @@ export function createWorld(content,profile,checkpoint=null){
     .map(x=>x.uid);
   },
   applySharedSpatial({nurses:sharedNurses,doctors},now=Date.now(),acknowledgedMotion=null){
-   if(authoritative||!['coop','competitive'].includes(mode))return false;
+   if(authoritative||phase!=='guard')return false;
    // A browser recovering an existing durable room starts its local counter
    // after the last sequence committed for this doctor, not at #1 again.
    if(Number.isSafeInteger(acknowledgedMotion)&&acknowledgedMotion>motionSequence)
@@ -274,7 +277,7 @@ export function createWorld(content,profile,checkpoint=null){
      return other;
     }
     if(!track){
-     track={pose:createRemotePose({x:remote.x,y:remote.y,now,cadence:320,speed:205}),seq:0,source:'clinical'};
+     track={pose:createRemotePose({x:remote.x,y:remote.y,now,cadence:320,speed:doctorMovementSpeed(remote.level)}),seq:0,source:'clinical'};
      guardRemotes.set(remote.id,track);
      // Seed the first *authoritative* point before receiving any later frame.
      // Without this, the second snapshot is treated as initial and teleports.
@@ -324,7 +327,14 @@ export function createWorld(content,profile,checkpoint=null){
    profile={...profile,name,scrubColor,sex};
    player.name=name;player.color=scrubColor;player.sex=sex;
   },
-  setLevel(level){if(!Number.isSafeInteger(level)||level<1)throw Error('invalid player level');player.level=level;},
+  setLevel(level){if(!Number.isSafeInteger(level)||level<1)throw Error('invalid player level');
+   profile={...profile,level};player.level=level;player.speed=doctorMovementSpeed(level);},
+  setDoctorLevel(id,level){
+   if(!Number.isSafeInteger(level)||level<1)throw Error('invalid player level');
+   if(id===profile.id){profile={...profile,level};player.level=level;player.speed=doctorMovementSpeed(level);return true;}
+   const other=others.find(x=>x.id===id);if(!other)return false;
+   other.level=level;other.speed=doctorMovementSpeed(level);return true;
+  },
   motionIntent:()=>lastMotionIntent?structuredClone(lastMotionIntent):null,
   seedMovementSequence(confirmed){
    // A reconnected doctor shares the same durable actor ID, but gets a new

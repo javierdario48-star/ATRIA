@@ -16,7 +16,7 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
    return {epoch:0,...runtime.view(actorId)};
   }finally{runtime.dispose();}
  }
- async function transact({roomId,actorId,commands=[],motion=null,motionSequence=null,claim=null,typing=null,confirmation=null}){
+ async function transact({roomId,actorId,commands=[],motion=null,motionSequence=null,claim=null,typing=null,confirmation=null,actorProfile=null}){
   if(!Array.isArray(commands)||commands.length>16)throw fail('invalid','invalid command batch');
   const before=await store.read(roomId);if(!before)throw fail('missing','clinical guard not found');
   const record=before.value;
@@ -33,6 +33,8 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
    const recovery=await runtime.advanceTo(Math.max(at,Math.ceil(fenced.runtime.lastWallMs)),{maxSteps});
    const acknowledgements=[];let confirmationAccepted=null;
    if(!recovery.recovering){
+    if(actorProfile&&Number.isSafeInteger(actorProfile.level)&&actorProfile.level>0)
+     runtime.updateDoctorLevel(actorId,actorProfile.level);
     if(motion)runtime.motion(actorId,motion,motionSequence);
     if(claim)runtime.claim(actorId,claim);
     if(typeof typing==='boolean')runtime.typing(actorId,typing,at);

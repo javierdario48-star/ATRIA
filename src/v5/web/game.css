@@ -559,3 +559,17 @@ body[data-phase="guard"] .guard-scoreboard{top:calc(141px + env(safe-area-inset-
 /* The creator canvas retains its source aspect ratio; raster backing is
    allocated at device pixel density by avatar-creator.js. */
 #avatarPreview{aspect-ratio:320 / 380;image-rendering:auto;flex:none}
+/* Compact social/account surfaces share the existing dialog and lifecycle. */
+.account-entry{display:flex;justify-content:center;gap:8px;margin:12px 0}
+.doctor-profile{max-width:440px;margin:auto}
+.doctor-profile header{display:flex;align-items:center;gap:14px}
+.doctor-profile header canvas{width:96px;height:116px;object-fit:contain;flex-shrink:0}
+.doctor-profile h2{margin:0 0 5px}
+.doctor-status{font-size:.85rem;color:#9cdbc8}
+.doctor-stats{display:flex;justify-content:space-around;gap:12px;padding:16px 0;text-align:center}
+.doctor-stats span{display:flex;flex-direction:column;font-size:.78rem;gap:4px}
+.doctor-stats b{font-size:1.3rem}
+.doctor-xp{display:block;font-size:.8rem}
+.doctor-xp progress{display:block;width:100%;height:8px;margin:8px 0 18px;accent-color:#54cfb4}
+#accountError{color:#ffb7aa;font-size:.85rem}
+@media(max-height:500px){.doctor-profile header canvas{width:64px;height:78px}.doctor-stats{padding:6px 0}}

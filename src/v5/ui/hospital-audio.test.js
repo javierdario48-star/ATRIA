@@ -35,6 +35,18 @@ const fixture=()=>{
  const audio=createHospitalAudio({window:ctx,storage});
  return {audio,ctx,store};
 };
+test('a new player gets a moderate louder default while saved volume and mute remain exact',()=>{
+ const fresh=fixture();assert(fresh.audio.state().volume>.62&&fresh.audio.state().volume<=.78);
+ const storage={getItem:()=>JSON.stringify({volume:.31,enabled:false}),setItem:()=>{}};
+ const saved=createHospitalAudio({window:fresh.ctx,storage});assert.equal(saved.state().volume,.31);assert.equal(saved.state().enabled,false);
+});
+test('menu cues have finite diminishing echoes and a rapid second tap cannot layer another motif',()=>{
+ let ctx;class RecordingContext extends AudioContext{constructor(){super();ctx=this;}}
+ const a=createHospitalAudio({window:{AudioContext:RecordingContext,document:{hidden:false}},storage:{getItem:()=>null}});
+ a.unlock();a.cue('uiTap');assert(ctx.oscillators.length>2&&ctx.oscillators.length<=6);
+ const count=ctx.oscillators.length;a.cue('uiTap');assert.equal(ctx.oscillators.length,count);
+ a.setEnabled(false);a.cue('uiChange');assert.equal(ctx.oscillators.length,count);a.destroy();
+});
 test('monitor follows real measured HR and never invents a beep for missing or disconnected readings',()=>{
  assert.equal(monitorBeatIntervalMs(60),1000);
  assert.equal(monitorBeatIntervalMs(120),500);

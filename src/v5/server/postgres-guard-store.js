@@ -8,7 +8,7 @@ const ROOM_ID=/^[A-Za-z0-9_-]{1,100}$/;
 function validRoom(id){if(typeof id!=='string'||!ROOM_ID.test(id))throw Error('invalid durable room ID');}
 const failure=(response,body)=>Object.assign(Error('clinical Postgres store request failed ('+response.status+')'),
  {status:response.status,code:body?.code||'database-unavailable'});
-export function createPostgresGuardStore({url,secretKey,fetchImpl=globalThis.fetch}){
+export function createPostgresGuardStore({url,secretKey,fetchImpl=globalThis.fetch,accountSession=null}){
  if(typeof url!=='string'||typeof secretKey!=='string'||!secretKey.startsWith('sb_secret_')||typeof fetchImpl!=='function')
   throw Error('Supabase private backend URL and secret API key required');
  let origin;
@@ -37,8 +37,9 @@ export function createPostgresGuardStore({url,secretKey,fetchImpl=globalThis.fet
    if(etag!==null&&(!/^[1-9][0-9]*$/.test(String(etag))||!Number.isSafeInteger(Number(etag))))
     throw Error('invalid expected clinical revision');
    if(!value||typeof value!=='object'||Array.isArray(value))throw Error('invalid clinical checkpoint');
-   const revision=await request('POST','/rest/v1/rpc/atria_guard_cas',{
-    p_room_id:roomId,p_expected_revision:etag===null?null:Number(etag),p_state:value});
+   const revision=await request('POST','/rest/v1/rpc/'+(accountSession?'atria_v5_guard_cas':'atria_guard_cas'),{
+    p_room_id:roomId,p_expected_revision:etag===null?null:Number(etag),p_state:value,
+    ...(accountSession?{p_actor_id:accountSession.actorId,p_session_id:accountSession.sessionId}:{})});
    if(revision===null)return null;
    if(!Number.isSafeInteger(revision)||revision<1)throw Error('invalid clinical CAS result');
    return String(revision);

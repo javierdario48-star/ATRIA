@@ -2,7 +2,7 @@ import {monitorAcuity} from './monitor-acuity.js';
 // ATRIA V5 hospital soundscape: V4.13 melody, notification motifs and
 // HR-dependent bedside monitor, all driven by the ONE application RAF.
 // No media asset, clinical state writer, extra timer, or animation loop.
-const DEFAULTS=Object.freeze({enabled:true,volume:.62,channels:{
+const DEFAULTS=Object.freeze({enabled:true,volume:.74,channels:{
  music:true,monitor:true,speech:true,effects:true,ambient:true},track:'guardia'});
 const CHORDS=Object.freeze([[52,55,59,66],[48,52,55,59],[50,57,60,64],[47,54,57,62]]);
 const MELODY=Object.freeze([[71,null,null,66,67,null,64,null],
@@ -77,8 +77,12 @@ export function createHospitalAudio({window,storage}){
    const now=context?.currentTime??0;
    if(now-lastUiCue<.085)return;
    lastUiCue=now;
-   for(const [hz,offset,peak] of quiet[kind])
-    tone(hz,{group:'effects',offset,duration:.095,peak});
+   stop('effects');
+   // Two finite, diminishing taps: no feedback loop or second audio owner.
+   // Cancel the previous cue before a new gesture so menu tails cannot stack.
+   for(const [delay,gain] of [[0,1],[.09,.22],[.18,.07]])
+    for(const [hz,offset,peak] of quiet[kind])
+     tone(hz,{group:'effects',offset:offset+delay,duration:.095,peak:peak*gain});
    if(channel('effects'))counters.effects++;
    return;
   }

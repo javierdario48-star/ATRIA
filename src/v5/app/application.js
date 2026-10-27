@@ -10,6 +10,7 @@ import {isExaminationCommand} from '../clinical/exam-contract.js';
 import {formatGuardTime} from '../ui/guard-time.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {createCooperativeLink} from '../social/cooperative-link.js';
+import {createAccountClient} from '../social/account-client.js';
 import {createCooperativeReplica} from '../social/cooperative-replica.js';
 import {createDurableCooperativeReplica} from '../social/durable-cooperative-replica.js';
 import {createClinicalConnectionNotice} from '../social/clinical-connection-notice.js';
@@ -39,6 +40,7 @@ import {createUnassignedPatientGlow,suggestedBedsideAction} from '../ui/bedside-
 import {createPatientClinicalOverlay} from '../ui/diagnostic-impression.js';
 import {createClinicalChecklist} from '../ui/clinical-checklist.js';
 import {createLobbyDirectory} from '../ui/lobby-directory.js';
+import {playerProfileCardHTML} from '../ui/player-profile-card.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const PROFILE_KEY='atria.v5.profile.v1';
@@ -54,8 +56,11 @@ export function readProfile(storage){
 /** Exactly one owner for boot, input listeners, RAF and all mode transitions. */
 export async function createApplication({document,window,content,signal}){
  const rootLifecycle=new Lifecycle(),scope=rootLifecycle.enter('application');
+ const account=createAccountClient({window});
  let progress;try{progress=createProgressionLedger(JSON.parse(window.localStorage.getItem(PROGRESS_KEY)||'{}'));}catch{progress=createProgressionLedger();}
  let savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;
+ const career=()=>account.read()||progress.read();
+ let accountTransition=Promise.resolve();
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
@@ -161,7 +166,7 @@ export async function createApplication({document,window,content,signal}){
  const clinicalUI=createClinicalInterface({document,session:()=>guardSession,open,close,send:submitText,notify:toast,cases:content.cases,
   onTalk:uid=>selectRecipient('patient',uid),therapies:content.therapies,
    onMonitorOpen:()=>hospitalAudio.cue('monitorOpen')});
- const social=createCooperativeLink({window,profile,
+ const social=createCooperativeLink({window,profile,onAccount:value=>account.accept(value),
   onSocial:()=>{if(destroyed)return;const s=social.state();renderNotifications(s);if(world.snapshot().phase==='lobby'){
    if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();
    if(dialog.open&&dialog.dataset.panel==='lobby-person'&&selectedLobbyPlayerId){
@@ -221,20 +226,18 @@ export async function createApplication({document,window,content,signal}){
    s.requests?.incoming?.some(x=>x.id===id)?'incoming':
    s.requests?.outgoing?.some(x=>x.id===id)?'outgoing':'stranger';
  }
- function showLobbyPlayerCard(userId){
+ async function showLobbyPlayerCard(userId){
   const state=social.state(),person=state.roster.find(x=>x.userId===userId);
-  if(!person)return toast('Ese médico ya no está conectado.');
   selectedLobbyPlayerId=userId;selectedLobbyCardState=friendStatus(state,userId);
-  const friend=state.friends?.some(x=>x.id===userId),
-    pending=state.requests?.outgoing?.some(x=>x.id===userId),
-    incoming=state.requests?.incoming?.some(x=>x.id===userId);
-  const cases=content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id));
-  open('<h2>'+esc(person.name)+'</h2><p>'+ (friend?'Amigo':pending?'Solicitud de amistad enviada':'Médico conectado')+
-   '</p><div class="actions">'+(incoming?'<button data-action="accept-friend" data-user="'+esc(userId)+'">Aceptar amistad</button>':
-   !friend&&!pending?'<button data-action="add-friend" data-user="'+esc(userId)+'">Agregar a amigos</button>':'')+
-   '<label>Paciente<select id="friendCase">'+cases.map(c=>'<option value="'+esc(c.id)+'" '+(c.id==='PERI-PBE-001'?'selected':'')+'>'+esc(c.selector)+'</option>').join('')+
-   '</select></label><button class="primary" data-action="invite-friend" data-user="'+esc(userId)+'">Invitar a una guardia</button>'+
-   '<button data-action="close">Cerrar</button></div>','lobby-person');
+  open('<p role="status">Cargando perfil…</p>','lobby-person');
+  try{const p=await social.readPlayerProfile(userId);
+   if(!dialog.open||dialog.dataset.panel!=='lobby-person'||selectedLobbyPlayerId!==userId)return;
+   open(playerProfileCardHTML(p,{friendship:friendStatus(social.state(),userId),canInvite:world.snapshot().phase==='lobby'}),'lobby-person');
+   renderer.drawAvatar(ui('socialProfileAvatar'),{color:p.scrubColor,sex:p.sex});
+  }catch(error){if(dialog.open&&dialog.dataset.panel==='lobby-person'){
+   if(person)open('<h2>'+esc(person.name)+'</h2><p>Perfil no disponible en este momento.</p><div class="actions"><button data-action="close">Cerrar</button></div>','lobby-person');
+   else {close();toast(error.message);}
+  }}
  }
  async function inviteColleagues(ids,caseId,mode='coop'){
   if(invitingColleagues||coopRoomId)return;
@@ -286,6 +289,7 @@ export async function createApplication({document,window,content,signal}){
    },
    onSnapshot:value=>{
     connectionNotice.succeeded();
+    if(value.account)account.accept(value.account);
     if(durableClient!==client||coopRoomId!==room.id||destroyed)return;
     world.reconcilePatients(value.clinical.shift?.patients||[]);
     world.applySharedSpatial(value.spatial,window.performance.now(),client.lastAcknowledgedMotion(social.state().user?.id));
@@ -358,7 +362,7 @@ export async function createApplication({document,window,content,signal}){
   coopRoomId=room.id;cooperativeFlow.bind(room.id);announcedClosure=null;announcedDeathUid=null;
   lastReceivedPatientCount=current.shift?.patients.length||1;lastSelectedPatientUid=current.patient.uid;shiftEndedAnnounced=false;
   world=createWorld(content,{...profile,id:social.state().user?.id||profile.id});
-  world.enterGuard({mode:current.competition?.mode==='competitive'?'competitive':'coop',
+  world.enterGuard({mode:current.shift?.mode||current.competition?.mode||'coop',
    caseId:current.shift?.patients[0]?.caseId||current.patient.caseId,
    patientUid:current.shift?.patients[0]?.uid||current.patient.uid,
    bedId:current.shift?.patients[0]?.bedId||'B1',
@@ -683,13 +687,15 @@ export async function createApplication({document,window,content,signal}){
    focusedPatientUid,selecting:!!receptionAssignment.status()||!!directSelection.status()
   });
   ui('peopleButton').textContent=guard?'Historia':'Personas';
-  const career=progress.read();ui('playerProgress').textContent='Nivel '+career.level+' · '+(career.xp%200)+'/200 XP';world.setLevel(career.level);
+  const stats=career();ui('playerProgress').textContent='Nivel '+stats.level+' · '+(stats.xp%200)+'/200 XP';world.setLevel(account.read()?stats.level:1);
   ui('recipientButton').textContent=guard?({nurse:'Enfermera',vega:'Dr. Vega'}[focusedNpc]||'Paciente cercano'):'Lobby · público';
   if(nurseQuick)nurseQuick.hidden=!guard;
   input.placeholder=guard?'Hablar en la guardia…':'Hablar en el lobby…';
   document.body.dataset.phase=s.phase;document.body.dataset.generation=String(s.generation);
  }
  function enterLobby(leaveShared=false){
+  if(durableClient&&account.read())accountTransition=account.call('release-guard',{})
+   .then(()=>account.restore()).catch(error=>toast(error.message));
   advanceClinicalTo(window.performance.now());
   if(leaveShared)restoreRoomId=null;
   if(leaveShared)cancelSharedIntent();
@@ -886,6 +892,10 @@ export async function createApplication({document,window,content,signal}){
    else toast('Acercate para interactuar.');
    return;
   }
+  if(world.snapshot().phase==='guard'){
+   const other=world.snapshot().others.find(p=>Math.hypot(p.x-x,p.y-y)<=22);
+   if(other){void showLobbyPlayerCard(other.id);return;}
+  }
   document.activeElement?.blur?.();pendingPatientAction=null;patientWheel.hide();close();
   if(!world.target(x,y))toast('No hay una ruta disponible.');
   drag={id:event.pointerId,x:event.clientX,y:event.clientY};canvas.setPointerCapture?.(event.pointerId);
@@ -943,11 +953,43 @@ export async function createApplication({document,window,content,signal}){
  }
  function showProfile(){
   const s=world.snapshot();
-  open(`<h2>Perfil</h2><p>${esc(profile.name)} · Nivel ${progress.read().level} · ${progress.read().xp} XP</p><p>Los progresos de la versión estable se conservan separados de esta prueba.</p>
+  const a=account.read(),stats=career();
+  open(`<h2>Perfil</h2><p>${esc(profile.name)} · Nivel ${stats.level} · ${stats.xp} XP</p>
+   <p>${a?'@'+esc(a.username)+' · '+a.casesResolved+' casos resueltos':'Práctica guardada en este dispositivo. Vinculá una cuenta para continuar en otros dispositivos.'}</p>
    <label class="field">Alias<input id="aliasChoice" value="${esc(profile.name)}" maxlength="32"></label>
    <label class="field">Sexo del personaje<select id="sexChoice"><option value="male" ${profile.sex!=='female'?'selected':''}>Masculino</option><option value="female" ${profile.sex==='female'?'selected':''}>Femenino</option></select></label>
    <label class="field">Ambo<select id="colorChoice">${SCRUB_COLORS.map(k=>`<option value="${k}" ${k===profile.scrubColor?'selected':''}>${esc(content.colors[k]?.[0]||({burgundy:'Burdeos clínico',black:'Negro'}[k]||k))}</option>`).join('')}</select></label>
-   <div class="actions"><button data-action="close">Cerrar</button><button data-action="save-profile" ${s.phase==='guard'?'disabled':''}>Guardar</button></div>`);
+   <div class="actions"><button data-action="close">Cerrar</button><button data-action="save-profile" ${s.phase==='guard'?'disabled':''}>Guardar</button>
+    ${a?'<button data-action="own-social-profile">Ver perfil social</button>':''}
+    ${s.phase==='guard'?'':a?'<button data-action="account-logout">Cerrar sesión</button>':'<button data-action="account-register">Guardar mi cuenta</button><button data-action="account-login">Ya tengo cuenta</button>'}</div>`);
+ }
+ function showAccountForm(kind='login'){
+  const register=kind==='register';
+  open('<h2>'+(register?'Guardá tu identidad médica':'Entrar a tu cuenta')+'</h2>'+
+   '<p>'+(register?'Conservá tu personaje y tus amigos. Usá la misma cuenta en tu teléfono o computadora.':'Recuperá tu personaje, amigos y progreso.')+'</p>'+
+   '<form id="accountForm" data-kind="'+kind+'"><label class="field">Usuario<input id="accountUsername" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[a-z][a-z0-9_]{2,23}" minlength="3" maxlength="24" required></label>'+
+   '<label class="field">Contraseña<input id="accountPassword" type="password" autocomplete="'+(register?'new-password':'current-password')+'" minlength="'+(register?12:1)+'" maxlength="128" required></label>'+
+   (register?'<small>Al menos 12 caracteres. Guardala en tu administrador de contraseñas.</small>':'')+
+   '<p id="accountError" role="alert"></p><div class="actions"><button type="button" data-action="close">Volver</button><button class="primary" type="submit">'+(register?'Crear cuenta':'Iniciar sesión')+'</button></div></form>','account');
+ }
+ function applyAccount(a){
+  account.accept(a);profile={id:a.actorId,name:a.name,sex:a.sex,scrubColor:a.scrubColor,level:a.level};
+  social.setProfile(profile);social.useAccount(a);world=createWorld(content,profile);
+  try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
+ }
+ async function startPersonalAccountGuard(caseId,mode=draftMode,recover=false){
+  if(durableStarting||coopRoomId)return;
+  durableStarting=true;let client;
+  try{
+   await accountTransition;
+   await social.connect();
+   const a=account.read(),id=recover?a.activeGuardId:'personal-'+window.crypto.randomUUID();
+   if(!id)throw Error('No hay una guardia para recuperar.');
+   const room={id,mode,members:[{userId:a.actorId,name:a.name}]};client=makeDurableClient(room);
+   if(recover)await client.sync();else await client.start(caseId,mode);
+   attachDurableRoom(room,client);
+  }catch(error){client?.dispose();toast(error.message);}
+  finally{durableStarting=false;}
  }
  ui('playerName').value=profile.name;
  const avatarCreator=createAvatarCreator({document,window,assetUrls:content.assetUrls,profile,listen,signal});
@@ -964,6 +1006,21 @@ export async function createApplication({document,window,content,signal}){
   social.setProfile(profile);
   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{/* session still usable */}
   world=createWorld(content,profile);enterLobby();
+ });
+ for(const [id,kind] of [['accountLoginButton','login'],['accountRegisterButton','register']])listen(ui(id),'click',()=>{
+  profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico',sex:avatarCreator.read().sex,scrubColor:avatarCreator.read().color};
+  social.setProfile(profile);showAccountForm(kind);
+ });
+ listen(dialog,'submit',async event=>{
+  if(event.target.id!=='accountForm')return;
+  event.preventDefault();const form=event.target,button=form.querySelector('button[type="submit"]');button.disabled=true;
+  try{const register=form.dataset.kind==='register';
+   const result=await account.call(register?'register':'login',{username:ui('accountUsername').value,password:ui('accountPassword').value,
+    ...(register?{...profile,clientKey:social.credentials().clientKey,legacyProgress:progress.read()}:{})});
+   await social.flush();applyAccount(result.account);enterLobby();
+   if(result.account.activeGuardId)open('<h2>Tenés una guardia en curso</h2><p>Podés recuperarla en este dispositivo.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
+  }catch(error){if(ui('accountError'))ui('accountError').textContent=error.message;}
+  finally{if(button.isConnected)button.disabled=false;}
  });
  listen(ui('notificationsButton'),'click',showPeople);
  listen(ui('audioButton'),'click',()=>{hospitalAudio.unlock();showAudioSettings();});
@@ -1036,6 +1093,7 @@ export async function createApplication({document,window,content,signal}){
    if(['coop','competitive'].includes(draftMode)){
     await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),ui('caseChoice').value,draftMode);return;
    }
+   if(account.read()){await startPersonalAccountGuard(ui('caseChoice').value);return;}
    cancelSharedIntent();
    beginLocalPatient(ui('caseChoice').value);
   }
@@ -1065,10 +1123,35 @@ export async function createApplication({document,window,content,signal}){
   }
   if(button.dataset.action==='save-profile'){
    const next={name:ui('aliasChoice').value.trim().slice(0,32)||'Médico',scrubColor:ui('colorChoice').value,sex:ui('sexChoice').value};
-   world.setAppearance(next);profile=next;
+   if(account.read()){
+    try{const result=await account.call('profile',next);account.accept(result.account);}
+    catch(error){toast(error.message);return;}
+   }
+   world.setAppearance(next);profile={...profile,...next};
    social.setProfile(profile);
    try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
    close();updateHud();
+  }
+  if(button.dataset.action==='account-login')showAccountForm('login');
+  if(button.dataset.action==='own-social-profile')void showLobbyPlayerCard(account.read().actorId);
+  if(button.dataset.action==='remove-friend'){
+   try{await social.removeFriend(button.dataset.user);void showLobbyPlayerCard(button.dataset.user);}
+   catch(error){toast(error.message);}
+  }
+  if(button.dataset.action==='account-register')showAccountForm('register');
+  if(button.dataset.action==='account-logout'){
+   try{await social.leave();await social.flush();await account.logout();social.useAccount(null);
+    profile=readProfile(window.localStorage);delete profile.id;world=createWorld(content,profile);world.enterLobby();
+    close();updateHud();ui('splash').hidden=false;ui('hud').hidden=true;ui('chatDock').hidden=true;
+   }catch(error){toast(error.message);}
+  }
+  if(button.dataset.action==='account-recover'){
+   try{await account.call('take-control',{});await startPersonalAccountGuard(null,'solo',true);}
+   catch(error){toast(error.message);}
+  }
+  if(button.dataset.action==='account-release'){
+   try{await account.call('release-guard',{});await account.restore();close();}
+   catch(error){toast(error.message);}
   }
  });
  listen(dialog,'input',event=>{
@@ -1227,6 +1310,9 @@ export async function createApplication({document,window,content,signal}){
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
  drawWorld();resume();
+ try{const saved=await account.restore();if(saved){applyAccount(saved);enterLobby();
+  if(saved.activeGuardId)open('<h2>Guardia en curso</h2><p>Tu personaje está listo. Recuperá la guardia o finalizá tu participación.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
+ }}catch{toast('No se pudo recuperar tu cuenta. Reintentá desde Perfil.');}
  return Object.freeze({snapshot:()=>({...world.snapshot(),history:structuredClone(history),clinical:guardSession?.read()||null}),
   diagnostics:()=>({destroyed,raf:raf===null?0:1,listeners:destroyed?0:listeners.length+atriaKeyboard.listenerCount()+renderer.metrics().listeners,timers:0,frames,
    frameErrors:{count:frameErrorCount,last:lastFrameError?{...lastFrameError}:null},
