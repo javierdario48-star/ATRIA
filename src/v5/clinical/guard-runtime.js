@@ -189,7 +189,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   view(actorId=hostId){
    const scene=world.snapshot(),session=activeSession(actorId);
    return clone({clinical:clinicalView(actorId),catalog:session.catalog(),
-    spatial:{nurses:scene.nurses,doctors:[{...scene.player,id:hostId,kind:'doctor'},...scene.others]},
+    spatial:{nurses:scene.nurses,doctors:[{...scene.player,id:hostId,kind:'doctor'},...scene.others],expert:scene.expert},
     motionReceipts:[...motionReceipts],claims:[...claims],deliveries:[...deliveries]});
   },
   async checkpoint(){

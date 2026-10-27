@@ -52,6 +52,7 @@ function routeFor(identity){
  probe:createClinicalStoreProbe({store,kind:sqlConfigured?'postgres-atomic-cas':'private-blob-etag-cas'})});
 }
 export default async function clinical(req,res){
+ let identity=null;
  res.setHeader('Cache-Control','private, no-store');res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('X-Content-Type-Options','nosniff');
  const origin=req.headers?.origin,host=req.headers?.host;
  if(origin){try{if(new URL(origin).host!==host)throw Error('origin');}catch{res.statusCode=403;res.end(JSON.stringify({error:'invalid origin'}));return;}}
@@ -59,9 +60,10 @@ export default async function clinical(req,res){
   let body=req.body??{};if(Buffer.isBuffer(body))body=body.toString('utf8');
   if(typeof body==='string'){if(Buffer.byteLength(body)>16000){res.statusCode=413;res.end(JSON.stringify({error:'request too large'}));return;}body=JSON.parse(body||'{}');}
   if(JSON.stringify(body).length>16000){res.statusCode=413;res.end(JSON.stringify({error:'request too large'}));return;}
-  const identity=accountGateway?await accountGateway.authenticate(req.headers):null;
+  identity=accountGateway?await accountGateway.authenticate(req.headers):null;
   const result=await routeFor(identity)({method:req.method,headers:req.headers,body});
   if(identity?.cookies?.length)res.setHeader('Set-Cookie',identity.cookies);
   res.statusCode=result.status;res.end(JSON.stringify(result.body));
- }catch(error){res.statusCode=error.status||400;res.end(JSON.stringify({error:error.status===401?'Sesión vencida. Iniciá sesión.':'invalid clinical request'}));}
+ }catch(error){if((error.cookies||identity?.cookies)?.length)res.setHeader('Set-Cookie',error.cookies||identity.cookies);
+  res.statusCode=error.status||400;res.end(JSON.stringify({error:error.status===401?'Sesión vencida. Iniciá sesión.':'invalid clinical request'}));}
 }

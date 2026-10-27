@@ -22,16 +22,20 @@ export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.f
   removeIdentity:id=>request('/auth/v1/admin/users/'+encodeURIComponent(id),{method:'DELETE'}),
   passwordSession:(username,password)=>request('/auth/v1/token?grant_type=password',{method:'POST',body:{email:username+'@accounts.atria.invalid',password}}),
   async validateSession(tokens){
+   let refreshedTokens=null;
+   try{
    let claims;try{claims=JSON.parse(Buffer.from(tokens.access_token.split('.')[1],'base64url').toString());}catch{throw error(401,'Sesión inválida.');}
    // Decode only to schedule refresh; Auth verifies the resulting JWT.
    if(!Number.isFinite(claims.exp)||claims.exp*1000<Date.now()+30000){
     tokens=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:tokens.refresh_token}});
+    refreshedTokens=tokens;
     try{claims=JSON.parse(Buffer.from(tokens.access_token.split('.')[1],'base64url').toString());}catch{throw error(401,'Sesión inválida.');}
    }
    const user=await request('/auth/v1/user',{accessToken:tokens.access_token});
    if(!user?.id||claims.sub!==user.id||!claims.session_id||!await rpc('atria_v5_session_active',{p_auth_user_id:user.id,p_session_id:claims.session_id}))
     throw error(401,'La sesión venció. Iniciá sesión nuevamente.');
    return {userId:user.id,sessionId:claims.session_id,tokens};
+   }catch(error){if(refreshedTokens)error.refreshedTokens=refreshedTokens;throw error;}
   },
   logout:tokens=>request('/auth/v1/logout?scope=local',{method:'POST',accessToken:tokens.access_token}),
   async insertAccount(row){return (await request('/rest/v1/atria_v5_accounts',{method:'POST',body:row,prefer:'return=representation'}))[0];},

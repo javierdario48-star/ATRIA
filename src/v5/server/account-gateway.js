@@ -2,6 +2,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {clinicalActorId} from './clinical-http.js';
 import {scrubAppearance,socialAppearance} from '../app/avatar-appearance.js';
 import {avatarAssetSpec} from '../ui/avatar-creator.js';
+import {privateRoomMotionPrefix} from '../social/room-motion-scope.js';
 
 const COOKIE='__Host-atria_v5';
 const fail=(status,message)=>Object.assign(Error(message),{status});
@@ -34,6 +35,15 @@ function appearance(body,previous={}){
 /** Adapts verified Supabase sessions to the existing social owner. The private
  * bridge token never leaves the server or authenticates a browser. */
 export function createAccountGateway({backend,legacy,storage}){
+ const publisherKey=id=>'atria-v5:presence-controller:'+id;
+ async function claimPublisher(identity){
+  const old=await storage.get(publisherKey(identity.actorId));
+  const value={sessionId:identity.sessionId,nonce:randomUUID(),epoch:Math.max(Date.now(),(old?.epoch||0)+1),clientEpoch:0,source:null};
+  await storage.set(publisherKey(identity.actorId),value,{ttl:604800});return value;
+ }
+ async function publishLogin(identity){
+  if(!identity.account.active_guard_id)await claimPublisher(identity);
+ }
  async function throttle(request,kind){
   const ip=String(request.headers?.['x-vercel-forwarded-for']||request.headers?.['x-forwarded-for']||'local').split(',')[0].trim();
   const key='atria-v5:auth-rate:'+kind+':'+createHash('sha256').update(ip).digest('hex');
@@ -44,10 +54,13 @@ export function createAccountGateway({backend,legacy,storage}){
  }
  async function authenticate(headers={}){
   const tokens=readCookie(headers);if(!tokens)return null;
-  const verified=await backend.validateSession(tokens),account=await backend.byAuth(verified.userId);
-  if(!account)throw fail(401,'Cuenta médica no disponible.');
-  return {...verified,account,actorId:account.actor_id,cookies:
-   verified.tokens.access_token!==tokens.access_token?[sessionCookie(verified.tokens)]:[]};
+  let cookies=[];
+  try{const verified=await backend.validateSession(tokens);
+   cookies=verified.tokens.access_token!==tokens.access_token?[sessionCookie(verified.tokens)]:[];
+   const account=await backend.byAuth(verified.userId);
+   if(!account)throw fail(401,'Cuenta médica no disponible.');
+   return {...verified,account,actorId:account.actor_id,cookies};
+  }catch(error){error.cookies=error.refreshedTokens?[sessionCookie(error.refreshedTokens)]:cookies;throw error;}
  }
  async function socialHeaders(identity){
   const a=identity.account,token=a.social_token;
@@ -59,7 +72,8 @@ export function createAccountGateway({backend,legacy,storage}){
  }
  async function resolve(request){
   const identity=await authenticate(request.headers);
-  if(identity)return {identity,headers:await socialHeaders(identity)};
+  if(identity){try{return {identity,headers:await socialHeaders(identity)};}
+   catch(error){error.cookies=identity.cookies;throw error;}}
   const who=await legacy.route({method:'GET',path:'me',headers:request.headers});
   if(who.status===200&&await backend.byActor(who.body.user.id))throw fail(401,'Esta identidad requiere iniciar sesión con contraseña.');
   return {identity:null,headers:request.headers};
@@ -70,6 +84,7 @@ export function createAccountGateway({backend,legacy,storage}){
  }
  async function route(request){
   const path=pathOf(request.path),method=request.method||'GET',body=request.body||{};
+  let pendingCookies=[];
   try{
    if(path==='account/session'&&method==='GET'&&!readCookie(request.headers||{}))return reply(200,{account:null});
    if(path==='account/register'&&method==='POST'){
@@ -86,36 +101,49 @@ export function createAccountGateway({backend,legacy,storage}){
      legacy_progress:body.legacyProgress&&typeof body.legacyProgress==='object'?{unverified:true,data:body.legacyProgress}:null,
      created_at:old?.createdAt?new Date(old.createdAt).toISOString():new Date().toISOString()});}
     catch(error){await backend.removeIdentity?.(user.id);throw error;}
-    const tokens=await backend.passwordSession(username,password),verified=await backend.validateSession(tokens);
+    const tokens=await backend.passwordSession(username,password);pendingCookies=[sessionCookie(tokens)];
+    const verified=await backend.validateSession(tokens);
     const identity={...verified,actorId,account};await socialHeaders(identity);
+    await publishLogin(identity);
     return reply(200,{account:await summary(identity,true)},[sessionCookie(tokens)]);
    }
    if(path==='account/login'&&method==='POST'){
     await throttle(request,'login');
     const username=String(body.username||'').trim().toLowerCase();
     if(!/^[a-z][a-z0-9_]{2,23}$/.test(username)||typeof body.password!=='string'||body.password.length>128)throw fail(401,'Usuario o contraseña incorrectos.');
-    const tokens=await backend.passwordSession(username,body.password),verified=await backend.validateSession(tokens),account=await backend.byAuth(verified.userId);
+    const tokens=await backend.passwordSession(username,body.password);pendingCookies=[sessionCookie(tokens)];
+    const verified=await backend.validateSession(tokens),account=await backend.byAuth(verified.userId);
     if(!account)throw fail(401,'Usuario o contraseña incorrectos.');
     const identity={...verified,account,actorId:account.actor_id};await socialHeaders(identity);
+    await publishLogin(identity);
     return reply(200,{account:await summary(identity,true)},[sessionCookie(tokens)]);
    }
+   if(path==='lobby/state'&&method==='POST')return signalRoute({...request,body:{presence:body}});
    const {identity,headers}=await resolve(request);
+   pendingCookies=identity?.cookies||[];
    if(path.startsWith('account/')){
     if(!identity)throw fail(401,'Iniciá sesión para acceder a tu cuenta.');
     if(path==='account/session'&&method==='GET')return reply(200,{account:await summary(identity,true)},identity.cookies);
     if(path==='account/logout'&&method==='POST'){
      await backend.rpc('atria_v5_set_active_guard',{p_actor_id:identity.actorId,p_room_id:null,p_session_id:identity.sessionId});
-     await backend.logout(identity.tokens);return reply(200,{ok:true},[sessionCookie(null)]);
+     await backend.logout(identity.tokens);
+     if((await storage.get(publisherKey(identity.actorId)))?.sessionId===identity.sessionId)await storage.delete(publisherKey(identity.actorId));
+     return reply(200,{ok:true},[sessionCookie(null)]);
     }
     if(path==='account/profile'&&method==='POST'){
      identity.account=await backend.updateAccount(identity.account.auth_user_id,appearance(body,identity.account));
      await socialHeaders(identity);return reply(200,{account:await summary(identity)},identity.cookies);
+    }
+    if(path==='account/use-device'&&method==='POST'){
+     if(identity.account.active_guard_id&&identity.account.controller_session_id!==identity.sessionId)throw fail(409,'Recuperá primero la guardia para usar este dispositivo.');
+     await claimPublisher(identity);return reply(200,{ok:true},identity.cookies);
     }
     if(['account/release-guard','account/take-control'].includes(path)&&method==='POST'){
      const take=path.endsWith('take-control');
      const ok=await backend.rpc(take?'atria_v5_take_control':'atria_v5_set_active_guard',{
       p_actor_id:identity.actorId,p_session_id:identity.sessionId,...(take?{}:{p_room_id:null})});
      if(!ok)throw fail(409,'La guardia está controlada desde otro dispositivo.');
+     if(take)await claimPublisher(identity);
      return reply(200,{ok:true},identity.cookies);
     }
     throw fail(404,'Operación de cuenta inexistente.');
@@ -139,14 +167,30 @@ export function createAccountGateway({backend,legacy,storage}){
    const result=await legacy.route({...request,headers});
    if(identity&&path==='me'&&result.status===200)result.body.account=await summary(identity);
    return {...result,cookies:identity?.cookies||[]};
-  }catch(error){return reply(error.status||503,{error:error.status?error.message:'No se pudo acceder a la cuenta. Intentá nuevamente.'});}
+  }catch(error){return reply(error.status||503,{error:error.status?error.message:'No se pudo acceder a la cuenta. Intentá nuevamente.'},error.cookies||pendingCookies);}
  }
  async function signalRoute(request){
-  try{const {identity,headers}=await resolve(request);let body=request.body;
-   if(identity&&body?.presence)body={...body,presence:{...body.presence,
-    level:publicAccount(identity.account).level,color:socialAppearance(identity.account.scrub_color,identity.account.sex)}};
+  let pendingCookies=[];
+  try{const {identity,headers}=await resolve(request);pendingCookies=identity?.cookies||[];let body=request.body;
+   if(identity){
+    let publisher=await storage.get(publisherKey(identity.actorId));
+    const controller=identity.account.active_guard_id?identity.account.controller_session_id:publisher?.sessionId;
+    if(controller&&controller!==identity.sessionId)return reply(200,{ok:true,observer:true,signal:null},identity.cookies);
+    if(!publisher||publisher.sessionId!==identity.sessionId)publisher=await claimPublisher(identity);
+    if(body?.presence){
+     const p=body.presence;
+     if(publisher.source!==p.motionSession){
+      if(publisher.source&&Number(p.motionEpoch)<=publisher.clientEpoch)return reply(200,{ok:true,stale:true},identity.cookies);
+      publisher={...publisher,source:p.motionSession,clientEpoch:Number(p.motionEpoch)||0,nonce:randomUUID(),epoch:Math.max(Date.now(),publisher.epoch+1)};
+      await storage.set(publisherKey(identity.actorId),publisher,{ttl:604800});
+     }
+     body={...body,presence:{...p,
+      motionSession:(p.phase==='guard'?privateRoomMotionPrefix(identity.account.active_guard_id):'')+publisher.nonce,motionEpoch:publisher.epoch,
+      level:publicAccount(identity.account).level,color:socialAppearance(identity.account.scrub_color,identity.account.sex)}};
+    }
+   }
    return {...await legacy.signalRoute({...request,headers,body}),cookies:identity?.cookies||[]};
-  }catch(error){return reply(error.status||503,{error:error.status?error.message:'Servicio social no disponible.'});}
+  }catch(error){return reply(error.status||503,{error:error.status?error.message:'Servicio social no disponible.'},error.cookies||pendingCookies);}
  }
  return Object.freeze({route,signalRoute,authenticate,socialHeaders});
 }

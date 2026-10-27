@@ -63,3 +63,33 @@ test('register cannot claim a different actor and profiles do not reveal private
  for(const field of ['auth_user_id','legacy_key','social_token','controller_session_id','password'])assert(!JSON.stringify(p.body).includes(field));
  assert.equal((await f.request('account/register',{username:'medico_uno',password:'safe-test-password-123',clientKey:key,name:'Otra Persona'})).status,409);
 });
+
+test('a second login cannot retire the active guard controller presence or break its SDP',async()=>{
+ const f=fixture(),a=await f.request('account/register',{username:'medico_uno',password:'safe-test-password-123',clientKey:key,name:'Médico Uno'});
+ const row=[...f.rows.values()][0];row.active_guard_id='room-1';row.controller_session_id=[...f.sessions.values()][0].sessionId;
+ const b=await f.request('account/login',{username:'medico_uno',password:'safe-test-password-123'});
+ const presence=(r,peerId,epoch,seq,x)=>f.gate.signalRoute({method:'POST',headers:{cookie:cookie(r)},body:{presence:{peerId,motionSession:peerId,motionEpoch:epoch,seq,x,y:400}}});
+ assert.equal((await presence(a,'peer-device-a',100,1,20)).status,200);
+ assert.equal((await presence(b,'peer-device-b',101,1,30)).body.observer,true);
+ assert.equal((await presence(a,'peer-device-a',100,2,40)).body.stale,undefined);
+ assert.equal((await f.legacy.roster())[0].x,40);
+ const signal=await f.gate.signalRoute({method:'GET',headers:{cookie:cookie(a)},query:{signal:'offer',toPeer:'peer-device-a',fromPeer:'peer-other'}});
+ assert.equal(signal.status,200);
+});
+test('refreshed session cookies survive a later account projection outage',async()=>{
+ const f=fixture(),a=await f.request('account/register',{username:'medico_uno',password:'safe-test-password-123',clientKey:key,name:'Médico Uno'});
+ const original=f.backend.validateSession.bind(f.backend);
+ f.backend.validateSession=async tokens=>({...await original(tokens),tokens:{access_token:'rotated-access',refresh_token:'rotated-refresh'}});
+ f.backend.award=async()=>{throw Error('database unavailable');};
+ const response=await f.request('account/session',undefined,{cookie:cookie(a)});
+ assert.equal(response.status,503);assert.equal(response.cookies.length,1);
+ assert(!JSON.stringify(response.body).includes('rotated-access'));
+ f.backend.byAuth=async()=>{throw Error('lookup unavailable');};
+ const lookup=await f.request('account/session',undefined,{cookie:cookie(a)});
+ assert.equal(lookup.status,503);assert.equal(lookup.cookies.length,1);
+});
+test('legacy presence route cannot forge an account level or appearance',async()=>{
+ const f=fixture(),a=await f.request('account/register',{username:'medico_uno',password:'safe-test-password-123',clientKey:key,name:'Médico Uno'});
+ const r=await f.request('lobby/state',{peerId:'peer-device-a',motionSession:'motion-a',motionEpoch:1,seq:1,level:999,color:'female-pink'},{cookie:cookie(a)});
+ assert.equal(r.status,200);const p=(await f.legacy.roster())[0];assert.equal(p.level,1);assert.equal(p.color,'navy');
+});

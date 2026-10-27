@@ -694,8 +694,11 @@ export async function createApplication({document,window,content,signal}){
   document.body.dataset.phase=s.phase;document.body.dataset.generation=String(s.generation);
  }
  function enterLobby(leaveShared=false){
-  if(durableClient&&account.read())accountTransition=account.call('release-guard',{})
-   .then(()=>account.restore()).catch(error=>toast(error.message));
+  if(durableClient&&account.read()){
+   const retired=durableClient;retired.dispose();
+   accountTransition=retired.flush().catch(()=>{}).then(()=>account.call('release-guard',{}))
+    .then(()=>account.restore()).catch(error=>toast(error.message));
+  }
   advanceClinicalTo(window.performance.now());
   if(leaveShared)restoreRoomId=null;
   if(leaveShared)cancelSharedIntent();
@@ -961,7 +964,7 @@ export async function createApplication({document,window,content,signal}){
    <label class="field">Ambo<select id="colorChoice">${SCRUB_COLORS.map(k=>`<option value="${k}" ${k===profile.scrubColor?'selected':''}>${esc(content.colors[k]?.[0]||({burgundy:'Burdeos clínico',black:'Negro'}[k]||k))}</option>`).join('')}</select></label>
    <div class="actions"><button data-action="close">Cerrar</button><button data-action="save-profile" ${s.phase==='guard'?'disabled':''}>Guardar</button>
     ${a?'<button data-action="own-social-profile">Ver perfil social</button>':''}
-    ${s.phase==='guard'?'':a?'<button data-action="account-logout">Cerrar sesión</button>':'<button data-action="account-register">Guardar mi cuenta</button><button data-action="account-login">Ya tengo cuenta</button>'}</div>`);
+    ${s.phase==='guard'?'':a?'<button data-action="account-use-device">Usar este dispositivo</button><button data-action="account-logout">Cerrar sesión</button>':'<button data-action="account-register">Guardar mi cuenta</button><button data-action="account-login">Ya tengo cuenta</button>'}</div>`);
  }
  function showAccountForm(kind='login'){
   const register=kind==='register';
@@ -1133,6 +1136,10 @@ export async function createApplication({document,window,content,signal}){
    close();updateHud();
   }
   if(button.dataset.action==='account-login')showAccountForm('login');
+  if(button.dataset.action==='account-use-device'){
+   try{await account.call('use-device',{});close();toast('Este dispositivo controla tu personaje.');}
+   catch(error){toast(error.message);}
+  }
   if(button.dataset.action==='own-social-profile')void showLobbyPlayerCard(account.read().actorId);
   if(button.dataset.action==='remove-friend'){
    try{await social.removeFriend(button.dataset.user);void showLobbyPlayerCard(button.dataset.user);}

@@ -17,7 +17,7 @@ export function createWorld(content,profile,checkpoint=null){
  const start=content.map.player_start_tile;
  const point=tile=>navigation.center(...(navigation.nearest(...tile,8)||start));
  let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true,
-  motionSequence=0,lastMotionIntent=null;
+  motionSequence=0,lastMotionIntent=null,mentorTrack=null;
  const lobbyRemotes=new Map(),guardRemotes=new Map(),nurseRemotes=new Map(),wardAppearances=new Map();
  const entities=()=>hospitalEntities({patients:patients.filter(p=>!p.departed),nurses,expert,phase},content.map,content.beds);
  function lobbyTile(){
@@ -34,8 +34,9 @@ export function createWorld(content,profile,checkpoint=null){
   lastMotionIntent={sequence:++motionSequence,target:[...player.target]};return true;
  }
  resetPlayer(lobbyTile());
- function enterLobby(){lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();wardAppearances.clear();nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
+ function enterLobby(){lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();wardAppearances.clear();mentorTrack=null;nursing?.dispose();nursing=null;others=[];authoritative=true;generation++;phase='lobby';mode=null;caseId=null;nurses=[];patients=[];expert=null;pendingInteraction=null;resetPlayer(lobbyTile());}
  function enterGuard(options={}){
+  mentorTrack=null;
   lobbyRemotes.clear();guardRemotes.clear();nurseRemotes.clear();wardAppearances.clear();const selected=options.mode||'solo';
   if(!['solo','apprentice','coop','competitive'].includes(selected))throw Error('multiplayer mode not migrated');
   const c=content.cases.find(c=>c.id===options.caseId);if(!c)throw Error('unknown clinical case');
@@ -95,6 +96,10 @@ export function createWorld(content,profile,checkpoint=null){
   }
   if(phase==='guard'&&!authoritative)for(const track of nurseRemotes.values())
    sampleRemotePose(track.pose,now);
+  if(phase==='guard'&&!authoritative&&mentorTrack&&expert){
+   const pose=sampleRemotePose(mentorTrack.pose,now);
+   Object.assign(expert,{x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,walkPhase:pose.walkPhase});
+  }
   for(const actor of [player,...others,...nurses,...patients,...(expert?[expert]:[])])if(actor.speechBubble&&actor.speechBubble.until<=now)delete actor.speechBubble;
   if(!authoritative)return;
   if(phase==='guard')for(const other of others)navigation.move(other,dt);
@@ -217,8 +222,13 @@ export function createWorld(content,profile,checkpoint=null){
     .sort((x,y)=>x.distance-y.distance||x.uid.localeCompare(y.uid))
     .map(x=>x.uid);
   },
-  applySharedSpatial({nurses:sharedNurses,doctors},now=Date.now(),acknowledgedMotion=null){
+  applySharedSpatial({nurses:sharedNurses,doctors,expert:sharedExpert},now=Date.now(),acknowledgedMotion=null){
    if(authoritative||phase!=='guard')return false;
+   if(sharedExpert){
+    expert??=structuredClone(sharedExpert);
+    mentorTrack??={pose:createRemotePose({x:sharedExpert.x,y:sharedExpert.y,now,cadence:900,speed:220}),seq:0};
+    receiveRemotePose(mentorTrack.pose,{...sharedExpert,now,transport:'clinical',motionSession:'clinical-mentor',motionEpoch:1,seq:++mentorTrack.seq,motionCadence:900});
+   }
    // A browser recovering an existing durable room starts its local counter
    // after the last sequence committed for this doctor, not at #1 again.
    if(Number.isSafeInteger(acknowledgedMotion)&&acknowledgedMotion>motionSequence)
