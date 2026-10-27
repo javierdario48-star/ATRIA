@@ -28,7 +28,7 @@ try{
  await host.waitForFunction(n=>atriaV5.snapshot().others.length===n-1,count,{timeout:90000});
  await host.locator('#guardButton').click();
  await host.locator('[data-mode="coop"]').click();
- await host.locator('#caseChoice').selectOption('PERI-PBE-001');
+ await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('PERI-PBE-001');
  for(const name of names.slice(1))
   await host.locator('#coopDoctors label').filter({hasText:name}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();

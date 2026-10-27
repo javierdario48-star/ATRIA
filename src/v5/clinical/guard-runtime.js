@@ -3,6 +3,7 @@ import {createGuardSession} from './guard-session.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {createShiftFlow,receptionAcuity} from './shift-flow.js';
 import {outcomeId} from '../social/cooperative-lifecycle.js';
+import {resolveGuardSelection,guardCaseSequence,guardScopeMultiplier} from './guard-selection-policy.js';
 
 export const CLINICAL_RUNTIME_VERSION='atria-guard-runtime-1';
 const STEP=1/60;
@@ -13,13 +14,25 @@ export async function clinicalContentHash(content){
 }
 /** One world, nurse dispatcher and shift clock; one original native clinical
  * session per patient. Only the existing durable CAS owner can mutate them. */
-export async function createGuardRuntime({content,roomId,caseId,members,hostId,mode='coop',nowMs,checkpoint=null}){
+export async function createGuardRuntime({content,roomId,caseId,members,hostId,mode='coop',nowMs,checkpoint=null,guardSelection=null}){
  const contentHash=await clinicalContentHash(content);
  if(checkpoint){
   if(checkpoint.schemaVersion!==1||checkpoint.modelVersion!==CLINICAL_RUNTIME_VERSION||
     checkpoint.contentHash!==contentHash||checkpoint.roomId!==roomId)throw Error('incompatible runtime checkpoint');
   ({caseId,members,hostId,mode='coop'}=clone(checkpoint));
+  guardSelection=checkpoint.guardSelection??null;
  }
+ if(guardSelection!==null){
+  const verified=resolveGuardSelection(content.cases,Object.keys(CLINICAL_EXECUTORS),guardSelection);
+  // jsonb reorders object keys; compare policy values, never object key order.
+  if(checkpoint&&(guardSelection.version!==1||guardSelection.selection!==verified.selection||
+   JSON.stringify(guardSelection.caseIds)!==JSON.stringify(verified.caseIds)))
+   throw Error('incompatible guard selection');
+  guardSelection=verified;
+ }
+ const caseSequence=checkpoint?.shift?.caseSequence??(guardSelection?guardCaseSequence(guardSelection.caseIds):null);
+ if(guardSelection&&!caseSequence)throw Error('missing admission sequence');
+ if(!checkpoint&&caseSequence)caseId=caseSequence[0];
  if(!['solo','apprentice','coop','competitive'].includes(mode)||!Number.isSafeInteger(nowMs)||nowMs<0||
    !Array.isArray(members)||members.length<(['solo','apprentice'].includes(mode)?1:2)||members.length>4||
    new Set(members.map(x=>x.id)).size!==members.length)throw Error('invalid multiplayer clinical runtime');
@@ -27,7 +40,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  const host=members.find(m=>m.id===hostId);if(!host)throw Error('runtime host not in roster');
  const world=createWorld(content,{id:hostId,name:host.name,scrubColor:host.scrubColor||'navy',sex:host.sex,level:host.level},checkpoint?.world);
  if(!checkpoint)world.enterGuard({mode,caseId,patientUid:roomId+':patient',members});
- const shift=createShiftFlow({content,mode,firstCaseId:caseId,roomId,snapshot:checkpoint?.shift});
+ const shift=createShiftFlow({content,mode,firstCaseId:caseId,roomId,snapshot:checkpoint?.shift,
+  allowedCaseIds:guardSelection?.caseIds??null,caseSequence});
  const sessions=new Map(),focused=new Map(clone(checkpoint?.focused??[]));
  const claims=new Map(clone(checkpoint?.claims??[])),deliveries=new Map(clone(checkpoint?.deliveries??[])),
   motionReceipts=new Map(clone(checkpoint?.motionReceipts??[]));
@@ -100,6 +114,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     xp:p.closure?.xp??0,points:p.closure?.quality?.score??0};
   });
   state.shift={mode,elapsedSeconds:shift.elapsed(),remainingSeconds:shift.remaining(),ended:shift.ended(),
+   guardSelection:guardSelection?{scope:guardSelection.scope,selection:guardSelection.selection,multiplier:guardScopeMultiplier(guardSelection.scope)}:null,
    focusPatientUid:state.patient.uid,
    // The default first patient is not necessarily physically claimed.
    // This UID exists only after this actor's server-side proximity validation.
@@ -195,6 +210,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   async checkpoint(){
    await flush();
    return clone({schemaVersion:1,modelVersion:CLINICAL_RUNTIME_VERSION,contentHash,roomId,caseId,members,hostId,mode,
+    ...(guardSelection?{guardSelection}:{}),
     ownerId:shift.record(firstUid)?.ownerId??null,shift:shift.checkpoint(),focused:[...focused],
     lastWallMs,pendingQuanta,typingUntilMs,motionReceipts:[...motionReceipts],claims:[...claims],
     deliveries:[...deliveries],world:world.checkpoint(),

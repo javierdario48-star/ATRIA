@@ -2,7 +2,7 @@ import {createWardPeer} from './ward-peer.js';
 import {socialAppearance} from '../app/avatar-appearance.js';
 import {privateRoomMotionPrefix} from './room-motion-scope.js';
 import {createPeerRecoveryPolicy} from './peer-recovery-policy.js';
-const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room';
+const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room',ROOM_ACTOR_KEY='atria.v5.coop.actor';
 /** Existing authenticated social registration/invitations and V4 SDP relay.
  * Clinical commands/snapshots travel on one reliable ordered ward channel.
  * Only the caller's existing RAF invokes maintain(); there is no timer here.
@@ -44,7 +44,7 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   if(room?.id&&room.id!==value.id){for(const peer of peers.values())peer.link.dispose();peers.clear();recovery.reset();}
   if(roomSpeechRoom!==value.id){roomSpeechCursor=0;roomSpeechRoom=value.id;}
   room=value;desiredRoomId=room.id;savedRoom=room.id;invites=invites.filter(x=>x.roomId!==room.id);
-  try{storage.setItem(ROOM_KEY,room.id);}catch{}onRoom(structuredClone(room),user);
+  try{storage.setItem(ROOM_KEY,room.id);storage.setItem(ROOM_ACTOR_KEY,user.id);}catch{}onRoom(structuredClone(room),user);
  }
  function peer(member,initiator){
   const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roster.find(x=>x.userId===member.userId)?.motionSession,link:null};
@@ -145,9 +145,10 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   connect,
   flush:()=>Promise.all([busy,busyRoster,busyRoom,busySpeech].filter(Boolean)),
   setProfile(value){profile={...value};},
-  useAccount(value){
+  useAccount(value,{restore=false}={}){
    if(room)throw Error('Volvé al lobby antes de cambiar de cuenta.');
-   savedRoom=null;desiredRoomId=null;try{storage.removeItem(ROOM_KEY);}catch{}
+   const sameActor=restore&&value&&storage.getItem(ROOM_ACTOR_KEY)===value.actorId;
+   if(!sameActor){savedRoom=null;desiredRoomId=null;try{storage.removeItem(ROOM_KEY);storage.removeItem(ROOM_ACTOR_KEY);}catch{}}
    cookieIdentity=!!value;token=null;user=value?{id:value.actorId,name:value.name,handle:value.username}:null;
    roomEpoch++;roster=[];friends=[];requests={incoming:[],outgoing:[]};invites=[];lastContactsAt=-Infinity;
   },
@@ -176,9 +177,9 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
    friends=me.friends||[];requests=me.requests||{incoming:[],outgoing:[]};onSocial();},
   async declineInvitation(roomId){await connect();await api('rooms/'+roomId+'/invite/decline',{});
    invites=invites.filter(x=>x.roomId!==roomId);onSocial();},
-  async invite(ids,mode='coop'){const epoch=++roomEpoch;desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
+  async invite(ids,mode='coop',guardSelection=null){const epoch=++roomEpoch;desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
    if(!['coop','competitive'].includes(mode))throw Error('Modalidad de guardia inválida');
-   const result=await api('rooms',{mode,invitees:ids,peerId});if(disposed||epoch!==roomEpoch){try{await api('rooms/'+result.room.id+'/cancel',{});}catch{}throw Error('Invitación cancelada.');}setRoom(result.room);return structuredClone(room);},
+   const result=await api('rooms',{mode,invitees:ids,peerId,...(guardSelection?{guardSelection}:{})});if(disposed||epoch!==roomEpoch){try{await api('rooms/'+result.room.id+'/cancel',{});}catch{}throw Error('Invitación cancelada.');}setRoom(result.room);return structuredClone(room);},
   async join(id){const epoch=++roomEpoch;desiredRoomId=id;await connect();
    let result;try{result=await api('rooms/join',{roomId:id,peerId});}
    catch(error){if(epoch===roomEpoch){desiredRoomId=null;if(room?.id!==id)try{await api('rooms/'+id+'/leave',{});}catch{}}throw error;}

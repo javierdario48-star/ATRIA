@@ -14,7 +14,7 @@ try{
  await page.waitForFunction(()=>document.body.dataset.boot==='ready');
  await page.locator('#playerName').fill('APP UI doctor');await page.locator('#enterButton').click();
  await page.locator('#guardButton').click();
- await page.locator('#caseChoice').selectOption('APP-001');
+ await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('APP-001');
  await page.locator('[data-action="start-guard"]').click();
  const state=()=>page.evaluate(()=>atriaV5.snapshot().clinical);
  const send=async text=>{

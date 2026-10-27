@@ -8,7 +8,7 @@ test('verified level makes walking faster with diminishing gains; transitions re
  let previous=0,priorGain=Infinity;
  for(const level of [1,5,10,20,50,100,10000]){
   const w=createWorld(content,{id:'a',name:'Médico',level});w.enterLobby();const p=w.snapshot().player;
-  assert(p.speed>=205&&p.speed<254.21);if(level===1)assert.equal(p.speed,205);else assert(p.speed>previous);
+  assert(p.speed>=184.5&&p.speed<254.21);if(level===1)assert.equal(p.speed,184.5);else assert(p.speed>previous);
   if(previous)assert((p.speed-previous)/(level-(level===5?1:level===10?5:level===20?10:level===50?20:level===100?50:100))<priorGain);
   if(previous)priorGain=(p.speed-previous)/(level-(level===5?1:level===10?5:level===20?10:level===50?20:level===100?50:100));
   previous=p.speed;

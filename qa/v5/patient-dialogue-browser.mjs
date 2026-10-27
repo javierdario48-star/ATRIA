@@ -11,7 +11,7 @@ try{
  const send=async text=>{const before=(await state()).room.transcript.length;await page.locator('#dieInput').fill(text);await page.locator('#chatForm [type="submit"]').click();
   await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,before);return (await state()).messages.at(-1);};
  async function guard(caseId){
-  await page.locator('#guardButton').click();await page.locator('#caseChoice').selectOption(caseId);await page.locator('[data-action="start-guard"]').click();
+  await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption(caseId);await page.locator('[data-action="start-guard"]').click();
   const before=(await state()).messages.length;await send('¿Dónde te duele?');assert.equal((await state()).messages.length,before+1,'distant question is global but has no patient reply');
   await page.locator('#dieInput').blur();if(await page.evaluate(()=>atriaV5.diagnostics().keyboard.open))await page.locator('#keyboardToggleButton').click();
   await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);

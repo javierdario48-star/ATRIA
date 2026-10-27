@@ -8,7 +8,7 @@ try{
  page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000);
  await page.goto(h.url);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
  await page.locator('#playerName').fill('Study doctor');await page.locator('#enterButton').click();
- await page.locator('#guardButton').click();await page.locator('#caseChoice').selectOption('CIRR-001');
+ await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CIRR-001');
  await page.locator('[data-action="start-guard"]').click();
  const send=async text=>{
   const before=await page.evaluate(()=>atriaV5.snapshot().clinical.room.transcript.length);
@@ -65,7 +65,7 @@ try{
  await page.locator('#guardButton').click();assert.equal((await page.evaluate(()=>atriaV5.snapshot())).clinical,null);
  // A second real guard checks that selecting a study retains its own ID even
  // when another case has an identically named study in the global catalog.
- await page.locator('#guardButton').click();await page.locator('#caseChoice').selectOption('APP-001');
+ await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('APP-001');
  await page.locator('[data-action="start-guard"]').click();await approachPatient();
  await page.locator('#peopleButton').click();await page.locator('[data-action="studies"]').click();
  await page.locator('#studyChoice').selectOption('app_ct');await page.locator('[data-action="request-study"]').click();

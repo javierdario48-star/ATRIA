@@ -21,7 +21,7 @@ try{
  await host.waitForFunction(()=>atriaV5.snapshot().others.some(p=>p.name==='Bruno'));
  await host.locator('#guardButton').click();
  await host.locator('[data-mode="coop"]').click();
- await host.locator('#caseChoice').selectOption('CIRR-001');
+ await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('CIRR-001');
  await host.locator('#coopDoctors label').filter({hasText:'Bruno'}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
  await guest.locator('#peopleButton').click();

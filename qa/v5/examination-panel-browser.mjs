@@ -13,7 +13,7 @@ try{
  await page.goto(process.env.V5_BROWSER_URL||h.url);
  await page.waitForFunction(()=>document.body.dataset.boot==='ready');
  await page.locator('#playerName').fill('Examen médico');await page.locator('#enterButton').click();
- await page.locator('#guardButton').click();await page.locator('#caseChoice').selectOption('CIRR-001');
+ await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CIRR-001');
  await page.locator('[data-action="start-guard"]').click();
  const state=()=>page.evaluate(()=>atriaV5.snapshot().clinical);
  const openExam=async()=>{await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();};

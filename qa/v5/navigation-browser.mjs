@@ -73,7 +73,7 @@ try{
   for(let round=0;round<5;round++){
    await page.locator('#guardButton').click();
    await page.locator('[data-mode="'+(round%2?'apprentice':'solo')+'"]').click();
-   await page.locator('#caseChoice').selectOption('CIRR-001');await page.locator('[data-action="start-guard"]').click();
+   await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CIRR-001');await page.locator('[data-action="start-guard"]').click();
    const guard=await page.evaluate(()=>atriaV5.snapshot());
    assert.equal(guard.phase,'guard');assert.equal(guard.patients.length,1);assert.equal(guard.nurses.length,6);
    assert.equal(!!guard.expert,round%2===1);

@@ -28,6 +28,14 @@ test('adopting a password account retires the legacy device recovery pointer',as
  const a=f.make();a.useAccount({actorId:'qa_111111111111111111111111111111',username:'doctor',name:'Doctor'});
  assert.equal(a.state().recovering,false);assert.equal(f.win.localStorage.getItem('atria.v5.coop.room'),null);a.dispose();
 });
+test('restoring the same account keeps its invitation pointer; another identity cannot inherit it',()=>{
+ const f=fixture(),id='qa_111111111111111111111111111111',room='00000000-0000-4000-8000-000000000000';
+ f.win.localStorage.setItem('atria.v5.coop.room',room);f.win.localStorage.setItem('atria.v5.coop.actor',id);
+ const a=f.make();a.useAccount({actorId:id,username:'doctor',name:'Doctor'},{restore:true});
+ assert.equal(a.state().recovering,true);assert.equal(f.win.localStorage.getItem('atria.v5.coop.room'),room);a.dispose();
+ const b=f.make();b.useAccount({actorId:'qa_222222222222222222222222222222',username:'other',name:'Other'},{restore:true});
+ assert.equal(b.state().recovering,false);assert.equal(f.win.localStorage.getItem('atria.v5.coop.room'),null);b.dispose();
+});
 test('an expired saved guard clears its resume pointer and returns to incoming invitations',async()=>{
  const f=fixture();f.win.localStorage.setItem('atria.v5.coop.room','00000000-0000-4000-8000-000000000000');const a=f.make();
  a.maintain(1000,{x:40,y:40});await a.flush();a.maintain(3000,{x:40,y:40});await a.flush();

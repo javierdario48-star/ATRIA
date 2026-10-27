@@ -45,7 +45,7 @@ try{
  const [host,firstGuest,lastGuest]=pages;
  await host.waitForFunction(()=>atriaV5.snapshot().others.length===2);
  await host.locator('#guardButton').click();await host.locator('[data-mode="coop"]').click();
- await host.locator('#caseChoice').selectOption('PERI-PBE-001');
+ await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('PERI-PBE-001');
  for(const name of names.slice(1))await host.locator('#coopDoctors label').filter({hasText:name}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
  await firstGuest.locator('#peopleButton').click();await firstGuest.locator('[data-action="join-coop"]').click();

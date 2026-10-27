@@ -15,7 +15,7 @@ try{
    await p.locator('#playerName').fill('Direct map QA '+mode);
    await p.locator('#enterButton').click();await p.locator('#guardButton').click();
    await p.locator('[data-mode="'+mode+'"]').click();
-   await p.locator('#caseChoice').selectOption('CIRR-001');
+   await p.locator('input[name="guardScope"][value="specific"]').check();await p.locator('#caseChoice').selectOption('CIRR-001');
    await p.locator('[data-action="start-guard"]').click();
    await p.waitForFunction(x=>atriaV5.snapshot().mode===x,mode);
    const uid=(await p.evaluate(()=>atriaV5.snapshot())).clinical.patient.uid;

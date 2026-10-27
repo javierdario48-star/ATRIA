@@ -9,7 +9,7 @@ for(const count of [2,3,4])test(count+' doctors retain verified level speeds and
  let runtime=await createGuardRuntime({content,roomId:'speed-'+count,caseId:'CIRR-001',members,hostId:members[0].id,mode:'coop',nowMs:1000000});
  try{
   const start=runtime.view().spatial.doctors;
-  for(const d of start){assert.equal(d.level,members.find(m=>m.id===d.id).level);assert(d.speed>=205&&d.speed<254.21);
+  for(const d of start){assert.equal(d.level,members.find(m=>m.id===d.id).level);assert(d.speed>=184.5&&d.speed<254.21);
    assert(runtime.motion(d.id,[d.x,d.y-200],1));}
   const distances=new Map(start.map(d=>[d.id,0]));let previous=start;
   for(let step=1;step<=12;step++){

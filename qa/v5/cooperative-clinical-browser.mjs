@@ -7,7 +7,7 @@ import {state,clinical,send,walk,study,chooseDestination} from './cooperative-ui
 const h=await browserHarness({apiLatency:35}),second=await h.newBrowser(),out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results';
 await fs.mkdir(out,{recursive:true});const contexts=[],pages=[],errors=[],report={browserProcesses:2,physicalAndroid:false,apiLatencyMs:35};let stage='boot';
 async function invite(caseId){
- const [a,b]=pages;await a.locator('#guardButton').click();await a.locator('[data-mode="coop"]').click();await a.locator('#caseChoice').selectOption(caseId);
+ const [a,b]=pages;await a.locator('#guardButton').click();await a.locator('[data-mode="coop"]').click();await a.locator('input[name="guardScope"][value="specific"]').check();await a.locator('#caseChoice').selectOption(caseId);
  await a.locator('#coopDoctors label').filter({hasText:'Dr. Bruno'}).locator('input').check();await a.locator('[data-action="start-guard"]').click();
  await b.locator('#peopleButton').click();await b.locator('[data-action="join-coop"]').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().mode==='coop'&&!!atriaV5.snapshot().clinical,null,{timeout:60000})));

@@ -15,7 +15,7 @@ try{
  const state=()=>page.evaluate(()=>atriaV5.snapshot().clinical);
  for(const mode of ['solo','apprentice'])for(const caseId of Object.keys(CLINICAL_EXECUTORS)){
   await page.locator('#guardButton').click();await page.locator('[data-mode="'+mode+'"]').click();
-  await page.locator('#caseChoice').selectOption(caseId);await page.locator('[data-action="start-guard"]').click();
+  await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption(caseId);await page.locator('[data-action="start-guard"]').click();
   await page.waitForFunction(id=>atriaV5.snapshot().clinical?.patient.caseId===id,caseId);
   const uid=(await state()).patient.uid;
   const before=await page.evaluate(()=>atriaV5.diagnostics().frames);

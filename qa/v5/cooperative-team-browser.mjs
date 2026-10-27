@@ -10,7 +10,7 @@ const names=['Dra. Ana','Dr. Bruno','Dra. Celia','Dr. Diego'].slice(0,count),out
 await fs.mkdir(out,{recursive:true});let stage='boot';
 const report={players:count,browserProcesses:count,apiLatencyMs:count===3?70:110,physicalAndroid:false};
 async function invite(caseId){
- const a=pages[0];await a.locator('#guardButton').click();await a.locator('[data-mode="coop"]').click();await a.locator('#caseChoice').selectOption(caseId);
+ const a=pages[0];await a.locator('#guardButton').click();await a.locator('[data-mode="coop"]').click();await a.locator('input[name="guardScope"][value="specific"]').check();await a.locator('#caseChoice').selectOption(caseId);
  for(const name of names.slice(1))await a.locator('#coopDoctors label').filter({hasText:name}).locator('input').check();
  await a.locator('[data-action="start-guard"]').click();
  await a.getByRole('heading',{name:'Invitación enviada',exact:true}).waitFor();

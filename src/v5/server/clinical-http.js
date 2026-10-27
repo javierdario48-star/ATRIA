@@ -24,7 +24,7 @@ export function createClinicalHttp({authority,verifiedRoom,probe,onUnavailable=(
     if(!room||room.id!==body.roomId||!['solo','apprentice','coop','competitive'].includes(room.mode)||!room.allAccepted||room.hostUserId!==actorId||room.members.length<(personal?1:2)||room.members.length>4)
      return {status:403,body:{error:'verified accepted cooperative invitation required'}};
     await beforeTransact({identity,roomId:room.id,action:'start'});
-    const result=await authority.bootstrap({roomId:room.id,caseId:body.caseId,actorId,hostId:room.hostUserId,
+    const result=await authority.bootstrap({roomId:room.id,caseId:body.caseId,guardSelection:room.guardSelection??body.guardSelection??null,actorId,hostId:room.hostUserId,
      mode:room.mode,members:await Promise.all(room.members.map(x=>memberProfile({id:x.userId,name:x.name})))});
     const account=await afterTransact({identity,roomId:room.id,result,action:'start'});
     return {status:200,body:{...result,...(account?{account}:{})}};

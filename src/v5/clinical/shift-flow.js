@@ -20,7 +20,7 @@ export function receptionAcuity({caseData,patient=null,waitingSeconds=0}={}){
  return clinicalAcuity(confirmed||caseData?.vitals,{dead:!!patient?.patientDied,
   rhythm:patient?.ecg?.rhythm,highRisk});
 }
-export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,allowedCaseIds=null}){
+export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,allowedCaseIds=null,caseSequence=null}){
  if(typeof roomId!=='string'||!roomId||roomId.length>100)throw Error('invalid shift room');
  const certified=content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id));
  const allowed=allowedCaseIds===null?null:new Set(allowedCaseIds);
@@ -28,6 +28,9 @@ export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,a
   allowed.size!==allowedCaseIds.length||allowedCaseIds.some(id=>!certified.some(c=>c.id===id))))
   throw Error('invalid shift case selection');
  const playable=allowed?certified.filter(c=>allowed.has(c.id)):certified;
+ const sequence=snapshot?.caseSequence??caseSequence;
+ if(sequence!==null&&(!Array.isArray(sequence)||sequence.length!==SHIFT_ARRIVAL_SECONDS.length||
+  sequence[0]!==firstCaseId||sequence.some(id=>!playable.some(c=>c.id===id))))throw Error('invalid admission sequence');
  if(!playable.some(c=>c.id===firstCaseId)||!['solo','apprentice','coop','competitive'].includes(mode))
   throw Error('invalid certified shift');
  const cases=new Map(playable.map(c=>[c.id,c])),beds=content.beds;
@@ -39,12 +42,12 @@ export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,a
   !Number.isSafeInteger(nextIndex)||nextIndex<0||nextIndex>SHIFT_ARRIVAL_SECONDS.length||
   !Array.isArray(records)||records.length!==nextIndex||
   records.some((r,i)=>r.uid!==roomId+(i===0?':patient':':patient-'+(i+1))||
-   r.index!==i||!beds.some(b=>b.id===r.bedId)||!cases.has(r.caseId)||
+   r.index!==i||!beds.some(b=>b.id===r.bedId)||!cases.has(r.caseId)||sequence&&r.caseId!==sequence[i]||
    !Number.isFinite(r.arrivalAt)||r.arrivalAt<0||r.arrivalAt>elapsedSeconds)||
   new Set(records.filter(r=>!r.departed).map(r=>r.bedId)).size!==records.filter(r=>!r.departed).length)
   throw Error('invalid shift checkpoint');
  function admit(index){
-  const caseId=index===0?firstCaseId:playable[(playable.findIndex(c=>c.id===firstCaseId)+index)%playable.length].id;
+  const caseId=sequence?sequence[index]:index===0?firstCaseId:playable[(playable.findIndex(c=>c.id===firstCaseId)+index)%playable.length].id;
   const c=cases.get(caseId),used=new Set(records.filter(r=>!r.departed).map(r=>r.bedId));
   let allowed=beds.filter(b=>!used.has(b.id));
   if(mode==='competitive'&&index===1){
@@ -80,6 +83,6 @@ export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,a
   close(uid,ownerId,destination=null){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;
    r.closed=true;r.departed=true;r.ownerId=ownerId;r.destination=destination;return true;},
   owner(uid,id){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;if(r.ownerId)return r.ownerId===id;r.ownerId=id;return true;},
-  checkpoint:()=>clone({records,elapsedSeconds,nextIndex})
+  checkpoint:()=>clone({records,elapsedSeconds,nextIndex,...(sequence?{caseSequence:sequence}:{})})
  });
 }

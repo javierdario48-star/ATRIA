@@ -32,7 +32,7 @@ try{
  stage='accepted two-physician durable room';
  await host.waitForFunction(name=>atriaV5.snapshot().others.some(x=>x.name===name),names[1]);
  await host.locator('#guardButton').click();await host.locator('[data-mode="coop"]').click();
- await host.locator('#caseChoice').selectOption('PERI-PBE-001');
+ await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('PERI-PBE-001');
  await host.locator('#coopDoctors label').filter({hasText:names[1]}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
  await guest.locator('#peopleButton').click();await guest.locator('[data-action="join-coop"]').click();

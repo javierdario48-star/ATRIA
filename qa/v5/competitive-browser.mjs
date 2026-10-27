@@ -36,7 +36,7 @@ try{
  // PUD followed by CELIAC remains able to give history during CI latency.
  // Untreated septic shock correctly loses coherent speech (covered separately
  // by patient-dialogue.test.js); it cannot be a transport-success fixture.
- await host.locator('#caseChoice').selectOption('PUD-001');
+ await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('PUD-001');
  for(const name of names.slice(1))
   await host.locator('#coopDoctors label').filter({hasText:name}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
@@ -52,7 +52,8 @@ try{
  },null,{timeout:90000})));
  const opening=(await clinical(host)).shift;
  assert.equal(opening.patients.length,2,'competitive should begin with two patients');
- assert.deepEqual(opening.patients.map(p=>p.caseId),['PUD-001','CELIAC-001']);
+ assert.deepEqual(opening.patients.map(p=>p.caseId),['PUD-001','PUD-001'],
+  'specific pathology must apply to both independent competitive patients');
  assert.notEqual(opening.patients[0].uid,opening.patients[1].uid);
  assert.notEqual(opening.patients[0].bedId,opening.patients[1].bedId);
  assert(opening.remainingSeconds>1430&&opening.remainingSeconds<=1440);
@@ -149,7 +150,7 @@ try{
  await host.locator('#chatHistory [data-role="patient"]').first().waitFor({timeout:20000});
  const doctorReply=(await host.locator('#chatHistory [data-role="patient"]').allInnerTexts()).join(' ');
  assert(doctorReply.trim().length>20,'native patient answer must be visible, not a local greeting bubble');
- assert.match(doctorReply,/meses con diarrea/,'the answer must belong to the second patient');
+ assert.match(doctorReply,/ardor/,'the second PUD patient must answer from its own native anamnesis');
  assert((await clinical(host)).patient.intentHistory.some(x=>
   x.id==='interview:symptoms'&&x.patientUid===nextUid),'greeting must update this patient\'s native anamnesis');
  // Check both beds stay distinct after the second physician arrives.

@@ -11,7 +11,7 @@ try{
  page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(12000);
  await page.goto(process.env.V5_BROWSER_URL||h.url);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
  await page.locator('#playerName').fill('CIRR UI doctor');await page.locator('#enterButton').click();
- await page.locator('#guardButton').click();await page.locator('#caseChoice').selectOption('CIRR-001');
+ await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CIRR-001');
  await page.locator('[data-action="start-guard"]').click();
  const state=()=>page.evaluate(()=>atriaV5.snapshot().clinical);
  const send=async text=>{
@@ -110,7 +110,7 @@ try{
  assert.match(await page.locator('#playerProgress').innerText(),/133/,'XP survives reload separately from production profile');
  // A separate explicitly requested native procedure verifies real physiological
  // changes too. It is not automatically added to the completed CIRR regimen.
- await page.locator('#guardButton').click();await page.locator('#caseChoice').selectOption('CIRR-001');await page.locator('[data-action="start-guard"]').click();
+ await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CIRR-001');await page.locator('[data-action="start-guard"]').click();
  assert.notEqual((await state()).patient.uid,closed.patient.uid,'new guard after reload has a different persistent patient identity');
  await page.locator('#keyboardToggleButton').click();
  await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);

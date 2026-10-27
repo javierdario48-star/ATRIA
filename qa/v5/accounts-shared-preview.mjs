@@ -48,7 +48,7 @@ try{
  stage='release';for(const p of pages)if(await p.evaluate(()=>atriaV5.snapshot().phase==='guard'))await p.locator('#guardButton').click();
  await Promise.all(pages.map(p=>p.waitForFunction(async()=>atriaV5.snapshot().phase==='lobby'&&!(await (await fetch('/api/account/session')).json()).account.activeGuardId)));
  for(const p of pages)await p.reload();await Promise.all(pages.map(p=>p.waitForFunction(()=>document.body.dataset.boot==='ready'&&atriaV5.snapshot().phase==='lobby')));
- stage='competitive invite';await host.locator('#guardButton').click();await host.locator('[data-mode="competitive"]').click();await host.locator('#caseChoice').selectOption('PUD-001');
+ stage='competitive invite';await host.locator('#guardButton').click();await host.locator('[data-mode="competitive"]').click();await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('PUD-001');
  await host.locator('#coopDoctors input[value="'+accounts[1].actorId+'"]').check();await host.locator('[data-action="start-guard"]').click();
  await guest.locator('#coopInviteNotice').waitFor({state:'visible'});await guest.locator('#coopInviteAccept').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().mode==='competitive'&&atriaV5.diagnostics().cooperative.durable)));

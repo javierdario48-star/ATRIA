@@ -35,7 +35,7 @@ try{
   JSON.stringify({name:'Render QA',scrubColor:'burgundy',sex:'female'})));
  await page.goto(h.url);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
  await page.locator('#enterButton').click();await page.locator('#guardButton').click();
- await page.locator('[data-mode="solo"]').click();await page.locator('#caseChoice').selectOption('CIRR-001');
+ await page.locator('[data-mode="solo"]').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CIRR-001');
  await page.locator('[data-action="start-guard"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().phase==='guard');
  const guardStarted=Date.now();

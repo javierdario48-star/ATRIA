@@ -17,6 +17,13 @@ test('recovery identity survives social-cache loss; only the durable membership 
  assert.equal(response.status,200);assert.equal(f.calls[0].actorId,actorId);
  assert.equal((await f.http({method:'POST',body:{action:'sync',clientKey:'short',roomId:'room'}})).status,401);
 });
+test('persisted host invitation selection wins over a modified start payload',async()=>{
+ const f=fixture({...room,guardSelection:{scope:'specific',selection:'FECAL-001'}});
+ const response=await f.http({method:'POST',body:{action:'start',clientKey:key,roomId:'room',
+  guardSelection:{scope:'random',multiplier:999},xp:999999}});
+ assert.equal(response.status,200);
+ assert.deepEqual(f.calls[0].guardSelection,{scope:'specific',selection:'FECAL-001'});
+});
 
 test('a storage probe failure is diagnosable server-side without exposing backend details to clients',async()=>{
  let observed;const error=Object.assign(Error('storage detail'),{name:'BlobError'});

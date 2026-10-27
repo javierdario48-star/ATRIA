@@ -8,9 +8,9 @@ const fail=(code,message)=>Object.assign(Error(message),{code});
  * whose lease expired while suspended. No ACK/view escapes before commit. */
 export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uuid=()=>crypto.randomUUID(),leaseMs=10000,maxSteps=3600}){
  if(typeof store?.read!=='function'||typeof store?.compareAndSwap!=='function'||leaseMs<1000)throw Error('atomic durable guard store required');
- async function bootstrap({roomId,caseId,members,hostId,actorId,mode='coop'}){
+ async function bootstrap({roomId,caseId,members,hostId,actorId,mode='coop',guardSelection=null}){
   if(actorId!==hostId)throw fail('forbidden','only the verified host can create a clinical guard');
-  const runtime=await createGuardRuntime({content,roomId,caseId,members,hostId,mode,nowMs:now()});
+  const runtime=await createGuardRuntime({content,roomId,caseId,members,hostId,mode,guardSelection,nowMs:now()});
   try{const value={schemaVersion:1,roomId,epoch:0,lease:null,runtime:await runtime.checkpoint()};
    const etag=await store.compareAndSwap(roomId,null,value);if(!etag)throw fail('exists','clinical guard already exists');
    return {epoch:0,...runtime.view(actorId)};

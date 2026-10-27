@@ -68,7 +68,7 @@ try{
  stage='profile card';await outsider.locator('#profileButton').click();await outsider.locator('[data-action="own-social-profile"]').click();
  await outsider.locator('.doctor-stats').waitFor();assert((await outsider.locator('.doctor-profile').innerText()).includes('Casos resueltos'));
  await outsider.screenshot({path:'/tmp/atria-account-profile.png'});await outsider.locator('#modalClose').click();summary.checks.push('real profile card');
- stage='personal guard';await outsider.locator('#guardButton').click();await outsider.locator('#caseChoice').selectOption('CIRR-001');
+ stage='personal guard';await outsider.locator('#guardButton').click();await outsider.locator('input[name="guardScope"][value="specific"]').check();await outsider.locator('#caseChoice').selectOption('CIRR-001');
  await outsider.locator('[data-action="start-guard"]').click();await outsider.waitForFunction(()=>atriaV5.diagnostics().cooperative.durable&&atriaV5.snapshot().mode==='solo');
  const opened=await outsider.evaluate(()=>atriaV5.snapshot());const guardId=opened.clinical.room.roomId;
  assert.equal(opened.player.color,'pink');assert.equal(opened.player.sex,'female');

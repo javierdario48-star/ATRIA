@@ -12,7 +12,7 @@ try{
   page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(20000);
   await page.goto(process.env.V5_BROWSER_URL||h.url);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#enterButton').click();await page.locator('#guardButton').click();
-  await page.locator('#caseChoice').selectOption('APP-001');await page.locator('[data-action="start-guard"]').click();
+  await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('APP-001');await page.locator('[data-action="start-guard"]').click();
   if(await page.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')await page.locator('#keyboardToggleButton').click();
   const state=()=>page.evaluate(()=>atriaV5.snapshot().clinical);
   const send=async text=>{

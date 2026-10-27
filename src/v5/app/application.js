@@ -9,7 +9,7 @@ import {createGuardSession} from '../clinical/guard-session.js';
 import {isExaminationCommand} from '../clinical/exam-contract.js';
 import {formatGuardTime} from '../ui/guard-time.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
-import {eligibleGuardCases,GUARD_SCOPES} from '../clinical/guard-selection-policy.js';
+import {eligibleGuardCases,GUARD_SCOPES,guardCaseSpecialty,guardCaseSequence} from '../clinical/guard-selection-policy.js';
 import {createCooperativeLink} from '../social/cooperative-link.js';
 import {createAccountClient} from '../social/account-client.js';
 import {createCooperativeReplica} from '../social/cooperative-replica.js';
@@ -65,7 +65,7 @@ export async function createApplication({document,window,content,signal}){
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
-  announcedDeathUid=null,pendingPatientAction=null,announcedClosure=null,coopCaseId=null,
+  announcedDeathUid=null,pendingPatientAction=null,announcedClosure=null,coopCaseId=null,coopGuardSelection=null,
   coopRoomId=null,replica=null,durableClient=null,lastSharedPublish=0,sharedSequence=0,lastMotion='',lastRemoteRevision=-1,socialEnabled=false,
   durableStarting=false,durableJoining=false,nextCooperativeAdmission=0,cooperativeCapability=null;
  let frameErrorCount=0,lastFrameError=null;
@@ -241,14 +241,14 @@ export async function createApplication({document,window,content,signal}){
    else {close();toast(error.message);}
   }}
  }
- async function inviteColleagues(ids,caseId,mode='coop'){
+ async function inviteColleagues(ids,caseId,mode='coop',guardSelection={scope:'specific',selection:caseId}){
   if(invitingColleagues||coopRoomId)return;
   if(!Object.hasOwn(CLINICAL_EXECUTORS,caseId)){toast('Este caso todavía no tiene atención completa.');return;}
   if(!ids.length){toast('Elegí al menos un médico conectado.');return;}
   invitingColleagues=true;
-  cancelSharedIntent();coopCaseId=caseId;
+  cancelSharedIntent();coopCaseId=caseId;coopGuardSelection=guardSelection;
   const intent=cooperativeFlow.begin('host');
-  try{await social.invite(ids,mode);
+  try{await social.invite(ids,mode,guardSelection);
    if(cooperativeFlow.current(intent)&&!coopRoomId)open('<h2>Invitación enviada</h2><p>Esperando que los colegas acepten la guardia '+(mode==='competitive'?'competitiva':'compartida')+'.</p>');
   }catch(error){if(cooperativeFlow.current(intent))toast(error.message);}
   finally{invitingColleagues=false;}
@@ -262,6 +262,10 @@ export async function createApplication({document,window,content,signal}){
  function maybeBeginCooperativeRoom(now=window.performance.now()){
   if(now<nextCooperativeAdmission||coopRoomId||durableStarting||durableJoining)return;
   const state=social.state(),room=state.room,role=social.isHost()?'host':'guest';
+  if(room&&role==='host'&&!coopCaseId&&room.guardSelection){
+   const p=room.guardSelection,eligible=eligibleGuardCases(content.cases,Object.keys(CLINICAL_EXECUTORS),p.scope,p.selection);
+   if(eligible.length){coopCaseId=eligible[0].id;coopGuardSelection=p;cooperativeFlow.begin('host');}
+  }
   if(!room||role==='host'&&!coopCaseId||
    !cooperativeFlow.mayEnter(role,{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:state.recovering}))return;
   nextCooperativeAdmission=now+1000;
@@ -277,7 +281,7 @@ export async function createApplication({document,window,content,signal}){
    pendingCoopLeave=true;publishCooperativeState(window.performance.now(),true);toast('Esperando que tus colegas reciban el resultado. Si están desconectados, deben reconectarse.');return;
   }enterLobby(true);
  }
- function cancelSharedIntent(){cooperativeFlow.cancel();coopCaseId=null;pendingCoopLeave=false;social.leave();}
+ function cancelSharedIntent(){cooperativeFlow.cancel();coopCaseId=null;coopGuardSelection=null;pendingCoopLeave=false;social.leave();}
  function makeDurableClient(room){
   const credentials=social.credentials();
   let client;
@@ -420,7 +424,7 @@ export async function createApplication({document,window,content,signal}){
    // Durable admission depends on the authenticated HTTP room, not an RTC
    // hello. A guest retries a not-yet-created room on the next social poll.
    client=makeDurableClient(room);
-   if(host)await client.start(coopCaseId);else await client.sync();
+   if(host)await client.start(coopCaseId,null,coopGuardSelection);else await client.sync();
    if(destroyed||coopRoomId||social.state().room?.id!==room.id){client.dispose();return;}
    attachDurableRoom(room,client);
    social.broadcast({kind:'durable.hello',roomId:room.id});
@@ -762,7 +766,9 @@ export async function createApplication({document,window,content,signal}){
   if(!localShift.begin({caseId}))return false;
   for(const session of localSessions.values())session.dispose();localSessions.clear();
   localRoomId='guard-'+window.crypto.randomUUID();
-  localAdmissions=createShiftFlow({content,mode:draftMode,roomId:localRoomId,firstCaseId:caseId,allowedCaseIds});
+  const caseSequence=allowedCaseIds?guardCaseSequence(allowedCaseIds):null;
+  if(caseSequence)caseId=caseSequence[0];
+  localAdmissions=createShiftFlow({content,mode:draftMode,roomId:localRoomId,firstCaseId:caseId,allowedCaseIds,caseSequence});
   const first=localAdmissions.advance(0)[0];if(!first)return false;
   fastWardSpeech.clear();announcedClosure=null;announcedDeathUid=null;
   seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;
@@ -795,7 +801,7 @@ export async function createApplication({document,window,content,signal}){
    <label><input type="radio" name="guardScope" value="random" checked> ${GUARD_SCOPES.random.label} · ×1,5 XP</label>
    <label><input type="radio" name="guardScope" value="specialty"> ${GUARD_SCOPES.specialty.label} · ×1,2 XP</label>
    <label><input type="radio" name="guardScope" value="specific"> ${GUARD_SCOPES.specific.label} · ×1,0 XP</label></fieldset>
-   <label class="field" id="guardSpecialtyField" hidden>Especialidad<select id="guardSpecialty">${[...new Set(content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id)).map(c=>c.specialty||c.category||"Gastroenterología"))].map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}</select></label>
+   <label class="field" id="guardSpecialtyField" hidden>Especialidad<select id="guardSpecialty">${[...new Set(content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id)).map(guardCaseSpecialty))].map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}</select></label>
    <label class="field" id="guardCaseField" hidden>Patología<select id="caseChoice">${content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id)).map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join("")}</select></label>
    ${['coop','competitive'].includes(draftMode)?'<p>Invitar colegas conectados</p><div id="coopDoctors"></div>':''}
    <p class="note">25 casos clínicos con evaluación, estudios, tratamientos y decisión de destino (alta, observación, sala, UTI, procedimiento o quirófano). El cierre requiere las condiciones clínicas de cada caso; una derivación no equivale a una operación realizada.</p>
@@ -983,13 +989,13 @@ export async function createApplication({document,window,content,signal}){
    (register?'<small>Al menos 12 caracteres. Guardala en tu administrador de contraseñas.</small>':'')+
    '<p id="accountError" role="alert"></p><div class="actions"><button type="button" data-action="close">Volver</button><button class="primary" type="submit">'+(register?'Crear cuenta':'Iniciar sesión')+'</button></div></form>','account');
  }
- function applyAccount(a){
-  restoreRoomId=null;
+ function applyAccount(a,{restore=false}={}){
   account.accept(a);profile={id:a.actorId,name:a.name,sex:a.sex,scrubColor:a.scrubColor,level:a.level};
-  social.setProfile(profile);social.useAccount(a);world=createWorld(content,profile);
+  social.setProfile(profile);social.useAccount(a,{restore});world=createWorld(content,profile);
+  if(!restore||!social.state().recovering)restoreRoomId=null;
   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
  }
- async function startPersonalAccountGuard(caseId,mode=draftMode,recover=false){
+ async function startPersonalAccountGuard(caseId,mode=draftMode,recover=false,guardSelection=null){
   if(durableStarting||coopRoomId)return;
   durableStarting=true;let client;
   try{
@@ -998,7 +1004,7 @@ export async function createApplication({document,window,content,signal}){
    const a=account.read(),id=recover?a.activeGuardId:'personal-'+window.crypto.randomUUID();
    if(!id)throw Error('No hay una guardia para recuperar.');
    const room={id,mode,members:[{userId:a.actorId,name:a.name}]};client=makeDurableClient(room);
-   if(recover)await client.sync();else await client.start(caseId,mode);
+   if(recover)await client.sync();else await client.start(caseId,mode,guardSelection);
    attachDurableRoom(room,client);
   }catch(error){client?.dispose();toast(error.message);}
   finally{durableStarting=false;}
@@ -1116,10 +1122,11 @@ export async function createApplication({document,window,content,signal}){
    const allowedCases=eligibleGuardCases(content.cases,Object.keys(CLINICAL_EXECUTORS),scope,selection);
    if(!allowedCases.length){toast('No hay casos clínicos jugables para esta selección.');return;}
    const chosenCase=allowedCases[0].id;
+   const guardSelection={scope,selection};
    if(['coop','competitive'].includes(draftMode)){
-    await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),chosenCase,draftMode);return;
+    await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),chosenCase,draftMode,guardSelection);return;
    }
-   if(account.read()){await startPersonalAccountGuard(chosenCase);return;}
+   if(account.read()){await startPersonalAccountGuard(chosenCase,draftMode,false,guardSelection);return;}
    cancelSharedIntent();
    beginLocalPatient(chosenCase,{allowedCaseIds:allowedCases.map(c=>c.id)});
   }
@@ -1340,7 +1347,7 @@ export async function createApplication({document,window,content,signal}){
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
  drawWorld();resume();
- try{const saved=await account.restore();if(saved){applyAccount(saved);enterLobby();
+ try{const saved=await account.restore();if(saved){applyAccount(saved,{restore:true});enterLobby();
   if(saved.activeGuardId)open('<h2>Guardia en curso</h2><p>Tu personaje está listo. Recuperá la guardia o finalizá tu participación.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
  }}catch{toast('No se pudo recuperar tu cuenta. Reintentá desde Perfil.');}
  return Object.freeze({snapshot:()=>({...world.snapshot(),history:structuredClone(history),clinical:guardSession?.read()||null}),

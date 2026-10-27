@@ -51,7 +51,7 @@ try{
    },mode);
    await p.locator('#guardButton').click();
    await p.locator('[data-mode="'+mode+'"]').click();
-   await p.locator('#caseChoice').selectOption('PERI-TER-001');
+   await p.locator('input[name="guardScope"][value="specific"]').check();await p.locator('#caseChoice').selectOption('PERI-TER-001');
    await p.locator('[data-action="start-guard"]').click();
    await p.waitForFunction(expected=>atriaV5.snapshot().mode===expected,mode);
    const clock=await p.evaluate(()=>{

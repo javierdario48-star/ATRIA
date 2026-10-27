@@ -1,5 +1,8 @@
 import {createQaSocialServer} from '../../social/qa-social-server.js';
 import {presenceAppearance} from '../app/avatar-appearance.js';
+import cases from '../content/cases.json' with {type:'json'};
+import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {resolveGuardSelection} from '../clinical/guard-selection-policy.js';
 // Storage composition only: the characterized V4 backend remains byte-identical.
 // A room has one host-owned metadata record and a distinct acceptance key per
 // guest. Joining doctors cannot overwrite each other's room membership.
@@ -56,6 +59,12 @@ export function createV5QaSocialServer(storage,options){
  }
  return {...legacy,readPlayerProfile,async route(request){
   const path=String(request.path||'').replace(/^\/?(?:api\/)?/,'');
+  let guardSelection=null;
+  if(path==='rooms'&&request.method==='POST'&&request.body?.guardSelection!=null){
+   try{const p=resolveGuardSelection(cases,Object.keys(CLINICAL_EXECUTORS),request.body.guardSelection);
+    guardSelection={scope:p.scope,selection:p.selection};
+   }catch{return {status:400,body:{error:'Selección de guardia no disponible.'}};}
+  }
   if(path.startsWith('profiles/')&&(request.method||'GET')==='GET'){
    const me=await legacy.route({method:'GET',path:'me',headers:request.headers});
    if(me.status!==200)return me;
@@ -64,6 +73,13 @@ export function createV5QaSocialServer(storage,options){
   }
   const response=await legacy.route(request);
   if(response.status>=400)return response;
+  if(guardSelection&&response.body.room){
+   const room=response.body.room,raw=await storage.get(ROOM+room.id);
+   // Host metadata uses the existing room record. Guest acceptances retain
+   // their independent slots, including if one arrives during this write.
+   await storage.set(ROOM+room.id,{...raw,guardSelection},{ttl:21600});
+   response.body.room={...room,guardSelection};
+  }
   const method=request.method||'GET';
   const match=path.match(/rooms\/([a-f0-9-]{36})\/(leave|invite)(?:\/(decline|remove))?$/);
   if(method!=='POST'||!match)return response;
