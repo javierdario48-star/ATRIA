@@ -54,7 +54,7 @@ export async function walk(p,lastX=144){
    // A physician already standing on this tile now opens their real profile.
    // Dismiss only that known social surface; clinical dialogs remain failures.
    // Keep the same destination, physical input and authoritative arrival gate.
-   if(await p.locator('#modal').evaluate(el=>el.open&&el.dataset.panel==='lobby-person')){
+   if(await p.evaluate(()=>{const el=document.getElementById('modal');return !!el?.open&&el.dataset.panel==='lobby-person';})){
     await p.locator('#modalClose').click();
     const local=(await state(p)).player;
     if(Math.hypot(local.x-goal[0],local.y-goal[1])>=3)
