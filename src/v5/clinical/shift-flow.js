@@ -20,9 +20,14 @@ export function receptionAcuity({caseData,patient=null,waitingSeconds=0}={}){
  return clinicalAcuity(confirmed||caseData?.vitals,{dead:!!patient?.patientDied,
   rhythm:patient?.ecg?.rhythm,highRisk});
 }
-export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null}){
+export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,allowedCaseIds=null}){
  if(typeof roomId!=='string'||!roomId||roomId.length>100)throw Error('invalid shift room');
- const playable=content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id));
+ const certified=content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id));
+ const allowed=allowedCaseIds===null?null:new Set(allowedCaseIds);
+ if(allowedCaseIds!==null&&(!Array.isArray(allowedCaseIds)||!allowedCaseIds.length||
+  allowed.size!==allowedCaseIds.length||allowedCaseIds.some(id=>!certified.some(c=>c.id===id))))
+  throw Error('invalid shift case selection');
+ const playable=allowed?certified.filter(c=>allowed.has(c.id)):certified;
  if(!playable.some(c=>c.id===firstCaseId)||!['solo','apprentice','coop','competitive'].includes(mode))
   throw Error('invalid certified shift');
  const cases=new Map(playable.map(c=>[c.id,c])),beds=content.beds;
