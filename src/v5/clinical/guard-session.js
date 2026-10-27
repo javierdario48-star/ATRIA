@@ -52,6 +52,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  if(checkpoint)progress=createProgressionLedger(checkpoint.progress);
  const resolvedPatient=materializeGuardPatient(patient,caseData,checkpoint);
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[],
+  ...(caseData.variation?{name:resolvedPatient.name,age:resolvedPatient.age,
+    personality:resolvedPatient.personality,opening:resolvedPatient.opening,
+    variation:resolvedPatient.variation}:{}),
   ...patientAllergyFacts487(resolvedPatient),adverseEvents:[]};
  if(nativePatient.allergies.length){
   const labels=new Map(content.therapies.map(x=>[x.id,x.label]));
