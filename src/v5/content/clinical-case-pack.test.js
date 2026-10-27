@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validateClinicalCasePack} from './clinical-case-pack.js';
+const variation={ageRange:[18,70],firstNames:['Ana'],lastNames:['Paz'],personalities:['serena'],openings:['Me cuesta respirar'],allergies:[{id:'a',drugId:'ampicillin',probability:0.1,historyDisclosure:'Urticaria'}],complications:[{id:'c',probability:0.2,rationale:'Fatiga respiratoria',progressionId:'fatigue',rescueId:'ventilation'}]};
+const entry=id=>({id,clinicalExecutorId:'resp',closurePolicyId:'resp',studyPolicyId:'resp',examPolicyId:'resp',variation});
+const options={existingCaseIds:['CIRR-001'],drugIds:['ampicillin'],progressionIds:['fatigue'],rescueIds:['ventilation']};
+test('accepts valid multi-case pack without activating it',()=>{const result=validateClinicalCasePack({schemaVersion:1,cases:[entry('RESP-01'),entry('RESP-02')]},options);assert.equal(result.ok,true);assert.deepEqual(result.accepted,['RESP-01','RESP-02']);});
+test('rejects duplicate and preexisting identifiers atomically',()=>{const r=validateClinicalCasePack({schemaVersion:1,cases:[entry('RESP-01'),entry('RESP-01')]},options);assert.equal(r.ok,false);assert.deepEqual(r.accepted,[]);assert.match(r.errors.join(' '),/duplicate/);});
+test('rejects unresolved clinical effects and allergies',()=>{const r=validateClinicalCasePack({schemaVersion:1,cases:[entry('RESP-01'),entry('RESP-02')]},{...options,drugIds:[],rescueIds:[]});assert.equal(r.ok,false);assert.deepEqual(r.accepted,[]);assert.match(r.errors.join(' '),/unknown drug/);assert.match(r.errors.join(' '),/unknown rescue/);});
+test('rejects missing clinical contract',()=>{const c=entry('RESP-01');delete c.closurePolicyId;assert.equal(validateClinicalCasePack({schemaVersion:1,cases:[c]},options).ok,false);});
