@@ -50,7 +50,7 @@ try{
  stage='movement and shared single-authority transcript';
  for(const p of pages)if(await p.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')
   await p.locator('#keyboardToggleButton').click();
- await Promise.all(pages.map((p,i)=>walk(p,144+i*18)));
+ await Promise.all(pages.map((p,i)=>walk(p,144+(i%2)*32,420-Math.floor(i/2)*32)));
  for(const [i,p] of pages.entries())await send(p,'Médico presente '+names[i]);
  await Promise.all(pages.map(p=>p.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length===n,count)));
  const before=await clinical(host);

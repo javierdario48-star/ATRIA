@@ -40,6 +40,9 @@ try{
  await q.setViewportSize({width:390,height:400});await q.locator('#doctorName').fill('Médica Andina');await q.locator('#doctorName').focus();await q.locator('#welcomeNameForm button').click();await q.locator('#enterButton').click();await q.locator('#newDoctorPassword').focus();
  await q.locator('#newDoctorPassword').scrollIntoViewIfNeeded();const box=await q.locator('#newDoctorPassword').boundingBox();assert(box.y>=0&&box.y+box.height<=400);
  await q.screenshot({path:output+'/mobile-keyboard.png'});
+ const landscape=await h.browser.newContext({viewport:{width:844,height:390},hasTouch:true}),wide=await landscape.newPage();await boot(wide);
+ await wide.locator('#doctorName').fill('Médica del Río');await wide.locator('#welcomeNameForm button').click();await wide.locator('#enterButton').click();await wide.locator('#newDoctorPassword').focus();await wide.locator('#newDoctorPassword').scrollIntoViewIfNeeded();
+ assert(await wide.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));const field=await wide.locator('#newDoctorPassword').boundingBox();assert(field.y>=0&&field.y+field.height<=390);await wide.screenshot({path:output+'/landscape-password.png'});await landscape.close();
  assert.deepEqual(errors,[]);results.push('register, canonical duplicate, avatar, returning gesture, reopened storage, second device, session cookie, XP/level projection, account isolation, revoked session, mobile keyboard');
  console.log(JSON.stringify({passed:results,requests:h.requests.length,errors}));
  await reopened.close();await second.close();

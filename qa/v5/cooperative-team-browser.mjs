@@ -42,7 +42,7 @@ try{
  const a=pages[0],last=pages.at(-1);stage='accepted team and real remote movement';
  await a.waitForFunction(n=>atriaV5.snapshot().others.length===n-1,count);const uid=await invite('PERI-PBE-001');report.patientUid=uid;
  for(const p of pages)if(await p.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')await p.locator('#keyboardToggleButton').click();
- await Promise.all(pages.map((p,i)=>walk(p,144+i*20)));
+ await Promise.all(pages.map((p,i)=>walk(p,144+(i%2)*32,420-Math.floor(i/2)*32)));
  for(const p of pages)await p.waitForFunction(n=>atriaV5.snapshot().others.length===n-1,count);
  const positions=await Promise.all(pages.map(state));
  // Remote poses travel through the existing HTTP/RTC presentation channel.

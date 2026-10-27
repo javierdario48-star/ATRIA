@@ -17,6 +17,14 @@ async function invite(caseId){
  await Promise.all([walk(a),walk(b,176)]);
  await a.waitForFunction(()=>atriaV5.snapshot().others.some(x=>x.name==='Dr. Bruno'));
  await b.waitForFunction(()=>atriaV5.snapshot().others.some(x=>x.name==='Dra. Ana'));
+ // Local arrival precedes the next remote presence/interpolation frame.
+ // Wait for the original spatial bound, keeping the assertion unchanged.
+ const arrived=await Promise.all(pages.map(state));
+ await Promise.all(pages.map((p,i)=>p.waitForFunction(({name,x,y})=>{
+  const remote=atriaV5.snapshot().others.find(d=>d.name===name);
+  return remote&&Math.hypot(remote.x-x,remote.y-y)<45;
+ },{name:arrived[1-i].player.name,x:arrived[1-i].player.x,y:arrived[1-i].player.y})));
+
  assert.equal((await a.evaluate(()=>atriaV5.diagnostics())).cooperative.authority,true);
  assert.equal((await b.evaluate(()=>atriaV5.diagnostics())).cooperative.authority,false);
  assert.equal((await b.evaluate(()=>atriaV5.diagnostics())).cooperative.replica,true);

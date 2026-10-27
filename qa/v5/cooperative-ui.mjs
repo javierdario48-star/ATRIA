@@ -14,8 +14,8 @@ export async function send(p,text){const before=await messageIds(p);
  await p.locator('#dieInput').fill(text);await p.locator('#chatForm [type="submit"]').click();await p.locator('#dieInput').blur();
  await waitForMessage(p,text,before);
 }
-export async function walk(p,lastX=144){
- for(const [x,y] of [[496,1200],[496,1080],[496,960],[496,840],[496,720],[400,580],[250,470],[lastX,420]]){
+export async function walk(p,lastX=144,lastY=420){
+ for(const [x,y] of [[496,1200],[496,1080],[496,960],[496,840],[496,720],[400,580],[250,470],[lastX,lastY]]){
   await p.waitForFunction(()=>{const s=atriaV5.snapshot(),c=atriaV5.diagnostics().renderer.camera;
    return !s.player.moving&&!s.player.target&&s.player.pathIndex>=s.player.path.length&&Math.abs(c.x-s.player.x)<1&&Math.abs(c.y-s.player.y)<1;});
   const before=await state(p),expected=structuredClone(before.player);assert(navigation.target(expected,x,y));

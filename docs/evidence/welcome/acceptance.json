@@ -1,0 +1,118 @@
+{
+  "tested_source_commit": "424de683f9b2e3167491e38836925ccda245bb54",
+  "preview": "https://night-shift-clinical-7gja1t3az-javierdario4878-7324.vercel.app",
+  "acceptance_run_in_stages": true,
+  "first_stage_completed": [
+    "real name-only UI registration and avatar selection",
+    "actual Chromium process close/reopen with persistent cookie and manual Continue",
+    "second independent session with upper-case accent-free name and session-only cookie",
+    "concurrent equivalent registrations: statuses 200 and 409",
+    "friendship visible from the second session"
+  ],
+  "race_database_checks": {
+    "matching_accounts": 1,
+    "duplicate_keys": 0,
+    "orphan_auth_identities": 0
+  },
+  "recovery": {
+    "same_guard_and_patient_after_reauthentication": true,
+    "stale_cookie_account": null,
+    "revoked_session_error_before_fix": 400,
+    "revoked_session_after_fix": 200,
+    "note": "The welcome cleared the rejected cookie; the subsequent session request was anonymous."
+  },
+  "legacy_database_totals_before_and_after": {
+    "accounts": 8,
+    "xp": 590,
+    "solved_cases": 4,
+    "lost_login_aliases": 0
+  },
+  "browser_fixture_acceptance": {
+    "desktop": true,
+    "portrait": true,
+    "landscape": true,
+    "keyboard_sized_viewport": true,
+    "page_errors": 0
+  },
+  "illustration": {
+    "width": 1536,
+    "height": 1024,
+    "bytes": 510544,
+    "sha256": "71627d386e37eff500e355138b0db576c946cd1ac2c94cd72f0bdaaa5c456136",
+    "visible_pixel_changes_outside_two_upper_edit_regions": 0,
+    "new_characters": false
+  },
+  "durable_teams": {
+    "three_doctors": {
+      "host_recovered": true,
+      "medication_receipts": 2,
+      "transcript": 7
+    },
+    "four_doctors": {
+      "host_recovered": true,
+      "medication_receipts": 2,
+      "transcript": 8
+    }
+  },
+  "physical_device": false,
+  "account_switch": {
+    "preview": "https://night-shift-clinical-7gja1t3az-javierdario4878-7324.vercel.app",
+    "checks": [
+      "explicit sign out and name-based switch retain the correct existing identity and friendship",
+      "Create new doctor uses a new actor with zero XP, zero friends and no inherited guard"
+    ],
+    "accounts": [
+      {
+        "actorId": "qa_674a02ffae1ec0cf432d26fb53bbb4",
+        "name": "Darío QA mvr73q20"
+      },
+      {
+        "actorId": "qa_1a4b3e086a03c57d72491620d5a629",
+        "name": "MEDICA QA MVR73Q20"
+      },
+      {
+        "actorId": "qa_5d7152248e912285968257dfdbb219",
+        "name": "Médico Nuevo mvr7j0ky"
+      }
+    ],
+    "physicalDevice": false,
+    "errors": [],
+    "passed": true
+  },
+  "legacy": {
+    "preview": "https://night-shift-clinical-7gja1t3az-javierdario4878-7324.vercel.app",
+    "checks": [
+      "previous account with ambiguous display name still uses its original login; 457 XP, level 3, 3 solved cases and friends retained",
+      "returning welcome explains legacy login without renaming the doctor",
+      "profile requests cannot mint XP or levels"
+    ],
+    "accounts": [],
+    "physicalDevice": false,
+    "account": {
+      "actorId": "qa_62f6316c532bf4b3506a98f546c6ee",
+      "xp": 457,
+      "level": 3,
+      "casesResolved": 3,
+      "friends": 0
+    },
+    "passed": true,
+    "errors": []
+  },
+  "cooperative": {
+    "preview": "https://night-shift-clinical-7gja1t3az-javierdario4878-7324.vercel.app",
+    "checks": [
+      "two accounts enter from the new welcome, see each other in lobby, invite and accept through the original UI",
+      "real server cooperative guard shares the same patient, room and two members after login",
+      "persisted female green avatar reaches multiplayer guard"
+    ],
+    "accounts": [],
+    "physicalDevice": false,
+    "guard": {
+      "roomId": "6d66d76e-f7a1-4daf-97f3-4cbcbe01a582",
+      "patientUid": "6d66d76e-f7a1-4daf-97f3-4cbcbe01a582:patient",
+      "mode": "coop"
+    },
+    "passed": true,
+    "errors": []
+  }
+}
