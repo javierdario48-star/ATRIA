@@ -573,3 +573,45 @@ body[data-phase="guard"] .guard-scoreboard{top:calc(141px + env(safe-area-inset-
 .doctor-xp progress{display:block;width:100%;height:8px;margin:8px 0 18px;accent-color:#54cfb4}
 #accountError{color:#ffb7aa;font-size:.85rem}
 @media(max-height:500px){.doctor-profile header canvas{width:64px;height:78px}.doctor-stats{padding:6px 0}}
+
+/* Welcome owns account navigation only; the hospital keeps its renderer and camera. */
+#splash.welcome{background:#05090c;overflow:auto;align-items:safe center;padding:max(16px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom));}
+.welcome-shell{width:min(1040px,100%);display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,1fr);gap:20px 36px;align-items:center;margin:auto;}
+.welcome-shell>.wordmark{grid-column:1/-1;justify-content:center;color:#e8faf7;letter-spacing:.08em;margin:0;}
+.welcome-art{width:100%;height:auto;object-fit:contain;display:block;background:#000;border-radius:20px;}
+.welcome-content{min-width:0;padding:20px 0;}
+.welcome-content h1{font-size:clamp(25px,3vw,35px);line-height:1.15;margin:0 0 12px;}
+.welcome-content>p{color:#aac5c3;line-height:1.5;}
+.welcome-content form>.primary,.welcome-content #welcomeContinue{width:100%;margin-top:15px;min-height:48px;}
+.welcome-content .field{display:block;margin:18px 0 12px;font-weight:600;}
+.welcome-content input:not([type=checkbox]){display:block;width:100%;box-sizing:border-box;margin-top:8px;min-height:48px;font-size:16px;}
+.welcome-remember{display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.4;margin-top:18px;color:#c0d6d3;}
+.welcome-remember input{width:19px;height:19px;accent-color:#35c6b4;flex-shrink:0;}
+.welcome-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 15px;margin-top:18px;}
+.welcome-links button{border:0;background:transparent;color:#a3c4be;font-size:13px;padding:8px 0;box-shadow:none;}
+#welcomeError{padding:10px 12px;color:#ffd4bd;background:#39241e;border-radius:8px;font-size:14px;}
+#welcomeLoading progress{width:100%;height:8px;accent-color:#35c6b4;border-radius:20px;}
+#welcomeLoading progress::-webkit-progress-bar{background:#173835;border-radius:20px;}
+#welcomeLoading progress::-webkit-progress-value{background:#35c6b4;border-radius:20px;transition:width .2s;}
+#welcomeLoading p{font-size:13px;color:#aac5c3;}
+.welcome-chosen-name{font-size:24px;color:#e8faf7;font-weight:700;}
+.welcome-content .avatar-display{height:230px;width:100%;margin:8px auto;}
+.welcome-content #avatarPreview{height:230px;width:200px;max-width:100%;}
+.welcome-content .avatar-carousel{margin:8px 0;}
+.welcome-content .avatar-sex-choice{display:flex;gap:8px;}
+.welcome-content .avatar-sex-choice button{flex:1;}
+#splash[data-step=loading] .welcome-art{opacity:.72;}
+#splash[data-step=avatar] .welcome-art{opacity:.85;}
+@media(max-width:640px){
+ .welcome-shell{grid-template-columns:1fr;gap:8px;max-width:450px;}
+ .welcome-art{max-height:30svh;width:auto;max-width:100%;margin:auto;}
+ .welcome-content{padding:12px 0 0;}
+ .welcome-content h1{font-size:27px;}
+ .welcome-content>p{margin:8px 0;font-size:14px;}
+ .welcome-content .field{margin:12px 0;}
+ #splash[data-step=avatar] .welcome-art{display:none;}
+ .welcome-content .avatar-display,.welcome-content #avatarPreview{height:240px;}
+}
+@media(max-height:500px) and (min-width:641px){.welcome-shell{gap:8px 24px;}.welcome-art{max-height:72svh;}.welcome-content{padding:0;}.welcome-content .avatar-display,.welcome-content #avatarPreview{height:140px;}.welcome-content h1{font-size:24px;}}
+#splash[data-step=loading]{background:rgba(3,12,15,.85);}
+#splash[data-step=loading] .welcome-art{opacity:.3;}

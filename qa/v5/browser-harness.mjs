@@ -10,12 +10,12 @@ import {createClinicalHttp} from '../../src/v5/server/clinical-http.js';
 import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 
-export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFallback=false}={}){
+export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFallback=false,accounts=null}={}){
  const require=createRequire(import.meta.url);
  const {chromium,devices}=require(process.env.PLAYWRIGHT_MODULE_PATH||
   (process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright':'playwright'));
  const root=path.resolve('out-v5'),requests=[];
- const records=new Map(),social=createV5QaSocialServer({get:async k=>records.get(k),set:async(k,v)=>records.set(k,structuredClone(v)),delete:async k=>records.delete(k)});
+ const records=new Map(),social=accounts?.legacy||createV5QaSocialServer({get:async k=>records.get(k),set:async(k,v)=>records.set(k,structuredClone(v)),delete:async k=>records.delete(k)});
  const durableDir=durable?mkdtempSync(path.join(tmpdir(),'atria-durable-browser-')):null;
  const store=durable?createSqliteGuardStore(path.join(durableDir,'guards.sqlite')):null;
  const readContent=name=>JSON.parse(readFileSync(new URL('../../src/v5/content/'+name+'.json',import.meta.url),'utf8'));
@@ -45,9 +45,10 @@ export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFa
      (input.method==='POST'&&input.body.action==='capability'
       ?{status:200,body:{durable:false,kind:'qa-legacy-only',schemaVersion:1,clinicalEnabled:false}}
       :{status:503,body:{code:'recovery-client-not-enabled'}}):
-     pathname==='/api/account/session'?{status:200,body:{account:null}}:
-     (isSignalingEndpoint({path:input.path,route:input.query.route})?await social.signalRoute(input):await social.route(input));
-    requests.push({path:pathname,status:response.status});res.writeHead(response.status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(response.body));return;
+     pathname.startsWith('/api/account/')&&accounts?await accounts.gate.route(input):
+     pathname==='/api/account/session'?{status:200,body:{account:null,enabled:false}}:
+     (isSignalingEndpoint({path:input.path,route:input.query.route})?await (accounts?.gate||social).signalRoute(input):await (accounts?.gate||social).route(input));
+    requests.push({path:pathname,status:response.status});if(response.cookies?.length)res.setHeader('Set-Cookie',response.cookies);res.writeHead(response.status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(response.body));return;
    }
    const file=path.resolve(root,'.'+pathname+(pathname.endsWith('/')?'index.html':''));
    if(!file.startsWith(root+path.sep))throw Error('outside root');

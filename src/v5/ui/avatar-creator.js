@@ -82,5 +82,5 @@ export function createAvatarCreator({document,window,assetUrls,profile,listen,si
  listen(document.getElementById('avatarNextColor'),'click',()=>{model.cycle(1);void paint();});
  listen(window,'resize',()=>{void paint();});
  void paint();
- return Object.freeze({read:model.read});
+ return Object.freeze({read:model.read,repaint:paint});
 }

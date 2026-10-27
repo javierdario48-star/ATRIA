@@ -41,34 +41,57 @@
    <button id="friendRequestDecline" type="button">Rechazar</button>
   </div>
  </aside>
- <section id="splash" class="overlay">
-  <div class="splash-card avatar-creator">
-   <div class="wordmark"><span class="logo">A</span> ATRIA <span class="creator-kicker">5.0 · TU PERSONAJE</span></div>
-   <h1>¿Cómo quieres que te vean?</h1>
-   <p class="creator-intro">Elegí tu estilo para empezar la guardia.</p>
-   <form id="profileForm">
-    <div class="avatar-sex-choice" role="group" aria-label="Aspecto del personaje">
-     <button type="button" data-avatar-sex="female" aria-pressed="false"><span>M</span> Mujer</button>
-     <button type="button" data-avatar-sex="male" aria-pressed="true"><span>H</span> Hombre</button>
+ <section id="splash" class="overlay welcome" aria-label="Bienvenida a ATRIA">
+  <div class="welcome-shell">
+   <div class="wordmark"><span class="logo">A</span> ATRIA <span class="creator-kicker">5.0</span></div>
+   <img class="welcome-art" src="./src/v5/content/assets/welcome-doctors.webp" width="1536" height="1024" alt="Dos médicos de ATRIA con mascarillas" fetchpriority="high">
+   <div class="welcome-content">
+    <h1 id="welcomeTitle">¿Cómo quieres que te llamen?</h1>
+    <p id="welcomeSubtitle">Tu historia en ATRIA comienza con tu nombre.</p>
+    <p id="welcomeError" role="alert" hidden></p>
+    <form id="welcomeNameForm" hidden>
+     <label class="field">Nombre de tu médico<input id="doctorName" autocomplete="nickname" autocapitalize="words" spellcheck="false" minlength="2" maxlength="32" required enterkeyhint="go"></label>
+     <button class="primary" type="submit">Continuar</button>
+    </form>
+    <form id="profileForm" hidden>
+     <div class="avatar-sex-choice" role="group" aria-label="Aspecto del personaje">
+      <button type="button" data-avatar-sex="female" aria-pressed="false">Femenino</button>
+      <button type="button" data-avatar-sex="male" aria-pressed="true">Masculino</button>
+     </div>
+     <input type="hidden" id="startingSex" value="male">
+     <div class="avatar-display"><canvas id="avatarPreview" width="320" height="380" role="img" aria-label="Vista previa del personaje"></canvas><span class="avatar-stage-floor" aria-hidden="true"></span></div>
+     <div class="avatar-carousel" aria-label="Elegir color del ambo">
+      <button id="avatarPreviousColor" type="button" aria-label="Color anterior">‹</button>
+      <div class="avatar-color-title"><span id="avatarColorName" aria-live="polite">Azul oscuro</span><small id="avatarColorPosition">1 / 7</small></div>
+      <button id="avatarNextColor" type="button" aria-label="Color siguiente">›</button>
+     </div>
+     <input type="hidden" id="startingColor" value="navy">
+     <label class="field" id="practiceNameLabel">Nombre de tu médico<input id="playerName" autocomplete="nickname" maxlength="32" required></label>
+     <button id="enterButton" type="submit" class="primary" disabled>Continuar</button>
+    </form>
+    <form id="welcomePasswordForm" hidden>
+     <p class="welcome-chosen-name" id="chosenDoctorName"></p>
+     <label class="field">Contraseña<input id="newDoctorPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
+     <small>Al menos 12 caracteres. Guárdala en tu administrador de contraseñas.</small>
+     <label class="welcome-remember"><input id="rememberNewDoctor" type="checkbox" checked>Recordar mi cuenta en este dispositivo</label>
+     <button class="primary" type="submit">Crear mi médico</button>
+    </form>
+    <form id="welcomeLoginForm" hidden>
+     <label class="field">Nombre de tu médico<input id="loginDoctorName" autocomplete="username" autocapitalize="words" spellcheck="false" maxlength="32" required></label>
+     <label class="field">Contraseña<input id="loginDoctorPassword" type="password" autocomplete="current-password" maxlength="128" required></label>
+     <label class="welcome-remember"><input id="rememberLoginDoctor" type="checkbox" checked>Recordar mi cuenta en este dispositivo</label>
+     <button class="primary" type="submit">Entrar</button>
+    </form>
+    <div id="welcomeReturning" hidden><button id="welcomeContinue" class="primary" type="button"></button></div>
+    <div id="welcomeLoading" role="status"><progress id="hospitalLoadProgress" max="100" value="5" aria-label="Carga del hospital"></progress><p id="hospitalLoadText">Recuperando tu cuenta...</p></div>
+    <div class="welcome-links">
+     <button id="accountLoginButton" type="button" hidden>Ya tengo una cuenta</button>
+     <button id="welcomeNew" type="button" hidden>Crear cuenta nueva</button>
+     <button id="welcomeBack" type="button" hidden>Volver</button>
+     <button id="welcomeLogout" type="button" hidden>Cerrar sesión en este dispositivo</button>
+     <button id="welcomeRetry" type="button" hidden>Reintentar</button>
     </div>
-    <input type="hidden" id="startingSex" value="male">
-    <div class="avatar-display">
-     <span class="avatar-stage-caption">ASÍ TE VERÁN EN ATRIA</span>
-     <canvas id="avatarPreview" width="320" height="380" role="img" aria-label="Vista previa del personaje"></canvas>
-     <span class="avatar-stage-floor" aria-hidden="true"></span>
-    </div>
-    <div class="avatar-carousel" aria-label="Elegir color del ambo">
-     <button id="avatarPreviousColor" type="button" aria-label="Color anterior">‹</button>
-     <div class="avatar-color-title"><span id="avatarColorName" aria-live="polite">Negro clínico</span><small id="avatarColorPosition">1 / 7</small></div>
-     <button id="avatarNextColor" type="button" aria-label="Color siguiente">›</button>
-    </div>
-    <input type="hidden" id="startingColor" value="navy">
-    <label for="playerName" class="avatar-name-label">¿Cómo te llamás?</label>
-    <input id="playerName" autocomplete="nickname" maxlength="32" value="Médico" required placeholder="Tu nombre en el hospital">
-    <button id="enterButton" type="submit" class="primary" disabled>Entrar al hospital →</button>
-   </form>
-   <div class="account-entry"><button id="accountRegisterButton" type="button">Guardar mi cuenta</button><button id="accountLoginButton" type="button">Ya tengo cuenta</button></div>
-   <small class="creator-footer">Tu personaje y tu nombre se pueden editar desde Perfil.</small>
+   </div>
   </div>
  </section>
  <section id="chatDock" hidden aria-label="Consola compartida">

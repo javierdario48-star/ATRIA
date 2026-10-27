@@ -4,6 +4,7 @@ import {createWorld} from './world.js';
 import {SCRUB_COLORS,AVATAR_SEXES} from './avatar-appearance.js';
 import {createHospitalRenderer} from '../render/hospital.js';
 import {createAvatarCreator} from '../ui/avatar-creator.js';
+import {createWelcomeFlow} from '../ui/welcome-flow.js';
 import {createPresentationTimeline} from '../render/presentation-timeline.js';
 import {createGuardSession} from '../clinical/guard-session.js';
 import {isExaminationCommand} from '../clinical/exam-contract.js';
@@ -981,13 +982,8 @@ export async function createApplication({document,window,content,signal}){
     ${s.phase==='guard'?'':a?'<button data-action="account-use-device">Usar este dispositivo</button><button data-action="account-logout">Cerrar sesión</button>':'<button data-action="account-register">Guardar mi cuenta</button><button data-action="account-login">Ya tengo cuenta</button>'}</div>`);
  }
  function showAccountForm(kind='login'){
-  const register=kind==='register';
-  open('<h2>'+(register?'Guardá tu identidad médica':'Entrar a tu cuenta')+'</h2>'+
-   '<p>'+(register?'Conservá tu personaje y tus amigos. Usá la misma cuenta en tu teléfono o computadora.':'Recuperá tu personaje, amigos y progreso.')+'</p>'+
-   '<form id="accountForm" data-kind="'+kind+'"><label class="field">Usuario<input id="accountUsername" autocomplete="username" autocapitalize="words" spellcheck="false" pattern="[A-Za-z][A-Za-z0-9_]{2,23}" title="Entre 3 y 24 caracteres: letras, números o guion bajo. Se aceptan mayúsculas." minlength="3" maxlength="24" required></label>'+
-   '<label class="field">Contraseña<input id="accountPassword" type="password" autocomplete="'+(register?'new-password':'current-password')+'" minlength="'+(register?12:1)+'" maxlength="128" required></label>'+
-   (register?'<small>Al menos 12 caracteres. Guardala en tu administrador de contraseñas.</small>':'')+
-   '<p id="accountError" role="alert"></p><div class="actions"><button type="button" data-action="close">Volver</button><button class="primary" type="submit">'+(register?'Crear cuenta':'Iniciar sesión')+'</button></div></form>','account');
+  close();socialEnabled=false;ui('hud').hidden=true;ui('chatDock').hidden=true;
+  if(kind==='register')void welcome.newDoctor();else welcome.login();
  }
  function applyAccount(a,{restore=false}={}){
   account.accept(a);profile={id:a.actorId,name:a.name,sex:a.sex,scrubColor:a.scrubColor,level:a.level};
@@ -1011,6 +1007,23 @@ export async function createApplication({document,window,content,signal}){
  }
  ui('playerName').value=profile.name;
  const avatarCreator=createAvatarCreator({document,window,assetUrls:content.assetUrls,profile,listen,signal});
+ const welcome=createWelcomeFlow({document,window,account,avatar:avatarCreator,listen,
+  clientKey:()=>social.credentials().clientKey,
+  async prepareNew(){socialEnabled=false;await social.flush();await social.leave();restoreRoomId=null;},
+  async onLogout(){
+   socialEnabled=false;await social.flush();await social.leave();await account.logout();social.useAccount(null);restoreRoomId=null;
+   profile={name:'Médico',sex:'male',scrubColor:'navy'};world=createWorld(content,profile);social.setProfile(profile);
+   close();ui('hud').hidden=true;ui('chatDock').hidden=true;
+  },
+  async onEnter(a,{progress:loadingProgress}){
+   // Revalidate the cookie before exposing protected progress after a long welcome.
+   const verified=await account.restore();if(!verified)throw Error('La sesión venció. Ingresa tu contraseña nuevamente.');
+   await social.flush();if(social.state().room)await social.leave();
+   applyAccount(verified);restoreRoomId=null;world.enterLobby();drawWorld();loadingProgress(65);
+   await social.connect();loadingProgress(100);enterLobby();
+   if(verified.activeGuardId)open('<h2>Tenés una guardia en curso</h2><p>Podés recuperarla en este dispositivo.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
+  }
+ });
  ui('enterButton').textContent='Entrar al hospital →';ui('enterButton').disabled=false;
  // Single gesture-gated sound channel for selection, invitation and menus.
  // This event only drives the existing audio renderer, never any gameplay.
@@ -1019,27 +1032,11 @@ export async function createApplication({document,window,content,signal}){
   if(cue){hospitalAudio.unlock();hospitalAudio.cue(cue);}
  },{capture:true});
  listen(ui('profileForm'),'submit',event=>{
-  event.preventDefault();hospitalAudio.unlock();profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico',
+  event.preventDefault();hospitalAudio.unlock();if(welcome.avatarSubmit())return;profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico',
    sex:avatarCreator.read().sex,scrubColor:avatarCreator.read().color};
   social.setProfile(profile);
   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{/* session still usable */}
   world=createWorld(content,profile);enterLobby();
- });
- for(const [id,kind] of [['accountLoginButton','login'],['accountRegisterButton','register']])listen(ui(id),'click',()=>{
-  profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico',sex:avatarCreator.read().sex,scrubColor:avatarCreator.read().color};
-  social.setProfile(profile);showAccountForm(kind);
- });
- listen(dialog,'submit',async event=>{
-  if(event.target.id!=='accountForm')return;
-  event.preventDefault();const form=event.target,button=form.querySelector('button[type="submit"]');button.disabled=true;
-  try{const register=form.dataset.kind==='register';
-   await social.leave();await social.flush();
-   const result=await account.call(register?'register':'login',{username:ui('accountUsername').value.trim().toLowerCase(),password:ui('accountPassword').value,
-    ...(register?{...profile,clientKey:social.credentials().clientKey,legacyProgress:progress.read()}:{})});
-   await social.flush();applyAccount(result.account);enterLobby();
-   if(result.account.activeGuardId)open('<h2>Tenés una guardia en curso</h2><p>Podés recuperarla en este dispositivo.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
-  }catch(error){if(ui('accountError'))ui('accountError').textContent=error.message;}
-  finally{if(button.isConnected)button.disabled=false;}
  });
  listen(ui('notificationsButton'),'click',showPeople);
  listen(ui('audioButton'),'click',()=>{hospitalAudio.unlock();showAudioSettings();});
@@ -1177,10 +1174,7 @@ export async function createApplication({document,window,content,signal}){
   }
   if(button.dataset.action==='account-register')showAccountForm('register');
   if(button.dataset.action==='account-logout'){
-   try{await social.leave();await social.flush();await account.logout();social.useAccount(null);
-    profile=readProfile(window.localStorage);delete profile.id;world=createWorld(content,profile);world.enterLobby();
-    close();updateHud();ui('splash').hidden=false;ui('hud').hidden=true;ui('chatDock').hidden=true;
-   }catch(error){toast(error.message);}
+   try{await welcome.logout();}catch(error){toast(error.message);}
   }
   if(button.dataset.action==='account-recover'){
    try{await account.call('take-control',{});await startPersonalAccountGuard(null,'solo',true);}
@@ -1347,9 +1341,7 @@ export async function createApplication({document,window,content,signal}){
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
  drawWorld();resume();
- try{const saved=await account.restore();if(saved){applyAccount(saved,{restore:true});enterLobby();
-  if(saved.activeGuardId)open('<h2>Guardia en curso</h2><p>Tu personaje está listo. Recuperá la guardia o finalizá tu participación.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
- }}catch{toast('No se pudo recuperar tu cuenta. Reintentá desde Perfil.');}
+ await welcome.restore();
  return Object.freeze({snapshot:()=>({...world.snapshot(),history:structuredClone(history),clinical:guardSession?.read()||null}),
   diagnostics:()=>({destroyed,raf:raf===null?0:1,listeners:destroyed?0:listeners.length+atriaKeyboard.listenerCount()+renderer.metrics().listeners,timers:0,frames,
    frameErrors:{count:frameErrorCount,last:lastFrameError?{...lastFrameError}:null},
