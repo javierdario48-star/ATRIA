@@ -110,5 +110,8 @@ try{
  assert.deepEqual(errors,[]);
  console.log('V5 LOBBY SOCIAL UI PASS',JSON.stringify({chatBoth:true,bubble:true,friendTap:true,
   friendAccepted:true,unilateralInvitation:true,joinByNotification:true,remoteTravel,maxRemoteJump,phonesPhysical:false}));
-}catch(e){console.error('V5 LOBBY SOCIAL UI FAIL',JSON.stringify({stage,error:e.message,errors}));throw e;}
+}catch(e){const snapshots=await Promise.all(pages.map(async p=>p.evaluate(()=>({phase:atriaV5.snapshot().phase,
+ mode:atriaV5.snapshot().mode,cooperative:atriaV5.diagnostics().cooperative,
+ modal:document.getElementById('modalContent').textContent,toast:document.getElementById('toast').textContent}))));
+ console.error('V5 LOBBY SOCIAL UI FAIL',JSON.stringify({stage,error:e.message,errors,snapshots}));throw e;}
 finally{for(const ctx of contexts)await ctx.close().catch(()=>{});await guestBrowser.close().catch(()=>{});await h.close();}

@@ -4,6 +4,9 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {randomBytes} from 'node:crypto';
 import fs from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
+import {clinicalBotAssessmentActions} from '../../src/v5/clinical/clinical-bot-playbooks.js';
+import {createNavigation} from '../../src/v5/engine/navigation.js';
 const origin=new URL(process.env.V5_BROWSER_URL).origin;
 assert(origin.startsWith('https://')&&origin.endsWith('.vercel.app'));
 const require=createRequire(import.meta.url),{chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright');
@@ -14,10 +17,11 @@ const browser=await chromium.launch({headless:true,executablePath:process.env.CH
 const suffix=Date.now().toString(36),password=randomBytes(24).toString('base64url'),contexts=[],pages=[],errors=[];
 const summary={preview:origin,accounts:[],checks:[],physicalDevice:false};
 let stage='boot';
-const api=(page,path,body)=>page.evaluate(async({path,body})=>{
- const r=await fetch('/api/'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},...(body?{body:JSON.stringify(body)}:{})});
+const apiTokens=new Map();
+const api=async(page,path,body)=>{const result=await page.evaluate(async({path,body,token})=>{
+ const r=await fetch('/api/'+path,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:'Bearer '+token}:{})},...(body?{body:JSON.stringify(body)}:{})});
  return {status:r.status,body:await r.json()};
-},{path,body});
+},{path,body,token:apiTokens.get(page)});if(result.body.token)apiTokens.set(page,result.body.token);return result;};
 async function openPage(mobile=false){
  const context=await browser.newContext({viewport:mobile?{width:393,height:851}:{width:1100,height:850},ignoreHTTPSErrors:!!proxy});
  contexts.push(context);const page=await context.newPage();pages.push(page);page.setDefaultTimeout(45000);
@@ -39,7 +43,8 @@ try{
   await page.locator('#playerName').fill(name);await page.locator('#enterButton').click();
  }
  await a.waitForFunction(()=>atriaV5.snapshot().others.length===1);
- const oldA=(await api(a,'me')).body.user,oldB=(await api(b,'me')).body.user;
+ const resume=async page=>api(page,'resume',await page.evaluate(()=>({clientKey:localStorage.getItem('atria.v5.social.client'),name:atriaV5.snapshot().player.name})));
+ const oldA=(await resume(a)).body.user,oldB=(await resume(b)).body.user;
  stage='legacy friendship';assert.equal((await api(a,'friends',{userId:oldB.id})).status,200);
  assert.equal((await api(b,'friends/accept',{userId:oldA.id})).status,200);
  stage='register';const aa=await credentialForm(a,'register','qa_a_'+suffix),bb=await credentialForm(b,'register','qa_b_'+suffix);
@@ -55,6 +60,7 @@ try{
  stage='second device';const second=await credentialForm(outsider,'login',aa.username);assert.equal(second.actorId,aa.actorId);
  await outsider.locator('#profileButton').click();await outsider.locator('#colorChoice').selectOption('pink');await outsider.locator('#sexChoice').selectOption('female');
  await outsider.locator('[data-action="save-profile"]').click();
+ await outsider.waitForFunction(()=>!document.getElementById('modal').open);
  const back=await api(a,'account/session');assert.equal(back.body.account.scrubColor,'pink');assert.equal(back.body.account.sex,'female');
  summary.checks.push('second-device account appearance and friends');
  stage='server stats permissions';const tampered=await api(outsider,'account/profile',{name:aa.name,sex:'female',scrubColor:'pink',xp:999999,level:999,casesResolved:999});
@@ -73,6 +79,45 @@ try{
  const recovered=await api(a,'clinical',{action:'sync',roomId:guardId,clientKey:oldKey});assert.equal(recovered.status,200);
  assert.equal(recovered.body.clinical.patient.uid,opened.clinical.patient.uid);summary.checks.push('explicit takeover and same patient recovery');
  await api(a,'account/release-guard',{});
+ assert.equal((await api(a,'clinical',{action:'sync',roomId:guardId,clientKey:oldKey})).status,403);
+ assert.equal((await api(a,'account/session')).body.account.activeGuardId,null);summary.checks.push('released guard cannot be reactivated');
+ stage='real native case reward';
+ const rewardRoom='reward-'+crypto.randomUUID();
+ const call=extra=>api(a,'clinical',{roomId:rewardRoom,clientKey:oldKey,...extra});
+ let reward=await call({action:'start',caseId:'FECAL-001',mode:'solo'});assert.equal(reward.status,200);
+ const beds=JSON.parse(readFileSync(new URL('../../src/v5/content/beds.json',import.meta.url))),map=JSON.parse(readFileSync(new URL('../../src/v5/content/hospital.json',import.meta.url)));
+ const bed=beds.find(b=>b.id===reward.body.clinical.shift.patients[0].bedId),point=createNavigation(map).center(...bed.approach);
+ const rewardUid=reward.body.clinical.patient.uid;
+ await call({action:'sync',motion:[point.x,point.y],motionSequence:1});
+ let arrived=false;for(let i=0;i<30;i++){
+  await new Promise(r=>setTimeout(r,900));reward=await call({action:'sync'});assert.equal(reward.status,200);
+  const doctor=reward.body.spatial.doctors.find(d=>d.id===aa.actorId);
+  if(!doctor.moving&&!doctor.target&&Math.hypot(doctor.x-point.x,doctor.y-point.y)<3){arrived=true;break;}
+ }
+ assert(arrived,'native doctor must physically arrive before examining');
+ const texts=clinicalBotAssessmentActions({id:'FECAL-001'},'competent');
+ const assessed=await call({action:'sync',commands:texts.map((text,i)=>({id:'assessment-'+suffix+'-'+i,text,targetPatientUid:rewardUid}))});
+ assert.equal(assessed.status,200);assert(assessed.body.acknowledgements.every(x=>x.status!=='rejected'));
+ const deadline=Date.now()+70000;
+ while(Date.now()<deadline){await new Promise(r=>setTimeout(r,1000));reward=await call({action:'sync'});assert.equal(reward.status,200);
+  if(reward.body.clinical.patient.administrationLog?.some(x=>x.id==='disimpaction'))break;
+ }
+ await call({action:'sync',commands:[{id:'reeval-'+suffix,text:'/reevaluar',targetPatientUid:rewardUid}]});
+ const closed=await call({action:'sync',commands:[{id:'closure-'+suffix,text:'/disposicion alta',targetPatientUid:rewardUid}]});
+ assert.equal(closed.status,200);assert.equal(closed.body.clinical.patient.closure?.closed,true,JSON.stringify(closed.body.acknowledgements));
+ assert(closed.body.account.xp>0);assert.equal(closed.body.account.casesResolved,1);
+ const savedXP=closed.body.account.xp;
+ const repeated=await call({action:'sync',commands:[{id:'closure-'+suffix,text:'/disposicion alta',targetPatientUid:rewardUid}]});
+ assert.equal(repeated.body.account.xp,savedXP);assert.equal((await api(outsider,'account/session')).body.account.xp,savedXP);
+ summary.reward={caseId:'FECAL-001',roomId:rewardRoom,patientUid:rewardUid,xp:savedXP,casesResolved:1};
+ summary.checks.push('native closure awards once and persists on second device');await api(a,'account/release-guard',{});
+ stage='real refresh';
+ const authCookie=(await contexts[2].cookies()).find(c=>c.name==='__Host-atria_v5');
+ const tokens=JSON.parse(Buffer.from(authCookie.value,'base64url').toString());
+ tokens.access_token='e30.'+Buffer.from(JSON.stringify({exp:0})).toString('base64url')+'.expired';
+ await contexts[2].addCookies([{...authCookie,value:Buffer.from(JSON.stringify(tokens)).toString('base64url')}]);
+ const refreshed=await api(outsider,'account/session');assert.equal(refreshed.status,200);assert.equal(refreshed.body.account.xp,savedXP);
+ summary.checks.push('real Supabase refresh-token renewal');
  stage='logout';assert.equal((await api(a,'account/logout',{})).status,200);
  assert.equal((await api(a,'account/session')).body.account,null);
  assert.equal((await api(outsider,'account/session')).status,200);summary.checks.push('logout isolated to current device');

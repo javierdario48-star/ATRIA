@@ -1,4 +1,5 @@
 import {createQaSocialServer} from '../../social/qa-social-server.js';
+import {presenceAppearance} from '../app/avatar-appearance.js';
 // Storage composition only: the characterized V4 backend remains byte-identical.
 // A room has one host-owned metadata record and a distinct acceptance key per
 // guest. Joining doctors cannot overwrite each other's room membership.
@@ -46,10 +47,24 @@ export function createConflictFreeRoomStorage(store){
 export function createV5QaSocialServer(storage,options){
  const slots=createConflictFreeRoomStorage(storage);
  const legacy=createQaSocialServer(slots,options);
- return {...legacy,async route(request){
+ async function readPlayerProfile(id,viewer){
+  if(!/^qa_[0-9a-f]{30}$/.test(id))return null;
+  const [user,friends,roster]=await Promise.all([slots.get('qa-v1:user:'+id),slots.get('qa-v1:friends:'+id),legacy.roster()]);
+  if(!user)return null;const live=roster.find(x=>x.userId===id),appearance=presenceAppearance(live?.color);
+  return {actorId:id,name:user.name,username:user.handle,scrubColor:appearance.color,sex:appearance.sex,
+   verified:false,friendsCount:Array.isArray(friends)?friends.length:0,status:live?'disponible':'desconectado',self:viewer===id};
+ }
+ return {...legacy,readPlayerProfile,async route(request){
+  const path=String(request.path||'').replace(/^\/?(?:api\/)?/,'');
+  if(path.startsWith('profiles/')&&(request.method||'GET')==='GET'){
+   const me=await legacy.route({method:'GET',path:'me',headers:request.headers});
+   if(me.status!==200)return me;
+   const profile=await readPlayerProfile(path.slice(9),me.body.user.id);
+   return profile?{status:200,body:{profile}}:{status:404,body:{error:'Médico no encontrado.'}};
+  }
   const response=await legacy.route(request);
   if(response.status>=400)return response;
-  const path=String(request.path||''),method=request.method||'GET';
+  const method=request.method||'GET';
   const match=path.match(/rooms\/([a-f0-9-]{36})\/(leave|invite)(?:\/(decline|remove))?$/);
   if(method!=='POST'||!match)return response;
   const [,id,action,sub]=match;

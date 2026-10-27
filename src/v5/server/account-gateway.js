@@ -156,10 +156,11 @@ export function createAccountGateway({backend,legacy,storage}){
     const viewer=identity?.actorId||(await legacy.route({method:'GET',path:'me',headers})).body?.user?.id;
     if(!viewer)throw fail(401,'Iniciá sesión para consultar perfiles.');
     const id=path.slice(9);if(!/^qa_[0-9a-f]{30}$/.test(id))throw fail(404,'Médico no encontrado.');
-    const a=await backend.byActor(id),u=await storage.get('qa-v1:user:'+id);
-    if(!a&&!u)throw fail(404,'Médico no encontrado.');
+    const a=await backend.byActor(id);
+    if(!a){const profile=await legacy.readPlayerProfile(id,viewer);
+     if(!profile)throw fail(404,'Médico no encontrado.');return reply(200,{profile},identity?.cookies);}
     const [friends,live]=await Promise.all([storage.get('qa-v1:friends:'+id),legacy.roster()]);
-    const online=live.some(p=>p.userId===id),s=a?publicAccount(a):{actorId:id,name:u.name,level:1,xp:0,casesResolved:0,sex:'male',scrubColor:'navy'};
+    const online=live.some(p=>p.userId===id),s=publicAccount(a);
     delete s.activeGuardId;delete s.legacyProgressRetained;
     return reply(200,{profile:{...s,verified:!!a,friendsCount:Array.isArray(friends)?friends.length:0,
      status:online?(a?.active_guard_id?'en guardia':'disponible'):'desconectado',self:viewer===id}},identity?.cookies);

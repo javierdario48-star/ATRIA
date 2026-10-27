@@ -232,7 +232,8 @@ export async function createApplication({document,window,content,signal}){
   open('<p role="status">Cargando perfil…</p>','lobby-person');
   try{const p=await social.readPlayerProfile(userId);
    if(!dialog.open||dialog.dataset.panel!=='lobby-person'||selectedLobbyPlayerId!==userId)return;
-   open(playerProfileCardHTML(p,{friendship:friendStatus(social.state(),userId),canInvite:world.snapshot().phase==='lobby'}),'lobby-person');
+   open(playerProfileCardHTML(p,{friendship:friendStatus(social.state(),userId),canInvite:world.snapshot().phase==='lobby',
+    cases:content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id))}),'lobby-person');
    renderer.drawAvatar(ui('socialProfileAvatar'),{color:p.scrubColor,sex:p.sex});
   }catch(error){if(dialog.open&&dialog.dataset.panel==='lobby-person'){
    if(person)open('<h2>'+esc(person.name)+'</h2><p>Perfil no disponible en este momento.</p><div class="actions"><button data-action="close">Cerrar</button></div>','lobby-person');
