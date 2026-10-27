@@ -9,7 +9,8 @@ try{
  const context=await h.browser.newContext(h.devices['Pixel 5']),page=await context.newPage();
  inspectedPage=page;
  await page.goto(h.url);await page.locator('#enterButton').click();
- await page.locator('#guardButton').click();await page.locator('[data-action="start-guard"]').click();
+ await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();
+ await page.locator('#caseChoice').selectOption('CIRR-001');await page.locator('[data-action="start-guard"]').click();
  await page.locator('#dieInput').blur();await page.locator('#game').focus();
  const sample=()=>page.evaluate(()=>({now:performance.now(),clock:atriaV5.snapshot().clinical.clock}));
  await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));

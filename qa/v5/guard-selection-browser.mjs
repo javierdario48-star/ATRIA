@@ -2,7 +2,9 @@
 import assert from 'node:assert/strict';
 import {browserHarness} from './browser-harness.mjs';
 const h=await browserHarness({durable:true}),errors=[],results=[];
-const scopes=['random','specialty','specific'];
+assert(!process.env.V5_SCOPE_MODE||['solo','apprentice','coop','competitive'].includes(process.env.V5_SCOPE_MODE));
+assert(!process.env.V5_SCOPE_SELECTION||['random','specialty','specific'].includes(process.env.V5_SCOPE_SELECTION));
+const scopes=['random','specialty','specific'].filter(s=>!process.env.V5_SCOPE_SELECTION||process.env.V5_SCOPE_SELECTION===s);
 async function boot(context,name){
  const p=await context.newPage();p.setDefaultTimeout(30000);
  p.on('pageerror',e=>errors.push(e.message));await p.goto(h.url);
@@ -22,7 +24,7 @@ async function choose(p,mode,scope){
  if(scope==='specific')await p.locator('#caseChoice').selectOption('FECAL-001');
 }
 try{
- for(const mode of ['solo','apprentice'])for(const scope of scopes){
+ for(const mode of ['solo','apprentice'].filter(m=>!process.env.V5_SCOPE_MODE||process.env.V5_SCOPE_MODE===m))for(const scope of scopes){
   const ctx=await h.browser.newContext(mode==='apprentice'?{viewport:{width:851,height:393},isMobile:true,deviceScaleFactor:2}:h.devices['Pixel 5']);
   try{const p=await boot(ctx,'Selección '+mode);await choose(p,mode,scope);
    await p.locator('[data-action="start-guard"]').click();await p.waitForFunction(()=>atriaV5.snapshot().phase==='guard');
@@ -33,7 +35,7 @@ try{
    results.push({mode,scope,mobile:true});
   }finally{await ctx.close();}
  }
- for(const mode of ['coop','competitive'])for(const [index,scope] of scopes.entries()){
+ for(const mode of ['coop','competitive'].filter(m=>!process.env.V5_SCOPE_MODE||process.env.V5_SCOPE_MODE===m))for(const scope of scopes){
   const contexts=await Promise.all([h.browser.newContext({viewport:{width:1280,height:960}}),h.browser.newContext(h.devices['Pixel 5'])]);
   try{const guestName='Colega '+mode+' '+scope;
    const host=await boot(contexts[0],'Selección '+mode+' '+scope),guest=await boot(contexts[1],guestName);
@@ -41,14 +43,22 @@ try{
    await choose(host,mode,scope);
    await host.locator('#coopDoctors label').filter({hasText:guestName}).locator('input').check();await host.locator('[data-action="start-guard"]').click();
    if(mode==='coop'&&scope==='specific'){
+    // A click dispatches an async invitation request. Wait for its committed
+    // response; unloading an uncommitted request intentionally cancels it.
+    await host.locator('#modalContent h2').filter({hasText:'Invitación enviada'}).waitFor();
     await host.reload();await host.waitForFunction(()=>document.body.dataset.boot==='ready');
     if(await host.locator('#enterButton').isVisible())await host.locator('#enterButton').click();
    }
    await guest.locator('#coopInviteNotice').waitFor({state:'visible'});await guest.locator('#coopInviteAccept').click();
-   await Promise.all([host,guest].map(p=>p.waitForFunction(()=>atriaV5.diagnostics().cooperative.durable&&atriaV5.snapshot().clinical?.shift)));
+   try{await Promise.all([host,guest].map(p=>p.waitForFunction(()=>atriaV5.diagnostics().cooperative.durable&&atriaV5.snapshot().clinical?.shift)));}
+   catch(error){console.error('ADMISSION DIAGNOSTICS',await Promise.all([host,guest].map(p=>p.evaluate(()=>({
+    phase:atriaV5.snapshot().phase,cooperative:atriaV5.diagnostics().cooperative,
+    room:localStorage.getItem('atria.v5.coop.room'),actor:localStorage.getItem('atria.v5.coop.actor'),
+    modal:document.getElementById('modalContent').innerText,toast:document.getElementById('toast').innerText
+   })))));console.error('FAILED REQUESTS',h.requests.filter(x=>x.path==='/api/clinical'&&x.status!==200).slice(-12));throw error;}
    const states=await Promise.all([host,guest].map(p=>p.evaluate(()=>atriaV5.snapshot().clinical.shift)));
    assert.deepEqual(states[0].patients.map(p=>[p.uid,p.caseId]),states[1].patients.map(p=>[p.uid,p.caseId]));
-   for(const s of states){assert.equal(s.guardSelection.scope,scope);assert.equal(s.guardSelection.multiplier,[1.5,1.2,1][index]);}
+   for(const s of states){assert.equal(s.guardSelection.scope,scope);assert.equal(s.guardSelection.multiplier,{random:1.5,specialty:1.2,specific:1}[scope]);}
    if(scope==='specific')assert(states[0].patients.every(p=>p.caseId==='FECAL-001'));
    await host.reload();await host.waitForFunction(()=>document.body.dataset.boot==='ready');
    if(await host.locator('#enterButton').isVisible())await host.locator('#enterButton').click();

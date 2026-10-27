@@ -30,7 +30,11 @@ Saldo final 457 XP y tres casos, recuperado en la otra sesión. PostgreSQL confi
 
 Los tests de casos concretos ahora seleccionan explícitamente «Patología específica». El test de teclado pedía fármacos de cirrosis mientras dejaba seleccionada la nueva admisión aleatoria; se corrigió su preparación manteniendo sus exigencias clínicas. La prueba del reloj ahora exige 12 horas, AM/PM y sol/luna. No se eliminaron comprobaciones para ocultar fallos.
 
+La misma preparación explícita se aplica a la regresión de bloqueo del reloj, que administra espironolactona en cirrosis. La prueba de recarga de invitación espera «Invitación enviada» antes de recargar: hacerlo durante el POST aún no confirmado activa la cancelación intencional del transporte. Se reprodujo ese límite y pasó la recarga de la invitación ya guardada, sin cambiar la cancelación ni la lógica clínica.
+
 La CI automática conserva sus suites existentes; no se lanzó manualmente otra auditoría de mortalidad ni la batería histórica de 500 recorridos. Un comando local amplio iniciado por error se interrumpió y no se presenta como una ejecución aprobada. Consultar los checks del SHA final para el resultado de CI; los fallos del primer checkpoint están identificados y corregidos en los tests anteriores.
+
+La ejecución de CI de `68f4612` también registró un timeout esperando elegibilidad de sala en Cooperativo RTC de tres médicos; ese mismo recorrido pasó en el checkpoint funcional. No se le atribuye una causa no comprobada ni se relajó su condición de aprobación.
 
 ## Límite externo
 
