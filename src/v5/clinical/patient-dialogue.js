@@ -98,7 +98,7 @@ export function executePatientDialogue(p,c,cmd,clock){
     answers.push(subjective());continue;
    }
    if(/(?:sabes|sabe|decime|digame|en que lugar|donde).*(?:estas|esta|estamos)|(?:estas|esta) (?:orientado|confuso|confundido)|que (?:dia|fecha) es|como (?:te llamas|se llama)/.test(clause)){
-    answers.push(verbal===4?'No sé bien… ¿estoy en mi casa? ¿Dónde estamos?':/como.*llama/.test(clause)?'Me llamo '+(c.common?.name||'Paciente')+'.':
+    answers.push(verbal===4?'No sé bien… ¿estoy en mi casa? ¿Dónde estamos?':/como.*llama/.test(clause)?'Me llamo '+(p.name||c.common?.name||'Paciente')+'.':
      /dia|fecha/.test(clause)?'Sé qué día es; me acuerdo de haber venido hoy a la guardia.':'Estoy en la guardia del hospital, para que me atiendan.');continue;
    }
    const exact=exactFact(c,clause),fact=csAnamnesisFact(c,clause),duration=dimensions[1][1].test(clause),explicitPain=/\b(dolor|duele|molesta|hinchazon|hinchando)\b/.test(clause);
@@ -144,7 +144,15 @@ export function executePatientDialogue(p,c,cmd,clock){
    answers[0]='Hola, doctor. '+answers[0];
   }
  }
- const answer=lay([...new Set(answers)].join(' '));
+ // Only style the outward utterance; recorded clinical facts stay literal.
+ // Never change impaired speech, allergies, drug names or other case facts.
+ const rawAnswer=lay([...new Set(answers)].join(' '));
+ const personality=String(p.personality||'').toLowerCase();
+ const canStyle=verbal>=4&&rawAnswer&&!/alergia|urticaria|anafilaxia/i.test(rawAnswer);
+ const answer=canStyle&&/ansios|nervios|preocupad/.test(personality)?
+  'Estoy preocupado. '+rawAnswer:
+  canStyle&&/reservad|timid|callad/.test(personality)?
+  'Bueno… '+rawAnswer:rawAnswer;
  const receipt={patientUid:p.uid,eventId:cmd.eventId,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,
   source:'native.patient-dialogue',...(answer?{answer}:{}),message:answer||'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'};
  return {status:answer?'executed':'rejected',patientUid:p.uid,eventId:cmd.eventId,
