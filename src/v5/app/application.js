@@ -9,6 +9,7 @@ import {createGuardSession} from '../clinical/guard-session.js';
 import {isExaminationCommand} from '../clinical/exam-contract.js';
 import {formatGuardTime} from '../ui/guard-time.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {eligibleGuardCases,GUARD_SCOPES} from '../clinical/guard-selection-policy.js';
 import {createCooperativeLink} from '../social/cooperative-link.js';
 import {createAccountClient} from '../social/account-client.js';
 import {createCooperativeReplica} from '../social/cooperative-replica.js';
@@ -753,7 +754,7 @@ export async function createApplication({document,window,content,signal}){
      closed:!!patient?.caseEnded,patientDied:!!patient?.patientDied};
    })};
  }
- function beginLocalPatient(caseId,{continuation=false}={}){
+ function beginLocalPatient(caseId,{continuation=false,allowedCaseIds=null}={}){
   if(continuation)return receiveNextLocalPatient();
   if(!Object.hasOwn(CLINICAL_EXECUTORS,caseId)){
    toast('Este caso todavía no tiene ejecutor clínico completo.');return false;
@@ -761,7 +762,7 @@ export async function createApplication({document,window,content,signal}){
   if(!localShift.begin({caseId}))return false;
   for(const session of localSessions.values())session.dispose();localSessions.clear();
   localRoomId='guard-'+window.crypto.randomUUID();
-  localAdmissions=createShiftFlow({content,mode:draftMode,roomId:localRoomId,firstCaseId:caseId});
+  localAdmissions=createShiftFlow({content,mode:draftMode,roomId:localRoomId,firstCaseId:caseId,allowedCaseIds});
   const first=localAdmissions.advance(0)[0];if(!first)return false;
   fastWardSpeech.clear();announcedClosure=null;announcedDeathUid=null;
   seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;
@@ -790,7 +791,12 @@ export async function createApplication({document,window,content,signal}){
    <button class="mode ${draftMode==='solo'?'active':''}" data-mode="solo"><b>Solitario</b><small>Explorá el hospital con los recursos originales.</small></button>
    <button class="mode ${draftMode==='coop'?'active':''}" data-mode="coop"><b>Cooperativo</b><small>2–4 médicos comparten la misma atención.</small></button>
    <button class="mode ${draftMode==='competitive'?'active':''}" data-mode="competitive"><b>Competitivo</b><small>2–4 médicos · el primero que atiende al paciente lo controla; los demás observan.</small></button></div>
-   <label class="field">Caso<select id="caseChoice">${content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id)).map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join('')}</select></label>
+   <fieldset class="field"><legend>¿Qué querés atender?</legend>
+   <label><input type="radio" name="guardScope" value="random" checked> ${GUARD_SCOPES.random.label} · ×1,5 XP</label>
+   <label><input type="radio" name="guardScope" value="specialty"> ${GUARD_SCOPES.specialty.label} · ×1,2 XP</label>
+   <label><input type="radio" name="guardScope" value="specific"> ${GUARD_SCOPES.specific.label} · ×1,0 XP</label></fieldset>
+   <label class="field" id="guardSpecialtyField" hidden>Especialidad<select id="guardSpecialty">${[...new Set(content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id)).map(c=>c.specialty||c.category||"Gastroenterología"))].map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}</select></label>
+   <label class="field" id="guardCaseField" hidden>Patología<select id="caseChoice">${content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id)).map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join("")}</select></label>
    ${['coop','competitive'].includes(draftMode)?'<p>Invitar colegas conectados</p><div id="coopDoctors"></div>':''}
    <p class="note">25 casos clínicos con evaluación, estudios, tratamientos y decisión de destino (alta, observación, sala, UTI, procedimiento o quirófano). El cierre requiere las condiciones clínicas de cada caso; una derivación no equivale a una operación realizada.</p>
    <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);renderSocialLists();
@@ -1076,6 +1082,7 @@ export async function createApplication({document,window,content,signal}){
  listen(dialog,'click',async event=>{
   if(await clinicalUI.handle(event.target))return;
   const button=event.target.closest('button');if(!button)return;
+  if(button.matches('input[name="guardScope"]'))return;
   if(button.dataset.mode){if(!['coop','competitive'].includes(button.dataset.mode))cancelSharedIntent();draftMode=button.dataset.mode;guardSetup();}
   if(button.dataset.action==='inspect-player'){showLobbyPlayerCard(button.dataset.user);return;}
   if(button.dataset.action==='add-friend'||button.dataset.action==='accept-friend'){
@@ -1097,12 +1104,17 @@ export async function createApplication({document,window,content,signal}){
    await acceptCooperativeInvitation(button.dataset.room);return;
   }
   if(button.dataset.action==='start-guard'){
+   const scope=document.querySelector('input[name="guardScope"]:checked')?.value||'random';
+   const selection=scope==='specific'?ui('caseChoice').value:scope==='specialty'?ui('guardSpecialty').value:'';
+   const allowedCases=eligibleGuardCases(content.cases,Object.keys(CLINICAL_EXECUTORS),scope,selection);
+   if(!allowedCases.length){toast('No hay casos clínicos jugables para esta selección.');return;}
+   const chosenCase=allowedCases[0].id;
    if(['coop','competitive'].includes(draftMode)){
-    await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),ui('caseChoice').value,draftMode);return;
+    await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),chosenCase,draftMode);return;
    }
-   if(account.read()){await startPersonalAccountGuard(ui('caseChoice').value);return;}
+   if(account.read()){await startPersonalAccountGuard(chosenCase);return;}
    cancelSharedIntent();
-   beginLocalPatient(ui('caseChoice').value);
+   beginLocalPatient(chosenCase,{allowedCaseIds:allowedCases.map(c=>c.id)});
   }
   if(button.dataset.action==='reception'){
    open(receptionBoardHTML(guardSession?.read()?.shift||localReceptionSnapshot(),
