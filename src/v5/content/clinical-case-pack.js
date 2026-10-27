@@ -3,7 +3,7 @@
 import {validateVariation} from './patient-variation.js';
 const validId=x=>typeof x==='string'&&/^[A-Z][A-Z0-9-]{2,63}$/.test(x);
 const validRef=x=>typeof x==='string'&&x.trim().length>0;
-export function validateClinicalCasePack(pack,{existingCaseIds=[],drugIds=[],progressionIds=[],rescueIds=[]}={}){
+export function validateClinicalCasePack(pack,{existingCaseIds=[],drugIds=[],progressionIds=[],rescueIds=[],executorIds=[],closurePolicyIds=[],studyPolicyIds=[],examPolicyIds=[]}={}){
  const errors=[],accepted=[],seen=new Set(existingCaseIds);
  if(!pack||pack.schemaVersion!==1||!Array.isArray(pack.cases)||pack.cases.length===0)
   return {ok:false,accepted:[],errors:['schemaVersion 1 and nonempty cases required']};
@@ -15,6 +15,14 @@ export function validateClinicalCasePack(pack,{existingCaseIds=[],drugIds=[],pro
   const before=errors.length;
   for(const field of ['clinicalExecutorId','closurePolicyId','studyPolicyId','examPolicyId'])
    if(!validRef(entry[field]))errors.push(at+': missing '+field);
+  // A declared integration is not proof that an executable policy exists.
+  // Registry checks are opt-in for legacy callers, mandatory at activation.
+  for(const [field,registry] of [
+   ['clinicalExecutorId',executorIds],['closurePolicyId',closurePolicyIds],
+   ['studyPolicyId',studyPolicyIds],['examPolicyId',examPolicyIds]]){
+   if(registry.length&&!registry.includes(entry[field]))
+    errors.push(at+': unregistered '+field+' '+entry[field]);
+  }
   if(!entry.variation)errors.push(at+': missing variation');
   else{
    for(const issue of validateVariation(entry.variation))errors.push(at+': '+issue);
