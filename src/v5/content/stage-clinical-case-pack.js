@@ -1,0 +1,13 @@
+// A pack is staged only after every clinical dependency resolves. Staging is
+// deliberately separate from publishing into the active case catalogue.
+import {validateClinicalCasePack} from './clinical-case-pack.js';
+export function stageClinicalCasePack(pack,registries){
+ const required=['executorIds','closurePolicyIds','studyPolicyIds','examPolicyIds',
+  'drugIds','progressionIds','rescueIds','existingCaseIds'];
+ for(const key of required)if(!Array.isArray(registries?.[key]))
+  throw Error('missing clinical registry '+key);
+ const validation=validateClinicalCasePack(pack,registries);
+ if(!validation.ok)return {status:'rejected',errors:validation.errors,cases:[]};
+ // Copy prevents caller mutation of the staged snapshot.
+ return {status:'staged',errors:[],cases:structuredClone(pack.cases)};
+}
