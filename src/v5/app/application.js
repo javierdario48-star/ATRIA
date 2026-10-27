@@ -1079,10 +1079,17 @@ export async function createApplication({document,window,content,signal}){
    const p=world.snapshot().patients.find(p=>p.uid===patientWheel.patientUid());
    patientWheel.hide();if(p)clinicalUI.openSection(p,b.dataset.patientAction);
   });
+ listen(dialog,'change',event=>{
+  if(!event.target.matches('input[name="guardScope"]'))return;
+  const scope=event.target.value;
+  const specialty=document.getElementById('guardSpecialtyField');
+  const specific=document.getElementById('guardCaseField');
+  if(specialty)specialty.hidden=scope!=='specialty';
+  if(specific)specific.hidden=scope!=='specific';
+ });
  listen(dialog,'click',async event=>{
   if(await clinicalUI.handle(event.target))return;
   const button=event.target.closest('button');if(!button)return;
-  if(button.matches('input[name="guardScope"]'))return;
   if(button.dataset.mode){if(!['coop','competitive'].includes(button.dataset.mode))cancelSharedIntent();draftMode=button.dataset.mode;guardSetup();}
   if(button.dataset.action==='inspect-player'){showLobbyPlayerCard(button.dataset.user);return;}
   if(button.dataset.action==='add-friend'||button.dataset.action==='accept-friend'){
