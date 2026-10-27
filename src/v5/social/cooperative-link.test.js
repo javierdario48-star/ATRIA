@@ -23,6 +23,11 @@ test('reloaded social identity renews authenticated presence without replaying a
  const first=(await f.backend.roster())[0];const b=f.make();await b.connect();b.maintain(20000,{x:50,y:40});await b.flush();
  const second=(await f.backend.roster())[0];assert.equal(second.x,50);assert.notEqual(second.motionSession,first.motionSession);a.dispose();b.dispose();
 });
+test('adopting a password account retires the legacy device recovery pointer',async()=>{
+ const f=fixture();f.win.localStorage.setItem('atria.v5.coop.room','00000000-0000-4000-8000-000000000000');
+ const a=f.make();a.useAccount({actorId:'qa_111111111111111111111111111111',username:'doctor',name:'Doctor'});
+ assert.equal(a.state().recovering,false);assert.equal(f.win.localStorage.getItem('atria.v5.coop.room'),null);a.dispose();
+});
 test('an expired saved guard clears its resume pointer and returns to incoming invitations',async()=>{
  const f=fixture();f.win.localStorage.setItem('atria.v5.coop.room','00000000-0000-4000-8000-000000000000');const a=f.make();
  a.maintain(1000,{x:40,y:40});await a.flush();a.maintain(3000,{x:40,y:40});await a.flush();

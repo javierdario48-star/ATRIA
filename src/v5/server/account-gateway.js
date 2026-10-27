@@ -13,7 +13,8 @@ export function publicAccount(a){
  return {actorId:a.actor_id,username:a.username,name:a.name,sex:a.sex,scrubColor:a.scrub_color,
   avatar:a.avatar,xp,level:1+Math.floor(xp/200),nextLevelXP:200,xpInLevel:xp%200,
   casesResolved:Number(a.cases_resolved)||0,activeGuardId:a.active_guard_id||null,
-  legacyProgressRetained:!!a.legacy_progress};
+  legacyProgressRetained:!!a.legacy_progress,
+  legacyPracticeXP:a.legacy_progress?.unverified===true&&Number.isSafeInteger(a.legacy_progress.data?.xp)?Math.max(0,a.legacy_progress.data.xp):0};
 }
 function readCookie(headers){
  const raw=String(headers.cookie||headers.Cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(COOKIE+'='));
@@ -161,7 +162,7 @@ export function createAccountGateway({backend,legacy,storage}){
      if(!profile)throw fail(404,'Médico no encontrado.');return reply(200,{profile},identity?.cookies);}
     const [friends,live]=await Promise.all([storage.get('qa-v1:friends:'+id),legacy.roster()]);
     const online=live.some(p=>p.userId===id),s=publicAccount(a);
-    delete s.activeGuardId;delete s.legacyProgressRetained;
+    delete s.activeGuardId;delete s.legacyProgressRetained;delete s.legacyPracticeXP;
     return reply(200,{profile:{...s,verified:!!a,friendsCount:Array.isArray(friends)?friends.length:0,
      status:online?(a?.active_guard_id?'en guardia':'disponible'):'desconectado',self:viewer===id}},identity?.cookies);
    }

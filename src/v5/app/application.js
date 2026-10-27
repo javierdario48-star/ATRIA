@@ -960,6 +960,7 @@ export async function createApplication({document,window,content,signal}){
   const a=account.read(),stats=career();
   open(`<h2>Perfil</h2><p>${esc(profile.name)} · Nivel ${stats.level} · ${stats.xp} XP</p>
    <p>${a?'@'+esc(a.username)+' · '+a.casesResolved+' casos resueltos':'Práctica guardada en este dispositivo. Vinculá una cuenta para continuar en otros dispositivos.'}</p>
+   ${a?.legacyPracticeXP?'<p>Historial anterior conservado: '+a.legacyPracticeXP+' XP de práctica pendientes de verificación. Tu nivel de cuenta usa los cierres verificados.</p>':''}
    <label class="field">Alias<input id="aliasChoice" value="${esc(profile.name)}" maxlength="32"></label>
    <label class="field">Sexo del personaje<select id="sexChoice"><option value="male" ${profile.sex!=='female'?'selected':''}>Masculino</option><option value="female" ${profile.sex==='female'?'selected':''}>Femenino</option></select></label>
    <label class="field">Ambo<select id="colorChoice">${SCRUB_COLORS.map(k=>`<option value="${k}" ${k===profile.scrubColor?'selected':''}>${esc(content.colors[k]?.[0]||({burgundy:'Burdeos clínico',black:'Negro'}[k]||k))}</option>`).join('')}</select></label>
@@ -977,6 +978,7 @@ export async function createApplication({document,window,content,signal}){
    '<p id="accountError" role="alert"></p><div class="actions"><button type="button" data-action="close">Volver</button><button class="primary" type="submit">'+(register?'Crear cuenta':'Iniciar sesión')+'</button></div></form>','account');
  }
  function applyAccount(a){
+  restoreRoomId=null;
   account.accept(a);profile={id:a.actorId,name:a.name,sex:a.sex,scrubColor:a.scrubColor,level:a.level};
   social.setProfile(profile);social.useAccount(a);world=createWorld(content,profile);
   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
@@ -1019,6 +1021,7 @@ export async function createApplication({document,window,content,signal}){
   if(event.target.id!=='accountForm')return;
   event.preventDefault();const form=event.target,button=form.querySelector('button[type="submit"]');button.disabled=true;
   try{const register=form.dataset.kind==='register';
+   await social.leave();await social.flush();
    const result=await account.call(register?'register':'login',{username:ui('accountUsername').value,password:ui('accountPassword').value,
     ...(register?{...profile,clientKey:social.credentials().clientKey,legacyProgress:progress.read()}:{})});
    await social.flush();applyAccount(result.account);enterLobby();
@@ -1158,7 +1161,7 @@ export async function createApplication({document,window,content,signal}){
    catch(error){toast(error.message);}
   }
   if(button.dataset.action==='account-release'){
-   try{await account.call('release-guard',{});await account.restore();close();}
+   try{await account.call('release-guard',{});await social.leave();restoreRoomId=null;await account.restore();close();}
    catch(error){toast(error.message);}
   }
  });

@@ -147,6 +147,7 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   setProfile(value){profile={...value};},
   useAccount(value){
    if(room)throw Error('Volvé al lobby antes de cambiar de cuenta.');
+   savedRoom=null;desiredRoomId=null;try{storage.removeItem(ROOM_KEY);}catch{}
    cookieIdentity=!!value;token=null;user=value?{id:value.actorId,name:value.name,handle:value.username}:null;
    roomEpoch++;roster=[];friends=[];requests={incoming:[],outgoing:[]};invites=[];lastContactsAt=-Infinity;
   },

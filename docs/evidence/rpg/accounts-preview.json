@@ -1,0 +1,36 @@
+{
+  "preview": "https://night-shift-clinical-mdhxgv2bq-javierdario4878-7324.vercel.app",
+  "accounts": [
+    {
+      "actorId": "qa_f4fe11e36c4e5da991d2f33bcac70e",
+      "username": "qa_a_mvqwebb0"
+    },
+    {
+      "actorId": "qa_a42058a3c9a40e9358fcf25a25b3ed",
+      "username": "qa_b_mvqwebb0"
+    }
+  ],
+  "checks": [
+    "legacy identity and friendship retained",
+    "secure HttpOnly cookie",
+    "claimed device key rejected",
+    "second-device account appearance and friends",
+    "client cannot award XP or levels",
+    "real profile card",
+    "second clinical controller fenced",
+    "explicit takeover and same patient recovery",
+    "released guard cannot be reactivated",
+    "native closure awards once and persists on second device",
+    "real Supabase refresh-token renewal",
+    "logout isolated to current device"
+  ],
+  "physicalDevice": false,
+  "reward": {
+    "caseId": "FECAL-001",
+    "roomId": "reward-f6243dd7-986a-40ca-bb14-0ff96924049b",
+    "patientUid": "reward-f6243dd7-986a-40ca-bb14-0ff96924049b:patient",
+    "xp": 133,
+    "casesResolved": 1
+  },
+  "passed": true
+}

@@ -1,0 +1,14 @@
+{
+  "preview": "https://night-shift-clinical-44hevv9uv-javierdario4878-7324.vercel.app",
+  "passed": true,
+  "checks": [
+    "persisted XP and compact profile in portrait/landscape",
+    "two real accounts accept one durable cooperative guard",
+    "account motion reaches remote continuously",
+    "two account competitive guard starts with two distinct patients"
+  ],
+  "physicalDevice": false,
+  "cooperativeRoom": "6737aacd-6053-4c2e-8c68-acdf7605bb64",
+  "maxRemoteJump": 3.7884000000005926,
+  "competitiveRoom": "8404285a-5daa-4958-97df-161706de7223"
+}
