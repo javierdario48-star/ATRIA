@@ -1,5 +1,5 @@
 const error=(status,message)=>Object.assign(Error(message),{status});
-const SELECT='auth_user_id,actor_id,username,name,sex,scrub_color,avatar,legacy_key,social_token,xp,cases_resolved,legacy_progress,active_guard_id,controller_session_id,created_at';
+const SELECT='auth_user_id,actor_id,username,name,character_name_key,sex,scrub_color,avatar,legacy_key,social_token,xp,cases_resolved,legacy_progress,active_guard_id,controller_session_id,created_at';
 /** Private REST adapter. Passwords go directly to Supabase Auth, never to
  * application tables, logs, browser storage, or returned profiles. */
 export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.fetch}){
@@ -11,13 +11,15 @@ export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.f
    ...(body?{body:JSON.stringify(body)}:{})});
   const text=await response.text();let data;try{data=text?JSON.parse(text):null;}catch{throw error(503,'Respuesta de cuenta inválida.');}
   if(!response.ok)throw error(response.status===401||response.status===400&&path.includes('/token')?401:data?.code==='23505'?409:response.status>=500?503:400,
-   path.startsWith('/auth/')?'Usuario o contraseña incorrectos.':'No se pudo guardar la cuenta.');
+   path.startsWith('/auth/')?'Nombre o contraseña incorrectos.':data?.code==='23505'?'Ese nombre de médico ya está ocupado. Elegí otro.':'No se pudo guardar la cuenta.');
   return data;
  }
  const one=async(field,value)=>(await request('/rest/v1/atria_v5_accounts?'+new URLSearchParams({[field]:'eq.'+value,select:SELECT,limit:'1'})))[0]||null;
  const rpc=(name,body)=>request('/rest/v1/rpc/'+name,{method:'POST',body});
  return Object.freeze({request,rpc,
   byActor:id=>one('actor_id',id),byAuth:id=>one('auth_user_id',id),byUsername:username=>one('username',username),
+  nameStatus:name=>rpc('atria_v5_name_status',{p_name:name}),
+  resolveLogin:name=>rpc('atria_v5_resolve_login',{p_name:name}),
   createIdentity:async(username,password)=>request('/auth/v1/admin/users',{method:'POST',body:{email:username+'@accounts.atria.invalid',password,email_confirm:true}}),
   removeIdentity:id=>request('/auth/v1/admin/users/'+encodeURIComponent(id),{method:'DELETE'}),
   passwordSession:(username,password)=>request('/auth/v1/token?grant_type=password',{method:'POST',body:{email:username+'@accounts.atria.invalid',password}}),

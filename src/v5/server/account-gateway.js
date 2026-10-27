@@ -10,7 +10,8 @@ const reply=(status,body,cookies=[])=>({status,body,cookies});
 const pathOf=x=>String(x||'').replace(/^\/?(?:api\/)?/,'').split('?')[0];
 export function publicAccount(a){
  const xp=Number(a.xp)||0;
- return {actorId:a.actor_id,username:a.username,name:a.name,sex:a.sex,scrubColor:a.scrub_color,
+ return {actorId:a.actor_id,username:a.character_name_key?a.name:a.username,name:a.name,loginName:a.character_name_key?a.name:a.username,
+  needsUniqueName:!a.character_name_key,sex:a.sex,scrubColor:a.scrub_color,
   avatar:a.avatar,xp,level:1+Math.floor(xp/200),nextLevelXP:200,xpInLevel:xp%200,
   casesResolved:Number(a.cases_resolved)||0,activeGuardId:a.active_guard_id||null,
   legacyProgressRetained:!!a.legacy_progress,
@@ -24,12 +25,17 @@ function readCookie(headers){
  }catch{throw fail(401,'La sesión venció. Iniciá sesión nuevamente.');}
 }
 function sessionCookie(tokens){
- const value=tokens?Buffer.from(JSON.stringify({access_token:tokens.access_token,refresh_token:tokens.refresh_token})).toString('base64url'):'';
- return COOKIE+'='+value+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age='+(tokens?31536000:0);
+ const value=tokens?Buffer.from(JSON.stringify({access_token:tokens.access_token,refresh_token:tokens.refresh_token,remember:tokens.remember!==false})).toString('base64url'):'';
+ return COOKIE+'='+value+'; Path=/; HttpOnly; Secure; SameSite=Lax'+(!tokens?'; Max-Age=0':tokens.remember===false?'':'; Max-Age=31536000');
+}
+function doctorName(value){
+ const name=String(value??'').normalize('NFC').trim().replace(/\s+/g,' ');
+ if(name.length<2||name.length>32||!/^\p{L}[\p{L}\p{M}\p{N} ._'’\-]+$/u.test(name))
+  throw fail(400,'Elegí un nombre de 2 a 32 caracteres, con letras, números, espacios, puntos o guiones.');
+ return name;
 }
 function appearance(body,previous={}){
- const name=String(body.name??previous.name??'Médico').trim();
- if(name.length<2||name.length>32||/[<>\x00-\x1f]/.test(name))throw fail(400,'Elegí un nombre de 2 a 32 caracteres.');
+ const name=previous.name&&(!Object.hasOwn(body,'name')||body.name===previous.name)?previous.name:doctorName(body.name??'Médico');
  const a=scrubAppearance(body.scrubColor??previous.scrub_color,body.sex??previous.sex);
  return {name,sex:a.sex,scrub_color:a.color,avatar:avatarAssetSpec(a).key};
 }
@@ -57,17 +63,18 @@ export function createAccountGateway({backend,legacy,storage}){
   const tokens=readCookie(headers);if(!tokens)return null;
   let cookies=[];
   try{const verified=await backend.validateSession(tokens);
+   verified.tokens={...verified.tokens,remember:tokens.remember!==false};
    cookies=verified.tokens.access_token!==tokens.access_token?[sessionCookie(verified.tokens)]:[];
    const account=await backend.byAuth(verified.userId);
    if(!account)throw fail(401,'Cuenta médica no disponible.');
    return {...verified,account,actorId:account.actor_id,cookies};
-  }catch(error){error.cookies=error.refreshedTokens?[sessionCookie(error.refreshedTokens)]:cookies;throw error;}
+  }catch(error){error.cookies=error.refreshedTokens?[sessionCookie({...error.refreshedTokens,remember:tokens.remember!==false})]:cookies;throw error;}
  }
  async function socialHeaders(identity){
   const a=identity.account,token=a.social_token;
   await Promise.all([
    storage.set('qa-v1:token:'+createHash('sha256').update(token).digest('hex'),a.actor_id,{ttl:60}),
-   storage.set('qa-v1:user:'+a.actor_id,{id:a.actor_id,handle:a.username,name:a.name,createdAt:a.created_at})
+   storage.set('qa-v1:user:'+a.actor_id,{id:a.actor_id,handle:publicAccount(a).username,name:a.name,createdAt:a.created_at})
   ]);
   return {authorization:'Bearer '+token};
  }
@@ -87,22 +94,28 @@ export function createAccountGateway({backend,legacy,storage}){
   const path=pathOf(request.path),method=request.method||'GET',body=request.body||{};
   let pendingCookies=[];
   try{
-   if(path==='account/session'&&method==='GET'&&!readCookie(request.headers||{}))return reply(200,{account:null});
+   if(path==='account/session'&&method==='GET'&&!readCookie(request.headers||{}))return reply(200,{account:null,enabled:true});
+   if(path==='account/name-status'&&method==='POST'){
+    const name=doctorName(body.name);return reply(200,await backend.nameStatus(name));
+   }
    if(path==='account/register'&&method==='POST'){
     await throttle(request,'register');
-    const username=String(body.username||'').trim().toLowerCase(),password=body.password;
+    const username=body.username?String(body.username).trim().toLowerCase():'med_'+randomUUID().replace(/-/g,'').slice(0,20),password=body.password;
     if(!/^[a-z][a-z0-9_]{2,23}$/.test(username)||typeof password!=='string'||password.length<12||password.length>128)
-     throw fail(400,'Usá un usuario de 3–24 letras, números o guion bajo y una contraseña de 12–128 caracteres.');
-    const actorId=clinicalActorId(body.clientKey),look=appearance(body);
-    if(await backend.byActor(actorId)||await backend.byUsername(username))throw fail(409,'La identidad o el usuario ya tiene una cuenta. Iniciá sesión.');
+     throw fail(400,'Usá una contraseña de 12–128 caracteres y un nombre válido.');
+    const deviceActor=clinicalActorId(body.clientKey),claimed=await backend.byActor(deviceActor),look=appearance(body);
+    if(claimed&&!body.newCharacter||await backend.byUsername(username))throw fail(409,'La identidad o el usuario ya tiene una cuenta. Iniciá sesión.');
+    const actorId=claimed?'qa_'+randomUUID().replace(/-/g,'').slice(0,30):deviceActor;
+    const legacyKey=claimed?randomUUID()+randomUUID():body.clientKey;
+    if(!(await backend.nameStatus(look.name)).available)throw fail(409,'Ese nombre de médico ya está ocupado. Elegí otro.');
     const old=await storage.get('qa-v1:user:'+actorId),user=await backend.createIdentity(username,password);
     let account;
     try{account=await backend.insertAccount({auth_user_id:user.id,actor_id:actorId,username,...look,
-     legacy_key:body.clientKey,social_token:randomUUID()+'-'+randomUUID(),xp:0,cases_resolved:0,
-     legacy_progress:body.legacyProgress&&typeof body.legacyProgress==='object'?{unverified:true,data:body.legacyProgress}:null,
+     legacy_key:legacyKey,social_token:randomUUID()+'-'+randomUUID(),xp:0,cases_resolved:0,
+     legacy_progress:!claimed&&body.legacyProgress&&typeof body.legacyProgress==='object'?{unverified:true,data:body.legacyProgress}:null,
      created_at:old?.createdAt?new Date(old.createdAt).toISOString():new Date().toISOString()});}
     catch(error){await backend.removeIdentity?.(user.id);throw error;}
-    const tokens=await backend.passwordSession(username,password);pendingCookies=[sessionCookie(tokens)];
+    const tokens={...await backend.passwordSession(username,password),remember:body.remember!==false};pendingCookies=[sessionCookie(tokens)];
     const verified=await backend.validateSession(tokens);
     const identity={...verified,actorId,account};await socialHeaders(identity);
     await publishLogin(identity);
@@ -110,9 +123,11 @@ export function createAccountGateway({backend,legacy,storage}){
    }
    if(path==='account/login'&&method==='POST'){
     await throttle(request,'login');
-    const username=String(body.username||'').trim().toLowerCase();
-    if(!/^[a-z][a-z0-9_]{2,23}$/.test(username)||typeof body.password!=='string'||body.password.length>128)throw fail(401,'Usuario o contraseña incorrectos.');
-    const tokens=await backend.passwordSession(username,body.password);pendingCookies=[sessionCookie(tokens)];
+    const name=String(body.name??body.username??'').trim();
+    if(name.length<2||name.length>32||typeof body.password!=='string'||body.password.length>128)throw fail(401,'Nombre o contraseña incorrectos.');
+    const target=await backend.resolveLogin(name);
+    if(!target)throw fail(401,'Nombre o contraseña incorrectos.');
+    const tokens={...await backend.passwordSession(target.username,body.password),remember:body.remember!==false};pendingCookies=[sessionCookie(tokens)];
     const verified=await backend.validateSession(tokens),account=await backend.byAuth(verified.userId);
     if(!account)throw fail(401,'Usuario o contraseña incorrectos.');
     const identity={...verified,account,actorId:account.actor_id};await socialHeaders(identity);
@@ -124,9 +139,9 @@ export function createAccountGateway({backend,legacy,storage}){
    pendingCookies=identity?.cookies||[];
    if(path.startsWith('account/')){
     if(!identity)throw fail(401,'Iniciá sesión para acceder a tu cuenta.');
-    if(path==='account/session'&&method==='GET')return reply(200,{account:await summary(identity,true)},identity.cookies);
+    if(path==='account/session'&&method==='GET')return reply(200,{account:await summary(identity,true),enabled:true},identity.cookies);
     if(path==='account/logout'&&method==='POST'){
-     await backend.rpc('atria_v5_set_active_guard',{p_actor_id:identity.actorId,p_room_id:null,p_session_id:identity.sessionId});
+     // Revoke this device, keeping the guard for explicit takeover on login.
      await backend.logout(identity.tokens);
      if((await storage.get(publisherKey(identity.actorId)))?.sessionId===identity.sessionId)await storage.delete(publisherKey(identity.actorId));
      return reply(200,{ok:true},[sessionCookie(null)]);
@@ -150,7 +165,7 @@ export function createAccountGateway({backend,legacy,storage}){
     throw fail(404,'Operación de cuenta inexistente.');
    }
    if(['register','resume'].includes(path)&&method==='POST'){
-    if(identity)return reply(200,{user:{id:identity.actorId,name:identity.account.name,handle:identity.account.username},token:null,account:await summary(identity)},identity.cookies);
+    if(identity)return reply(200,{user:{id:identity.actorId,name:identity.account.name,handle:publicAccount(identity.account).username},token:null,account:await summary(identity)},identity.cookies);
     if(await backend.byActor(clinicalActorId(body.clientKey)))throw fail(401,'Esta identidad requiere iniciar sesión con contraseña.');
    }
    if(path.startsWith('profiles/')&&method==='GET'){
@@ -169,7 +184,8 @@ export function createAccountGateway({backend,legacy,storage}){
    const result=await legacy.route({...request,headers});
    if(identity&&path==='me'&&result.status===200)result.body.account=await summary(identity);
    return {...result,cookies:identity?.cookies||[]};
-  }catch(error){return reply(error.status||503,{error:error.status?error.message:'No se pudo acceder a la cuenta. Intentá nuevamente.'},error.cookies||pendingCookies);}
+  }catch(error){return reply(error.status||503,{error:error.status?error.message:'No se pudo acceder a la cuenta. Intentá nuevamente.'},
+   path==='account/session'&&error.status===401?[sessionCookie(null)]:error.cookies||pendingCookies);}
  }
  async function signalRoute(request){
   let pendingCookies=[];

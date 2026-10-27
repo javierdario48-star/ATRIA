@@ -1,31 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAccountGateway} from './account-gateway.js';
-import {createV5QaSocialServer} from '../social/room-membership-store.js';
 import {clinicalActorId} from './clinical-http.js';
 
 const key='device-secret-1111111111111111111111111111111111';
-function fixture(){
- const data=new Map(),storage={get:async k=>data.get(k),set:async(k,v)=>data.set(k,structuredClone(v)),delete:async k=>data.delete(k)};
- const legacy=createV5QaSocialServer(storage),rows=new Map(),sessions=new Map();let serial=0;
- const backend={
-  byActor:async id=>[...rows.values()].find(x=>x.actor_id===id)||null,
-  byAuth:async id=>rows.get(id)||null,
-  byUsername:async u=>[...rows.values()].find(x=>x.username===u)||null,
-  async createIdentity(username,password){return {id:'auth-'+(++serial)};},
-  async passwordSession(username,password){const row=await this.byUsername(username);if(!row||password!=='safe-test-password-123')throw Object.assign(Error('invalid credentials'),{status:401});
-   const token='access-'+(++serial),sessionId='session-'+serial;sessions.set(token,{userId:row.auth_user_id,sessionId});return {access_token:token,refresh_token:'refresh-'+serial,expires_in:3600};},
-  async validateSession(tokens){const s=sessions.get(tokens.access_token);if(!s)throw Object.assign(Error('expired'),{status:401});return {...s,tokens};},
-  async logout(tokens){sessions.delete(tokens.access_token);},
-  async insertAccount(row){if(await this.byActor(row.actor_id)||await this.byUsername(row.username))throw Object.assign(Error('conflict'),{status:409});rows.set(row.auth_user_id,structuredClone(row));return row;},
-  async updateAccount(id,change){const r=rows.get(id);Object.assign(r,change);return structuredClone(r);},
-  async award(actorId){const r=await this.byActor(actorId);return {xp:r.xp,casesResolved:r.cases_resolved};},
-  async rpc(){return true;}
- };
- const gate=createAccountGateway({backend,legacy,storage});
- const request=(path,body,headers={})=>gate.route({method:body?'POST':'GET',path,body:body||{},headers});
- return {data,storage,legacy,rows,sessions,backend,gate,request};
-}
+
+import {accountGatewayFixture as fixture} from '../../../qa/v5/account-fixture.mjs';
 const cookie=r=>r.cookies.map(x=>x.split(';')[0]).join('; ');
 test('claim preserves proven device actor and friends; another session recovers server progress without secrets',async()=>{
  const f=fixture();const old=await f.legacy.route({method:'POST',path:'resume',body:{clientKey:key,name:'Doctora Uno'}});
