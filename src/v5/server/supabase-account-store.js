@@ -10,7 +10,8 @@ export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.f
    ...(body?{'Content-Type':'application/json'}:{}),...(accessToken?{Authorization:'Bearer '+accessToken}:{}),...(prefer?{Prefer:prefer}:{})},
    ...(body?{body:JSON.stringify(body)}:{})});
   const text=await response.text();let data;try{data=text?JSON.parse(text):null;}catch{throw error(503,'Respuesta de cuenta inválida.');}
-  if(!response.ok)throw error(response.status===401||response.status===400&&path.includes('/token')?401:data?.code==='23505'?409:response.status>=500?503:400,
+  const sessionEndpoint=path.startsWith('/auth/v1/user')||path.startsWith('/auth/v1/logout')||path.includes('/token');
+  if(!response.ok)throw error(response.status===401||sessionEndpoint&&[400,403,404,422].includes(response.status)?401:data?.code==='23505'?409:response.status>=500?503:response.status===429?429:400,
    path.startsWith('/auth/')?'Nombre o contraseña incorrectos.':data?.code==='23505'?'Ese nombre de médico ya está ocupado. Elegí otro.':'No se pudo guardar la cuenta.');
   return data;
  }
