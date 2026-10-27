@@ -2,8 +2,23 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createShiftFlow,receptionAcuity} from './shift-flow.js';
+import {resolveGuardSelection,guardCaseSequence} from './guard-selection-policy.js';
+import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 const load=x=>JSON.parse(fs.readFileSync(new URL('../content/'+x+'.json',import.meta.url)));
 const content={cases:load('cases'),beds:load('beds')};
+for(const mode of ['solo','apprentice','coop','competitive'])for(const scope of ['random','specialty','specific'])
+ test(`${mode} ${scope}: all six admissions obey the selected pool and restore at the 1440s boundary`,()=>{
+  const policy=resolveGuardSelection(content.cases,Object.keys(CLINICAL_EXECUTORS),{scope,
+   selection:scope==='specialty'?'Gastroenterología':scope==='specific'?'FECAL-001':''});
+  const sequence=guardCaseSequence(policy.caseIds),args={content,mode,roomId:'selected',
+   firstCaseId:sequence[0],allowedCaseIds:policy.caseIds,caseSequence:sequence};
+  const shift=createShiftFlow(args);shift.advance(420);
+  const restored=createShiftFlow({...args,snapshot:shift.checkpoint()});restored.advance(1020);
+  assert.equal(restored.elapsed(),1440);assert.equal(restored.records().length,6);
+  assert.deepEqual(restored.records().map(r=>r.caseId),sequence);
+  if(scope==='specific')assert(restored.records().every(r=>r.caseId==='FECAL-001'));
+  assert.equal(restored.advance(999).length,0);
+ });
 test('24 minute shift has spaced arrivals and uniquely assigned beds',()=>{
  const s=createShiftFlow({content,mode:'coop',firstCaseId:'CIRR-001',roomId:'r'});
  assert.equal(s.advance(0).length,1);assert.equal(s.advance(179).length,0);

@@ -1,0 +1,114 @@
+{
+  "preview": "https://night-shift-clinical-e6fayq4d2-javierdario4878-7324.vercel.app",
+  "physicalDevice": false,
+  "checks": [
+    "real registration, portrait creation and landscape second-device login",
+    "same-account reload retains pending host invitation and both doctors enter",
+    "12 deployed mode/scope combinations, server recovery, fixed shared sequences and manipulation rejection"
+  ],
+  "rewards": [
+    {
+      "scope": "random",
+      "roomId": "scope-reward-71d70c8a-c584-4ff5-b5a5-6990eea1743c",
+      "caseId": "ILEO-001",
+      "patientUid": "scope-reward-71d70c8a-c584-4ff5-b5a5-6990eea1743c:patient",
+      "nativeXP": 109,
+      "factor": 1.5,
+      "awardedXP": 164,
+      "total": 164
+    },
+    {
+      "scope": "specialty",
+      "roomId": "scope-reward-2bb27ddc-291b-478d-a3a4-5193a81363b0",
+      "caseId": "FECAL-001",
+      "patientUid": "scope-reward-2bb27ddc-291b-478d-a3a4-5193a81363b0:patient",
+      "nativeXP": 133,
+      "factor": 1.2,
+      "awardedXP": 160,
+      "total": 324
+    },
+    {
+      "scope": "specific",
+      "roomId": "scope-reward-6d75ed38-3871-45d7-81b0-8fd33c9ee736",
+      "caseId": "FECAL-001",
+      "patientUid": "scope-reward-6d75ed38-3871-45d7-81b0-8fd33c9ee736:patient",
+      "nativeXP": 133,
+      "factor": 1,
+      "awardedXP": 133,
+      "total": 457
+    }
+  ],
+  "accounts": [
+    {
+      "username": "qa_scope_a_mvr10u7i",
+      "actorId": "qa_62f6316c532bf4b3506a98f546c6ee"
+    },
+    {
+      "username": "qa_scope_b_mvr10u7i",
+      "actorId": "qa_a50e8fe7c18f175c660f016d3a74c2"
+    }
+  ],
+  "modes": [
+    {
+      "mode": "solo",
+      "scope": "random",
+      "recovered": true
+    },
+    {
+      "mode": "solo",
+      "scope": "specialty",
+      "recovered": true
+    },
+    {
+      "mode": "solo",
+      "scope": "specific",
+      "recovered": true
+    },
+    {
+      "mode": "apprentice",
+      "scope": "random",
+      "recovered": true
+    },
+    {
+      "mode": "apprentice",
+      "scope": "specialty",
+      "recovered": true
+    },
+    {
+      "mode": "apprentice",
+      "scope": "specific",
+      "recovered": true
+    },
+    {
+      "mode": "coop",
+      "scope": "random",
+      "recovered": true
+    },
+    {
+      "mode": "coop",
+      "scope": "specialty",
+      "recovered": true
+    },
+    {
+      "mode": "coop",
+      "scope": "specific",
+      "recovered": true
+    },
+    {
+      "mode": "competitive",
+      "scope": "random",
+      "recovered": true
+    },
+    {
+      "mode": "competitive",
+      "scope": "specialty",
+      "recovered": true
+    },
+    {
+      "mode": "competitive",
+      "scope": "specific",
+      "recovered": true
+    }
+  ],
+  "pass": true
+}

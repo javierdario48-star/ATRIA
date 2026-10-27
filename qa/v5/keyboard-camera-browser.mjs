@@ -71,7 +71,8 @@ try{
  await page.screenshot({path:out+'/atria-scrubs-preserve-location.png'});
 
  // A new message in the guard uses the same authority, never a second chat.
- await page.locator('#guardButton').click();await page.locator('[data-action="start-guard"]').click();
+ await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();
+ await page.locator('#caseChoice').selectOption('CIRR-001');await page.locator('[data-action="start-guard"]').click();
  for(const key of ['h','o','l','a'])await page.locator('#atriaKeyboard [data-key="'+key+'"]').click();
  await page.locator('#atriaKeyboard [data-key="send"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical?.room?.transcript?.some(x=>x.text==='hola'));

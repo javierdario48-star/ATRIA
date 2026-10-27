@@ -1,5 +1,11 @@
 # Prompt de continuidad — ATRIA 5.0
 
+## Actualización posterior: selección de guardia
+
+Continuar desde el HEAD remoto, posterior a `2820ce5f0939af0b5ed87915927f45a0e8ec63fb`. Leer [el cierre de selección y XP](2026-10-27-guard-selection-results.md): los tres alcances están integrados con admisiones persistentes, invitaciones recuperables y el RPC de progreso existente. No reimplementar ni repetir sus pruebas de aceptación sin un defecto nuevo. La migración de factores ya está aplicada como `20261027182450_atria_v5_guard_selection_rewards`. La velocidad inicial actual es **184,5 px/s**, con máximo asintótico 254,2; la fórmula de 205 px/s descrita más abajo corresponde a la entrega anterior. El reloj actual muestra AM/PM y sol/luna.
+
+Pendiente externo: recibir la imagen original de los dos médicos chibi para integrarla sin rediseñarla. No sustituirla por otra ilustración. Los debriefs conservan los XP clínicos base; el saldo de cuenta incluye el factor verificado. Los invitados sin cuenta conservan práctica local; sus cifras no se convierten en XP autorizado.
+
 Continúa trabajando en `javierdario48-star/ATRIA`, exclusivamente en `atria-5.0-core-rebuild-experimental`. La entrega está en el HEAD que contiene este archivo. Antes de cambiar nada consulta el HEAD remoto y el checkout; no regreses a un hash anterior. El último checkpoint anterior al cierre de esta entrega es `9be8d9a33cb3572604ce0b3fed62cb9efe682d98`; los cambios finales están en su descendiente que incluye este prompt y el informe. Toma el SHA actual de GitHub, no el valor histórico de un chat.
 
 Lee primero `docs/qa/2026-10-27-rpg-results.md` y, si hace falta, `docs/qa/2026-10-27-rpg-progress.md`. No reinicies auditorías, no reconstruyas lo implementado, no copies motores V4 y no repitas los 500 recorridos antiguos para obtener contexto. Si el remoto avanzó, inspecciona sólo la diferencia. No modifiques main, V4 ni las fuentes originales de caracterización clínica. Publica únicamente checkpoints pequeños comprobados, sin pedir confirmación por cada paso.
