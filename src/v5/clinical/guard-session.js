@@ -1,5 +1,6 @@
 import {createRoomAuthority} from '../core/room-authority.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {materializeGuardPatient} from '../content/guard-patient-variation.js';
 import {createNativeClinicalPort} from '../adapters/native-clinical-port.js';
 import {createStudyService} from './studies.js';
 import {createCirrCare} from './cirr-care.js';
@@ -49,8 +50,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   checkpoint.patient.uid!==patient.uid||checkpoint.patient.caseId!==caseData.id||
   JSON.stringify(checkpoint.members)!==JSON.stringify(members)))throw Error('incompatible clinical checkpoint room/patient/model');
  if(checkpoint)progress=createProgressionLedger(checkpoint.progress);
+ const resolvedPatient=materializeGuardPatient(patient,caseData,checkpoint);
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[],
-  ...patientAllergyFacts487(patient),adverseEvents:[]};
+  ...patientAllergyFacts487(resolvedPatient),adverseEvents:[]};
  if(nativePatient.allergies.length){
   const labels=new Map(content.therapies.map(x=>[x.id,x.label]));
   nativePatient.allergyHistoryAnswer='Tengo alergia a '+nativePatient.allergies.map(id=>
