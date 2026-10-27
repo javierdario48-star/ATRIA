@@ -4,7 +4,7 @@ import {validateClinicalCasePack} from './clinical-case-pack.js';
 export function stageClinicalCasePack(pack,registries){
  const required=['executorIds','closurePolicyIds','studyPolicyIds','examPolicyIds',
   'drugIds','progressionIds','rescueIds','existingCaseIds'];
- for(const key of required)if(!Array.isArray(registries?.[key]))
+ for(const key of required)if(!Array.isArray(registries?.[key])||(['executorIds','closurePolicyIds','studyPolicyIds','examPolicyIds'].includes(key)&&!registries[key].length))
   throw Error('missing clinical registry '+key);
  const validation=validateClinicalCasePack(pack,registries);
  if(!validation.ok)return {status:'rejected',errors:validation.errors,cases:[]};
