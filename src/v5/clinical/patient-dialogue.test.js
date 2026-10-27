@@ -193,3 +193,21 @@ test('stable PUD and celiac patients retain factual dialogue after browser setup
   f.s.dispose();
  }
 });
+
+test('variation identity and personality affect speech without changing clinical facts',async()=>{
+ const base=content.cases.find(c=>c.id==='CIRR-001');
+ const modified={...content,cases:content.cases.map(c=>c.id!==base.id?c:{...c,variation:{
+  ageRange:[55,65],firstNames:['Amalia'],lastNames:['Ríos'],personalities:['ansiosa'],
+  openings:['Me siento cansada'],allergies:[],complications:[]}})};
+ const s=createGuardSession({roomId:'variation-dialogue',mode:'solo',actorId:'doctor',actorName:'Doctor',
+  patient:{uid:'patient-variation',caseId:'CIRR-001'},content:modified,resolveContext:()=>({patientUid:'patient-variation',focusedNpc:null})});
+ const p=s.read().patient;
+ assert.equal(p.name,'Amalia Ríos');assert.equal(p.personality,'ansiosa');
+ const a=await s.post({id:'name',text:'¿Cómo te llamas?'});
+ assert.match(answer(a),/Amalia Ríos/);
+ const b=await s.post({id:'symptoms',text:'¿Qué te pasa?'});
+ assert.match(answer(b),/Estoy preocupado/);
+ assert.match(answer(b),/hinchando/);
+ assert.equal(s.read().patient.treatments.length,0);
+ s.dispose();
+});
