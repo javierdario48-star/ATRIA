@@ -668,7 +668,7 @@ export async function createApplication({document,window,content,signal}){
   if(timeBadge){
    timeBadge.hidden=!guard;
    if(guard){
-    ui('guardTimeNow').textContent=clock.time;
+    ui('guardTimeNow').textContent=clock.displayTime;
     ui('guardTimeProgress').textContent=clock.progress;
     timeBadge.setAttribute('aria-label',clock.accessible);
     timeBadge.dataset.ended=String(clock.ended);
