@@ -75,12 +75,28 @@ export function documentMedicationComplications487(p,c,clock){
    sourceEventId:previousOpioid?.sourceEventId??opioid.sourceEventId,
    severity:(previousOpioid?opioid?.respiratoryRisk:observed)?1:0});
  }
- const albumin=confirmedNativeSupportEffects487(p,c,clock.nativeMinute).drugs.albumin;
+ const support=confirmedNativeSupportEffects487(p,c,clock.nativeMinute).drugs;
+ const albumin=support.albumin;
  const previousAlbumin=p.adverseEvents.find(x=>x.kind==='albumin-respiratory-overload'&&x.status==='active');
  if(previousAlbumin||albumin?.toxicity.spo2<0&&p.liveVitals.spo2<94){
   reactions.push({kind:'albumin-respiratory-overload',patientUid:p.uid,drugId:'albumin',
    sourceEventId:previousAlbumin?.sourceEventId??albumin.sourceEventId,
    severity:albumin?.toxicity.spo2<0?1:0});
+ }
+ const pressor=support.vasopressor;
+ const previousPressor=p.adverseEvents.find(x=>x.kind==='vasopressor-excess-response'&&x.status==='active');
+ const [initialSys,initialDia]=String(c.vitals.bp).split('/').map(Number);
+ // Document the EXISTING native excess-rate response only after it has
+ // emerged in measured pressure. Subtracting the inherited toxic component
+ // leaves the ordinary support contribution; no second pressure equation or
+ // new dose/death threshold is introduced here.
+ const pressorObserved=pressor?.active&&pressor.toxicity.sys>0&&
+  (p.liveVitals.sys>initialSys+pressor.offsets.sys-pressor.toxicity.sys||
+   p.liveVitals.dia>initialDia+pressor.offsets.dia-pressor.toxicity.dia);
+ if(pressorObserved||previousPressor){
+  reactions.push({kind:'vasopressor-excess-response',patientUid:p.uid,drugId:'vasopressor',
+   sourceEventId:previousPressor?.sourceEventId??pressor.sourceEventId,
+   severity:pressor?.active&&pressor.toxicity.sys>0?1:0});
  }
  for(const r of reactions){
   const previous=p.adverseEvents.find(x=>x.kind===r.kind&&x.sourceEventId===r.sourceEventId);
@@ -95,7 +111,8 @@ export function documentMedicationComplications487(p,c,clock){
   const event={kind:r.kind,sourceEventId:r.sourceEventId,patientUid:p.uid,
    drugId:r.drugId,atNativeMinute:clock.nativeMinute,atRealSecond:clock.clinicalMinute,
    peakSeverity:r.severity,status:'active',
-   message:r.kind==='albumin-respiratory-overload'?
+   message:r.kind==='vasopressor-excess-response'?
+    'Respuesta presora excesiva tras noradrenalina a tasa elevada: aumento de presión observado más allá del soporte habitual. Reevaluar la tasa y la indicación.':r.kind==='albumin-respiratory-overload'?
     'Sobrecarga respiratoria tras dosis repetidas de albúmina: deterioro de la saturación. Reevaluar el soporte y las nuevas administraciones.':
     r.kind==='opioid-respiratory-depression'?
     'Depresión respiratoria tras morfina: deterioro respiratorio observado con exposición opioide activa. Reevaluar y estabilizar.':r.kind==='severe-drug-allergy'?
