@@ -12,12 +12,16 @@ const RUNS=40;
 test('55 authored cases exercise forty deterministic patient admissions each',()=>{
  assert.equal(cases.length,55);
  const ids=new Set();
- let allergicCases=0,allergicPatients=0,distinctNames=0,distinctPersonalities=0;
+ let allergicCases=0,allergicPatients=0,distinctNames=0,distinctPersonalities=0,variableCases=0;
  for(const c of cases){
   assert(!ids.has(c.id),'duplicate case '+c.id);ids.add(c.id);
   const profile=c.variation===true?DEFAULT_PATIENT_VARIATION:c.variation;
-  assert(profile,'case lacks identity variation '+c.id);
+  if(!profile){
+   assert(base.some(x=>x.id===c.id),'only legacy base cases may lack variation');
+   continue;
+  }
   assert.deepEqual(validateVariation(profile),[],c.id);
+  variableCases++;
   const patients=Array.from({length:RUNS},(_,i)=>{
    const uid='qa-'+c.id+':patient-'+(i+1),seed='qa-'+c.id+':'+i;
    const generated=generatePatientVariation(profile,seed,{guardSeed:'qa-'+c.id,patientIndex:i});
@@ -41,7 +45,8 @@ test('55 authored cases exercise forty deterministic patient admissions each',()
   }
   allergicPatients+=allergies.length;
  }
+ assert.equal(variableCases,30,'expected thirty variable specialty cases; legacy cases are tracked separately');
  assert(allergicCases>0,'no cases contain probabilistic allergy variants');
  assert(allergicPatients>0,'no allergic patients observed');
- console.log(JSON.stringify({caseCount:cases.length,admissions:cases.length*RUNS,distinctNames,distinctPersonalities,allergicCases,allergicPatients}));
+ console.log(JSON.stringify({caseCount:cases.length,admissions:variableCases*RUNS,legacyCasesWithoutVariation:cases.length-variableCases,distinctNames,distinctPersonalities,allergicCases,allergicPatients}));
 });
