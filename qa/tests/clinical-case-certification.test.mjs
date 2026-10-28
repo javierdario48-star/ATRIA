@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
+import {neurologyPack} from '../../src/v5/content/packs/neurology-pack.js';
 import * as certification from '../v5/certify-clinical-cases.mjs';
 import {certifyClinicalCases, runClinicalCaseScenario, deriveClinicalCertificationPlan,
  CLINICAL_CERTIFICATION_PROFILES} from '../v5/certify-clinical-cases.mjs';
@@ -9,6 +10,34 @@ const load=name=>JSON.parse(fs.readFileSync(new URL('../../src/v5/content/'+name
 const content={map:load('hospital'),beds:load('beds'),cases:load('cases'),therapies:load('therapies'),defaultDoses:load('default-doses')};
 const app=content.cases.find(c=>c.id==='APP-001');
 const peri=content.cases.find(c=>c.id==='PERI-SEC-001');
+test('abandonment preserves a single irreversible death when postmortem commands have no bedside target',async()=>{
+ const c=respiratoryPack.cases.find(x=>x.id==='RESP-04'),row=await runClinicalCaseScenario(c,{profile:'abandon',horizon:400,seed:'abandoned-terminal'});
+ assert.equal(row.final.died,true);assert.equal(row.terminalIntegrity.postmortemCommandsRejected,true);
+ assert(Object.values(row.terminalIntegrity).every(x=>x===true));assert.equal(row.final.xp,0);
+});
+for(const id of ['NEUR-03','NEUR-07'])test('neurological certification observes time and delayed native closure for '+id,async()=>{
+ const c=neurologyPack.cases.find(x=>x.id===id),row=await runClinicalCaseScenario(c,{seed:'neuro-closure-'+id,horizon:1440,recovery:true});
+ assert.equal(row.passed,true,JSON.stringify(row.failures));
+ assert.equal(row.closureIntegrity.singleClosureReceipt,true);assert.equal(row.xpReceipts.length,1);
+});
+test('a competent doctor can rescue refractory PE hypoxemia while the real thrombolytic infusion completes',async()=>{
+ const c=respiratoryPack.cases.find(x=>x.id==='RESP-06');
+ assert(c.interventions.some(x=>x.id==='intubation'),'refractory hypoxemia needs an executable airway option');
+ const row=await runClinicalCaseScenario(c,{seed:'pe-refractory-rescue',horizon:1300,recovery:true});
+ assert.equal(row.passed,true,JSON.stringify({failures:row.failures,missing:row.readiness?.missing}));
+ assert(row.treatments.some(t=>t.id==='intubation'&&t.kind==='procedure.performed'));
+ const lysis=row.administrations.find(t=>t.id==='alteplase_pe');
+ assert(lysis.completedAtNativeMinute-lysis.administeredAtNativeMinute>=120-1e-8);
+ const sample=row.studies.find(x=>x.id==='g_resp06_coag_followup');
+ assert(sample.sampledAtNativeMinute>=lysis.completedAtNativeMinute);
+});
+for(const [id,horizon] of [['RESP-02',720],['RESP-03',150],['RESP-05',150]])
+ test('actual specialty transfer closes '+id+' with native support, procedures and one XP receipt',async()=>{
+  const c=respiratoryPack.cases.find(x=>x.id===id),row=await runClinicalCaseScenario(c,{seed:'transfer-'+id,horizon,recovery:true});
+  assert.equal(row.passed,true,JSON.stringify({failures:row.failures,missing:row.readiness?.missing}));
+  assert.equal(row.closureReceipt.destination,row.plan.destination);
+  assert.equal(row.xpReceipts.length,1);assert(row.xpReceipts[0].xp>0);
+ });
 
 test('real public runtime certification produces patient-bound administration, study, closure and XP receipts',async()=>{
  const before=JSON.stringify(content),row=await runClinicalCaseScenario(peri,{content,seed:'real-peritonitis',mode:'solo',horizon:300,recovery:true});

@@ -26,7 +26,7 @@ export function diagnosticMultiplier(p,c,cases){
 }
 export function partialDisposition(p,c,destination,assessment,{cases}={}){
  if(p.caseEnded||p.patientDied)return {ready:false,missing:['Atención ya finalizada.']};
- const rule=GASTRO_CASE_RULES[c.id]||CASE_CLOSURE_RULES_487[c.id];
+ const rule=c.clinicalPolicy?.closure||GASTRO_CASE_RULES[c.id]||CASE_CLOSURE_RULES_487[c.id];
  const allowed=rule?.destinations||[PERITONITIS_DESTINATIONS[c.id]?.({
   sys:p.liveVitals.sys,spo2:p.liveVitals.spo2,baselineVitals:p.baselineVitals
  })].filter(Boolean);
@@ -37,9 +37,9 @@ export function partialDisposition(p,c,destination,assessment,{cases}={}){
   return {ready:false,missing:['El paciente está inestable; no corresponde cerrar con ese destino.']};
  if(destination==='quirofano'&&!csDxMatchesCase487(cases,c.id,p.diagnosis))
   return {ready:false,missing:['Cirugía rechaza el traslado: la impresión diagnóstica no justifica la indicación.']};
- if(['quirofano','uti','procedimiento'].includes(destination)){
-  const service=destination==='quirofano'?'cirugia':destination==='uti'?'uti':'gastro';
-  if(!p.consults?.some(x=>x.id===service&&x.status==='done'&&x.accepted))
+ if(rule?.consult?.[destination]?.length||['quirofano','uti','procedimiento'].includes(destination)){
+  const services=rule?.consult?.[destination]||[destination==='quirofano'?'cirugia':destination==='uti'?'uti':'gastro'];
+  if(!p.consults?.some(x=>services.includes(x.id)&&x.status==='done'&&x.accepted))
    return {ready:false,missing:['El servicio receptor aún no aceptó la derivación. Solicitá la interconsulta y aguardá su respuesta.']};
  }
  const original=assessment?.quality;

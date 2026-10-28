@@ -33,6 +33,14 @@ function isConfirmedTreatment(p,t,id,minute){
    t.administeredAtNativeMinute>minute||
    p.treatments.filter(x=>x.sourceEventId===t.sourceEventId).length!==1)return false;
   if(!completedDelivery(t,minute))return false;
+  if(id==='oxygen'){
+   const device=p.procedures?.oxygen,rows=(p.administrationLog||[]).filter(a=>a.sourceEventId===t.sourceEventId);
+   return ['start','setRate'].includes(t.action)&&t.dose?.unit==='L/min'&&t.dose.amount>0&&
+    device?.patientUid===p.uid&&device.active===true&&device.sourceEventId===t.sourceEventId&&device.flowLpm===t.dose.amount&&
+    rows.length===1&&rows[0].patientUid===p.uid&&rows[0].id===id&&rows[0].action===t.action&&
+    rows[0].dose?.amount===t.dose.amount&&rows[0].dose?.unit===t.dose.unit&&
+    rows[0].administeredAtNativeMinute===t.administeredAtNativeMinute;
+  }
   if(t.route==='procedure'){
    const rows=(p.administrationLog||[]).filter(a=>a.sourceEventId===t.sourceEventId);
    return t.kind==='procedure.performed'&&t.completionStatus==='completed'&&
@@ -52,6 +60,20 @@ function isConfirmedTreatment(p,t,id,minute){
 export function confirmedClinicalTreatment(p,id,minute){
  if(!Number.isFinite(minute)||minute<0)return undefined;
  return p.treatments?.find(t=>isConfirmedTreatment(p,t,id,minute));
+}
+/** Current support is distinct from the historical fact that a dose was given.
+ * Continuous effects must follow the unique active device/rate receipt. */
+export function currentClinicalTreatment(p,id,minute){
+ if(!Number.isFinite(minute)||minute<0)return undefined;
+ if(id==='oxygen')return confirmedClinicalTreatment(p,id,minute);
+ const rows=(p.treatments||[]).filter(t=>t.id===id&&t.action);
+ if(!rows.length)return confirmedClinicalTreatment(p,id,minute);
+ const device=p.procedures?.[id];
+ if(!device?.active||device.patientUid!==p.uid)return undefined;
+ const t=rows.find(t=>t.sourceEventId===device.sourceEventId),dose=t?.infusionDose??t?.dose;
+ if(!t||!['start','setRate'].includes(t.action)||!isConfirmedTreatment(p,t,id,minute)||
+  device.dose?.amount!==dose?.amount||device.dose?.unit!==dose?.unit)return undefined;
+ return t;
 }
 
 /** Validate delivered exposure independently from completed-treatment credit.

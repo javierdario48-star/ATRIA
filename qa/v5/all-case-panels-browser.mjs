@@ -3,7 +3,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
-import {CLINICAL_EXECUTORS} from '../../src/v5/content/clinical-cases.js';
+import {playableClinicalCaseIds} from '../../src/v5/content/clinical-cases.js';
+import {clinicalContent} from '../../src/v5/server/content.js';
+const caseIds=playableClinicalCaseIds(clinicalContent.cases);
 const h=await browserHarness(),out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results';
 await fs.mkdir(out,{recursive:true});
 let page;const errors=[],runs=[];
@@ -11,9 +13,9 @@ try{
  const context=await h.browser.newContext(h.devices['Pixel 5']);page=await context.newPage();page.setDefaultTimeout(15000);
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(h.url);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
- await page.locator('#playerName').fill('Paneles 25 casos');await page.locator('#enterButton').click();
+ await page.locator('#playerName').fill('Paneles clínicos');await page.locator('#enterButton').click();
  const state=()=>page.evaluate(()=>atriaV5.snapshot().clinical);
- for(const mode of ['solo','apprentice'])for(const caseId of Object.keys(CLINICAL_EXECUTORS)){
+ for(const mode of ['solo','apprentice'])for(const caseId of caseIds){
   await page.locator('#guardButton').click();await page.locator('[data-mode="'+mode+'"]').click();
   await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption(caseId);await page.locator('[data-action="start-guard"]').click();
   await page.waitForFunction(id=>atriaV5.snapshot().clinical?.patient.caseId===id,caseId);
@@ -56,10 +58,10 @@ try{
   await page.locator('#guardButton').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical===null);
  }
- assert.equal(runs.length,50);assert.deepEqual(errors,[]);
+ assert.equal(runs.length,caseIds.length*2);assert.deepEqual(errors,[]);
  await fs.writeFile(out+'/all-case-panels-summary.json',JSON.stringify({realBrowser:true,mobileEmulated:'Pixel 5',
-  physicalDevice:false,cases:25,modes:['solo','apprentice'],panelsOpened:200,rectalPhysicianExam:true,runs,errors},null,2));
- console.log('ALL 25 CASE MOBILE PANELS PASS '+JSON.stringify({guards:runs.length,panels:200,errors}));
+  physicalDevice:false,cases:caseIds.length,modes:['solo','apprentice'],panelsOpened:runs.length*4,rectalPhysicianExam:true,runs,errors},null,2));
+ console.log('ALL CERTIFIED CASE MOBILE PANELS PASS '+JSON.stringify({guards:runs.length,panels:runs.length*4,errors}));
  await context.close();
 }catch(error){
  if(page){await page.screenshot({path:out+'/all-case-panels-failure.png'}).catch(()=>{});

@@ -5,6 +5,7 @@ import {createGuardSession} from './guard-session.js';
 import {executePatientDialogue} from './patient-dialogue.js';
 import {createClinicalContent} from '../content/clinical-content.js';
 import {respiratoryPack} from '../content/packs/respiratory-pack.js';
+import {neurologyPack} from '../content/packs/neurology-pack.js';
 const read=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const content={cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')};
 function setup(caseId='APP-001',uid='P1'){
@@ -14,6 +15,19 @@ function setup(caseId='APP-001',uid='P1'){
  return {s,send:text=>s.post({id:'d'+(++n),text}),near:x=>near=x,focus:x=>focus=x};
 }
 const answer=ack=>ack.clinical.map(x=>x.receipt?.answer||'').join(' ');
+test('an unconscious patient retains impaired speech while an authored companion supplies indirect history',async()=>{
+ const c=neurologyPack.cases.find(x=>x.id==='NEUR-06'),uid='witness-history',
+  extended=createClinicalContent(content,{additionalCases:[c]});
+ const s=createGuardSession({roomId:uid,mode:'solo',actorId:'doctor',actorName:'Doctor',
+  patient:{uid,caseId:c.id},content:extended,resolveContext:()=>({patientUid:uid})});
+ try{
+  const reply=await s.post({id:'witness-onset',text:'¿Desde cuándo?'});
+  assert.match(answer(reply),/Familiar acompañante/);assert.match(answer(reply),/12 minutos/);
+  assert.equal(s.read().patient.neurology.verbal,1);
+  const fact=s.read().patient.intentHistory.find(x=>x.id==='onset');
+  assert.equal(fact.historySource.kind,'companion');assert.equal(fact.patientUid,uid);
+ }finally{s.dispose();}
+});
 test('authored specialty patients answer real history through the public session without executing care',async()=>{
  const caseData=respiratoryPack.cases.find(c=>c.id==='RESP-01');
  const uid='specialty-history',clinicalContent=createClinicalContent(content,{additionalCases:[caseData]});

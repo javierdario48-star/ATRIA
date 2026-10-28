@@ -1,5 +1,7 @@
 // UI acceptance on the built application and original durable authority.
 import assert from 'node:assert/strict';
+import {clinicalContent} from '../../src/v5/server/content.js';
+import {guardCaseSpecialty} from '../../src/v5/clinical/guard-selection-policy.js';
 import {browserHarness} from './browser-harness.mjs';
 const h=await browserHarness({durable:true}),errors=[],results=[];
 assert(!process.env.V5_SCOPE_MODE||['solo','apprentice','coop','competitive'].includes(process.env.V5_SCOPE_MODE));
@@ -18,7 +20,7 @@ async function choose(p,mode,scope){
  assert.equal(await p.locator('#guardSpecialtyField').isVisible(),scope==='specialty');
  assert.equal(await p.locator('#guardCaseField').isVisible(),scope==='specific');
  if(scope==='specialty'){
-  assert.deepEqual(await p.locator('#guardSpecialty option').allTextContents(),['Gastroenterología']);
+  assert.deepEqual(await p.locator('#guardSpecialty option').allTextContents(),[...new Set(clinicalContent.cases.map(guardCaseSpecialty))]);
   await p.locator('#guardSpecialty').selectOption('Gastroenterología');
  }
  if(scope==='specific')await p.locator('#caseChoice').selectOption('FECAL-001');

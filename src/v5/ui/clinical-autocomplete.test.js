@@ -5,10 +5,17 @@ import {clinicalCompletions,clinicalVocabulary,activeClinicalClause,
  replaceClinicalClause,shortNursePrefix,spellingSuggestions,
  correctEverydayBeforeSpace} from './clinical-autocomplete.js';
 import {routeWardSpeech} from '../core/speech-router.js';
+import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
 const cases=JSON.parse(fs.readFileSync(new URL('../content/cases.json',import.meta.url)));
 const therapies=JSON.parse(fs.readFileSync(new URL('../content/therapies.json',import.meta.url)));
 const context=id=>({caseId:id,cases,therapies});
 const suggestion=(text,ctx,kind)=>clinicalCompletions(text,ctx).find(x=>!kind||x.kind===kind);
+test('new specialty terms do not turn a valid conversational word into an internal drug substring',()=>{
+ const expanded={caseId:'APP-001',cases,therapies:[...therapies,...Object.values(CLINICAL_TREATMENTS)]};
+ assert.deepEqual(clinicalCompletions('paso',expanded),[]);
+ assert(spellingSuggestions('paso').some(x=>x.label==='pasó'));
+ assert(clinicalCompletions('marcapaso',expanded).some(x=>/marcapas|estimulación/i.test(x.label)));
+});
 test('medical completion searches valid case study, common medical therapy and procedures',()=>{
  const c=context('CIRR-001');
  for(const [partial,label] of [['ceftr','Ceftriaxona'],['hemogra','Hemograma'],

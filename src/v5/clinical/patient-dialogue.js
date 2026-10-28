@@ -91,8 +91,10 @@ export function executePatientDialogue(p,c,cmd,clock){
   context.subjective={answer:text,patientUid:p.uid,eventId:cmd.eventId,nativeMinute:clock.nativeMinute};return text;
  }
  const raw=cmd.intent.sourceText,n=normalize(raw),verbal=observed.neuro.verbal;
+ const informant=c.clinicalPolicy?.historySource,
+  proxyHistory=(verbal==null||verbal<=3)&&['companion','clinical-record'].includes(informant?.kind)&&informant.label;
  const greeting=/^(hola|hpla|holq|ola|buenas|buen dia|buenos dias|buenas tardes|buenas noches)\b/.test(n);
- if(verbal==null||verbal<=3)answers.push(verbal==null?'(No puede dar una respuesta verbal evaluable en este momento.)':
+ if((verbal==null||verbal<=3)&&!proxyHistory)answers.push(verbal==null?'(No puede dar una respuesta verbal evaluable en este momento.)':
   verbal===3?'Dolor… panza…':verbal===2?'Mmm…':'(No responde.)');
  else{
   // Preserve actual questions after greetings and independently process each
@@ -176,7 +178,7 @@ export function executePatientDialogue(p,c,cmd,clock){
     answers.push(note('interview:symptoms',profile.symptoms,'native.patient-profile.symptoms').answer);
    }
   }
-  if(greeting){
+  if(greeting&&!proxyHistory){
    if(!answers.length)answers.push(note('interview:symptoms',profile.symptoms,'native.patient-profile.symptoms').answer);
    answers[0]='Hola, doctor. '+answers[0];
   }
@@ -188,7 +190,10 @@ export function executePatientDialogue(p,c,cmd,clock){
  const canStyle=verbal>=5&&rawAnswer&&!sensitiveHistory&&!/alergia|urticaria|anafilaxia/i.test(rawAnswer);
  const prefix={anxious:'Estoy preocupado. ',reserved:'Bueno… ',talkative:'Le cuento, doctor. ',
   irritable:'Esto me tiene molesto. ',scared:'Tengo miedo. ',uncooperative:'No tengo muchas ganas de hablar. '}[personality];
- const answer=canStyle&&prefix?prefix+rawAnswer:rawAnswer;
+ if(proxyHistory)for(const entry of p.intentHistory)if(entry.eventId===cmd.eventId){
+  entry.historySource={kind:informant.kind,label:informant.label};entry.source='indirect-history:'+entry.source;
+ }
+ const answer=proxyHistory&&rawAnswer?informant.label+' (anamnesis indirecta): '+rawAnswer:canStyle&&prefix?prefix+rawAnswer:rawAnswer;
  const receipt={patientUid:p.uid,eventId:cmd.eventId,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,
   source:'native.patient-dialogue',...(answer?{answer}:{}),message:answer||'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'};
  return {status:answer?'executed':'rejected',patientUid:p.uid,eventId:cmd.eventId,

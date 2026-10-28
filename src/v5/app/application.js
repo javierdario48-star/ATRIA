@@ -9,7 +9,7 @@ import {createPresentationTimeline} from '../render/presentation-timeline.js';
 import {createGuardSession} from '../clinical/guard-session.js';
 import {isExaminationCommand} from '../clinical/exam-contract.js';
 import {formatGuardTime} from '../ui/guard-time.js';
-import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {playableClinicalCaseIds} from '../content/clinical-cases.js';
 import {eligibleGuardCases,GUARD_SCOPES,guardCaseSpecialty,guardCaseSequence} from '../clinical/guard-selection-policy.js';
 import {createCooperativeLink} from '../social/cooperative-link.js';
 import {createAccountClient} from '../social/account-client.js';
@@ -57,6 +57,7 @@ export function readProfile(storage){
 
 /** Exactly one owner for boot, input listeners, RAF and all mode transitions. */
 export async function createApplication({document,window,content,signal}){
+ const playableIds=new Set(playableClinicalCaseIds(content.cases));
  const rootLifecycle=new Lifecycle(),scope=rootLifecycle.enter('application');
  const account=createAccountClient({window});
  let progress;try{progress=createProgressionLedger(JSON.parse(window.localStorage.getItem(PROGRESS_KEY)||'{}'));}catch{progress=createProgressionLedger();}
@@ -115,7 +116,7 @@ export async function createApplication({document,window,content,signal}){
  // Unsupported catalog cases remain navigable, but subsequent arrivals rotate
  // only among cases with certified clinical executors.
  const localShift=createLocalShift({caseIds:content.cases.map(c=>c.id),
-  rotationCaseIds:Object.keys(CLINICAL_EXECUTORS)});
+  rotationCaseIds:[...playableIds]});
  const hospitalAudio=createHospitalAudio({window,storage:window.localStorage});
  let audioPatient=null,lastAudioRead=-Infinity;
  const chatSuggestions=ui('chatSuggestions'),nurseQuick=ui('nurseQuickButton');
@@ -235,7 +236,7 @@ export async function createApplication({document,window,content,signal}){
   try{const p=await social.readPlayerProfile(userId);
    if(!dialog.open||dialog.dataset.panel!=='lobby-person'||selectedLobbyPlayerId!==userId)return;
    open(playerProfileCardHTML(p,{friendship:friendStatus(social.state(),userId),canInvite:world.snapshot().phase==='lobby',
-    cases:content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id))}),'lobby-person');
+    cases:content.cases.filter(c=>playableIds.has(c.id))}),'lobby-person');
    renderer.drawAvatar(ui('socialProfileAvatar'),{color:p.scrubColor,sex:p.sex});
   }catch(error){if(dialog.open&&dialog.dataset.panel==='lobby-person'){
    if(person)open('<h2>'+esc(person.name)+'</h2><p>Perfil no disponible en este momento.</p><div class="actions"><button data-action="close">Cerrar</button></div>','lobby-person');
@@ -244,7 +245,7 @@ export async function createApplication({document,window,content,signal}){
  }
  async function inviteColleagues(ids,caseId,mode='coop',guardSelection={scope:'specific',selection:caseId}){
   if(invitingColleagues||coopRoomId)return;
-  if(!Object.hasOwn(CLINICAL_EXECUTORS,caseId)){toast('Este caso todavía no tiene atención completa.');return;}
+  if(!playableIds.has(caseId)){toast('Este caso todavía no tiene atención completa.');return;}
   if(!ids.length){toast('Elegí al menos un médico conectado.');return;}
   invitingColleagues=true;
   cancelSharedIntent();coopCaseId=caseId;coopGuardSelection=guardSelection;
@@ -264,7 +265,7 @@ export async function createApplication({document,window,content,signal}){
   if(now<nextCooperativeAdmission||coopRoomId||durableStarting||durableJoining)return;
   const state=social.state(),room=state.room,role=social.isHost()?'host':'guest';
   if(room&&role==='host'&&!coopCaseId&&room.guardSelection){
-   const p=room.guardSelection,eligible=eligibleGuardCases(content.cases,Object.keys(CLINICAL_EXECUTORS),p.scope,p.selection);
+   const p=room.guardSelection,eligible=eligibleGuardCases(content.cases,[...playableIds],p.scope,p.selection);
    if(eligible.length){coopCaseId=eligible[0].id;coopGuardSelection=p;cooperativeFlow.begin('host');}
   }
   if(!room||role==='host'&&!coopCaseId||
@@ -364,7 +365,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function attachDurableRoom(room,client){
   const current=client.read(),spatial=client.snapshotSpatial();
-  if(!current?.patient?.uid||!Object.hasOwn(CLINICAL_EXECUTORS,current.patient.caseId))
+  if(!current?.patient?.uid||!playableIds.has(current.patient.caseId))
    throw Error('Invalid persistent clinical session');
   coopRoomId=room.id;cooperativeFlow.bind(room.id);announcedClosure=null;announcedDeathUid=null;
   lastReceivedPatientCount=current.shift?.patients.length||1;lastSelectedPatientUid=current.patient.uid;shiftEndedAnnounced=false;
@@ -470,7 +471,7 @@ export async function createApplication({document,window,content,signal}){
   }
   if(durableClient)return;
   if(!coopRoomId&&packet.kind==='state'&&sender===social.state().room?.hostUserId&&cooperativeFlow.mayEnter('guest',{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:social.state().recovering})){
-   const room=social.state().room;if(packet.roomId!==room.id||!Object.hasOwn(CLINICAL_EXECUTORS,packet.clinical?.patient?.caseId))return;
+   const room=social.state().room;if(packet.roomId!==room.id||!playableIds.has(packet.clinical?.patient?.caseId))return;
    coopRoomId=room.id;cooperativeFlow.bind(room.id);announcedClosure=null;announcedDeathUid=null;
    lastReceivedPatientCount=1;lastSelectedPatientUid=packet.clinical.patient.uid;shiftEndedAnnounced=false;
    world=createWorld(content,{...profile,id:social.state().user.id});world.enterGuard({mode:'coop',caseId:packet.clinical.patient.caseId,
@@ -761,7 +762,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function beginLocalPatient(caseId,{continuation=false,allowedCaseIds=null}={}){
   if(continuation)return receiveNextLocalPatient();
-  if(!Object.hasOwn(CLINICAL_EXECUTORS,caseId)){
+  if(!playableIds.has(caseId)){
    toast('Este caso todavía no tiene ejecutor clínico completo.');return false;
   }
   if(!localShift.begin({caseId}))return false;
@@ -802,10 +803,10 @@ export async function createApplication({document,window,content,signal}){
    <label><input type="radio" name="guardScope" value="random" checked> ${GUARD_SCOPES.random.label} · ×1,5 XP</label>
    <label><input type="radio" name="guardScope" value="specialty"> ${GUARD_SCOPES.specialty.label} · ×1,2 XP</label>
    <label><input type="radio" name="guardScope" value="specific"> ${GUARD_SCOPES.specific.label} · ×1,0 XP</label></fieldset>
-   <label class="field" id="guardSpecialtyField" hidden>Especialidad<select id="guardSpecialty">${[...new Set(content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id)).map(guardCaseSpecialty))].map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}</select></label>
-   <label class="field" id="guardCaseField" hidden>Patología<select id="caseChoice">${content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id)).map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join("")}</select></label>
+   <label class="field" id="guardSpecialtyField" hidden>Especialidad<select id="guardSpecialty">${[...new Set(content.cases.filter(c=>playableIds.has(c.id)).map(guardCaseSpecialty))].map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}</select></label>
+   <label class="field" id="guardCaseField" hidden>Patología<select id="caseChoice">${content.cases.filter(c=>playableIds.has(c.id)).map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join("")}</select></label>
    ${['coop','competitive'].includes(draftMode)?'<p>Invitar colegas conectados</p><div id="coopDoctors"></div>':''}
-   <p class="note">25 casos clínicos con evaluación, estudios, tratamientos y decisión de destino (alta, observación, sala, UTI, procedimiento o quirófano). El cierre requiere las condiciones clínicas de cada caso; una derivación no equivale a una operación realizada.</p>
+   <p class="note">${playableIds.size} casos clínicos con evaluación, estudios, tratamientos y decisión de destino (alta, observación, sala, UTI, procedimiento o quirófano). El cierre requiere las condiciones clínicas de cada caso; una derivación no equivale a una operación realizada.</p>
    <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);renderSocialLists();
  }
  function updateTypingAssistance(){
@@ -1116,7 +1117,7 @@ export async function createApplication({document,window,content,signal}){
   if(button.dataset.action==='start-guard'){
    const scope=document.querySelector('input[name="guardScope"]:checked')?.value||'random';
    const selection=scope==='specific'?ui('caseChoice').value:scope==='specialty'?ui('guardSpecialty').value:'';
-   const allowedCases=eligibleGuardCases(content.cases,Object.keys(CLINICAL_EXECUTORS),scope,selection);
+   const allowedCases=eligibleGuardCases(content.cases,[...playableIds],scope,selection);
    if(!allowedCases.length){toast('No hay casos clínicos jugables para esta selección.');return;}
    const chosenCase=allowedCases[0].id;
    const guardSelection={scope,selection};

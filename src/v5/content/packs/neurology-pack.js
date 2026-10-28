@@ -146,7 +146,7 @@ export const neurologyCaseDefinitions = [
     clopidogrel: {requiredStudies: ['g_neur03_ct'], requiresNoIntracranialBleed: true, requiresSafeSwallowOrEnteralTube: true, excludeTraits: ['activeBleeding', 'intracranialBleed'], afterThrombolysisMinutes: 1440}},
    regimens: {swallow_screen: {safe: true}, aspirin: {dose: {amount: 160, unit: 'mg', display: 'Aspirina 160 mg oral inicial, luego 81–100 mg/día'}, route: 'oral', intervalMinutes: 1440},
     clopidogrel: {dose: {amount: 300, unit: 'mg', display: 'Clopidogrel 300 mg oral de carga, luego 75 mg/día'}, route: 'oral', intervalMinutes: 1440}},
-   closure: {destinations: ['observacion', 'sala'], treatment: [['aspirin', 'clopidogrel', 'stroke_prevention']], requiredStudies: ['g_neur03_ct', 'g_neur03_vascular', 'g_neur03_ecg'], study: [],
+   closure: {destinations: ['observacion', 'sala'], minimumObservationMinutes: 20, treatment: [['aspirin', 'clopidogrel', 'stroke_prevention']], requiredStudies: ['g_neur03_ct', 'g_neur03_vascular', 'g_neur03_ecg'], study: [],
     requiredExams: ['neurological:all'], consult: {observacion: ['neurology'], sala: ['neurology']},
     summary: 'AIT de alto riesgo con déficit resuelto: observación/internación para estudio urgente y prevención secundaria. Doble antiagregación breve por 21 días, luego monoterapia según etiología; no alta sin circuito rápido garantizado.'},
    traits: ['stroke', 'highRiskTIA'], neurologyBaseline: {eye: 4, verbal: 5, motor: 6, nihss: 0, focalDeficit: 'Ninguno en la evaluación actual'},
@@ -249,8 +249,8 @@ export const neurologyCaseDefinitions = [
   id: 'NEUR-06', specialty: 'Neurología', title: 'Estado epiléptico convulsivo con necesidad de segunda línea', difficulty: 4,
   chief: 'Convulsiones generalizadas persistentes sin recuperar conciencia.', opening: 'Familiar: Lleva más de diez minutos convulsionando y no volvió a despertarse entre los episodios.', ageRange: [24, 42],
   variation: {backgroundHistory: [
-   {"id": "esguince-remoto", "history": {"pmh": "Epilepsia conocida; sin traumatismo ni infección reciente. No antecedente de alcoholismo. De adolescente tuve un esguince de tobillo, ya resuelto; antes de esta crisis no tenía limitaciones por eso."}},
-   {"id": "dermatitis-infantil", "history": {"pmh": "Epilepsia conocida; sin traumatismo ni infección reciente. No antecedente de alcoholismo. De niño tuve dermatitis leve que desapareció; no uso corticoides ni medicación habitual por ese antecedente."}}
+   {"id": "esguince-remoto", "history": {"pmh": "Epilepsia conocida; sin traumatismo ni infección reciente. No antecedente de alcoholismo. De adolescente tuvo un esguince de tobillo, ya resuelto; antes de esta crisis no tenía limitaciones por eso."}},
+   {"id": "dermatitis-infantil", "history": {"pmh": "Epilepsia conocida; sin traumatismo ni infección reciente. No antecedente de alcoholismo. De niño tuvo dermatitis leve que desapareció; no usa corticoides ni medicación habitual por ese antecedente."}}
   ]},
   history: {
    onset: 'Crisis tónico-clónica de 12 minutos con episodios consecutivos y sin recuperación de conciencia.',
@@ -281,6 +281,7 @@ export const neurologyCaseDefinitions = [
     requiredExams: ['neurological:all'], consult: {uti: ['uti', 'neurology']}, urgentStudyBypass: true,
     summary: 'Tratamiento secuencial confirmado y UTI/neurología acepta traslado con monitorización respiratoria y EEG si no recupera conciencia. Cese motor no prueba ausencia de estado no convulsivo ni recuperación inmediata.'},
    traits: ['seizure', 'statusEpilepticus'],
+   historySource: {kind:'companion',label:'Familiar acompañante'},
    neurologyBaseline: {eye: 1, verbal: 1, motor: 4, seizureActive: true, focalDeficit: 'No valorable durante crisis', recoveryDelayMinutes: 30, mayRemainPostictal: true},
    observationResponses: [
     {allOf: ['lorazepam', 'levetiracetam'], delay: 2, peak: 10, neurology: {seizureActive: false, postictal: true}},

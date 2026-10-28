@@ -1,7 +1,7 @@
 // Declarative targets consumed by the EXISTING acute-case vital writer.
 // These game-scale response envelopes are not patient PK/prognostic estimates.
 // This module never writes liveVitals, death, the clock, closure or rewards.
-import {confirmedClinicalTreatment,isDeliveredClinicalAdministration} from './receipts.js';
+import {currentClinicalTreatment,isDeliveredClinicalAdministration} from './receipts.js';
 import {summarizeIVExposures} from './medication-exposure.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {evaluateComplicationCandidate} from './complication-eligibility.js';
@@ -18,7 +18,7 @@ function checkMinute(minute){if(!Number.isFinite(minute)||minute<0)throw Error('
  * satisfy closure before completion. It must be an owned, unique delivery row;
  * an order, a consultation or a preparation has no physiological effect. */
 export function deliveredClinicalTreatment(patient,id,minute){
- const complete=confirmedClinicalTreatment(patient,id,minute);
+ const complete=currentClinicalTreatment(patient,id,minute);
  if(complete)return {...complete,deliveryFraction:1};
  const rows=(patient.administrationLog||[]).filter(row=>row.id===id&&row.status==='administering'&&
   isDeliveredClinicalAdministration(patient,row,minute));
@@ -81,6 +81,7 @@ export function advanceClinicalComplications(patient,caseData,minute){
  patient.policyState??={nativeMinute:0,complications:[]};
  if(minute+1e-8<patient.policyState.nativeMinute)throw Error('clinical policy clock cannot run backwards');
  const state=patient.policyState;
+ const previousNativeMinute=state.nativeMinute;
  state.nativeMinute=minute;state.complications??=[];
  const out=zero(),selected=new Set((patient.variation?.complicationCandidates||[]).map(x=>x.id));
  for(const candidate of caseData.clinicalPolicy.complications||[]){
@@ -93,18 +94,27 @@ export function advanceClinicalComplications(patient,caseData,minute){
    if(eligibility.status!=='eligible')continue;
    episode={id:candidate.id,type:candidate.type||'clinical-deterioration',manifestation:candidate.manifestation,
     ...(candidate.neurology?{neurology:structuredClone(candidate.neurology)}:{}),
-    onsetAt:minute,status:'active',severity:0};state.complications.push(episode);
+    onsetAt:minute,status:'active',severity:0,lastEvaluatedAt:minute,recoveryRemaining:1};state.complications.push(episode);
   }
   if(episode.status==='recovered')continue;
-  const all=(candidate.rescueAllOf||[]).map(id=>confirmedClinicalTreatment(patient,id,minute));
-  const any=(candidate.rescueAnyOf||[]).map(id=>confirmedClinicalTreatment(patient,id,minute)).filter(Boolean);
+  const all=(candidate.rescueAllOf||[]).map(id=>currentClinicalTreatment(patient,id,minute));
+  const any=(candidate.rescueAnyOf||[]).map(id=>currentClinicalTreatment(patient,id,minute)).filter(Boolean);
   const rescued=(all.length||candidate.rescueAnyOf?.length)&&all.every(Boolean)&&(!candidate.rescueAnyOf?.length||any.length);
-  if(rescued&&episode.rescueAt===undefined){
+  const previousAt=episode.lastEvaluatedAt??Math.max(episode.onsetAt,previousNativeMinute);
+  let remaining=episode.recoveryRemaining??(episode.rescueAt===undefined?1:
+   rescueClinicalComplication(candidate,Math.max(0,previousAt-episode.rescueAt)));
+  if(rescued){
    const evidence=[...all,...(any.length?[any.reduce((a,b)=>a.administeredAtNativeMinute<b.administeredAtNativeMinute?a:b)]:[])];
-   episode.rescueAt=Math.max(episode.onsetAt,...evidence.map(t=>t.administeredAtNativeMinute));
+   const evidenceAt=Math.max(episode.onsetAt,...evidence.map(t=>t.completedAtNativeMinute??t.administeredAtNativeMinute));
+   episode.rescueAt??=evidenceAt;
    episode.rescueEvents=evidence.map(t=>t.sourceEventId);episode.status='recovering';
+   remaining=Math.max(0,remaining-Math.max(0,minute-Math.max(previousAt,evidenceAt))/candidate.recoveryMinutes);
+  }else{
+   if(episode.status==='recovering')episode.rescueInterruptedAt=minute;
+   if(episode.rescueAt!==undefined)remaining=Math.min(1,remaining+(minute-previousAt)/candidate.riseMinutes);
+   episode.status='active';
   }
-  const remaining=episode.rescueAt===undefined?1:rescueClinicalComplication(candidate,minute-episode.rescueAt);
+  episode.lastEvaluatedAt=minute;episode.recoveryRemaining=remaining;
   const elapsed=Math.max(0,minute-episode.onsetAt);
   episode.severity=clamp(elapsed/candidate.riseMinutes)*remaining;
   if(remaining===0){episode.status='recovered';episode.recoveredAt=minute;}

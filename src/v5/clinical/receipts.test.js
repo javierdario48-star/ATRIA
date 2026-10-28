@@ -2,6 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {confirmedClinicalTreatment} from './receipts.js';
 import * as receipts from './receipts.js';
+test('native oxygen support is confirmed by its matching administration and active device',()=>{
+ const t={id:'oxygen',patientUid:'p',sourceEventId:'oxygen-start',action:'start',
+  dose:{amount:4,unit:'L/min',device:'nasal-cannula'},administeredAtNativeMinute:2};
+ const p={uid:'p',treatments:[t],administrationLog:[structuredClone(t)],
+  procedures:{oxygen:{patientUid:'p',sourceEventId:'oxygen-start',active:true,flowLpm:4}}};
+ assert.equal(confirmedClinicalTreatment(p,'oxygen',3),t);
+ assert.equal(confirmedClinicalTreatment(p,'oxygen',1),undefined);
+ p.procedures.oxygen.flowLpm=2;assert.equal(confirmedClinicalTreatment(p,'oxygen',3),undefined);
+ p.procedures.oxygen.flowLpm=4;p.administrationLog[0].patientUid='other';
+ assert.equal(confirmedClinicalTreatment(p,'oxygen',3),undefined);
+ p.administrationLog[0].patientUid='p';p.procedures.oxygen.active=false;
+ assert.equal(confirmedClinicalTreatment(p,'oxygen',3),undefined);
+});
 
 for(const route of ['iv','oral','inhaled','sc','im'])test('confirmed administration supports '+route+' without trusting an order',()=>{
  const t={id:'drug',patientUid:'p',sourceEventId:'e',administeredAtNativeMinute:2,route,dose:{amount:1,unit:'mg'},completionStatus:'completed'};

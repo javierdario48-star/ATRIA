@@ -11,6 +11,15 @@ import {readCertifiedCaseCatalog, CERTIFIED_CASE_CATALOG_KIND, CERTIFIED_CASE_CA
 export const DEFAULT_CERTIFIED_CASE_CATALOG_PATH = fileURLToPath(new URL('../src/v5/content/certified-case-packs.json', import.meta.url));
 const emptyCatalog = () => ({schemaVersion: CERTIFIED_CASE_CATALOG_SCHEMA_VERSION, kind: CERTIFIED_CASE_CATALOG_KIND, packs: []});
 const rejected = errors => ({ok: false, status: 'rejected', errors});
+// The full public-command trace remains a QA artifact. Shipping a case needs
+// its native proofs and trace digest, not repeated copies of every room view.
+export function compactClinicalCertificationEvidence(result){
+ const fields=['caseId','passed','profile','mode','seed','authority','patientUid','checks','integrityChecks',
+  'initial','final','history','examLog','studies','administrations','treatments','consultations',
+  'complications','adverseEvents','closureReceipt','xpReceipts','nursing','recovery','recoveryRequested',
+  'reception','evidenceDigest','outcome','failures','closureIntegrity','terminalIntegrity','firstMeaningfulPhysiologicalDelta'];
+ return {...result,evidence:result.evidence.map(row=>Object.fromEntries(fields.filter(k=>Object.hasOwn(row,k)).map(k=>[k,row[k]])))};
+}
 
 async function writeAtomically(outputPath, bytes, fileSystem) {
  const temporaryPath = resolve(dirname(outputPath), '.' + basename(outputPath) + '.' + process.pid + '.' + randomUUID() + '.tmp');
@@ -69,13 +78,13 @@ export async function importClinicalCasePack({packPath, outputPath = DEFAULT_CER
   if (certificate.status !== 'certified') return rejected(certificate.errors);
   const activation = registry.activate(certificate);
   if (activation.status !== 'activated') return rejected(activation.errors);
-  const nextArtifact = {...artifact, packs: [...artifact.packs, {
+  const nextArtifact = {...artifact, packs: [...artifact.packs.map(stored=>({...stored,evidence:compactClinicalCertificationEvidence(stored.evidence)})), {
    // Preserve the exact raw pack, including author metadata covered by digest.
-   pack, digest: certificate.digest, dependencies: certificate.dependencies, evidence: certificate.evidence
+   pack, digest: certificate.digest, dependencies: certificate.dependencies, evidence: compactClinicalCertificationEvidence(certificate.evidence)
   }]};
   const finalCatalog = readCertifiedCaseCatalog(nextArtifact, registries);
   if (!finalCatalog.ok) return rejected(finalCatalog.errors.map(error => 'activated artifact: ' + error));
-  await writeAtomically(absoluteOutputPath, JSON.stringify(nextArtifact, null, 2) + '\n', fileSystem);
+  await writeAtomically(absoluteOutputPath, JSON.stringify(nextArtifact) + '\n', fileSystem);
   return {ok: true, status: 'activated', errors: [], ...summary, catalogCaseCount: finalCatalog.cases.length};
  } catch (error) { return rejected(['case pack import failed: ' + (error?.message || String(error))]); }
  finally {
@@ -119,8 +128,10 @@ export async function runClinicalCasePackCli(argv = process.argv.slice(2)) {
  if (options.help) { process.stdout.write(usage); return 0; }
  try {
   const {CLINICAL_POLICY_REGISTRIES} = await import('../src/v5/clinical/clinical-policy-registry.js');
+  const originalCases=JSON.parse(await fs.readFile(new URL('../src/v5/content/cases.json',import.meta.url),'utf8'));
+  const registries={...CLINICAL_POLICY_REGISTRIES,existingCaseIds:originalCases.map(c=>c.id)};
   const certificationRunner = options.activate ? (await import('../qa/v5/certify-clinical-cases.mjs')).certifyClinicalCases : undefined;
-  const result = await importClinicalCasePack(options, {registries: CLINICAL_POLICY_REGISTRIES, certificationRunner});
+  const result = await importClinicalCasePack(options, {registries, certificationRunner});
   (result.ok ? process.stdout : process.stderr).write(JSON.stringify(result, null, 2) + '\n');
   return result.ok ? 0 : 1;
  } catch (error) { process.stderr.write(JSON.stringify(rejected(['clinical runtime import failed: ' + error.message]), null, 2) + '\n'); return 1; }

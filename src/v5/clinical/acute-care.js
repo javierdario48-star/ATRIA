@@ -64,6 +64,8 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   if(p.pendingTreatments.length)return rejected(cmd,'pending-clinical-treatment',
    'Esperá la administración pendiente antes de completar el traslado.');
   const assessed=readiness(cmd.intent.id);
+  if(c.clinicalPolicy&&!cmd.intent.partial&&!assessed?.ready)
+   return rejected(cmd,'closure-not-ready',(assessed?.missing||['Destino no disponible.']).join(' '));
   const evaluation=partialDisposition(p,c,cmd.intent.id,assessed,{cases});
   if(!evaluation.ready)return rejected(cmd,'transfer-not-authorized',evaluation.missing.join(' '));
   return finalize(cmd,evaluation);

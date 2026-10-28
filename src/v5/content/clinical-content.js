@@ -18,7 +18,9 @@ export function createClinicalContent(base,{additionalCases=[]}={}){
  })}))];
  const content={...base,cases,therapies:[...therapies.values()],defaultDoses:{...base.defaultDoses,
   ...Object.fromEntries(Object.values(CLINICAL_TREATMENTS).map(t=>[t.id,t.dose]))}};
- previousContents.set(content,[base]);return content;
+ // Guards created with the expanded formulary but before pack activation
+ // retain that exact source-owned revision as well as the original catalog.
+ previousContents.set(content,additionalCases.length?[base,createClinicalContent(base)]:[base]);return content;
 }
 // Old guards retain their original content/selection/reward contract. Only an
 // exact hash of a source-owned previous revision may be restored as that revision.

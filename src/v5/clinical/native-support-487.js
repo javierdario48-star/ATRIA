@@ -36,8 +36,9 @@ export function confirmedNativeSupportEffects487(p,c,atNativeMinute){
      infusion.moleculeId!=='norepinephrine'||infusion.dose?.amount!==row.dose?.amount)
      throw Error('native pressor requires the confirmed active infusion');
    }
-   if(!septic)Object.assign(own,effects[id]);
-   else if(id==='vasopressor'){
+   const policyOwnsBenefit=c?.clinicalPolicy?.responses?.some(r=>r.allOf?.includes(id)||r.anyOf?.includes(id));
+   if(!policyOwnsBenefit&&!septic)Object.assign(own,effects[id]);
+   else if(!policyOwnsBenefit&&id==='vasopressor'){
     if(!p.phys||!Number.isFinite(p.phys.effectiveVolume))throw Error('native pressor needs owned sepsis physiology');
     const doseFactor=Math.max(.55,Math.min(1.6,Number(row.dose.amount||.05)/.05));
     const volFactor=Math.max(.45,Math.min(1.05,.35+p.phys.effectiveVolume));

@@ -167,14 +167,10 @@ function collectReceipts(state){
  }
  return receipts;
 }
-function actualTreatment(p,id){
+function actualTreatment(p,id,minute){
  if(id==='iv')return p.venousAccessCount>0&&p.procedures.iv?.patientUid===p.uid;
  if(id==='monitor')return p.procedures.monitor?.connected&&p.procedures.monitor.patientUid===p.uid;
- return p.treatments.some(t=>t.id===id&&t.patientUid===p.uid&&typeof t.sourceEventId==='string'&&
-  Number.isFinite(t.administeredAtNativeMinute)&&(!t.dose||p.administrationLog.some(a=>
-   a.patientUid===p.uid&&a.sourceEventId===t.sourceEventId&&a.id===t.id&&
-   a.administeredAtNativeMinute===t.administeredAtNativeMinute&&
-   a.dose?.amount===t.dose.amount&&a.dose?.unit===t.dose.unit)));
+ return !!confirmedClinicalTreatment(p,id,minute);
 }
 
 /** A read-only decision over evidence collected at the public runtime boundary.
@@ -265,7 +261,7 @@ function finalEvidence(row,view,checkpoint,c,plan){
   if(['heart','lungs'].includes(region)&&technique==='auscultation')return !!p.examFindings?.thorax?.auscultation;
   return row.examLog.some(x=>x.regionId===region&&x.technique===technique)||!!p.examFindings?.[region]?.[technique];
  });
- const nativeTreatments=plan.treatmentIds.every(id=>actualTreatment(p,id));
+ const nativeTreatments=plan.treatmentIds.every(id=>actualTreatment(p,id,s.clock.nativeMinute));
  const administrativeIntegrity=row.administrations.every(a=>a.patientUid===p.uid&&a.sourceEventId&&
   p.treatments.filter(t=>t.sourceEventId===a.sourceEventId&&t.id===a.id).length===1)&&
   new Set(row.administrations.map(x=>x.sourceEventId)).size===row.administrations.length;
@@ -403,9 +399,17 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
      const eligibility=c.clinicalPolicy.eligibility?.[id];
      if((eligibility?.requiredStudies||[]).some(x=>!done.has(x)))continue;
      if(clinicalInterventionEligibility(p,c,id,s.clock))continue;
-     if(eligibility?.requiresSafeSwallowOrEnteralTube&&!actualTreatment(p,'swallow_screen'))continue;
-     if(id==='lung_protective_ventilation'&&!actualTreatment(p,'intubation'))continue;
+     if(eligibility?.requiresSafeSwallowOrEnteralTube&&!actualTreatment(p,'swallow_screen',s.clock.nativeMinute))continue;
+     if(id==='lung_protective_ventilation'&&!actualTreatment(p,'intubation',s.clock.nativeMinute))continue;
      const ordered=await action(treatmentCommand(c,content,id));requested.add(id);firstOrder??=ordered;
+    }
+    const oxygen=confirmedClinicalTreatment(p,'oxygen',s.clock.nativeMinute);
+    if(oxygen&&s.clock.nativeMinute-oxygen.administeredAtNativeMinute>=5&&p.liveVitals.spo2<85&&
+     c.interventions.some(x=>x.id==='intubation')&&!requested.has('intubation')&&!rescued.has('intubation')&&
+     !actualTreatment(p,'intubation',s.clock.nativeMinute)&&!clinicalInterventionEligibility(p,c,'intubation',s.clock)){
+     const command=await action(treatmentCommand(c,content,'intubation'));rescued.add('intubation');
+     row.rescueActions.push({complicationId:'refractory-hypoxemia',treatmentId:'intubation',commandId:command.id,
+      issuedAtNativeMinute:s.clock.nativeMinute,issuedAtRealSecond:command.issuedAtRealSecond});
     }
    }
    if(competent)for(const service of plan.consults)if(!consulted.has(service)){
@@ -419,7 +423,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     for(const def of c.clinicalPolicy?.complications||[]){
      const active=emerged.some(x=>x.id===def.id||x.complicationId===def.id||x.kind===def.id);
      if(!active)continue;
-     for(const id of [...(def.rescueAllOf||[]),...(def.rescueAnyOf||[]).slice(0,1)])if(!rescued.has(id)&&!actualTreatment(view.clinical.patient,id)){
+     for(const id of [...(def.rescueAllOf||[]),...(def.rescueAnyOf||[]).slice(0,1)])if(!rescued.has(id)&&!actualTreatment(view.clinical.patient,id,view.clinical.clock.nativeMinute)){
       const issuedAtNativeMinute=view.clinical.clock.nativeMinute,command=await action(treatmentCommand(c,content,id));rescued.add(id);
       row.rescueActions.push({complicationId:def.id,treatmentId:id,commandId:command.id,issuedAtNativeMinute,
        issuedAtRealSecond:command.issuedAtRealSecond});
@@ -444,7 +448,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    }
    const current=runtime.view(actorId).clinical;
    const allStudies=plan.studyIds.every(id=>current.patient.orders.some(o=>o.id===id&&o.status==='done'));
-   const allTreatments=plan.treatmentIds.every(id=>actualTreatment(current.patient,id));
+   const allTreatments=plan.treatmentIds.every(id=>actualTreatment(current.patient,id,current.clock.nativeMinute));
    const canAttempt=['omit-studies','inexperienced','negligent','wrong-medication'].includes(profile)||allStudies&&allTreatments;
    const complicationObservationComplete=profile!=='complication-rescue'||!c.clinicalPolicy?.complications?.length||
     (current.patient.policyState?.complications||[]).some(x=>x.status==='recovered');
@@ -466,6 +470,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    await advance(Math.min(1,horizon-view.clinical.clock.clinicalMinute));
    const after=runtime.view(actorId).clinical;
    row.terminalIntegrity={postmortemCommandsRejected:rejected.every(ack=>ack.status==='rejected'||
+     ack.status==='received-not-executed'&&!!ack.routeError&&!ack.clinical?.length||
      ack.clinical?.length&&ack.clinical.every(item=>item.status==='rejected')),
     checkpointRestored:true,noResurrection:after.patient.patientDied===true,
     unchangedVitals:hash(before.patient.liveVitals)===hash(after.patient.liveVitals),
@@ -474,7 +479,9 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     singleDeathEvent:after.room.events.filter(x=>x.type==='clinical.patient-died').length===1};
   }
   if(view.clinical.patient.closure?.closed){
-   const before=runtime.view(actorId),command=row.commands.findLast(x=>x.clinical.some(item=>item.receipt?.closure?.closed));
+   const before=runtime.view(actorId),closureEvent=before.clinical.room.events.find(event=>
+    event.clinical?.some(item=>item.receipt?.closure?.eventId===before.clinical.patient.closure.eventId)),
+    command=row.commands.findLast(x=>x.id===closureEvent?.commandId||x.clinical.some(item=>item.receipt?.closure?.closed));
    if(!command)throw Error('native closure has no public command receipt');
    await send(command.text,command.id);const after=runtime.view(actorId);
    row.closureIntegrity={replayUnchanged:hash(before)===hash(after),

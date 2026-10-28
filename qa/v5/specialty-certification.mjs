@@ -11,7 +11,7 @@ import {clinicalCertificationContent,runClinicalCaseScenario,CLINICAL_CERTIFICAT
  CLINICAL_CERTIFICATION_MODES} from './certify-clinical-cases.mjs';
 const args=process.argv.slice(2),options={};
 for(let i=0;i<args.length;i+=2){
- if(!['--pack','--profiles','--modes','--output'].includes(args[i])||!args[i+1])throw Error('invalid specialty QA option');
+ if(!['--pack','--profiles','--modes','--output','--cases'].includes(args[i])||!args[i+1])throw Error('invalid specialty QA option');
  options[args[i].slice(2)]=args[i+1];
 }
 const available={respiratory:respiratoryPack,cardiology:cardiologyPack,neurology:neurologyPack};
@@ -20,11 +20,15 @@ if(packs.some(x=>!x))throw Error('unknown clinical pack');
 const profiles=(options.profiles||'competent').split(','),modes=(options.modes||'solo').split(',');
 if(profiles.some(x=>!CLINICAL_CERTIFICATION_PROFILES.includes(x))||modes.some(x=>!CLINICAL_CERTIFICATION_MODES.includes(x)))throw Error('unknown clinical profile or mode');
 const output=resolve(options.output||'qa/v5-specialty-results');await mkdir(output,{recursive:true});
-const cases=packs.flatMap(p=>p.cases),content=await clinicalCertificationContent(cases),rows=[];
+const selected=options.cases?new Set(options.cases.split(',')):null,
+ cases=packs.flatMap(p=>p.cases).filter(c=>!selected||selected.has(c.id)),
+ content=await clinicalCertificationContent(cases),rows=[];
+if(!cases.length||selected&&cases.length!==selected.size)throw Error('unknown selected case');
 for(const pack of packs){
  const staged=compileClinicalCasePack(pack,CLINICAL_POLICY_REGISTRIES);
  if(!staged.ok)throw Error(staged.errors.join('\n'));
  for(const c of staged.cases)for(const profile of profiles)for(const mode of modes){
+  if(selected&&!selected.has(c.id))continue;
   const row=await runClinicalCaseScenario(c,{content,profile,mode,recovery:true,
    seed:staged.digest+':'+c.id});
   rows.push(row);await writeFile(resolve(output,c.id+'-'+profile+'-'+mode+'.json'),JSON.stringify(row,null,2)+'\n');

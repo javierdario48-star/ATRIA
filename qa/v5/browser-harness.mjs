@@ -6,6 +6,7 @@ import {createV5QaSocialServer} from '../../src/v5/social/room-membership-store.
 import {isSignalingEndpoint} from '../../src/v5/social/social-route-policy.js';
 import {createSqliteGuardStore} from './sqlite-guard-store.mjs';
 import {createDurableGuardAuthority} from '../../src/v5/server/durable-guard-authority.js';
+import {clinicalContent} from '../../src/v5/server/content.js';
 import {createClinicalHttp} from '../../src/v5/server/clinical-http.js';
 import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -19,8 +20,7 @@ export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFa
  const durableDir=durable?mkdtempSync(path.join(tmpdir(),'atria-durable-browser-')):null;
  const store=durable?createSqliteGuardStore(path.join(durableDir,'guards.sqlite')):null;
  const readContent=name=>JSON.parse(readFileSync(new URL('../../src/v5/content/'+name+'.json',import.meta.url),'utf8'));
- const content=durable?{map:readContent('hospital'),beds:readContent('beds'),cases:readContent('cases'),
-  therapies:readContent('therapies'),defaultDoses:readContent('default-doses')}:null;
+ const content=durable?clinicalContent:null;
  const authority=durable?createDurableGuardAuthority({store,content}):null;
  const clinicalRoute=durable?createClinicalHttp({authority,enabled:true,probe:async()=>({durable:true,kind:'qa-sqlite-cas',schemaVersion:1}),
   async verifiedRoom(headers,roomId,actorId){

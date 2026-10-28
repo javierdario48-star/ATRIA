@@ -99,7 +99,7 @@ function rank(query,term){
  if(term===query)return 105;
  if(term.startsWith(query))return 90;
  if(term.split(/[\s/.-]+/).some(x=>x.startsWith(query)))return 78;
- if(query.length>=4&&term.includes(query))return 65;
+ if(query.length>=4&&!spanishKnownWord(query)&&term.includes(query))return 65;
  // Fuzzy only for near-complete words, preventing dangerous 'morfina'
  // matches on an unrelated short 'mor' prefix.
  if(query.length>=5&&term.length>=5&&Math.abs(query.length-term.length)<=2){

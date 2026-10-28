@@ -2,6 +2,7 @@ import {csNurseScan487} from '../../clinical/nurse-scanner-487.js';
 import {EXAM_TECHNIQUES,GLASGOW_COMPONENTS,validExamSelection,isPhysicianExamStudy} from '../clinical/exam-contract.js';
 import {planNursingIVAccess} from '../clinical/nursing-access-plan.js';
 import {nursingFormulationVocabulary487} from '../clinical/iv-dose-contracts-487.js';
+import {nativeMedicineDefinition} from '../clinical/native-medications.js';
 
 const nurseAddress=/^(?:enfermera|enfermero|enfermeria)\b|(?:\b(?:enfermera|enfermero|enfermeria))\s*[,!.]?\s*$/i;
 const vegaAddress=/^(?:(?:dr|doctor)\.?\s*)?vega\b/i;
@@ -111,10 +112,14 @@ export function routeWardSpeech(text,context={}){
  if(!patientUid)return {recipient,patientUid,intents:[],original,error:'no-patient-target'};
  const intents=[];
  for(const item of parsed.items.slice(0,12)){
-  if(item.negated||item.routeOnly)continue;
+  const stopWords=clean(item.text).replace(/\s+/g,' '),phrase=clean(item.phrase),
+   nativeStop=item.kind==='therapy'&&item.negated&&nativeMedicineDefinition(item.id,context.caseData)?.continuous&&
+    ['suspender','suspende','suspenda','retirar','retira','retire','detener','detene'].some(verb=>
+     [verb+' '+phrase,verb+' el '+phrase,verb+' la '+phrase].includes(stopWords));
+  if(item.negated&&!nativeStop||item.routeOnly)continue;
   let kind;
   if(item.kind==='study')kind='study.request';
-  else if(item.kind==='therapy')kind=item.action==='stop'?'therapy.stop':'therapy.request';
+  else if(item.kind==='therapy')kind=nativeStop||item.action==='stop'?'therapy.stop':'therapy.request';
   else if(['monitor','iv','vitals','surgery'].includes(item.kind))kind='procedure.request';
   else continue;
   intents.push({kind,id:item.id,sourceText:original,clause:item.text,count:item.count||1});

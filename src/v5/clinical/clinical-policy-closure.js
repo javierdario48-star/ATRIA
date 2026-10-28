@@ -1,7 +1,7 @@
 // Policy-based cases use the existing disposition/quality contract. This is a
 // read-only adapter over native receipts; it owns neither closure nor XP.
 import {csClosureQuality487} from '../../clinical/case-completion-487.js';
-import {confirmedClinicalTreatment} from './receipts.js';
+import {currentClinicalTreatment} from './receipts.js';
 import {physicianExaminationsPerformed} from './diagnostic-evidence.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
@@ -50,7 +50,7 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  const minute = nativeMinute(patient), examined = actualExaminations(patient), requiredExams = rule.requiredExams || [];
  const rows = completedStudies(patient, minute), studies = new Set(rows.map(row => row.id));
  const treatmentIds = [...new Set((patient.treatments || []).map(row => row.id))];
- const confirmed = treatmentIds.map(id => confirmedClinicalTreatment(patient, id, minute))
+ const confirmed = treatmentIds.map(id => currentClinicalTreatment(patient, id, minute))
   .filter(row => row && !matchesMedicationAllergy487(patient, row.id));
  const done = new Set(confirmed.map(row => row.id));
  const access = patient.procedures?.iv;
@@ -110,10 +110,15 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   // itself evidence that a clinical adverse event occurred.
   missing.push('Revisar los recibos nativos de administración inconsistentes antes del cierre.');
  }
+ const acceptedTreatmentGroup=rule.treatment?.find(group=>group.length&&group.every(id=>done.has(id))),
+  referenceTreatmentGroup=rule.treatment?.[0]||[],
+  qualityInterventions=acceptedTreatmentGroup?[...new Set([
+   ...(caseData.keyInterventions||[]).filter(id=>!referenceTreatmentGroup.includes(id)),...acceptedTreatmentGroup
+  ])]:caseData.keyInterventions||[];
  const qualityInput = {caseId, diagnosis: patient.diagnosis, acceptedDiagnoses: caseData.dx,
   historyAnswered, historyRelevant: caseData.requiredHistory || [], vitalsKnown: !!vitalsKnown, examDone: !!examDone,
   reassessments: reassessed ? patient.reassessments : 0, disposition: target,
-  keyStudies: [...(caseData.keyStudies || []), ...examinationEvidence], keyInterventions: caseData.keyInterventions || [],
+  keyStudies: [...(caseData.keyStudies || []), ...examinationEvidence], keyInterventions: qualityInterventions,
   extraStudies: rows.filter(row => !(caseData.keyStudies || []).includes(row.id)).map(row => row.id),
   consultsDone, adverseCount};
  const qualityEvidence = new Set([...studies, ...requiredExams.filter(id => examined.has(id)).map(id => 'exam:' + id)]);

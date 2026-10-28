@@ -35,3 +35,21 @@ test('eligibility is a clinical condition, never the random draw alone',()=>{
  assert.equal(complicationStateEligible(candidate,{nativeMinute:20,clinicalState:{spo2:85,sys:100}}),true);
  const p=patient();p.variation.complicationCandidates=[];advanceClinicalComplications(p,c,60);assert.deepEqual(p.policyState.complications,[]);
 });
+test('stopping required ongoing support interrupts complication recovery and allows gradual relapse',()=>{
+ const p=patient(),definition=structuredClone(c);definition.clinicalPolicy.complications[0].rescueAllOf=['vasopressor'];
+ const give=minute=>{
+  const row={id:'vasopressor',patientUid:p.uid,sourceEventId:'pressor-'+minute,action:'start',route:'iv',
+   dose:{amount:.05,unit:'µg/kg/min'},administeredAtNativeMinute:minute};
+  p.treatments.push(row);p.administrationLog.push(structuredClone(row));
+  p.procedures={vasopressor:{patientUid:p.uid,sourceEventId:row.sourceEventId,active:true,dose:structuredClone(row.dose)}};
+ };
+ advanceClinicalComplications(p,definition,20);advanceClinicalComplications(p,definition,35);give(35);
+ advanceClinicalComplications(p,definition,35);const improving=advanceClinicalComplications(p,definition,45).spo2;
+ assert(improving>-12&&improving<0);p.procedures.vasopressor.active=false;
+ const relapse=advanceClinicalComplications(p,definition,55).spo2;
+ assert(relapse<=improving,'a stopped rescue infusion cannot keep healing the episode');
+ advanceClinicalComplications(p,definition,75);assert.notEqual(p.policyState.complications[0].status,'recovered');
+ give(76);advanceClinicalComplications(p,definition,76);
+ assert.equal(advanceClinicalComplications(p,definition,106).spo2,0);
+ assert.equal(p.policyState.complications[0].status,'recovered');
+});

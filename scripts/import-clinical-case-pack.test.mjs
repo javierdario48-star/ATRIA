@@ -4,9 +4,23 @@ import * as fs from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {importClinicalCasePack} from './import-clinical-case-pack.mjs';
+import {importClinicalCasePack,compactClinicalCertificationEvidence} from './import-clinical-case-pack.mjs';
 import {readCertifiedCaseCatalog} from '../src/v5/content/certified-case-catalog.js';
 import {casePack, playableCase, executableRegistries, passingEvidence} from '../src/v5/content/clinical-case-pack.test-helpers.js';
+import {respiratoryPack} from '../src/v5/content/packs/respiratory-pack.js';
+test('runtime catalogs retain actual clinical proof without downloading duplicated command traces',()=>{
+ const full={ok:true,packId:'proof',runnerId:'real-runtime',evidence:[{caseId:'RESP-101',passed:true,
+  checks:{history:true},integrityChecks:{persistence:true},administrations:[{sourceEventId:'actual',dose:{amount:1,unit:'mg'}}],
+  closureReceipt:{closed:true,eventId:'closure'},xpReceipts:[{eventId:'closure',xp:133}],evidenceDigest:'trace-digest',
+  commands:[{receipt:'duplicated trace'}],observations:[{duplicate:'longitudinal trace'}]}]};
+ const before=structuredClone(full),small=compactClinicalCertificationEvidence(full);
+ assert.deepEqual(full,before);assert.equal(small.runnerId,'real-runtime');
+ assert.deepEqual(small.evidence[0].administrations,full.evidence[0].administrations);
+ assert.deepEqual(small.evidence[0].closureReceipt,full.evidence[0].closureReceipt);
+ assert.deepEqual(small.evidence[0].checks,full.evidence[0].checks);
+ assert.equal(small.evidence[0].evidenceDigest,'trace-digest');
+ assert(!Object.hasOwn(small.evidence[0],'commands'));assert(!Object.hasOwn(small.evidence[0],'observations'));
+});
 
 async function setup(t, registries = executableRegistries()) {
  const dir = await fs.mkdtemp(join(tmpdir(), 'atria-case-import-'));
@@ -18,6 +32,14 @@ async function setup(t, registries = executableRegistries()) {
   dependencies: {registries, certificationRunner},
   run: (activate = false, dependencies = {}) => importClinicalCasePack({packPath, outputPath, activate}, {registries, certificationRunner, ...dependencies})};
 }
+test('the real importer reserves the original case identities before writing a catalog',async t=>{
+ const f=await setup(t),pack=structuredClone(respiratoryPack);pack.cases=pack.cases.slice(0,1);
+ pack.packId='legacy-collision';pack.cases[0].id='APP-001';await f.writePack(pack);
+ const result=spawnSync(process.execPath,['scripts/import-clinical-case-pack.mjs','--pack',f.packPath,'--output',f.outputPath],{encoding:'utf8'});
+ assert.equal(result.status,1);
+ assert.match(result.stderr,/duplicate\/existing case APP-001/);
+ await assert.rejects(fs.stat(f.outputPath),{code:'ENOENT'});
+});
 
 test('developer import dry-stages by default without running certification or writing a catalog', async t => {
  const fixture = await setup(t);

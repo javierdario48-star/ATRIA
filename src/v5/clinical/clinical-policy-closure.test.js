@@ -22,6 +22,10 @@ function evidencePatient(c) {
 function administered(p, id, route = 'oral') {
  const t = {id, patientUid: p.uid, sourceEventId: 'admin-' + id, route, dose: {amount: 1, unit: 'mg'},
   administeredAtNativeMinute: 1, administeredAtRealSecond: 1};
+ if(id==='oxygen'){
+  t.action='start';t.dose={amount:4,unit:'L/min',device:'nasal-cannula'};
+  p.procedures={oxygen:{patientUid:p.uid,sourceEventId:t.sourceEventId,active:true,flowLpm:4}};
+ }
  p.treatments.push(t); p.administrationLog.push(clone(t));
  p.lastReassessment.interventionEvents.push(t.sourceEventId);
  p.lastReassessment.administrationEvents.push(t.sourceEventId);
@@ -51,6 +55,16 @@ test('policy closure reads real patient evidence and delegates its score to the 
   adverseCount: 0}, c.clinicalPolicy.closure, new Set(['amoxicillin']), new Set([...c.studies.map(s => s.id), ...examinations]));
  assert.deepEqual(result.quality, quality);
  assert.equal(result.procedurePerformed, false);
+});
+test('an authored alternative regimen earns the same treatment credit as its completed reference',()=>{
+ const c=caseById('RESP-01');c.clinicalPolicy.closure.treatment.push(['doxycycline']);
+ c.clinicalPolicy.closure.dischargeTreatments=[];
+ for(const id of ['amoxicillin','doxycycline']){
+  const p=evidencePatient(c);administered(p,id);
+  const result=evaluate(p,c,'alta');
+  assert.equal(result.ready,true,result.missing.join(' '));
+  assert.equal(result.quality.treatment,25,'the common score must recognize the declared completed alternative');
+ }
 });
 
 test('pending, cross-patient, future and unmatched administration rows never satisfy treatment evidence', () => {

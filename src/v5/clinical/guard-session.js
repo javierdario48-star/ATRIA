@@ -15,7 +15,7 @@ import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
 import {refreshMonitoring,parseNasalOxygenFlow} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
-import {IV_MEDICINES,NATIVE_MEDICINES,isNativeMedicine,nativeMedicineDefinition,parseNativeMedicineDose} from './native-medications.js';
+import {NATIVE_MEDICINES,isNativeMedicine,nativeMedicineDefinition,preflightNativeMedicine} from './native-medications.js';
 import {clinicalInterventionEligibility} from './native-medication-eligibility.js';
 import {parseCirrDose} from './native-cirr.js';
 import {summarizeIVExposures} from './medication-exposure.js';
@@ -103,18 +103,17 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   for(const intent of intents){
    if(!['therapy.request','therapy.stop'].includes(intent.kind))continue;
    if(!migratedTherapies.has(intent.id)||
-      intent.kind==='therapy.stop'&&!['oxygen','vasopressor'].includes(intent.id))
+      intent.kind==='therapy.stop'&&intent.id!=='oxygen'&&!nativeMedicineDefinition(intent.id,caseData)?.continuous)
     return 'unsafe-compound-order';
    if(intent.kind==='therapy.stop'){
-    if(intent.id==='oxygen'&&!nativePatient.procedures?.oxygen?.active)
-     return 'unsafe-compound-order';
-    if(intent.id==='vasopressor'&&!nativePatient.procedures?.vasopressor?.active)
+    if(!nativePatient.procedures?.[intent.id]?.active)
      return 'unsafe-compound-order';
     continue;
    }
    try{
     if(isNativeMedicine(intent.id)){
-     parseNativeMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??NATIVE_MEDICINES[intent.id]?.dose,intent.sourceText,caseData);
+     preflightNativeMedicine(intent.id,intent.clause||intent.sourceText,{caseData,patient:nativePatient,clock,requireAccess:false,
+      reference:content.defaultDoses?.[intent.id]??NATIVE_MEDICINES[intent.id]?.dose,unfiltered:intent.sourceText});
     }
     else if(intent.id==='oxygen')
      parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
@@ -137,7 +136,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    const definition=nativeMedicineDefinition(intent.id,caseData)||CLINICAL_TREATMENTS[intent.id];
    const requiresAccess=!!definition?.requiresAccess;
    const clinicalProcedure=!!care&&intent.kind==='therapy.request'&&CLINICAL_TREATMENTS[intent.id]?.kind!=='medication'&&!!CLINICAL_TREATMENTS[intent.id];
-   const infusionStop=!!care&&intent.kind==='therapy.stop'&&NATIVE_MEDICINES[intent.id]?.continuous;
+   const infusionStop=!!care&&intent.kind==='therapy.stop'&&definition?.continuous;
    const oxygenAction=!!care&&intent.id==='oxygen'&&['therapy.request','therapy.stop'].includes(intent.kind);
    const cirrBedside=caseData.id==='CIRR-001'&&intent.kind==='therapy.request'&&
     ['espironolactona','paracentesis_ter'].includes(intent.id);
@@ -149,9 +148,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     // certified dose/route parsers that it calls, never a new catalog.
     try{
      if(ivMedicine){
-      parseNativeMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??NATIVE_MEDICINES[intent.id]?.dose,intent.sourceText,caseData);
+      preflightNativeMedicine(intent.id,intent.clause||intent.sourceText,{caseData,patient:nativePatient,clock,requireAccess:false,eventId,
+       reference:content.defaultDoses?.[intent.id]??NATIVE_MEDICINES[intent.id]?.dose,unfiltered:intent.sourceText});
      }
-     const eligibility=clinicalInterventionEligibility(nativePatient,caseData,intent.id,clock);
+     const eligibility=intent.kind!=='therapy.stop'&&clinicalInterventionEligibility(nativePatient,caseData,intent.id,clock);
      if(eligibility)throw Error(eligibility.reason);
      if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
      if(cirrBedside&&intent.id==='espironolactona')

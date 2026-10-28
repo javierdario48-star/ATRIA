@@ -9,6 +9,28 @@ permissions:
   contents: read
 
 jobs:
+  specialty-runtime-certification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [solo, apprentice, coop, competitive]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Certify all thirty specialty cases through public bedside commands and restart
+        run: node qa/v5/specialty-certification.mjs --modes "${{ matrix.mode }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-specialty-${{ matrix.mode }}-clinical-evidence
+          path: qa/v5-specialty-results/
+          if-no-files-found: error
+          retention-days: 14
+
   clean-core-contract:
     runs-on: ubuntu-latest
     timeout-minutes: 12

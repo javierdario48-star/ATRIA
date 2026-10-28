@@ -13,6 +13,6 @@ test('invitation retains host selection across service recreation and independen
  social=createV5QaSocialServer(storage);
  const joined=await social.route({method:'POST',path:'/api/rooms/join',headers:bh,body:{roomId:created.body.room.id}});
  assert.equal(joined.status,200);assert.deepEqual(joined.body.room.guardSelection,{scope:'specific',selection:'FECAL-001'});
- const bad=await social.route({method:'POST',path:'/api/rooms',headers:ah,body:{mode:'coop',invitees:[b.user.id],guardSelection:{scope:'specialty',selection:'Cardiología'}}});
+ const bad=await social.route({method:'POST',path:'/api/rooms',headers:ah,body:{mode:'coop',invitees:[b.user.id],guardSelection:{scope:'specialty',selection:'Especialidad no publicada'}}});
  assert.equal(bad.status,400);
 });

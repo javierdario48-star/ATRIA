@@ -179,6 +179,8 @@ function validateEligibility(c) {
 export function validateClinicalPolicyCase(c) {
  const policy = c?.clinicalPolicy, errors = [];
  if (!record(policy) || policy.schemaVersion !== 1) return ['unsupported clinical policy schema'];
+ if(policy.historySource!==undefined&&(!record(policy.historySource)||
+  !['companion','clinical-record'].includes(policy.historySource.kind)||!text(policy.historySource.label)))errors.push('invalid clinical history source');
  const trajectory = policy.trajectory;
  if (!record(trajectory) || !vector(trajectory.early) || !vector(trajectory.late) ||
   !positive(trajectory.earlyEnd) || !positive(trajectory.lateEnd) || trajectory.lateEnd <= trajectory.earlyEnd ||

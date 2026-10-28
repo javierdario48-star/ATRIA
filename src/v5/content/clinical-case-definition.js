@@ -18,6 +18,14 @@ const aliases={
  surgeries:['cirugias','operaciones previas','surgeries']
 };
 const text=x=>typeof x==='string'&&x.trim();
+// Optional, authored prior reactions to available medicines outside the
+// reference specialty regimens. Probabilities select game variants, not risk.
+const optionalAllergies=Object.freeze([
+ Object.freeze({id:'prior-morphine-anaphylaxis',drugId:'morphine',type:'hypersensitivity',severity:'severe',
+  reaction:'anaphylaxis',probability:.06,historyDisclosure:'Con morfina tuve una reacción grave con ronchas, dificultad para respirar y caída de presión; me indicaron evitarla.'}),
+ Object.freeze({id:'prior-amikacin-urticaria',drugId:'amikacin',type:'hypersensitivity',severity:'mild',
+  reaction:'urticaria',probability:.08,historyDisclosure:'Con amikacina tuve ronchas y picazón, sin dificultad para respirar ni desmayo.'})
+]);
 export function defineClinicalCase(input){
  if(!input||!text(input.id)||!text(input.specialty)||!text(input.chief)||!text(input.opening)||!Array.isArray(input.dx)||!input.dx.length)throw Error('clinical case identity required');
  for(const key of ['onset','pmh','meds','allergies','risk'])if(!text(input.history?.[key]))throw Error('authored history required: '+key);
@@ -26,7 +34,7 @@ export function defineClinicalCase(input){
  const ageRange=c.ageRange??[18,85],fields=c.examFindings??{};
  const interventions=c.interventions??(c.interventionIds||[]).map(id=>({id,label:id.replaceAll('_',' '),aliases:[id,id.replaceAll('_',' ')]}));
  const variation={...DEFAULT_PATIENT_VARIATION,ageRange,openings:[c.opening],...c.variation,
-  allergies:c.allergyOptions??c.variation?.allergies??[],
+  allergies:c.allergyOptions??c.variation?.allergies??optionalAllergies,
   complications:(policy.complications||[]).map(x=>({...x,rationale:x.rationale||x.manifestation||x.id}))};
  return {...c,selector:c.selector||c.chief,area:c.area||c.specialty,demo:c.demo||'Paciente adulto',
   exam:c.exam||Object.values(fields).filter(text).join(' '),physicalExam:fields,variation,

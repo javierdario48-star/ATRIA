@@ -1,7 +1,8 @@
 import {createQaSocialServer} from '../../social/qa-social-server.js';
 import {presenceAppearance} from '../app/avatar-appearance.js';
-import cases from '../content/cases.json' with {type:'json'};
-import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {clinicalContent} from '../server/content.js';
+import {playableClinicalCaseIds} from '../content/clinical-cases.js';
+const cases=clinicalContent.cases;
 import {resolveGuardSelection} from '../clinical/guard-selection-policy.js';
 // Storage composition only: the characterized V4 backend remains byte-identical.
 // A room has one host-owned metadata record and a distinct acceptance key per
@@ -61,7 +62,7 @@ export function createV5QaSocialServer(storage,options){
   const path=String(request.path||'').replace(/^\/?(?:api\/)?/,'');
   let guardSelection=null;
   if(path==='rooms'&&request.method==='POST'&&request.body?.guardSelection!=null){
-   try{const p=resolveGuardSelection(cases,Object.keys(CLINICAL_EXECUTORS),request.body.guardSelection);
+   try{const p=resolveGuardSelection(cases,playableClinicalCaseIds(cases),request.body.guardSelection);
     guardSelection={scope:p.scope,selection:p.selection};
    }catch{return {status:400,body:{error:'Selección de guardia no disponible.'}};}
   }

@@ -305,19 +305,20 @@ export const respiratoryCaseDefinitions = [
   dx: ['tep de alto riesgo', 'tep con shock', 'tromboembolismo pulmonar masivo', 'embolia pulmonar de alto riesgo', 'shock obstructivo por tep'],
   differential: ['Taponamiento cardíaco', 'Neumotórax a tensión', 'Infarto de ventrículo derecho', 'Disección aórtica'],
   requiredHistory: ['onset', 'risk', 'bleeding', 'meds', 'allergies'], keyStudies: ['g_resp06_echo', 'g_resp06_gas', 'g_resp06_labs'],
-  interventionIds: ['oxygen', 'vasopressor', 'fluid', 'alteplase_pe', 'heparin_therapeutic'], keyInterventions: ['oxygen', 'alteplase_pe', 'heparin_therapeutic'],
+  interventionIds: ['oxygen', 'vasopressor', 'fluid', 'alteplase_pe', 'heparin_therapeutic', 'intubation'], keyInterventions: ['oxygen', 'alteplase_pe', 'heparin_therapeutic'],
   clinicalPolicy: {
    schemaVersion: 1, traits: ['thromboembolism', 'obstructiveShockPE'],
    trajectory: {early: [0, 9, 3, -10, -6, -3], late: [0.1, 24, 10, -25, -15, -11], earlyEnd: 12, lateEnd: 60, fluidResponse: 0.1},
    responses: [
     {allOf: ['alteplase_pe'], delay: 5, peak: 120, offsets: [0, -37, -13, 48, 26, 9]},
+    {allOf: ['intubation'], delay: 2, peak: 15, offsets: [0, -4, -8, -5, -3, 12]},
     {allOf: ['heparin_therapeutic'], delay: 15, peak: 180, offsets: [0, -5, -2, 3, 2, 1]}
    ],
    regimens: {
     alteplase_pe: {dose: {amount: 100, unit: 'mg', display: '100 mg IV en2h'}, intervalMinutes: 1440, administrationMinutes: 120, route: 'iv'},
     heparin_therapeutic: {dose: {amount: 18, unit: 'U/kg/h', display: '18 U/kg/h IV sin bolo tras completar alteplasa y revisar coagulación; titular por TTPa/anti-Xa'}, continuous: true, infusion: {amount: 18, unit: 'U/kg/h'}, route: 'iv'}
    },
-   eligibility: {heparin_therapeutic: {requiresCompletedTreatments: ['alteplase_pe'], requiresStudiesAfterTreatments: [{treatmentId: 'alteplase_pe', studyId: 'g_resp06_coag_followup'}]}},
+   eligibility: {intubation: {requiresCompletedTreatments: ['vasopressor']}, heparin_therapeutic: {requiresCompletedTreatments: ['alteplase_pe'], requiresStudiesAfterTreatments: [{treatmentId: 'alteplase_pe', studyId: 'g_resp06_coag_followup'}]}},
    closure: {destinations: ['uti'], treatment: [['oxygen', 'alteplase_pe', 'heparin_therapeutic']], requiredStudies: ['g_resp06_labs', 'g_resp06_coag_followup'], study: [['g_resp06_echo', 'g_resp06_ctpa']], requiredExams: ['thorax:auscultation'], consult: {uti: ['uti']}, urgentStudyBypass: true, dischargeTreatments: [], summary: 'Shock obstructivo: O2, noradrenalina según perfusión y reperfusión inmediata si elegible tras revisar contraindicaciones. Bolo pequeño de volumen solo si bajo llenado, con reevaluación; evitar carga indiscriminada. Evidencia ecográfica puede orientar reperfusión cuando la TC no es segura. En esta estrategia, iniciar UFH sin bolo después de completar alteplasa y revisar una nueva muestra de coagulación≤2veces control; titular y vigilar sangrado. El coagulograma basal no acredita el control posterior. Aceptación UTI no sustituye reperfusión ejecutada.'},
    complications: []
   }
