@@ -79,7 +79,8 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  if (rule.study?.length && !orientedStudy && !rule.urgentStudyBypass) missing.push('Completar un estudio orientador.');
  for (const id of rule.requiredStudies || [])
   if (!studies.has(id)) missing.push('Revisar estudio imprescindible ' + id + ' antes de cerrar el caso.');
- if (!rule.treatment?.some(group => group.length > 0 && group.every(id => done.has(id))))
+ const requiredTreatmentGroups = rule.treatmentByDestination?.[target] || rule.treatment;
+ if (!requiredTreatmentGroups?.some(group => group.length > 0 && group.every(id => done.has(id))))
   missing.push('Confirmar las intervenciones imprescindibles y su ejecución real.');
  if (target === 'alta' && (rule.dischargeTreatments || []).some(id => !done.has(id)))
   missing.push('Documentar el tratamiento y plan de seguimiento antes del alta.');
@@ -110,8 +111,8 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   // itself evidence that a clinical adverse event occurred.
   missing.push('Revisar los recibos nativos de administración inconsistentes antes del cierre.');
  }
- const acceptedTreatmentGroup=rule.treatment?.find(group=>group.length&&group.every(id=>done.has(id))),
-  referenceTreatmentGroup=rule.treatment?.[0]||[],
+ const acceptedTreatmentGroup=requiredTreatmentGroups?.find(group=>group.length&&group.every(id=>done.has(id))),
+  referenceTreatmentGroup=requiredTreatmentGroups?.[0]||[],
   qualityInterventions=acceptedTreatmentGroup?[...new Set([
    ...(caseData.keyInterventions||[]).filter(id=>!referenceTreatmentGroup.includes(id)),...acceptedTreatmentGroup
   ])]:caseData.keyInterventions||[];
