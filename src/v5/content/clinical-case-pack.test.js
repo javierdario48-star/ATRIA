@@ -8,3 +8,11 @@ test('accepts valid multi-case pack without activating it',()=>{const result=val
 test('rejects duplicate and preexisting identifiers atomically',()=>{const r=validateClinicalCasePack({schemaVersion:1,cases:[entry('RESP-01'),entry('RESP-01')]},options);assert.equal(r.ok,false);assert.deepEqual(r.accepted,[]);assert.match(r.errors.join(' '),/duplicate/);});
 test('rejects unresolved clinical effects and allergies',()=>{const r=validateClinicalCasePack({schemaVersion:1,cases:[entry('RESP-01'),entry('RESP-02')]},{...options,drugIds:[],rescueIds:[]});assert.equal(r.ok,false);assert.deepEqual(r.accepted,[]);assert.match(r.errors.join(' '),/unknown drug/);assert.match(r.errors.join(' '),/unknown rescue/);});
 test('rejects missing clinical contract',()=>{const c=entry('RESP-01');delete c.closurePolicyId;assert.equal(validateClinicalCasePack({schemaVersion:1,cases:[c]},options).ok,false);});
+
+test('malformed variation collections reject atomically instead of throwing',()=>{
+ for(const malformed of [null,{},'invalid',[null]]){
+  const broken=entry('RESP-03');broken.variation={...variation,allergies:malformed};
+  const result=validateClinicalCasePack({schemaVersion:1,cases:[entry('RESP-04'),broken]},options);
+  assert.equal(result.ok,false);assert.deepEqual(result.accepted,[]);
+ }
+});
