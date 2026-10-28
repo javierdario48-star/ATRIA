@@ -39,6 +39,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Bot-check 40 admissions per variable case for identity personality allergy and recovery
+        run: node --test qa/tests/clinical-patient-variation-55.test.mjs
       - name: Verify the original module based core
         run: npm run test:v5-core
       - name: Canonical content, navigation, study and independent game contracts
