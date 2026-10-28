@@ -26,11 +26,11 @@ export function validateClinicalCasePack(pack,{existingCaseIds=[],drugIds=[],pro
   if(!entry.variation)errors.push(at+': missing variation');
   else{
    for(const issue of validateVariation(entry.variation))errors.push(at+': '+issue);
-   for(const allergy of entry.variation.allergies||[])
-    if(!drugIds.includes(allergy.drugId))errors.push(at+': unknown drug '+allergy.drugId);
-   for(const complication of entry.variation.complications||[]){
-    if(!progressionIds.includes(complication.progressionId))errors.push(at+': unknown progression '+complication.progressionId);
-    if(!rescueIds.includes(complication.rescueId))errors.push(at+': unknown rescue '+complication.rescueId);
+   for(const allergy of Array.isArray(entry.variation.allergies)?entry.variation.allergies:[])
+    if(allergy?.drugId&&!drugIds.includes(allergy.drugId))errors.push(at+': unknown drug '+allergy.drugId);
+   for(const complication of Array.isArray(entry.variation.complications)?entry.variation.complications:[]){
+    if(complication?.progressionId&&!progressionIds.includes(complication.progressionId))errors.push(at+': unknown progression '+complication.progressionId);
+    if(complication?.rescueId&&!rescueIds.includes(complication.rescueId))errors.push(at+': unknown rescue '+complication.rescueId);
    }
   }
   if(errors.length===before)accepted.push(entry.id);
