@@ -10,8 +10,10 @@ import {applyConfirmedMorphineTargetOffsets487} from './morphine-487.js';
 import {applyConfirmedNativeSupportTargets487} from './native-support-487.js';
 import {GASTRO_DYNAMICS} from './gastro-expansion-policies.js';
 import {confirmedClinicalTreatment} from './receipts.js';
+import {clinicalPolicyTargets,advanceClinicalComplications} from './clinical-policy-effects.js';
 const axes=['temp','hr','rr','sys','dia','spo2'];
 const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
+const policyBounds={temp:[34,41.5],hr:[20,240],rr:[4,60],sys:[40,240],dia:[20,140],spo2:[50,100]};
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const ramp=(t,a,b)=>clamp((t-a)/(b-a),0,1);
 export const ADDITIONAL_CASE_TRAJECTORIES=Object.freeze({
@@ -38,13 +40,14 @@ export const ADDITIONAL_CASE_TRAJECTORIES=Object.freeze({
   therapy:'anticoagulation',protection:0,fluidResponse:.65}
 });
 export function additionalCaseInitialVitals(c){
- if(!Object.hasOwn(ADDITIONAL_CASE_TRAJECTORIES,c?.id))throw Error('additional case not supported');
+ if(!c?.clinicalPolicy&&!Object.hasOwn(ADDITIONAL_CASE_TRAJECTORIES,c?.id))throw Error('additional case not supported');
  const [sys,dia]=String(c.vitals.bp).split('/').map(Number);
  const out={temp:c.vitals.temp,hr:c.vitals.hr,rr:c.vitals.rr,sys,dia,spo2:c.vitals.spo2};
  if(axes.some(k=>!Number.isFinite(out[k])))throw Error('invalid baseline');
  return out;
 }
 export function additionalCaseTargets(p,c,minute){
+ if(c?.clinicalPolicy)return clinicalPolicyTargets(p,c,minute);
  const rule=ADDITIONAL_CASE_TRAJECTORIES[c?.id];
  if(!rule||!Number.isFinite(minute)||minute<0)throw Error('invalid disease target');
  const therapyIds=Array.isArray(rule.therapy)?rule.therapy:rule.therapy?[rule.therapy]:[];
@@ -68,9 +71,14 @@ export function advanceAdditionalCaseVitals(p,c,delta,minute=0){
  if(delta===0||p.caseEnded)return;
  const base=additionalCaseInitialVitals(c),offset=additionalCaseTargets(p,c,minute);
  for(const axis of axes)base[axis]+=offset[axis];
+ if(c.clinicalPolicy){
+  const complication=advanceClinicalComplications(p,c,minute);
+  for(const axis of axes)base[axis]+=complication[axis];
+ }
  const overload=crystalloidOverloadOffsets(p,c);
  base.rr+=overload.rr;base.spo2+=overload.spo2;
- base.spo2+=oxygenationTargetOffset(p,c,minute);
+ const oxygen=oxygenationTargetOffset(p,c,minute);
+ base.spo2+=c.clinicalPolicy?Math.max(0,Math.min(oxygen,(c.clinicalPolicy.oxygenTarget?.[1]??100)-base.spo2)):oxygen;
  applyConfirmedIVTargetOffsets(base,p,c,minute);
  applyMedicationHarmTargets487(base,p,c,minute);
  applyConfirmedMorphineTargetOffsets487(base,p,c,minute);
@@ -78,6 +86,6 @@ export function advanceAdditionalCaseVitals(p,c,delta,minute=0){
  const steps=Math.floor(delta*60+1e-10),remainder=Math.max(0,delta-steps/60);
  for(const axis of axes){
   const rate=axis==='temp'?.08:.38,blend=1-Math.pow(1-rate/60,steps)*(1-Math.min(1,remainder*rate));
-  p.liveVitals[axis]+=(clamp(base[axis],...bounds[axis])-p.liveVitals[axis])*blend;
+  p.liveVitals[axis]+=(clamp(base[axis],...(c.clinicalPolicy?policyBounds:bounds)[axis])-p.liveVitals[axis])*blend;
  }
 }

@@ -9,3 +9,8 @@ export const CLINICAL_EXECUTORS=Object.freeze({
   'HEPAT-001','DIARR-001','FECAL-001','PUD-001','CELIAC-001','ACAL-001'].map(id=>[id,'additional'])),
  'PERI-SEC-001':'peritonitis','PERI-PBE-001':'peritonitis','PERI-TER-001':'peritonitis'
 });
+// New definitions reach production only through the committed certified
+// catalog. The offline runner uses the same dispatch for staged certification.
+export const clinicalExecutorFor=c=>CLINICAL_EXECUTORS[c?.id]||
+ (c?.clinicalExecutorId==='acute-policy-v1'&&c.clinicalPolicy?.schemaVersion===1?'additional':null);
+export const playableClinicalCaseIds=cases=>cases.filter(c=>clinicalExecutorFor(c)).map(c=>c.id);

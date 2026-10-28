@@ -7,7 +7,8 @@ import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
 import {createClosureDebrief} from './closure-debrief.js';
 import {partialDisposition} from './partial-closure.js';
-import {createIVAdministration} from './native-medications.js';
+import {createIVAdministration,nativeTreatmentDefinition,parseNativeProcedureDose} from './native-medications.js';
+import {clinicalInterventionEligibility} from './native-medication-eligibility.js';
 import {createSurgicalConsultation} from './surgical-consultation.js';
 import {GASTRO_CASE_CONDUCTS} from './gastro-expansion-policies.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
@@ -25,14 +26,22 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   receipt:{eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,...data}});
  const proof=(cmd,t,reused=false)=>executed(cmd,{therapyId:t.id,sourceEventId:t.sourceEventId,
   dose:copy(t.dose),administeredAtRealSecond:t.administeredAtRealSecond,
+  ...(t.regimen||t.kind==='procedure.performed'?{route:t.route,regimen:copy(t.regimen),
+   status:t.status,completionStatus:t.completionStatus,deliveryFraction:t.deliveryFraction,
+   completedAtRealSecond:t.completedAtRealSecond,completedAtNativeMinute:t.completedAtNativeMinute,
+   ...(t.kind==='procedure.performed'?{procedureId:t.id,performed:true,performedKind:t.kind,
+    ...(t.resultSafe!==undefined?{resultSafe:t.resultSafe}:{})}:{}),
+   ...(t.moleculeId?{moleculeId:t.moleculeId}:{}),...(t.infusionDose?{infusionDose:copy(t.infusionDose)}:{})}:{}),
   ...(t.action?{action:t.action,route:t.route,previousDose:copy(t.previousDose)}:{}),
   administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
-  message:(reused?'Ya confirmado por la orden original: ':t.action==='stop'?'Suspensión confirmada: ':t.id==='npo'?'Conducta registrada: ':'Administración confirmada: ')+t.label+
-   (t.dose?' · '+t.dose.display:'')+'.'});
+  message:(reused?'Ya confirmado por la orden original: ':t.action==='stop'?'Suspensión confirmada: ':t.id==='npo'?'Conducta registrada: ':
+   t.kind==='procedure.performed'?'Procedimiento completado: ':'Administración confirmada: ')+t.label+
+   (t.dose?' · '+t.dose.display:'')+'.'+(t.id==='swallow_screen'?
+    t.resultSafe?' Deglución segura documentada.':' Cribado no seguro; mantener ayuno y valorar alternativa enteral.':'')});
  const pendingConducts=new Map(copy(checkpoint?.conducts??[]));
  const conductSeconds=Object.freeze({steroid:.8,aza:.8,ppi:.8,ngt:1.2,staging_order:.55,
   ...Object.fromEntries([...new Set(Object.values(GASTRO_CASE_CONDUCTS).flat())].map(id=>[id,1.1]))});
- const ivMedicines=createIVAdministration(p,{doses:defaultDoses,
+ const ivMedicines=createIVAdministration(p,{doses:defaultDoses,caseData:c,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
   proof,rejected,checkpoint:checkpoint?.iv});
  const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,
@@ -82,9 +91,13 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
    const access=executeVenousAccess(p,cmd);if(access)return access;
    const oxygen=executeOxygenSupport(p,cmd,clock);if(oxygen)return oxygen;
+   if(['therapy.request','procedure.request'].includes(intent.kind)){
+    const issue=clinicalInterventionEligibility(p,c,intent.id,clock);
+    if(issue)return rejected(cmd,issue.reason,issue.message);
+   }
    const consult=surgery.request(cmd,clock);if(consult)return consult;
    const iv=ivMedicines.request(cmd,clock);if(iv)return iv;
-   if(intent.kind==='therapy.request'&&(policy.conducts||[]).includes(intent.id)){
+   if(['therapy.request','procedure.request'].includes(intent.kind)&&(policy.conducts||[]).includes(intent.id)){
     const id=intent.id,label=c.interventions.find(i=>i.id===id)?.label||id;
     const existing=p.treatments.find(t=>t.id===id&&t.patientUid===p.uid);
     if(existing)return proof(cmd,existing,true);
@@ -92,6 +105,23 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
      const t={id,label,dose:null,sourceEventId:cmd.eventId,actorId:cmd.actorId,
       patientUid:p.uid,administeredAtRealSecond:clock.clinicalMinute,administeredAtNativeMinute:clock.nativeMinute};
      p.treatments.push(t);return proof(cmd,t);
+    }
+    const definition=c.clinicalPolicy?nativeTreatmentDefinition(id,c):null;
+    if(definition&&['procedure','conduct'].includes(definition.kind)){
+     let dose;
+     try{dose=parseNativeProcedureDose(id,intent.clause||intent.sourceText,c);}
+     catch(error){return rejected(cmd,error.message,'Dosis o parámetros del procedimiento no validados.');}
+     if(definition.requiresAccess&&(p.venousAccessCount??0)<1)
+      return rejected(cmd,'venous-access-required','Confirmar acceso venoso antes de este procedimiento.');
+     const prior=[...pendingConducts.values()].find(t=>t.id===id);
+     if(prior){prior.commands.push(copy(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
+     const task={id,label,dose,route:'procedure',regimen:copy(definition.regimen),phase:'preparing',
+      executionMinutes:definition.regimen.executionMinutes??definition.executionMinutes??0,
+      sourceEventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,
+      readyAtRealSecond:clock.clinicalMinute+(definition.seconds??1),commands:[copy(cmd)]};
+     pendingConducts.set(cmd.eventId,task);
+     p.pendingTreatments.push({id,patientUid:p.uid,sourceEventId:cmd.eventId,readyAtRealSecond:task.readyAtRealSecond});
+     return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
     }
     if(!Object.hasOwn(conductSeconds,id))return rejected(cmd,'unmodeled-conduct');
     // Exact oral dose contract. Never turn 'IV vancomycin' into a confirmed
@@ -145,19 +175,48 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   advance(clockBefore,clockAfter,dt){
    const results=[];if(p.caseEnded)return results;
    let cursor=clockBefore.clinicalMinute;
-   const due=[...ivMedicines.due(clockBefore,clockAfter),...surgery.due(clockBefore,clockAfter),
-    ...[...pendingConducts.values()].filter(t=>t.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9)]
-    .sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond);
-   for(const task of due){
+   const span=clockAfter.clinicalMinute-clockBefore.clinicalMinute,nativeSpan=clockAfter.nativeMinute-clockBefore.nativeMinute;
+   const nativeAt=at=>clockBefore.nativeMinute+nativeSpan*(span>0?(at-clockBefore.clinicalMinute)/span:0);
+   const nextDue=()=>{
+    for(const t of pendingConducts.values())if(t.phase==='executing')
+     t.readyAtRealSecond=nativeSpan>0?clockBefore.clinicalMinute+(t.readyAtNativeMinute-clockBefore.nativeMinute)*span/nativeSpan:clockAfter.clinicalMinute+1;
+    return [...ivMedicines.due(clockBefore,clockAfter),...surgery.due(clockBefore,clockAfter),
+     ...[...pendingConducts.values()].filter(t=>t.readyAtRealSecond<=clockAfter.clinicalMinute+1e-9)]
+     .sort((a,b)=>a.readyAtRealSecond-b.readyAtRealSecond)[0];
+   };
+   // A long advance may include preparation and completion of the same task.
+   // Re-read the existing due queues after each phase, retaining one owner.
+   for(let task=nextDue();task;task=nextDue()){
     const at=Math.max(cursor,task.readyAtRealSecond);
-    policy.advanceVitals(p,c,at-cursor,clockBefore.nativeMinute+(clockAfter.nativeMinute-clockBefore.nativeMinute)*(dt>0?(at-clockBefore.clinicalMinute)/dt:0));cursor=at;
-    const fraction=dt>0?(at-clockBefore.clinicalMinute)/dt:0;
-    const nativeMinute=clockBefore.nativeMinute+
-      (clockAfter.nativeMinute-clockBefore.nativeMinute)*fraction;
+    const nativeMinute=nativeAt(at);
+    ivMedicines.advanceDelivery(nativeMinute);
+    policy.advanceVitals(p,c,at-cursor,nativeMinute);cursor=at;
     const consultation=surgery.owns(task),conduct=pendingConducts.get(task.sourceEventId)===task;
     if(conduct){
+     if(task.phase==='preparing'&&task.executionMinutes>0){
+      Object.assign(task,{phase:'executing',startedAtNativeMinute:nativeMinute,readyAtNativeMinute:nativeMinute+task.executionMinutes,
+       readyAtRealSecond:at+task.executionMinutes/.12});
+      const pending=p.pendingTreatments.find(x=>x.sourceEventId===task.sourceEventId);
+      if(pending)Object.assign(pending,{status:'executing',readyAtNativeMinute:task.readyAtNativeMinute});
+      continue;
+     }
      pendingConducts.delete(task.sourceEventId);
      p.pendingTreatments=p.pendingTreatments.filter(x=>x.sourceEventId!==task.sourceEventId);
+     if(task.phase){
+      const issue=clinicalInterventionEligibility(p,c,task.id,{clinicalMinute:at,nativeMinute});
+      if(issue){for(const command of task.commands)results.push(rejected(command,issue.reason,issue.message));continue;}
+      const done={id:task.id,label:task.label,dose:copy(task.dose),route:'procedure',regimen:copy(task.regimen),
+       sourceEventId:task.sourceEventId,patientUid:p.uid,actorId:task.actorId,kind:'procedure.performed',
+       completionStatus:'completed',performed:true,administeredAtRealSecond:at,administeredAtNativeMinute:nativeMinute,
+       completedAtRealSecond:at,completedAtNativeMinute:nativeMinute};
+      if(task.id==='swallow_screen'){
+       done.resultSafe=task.regimen.resultSafe===true||task.regimen.safe===true;
+       p.swallowScreen={patientUid:p.uid,safe:done.resultSafe,sourceEventId:task.sourceEventId,performedAtNativeMinute:nativeMinute};
+      }
+      p.treatments.push(done);p.procedures[task.id]={...copy(done),active:true};
+      for(const command of task.commands)results.push(proof(command,done,command.eventId!==task.sourceEventId));
+      continue;
+     }
      const done={id:task.id,label:task.label,dose:task.dose||null,route:task.route||'documented',
       sourceEventId:task.sourceEventId,
       patientUid:p.uid,actorId:task.actorId,administeredAtRealSecond:at,
@@ -177,6 +236,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
      }
     }
    }
+   ivMedicines.advanceDelivery(clockAfter.nativeMinute);
    policy.advanceVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor),clockAfter.nativeMinute);
    return results;
   },

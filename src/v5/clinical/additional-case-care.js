@@ -9,6 +9,8 @@ import {createPancCare} from './panc-care.js';
 import {GASTRO_CASE_RULES,GASTRO_CASE_CONDUCTS,GASTRO_CLOSURE_TEXT} from './gastro-expansion-policies.js';
 import {additionalCaseInitialVitals,advanceAdditionalCaseVitals,ADDITIONAL_CASE_TRAJECTORIES} from './native-additional-cases.js';
 import {physicianExaminationsPerformed,diagnosticRequirements} from './diagnostic-evidence.js';
+import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
+import {evaluateClinicalPolicyDisposition} from './clinical-policy-closure.js';
 export {createPancCare};
 function snapshot(p,c,destination){
  return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,
@@ -43,12 +45,20 @@ export const ADDITIONAL_CASE_DISPOSITIONS=Object.freeze({
   summary:'Isquemia mesentérica: cirugía acepta el traslado urgente. La revascularización no fue realizada aquí.'}
 });
 export function createAdditionalCaseCare(p,c,options){
- if(!Object.hasOwn(ADDITIONAL_CASE_DISPOSITIONS,c.id)||!Object.hasOwn(ADDITIONAL_CASE_TRAJECTORIES,c.id))
+ if(!c.clinicalPolicy&&(!Object.hasOwn(ADDITIONAL_CASE_DISPOSITIONS,c.id)||!Object.hasOwn(ADDITIONAL_CASE_TRAJECTORIES,c.id)))
   throw Error('unported case policy');
- const policy=ADDITIONAL_CASE_DISPOSITIONS[c.id];
+ const policy=c.clinicalPolicy?{
+  conducts:c.interventions.filter(x=>CLINICAL_TREATMENTS[x.id]?.kind!=='medication').map(x=>x.id),
+  destinations:c.clinicalPolicy.closure.destinations,summary:c.clinicalPolicy.closure.summary
+ }:ADDITIONAL_CASE_DISPOSITIONS[c.id];
  return createAcuteCare(p,c,options,{
   initialVitals:additionalCaseInitialVitals,advanceVitals:advanceAdditionalCaseVitals,
-  evaluate:(patient,caseData,destination)=>GASTRO_CASE_RULES[caseData.id]?
+  initialize:patient=>{if(c.clinicalPolicy){
+   patient.policyState={nativeMinute:0,complications:[]};
+   if(c.clinicalPolicy.neurologyBaseline)patient.neurology=structuredClone(c.clinicalPolicy.neurologyBaseline);
+   if(c.clinicalPolicy.observationResponses)patient.observationResponses=structuredClone(c.clinicalPolicy.observationResponses);
+  }},
+  evaluate:(patient,caseData,destination)=>caseData.clinicalPolicy?evaluateClinicalPolicyDisposition(patient,caseData,destination):GASTRO_CASE_RULES[caseData.id]?
    evaluateGastroDisposition(snapshot(patient,caseData,destination)):
    csEvaluateClosure487(snapshot(patient,caseData,destination)),
   conducts:policy.conducts,reassessmentRequired:true,

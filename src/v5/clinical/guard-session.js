@@ -1,5 +1,6 @@
 import {createRoomAuthority} from '../core/room-authority.js';
-import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {clinicalExecutorFor} from '../content/clinical-cases.js';
+import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
 import {materializeGuardPatient} from '../content/guard-patient-variation.js';
 import {createNativeClinicalPort} from '../adapters/native-clinical-port.js';
 import {createStudyService} from './studies.js';
@@ -14,7 +15,8 @@ import {assertMatchingClinicalReceipt} from './receipts.js';
 import {createGuardClock} from './guard-clock.js';
 import {refreshMonitoring,parseNasalOxygenFlow} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
-import {IV_MEDICINES,isStandardIVMedicine,parseIVMedicineDose} from './native-medications.js';
+import {IV_MEDICINES,NATIVE_MEDICINES,isNativeMedicine,nativeMedicineDefinition,parseNativeMedicineDose} from './native-medications.js';
+import {clinicalInterventionEligibility} from './native-medication-eligibility.js';
 import {parseCirrDose} from './native-cirr.js';
 import {summarizeIVExposures} from './medication-exposure.js';
 import {createCasePharmacology} from './pharmacology-catalog.js';
@@ -45,6 +47,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  if(mode==='coop'&&(members.length<2||members.length>4||!members.some(x=>x.id===actorId)))throw Error('cooperative roster requires two to four doctors');
  const memberNames=new Map(members.map(x=>[x.id,String(x.name||x.id).slice(0,32)]));
  const caseData=content.cases.find(c=>c.id===patient.caseId);if(!caseData)throw Error('unknown patient case');
+ const executor=clinicalExecutorFor(caseData);
  if(checkpoint&&(checkpoint.schemaVersion!==1||checkpoint.modelVersion!=='atria-clinical-c5b-1'||
   checkpoint.roomId!==roomId||checkpoint.mode!==mode||checkpoint.actorId!==actorId||
   checkpoint.patient.uid!==patient.uid||checkpoint.patient.caseId!==caseData.id||
@@ -52,6 +55,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  if(checkpoint)progress=createProgressionLedger(checkpoint.progress);
  const resolvedPatient=materializeGuardPatient(patient,caseData,checkpoint);
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[],
+  allergyHistory:copy(resolvedPatient.allergyHistory||[]),intolerances:copy(resolvedPatient.intolerances||[]),
+  ...(resolvedPatient.backgroundHistory?{backgroundHistory:copy(resolvedPatient.backgroundHistory)}:{}),
   ...(caseData.variation?{name:resolvedPatient.name,age:resolvedPatient.age,
     personality:resolvedPatient.personality,opening:resolvedPatient.opening,
     variation:resolvedPatient.variation}:{}),
@@ -68,7 +73,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  const pharmacology=createCasePharmacology({cases:content.cases,therapies:content.therapies});
  const factory={cirr:createCirrCare,app:createAppCare,peritonitis:createPeritonitisCare,
    cholangitis:createCholangitisCare,chole:createCholeCare,panc:createPancCare,
-   additional:createAdditionalCaseCare}[CLINICAL_EXECUTORS[caseData.id]];
+   additional:createAdditionalCaseCare}[executor];
  const care=factory?factory(nativePatient,caseData,options):null;
  // Factories initialize their native fields. Restore the SAME owned object
  // afterwards so every executor and pending task keeps its original reference.
@@ -88,7 +93,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  // Read-only all-or-nothing preflight for *compound* nurse orders. Reuse the
  // same native case formulary and dose/device parsers; never preview effects.
  // Single orders still return their existing per-intervention rejection.
- const migratedTherapies=new Set(['oxygen',...Object.keys(IV_MEDICINES),
+ const migratedTherapies=new Set(['oxygen',...Object.keys(NATIVE_MEDICINES),
+  ...(caseData.clinicalPolicy?caseData.interventions.map(x=>x.id):[]),
   ...(['APP-001','CHOLE-001','PANC-001'].includes(caseData.id)?['npo']:
    caseData.id==='CIRR-001'?['espironolactona','sal_restriccion','paracentesis_ter']:
    ADDITIONAL_CASE_DISPOSITIONS[caseData.id]?.conducts||[])]);
@@ -107,8 +113,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     continue;
    }
    try{
-    if(isStandardIVMedicine(intent.id)){
-     parseIVMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose,intent.sourceText);
+    if(isNativeMedicine(intent.id)){
+     parseNativeMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??NATIVE_MEDICINES[intent.id]?.dose,intent.sourceText,caseData);
     }
     else if(intent.id==='oxygen')
      parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
@@ -127,21 +133,26 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   invoke:async({eventId,actorId,patientUid,intent})=>{
    if(nursing&&intent.kind==='case.close'&&nursingWorkPending())
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
-   const ivMedicine=!!care&&intent.kind==='therapy.request'&&isStandardIVMedicine(intent.id);
-   const infusionStop=!!care&&intent.kind==='therapy.stop'&&IV_MEDICINES[intent.id]?.continuous;
+   const ivMedicine=!!care&&intent.kind==='therapy.request'&&isNativeMedicine(intent.id);
+   const definition=nativeMedicineDefinition(intent.id,caseData)||CLINICAL_TREATMENTS[intent.id];
+   const requiresAccess=!!definition?.requiresAccess;
+   const clinicalProcedure=!!care&&intent.kind==='therapy.request'&&CLINICAL_TREATMENTS[intent.id]?.kind!=='medication'&&!!CLINICAL_TREATMENTS[intent.id];
+   const infusionStop=!!care&&intent.kind==='therapy.stop'&&NATIVE_MEDICINES[intent.id]?.continuous;
    const oxygenAction=!!care&&intent.id==='oxygen'&&['therapy.request','therapy.stop'].includes(intent.kind);
    const cirrBedside=caseData.id==='CIRR-001'&&intent.kind==='therapy.request'&&
     ['espironolactona','paracentesis_ter'].includes(intent.id);
    const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor','vitals'].includes(intent.id)||
-    intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||infusionStop||cirrBedside||oxygenAction);
+    intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||clinicalProcedure||infusionStop||cirrBedside||oxygenAction);
    if(physical){
     if(nativePatient.caseEnded)return {status:'rejected',patientUid,eventId,reason:'patient-not-active'};
     // Native case policy remains the only executor. These are the same
     // certified dose/route parsers that it calls, never a new catalog.
     try{
      if(ivMedicine){
-      parseIVMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??IV_MEDICINES[intent.id]?.dose,intent.sourceText);
+      parseNativeMedicineDose(intent.id,intent.clause||intent.sourceText,content.defaultDoses?.[intent.id]??NATIVE_MEDICINES[intent.id]?.dose,intent.sourceText,caseData);
      }
+     const eligibility=clinicalInterventionEligibility(nativePatient,caseData,intent.id,clock);
+     if(eligibility)throw Error(eligibility.reason);
      if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
      if(cirrBedside&&intent.id==='espironolactona')
       parseCirrDose(intent.clause||intent.sourceText,content.defaultDoses?.espironolactona);
@@ -159,7 +170,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     // IV therapy can only start its native pharmacological preparation
     // once access exists. If a legitimate IV trip is in progress, wait for its
     // exact receipt before queueing the bedside medication.
-    if(ivMedicine&&nativePatient.venousAccessCount<1){
+    if((ivMedicine||clinicalProcedure)&&requiresAccess&&nativePatient.venousAccessCount<1){
      if([...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv')){
       waitingForAccess.set(eventId,{eventId,actorId,patientUid,intent:copy(intent)});
       return {status:'pending',patientUid,eventId};
@@ -189,7 +200,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     return {status:'rejected',patientUid,eventId,reason:'nurse-'+travel.status};
    }
    if(intent.kind==='study.request'){
-    const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute});
+    const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute,atNativeMinute:clock.nativeMinute});
     if(result.status==='pending'){
      const order=nativePatient.orders.find(o=>o.id===intent.id);
      if(!pendingStudyRequests.has(order.sourceEventId))pendingStudyRequests.set(order.sourceEventId,new Set());
@@ -204,9 +215,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   checkpoint:checkpoint?.authority,
   authenticate:token=>token===credentials?{id:actorId,roomId}:authenticate?.(token)??null,clinicalPort:port,
   resolveSpeechContext:({envelope,actorId:requestActor})=>({...resolveContext({actorId:requestActor,targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,
-   ...(care&&nursing?{venousAccessCount:nativePatient.venousAccessCount??0,pendingIV:[...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv'),defaultDoses:content.defaultDoses}:{}),
+   ...(care&&nursing?{venousAccessCount:nativePatient.venousAccessCount??0,pendingIV:[...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv'),defaultDoses:content.defaultDoses,caseData}:{}),
    studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions,
     surgicalConsultDone:!!nativePatient.consults?.some(x=>x.id==='cirugia'&&x.status==='done'&&x.accepted),
+    consultServices:[...new Set(Object.values(caseData.clinicalPolicy?.closure?.consult||{}).flat())],
    validateClinicalBatch}),
   respondNpc:({patientUid,text,mode})=>vegaGuidance(patientUid===nativePatient.uid?nativePatient:null,caseData,text,{mode}),
   time:()=>clock.clinicalMinute,emit:(event,snapshot)=>onChange(copy(event),copy(snapshot))});
@@ -220,7 +232,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  }
  function eligibleDestinations(){
   if(!care||nativePatient.caseEnded)return [];
-  const destinations=(GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations;
+  const destinations=(caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations;
   if(destinations)return destinations.filter(id=>closureReadiness(id)?.ready);
   const out=closureReadiness();return out?.ready?[out.action]:[];
  }
@@ -320,7 +332,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    // A long presentation frame must preserve adverse episodes, support changes
    // and fatal exposure in the SAME clock/executor path. A pending medicine
    // only selects time resolution; effects still require actual administration.
-   if((['peritonitis','cholangitis','panc','additional'].includes(CLINICAL_EXECUTORS[caseData.id])||nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
+   if((['peritonitis','cholangitis','panc','additional'].includes(executor)||nativePatient.severeAllergies.length||nativePatient.administrationLog?.some(x=>survivalSensitiveIV.has(x.id))||
      nativePatient.pendingTreatments?.some(x=>survivalSensitiveIV.has(x.id)))&&deltaRealSeconds>.25){
     const ready=[];
     for(let elapsed=0;elapsed<deltaRealSeconds-1e-9;elapsed+=.25)
@@ -329,6 +341,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    const before=clock;
    clock=guardClock.advance(deltaRealSeconds,typing);
+   if(nativePatient.policyState)nativePatient.policyState.realSecond=clock.clinicalMinute;
    for(const result of care?.advance(before,clock,deltaRealSeconds)||[]){
     // Actual bedside IV completion, never an order or a repeated transport ACK.
     // Reuse V4 clinical traits, but preserve the unique V5 fluid/vital owners.
@@ -347,6 +360,18 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
       throw Error('physical therapy completion mismatch');
      pendingNurseJobs.delete(result.eventId);
     }
+   }
+   // The bedside task confirms START of a real timed infusion, while the
+   // clinical port remains pending until its administered dose is complete.
+   // This lets the same nurse initiate another infusion without fabricating
+   // delivery or holding an NPC at the bed for two simulated hours.
+   if(nursing)for(const [eventId,task] of pendingNurseJobs){
+    const delivery=nativePatient.administrationLog?.find(row=>row.sourceEventId===eventId&&row.patientUid===nativePatient.uid&&row.status==='administering');
+    if(!delivery)continue;
+    const ack=nursing.accept({eventId,patientUid:task.patientUid,status:'executed',
+     receipt:{eventId,patientUid:task.patientUid,kind:'administration.started',therapyId:delivery.id,completed:false}});
+    if(ack.status!=='confirmed')throw Error('physical infusion start mismatch');
+    pendingNurseJobs.delete(eventId);
    }
    // The existing authoritative guard clock drives the V4-proven pure survival
    // policies AFTER the native case vital writer; no additional timer/loop.
@@ -443,8 +468,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
   read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
    eligibleDestinations:eligibleDestinations(),
-   closure:copy(closureReadiness(CLINICAL_EXECUTORS[caseData.id]==='peritonitis'?undefined:
-    (GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations?.[0]||'sala'))};},
+   closure:copy(closureReadiness(executor==='peritonitis'?undefined:
+    (caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations?.[0]||'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }

@@ -1,4 +1,4 @@
-import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {clinicalExecutorFor} from '../content/clinical-cases.js';
 import {clinicalAcuity} from './acuity.js';
 // One deterministic admission schedule; the native patient session remains
 // the only clinical owner. One real second = one displayed game minute.
@@ -22,7 +22,7 @@ export function receptionAcuity({caseData,patient=null,waitingSeconds=0}={}){
 }
 export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,allowedCaseIds=null,caseSequence=null}){
  if(typeof roomId!=='string'||!roomId||roomId.length>100)throw Error('invalid shift room');
- const certified=content.cases.filter(c=>Object.hasOwn(CLINICAL_EXECUTORS,c.id));
+ const certified=content.cases.filter(c=>clinicalExecutorFor(c));
  const allowed=allowedCaseIds===null?null:new Set(allowedCaseIds);
  if(allowedCaseIds!==null&&(!Array.isArray(allowedCaseIds)||!allowedCaseIds.length||
   allowed.size!==allowedCaseIds.length||allowedCaseIds.some(id=>!certified.some(c=>c.id===id))))

@@ -8,8 +8,65 @@ const responseElapsed=(p,id,minute)=>{
  const received=confirmedClinicalTreatment(p,id,minute);
  return received?minute-received.administeredAtNativeMinute:-Infinity;
 };
+const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
+const policyAt=(p,minute)=>Number.isFinite(p.policyState?.nativeMinute)&&
+ p.policyState.nativeMinute<=minute+1e-9?p.policyState:null;
+/** Read the existing owner's present episodes; never predict an unsampled
+ * onset, progress severity, or turn an ordered rescue into recovery. */
+export function readClinicalComplications(p,atNativeMinute=0){
+ return (policyAt(p,atNativeMinute)?.complications||[]).filter(x=>
+  ['active','recovering'].includes(x.status)&&Number.isFinite(x.severity)&&x.severity>0&&
+  (!Number.isFinite(x.onsetAt)||x.onsetAt<=atNativeMinute))
+  .map(x=>({...x,...(x.neurology?{neurology:{...x.neurology}}:{})}));
+}
+function blendNeurology(n,target,fraction,complication=false){
+ for(const key of ['eye','verbal','motor'])if(Number.isFinite(target?.[key])&&Number.isFinite(n[key])){
+  const value=Math.round(n[key]+(target[key]-n[key])*fraction);
+  n[key]=complication?Math.min(n[key],value):value;
+ }
+ for(const key of ['seizureActive','postictal'])if(typeof target?.[key]==='boolean'&&
+  (complication?fraction>0:fraction>=1))n[key]=target[key];
+}
+function neurologicalResponses(p,n,minute){
+ for(const response of p.observationResponses||[]){
+  const all=(response.allOf||[]).map(id=>confirmedClinicalTreatment(p,id,minute)),
+   any=(response.anyOf||[]).map(id=>confirmedClinicalTreatment(p,id,minute)).filter(Boolean);
+  if(all.some(x=>!x)||response.anyOf?.length&&!any.length)continue;
+  const evidence=[...all,...(any.length?[any.reduce((a,b)=>
+   (a.completedAtNativeMinute??a.administeredAtNativeMinute)<
+   (b.completedAtNativeMinute??b.administeredAtNativeMinute)?a:b)]:[])];
+  if(!evidence.length)continue;
+  const completedAt=Math.max(...evidence.map(x=>x.completedAtNativeMinute??x.administeredAtNativeMinute)),
+   fraction=clamp((minute-completedAt-response.delay)/(response.peak-response.delay),0,1);
+  if(Number.isFinite(fraction)&&fraction>0)blendNeurology(n,response.neurology,fraction);
+ }
+}
+/** Present respiratory support and complications are observations of the
+ * existing clinical owner, never a second disease/treatment writer. */
+export function readRespiratoryObservation(p,atNativeMinute=0){
+ const state=policyAt(p,atNativeMinute);
+ const fatigue=Math.max(0,...(state?.complications||[]).filter(x=>
+  !['resolved','scheduled','inactive','not-triggered'].includes(x.status)&&
+  (!Number.isFinite(x.onsetAt)||x.onsetAt<=atNativeMinute)&&
+  (x.effect==='respiratory-fatigue'||x.effect?.type==='respiratory-fatigue'||x.type==='respiratory-fatigue'))
+  .map(x=>Number.isFinite(x.severity)?clamp(x.severity,0,1):0));
+ const invasive=confirmedClinicalTreatment(p,'intubation',atNativeMinute),
+  noninvasive=confirmedClinicalTreatment(p,'niv',atNativeMinute),support=invasive||noninvasive;
+ return {fatigue,ventilation:invasive?'invasive':noninvasive?'non-invasive':null,
+  ventilationMinutes:support?Math.max(0,atNativeMinute-support.administeredAtNativeMinute):0};
+}
 export function readNeurologicalState(p,atNativeMinute=0){
- if(p.neurology)return {...p.neurology};
+ const current=policyAt(p,atNativeMinute)?.neurology||p.neurology;
+ if(current){
+  const n={...current},respiratory=readRespiratoryObservation(p,atNativeMinute);
+  neurologicalResponses(p,n,atNativeMinute);
+  for(const episode of readClinicalComplications(p,atNativeMinute))
+   blendNeurology(n,episode.neurology,clamp(episode.severity,0,1),true);
+  if(respiratory.ventilation==='invasive'){
+   n.verbal=null;n.reason='Intubación: respuesta verbal no evaluable.';
+  }
+  return n;
+ }
  const impaired=Number(p.hypoperfusionNativeMinutes||0);
  const hepatic=p.caseId==='ENCEF-001';
  if(hepatic){
@@ -33,7 +90,8 @@ function observationIndex(v,n){
   Math.max(0,8-v.rr)+Math.max(0,v.temp-37.5)*.8+Math.max(0,15-(n.eye??4)-(n.verbal??5)-(n.motor??6));
 }
 export function readPatientObservations(p,caseId=p.caseId,atNativeMinute=0){
- const neuro=readNeurologicalState(p,atNativeMinute),initial=observationIndex(p.baselineVitals||p.liveVitals,readNeurologicalState({caseId})),
+ const neuro=readNeurologicalState(p,atNativeMinute),initial=observationIndex(p.baselineVitals||p.liveVitals,
+  p.neurology||readNeurologicalState({caseId})),
   delta=observationIndex(p.liveVitals,neuro)-initial;
  const trend=delta>.8?'worse':delta<-.8?'better':'unchanged';
  const intensity=PATIENT_PROFILES[caseId]?.intensity;

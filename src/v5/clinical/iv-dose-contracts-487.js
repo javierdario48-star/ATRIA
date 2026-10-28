@@ -69,9 +69,18 @@ export function parseSpecialIVDose487(id,text,reference,unfiltered=text){
  */
 export function nursingFormulationVocabulary487(text,{studies=[],therapies=[]}={}){
  const raw=normalize(text);
+ const escaped=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+ // A named medicine with an explicit dose and administration route is a
+ // formulation. A bare electrolyte name retains its laboratory meaning.
+ const formulations=new Set(therapies.flatMap(t=>[t.label,...(t.aliases||[])])
+  .filter(alias=>typeof alias==='string'&&alias.trim()).map(alias=>normalize(alias))
+  .filter(alias=>new RegExp('(?:^|\\b)'+escaped(alias)+
+   '\\s+[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)\\s*(?:mg|g|mcg|ug|ml|iu|ui|u)\\b'+
+   '\\s+(?:iv|ev|intravenos[oa]|endovenos[oa]|oral|vo|po|im|sc|nebulizad[oa]s?)\\b').test(raw)));
  const explicitAlbumin=/\balbumina\s+(?:(?:iv|ev|intravenos[oa]|endovenos[oa]|mg|g|ml|kg)\b|[+-]?(?:\d|\.\d))/.test(raw);
- const filtered=explicitAlbumin?studies.filter(s=>normalize(s.label)!=='albumina').map(s=>
-  ({...s,aliases:(s.aliases||[]).filter(a=>normalize(a)!=='albumina')})):studies;
+ if(explicitAlbumin)formulations.add('albumina');
+ const filtered=formulations.size?studies.filter(s=>!formulations.has(normalize(s.label))).map(s=>
+  ({...s,aliases:(s.aliases||[]).filter(a=>!formulations.has(normalize(a)))})):studies;
  const bloodDoses=[...raw.matchAll(SPECIAL_IV_FORMULATIONS_487.transfusion.pattern)].map(x=>x[0].trim());
  const vocabulary=bloodDoses.length?therapies.map(t=>t.id==='transfusion'?{...t,aliases:[...(t.aliases||[]),
   ...[t.label,...(t.aliases||[])].flatMap(label=>bloodDoses.map(dose=>label+' '+dose))]}:t):therapies;

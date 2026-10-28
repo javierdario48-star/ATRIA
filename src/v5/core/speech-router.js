@@ -44,6 +44,17 @@ export function routeWardSpeech(text,context={}){
   const error=component!=='all'&&!Object.hasOwn(GLASGOW_COMPONENTS,component)?'invalid-clinical-command':!patientUid?'no-patient-target':null;
   return {recipient:'patient',patientUid,original,intents:error?[]:[{kind:'exam.glasgow',id:component,sourceText:original}],...(error?{error}:{})};
  }
+ // Menu/bot protocol for a catalogued treatment. It enters the SAME native
+ // preflight, bedside queue and receipt path as a natural-language order.
+ const treatment=/^\/tratamiento\s+([a-z][a-z0-9_]*)(?:\s+(.+))?$/i.exec(original);
+ if(treatment&&context.clinicalEvaluation){
+  const id=treatment[1],patientUid=context.patientUid??null;
+  const known=[...(context.therapies||[]),...(context.interventions||[])].some(t=>t.id===id);
+  const error=!known?'unknown-treatment':!patientUid?'no-patient-target':null;
+  const intents=error?[]:planNursingIVAccess([{kind:'therapy.request',id,sourceText:original,clause:treatment[2]||'',count:1}],context);
+  const batchError=!error&&intents.length>1&&context.validateClinicalBatch?.(intents);
+  return {recipient:'nurse',patientUid,original,intents:error||batchError?[]:intents,...(error||batchError?{error:error||batchError}:{})};
+ }
  const clinical=/^\/(signos|examen|reevaluar|diagnostico|disposicion|cierre-parcial)(?:\s+(.+))?$/i.exec(original);
  if(clinical&&context.clinicalEvaluation){
   const action=clinical[1].toLowerCase(),value=clinical[2]?.trim(),patientUid=context.patientUid??null;
@@ -59,12 +70,14 @@ export function routeWardSpeech(text,context={}){
    ...(regionId?{regionId}:{}),
    ...(action==='diagnostico'?{value}:{}),sourceText:original}],...(error?{error}:{})};
  }
- const consult=/^(?:\/consulta\s+|enfermer(?:a|o|ia)[,:]?\s+(?:interconsulta\s+(?:a\s+)?|consulta\s+(?:a\s+)?))(cirugia|uti|terapia intensiva|uci|gastro|gastroenterologia)[.!]?$/i.exec(normalized);
+ const consult=/^(?:\/consulta\s+|enfermer(?:a|o|ia)[,:]?\s+(?:interconsulta\s+(?:a\s+)?|consulta\s+(?:a\s+)?))([a-z]+(?:\s+intensiva)?)[.!]?$/i.exec(normalized);
  if(consult&&context.clinicalEvaluation){
-  const patientUid=context.patientUid??null;
+  const aliases={cirugia:'cirugia',uti:'uti',uci:'uti','terapia intensiva':'uti',gastro:'gastro',gastroenterologia:'gastro',neurologia:'neurology',neurocirugia:'neurosurgery'};
+  const service=aliases[consult[1]]||consult[1],allowed=new Set(['cirugia','uti','gastro',...(context.consultServices||[])]);
+  const patientUid=context.patientUid??null,error=!allowed.has(service)?'unknown-consultation':!patientUid?'no-patient-target':null;
   return {recipient:'nurse',patientUid,original,
-   intents:patientUid?[{kind:'consult.request',id:consult[1]==='cirugia'?'cirugia':['gastro','gastroenterologia'].includes(consult[1])?'gastro':'uti',sourceText:original,clause:original}]:[],
-   ...(!patientUid?{error:'no-patient-target'}:{})};
+   intents:!error?[{kind:'consult.request',id:service,sourceText:original,clause:original}]:[],
+   ...(error?{error}:{})};
  }
  // A transfer is a closure request, NOT evidence that surgery or discharge
  // already happened. Only the native case evaluator may accept it.

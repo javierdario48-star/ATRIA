@@ -34,5 +34,7 @@ test('standalone V5 build boots from a canonical entry and is byte reproducible 
   execFileSync(process.execPath,['scripts/build-v5-core.mjs'],{cwd:dir,encoding:'utf8'});
   const core=JSON.parse(fs.readFileSync(path.join(dir,'out-v5-core/manifest.json'),'utf8'));
   assert(core.files['src/v5/clinical/exam-contract.js'],'core must include the lightweight command contract');
+  assert(core.files['src/v5/content/clinical-treatment-definitions.js'],'core must include native medication definitions');
+  assert(core.files['src/v5/clinical/native-medication-eligibility.js'],'core must include medication evidence preflight');
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });

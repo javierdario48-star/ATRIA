@@ -1,9 +1,10 @@
 // Lightweight command vocabulary shared by router, UI and clinical policy.
 export const EXAM_TECHNIQUES=Object.freeze({general:'Impresión general',inspection:'Inspección',
- auscultation:'Auscultación',percussion:'Percusión',palpation:'Palpación',rectal:'Tacto rectal'});
+ auscultation:'Auscultación',percussion:'Percusión',palpation:'Palpación',rectal:'Tacto rectal',neurological:'Exploración neurológica'});
 export const EXAM_REGIONS=Object.freeze({
  general:{label:'General',techniques:['general']},skin:{label:'Piel y mucosas',techniques:['inspection']},
- thorax:{label:'Tórax',techniques:['inspection','auscultation']},
+ thorax:{label:'Tórax',techniques:['inspection','auscultation','percussion','palpation']},
+ neurological:{label:'Neurológico',techniques:['neurological']},
  abdomen:{label:'Abdomen',techniques:['inspection','auscultation','percussion','palpation']},
  liver:{label:'Hígado',techniques:['percussion','palpation']},spleen:{label:'Bazo',techniques:['percussion','palpation']},
  renal:{label:'Región renal',techniques:['percussion']},perineum:{label:'Periné',techniques:['inspection','rectal']},

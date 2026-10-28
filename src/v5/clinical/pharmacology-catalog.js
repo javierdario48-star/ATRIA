@@ -11,6 +11,7 @@ import {confirmedMorphineResponse487} from './morphine-487.js';
 import {confirmedNativeSupportEffects487} from './native-support-487.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {GASTRO_REVIEW_ONLY} from './gastro-medication-rules.js';
+import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
 
 const clone=x=>structuredClone(x);
 const VITALS=['temp','hr','rr','sys','dia','spo2'];
@@ -36,7 +37,7 @@ const OWNER=Object.freeze({
   paracentesis_ter:['rr'],furosemide:['sys','dia','hr','rr','spo2'],morphine:VITALS,albumin:VITALS,transfusion:VITALS,vasopressor:VITALS})
 });
 function checkRule(id,rule){
- if(REVIEW_ONLY[id])return;
+ if(REVIEW_ONLY[id]||CLINICAL_TREATMENTS[id])return;
  csValidateDrug487(id,rule);
 }
 function normalizeCase(c){
@@ -170,7 +171,13 @@ export function createCasePharmacology({cases,therapies}={}){
  const catalog=therapies.map(item=>{
   if(!valid(item?.id)||seenDrugs.has(item.id))throw Error('invalid/duplicate medicine '+item?.id);
   seenDrugs.add(item.id);
-  const rule=PHARMA_RULES_487[item.id]||REVIEW_ONLY[item.id];
+  const definition=CLINICAL_TREATMENTS[item.id];
+  // New content executes through the native policy and administration owners.
+  // This read-only catalogue must not apply that response a second time.
+  const rule=PHARMA_RULES_487[item.id]||REVIEW_ONLY[item.id]||(definition&&{
+   classId:definition.classId||definition.kind,route:definition.route,mechanism:'unmodeled',
+   indications:definition.indications,hazards:definition.hazards,
+   onsetMin:definition.latencyMinutes,peakMin:definition.peakMinutes});
   if(!rule)throw Error('unreviewed global treatment '+item.id);
   checkRule(item.id,rule);
   return Object.freeze({id:item.id,label:item.label,rule});
@@ -184,8 +191,8 @@ export function createCasePharmacology({cases,therapies}={}){
   }
   for(const regimen of c.pharmacology?.coverageSets||c.physiology?.coverageSets||[]){
    if(!Array.isArray(regimen)||!regimen.length||regimen.some(id=>!seenDrugs.has(id)||
-    !['antibiotic','aminoglycoside','antifungal'].includes(
-     (PHARMA_RULES_487[id]||{}).classId)))
+    !['antibiotic','aminoglycoside','antifungal','antiviral'].includes(
+     (PHARMA_RULES_487[id]||CLINICAL_TREATMENTS[id]||{}).classId)))
     throw Error('invalid antimicrobial coverage for '+c.id);
   }
  }
@@ -213,6 +220,9 @@ export function createCasePharmacology({cases,therapies}={}){
 const NATIVE_IV_EFFECT_IDS=Object.freeze(['furosemide']);
 export function applyConfirmedIVTargetOffsets(target,patient,caseDef,atNativeMinute){
  for(const id of NATIVE_IV_EFFECT_IDS){
+  // The new case's explicitly certified response owns its beneficial effect.
+  // In other cases the inherited off-target response remains observable.
+  if(caseDef.clinicalPolicy?.responses?.some(r=>r.allOf?.includes(id)||r.anyOf?.includes(id)))continue;
   const doses=(patient?.administrationLog||[]).filter(row=>row.id===id);
   if(!doses.length)continue;
   if(!Number.isFinite(atNativeMinute)||atNativeMinute<0)throw Error('invalid IV physiological clock');

@@ -12,6 +12,16 @@ function fixture(){
   procedures:{},administrationLog:[],treatments:[],caseEnded:false};
 }
 const time=(real,native)=>({clinicalMinute:real,nativeMinute:native});
+test('a running finite infusion is valid exposure but cannot earn completed-dose rescue credit',()=>{
+ const p=fixture();p.administrationLog=[{id:'ceftriaxone',patientUid:p.uid,sourceEventId:'infusing',
+  route:'iv',status:'administering',completionStatus:'pending',administeredAtRealSecond:1,
+  administeredAtNativeMinute:.12,prescribedDose:{amount:1000,unit:'mg'},
+  dose:{amount:250,unit:'mg'},deliveryFraction:.25}];
+ assert.doesNotThrow(()=>advanceNativeSurvival(p,cirr,'solo',time(0,0),time(30,3.6)));
+ assert.equal(p.survival.earnedCredit,0);assert.equal(p.treatments.length,0);
+ p.administrationLog[0].dose.amount=300;
+ assert.throws(()=>advanceNativeSurvival(p,cirr,'solo',time(30,3.6),time(31,3.72)),/unique native treatment receipt/);
+});
 test('V4 legacy initial grace is a hard minimum and severe vitals need time, not an immediate kill switch',()=>{
  const p=fixture();
  advanceNativeSurvival(p,cirr,'solo',time(0,0),time(100,12));

@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createGuardSession} from './guard-session.js';
+import {executePatientDialogue} from './patient-dialogue.js';
+import {createClinicalContent} from '../content/clinical-content.js';
+import {respiratoryPack} from '../content/packs/respiratory-pack.js';
 const read=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const content={cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')};
 function setup(caseId='APP-001',uid='P1'){
@@ -11,6 +14,57 @@ function setup(caseId='APP-001',uid='P1'){
  return {s,send:text=>s.post({id:'d'+(++n),text}),near:x=>near=x,focus:x=>focus=x};
 }
 const answer=ack=>ack.clinical.map(x=>x.receipt?.answer||'').join(' ');
+test('authored specialty patients answer real history through the public session without executing care',async()=>{
+ const caseData=respiratoryPack.cases.find(c=>c.id==='RESP-01');
+ const uid='specialty-history',clinicalContent=createClinicalContent(content,{additionalCases:[caseData]});
+ const s=createGuardSession({roomId:uid,mode:'solo',actorId:'doctor',actorName:'Doctor',
+  patient:{uid,caseId:caseData.id},content:clinicalContent,
+  resolveContext:()=>({patientUid:uid,focusedNpc:null})});
+ try{
+  const before=s.read();
+  const questions=[['Hola, ¿qué le pasó?',/Tengo fiebre.*costado/],
+   ['¿Desde cuándo?',/tres días/],['¿Alergias?',/alergias.*medicamentos/],
+   ['¿Antecedentes?',/enfermedad cardíaca, pulmonar, renal ni diabetes/],
+   ['¿Support?',/Vivo con mi familia/],['¿Medicamentos?',/paracetamol/]];
+  for(const [i,[text,want]] of questions.entries()){
+   const result=await s.post({id:'specialty-history-'+i,text});
+   assert.equal(result.clinical[0].status,'executed',text);
+   assert.match(answer(result),want,text);
+  }
+  const after=s.read();
+  for(const id of ['onset','pmh','support','meds'])assert(after.patient.intentHistory.some(x=>x.id===id||x.id==='anamnesis:'+id),id);
+  assert.deepEqual(after.patient.liveVitals,before.patient.liveVitals);
+  assert.deepEqual(after.clock,before.clock);
+  assert.deepEqual(after.patient.treatments,[]);
+  assert.equal(after.patient.examDone,false);
+ }finally{s.dispose();}
+});
+test('seeded identity and background stay identical across modes and survive public-session checkpoint restore',async()=>{
+ const c=respiratoryPack.cases.find(c=>c.id==='RESP-01');
+ const clinicalContent=createClinicalContent(content,{additionalCases:[c]}),uid='shared-variation:patient';
+ const options={roomId:'shared-variation',actorId:'doctor',actorName:'Doctor',patient:{uid,caseId:c.id},
+  content:clinicalContent,resolveContext:()=>({patientUid:uid,focusedNpc:null})};
+ const solo=createGuardSession({...options,mode:'solo'}),members=[{id:'doctor',name:'Doctor'},{id:'other',name:'Other'}];
+ const coop=createGuardSession({...options,mode:'coop',members});
+ let restored;
+ try{
+  const initial=solo.read().patient,shared=coop.read().patient;
+  assert(initial.backgroundHistory?.history?.pmh,'authored background must reach the single owned patient');
+  for(const key of ['name','age','personality','variation','backgroundHistory','allergyHistory'])assert.deepEqual(shared[key],initial[key],key);
+  assert.equal(initial.variation.backgroundHistory,undefined,'factual history is stored once on the owner');
+  const greeting=await coop.post({id:'greeting',text:'Hola ¿Qué le pasó?'});
+  assert.doesNotMatch(answer(greeting),/fractura|apendicectomía|infección de oído/i);
+  const asked=await coop.post({id:'background',text:'¿Antecedentes personales?'});
+  assert( coop.read().patient.intentHistory.some(x=>x.source==='patient.backgroundHistory'&&x.answer===initial.backgroundHistory.history.pmh));
+  const checkpoint=await coop.checkpoint();
+  const changed={...c,variation:{...c.variation,backgroundHistory:[{id:'changed',history:{pmh:'Una historia diferente.'}}]}};
+  restored=createGuardSession({...options,mode:'coop',members,checkpoint,
+   content:{...clinicalContent,cases:clinicalContent.cases.map(row=>row.id===c.id?changed:row)}});
+  assert.deepEqual(restored.read().patient.backgroundHistory,initial.backgroundHistory);
+  const again=await restored.post({id:'background-again',text:'¿Antecedentes personales?'});
+  assert.equal(answer(again),answer(asked),'restored patient speaks the same persisted facts');
+ }finally{solo.dispose();coop.dispose();restored?.dispose();}
+});
 test('natural compound pain questions acquire each actual dimension and the correct APP history facts',async()=>{
  const f=setup(),before=f.s.read();
  const a=await f.send('¿Dónde te duele y desde cuándo empezó?');
@@ -210,4 +264,127 @@ test('variation identity and personality affect speech without changing clinical
  assert.match(answer(b),/hinchando/);
  assert.equal(s.read().patient.treatments.length,0);
  s.dispose();
+});
+
+function variedDialoguePatient(personality){
+ return {uid:'dialogue-personality',caseId:'CIRR-001',name:'Ana Ríos',personality,intentHistory:[],treatments:[],
+  liveVitals:{hr:94,rr:20,sys:108,dia:68,spo2:96,temp:37.2},
+  variation:{seed:'fixed-history',allergies:[
+   {id:'intolerance',drugId:'morphine',type:'intolerance',historyDisclosure:'La morfina me da náuseas, sin ronchas.'},
+   {id:'severe',drugId:'ceftriaxone',type:'hypersensitivity',severity:'severe',historyDisclosure:'Con ceftriaxona se me cerró la garganta.'}
+  ]}};
+}
+function directHistory(p,text,id='test-history'){
+ return executePatientDialogue(p,content.cases.find(c=>c.id===p.caseId),
+  {eventId:id,actorId:'doctor',intent:{kind:'history.ask',id:'history',sourceText:text}},{nativeMinute:0});
+}
+
+test('all seven personality types change only conversational style and never orientation or clinical facts',()=>{
+ const fixtures=[['calm',/^Se me viene/],['anxious',/^Estoy preocupado/],['reserved',/^Bueno…/],
+  ['talkative',/^Le cuento, doctor/],['irritable',/^Esto me tiene molesto/],
+  ['scared',/^Tengo miedo/],['uncooperative',/^No tengo muchas ganas de hablar/]];
+ for(const [personality,style] of fixtures){
+  const p=variedDialoguePatient(personality),before=structuredClone(p.liveVitals);
+  const result=directHistory(p,'¿Qué te pasa?');
+  assert.match(result.receipt.answer,style,personality);
+  assert.match(result.receipt.answer,/Se me viene hinchando la panza/);
+  assert.doesNotMatch(result.receipt.answer,/morfina|ceftriaxona|garganta|ronchas|mi casa|no sé dónde/i);
+  assert.equal(p.intentHistory.length,1);assert.equal(p.intentHistory[0].answer,'Se me viene hinchando la panza, estoy cansado y me dijeron que me ven algo amarillo.');
+  assert.match(directHistory(p,'¿Dónde estás?','orientation').receipt.answer,/Estoy en la guardia del hospital/);
+  assert.deepEqual(p.liveVitals,before);assert.deepEqual(p.treatments,[]);
+ }
+});
+
+test('typed variation disclosures are spoken verbatim only after asking reaction history',()=>{
+ const p=variedDialoguePatient('anxious');
+ p.allergies=['ceftriaxone'];p.severeAllergies=['ceftriaxone'];
+ p.allergyHistoryAnswer='Tengo alergia a ceftriaxona (reacción grave).';
+ const greeting=directHistory(p,'Hola ¿Qué te pasa?');
+ assert.doesNotMatch(greeting.receipt.answer,/morfina|ceftriaxona|garganta|ronchas/);
+ assert(!p.intentHistory.some(x=>x.source==='patient.allergies'));
+ const asked=directHistory(p,'¿Tenés alergias a medicamentos?','asked-allergies');
+ assert.equal(asked.receipt.answer,'La morfina me da náuseas, sin ronchas. Con ceftriaxona se me cerró la garganta.');
+ const history=p.intentHistory.find(x=>x.source==='patient.allergies');assert(history);
+ assert.equal(history.eventId,'asked-allergies');
+ assert.equal(p.variation.allergies[0].type,'intolerance');assert.equal(p.variation.allergies[1].severity,'severe');
+});
+
+test('a generated intolerance disclosure cannot hide an existing severe allergy from history',()=>{
+ const p=variedDialoguePatient('calm');p.variation.allergies=p.variation.allergies.slice(0,1);
+ p.allergies=['ceftriaxone'];p.severeAllergies=['ceftriaxone'];
+ p.allergyHistoryAnswer='Tengo alergia a ceftriaxona (reacción grave).';
+ const result=directHistory(p,'¿Tiene alergias?');
+ assert.match(result.receipt.answer,/La morfina me da náuseas, sin ronchas/);
+ assert.match(result.receipt.answer,/ceftriaxona \(reacción grave\)/);
+});
+
+test('intolerance or mild history of the same drug cannot cover a documented severe hypersensitivity',()=>{
+ for(const reaction of [{type:'intolerance'},{type:'hypersensitivity',severity:'mild'}]){
+  const p=variedDialoguePatient('calm');p.variation.allergies=[{id:'new-history',drugId:'ceftriaxone',
+   ...reaction,historyDisclosure:'Con ceftriaxona tuve una molestia.'}];
+  p.allergies=['ceftriaxone'];p.severeAllergies=['ceftriaxone'];
+  p.allergyHistoryAnswer='Tengo alergia a ceftriaxona (reacción grave).';
+  const result=directHistory(p,'¿Tiene alergias?');
+  assert.match(result.receipt.answer,/Con ceftriaxona tuve una molestia/);
+  assert.match(result.receipt.answer,/ceftriaxona \(reacción grave\)/);
+ }
+});
+
+test('age history uses the persisted patient identity instead of the case demonstration age',()=>{
+ const p=variedDialoguePatient('calm');p.age=25;
+ const result=directHistory(p,'¿Cuántos años tiene?','patient-age');
+ assert.match(result.receipt.answer,/25/);assert.doesNotMatch(result.receipt.answer,/58/);
+ assert.equal(p.age,25);
+});
+
+test('personality never adds speech or acquired history when the clinical owner reports impaired verbal response',()=>{
+ const p=variedDialoguePatient('ansiosa');p.neurology={eye:4,verbal:4,motor:6};
+ assert.equal(directHistory(p,'¿Dónde estás?').receipt.answer,'No sé bien… ¿estoy en mi casa? ¿Dónde estamos?');
+ p.neurology.verbal=3;
+ assert.equal(directHistory(p,'¿Tenés alergias?').receipt.answer,'Dolor… panza…');
+ assert.deepEqual(p.intentHistory,[]);
+});
+
+test('persisted authored background replaces only asked personal history and stays out of greetings and symptoms',()=>{
+ const p=variedDialoguePatient('calm');
+ p.backgroundHistory={id:'resolved-fracture',history:{pmh:'Tengo presión alta y tuve una fractura de brazo que ya curó.'}};
+ const before=structuredClone(p.liveVitals);
+ assert.doesNotMatch(directHistory(p,'Hola ¿Qué te pasa?').receipt.answer,/fractura/);
+ assert(!p.intentHistory.some(x=>x.source==='patient.backgroundHistory'));
+ const asked=directHistory(p,'¿Tiene enfermedades previas?','asked-background');
+ assert.equal(asked.receipt.answer,'Tengo presión alta y tuve una fractura de brazo que ya curó.');
+ assert.equal(p.intentHistory.find(x=>x.source==='patient.backgroundHistory')?.eventId,'asked-background');
+ assert.doesNotMatch(directHistory(p,'¿Qué medicación toma?','asked-meds').receipt.answer,/fractura/);
+ assert.deepEqual(p.liveVitals,before);assert.deepEqual(p.treatments,[]);
+});
+
+test('medication reaction questions acquire allergy history instead of being swallowed by medication history',()=>{
+ for(const text of ['¿Tuvo alguna reacción con antibióticos?','¿Tiene reacciones a medicamentos?']){
+  const p=variedDialoguePatient('anxious');
+  p.allergyHistory=p.variation.allergies;delete p.variation.allergies;
+  const result=directHistory(p,text);
+  assert.equal(result.status,'executed',text);
+  assert.equal(result.receipt.answer,'La morfina me da náuseas, sin ronchas. Con ceftriaxona se me cerró la garganta.');
+  assert(p.intentHistory.some(x=>x.source==='patient.allergies'));
+  assert(!p.intentHistory.some(x=>x.id==='meds'));
+ }
+});
+
+test('documented reaction facts cannot fall back to a case denial when the patient lacks a detailed disclosure',()=>{
+ const p=variedDialoguePatient('calm');p.allergyHistory=[];delete p.variation.allergies;
+ p.allergies=['ceftriaxone'];p.severeAllergies=['ceftriaxone'];
+ const result=directHistory(p,'¿Tiene alergias?');
+ assert.equal(result.status,'executed');
+ assert.doesNotMatch(result.receipt.answer,/no (?:tengo|conozco)|sin (?:alergias|reacciones)/i);
+ assert.match(result.receipt.answer,/reacci|alergia/i);
+});
+
+test('asking how the patient was before acquires authored baseline rather than current subjective status',()=>{
+ const c=respiratoryPack.cases.find(c=>c.history.baseline),p=variedDialoguePatient('calm');p.caseId=c.id;
+ const result=executePatientDialogue(p,c,{eventId:'baseline',actorId:'doctor',
+  intent:{kind:'history.ask',id:'history',sourceText:'¿Cómo estaba antes?'}},{nativeMinute:0});
+ assert.equal(result.status,'executed');
+ assert.equal(result.receipt.answer,c.history.baseline);
+ assert(p.intentHistory.some(x=>x.id==='baseline'));
+ assert.equal(p.interview.subjective,null);
 });

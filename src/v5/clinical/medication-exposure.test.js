@@ -35,3 +35,19 @@ test('corrupt, repeated or cross-patient IV events fail closed instead of fabric
  }
  assert.throws(()=>summarizeIVExposures({uid:'P',administrationLog:[good,good]}),/exposure record/);
 });
+test('a continuous regimen keeps its bolus and infusion in their own dimensions',()=>{
+ const bolus={...event('P','heparin_therapeutic','start',80,'U/kg'),action:'start',route:'iv',
+  infusionDose:{amount:18,unit:'U/kg/h'}};
+ const rate={...event('P','heparin_therapeutic','rate',12,'U/kg/h'),action:'setRate',route:'iv',
+  infusionDose:{amount:12,unit:'U/kg/h'}};
+ const p={uid:'P',administrationLog:[bolus]};
+ let exposure=summarizeIVExposures(p).byDrug.heparin_therapeutic;
+ assert.equal(exposure.currentRate,18);assert.equal(exposure.unit,'U/kg/h');
+ assert.equal(exposure.bolusAmount,80);assert.equal(exposure.bolusUnit,'U/kg');
+ p.administrationLog.push(rate);exposure=summarizeIVExposures(p).byDrug.heparin_therapeutic;
+ assert.equal(exposure.currentRate,12);assert.equal(exposure.bolusAmount,80);
+ p.administrationLog.push({id:'heparin_therapeutic',patientUid:'P',sourceEventId:'stop',
+  action:'stop',previousDose:{amount:12,unit:'U/kg/h'}});
+ assert.equal(summarizeIVExposures(p).byDrug.heparin_therapeutic.currentRate,0);
+ assert.throws(()=>summarizeIVExposures({uid:'P',administrationLog:[{...bolus,infusionDose:undefined}]}),/exposure record/);
+});

@@ -1,7 +1,7 @@
 // Effective ns421-clinical-exam findings, deliberately limited to the
 // migrated cases. Neither undefined findings nor an untouched organ are normal.
 import {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
-import {readNeurologicalState,readPatientObservations} from './patient-observations.js';
+import {readNeurologicalState,readPatientObservations,readRespiratoryObservation,readClinicalComplications} from './patient-observations.js';
 import {GASTRO_PHYSICAL_FINDINGS} from './gastro-expansion-presentations.js';
 export {EXAM_TECHNIQUES,EXAM_REGIONS,GLASGOW_COMPONENTS,validExamSelection} from './exam-contract.js';
 const unspecified='Sin hallazgo específico modelado en este escenario.';
@@ -63,25 +63,63 @@ const findings={
 const row=(regionId,organ,text)=>({regionId,organ,text:text||unspecified});
 export function initializeExamination(p){Object.assign(p,{exam:{},examFindings:{},examLog:[],examDone:false,glasgow:null});}
 /** Pure observation of the authorized patient's present state. No clock or treatment writes. */
-export function physicalExamRows(caseId,p,technique,regionId=null,atNativeMinute=0){
- const f=findings[caseId];if(!f)throw Error('exam-case-not-migrated');
- const v=p.liveVitals,observed=readPatientObservations(p,caseId,atNativeMinute),n=observed.neuro;let rows=[];
- if(technique==='general')rows=[row('general','Aspecto general',f.appearance),
+export function physicalExamRows(caseId,p,technique,regionId=null,atNativeMinute=0,caseData=null){
+ const authored=caseData?.id===caseId&&caseData.clinicalPolicy?caseData.physicalExam:null,
+  f=authored||findings[caseId];if(!f)throw Error('exam-case-not-migrated');
+ const v=p.liveVitals,observed=readPatientObservations(p,caseId,atNativeMinute),n=observed.neuro,
+  respiratory=readRespiratoryObservation(p,atNativeMinute),fatigue=respiratory.fatigue,
+  seizureControlled=f.neurology?.seizureActive===true&&n.seizureActive===false,
+  thoracic=!!authored&&!authored.neurology,bronchospasm=caseData?.clinicalPolicy?.traits?.includes('bronchospasm');let rows=[];
+ if(technique==='general')rows=[row('general','Aspecto general',fatigue>=.6?
+  'Agotamiento respiratorio, somnolencia y dificultad para mantener un esfuerzo ventilatorio eficaz.':
+  seizureControlled?'Sin actividad convulsiva motora actual; persiste compromiso posictal de conciencia y necesidad de vigilancia.':
+  n.seizureActive&&f.neurology?.seizureActive!==true?'Actividad convulsiva actual con deterioro de conciencia.':f.appearance),
   row('general','Consciencia y orientación',n.verbal==null?'Respuesta verbal no evaluable.':n.verbal<4?'Respuesta verbal muy limitada.':
-   n.verbal===4?'Comunica frases, pero no está bien orientado; pregunta dónde está.':'Alerta y orientado en esta evaluación.'),
+   n.verbal===4?authored?.neurology?.language&&!n.infectiousConfusion?
+    'Respuesta verbal limitada por el trastorno del lenguaje; evaluar orientación mediante respuestas adaptadas.':
+    'Comunica frases, pero no está bien orientado; pregunta dónde está.':'Alerta y orientado en esta evaluación.'),
   row('general','Perfusión y respiración',v.sys<90?'Perfusión comprometida; requiere reevaluación inmediata.':
-   v.spo2<90?'Compromiso de la oxigenación.':observed.trend==='better'?'Mejor perfusión clínica que al ingreso; persiste necesidad de seguimiento.':'Valorar en conjunto con los signos actuales.'),
+   v.spo2<90?'Compromiso de la oxigenación.':observed.trend==='better'?authored?
+    'Mejoría clínica respecto del ingreso; reevaluar perfusión y respiración con los signos actuales.':
+    'Mejor perfusión clínica que al ingreso; persiste necesidad de seguimiento.':'Valorar en conjunto con los signos actuales.'),
   row('general','Dolor observado',observed.pain==null?null:'Refiere '+observed.pain+'/10 en este momento.')];
  if(technique==='inspection')rows=[row('skin','Piel y mucosas',f.skin),
-  row('thorax','Tórax / patrón respiratorio',v.rr>=26?'Respiración rápida, '+Math.round(v.rr)+' por minuto.':null),
-  row('abdomen','Abdomen',f.inspection),row('perineum','Periné',f.perineum)];
- if(technique==='auscultation')rows=[row('abdomen','Intestino / abdomen',f.bowel),row('thorax','Corazón'),row('thorax','Pulmones')];
- if(technique==='percussion')rows=[row('abdomen','Abdomen',f.percussion),row('liver','Hígado',f.liverPercussion),row('spleen','Bazo'),row('renal','Región renal')];
- if(technique==='palpation')rows=[row('abdomen','Abdomen',f.palpation),row('liver','Hígado',f.liver),
+  row('thorax','Tórax / patrón respiratorio',fatigue>=.4?
+   'Signos de agotamiento: menor esfuerzo respiratorio útil, respiración superficial y entrada de aire reducida.':
+   thoracic?f.inspection:v.rr>=26?'Respiración rápida, '+Math.round(v.rr)+' por minuto.':null),
+  row('abdomen','Abdomen',thoracic?f.abdomenInspection:f.inspection),row('perineum','Periné',f.perineum)];
+ if(technique==='auscultation')rows=[row('abdomen','Intestino / abdomen',f.bowel),row('thorax','Corazón',f.heart),
+  row('thorax','Pulmones',fatigue>=.75&&bronchospasm?'Entrada de aire mínima bilateral: tórax silente o casi silente; dato de alarma por agotamiento ventilatorio.':
+   fatigue>=.4?(f.lungs?f.lungs+' ':'')+'Menor ventilación útil y signos de fatiga ventilatoria.':
+   seizureControlled?'Sin convulsión motora durante esta evaluación; reevaluar entrada de aire y protección de vía aérea.':f.lungs)];
+ if(technique==='percussion')rows=[...(thoracic?[row('thorax','Tórax',f.percussion)]:[]),
+  row('abdomen','Abdomen',thoracic?f.abdomenPercussion:f.percussion),row('liver','Hígado',f.liverPercussion),row('spleen','Bazo'),row('renal','Región renal')];
+ if(technique==='palpation')rows=[...(thoracic?[row('thorax','Tórax / pulsos',f.palpation)]:[]),
+  row('abdomen','Abdomen',thoracic?f.abdomenPalpation:f.palpation),row('liver','Hígado',f.liver),
   row('spleen','Bazo',f.spleen),row('pulses','Pulsos periféricos',v.sys<90?'Pulso débil con compromiso de perfusión.':null)];
+ if(technique==='neurological'){
+  const scores=[n.eye,n.verbal,n.motor],total=scores.every(Number.isFinite)?scores.reduce((a,b)=>a+b,0):null;
+  rows=[row('neurological','Hallazgos neurológicos de referencia',f.neuro),
+   row('neurological','Consciencia actual','Glasgow E'+(n.eye??'no evaluable')+' V'+(n.verbal??'no evaluable')+
+    ' M'+(n.motor??'no evaluable')+(total==null?'; total no calculable.':' = '+total+'.'))];
+  const labels={pupils:'Pupilas',language:'Lenguaje',strength:'Fuerza',sensation:'Sensibilidad',gait:'Marcha',
+   gaze:'Mirada',neglect:'Atención espacial',reflexes:'Reflejos',bulbar:'Función bulbar',ocular:'Función ocular',
+   memory:'Memoria',meningism:'Signos meníngeos',meningeal:'Signos meníngeos'};
+  for(const [key,label] of Object.entries(labels))if(typeof f.neurology?.[key]==='string')
+   rows.push(row('neurological',label,seizureControlled&&['pupils','strength'].includes(key)?
+    'Crisis motora controlada; requiere nueva evaluación dirigida durante la recuperación posictal, sin presumir normalidad.':f.neurology[key]));
+  if(typeof n.seizureActive==='boolean')rows.push(row('neurological','Actividad convulsiva actual',n.seizureActive?
+   'Actividad convulsiva presente; requiere control y vigilancia de vía aérea.':
+   'Sin movimientos convulsivos en esta evaluación.'+(n.postictal?' Persiste estado posictal; el cese motor no excluye actividad electrográfica.':'')));
+  if(Number.isFinite(n.nihss))rows.push(row('neurological','NIHSS','NIHSS '+n.nihss+'.'));
+  if(n.verbal==null)rows.push(row('neurological','Evaluabilidad',n.reason));
+ }
  if(technique==='rectal')rows=[row('perineum','Tacto rectal',caseId==='FECAL-001'?
   observed.bowelImpactionResolved?'Ampolla rectal sin fecaloma palpable tras la desimpactación confirmada; continuar vigilancia y prevención.':
    'Ampolla rectal con materia fecal dura; sin masa evidente.':null)];
+ if(['general','neurological'].includes(technique))for(const episode of readClinicalComplications(p,atNativeMinute))
+  if(typeof episode.manifestation==='string')rows.push(row(technique==='general'?'general':'neurological',
+   'Evolución clínica actual',(episode.status==='recovering'?'En recuperación parcial; persisten hallazgos del episodio: ':'')+episode.manifestation));
  return regionId?rows.filter(r=>r.regionId===regionId):rows;
 }
 const response=(p,cmd,data)=>({status:'executed',eventId:cmd.eventId,patientUid:p.uid,
@@ -106,17 +144,30 @@ export function executePhysicalExam(p,c,cmd,clock){
   g.total=components.every(x=>x&&x.score!=null)?components.reduce((sum,x)=>sum+x.score,0):null;
   return response(p,cmd,{glasgow:structuredClone(g),message:'Glasgow · '+parts.map(k=>GLASGOW_COMPONENTS[k]+': '+g[k].text).join(' · ')});
  }
- const technique=intent.id,region=intent.regionId;
+ const region=intent.regionId,technique=intent.id==='all'&&region==='neurological'?'neurological':
+  intent.id==='all'&&region==='general'?'general':intent.id;
  if(!Object.hasOwn(EXAM_TECHNIQUES,technique)||region&&!validExamSelection(region,technique))return reject(p,cmd);
- const rows=physicalExamRows(c.id,p,technique,region,clock.nativeMinute);
+ const rows=physicalExamRows(c.id,p,technique,region,clock.nativeMinute,c);
  for(const id of new Set(rows.map(r=>r.regionId))){
   p.examFindings[id]??={};p.examFindings[id][technique]={rows:rows.filter(r=>r.regionId===id),
    patientUid:p.uid,eventId:cmd.eventId,nativeMinute:clock.nativeMinute};
  }
- p.examLog.push({patientUid:p.uid,eventId:cmd.eventId,regionId:region||null,technique,nativeMinute:clock.nativeMinute});
+ p.examLog.push({patientUid:p.uid,eventId:cmd.eventId,regionId:region||null,technique,
+  nativeMinute:clock.nativeMinute,rows:structuredClone(rows)});
  p.exam[technique]={rows:Object.values(p.examFindings).flatMap(techs=>techs[technique]?.rows||[]),
   eventId:cmd.eventId,nativeMinute:clock.nativeMinute};
- p.examDone=!!p.examFindings.general?.general&&EXAM_REGIONS.abdomen.techniques.every(k=>p.examFindings.abdomen?.[k]);
+ if(c.clinicalPolicy){
+  const required=c.clinicalPolicy.closure?.requiredExams||[],has=(anatomy,tech)=>{
+   if(['heart','lungs'].includes(anatomy))anatomy='thorax';
+   if(tech==='all')return anatomy==='general'?!!p.examFindings.general?.general:
+    anatomy==='neurological'?!!p.examFindings.neurological?.neurological:
+    !!EXAM_REGIONS[anatomy]?.techniques.length&&EXAM_REGIONS[anatomy].techniques.every(t=>p.examFindings[anatomy]?.[t]);
+   return !!p.examFindings[anatomy]?.[tech];
+  };
+  const directed=required.length?required.every(id=>has(...id.split(':'))):
+   !!p.examFindings.thorax?.auscultation||!!p.examFindings.neurological?.neurological;
+  p.examDone=!!p.examFindings.general?.general&&directed;
+ }else p.examDone=!!p.examFindings.general?.general&&EXAM_REGIONS.abdomen.techniques.every(k=>p.examFindings.abdomen?.[k]);
  return response(p,cmd,{rows:structuredClone(rows),regionId:region||null,
   message:EXAM_TECHNIQUES[technique]+(region?' · '+EXAM_REGIONS[region].label:'')+': '+rows.map(x=>x.organ+': '+x.text).join(' · ')});
 }

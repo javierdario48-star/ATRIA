@@ -6,6 +6,7 @@ import {csCriticalRescueEvidence487,csCriticalRescueWindow487}
  from '../../clinical/critical-rescue-487.js';
 import {summarizeIVExposures} from './medication-exposure.js';
 import {IV_MEDICINES} from './native-medications.js';
+import {isDeliveredClinicalAdministration} from './receipts.js';
 
 // Both constants come from the effective V4 irreversible transition and the
 // validated 65s rescue policy. Gameplay units, NOT clinical prognosis.
@@ -15,7 +16,7 @@ const VITAL_AXES=['sys','dia','spo2','hr'];
 const previousState=()=>({observedCritical:false,exposureNativeMinutes:0,
  earnedCredit:0,rescueStartedAtSec:null,dead:false});
 
-function confirmedView(p,mode,prior){
+function confirmedView(p,mode,prior,minute){
  const administrations=p.administrationLog||[];
  const idSet=new Set();
  const active=new Map();
@@ -23,6 +24,12 @@ function confirmedView(p,mode,prior){
   if(row.patientUid!==p.uid||typeof row.sourceEventId!=='string'||!row.sourceEventId||
     idSet.has(row.sourceEventId))throw Error('invalid native survival administration');
   idSet.add(row.sourceEventId);
+  if(row.status==='administering'){
+   if(!(row.dose?.amount===0&&row.deliveryFraction===0)&&
+    !isDeliveredClinicalAdministration(p,row,minute))
+    throw Error('survival support requires unique native treatment receipt');
+   continue; // Running delivery is not a completed-dose support receipt.
+  }
   if(Object.hasOwn(IV_MEDICINES,row.id)){
    const matches=(p.treatments||[]).filter(t=>t.sourceEventId===row.sourceEventId&&t.id===row.id);
    if(matches.length!==1||matches[0].patientUid!==p.uid||
@@ -66,7 +73,7 @@ export function advanceNativeSurvival(p,c,mode,before,after){
  const from=before.nativeMinute,to=after.nativeMinute;
  if(![start,end,from,to].every(Number.isFinite)||start<0||end<start||to<from)
   throw Error('invalid native survival clock');
- const old=p.survival||previousState(),view=confirmedView(p,mode,old);
+ const old=p.survival||previousState(),view=confirmedView(p,mode,old,to);
  const v=danger(p.liveVitals);
  const grace=csGraceState487(view,c,end);
  const earnedCredit=Math.max(old.earnedCredit,grace.observedCredit??0);

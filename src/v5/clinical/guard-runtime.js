@@ -1,6 +1,7 @@
 import {createWorld} from '../app/world.js';
 import {createGuardSession} from './guard-session.js';
-import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
+import {clinicalExecutorFor,playableClinicalCaseIds} from '../content/clinical-cases.js';
+import {previousClinicalContents} from '../content/clinical-content.js';
 import {createShiftFlow,receptionAcuity} from './shift-flow.js';
 import {outcomeId} from '../social/cooperative-lifecycle.js';
 import {resolveGuardSelection,guardCaseSequence,guardScopeMultiplier} from './guard-selection-policy.js';
@@ -15,7 +16,13 @@ export async function clinicalContentHash(content){
 /** One world, nurse dispatcher and shift clock; one original native clinical
  * session per patient. Only the existing durable CAS owner can mutate them. */
 export async function createGuardRuntime({content,roomId,caseId,members,hostId,mode='coop',nowMs,checkpoint=null,guardSelection=null}){
- const contentHash=await clinicalContentHash(content);
+ let contentHash=await clinicalContentHash(content);
+ if(checkpoint&&checkpoint.contentHash!==contentHash){
+  for(const previous of previousClinicalContents(content)){
+   const previousHash=await clinicalContentHash(previous);
+   if(previousHash===checkpoint.contentHash){content=previous;contentHash=previousHash;break;}
+  }
+ }
  if(checkpoint){
   if(checkpoint.schemaVersion!==1||checkpoint.modelVersion!==CLINICAL_RUNTIME_VERSION||
     checkpoint.contentHash!==contentHash||checkpoint.roomId!==roomId)throw Error('incompatible runtime checkpoint');
@@ -23,7 +30,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   guardSelection=checkpoint.guardSelection??null;
  }
  if(guardSelection!==null){
-  const verified=resolveGuardSelection(content.cases,Object.keys(CLINICAL_EXECUTORS),guardSelection);
+  const verified=resolveGuardSelection(content.cases,playableClinicalCaseIds(content.cases),guardSelection);
   // jsonb reorders object keys; compare policy values, never object key order.
   if(checkpoint&&(guardSelection.version!==1||guardSelection.selection!==verified.selection||
    JSON.stringify(guardSelection.caseIds)!==JSON.stringify(verified.caseIds)))
@@ -36,7 +43,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  if(!['solo','apprentice','coop','competitive'].includes(mode)||!Number.isSafeInteger(nowMs)||nowMs<0||
    !Array.isArray(members)||members.length<(['solo','apprentice'].includes(mode)?1:2)||members.length>4||
    new Set(members.map(x=>x.id)).size!==members.length)throw Error('invalid multiplayer clinical runtime');
- if(!Object.hasOwn(CLINICAL_EXECUTORS,caseId))throw Object.assign(Error('clinical case is not migrated'),{code:'invalid'});
+ if(!clinicalExecutorFor(content.cases.find(c=>c.id===caseId)))throw Object.assign(Error('clinical case is not migrated'),{code:'invalid'});
  const host=members.find(m=>m.id===hostId);if(!host)throw Error('runtime host not in roster');
  const world=createWorld(content,{id:hostId,name:host.name,scrubColor:host.scrubColor||'navy',sex:host.sex,level:host.level},checkpoint?.world);
  if(!checkpoint)world.enterGuard({mode,caseId,patientUid:roomId+':patient',members});

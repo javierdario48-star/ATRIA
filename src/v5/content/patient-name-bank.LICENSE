@@ -1,0 +1,31 @@
+Copyright (c) 2012 Daniele Faraglia
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+Name data snapshot retrieved 2026-10-28; upstream source SHA-256:
+https://raw.githubusercontent.com/joke2k/faker/master/faker/providers/person/es_ES/__init__.py
+f37eb83dad277784785de028cc5971c24976f643bf20b695507a0cb8c49b3b40
+https://raw.githubusercontent.com/joke2k/faker/master/faker/providers/person/es_MX/__init__.py
+b33502775a66d9312d9510f9ec79b9c4188a99d1c3ab6e534e0f55bd5aa9dbfd
+https://raw.githubusercontent.com/joke2k/faker/master/faker/providers/person/es_AR/__init__.py
+59bd61b7f70b5867da0b930758abb24161b937558337090a0412eae81c384d66
+https://raw.githubusercontent.com/joke2k/faker/master/faker/providers/person/pt_BR/__init__.py
+43867c26cbab198cb55d2a0ed8be9904ae387f90fecf99103345f25129936bf9
+
+The packaged data includes only literal given names and surnames, with case/accent-only duplicates removed. No upstream Python code is executed or shipped.
