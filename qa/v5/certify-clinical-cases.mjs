@@ -82,7 +82,9 @@ export function deriveClinicalCertificationPlan(c,content){
  const baselineSys=Number(String(c.vitals?.bp).split('/')[0]);
  const critical=baselineSys<90||c.vitals?.spo2<90||c.vitals?.hr>=140||c.vitals?.rr>=30;
  const destinations=rule?.destinations||[legacy?.dest].filter(Boolean);
- const destination=critical&&destinations.includes('uti')?'uti':destinations[0];
+ const surgicalTransfer=destinations.includes('quirofano')&&(policy?.definitiveInterventions||[])
+  .some(id=>nativeTreatmentDefinition(id,c)?.kind==='procedure');
+ const destination=critical&&destinations.includes('uti')?'uti':surgicalTransfer?'quirofano':destinations[0];
  if(!destination)throw Error(c.id+': no declared executable destination');
  const treatmentIds=policy?unique([...firstAllowedTreatmentGroup(c),...(rule.dischargeTreatments||[])]):
   (c.keyInterventions||[]).filter(id=>!['surgery','source_control'].includes(id));
@@ -299,6 +301,11 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
  try{
   content??=await clinicalCertificationContent([c]);
   const plan=deriveClinicalCertificationPlan(c,content);row.plan=copy(plan);
+  // The authored receiving surgical pathway is a handoff, not an operation
+  // performed at the bedside. Keep the native complication active until an
+  // actual procedural receipt exists; never queue that operation across transfer.
+  const transferredProcedures=new Set(plan.destination==='quirofano'?
+   (c.clinicalPolicy?.definitiveInterventions||[]).filter(id=>treatmentDefinition(content,id,c)?.kind==='procedure'):[]);
   const seeded=random(seed),roomId=roomForScenario(c,mode,seed,profile);
   const members=mode==='coop'||mode==='competitive'?
    [{id:'host',name:'Certificación anfitrión'},{id:'doctor',name:'Certificación médico'}]:[{id:'doctor',name:'Certificación médico'}];
@@ -423,7 +430,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     for(const def of c.clinicalPolicy?.complications||[]){
      const active=emerged.some(x=>x.id===def.id||x.complicationId===def.id||x.kind===def.id);
      if(!active)continue;
-     for(const id of [...(def.rescueAllOf||[]),...(def.rescueAnyOf||[]).slice(0,1)])if(!rescued.has(id)&&!actualTreatment(view.clinical.patient,id,view.clinical.clock.nativeMinute)){
+     for(const id of [...(def.rescueAllOf||[]),...(def.rescueAnyOf||[]).slice(0,1)])if(!transferredProcedures.has(id)&&!rescued.has(id)&&!actualTreatment(view.clinical.patient,id,view.clinical.clock.nativeMinute)){
       const issuedAtNativeMinute=view.clinical.clock.nativeMinute,command=await action(treatmentCommand(c,content,id));rescued.add(id);
       row.rescueActions.push({complicationId:def.id,treatmentId:id,commandId:command.id,issuedAtNativeMinute,
        issuedAtRealSecond:command.issuedAtRealSecond});

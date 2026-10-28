@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
 import {neurologyPack} from '../../src/v5/content/packs/neurology-pack.js';
+import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
 import * as certification from '../v5/certify-clinical-cases.mjs';
 import {certifyClinicalCases, runClinicalCaseScenario, deriveClinicalCertificationPlan,
  CLINICAL_CERTIFICATION_PROFILES} from '../v5/certify-clinical-cases.mjs';
@@ -10,6 +11,21 @@ const load=name=>JSON.parse(fs.readFileSync(new URL('../../src/v5/content/'+name
 const content={map:load('hospital'),beds:load('beds'),cases:load('cases'),therapies:load('therapies'),defaultDoses:load('default-doses')};
 const app=content.cases.find(c=>c.id==='APP-001');
 const peri=content.cases.find(c=>c.id==='PERI-SEC-001');
+test('a declared definitive surgical pathway selects the receiving operating team before a routine ward',()=>{
+ const c=cardiologyPack.cases.find(x=>x.id==='CARD-09');
+ const plan=deriveClinicalCertificationPlan(c,content);
+ assert.equal(plan.destination,'quirofano');assert.deepEqual(plan.consults,['cardiovascular']);
+});
+test('cooperative endocarditis with valvular edema transfers for surgery without claiming an unfinished operation',async()=>{
+ const c=cardiologyPack.cases.find(x=>x.id==='CARD-09'),row=await runClinicalCaseScenario(c,{
+  mode:'coop',seed:'casepack-v1-8e6c2d5dfde6a52b-130081:CARD-09',horizon:1440,recovery:true});
+ assert.equal(row.passed,true,JSON.stringify(row.failures));
+ assert.equal(row.closureReceipt.destination,'quirofano');
+ assert(row.complications.some(x=>x.id==='card09-valvular-edema'));
+ assert(row.consultations.some(x=>x.id==='cardiovascular'&&x.accepted===true));
+ assert(!row.treatments.some(x=>x.id==='valve_surgery'),'transfer cannot invent a completed operation');
+ assert.equal(row.pendingTreatments.length,0);assert.equal(row.xpReceipts.length,1);
+});
 test('abandonment preserves a single irreversible death when postmortem commands have no bedside target',async()=>{
  const c=respiratoryPack.cases.find(x=>x.id==='RESP-04'),row=await runClinicalCaseScenario(c,{profile:'abandon',horizon:400,seed:'abandoned-terminal'});
  assert.equal(row.final.died,true);assert.equal(row.terminalIntegrity.postmortemCommandsRejected,true);

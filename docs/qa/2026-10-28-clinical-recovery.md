@@ -58,7 +58,7 @@ persisted identities, compatible age and history variants, personality and typed
 allergy facts. Allergy knowledge comes from legitimate history; reactions use
 the existing pharmacology.
 
-Final local verification: `npm run test:v5` passed 2,565/2,565 tests;
+Final local verification: `npm run test:v5` passed 2,567/2,567 tests;
 `npm run build:v5` built 189 files and `npm run build:v5-core` validated 22 modules.
 The historical `npm test` suite also passed during this recovery. Two explicit
 complication-rescue journeys (RESP-04 and NEUR-08) passed again after the final
@@ -73,3 +73,13 @@ and competitive modes, with evidence artifacts, and browser coverage of all 55
 cases. Browser execution is delegated to CI because this workspace has no
 Chromium executable. Automatic deployment is restricted to the experimental
 branch preview; this work does not promote production or modify `main`.
+
+The first four-mode CI matrix exposed a cooperative CARD-09 strategy defect:
+the bot chose routine ward admission and queued a 180-native-minute valve
+operation after valvular edema emerged, beyond the remaining guard horizon.
+The native engine correctly withheld both the operation receipt and closure.
+The common bot planner now prefers an authored definitive surgical destination
+over a routine ward and requests its receiving team. It does not queue or claim
+an operation that belongs after that transfer. A regression using the exact
+failing seed observes the actual edema, accepted cardiovascular handoff, empty
+pending orders and one XP receipt, with no fabricated valve operation.
