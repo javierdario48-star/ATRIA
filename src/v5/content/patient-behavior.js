@@ -15,21 +15,21 @@ export function buildBehaviorProfile(seed,archetype='calm'){
  }));
  return Object.freeze({version:1,archetype,...values});
 }
-const openings=['Mire, ','Bueno, ','A ver, ','Le cuento: ','Doctor, ',''];
+const openings=['Mire: ','Bueno: ','A ver: ','Le cuento: ','Doctor: ',''];
 const closings=['¿Me explica qué puede ser?','Estoy un poco preocupado.','Gracias por escucharme.'];
 const normalize=x=>String(x).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 function sentenceAfter(prefix,fact){
  if(!prefix)return fact;
  // Avoid duplicated greetings, awkward capitals and redundant leading discourse markers.
  if(/^(hola|buenas|doctor|doctora|mire|bueno|a ver|le cuento)\\b/i.test(normalize(fact)))return fact;
- return prefix+fact.charAt(0).toLowerCase()+fact.slice(1);
+ return prefix+fact;
 }
 // The case-authored clinical answer is never deleted, rephrased or reordered.
 export function styleClinicalAnswer(fact,{behavior,seed='',question='',eventId='',impaired=false,sensitive=false}={}){
  if(!fact||impaired||sensitive||!behavior)return fact;
  const h=hash(seed+':'+question+':'+eventId);
  const prefix=behavior.verbosity>=3?openings[h%openings.length]:
-  behavior.trust<=1&&behavior.cooperation<=1?'Bueno, ':behavior.anxiety>=3?'Doctor, ':'';
+  behavior.trust<=1&&behavior.cooperation<=1?'Bueno: ':behavior.anxiety>=3?'Doctor: ':'';
  const withPrefix=sentenceAfter(prefix,fact);
  // Optional emotional remarks only on selected turns; do not append the same
  // question to every clinical fact, and never alter the fact itself.
