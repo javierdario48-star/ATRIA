@@ -710,6 +710,7 @@ export async function createApplication({document,window,content,signal}){
   if(nurseQuick)nurseQuick.hidden=!guard;
   input.placeholder=guard?'Hablar en la guardia…':'Hablar en el lobby…';
   document.body.dataset.phase=s.phase;document.body.dataset.generation=String(s.generation);
+  renderMusic();
  }
  function enterLobby(leaveShared=false){
   if(durableClient&&account.read()){
