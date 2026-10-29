@@ -59,7 +59,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   allergyHistory:copy(resolvedPatient.allergyHistory||[]),intolerances:copy(resolvedPatient.intolerances||[]),
   ...(resolvedPatient.backgroundHistory?{backgroundHistory:copy(resolvedPatient.backgroundHistory)}:{}),
   ...(caseData.variation?{name:resolvedPatient.name,age:resolvedPatient.age,
-    personality:resolvedPatient.personality,opening:resolvedPatient.opening,
+    personality:resolvedPatient.personality,behavior:copy(resolvedPatient.behavior),opening:resolvedPatient.opening,
     variation:resolvedPatient.variation}:{}),
   ...patientAllergyFacts487(resolvedPatient),adverseEvents:[]};
  if(nativePatient.allergies.length){

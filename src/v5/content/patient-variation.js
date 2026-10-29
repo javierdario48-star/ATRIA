@@ -91,7 +91,7 @@ export function generatePatientVariation(input,seed,context={}){
  const personality=choose(v.personalities,r),opening=choose(v.openings,r);
  return {
   seed:String(seed),name:firstName+' '+lastName,age,personality,opening,
-  behavior:buildBehaviorProfile(seed,personality),
+  behavior:buildBehaviorProfile(seed,normalizePatientPersonality(personality)),
   ...(v.nameBankId?{nameBankId:v.nameBankId}:{}),
   ...(nameIndex!==undefined?{nameIndex,guardSeed:String(context.guardSeed??seed),patientIndex:context.patientIndex}:{}),
   // Retain authored reaction type, severity and disclosure. Intolerance never
