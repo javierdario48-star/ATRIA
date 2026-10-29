@@ -36,7 +36,7 @@ export const CLINICAL_BOT_PLAYBOOK=Object.freeze({
    'Enfermera pantoprazol 40 mg'],consult:'/consulta gastro',wait:80},
  'COLON-001':{dx:'cáncer de colon',dest:'alta',
   history:['¿Ha bajado de peso?','¿Tiene sangre?'],
-  studies:['colonoscopia'],meds:[],wait:255},
+  studies:['colonoscopia'],meds:['/tratamiento staging_order'],wait:255},
  'ILEO-001':{dx:'obstrucción intestinal',dest:'sala',
   history:['¿Tuvo una operación abdominal?','¿Dejó de eliminar gases?'],
   studies:['ileo_xray'],meds:['Enfermera nada por boca','Enfermera una vía',

@@ -36,7 +36,8 @@ export function assessIntegralJourney(row){
   row.patientIdentity?.restoredIdentityUnchanged===true,'patient identity changed');
  require(row.final?.atRealSecond>row.initial?.atRealSecond,'native clock never advanced');
  const duration=row.final?.atRealSecond-row.initial?.atRealSecond;
- require(row.final?.died||row.closureReceipt?.closed||row.final?.atRealSecond>=row.horizonRealSeconds-1e-6,'journey stopped before outcome/horizon');
+ require(row.final?.died||row.closureReceipt?.closed||row.final?.atRealSecond>=row.horizonRealSeconds-1e-6||
+  row.final?.shiftEnded===true&&row.final?.shiftElapsedSeconds===1440,'journey stopped before outcome/horizon');
  const complete=failures.length===0;
  const integrity=assessClinicalCertificationEvidence(row).integrityChecks;
  // Rescue coverage is a clinical opportunity, separate from source/runtime

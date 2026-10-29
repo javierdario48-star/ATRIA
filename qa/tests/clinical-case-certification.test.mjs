@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
 import {neurologyPack} from '../../src/v5/content/packs/neurology-pack.js';
 import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
+import {chooseClinicalScenarioSeed} from '../v5/scenario-seeds.mjs';
 import * as certification from '../v5/certify-clinical-cases.mjs';
 import {certifyClinicalCases, runClinicalCaseScenario, deriveClinicalCertificationPlan,
  CLINICAL_CERTIFICATION_PROFILES} from '../v5/certify-clinical-cases.mjs';
@@ -17,8 +18,10 @@ test('a declared definitive surgical pathway selects the receiving operating tea
  assert.equal(plan.destination,'quirofano');assert.deepEqual(plan.consults,['cardiovascular']);
 });
 test('cooperative endocarditis with valvular edema transfers for surgery without claiming an unfinished operation',async()=>{
- const c=cardiologyPack.cases.find(x=>x.id==='CARD-09'),row=await runClinicalCaseScenario(c,{
-  mode:'coop',seed:'casepack-v1-8e6c2d5dfde6a52b-130081:CARD-09',horizon:1440,recovery:true});
+ const c=cardiologyPack.cases.find(x=>x.id==='CARD-09'),composed=await certification.clinicalCertificationContent([c]);
+ const seed=chooseClinicalScenarioSeed(composed.cases.find(x=>x.id===c.id),'valvular-edema',
+  variant=>variant.complicationCandidates.some(x=>x.id==='card09-valvular-edema'),{mode:'coop'});
+ const row=await runClinicalCaseScenario(c,{mode:'coop',seed,horizon:1440,recovery:true});
  assert.equal(row.passed,true,JSON.stringify(row.failures));
  assert.equal(row.closureReceipt.destination,'quirofano');
  assert(row.complications.some(x=>x.id==='card09-valvular-edema'));

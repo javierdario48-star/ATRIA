@@ -1,10 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
 import {clinicalCertificationContent,runClinicalCaseScenario,deriveClinicalCertificationPlan} from '../v5/certify-clinical-cases.mjs';
 import {INTEGRAL_SCENARIOS,assessIntegralJourney,makeIntegralManifest,summarizeIntegralRows} from '../v5/clinical-integral-matrix.mjs';
 import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
+test('a submillisecond horizon advances a real native frame instead of spinning on a rounded zero deadline',()=>{
+ const script=`import {clinicalCertificationContent,runClinicalCaseScenario} from './qa/v5/certify-clinical-cases.mjs';
+ const content=await clinicalCertificationContent(),c=content.cases.find(x=>x.id==='APP-001');
+ const row=await runClinicalCaseScenario(c,{content,profile:'abandon',horizon:.0001});
+ console.log(JSON.stringify(row.final));`;
+ const final=JSON.parse(execFileSync(process.execPath,['--input-type=module','-e',script],{encoding:'utf8',timeout:4000}));
+ assert(final.atRealSecond>0&&final.atRealSecond<=1/60+.0001);
+ assert(Math.abs(final.atNativeMinute-final.atRealSecond*.12)<1e-6);
+});
 
 test('integral matrix schedules ten distinct journeys per authored case',()=>{
  const cases=[{id:'A'},{id:'B'}],manifest=makeIntegralManifest(cases,{seed:'matrix',sourceDigest:'source',horizon:60});

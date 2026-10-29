@@ -119,6 +119,13 @@ export function executePatientDialogue(p,c,cmd,clock){
    const historyQuestion=reactionQuestion?'alergias':personalHistory?'antecedentes personales':clause;
    const exact=exactFact(c,clause),fact=csAnamnesisFact(c,historyQuestion),duration=dimensions[1][1].test(clause),explicitPain=/\b(dolor|duele|molesta|hinchazon|hinchando)\b/.test(clause);
    const named=symptomQuestions.filter(([,re])=>re.test(clause));
+   // A composite authored symptom (for example vomiting blood) carries
+   // more information than the generic symptom word it contains.
+   if(exact&&named.length&&!duration&&exact.keys.some(key=>normalize(key).includes(' ')&&
+    (' '+clause+' ').includes(' '+normalize(key)+' '))){
+    answers.push(note(exact.id,exact.answers[0],'case.intents.'+exact.id).answer);
+    context.lastSymptom=exact.id;continue;
+   }
    // Explicit postoperative history must not be swallowed by the generic
    // "surgeries" domain. A bare pain/fever duration follow-up still follows
    // its current symptom and cannot earn a postoperative-course fact.

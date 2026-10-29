@@ -11,6 +11,7 @@ import {nativeTreatmentDefinition} from '../../src/v5/clinical/native-medication
 import {clinicalInterventionEligibility} from '../../src/v5/clinical/native-medication-eligibility.js';
 import {confirmedClinicalTreatment} from '../../src/v5/clinical/receipts.js';
 import {generatePatientVariation} from '../../src/v5/content/patient-variation.js';
+import {diagnosticRequirements} from '../../src/v5/clinical/diagnostic-evidence.js';
 
 export const CLINICAL_CERTIFICATION_PROFILES=Object.freeze([
  'competent','slow','inexperienced','negligent','omit-studies','wrong-medication',
@@ -106,7 +107,7 @@ export function deriveClinicalCertificationPlan(c,content){
   if(treatmentIds.some(id=>policy.eligibility?.[id]?.requiresSafeSwallowOrEnteralTube)&&offered.has('swallow_screen'))
    treatmentIds.unshift('swallow_screen');
  }
- const studyIds=unique([...(legacy?.studies||[]),...(c.keyStudies||[]),...(rule?.requiredStudies||[]),
+ const studyIds=unique([...(policy||!Array.isArray(legacy?.studies)?c.keyStudies||[]:legacy.studies),...(rule?.requiredStudies||[]),
   ...(rule?.study||[]).flat(),
   ...treatmentIds.flatMap(id=>[...(policy?.eligibility?.[id]?.requiredStudies||[]),
    ...(policy?.eligibility?.[id]?.requiresStudiesAfterTreatments||[]).map(rule=>rule.studyId)])]).filter(id=>!isPhysicianExamStudy(id));
@@ -164,6 +165,7 @@ function snapshot(view){
   critical:!!p.survival?.observedCritical,died:!!p.patientDied,deathReason:p.deathReason??null,
   deathAtRealSecond:p.patientDied?(p.survival?.atRealSecond??null):null,
   closed:!!p.closure?.closed,destination:p.closure?.destination??null,xp:s.progress.xp,
+  shiftEnded:!!s.shift?.ended,shiftElapsedSeconds:s.shift?.elapsedSeconds??null,
   exposureNativeMinutes:round(p.survival?.exposureNativeMinutes??0)};
 }
 function failedCase(c,options,error){
@@ -174,7 +176,8 @@ function collectReceipts(state){
  const receipts=[];
  for(const event of state.room.events){
   if(['chat.posted','clinical.completed'].includes(event.type))for(const item of event.clinical||[])
-   if(item.status==='executed'&&item.receipt)receipts.push({...copy(item.receipt),kind:item.kind,id:item.id});
+   if(item.status==='executed'&&item.receipt)receipts.push({...copy(item.receipt),
+    commandId:event.commandId||event.message?.id,kind:item.kind,id:item.id});
  }
  return receipts;
 }
@@ -267,14 +270,17 @@ function finalEvidence(row,view,checkpoint,c,plan){
  const done=new Set(p.orders.filter(x=>x.patientUid===p.uid&&x.status==='done'&&x.sourceEventId&&x.result&&
   x.readyAtMinute<=s.clock.clinicalMinute+1e-8).map(x=>x.id));
  const examExecuted=row.examLog.length>0&&row.examLog.every(x=>x.patientUid===p.uid&&x.eventId)&&p.examDone;
- const requiredExams=(c.clinicalPolicy?.closure?.requiredExams||[]);
+ const requiredExams=(c.clinicalPolicy?.closure?.requiredExams||diagnosticRequirements(c).examinations);
  const targeted=requiredExams.every(selection=>{
   const [region,technique]=selection.split(':');
   if(region==='neurological')return row.examLog.some(x=>x.regionId==='neurological'||x.technique==='neurological');
   if(['heart','lungs'].includes(region)&&technique==='auscultation')return !!p.examFindings?.thorax?.auscultation;
   return row.examLog.some(x=>x.regionId===region&&x.technique===technique)||!!p.examFindings?.[region]?.[technique];
  });
- const nativeTreatments=plan.treatmentIds.every(id=>actualTreatment(p,id,s.clock.nativeMinute));
+ const legacyActions=row.legacyTreatmentActions||[];
+ const nativeTreatments=c.clinicalPolicy?plan.treatmentIds.every(id=>actualTreatment(p,id,s.clock.nativeMinute)):
+  legacyActions.length>0&&legacyActions.every(action=>receipts.some(receipt=>receipt.patientUid===p.uid&&
+   receipt.commandId===action.commandId&&receipt.id===action.id&&receipt.kind===action.kind));
  const administrativeIntegrity=row.administrations.every(a=>a.patientUid===p.uid&&a.sourceEventId&&
   p.treatments.filter(t=>t.sourceEventId===a.sourceEventId&&t.id===a.id).length===1)&&
   new Set(row.administrations.map(x=>x.sourceEventId)).size===row.administrations.length;
@@ -285,9 +291,13 @@ function finalEvidence(row,view,checkpoint,c,plan){
   typeof closure.eventId==='string'&&receipts.some(x=>x.closure?.eventId===closure.eventId&&x.closure.closed);
  const xp=!!closure&&closure.xp>0&&s.progress.receipts.length===1&&s.progress.receipts[0].patientUid===p.uid&&
   s.progress.receipts[0].eventId===closure.eventId&&s.progress.receipts[0].xp===closure.xp&&s.progress.xp===closure.xp;
- row.checks={history:(c.requiredHistory||[]).length>0&&(c.requiredHistory||[]).every(id=>answered.has(id)),
+ const sourceQuestions=CLINICAL_BOT_PLAYBOOK[c.id]?.history||[];
+ const nativeHistory=!c.clinicalPolicy&&sourceQuestions.length>0&&sourceQuestions.every(text=>
+  row.commands.filter(command=>command.text===text).some(command=>command.clinical.some(item=>item.kind==='history.ask'&&
+   item.status==='executed'&&receipts.some(receipt=>receipt.commandId===command.id&&receipt.patientUid===p.uid&&receipt.answer))));
+ row.checks={history:nativeHistory||(c.requiredHistory||[]).length>0&&(c.requiredHistory||[]).every(id=>answered.has(id)),
   exam:!!examExecuted&&targeted,studies:confirmedStudies,
-  treatment:plan.treatmentIds.length>0&&nativeTreatments&&administrativeIntegrity,
+  treatment:(c.clinicalPolicy?plan.treatmentIds.length>0:legacyActions.length>0)&&nativeTreatments&&administrativeIntegrity,
   trajectory:!!row.firstMeaningfulPhysiologicalDelta,
   closure:actualClosure&&plan.consults.every(id=>p.consults.some(x=>x.id===id&&x.patientUid===p.uid&&x.accepted&&x.status==='done')),
   xp};
@@ -356,7 +366,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   const advance=async seconds=>{
    const left=horizon-view.clinical.clock.clinicalMinute;
    if(left<=1e-8)return observe(false);
-   nowMs+=Math.round(Math.min(left,seconds)*1000);
+   nowMs+=Math.max(1,Math.round(Math.min(left,seconds)*1000));
    let advanced=await runtime.advanceTo(nowMs,{maxSteps:3600});
    while(advanced.recovering)advanced=await runtime.advanceTo(nowMs,{maxSteps:3600});
    return observe(false);
@@ -402,7 +412,13 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
      const needsAccess=plan.treatmentIds.some(id=>id==='iv'||treatmentDefinition(content,id,c)?.requiresAccess||
       (c.clinicalPolicy.regimens?.[id]?.route||treatmentDefinition(content,id,c)?.route)==='iv');
      if(needsAccess)firstOrder=await action('Enfermera una vía');
-    }else for(const text of plan.legacyMedicationCommands){const ordered=await action(text);firstOrder??=ordered;}
+   }else for(const text of plan.legacyMedicationCommands){
+    const ordered=await action(text);firstOrder??=ordered;
+    row.legacyTreatmentActions??=[];
+    row.legacyTreatmentActions.push(...(ordered.ack.clinical||[]).filter(item=>
+     ['therapy.request','procedure.request','monitor.set'].includes(item.kind)).map(item=>
+     ({id:item.id,kind:item.kind,commandId:ordered.id})));
+   }
    }else if(profile==='wrong-medication'){
     await action('Enfermera una vía');
     row.unsafeMedicationCommand=wrongMedicationCommand;firstOrder=await action(wrongMedicationCommand);
@@ -412,7 +428,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   let lastCloseAttempt=-Infinity,wrongRepeatAt=0;
   while(view.clinical.clock.clinicalMinute<horizon-1e-8){
    const s=view.clinical,p=s.patient,second=s.clock.clinicalMinute;
-   if(p.patientDied||p.closure?.closed)break;
+   if(p.patientDied||p.closure?.closed||s.shift?.ended)break;
    if(competent&&c.clinicalPolicy){
     if(profile!=='omit-studies')for(const id of plan.studyIds)if(!requestedStudies.has(id)&&canRequestStudy(id,s)){
      await action('/estudio '+id);requestedStudies.add(id);
@@ -476,7 +492,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    const allTreatments=plan.treatmentIds.every(id=>actualTreatment(current.patient,id,current.clock.nativeMinute));
    // Original case owners decide their own native conduct/receipt contract.
    // A policy-only prefilter must not prevent asking that owner for handoff.
-   const canAttempt=!c.clinicalPolicy||['omit-studies','inexperienced','negligent','wrong-medication'].includes(profile)||allStudies&&allTreatments;
+   const canAttempt=['omit-studies','inexperienced','negligent','wrong-medication'].includes(profile)||
+    allStudies&&(!c.clinicalPolicy||allTreatments);
    const complicationObservationComplete=profile!=='complication-rescue'||!c.clinicalPolicy?.complications?.length||
     (current.patient.policyState?.complications||[]).some(episode=>episode.status==='recovered'||
      (c.clinicalPolicy.complications.find(def=>def.id===episode.id)?.rescueAllOf||[]).some(id=>transferredProcedures.has(id)));

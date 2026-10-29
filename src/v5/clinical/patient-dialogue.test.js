@@ -15,6 +15,15 @@ function setup(caseId='APP-001',uid='P1'){
  return {s,send:text=>s.post({id:'d'+(++n),text}),near:x=>near=x,focus:x=>focus=x};
 }
 const answer=ack=>ack.clinical.map(x=>x.receipt?.answer||'').join(' ');
+test('specific blood-vomit history is not replaced by a generic uncertain vomiting answer',async()=>{
+ const f=setup('HDA-001');
+ try{
+  const response=await f.send('¿Vomitó sangre?');
+  assert.match(answer(response),/sangre/i);
+  assert(f.s.read().patient.intentHistory.some(x=>x.id==='bleeding'&&x.source==='case.intents.bleeding'));
+  assert.equal(f.s.read().patient.administrationLog.length,0);
+ }finally{f.s.dispose();}
+});
 test('an unconscious patient retains impaired speech while an authored companion supplies indirect history',async()=>{
  const c=neurologyPack.cases.find(x=>x.id==='NEUR-06'),uid='witness-history',
   extended=createClinicalContent(content,{additionalCases:[c]});
