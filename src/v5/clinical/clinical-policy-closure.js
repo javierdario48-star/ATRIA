@@ -112,7 +112,10 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   missing.push('Revisar los recibos nativos de administración inconsistentes antes del cierre.');
  }
  const acceptedTreatmentGroup=requiredTreatmentGroups?.find(group=>group.length&&group.every(id=>done.has(id))),
-  referenceTreatmentGroup=requiredTreatmentGroups?.[0]||[],
+  // Destination alternatives replace the original reference care for scoring
+  // as well as readiness. Receiver-owned drainage must not remain an omitted
+  // bedside intervention after an authored handoff alternative was completed.
+  referenceTreatmentGroup=rule.treatment?.[0]||requiredTreatmentGroups?.[0]||[],
   qualityInterventions=acceptedTreatmentGroup?[...new Set([
    ...(caseData.keyInterventions||[]).filter(id=>!referenceTreatmentGroup.includes(id)),...acceptedTreatmentGroup
   ])]:caseData.keyInterventions||[];

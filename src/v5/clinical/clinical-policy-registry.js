@@ -63,6 +63,12 @@ function validateClosure(c) {
  if (!strings(rule.destinations) || rule.destinations.some(id => !destinations.has(id))) errors.push('invalid closure destinations');
  if (!Array.isArray(rule.treatment) || !rule.treatment.length) errors.push('nonempty closure treatment alternatives required');
  else for (const [i, group] of rule.treatment.entries()) actionList(group, 'closure.treatment[' + i + ']', errors);
+ if (rule.treatmentByDestination !== undefined && !record(rule.treatmentByDestination)) errors.push('invalid destination closure treatments');
+ else for (const [destination, groups] of Object.entries(rule.treatmentByDestination || {})) {
+  if (!rule.destinations?.includes(destination)) errors.push('invalid treatment destination ' + destination);
+  if (!Array.isArray(groups) || !groups.length) errors.push('nonempty destination treatment alternatives required for ' + destination);
+  else for (const [i, group] of groups.entries()) actionList(group, 'closure.treatmentByDestination.' + destination + '[' + i + ']', errors);
+ }
  studyReferences(rule.requiredStudies, c, 'closure.requiredStudies', errors);
  if (!Array.isArray(rule.study)) errors.push('closure study alternatives required');
  else for (const [i, group] of rule.study.entries()) studyReferences(group, c, 'closure.study[' + i + ']', errors, false);

@@ -12,6 +12,29 @@ const registries = () => {
 };
 const clone = value => structuredClone(value);
 const row = (registry, id) => registry instanceof Map ? registry.get(id) : registry[id];
+test('destination treatment contracts reject invalid routes, empty alternatives and unexecutable actions', () => {
+ for (const treatmentByDestination of [
+  [], {alta: []}, {alta: [[]]}, {quirofano: [['amoxicillin']]}, {alta: [['invented-action']]}
+ ]) {
+  const pack = clone(respiratoryPack); pack.cases = pack.cases.slice(0, 1);
+  pack.cases[0].clinicalPolicy.closure.treatmentByDestination = treatmentByDestination;
+  const result = compileClinicalCasePack(pack, registries());
+  assert.equal(result.ok, false, JSON.stringify(treatmentByDestination));
+  assert.deepEqual(result.cases, []);
+ }
+});
+
+test('destination-only treatment actions remain executable dependencies of the compiled pack', () => {
+ const pack = clone(respiratoryPack); pack.cases = pack.cases.slice(0, 1);
+ pack.cases[0].clinicalPolicy.closure.treatmentByDestination = {alta: [['amoxiclav']]};
+ const result = compileClinicalCasePack(pack, registries());
+ assert.equal(result.ok, true, result.errors.join('\n'));
+ assert(result.dependencies.some(row => row.registry === 'drugs' && row.id === 'amoxiclav'));
+ const r = registries(), without = {...r, drugs: {...r.drugs}};
+ delete without.drugs.amoxiclav;
+ assert.equal(compileClinicalCasePack(pack, without).ok, false);
+});
+
 test('declarative observation and post-treatment evidence contracts are validated before activation',()=>{
  for(const corrupt of [
   c=>{c.clinicalPolicy.observationResponses=[{allOf:['amoxicillin'],delay:2,peak:2,neurology:{eye:4}}];},

@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {respiratoryPack} from '../content/packs/respiratory-pack.js';
+import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
 import {csClosureQuality487} from '../../clinical/case-completion-487.js';
 import {evaluateClinicalPolicyDisposition as evaluate} from './clinical-policy-closure.js';
 const clone = value => structuredClone(value);
-const caseById = id => clone([...respiratoryPack.cases, ...neurologyPack.cases].find(c => c.id === id));
+const caseById = id => clone([...respiratoryPack.cases, ...cardiologyPack.cases, ...neurologyPack.cases].find(c => c.id === id));
 
 function evidencePatient(c) {
  const uid = 'policy-closure-' + c.id;
@@ -64,6 +65,41 @@ test('an authored alternative regimen earns the same treatment credit as its com
   const result=evaluate(p,c,'alta');
   assert.equal(result.ready,true,result.missing.join(' '));
   assert.equal(result.quality.treatment,25,'the common score must recognize the declared completed alternative');
+ }
+});
+
+test('destination-specific handoff care earns treatment credit without inventing the receiver procedure', () => {
+ for (const [caseId, destination, interventions, receiver] of [
+  ['RESP-07', 'procedimiento', ['needle_decompression'], 'cirugia'],
+  ['RESP-07', 'uti', ['needle_decompression'], 'uti'],
+  ['RESP-08', 'procedimiento', ['amoxiclav'], 'cirugia'],
+  ['RESP-08', 'quirofano', ['ceftriaxone', 'metronidazole'], 'cirugia']
+ ]) {
+  const c = caseById(caseId), p = evidencePatient(c);
+  p.examFindings.thorax.percussion = {patientUid: p.uid, eventId: 'percussion', rows: [{text: 'Exploración pleural realizada.'}]};
+  for (const id of interventions) id === 'needle_decompression' ? performed(p, id) : administered(p, id, 'iv');
+  accepted(p, receiver);
+  const result = evaluate(p, c, destination);
+  assert.equal(result.ready, true, caseId + ': ' + result.missing.join(' '));
+  assert.equal(result.quality.treatment, 25, caseId + ': the accepted destination owns definitive drainage');
+  assert(!p.treatments.some(row => row.id === 'chest_drainage'));
+  assert(!p.administrationLog.some(row => row.id === 'chest_drainage'));
+ }
+});
+
+test('accepted receiver never replaces immediate tension decompression or permits undrained ward admission', () => {
+ for (const [caseId, interventions, receiver] of [
+  ['RESP-07', [], 'cirugia'], ['RESP-08', ['amoxiclav'], 'clinica']
+ ]) {
+  const c = caseById(caseId), p = evidencePatient(c);
+  p.examFindings.thorax.percussion = {patientUid: p.uid, eventId: 'percussion', rows: [{text: 'Exploración pleural realizada.'}]};
+  for (const id of interventions) administered(p, id, 'iv');
+  accepted(p, receiver);
+  for (const destination of caseId === 'RESP-07' ? ['procedimiento', 'sala', 'uti'] : ['sala']) {
+   const result = evaluate(p, c, destination);
+   assert.equal(result.ready, false, caseId + ': ' + destination);
+   assert.match(result.missing.join(' '), /intervenciones imprescindibles/);
+  }
  }
 });
 

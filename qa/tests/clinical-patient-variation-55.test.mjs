@@ -6,8 +6,11 @@ import {materializeGuardPatient} from '../../src/v5/content/guard-patient-variat
 import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
 import {neurologyPack} from '../../src/v5/content/packs/neurology-pack.js';
+import {createClinicalContent} from '../../src/v5/content/clinical-content.js';
 const base=JSON.parse(readFileSync(new URL('../../src/v5/content/cases.json',import.meta.url)));
-const cases=[...base,...respiratoryPack.cases,...cardiologyPack.cases,...neurologyPack.cases];
+const read=name=>JSON.parse(readFileSync(new URL('../../src/v5/content/'+name+'.json',import.meta.url)));
+const cases=createClinicalContent({cases:base,therapies:read('therapies'),defaultDoses:read('default-doses')},
+ {additionalCases:[...respiratoryPack.cases,...cardiologyPack.cases,...neurologyPack.cases]}).cases;
 const RUNS=40;
 test('55 authored cases exercise forty deterministic patient admissions each',()=>{
  assert.equal(cases.length,55);
@@ -16,10 +19,7 @@ test('55 authored cases exercise forty deterministic patient admissions each',()
  for(const c of cases){
   assert(!ids.has(c.id),'duplicate case '+c.id);ids.add(c.id);
   const profile=c.variation===true?DEFAULT_PATIENT_VARIATION:c.variation;
-  if(!profile){
-   assert(base.some(x=>x.id===c.id),'only legacy base cases may lack variation');
-   continue;
-  }
+  assert(profile,c.id+' must have executable patient variation');
   assert.deepEqual(validateVariation(profile),[],c.id);
   variableCases++;
   const patients=Array.from({length:RUNS},(_,i)=>{
@@ -45,7 +45,7 @@ test('55 authored cases exercise forty deterministic patient admissions each',()
   }
   allergicPatients+=allergies.length;
  }
- assert.equal(variableCases,30,'expected thirty variable specialty cases; legacy cases are tracked separately');
+ assert.equal(variableCases,55,'all original and specialty cases require patient variation');
  assert(allergicCases>0,'no cases contain probabilistic allergy variants');
  assert(allergicPatients>0,'no allergic patients observed');
  console.log(JSON.stringify({caseCount:cases.length,admissions:variableCases*RUNS,legacyCasesWithoutVariation:cases.length-variableCases,distinctNames,distinctPersonalities,allergicCases,allergicPatients}));

@@ -27,6 +27,10 @@ const round=x=>Number(Number(x).toFixed(6));
 const unique=xs=>[...new Set(xs)];
 const readContent=name=>JSON.parse(readFileSync(new URL('../../src/v5/content/'+name+'.json',import.meta.url)));
 const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
+const patientIdentity=p=>({patientUid:p.uid,caseId:p.caseId,name:p.name??null,age:p.age??null,
+ personality:p.personality??null,opening:p.opening??null,variation:copy(p.variation??null),
+ backgroundHistory:copy(p.backgroundHistory??null),allergyHistory:copy(p.allergyHistory||[]),
+ allergies:copy(p.allergies||[]),severeAllergies:copy(p.severeAllergies||[]),intolerances:copy(p.intolerances||[])});
 // Optional native receipt properties may be undefined in memory. Certification
 // is a strict JSON envelope: omit absent object fields without coercing any
 // observed number, array entry or other clinical value.
@@ -63,9 +67,12 @@ function historyQuestions(c){
   return generic?[{intentId:id,text:generic}]:[];
  });
 }
-function firstAllowedTreatmentGroup(c){
- const groups=c.clinicalPolicy?.closure?.treatment||[];
- return groups[0]||[];
+function firstAllowedTreatmentGroup(c,destination){
+ const rule=c.clinicalPolicy?.closure,groups=rule?.treatmentByDestination?.[destination]||rule?.treatment||[];
+ // Prefer an authored receiver alternative when the source explicitly offers
+ // one. Transfer is never evidence that a definitive operation was performed.
+ const receiver=rule?.consult?.[destination]?.length;
+ return (receiver?groups.find(group=>group.every(id=>nativeTreatmentDefinition(id,c)?.kind!=='procedure')):null)||groups[0]||[];
 }
 function targetedExam(selection){
  const [region,technique]=selection.split(':');
@@ -84,9 +91,10 @@ export function deriveClinicalCertificationPlan(c,content){
  const destinations=rule?.destinations||[legacy?.dest].filter(Boolean);
  const surgicalTransfer=destinations.includes('quirofano')&&(policy?.definitiveInterventions||[])
   .some(id=>nativeTreatmentDefinition(id,c)?.kind==='procedure');
- const destination=critical&&destinations.includes('uti')?'uti':surgicalTransfer?'quirofano':destinations[0];
+ const receiverAlternative=destinations.find(id=>rule?.treatmentByDestination?.[id]&&rule?.consult?.[id]?.length);
+ const destination=critical&&destinations.includes('uti')?'uti':surgicalTransfer?'quirofano':receiverAlternative||destinations[0];
  if(!destination)throw Error(c.id+': no declared executable destination');
- const treatmentIds=policy?unique([...firstAllowedTreatmentGroup(c),...(rule.dischargeTreatments||[])]):
+ const treatmentIds=policy?unique([...firstAllowedTreatmentGroup(c,destination),...(rule.dischargeTreatments||[])]):
   (c.keyInterventions||[]).filter(id=>!['surgery','source_control'].includes(id));
  if(policy){
   const offered=new Set((c.interventions||[]).map(x=>x.id));
@@ -236,6 +244,8 @@ export function assessClinicalCertificationEvidence(row){
 }
 function finalEvidence(row,view,checkpoint,c,plan){
  const s=view.clinical,p=s.patient,receipts=collectReceipts(s);
+ row.patientIdentity.final=patientIdentity(p);
+ row.patientIdentity.identityUnchanged=hash(row.patientIdentity.initial)===hash(row.patientIdentity.final);
  row.final=snapshot(view);row.history=copy(p.intentHistory||[]);row.examLog=copy(p.examLog||[]);
  row.studies=copy(p.orders);row.administrations=copy(p.administrationLog||[]);
  row.treatments=copy(p.treatments);row.consultations=copy(p.consults||[]);
@@ -290,10 +300,11 @@ function finalEvidence(row,view,checkpoint,c,plan){
 /** One real player journey. The runtime owns fixed world steps and the native
  * clinical rate. Advancing wall time never assigns its native clock directly. */
 export async function runClinicalCaseScenario(c,{content,mode='solo',profile='competent',
- seed='clinical-certification-v1',horizon=1440,recovery=false,traceEvery=10}={}){
+ seed='clinical-certification-v1',horizon=1440,recovery=false,traceEvery=10,source={}}={}){
  if(!CLINICAL_CERTIFICATION_PROFILES.includes(profile)||!CLINICAL_CERTIFICATION_MODES.includes(mode)||
   !Number.isFinite(horizon)||horizon<=0||horizon>1440)throw Error('invalid clinical certification scenario');
  const options={mode,profile},row={caseId:c.id,profile,mode,seed:String(seed),authority:'createGuardRuntime',
+  source:{...copy(source),caseId:c.id,caseDefinitionDigest:hash(c),nativePolicy:c.clinicalPolicy?'declarative-v5':'legacy-native'},
   horizonRealSeconds:horizon,clockStepRealSeconds:{initial:.25,longitudinal:1},
   commands:[],observations:[],firstMeaningfulPhysiologicalDelta:null,recovery:null,recoveryRequested:recovery,
   complicationObservations:[],rescueActions:[]};
@@ -313,6 +324,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   row.memberIds=members.map(member=>member.id);row.careActorId=actorId;
   const factory=checkpoint=>createGuardRuntime({content,roomId,caseId:c.id,members,hostId,mode,nowMs,checkpoint});
   runtime=await factory(null);let view=runtime.view(actorId);const uid=view.clinical.patient.uid;
+  row.patientIdentity={patientUid:uid,initial:patientIdentity(view.clinical.patient),restoredIdentityUnchanged:true};
   row.patientUid=uid;row.initial=snapshot(view);const baseline=copy(view.clinical.patient.liveVitals);
   const observe=force=>{
    view=runtime.view(actorId);const sample=snapshot(view),previous=row.observations.at(-1);
@@ -335,7 +347,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    sameAdministrations:hash(after.clinical.patient.administrationLog)===hash(before.clinical.patient.administrationLog),
    sameXP:hash(after.clinical.progress)===hash(before.clinical.progress),
    sameEventIds:hash(after.clinical.room.events)===hash(before.clinical.room.events),
-   sameClock:hash(after.clinical.clock)===hash(before.clinical.clock),sameClaims:hash(after.claims)===hash(before.claims)});
+   sameClock:hash(after.clinical.clock)===hash(before.clinical.clock),sameClaims:hash(after.claims)===hash(before.claims),
+   sameIdentity:hash(patientIdentity(after.clinical.patient))===hash(patientIdentity(before.clinical.patient))});
   const advance=async seconds=>{
    const left=horizon-view.clinical.clock.clinicalMinute;
    if(left<=1e-8)return observe(false);
@@ -446,6 +459,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     row.recovery={atRealSecond:round(second),pendingBefore:beforeP.pendingTreatments.length,
      ...recoveryEvidence(before,restored),
      hostId,members:members.map(x=>x.id)};
+    row.patientIdentity.restoredIdentityUnchanged&&=row.recovery.sameIdentity;
     const beforeReplay=runtime.view(actorId),again=await send(firstOrder.text,firstOrder.id),afterReplay=runtime.view(actorId);
     row.recovery.replayedCommandId=again.id;
     row.recovery.replayUnchanged=hash(beforeReplay.clinical.patient)===hash(afterReplay.clinical.patient)&&
@@ -503,6 +517,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    row.recovery??={atRealSecond:round(before.clinical.clock.clinicalMinute),
     pendingBefore:before.clinical.patient.pendingTreatments.length,...finalRecovery};
    row.recovery.final=finalRecovery;observe(false);
+   row.patientIdentity.restoredIdentityUnchanged&&=finalRecovery.sameIdentity;
   }
   const checkpoint=await runtime.checkpoint();
   row.sharedViews=members.map(m=>{

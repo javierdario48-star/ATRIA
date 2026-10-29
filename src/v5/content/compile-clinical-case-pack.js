@@ -40,6 +40,8 @@ export function clinicalCaseExecutableReferences(c) {
  }
  const closure = record(policy.closure) ? policy.closure : {};
  for (const group of Array.isArray(closure.treatment) ? closure.treatment : []) list('drugs', group);
+ if (record(closure.treatmentByDestination)) for (const groups of Object.values(closure.treatmentByDestination))
+  for (const group of Array.isArray(groups) ? groups : []) list('drugs', group);
  list('drugs', closure.dischargeTreatments); list('drugs', closure.definitiveTreatmentIds);
  for (const allergy of Array.isArray(c?.variation?.allergies) ? c.variation.allergies : []) add('drugs', allergy?.drugId);
  const complications = [...(Array.isArray(policy.complications) ? policy.complications : []),
