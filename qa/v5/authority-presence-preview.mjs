@@ -71,8 +71,17 @@ async function moveAndObserve(p,other,name){
 }
 try{
  const expected=createHash('sha256').update(await fs.readFile(new URL('../../src/v5/app/application.js',import.meta.url))).digest('hex');
- const response=await fetch(origin+'/src/v5/app/application.js');
- assert.equal(createHash('sha256').update(await response.text()).digest('hex'),expected,'test the checked-out preview');
+ stage='wait for the checked-out preview';
+ const deadline=Date.now()+120000;let served=null;
+ while(served!==expected){
+  try{
+   const response=await fetch(origin+'/src/v5/app/application.js',{cache:'no-store',signal:AbortSignal.timeout(10000)});
+   if(response.ok)served=createHash('sha256').update(await response.text()).digest('hex');
+  }catch{/* Vercel builds asynchronously; never certify the old deployment. */}
+  if(served===expected)break;
+  assert(Date.now()<deadline,'the real preview must serve the checked-out application');
+  await new Promise(resolve=>setTimeout(resolve,2000));
+ }
  const a=await boot(),b=await boot(true);await register(a,0);await register(b,1);
  await check('mutual lobby presence and movement',async()=>{
   await Promise.all([a,b].map((p,i)=>p.waitForFunction(name=>atriaV5.snapshot().others.some(x=>x.name===name),names[1-i])));
@@ -161,7 +170,9 @@ try{
   assert(fresh.activeGuardId&&fresh.activeGuardId!==roomId);assert.equal(fresh.xp,saved.xp);
  });
  assert.deepEqual(errors,[]);assert.deepEqual(failures,[]);
- const report={passed:true,origin,checks,errors};await fs.writeFile(output+'/results.json',JSON.stringify(report,null,2));
+ const report={passed:true,origin,applicationHash:expected,checks,errors,
+  progress:{xp:saved.xp,casesResolved:saved.casesResolved}};
+ await fs.writeFile(output+'/results.json',JSON.stringify(report,null,2));
  console.log('ATRIA LIVE AUTHORITY PRESENCE PASS '+JSON.stringify(report));
 }catch(error){
  const diagnostics=await Promise.all(pages.map(async(p,i)=>{
