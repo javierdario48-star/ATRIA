@@ -41,7 +41,7 @@ jobs:
           node-version: '22'
       - name: Bot-check 40 admissions per variable case for identity personality allergy and recovery
         run: node --test qa/tests/clinical-patient-variation-55.test.mjs
-      - name: Verify the original module based core
+      - name: Certify 10000 behavior profiles and 10000 twelve-turn anamneses\n        run: node --test qa/tests/patient-behavior-accelerated.test.mjs qa/tests/patient-behavior-conversations.test.mjs\n      - name: Verify the original module based core
         run: npm run test:v5-core
       - name: Canonical content, navigation, study and independent game contracts
         run: npm run test:v5
