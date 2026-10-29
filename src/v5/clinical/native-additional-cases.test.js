@@ -34,3 +34,22 @@ test('arterial ischemia anticoagulation does not simulate reperfusion or normali
  assert.deepEqual(p.liveVitals,bare.liveVitals);
  assert(p.liveVitals.sys<c.vitals.bp.split('/')[0]);
 });
+
+test('GI cases inherit confirmed repeat-diuretic harm and freeze physiology after handoff',()=>{
+ for(const id of ['UC-AS-001','CDI-001','DIARR-001']){
+  const {c,p}=factory(id),{p:untreated}=factory(id);
+  for(let i=0;i<13;i++){
+   const row={id:'furosemide',patientUid:p.uid,sourceEventId:'furo-'+i,
+    dose:{amount:40,unit:'mg'},route:'iv',administeredAtNativeMinute:i};
+   p.administrationLog.push(row);p.treatments.push({...row});
+  }
+  advanceAdditionalCaseVitals(p,c,72,72);
+  advanceAdditionalCaseVitals(untreated,c,72,72);
+  assert(p.liveVitals.sys<untreated.liveVitals.sys-15,id+' wrong diuresis must lower BP');
+  assert(p.liveVitals.hr>untreated.liveVitals.hr+8,id+' wrong diuresis must raise HR');
+  const after=structuredClone(p.liveVitals);
+  p.caseEnded=true;
+  advanceAdditionalCaseVitals(p,c,120,200);
+  assert.deepEqual(p.liveVitals,after,id+' transfer freezes all vital changes');
+ }
+});
