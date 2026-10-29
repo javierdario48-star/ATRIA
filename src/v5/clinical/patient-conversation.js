@@ -61,6 +61,7 @@ export function composePatientConversation(facts,{behavior,seed,relationship:r,t
    r.anxiety>=3?['¿Hay algo que no haya quedado claro?','¿Necesita que vuelva al principio?']:
     behavior.sociability>=3?['Voy a contarlo otra vez.','Le cuento de nuevo cómo fue.']:['Lo aclaro otra vez.'];
   else if(interaction.explanation&&behavior.explanation>=3&&r.turn>1)candidates=['Así entiendo para qué me pregunta.','Con esa explicación puedo seguirle mejor.'];
+  else if(topic==='reason'&&r.cooperation<1)candidates=['Prefiero ir respondiendo de a poco.','Me cuesta hablar de esto; pregúnteme de a una cosa.'];
   else if(topic==='reason'&&r.trust<1.5&&behavior.explanation>=2)candidates=['Antes de seguir, quisiera saber para qué son estas preguntas.','¿Me cuenta por qué necesita saber estos detalles?'];
   else if(['reason','symptoms'].includes(topic)&&r.anxiety>=3&&behavior.expressiveness>=3)candidates=[
    '¿Qué van a hacer ahora?','Me cuesta no pensar en lo que puede estar pasando.','Necesito que me vaya explicando los pasos.'];
@@ -70,6 +71,6 @@ export function composePatientConversation(facts,{behavior,seed,relationship:r,t
  }
  const text=[...realized.map(f=>f.spoken),...(remark?[remark]:[])].join(' ');
  return {answer:(greeting?'Hola, doctor. ':'')+(limited&&!sensitive?'(Responde con pausas.) ':'')+text,
-  evidence:{facts:realized,remark,repeat,limited,topic,
+  evidence:{facts:realized,remark,repeat,limited,topic,styleApplied:!sensitive&&!limited,
    emotion:{anxiety:r.anxiety,trust:r.trust,cooperation:r.cooperation,frustration:r.frustration}}};
 }

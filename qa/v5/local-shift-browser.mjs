@@ -91,9 +91,11 @@ try{
    assert.equal(await p.locator('#receptionGuide').isHidden(),true);
    assert.equal(await p.locator('#patientWheel').isHidden(),false,
     'arrival from reception must expose the existing bedside wheel');
+   const volunteered=await p.evaluate(()=>atriaV5.snapshot().clinical.patient.intentHistory.some(
+    x=>['interview:associated','interview:current'].includes(x.id)));
    assert.equal(await p.locator('#patientWheel [data-patient-action="talk"]').evaluate(
-    e=>e.classList.contains('patient-wheel-guided')),true,
-    'shared bedside policy must guide Talk for both local modes');
+    e=>e.classList.contains('patient-wheel-guided')),!volunteered,
+    'Talk coaching advances when a conversational patient actually volunteers additional history');
    assert.equal((await p.evaluate(()=>atriaV5.snapshot().clinical)).messages.filter(
     m=>m.role==='player'&&m.text==='Hola ¿Qué te pasó?').length,1);
    results.push({mode,triage,mentor:!!state.expert,firstPatient:true,nativeConversation:true});

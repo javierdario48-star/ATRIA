@@ -32,6 +32,10 @@ test('selectable glow respects availability and mode ownership',()=>{
  assert.deepEqual(unassignedPatientMarkers('guard','apprentice',points,records,'b').map(x=>x.uid),['a']);
  assert.deepEqual(unassignedPatientMarkers('lobby','competitive',points,records),[]);
 });
+test('authored spontaneous disclosures are real history progress for bedside coaching',()=>{
+ const s=clinical();s.patient.intentHistory=[{id:'interview:symptoms'},{id:'interview:associated',source:'case.anamnesis.otherSymptoms'}];
+ assert.equal(suggestedBedsideAction(s),null);
+});
 
 test('departed, deceased, and focused shared beds do not glow',()=>{
  const points=[{uid:'a',x:5,y:8},{uid:'b',x:8,y:9,departed:true},

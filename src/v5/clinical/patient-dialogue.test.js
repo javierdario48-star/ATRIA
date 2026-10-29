@@ -247,7 +247,7 @@ test('real untreated shock limits speech instead of fabricating acquired history
  assert(before.hypoperfusionNativeMinutes>=2);
  const reply=await f.send('Hola ¿Qué te pasó?');
  assert.equal(reply.clinical[0].status,'executed','a limited verbal reply is still delivered');
- assert.equal(answer(reply),'Dolor… panza…');
+ assert.equal(answer(reply),'(Pronuncia palabras sueltas, sin poder precisar lo que siente.)');
  const after=f.s.read().patient;
  assert.deepEqual(after.intentHistory,[],'incoherent speech cannot grant a complete symptom history');
  assert.equal(after.examDone,false);
@@ -365,7 +365,7 @@ test('personality never adds speech or acquired history when the clinical owner 
  const p=variedDialoguePatient('ansiosa');p.neurology={eye:4,verbal:4,motor:6};
  assert.equal(directHistory(p,'¿Dónde estás?').receipt.answer,'No sé bien… ¿estoy en mi casa? ¿Dónde estamos?');
  p.neurology.verbal=3;
- assert.equal(directHistory(p,'¿Tenés alergias?').receipt.answer,'Dolor… panza…');
+ assert.equal(directHistory(p,'¿Tenés alergias?').receipt.answer,'(Pronuncia palabras sueltas, sin poder precisar lo que siente.)');
  assert.deepEqual(p.intentHistory,[]);
 });
 

@@ -83,7 +83,7 @@ export function executePatientDialogue(p,c,cmd,clock){
   const timed=fact?.answers.find(a=>/\b(hace|ayer|anoche|hoy|desde|semana\w*|hora\w*|dia\w*)\b|no (?:tuve|tengo|note)/.test(normalize(a)));
   const text=duration?timed||'No recuerdo exactamente cuándo empezó '+(def?.[2]||'ese síntoma')+'.':
    fact?.answers[0]||'No puedo precisar bien '+(def?.[2]||'ese síntoma')+' ahora.';
-  const entry=note(fact?.id||'symptom:'+id,text,fact?'case.intents.'+fact.id:'native.symptom-unknown');
+  const entry=note(fact?.id||'symptom:'+id,text,fact&&(!duration||timed)?'case.intents.'+fact.id:'native.symptom-unknown');
   context.lastSymptom=id;context.symptoms[id]=entry;answers.push(entry.answer);
  }
  function subjective(){
@@ -102,7 +102,7 @@ export function executePatientDialogue(p,c,cmd,clock){
   proxyHistory=(verbal==null||verbal<=3)&&['companion','clinical-record'].includes(informant?.kind)&&informant.label;
  const greeting=/^(hola|hpla|holq|ola|buenas|buen dia|buenos dias|buenas tardes|buenas noches)\b/.test(n);
  if((verbal==null||verbal<=3)&&!proxyHistory)answers.push(verbal==null?'(No puede dar una respuesta verbal evaluable en este momento.)':
-  verbal===3?'Dolor… panza…':verbal===2?'Mmm…':'(No responde.)');
+  verbal===3?'(Pronuncia palabras sueltas, sin poder precisar lo que siente.)':verbal===2?'Mmm…':'(No responde.)');
  else{
   // Preserve actual questions after greetings and independently process each
   // question/conjunction; a special answer must not swallow another domain.
@@ -146,6 +146,7 @@ export function executePatientDialogue(p,c,cmd,clock){
    // before older case keyword scoring (for example, medication history).
    const identityAge=fact?.intent==='age'&&Number.isInteger(p.age)?'Tengo '+p.age+' años.':null;
    const historyIntent=fact?.intent??exact?.id;
+   if(['allergies','meds','drugs','anticoagulants','anticoagulation','medications'].includes(historyIntent))sensitiveHistory=true;
    const backgroundAnswer=historyIntent==='pmh'?p.backgroundHistory?.history?.pmh:null;
    if(!named.length&&(fact?.text||identityAge||backgroundAnswer)&&!['onset','radiation','location','features','intensity','otherSymptoms','reason'].includes(historyIntent)){
     const id=exact?.id===historyIntent?exact.id:'anamnesis:'+historyIntent;
@@ -204,7 +205,9 @@ export function executePatientDialogue(p,c,cmd,clock){
  // Never change impaired speech, allergies, drug names or other case facts.
  const rawAnswer=lay([...new Set(answers)].join(' '));
  const personality=normalizePatientPersonality(p.personality);
- const canStyle=verbal>=5&&rawAnswer&&!sensitiveHistory&&!/alergia|urticaria|anafilaxia/i.test(rawAnswer);
+ const fluent=verbal>=5&&rawAnswer;
+ const protectedAnswer=sensitiveHistory||/alergia|urticaria|anafilaxia/i.test(rawAnswer);
+ const canStyle=fluent&&!protectedAnswer;
  const prefix={anxious:'Estoy preocupado. ',reserved:'Bueno… ',talkative:'Le cuento, doctor. ',
   irritable:'Esto me tiene molesto. ',scared:'Tengo miedo. ',uncooperative:'No tengo muchas ganas de hablar. '}[personality];
  if(proxyHistory)for(const entry of p.intentHistory)if(entry.eventId===cmd.eventId){
@@ -213,7 +216,7 @@ export function executePatientDialogue(p,c,cmd,clock){
  let dialogue=null;
  let answer=proxyHistory&&rawAnswer?informant.label+' (anamnesis indirecta): '+rawAnswer:
   canStyle&&!p.behavior&&prefix?prefix+rawAnswer:rawAnswer;
- if(canStyle&&p.behavior){
+ if(fluent&&p.behavior){
   const interaction=patientRelationship(context,cmd.actorId,p.behavior,raw),r=interaction.relationship;
   const facts=[...new Set(answers)].map((text,i)=>{
    const canonical=lay(text.replace(/^Hola, doctor\. /,'')),entry=disclosures.find(e=>e.answer===canonical);
@@ -222,12 +225,21 @@ export function executePatientDialogue(p,c,cmd,clock){
   const topic=disclosures.some(e=>e.id==='interview:symptoms')?'reason':
    disclosures.some(e=>e.id==='onset')?'onset':disclosures[0]?.id??'observation';
   const limited=p.liveVitals.spo2<90||p.liveVitals.sys<80||p.liveVitals.rr>=32;
-  if(!sensitiveHistory&&!limited)for(const extra of spontaneousHistory(c,p.behavior,r,topic,facts)){
+  if(!protectedAnswer&&!limited&&!p.treatments.length&&observed.trend==='unchanged')for(const extra of spontaneousHistory(c,p.behavior,r,topic,facts)){
    const entry=note(extra.id,extra.canonical,extra.source);facts.push({...extra,canonical:entry.answer});
   }
   const composed=composePatientConversation(facts,{behavior:p.behavior,seed:p.variation?.seed??p.uid,
-   relationship:r,topic,question:raw,interaction,sensitive:sensitiveHistory,greeting,limited});
+   relationship:r,topic,question:raw,interaction,sensitive:protectedAnswer,greeting,limited});
   answer=composed.answer;dialogue=composed.evidence;
+ }
+ if(answer&&!dialogue){
+  const facts=[...new Set(answers)].map((text,i)=>{
+   const canonical=lay(text.replace(/^Hola, doctor\. /,'')),entry=disclosures.find(e=>e.answer===canonical);
+   return {id:entry?.id??'interview:response:'+i,canonical,spoken:canonical,
+    source:entry?.source??(verbal<4||verbal==null?'native.impaired-speech':'native.patient-observation'),rules:[]};
+  });
+  dialogue={facts,remark:null,limited:true,styleApplied:false,
+   prefix:proxyHistory?informant.label+' (anamnesis indirecta): ':greeting?'Hola, doctor. ':''};
  }
  const receipt={patientUid:p.uid,eventId:cmd.eventId,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,
   source:'native.patient-dialogue',...(answer?{answer}:{}),...(dialogue?{dialogue}:{}),message:answer||'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'};

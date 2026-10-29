@@ -79,3 +79,23 @@ test('old checkpoints acquire deterministic behavior without rerolling clinical 
   for(const k of ['name','age','variation','allergies','allergyHistory','liveVitals'])assert.deepEqual(a.read().patient[k],cp.patient[k],k);
  }finally{a.dispose();b.dispose();}
 });
+test('medication and anticoagulant history stays literal while explanations still update rapport',async()=>{
+ for(const id of ['PERI-SEC-001','DIVERT-001','LGIB-001']){
+  const data=content.cases.find(x=>x.id===id),{session}=interviewFixture(data,content,{archetype:'scared',seed:'same'});
+  try{
+   await session.post({id:'reason',text:'¿Qué le pasa?'});
+   const before=session.read().patient.interview.relationships.doctor;
+   const ack=await session.post({id:'protected-meds',text:'Le escucho con calma. Le explico: estas preguntas ayudan a entender lo que siente. ¿Qué medicación toma?'});
+   const r=ack.clinical[0].receipt;
+   assert(r.dialogue,'protected answers still need evidence');
+   assert(r.dialogue.facts.every(f=>f.canonical===f.spoken),'medication history must remain literal');
+   const after=session.read().patient.interview.relationships.doctor;
+   assert.equal(after.turn,before.turn+1);assert(after.anxiety<=before.anxiety);
+  }finally{session.dispose();}
+ }
+});
+test('reluctant cooperation is perceptible without withholding requested medical facts',async()=>{
+ const r=await runAnamnesis(c,content,{index:6,profileIndex:6});
+ assert.match(r.rows[0].answer,/de a poco|de a una cosa/);
+ assert.match(r.rows[0].answer,/ombligo/);assert.deepEqual(r.failures,[]);
+});

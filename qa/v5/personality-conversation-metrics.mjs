@@ -1,6 +1,17 @@
 // Reproducible comparisons. Greetings, punctuation and emotional wrappers
 // cannot earn substantive diversity. Medical content is never scored by length.
 export const normalizeText=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const conversationalRemarks=new Set([
+ 'Ya se lo había contado; voy a repetirlo.','¿Necesita que lo diga de otra manera?',
+ '¿Hay algo que no haya quedado claro?','¿Necesita que vuelva al principio?',
+ 'Voy a contarlo otra vez.','Le cuento de nuevo cómo fue.','Lo aclaro otra vez.',
+ 'Así entiendo para qué me pregunta.','Con esa explicación puedo seguirle mejor.',
+ 'Prefiero ir respondiendo de a poco.','Me cuesta hablar de esto; pregúnteme de a una cosa.',
+ 'Antes de seguir, quisiera saber para qué son estas preguntas.','¿Me cuenta por qué necesita saber estos detalles?',
+ '¿Qué van a hacer ahora?','Me cuesta no pensar en lo que puede estar pasando.',
+ 'Necesito que me vaya explicando los pasos.','Necesito un momento para responderle.',
+ 'Puedo contestar, pero me cuesta si me apura.'
+]);
 export function stripSurface(text){
  return String(text).replace(/^(?:(?:Hola, doctor\.|Estoy preocupado\.|Bueno…|Le cuento, doctor\.|Esto me tiene molesto\.|Tengo miedo\.|No tengo muchas ganas de hablar\.|(?:Mire|Bueno|A ver|Le cuento|Doctor):)\s*)+/i,'')
   .replace(/\s*(?:¿Me explica qué puede ser\?|Estoy un poco preocupado\.|Gracias por escucharme\.)\s*$/i,'');
@@ -8,7 +19,7 @@ export function stripSurface(text){
 export function substantiveBody(row,{primaryOnly=false}={}){
  return normalizeText(row.rows.map(t=>t.evidence?.facts?.filter(f=>!primaryOnly||!f.spontaneous).map(f=>f.spoken).join(' ')||stripSurface(t.answer)).join(' '));
 }
-export const expressiveInterview=row=>row.rows.some(t=>t.evidence&&!t.evidence.limited);
+export const expressiveInterview=row=>row.rows.some(t=>t.evidence&&t.evidence.styleApplied!==false&&!t.evidence.limited);
 const shingles=text=>{const words=normalizeText(text).split(' '),set=new Set();for(let i=0;i<words.length-2;i++)set.add(words.slice(i,i+3).join(' '));return set;};
 export function jaccard(a,b){let n=0;for(const x of a)if(b.has(x))n++;return a.size+b.size-n?n/(a.size+b.size-n):1;}
 export function compareConversations(rows,options={}){
@@ -23,7 +34,8 @@ export function compareConversations(rows,options={}){
 // Independent semantic guard for the deliberately finite language vocabulary.
 // Clause order may change; clinical tokens, negations and values may not.
 export function clinicalMeaning(text){
- let n=normalizeText(text);
+ const clauses=String(text).split(/(?<=[.!?])\s+/).map(clause=>{
+ let n=normalizeText(clause);
  for(const [re,to] of [
   [/\b(?:panza|barriga)\b/g,'belly'],[/\b(?:abdomen|vientre)\b/g,'abdomen'],
   [/\b(?:empezo|comenzo|arranco)\b/g,'start'],[/\bde (?:golpe|repente)\b/g,'sudden'],
@@ -39,7 +51,13 @@ export function clinicalMeaning(text){
   [/\b(?:me duele|siento el dolor|tengo dolor en)\b/g,'pain']
  ])n=n.replace(re,to);
  n=n.replace(/^hace (.+?) que start\b/,'start hace $1');
- return n.split(' ').sort().join(' ');
+ n=n.replace(/^desde que start no tengo nada de hambre$/,'no tengo nada de hambre desde que start')
+  .replace(/^vomite una vez y nausea$/,'nausea y vomite una vez');
+ return n;
+ });
+ // Sentence permutations are allowed; polarity and numbers stay attached to
+ // their original propositions. A global word bag would miss reassignment.
+ return clauses.sort().join(' | ');
 }
 export function interviewQuality(row){
  const failures=[],remarks=new Map();let spontaneous=0,facts=0,realizations=0;
@@ -54,7 +72,16 @@ export function interviewQuality(row){
    if(clinicalMeaning(f.canonical)!==clinicalMeaning(f.spoken))failures.push('changed-clinical-content:'+i+':'+f.id);
    if(normalizeText(f.canonical)!==normalizeText(f.spoken))realizations++;
   }
-  if(e?.remark){const n=normalizeText(e.remark);remarks.set(n,(remarks.get(n)||0)+1);}
+  if(e?.remark){
+   if(!conversationalRemarks.has(e.remark))failures.push('non-conversational-remark:'+i);
+   const n=normalizeText(e.remark);remarks.set(n,(remarks.get(n)||0)+1);
+  }
+  if(e?.facts?.length){
+   const declared=[...e.facts.map(f=>f.spoken),...(e.remark?[e.remark]:[])].join(' ');
+   const actual=t.answer.replace(/^Hola, doctor\. /,'').replace(/^\(Responde con pausas\.\) /,'');
+   if(actual!==declared&&t.answer!==String(e.prefix??'')+declared)failures.push('untracked-answer-content:'+i);
+  }
+  else if(t.status==='executed')failures.push('missing-clinical-evidence:'+i);
   if(/(?:doctor|mire|bueno)[:.]\s*(?:doctor|mire|bueno)[:.]/i.test(t.answer))failures.push('stacked-marker:'+i);
   if(/\b(?:en en|que que|de de|el el)\b/i.test(t.answer))failures.push('doubled-grammar:'+i);
   if(/en la abajo|en el debajo|(?:comenzó|arrancó) doliendo/i.test(t.answer))failures.push('artificial-grammar:'+i);

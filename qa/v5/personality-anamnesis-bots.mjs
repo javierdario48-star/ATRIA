@@ -9,6 +9,7 @@ import {PATIENT_PERSONALITIES} from '../../src/v5/content/patient-variation.js';
 import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
 import {neurologyPack} from '../../src/v5/content/packs/neurology-pack.js';
+import {validateDialogueSources} from './personality-fact-oracle.mjs';
 
 export const INTERVIEW_DOCTORS=Object.freeze(['expert','beginner','empathetic','brusque','hurried','meticulous']);
 export const personalityContent=()=>clinicalCertificationContent([
@@ -70,7 +71,8 @@ export async function runAnamnesis(c,content,{index=0,profileIndex=index,doctor=
  const archetype=PATIENT_PERSONALITIES[profileIndex%PATIENT_PERSONALITIES.length],seed='npc-profile:'+profileIndex;
  const {options,session:initial}=interviewFixture(c,content,{seed,archetype,mode,roomId:'npc-'+c.id+'-'+index});
  let session=initial;
- const before=clinicalInvariant(session),initialBehavior=session.read().patient.behavior;
+ const before=clinicalInvariant(session),initialPatient=session.read().patient,initialBehavior=initialPatient.behavior;
+ let verifiedClinicalFacts=0,dynamicObservationFacts=0;
  const rows=[],failures=[],questions=anamnesisQuestions(c,content,doctor);
  try{
   for(const [i,text] of questions.entries()){
@@ -81,6 +83,9 @@ export async function runAnamnesis(c,content,{index=0,profileIndex=index,doctor=
    const reply=await session.post({id:'anamnesis-'+i,text});
    const executed=reply.clinical?.find(x=>x.kind==='history.ask');
    const receipt=executed?.receipt;
+   const sourceCheck=validateDialogueSources(receipt?.dialogue,c,initialPatient);
+   verifiedClinicalFacts+=sourceCheck.verified;dynamicObservationFacts+=sourceCheck.dynamic;
+   failures.push(...sourceCheck.failures.map(x=>x+':turn:'+i));
    if(!executed||executed.status!=='executed'||!receipt?.answer)failures.push('unanswered:'+i+':'+text);
    if(digest(clinicalInvariant(session))!==digest(before))failures.push('clinical-state-changed:'+i);
    if(digest(session.read().patient.behavior)!==digest(initialBehavior))failures.push('personality-changed:'+i);
@@ -92,6 +97,6 @@ export async function runAnamnesis(c,content,{index=0,profileIndex=index,doctor=
   return {caseId:c.id,index,profileIndex,seed,archetype,doctor,mode,
    behavior:initialBehavior,signature:behaviorSignature(initialBehavior),
    physiologicalSpeech:p.neurology??null,relationship:p.interview?.relationships?.doctor??null,
-   clinicalInvariant:digest(before),history:p.intentHistory,rows,failures:unique(failures)};
+   clinicalInvariant:digest(before),verifiedClinicalFacts,dynamicObservationFacts,history:p.intentHistory,rows,failures:unique(failures)};
  }finally{session.dispose();}
 }
