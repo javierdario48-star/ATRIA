@@ -4,7 +4,9 @@ import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
 
 const output='qa/v5-audio-results';await fs.mkdir(output,{recursive:true});
-const h=await browserHarness({durable:true,browserArgs:['--autoplay-policy=user-gesture-required']}),errors=[],results=[];
+// Web Audio on a top-level page requires document activation; the older
+// user-gesture policy only blocks cross-origin frames in current Chromium.
+const h=await browserHarness({durable:true,browserArgs:['--autoplay-policy=document-user-activation-required']}),errors=[],results=[];
 async function pageFor(context,name){
  const p=await context.newPage();p.setDefaultTimeout(45000);p.on('pageerror',e=>errors.push(e.message));
  await p.addInitScript(()=>{
