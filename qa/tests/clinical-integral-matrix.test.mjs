@@ -6,6 +6,18 @@ import {clinicalCertificationContent,runClinicalCaseScenario,deriveClinicalCerti
 import {INTEGRAL_SCENARIOS,assessIntegralJourney,makeIntegralManifest,summarizeIntegralRows} from '../v5/clinical-integral-matrix.mjs';
 import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
+test('tertiary ICU workup obtains initial imaging and organ function without waiting for late cultures',async()=>{
+ const content=await clinicalCertificationContent(),c=content.cases.find(x=>x.id==='PERI-TER-001');
+ const plan=deriveClinicalCertificationPlan(c,content);
+ assert.deepEqual(plan.pendingStudyIds,['ter_culture']);
+ assert(plan.studyIds.includes('ter_cbc')&&plan.studyIds.includes('ter_ct'));
+ const row=await runClinicalCaseScenario(c,{content,seed:'tertiary-initial-results-and-pending-culture',horizon:180,recovery:true});
+ assert.equal(row.closureReceipt?.destination,'uti',JSON.stringify(row.readiness));
+ assert.equal(row.checks.studies,true);
+ assert(['ter_cbc','ter_ct'].every(id=>row.studies.some(s=>s.id===id&&s.status==='done'&&s.nativeResult)));
+ assert(row.studies.some(s=>s.id==='ter_culture'&&s.status==='pending'&&s.readyAtMinute>row.final.atRealSecond));
+ assert(!row.final.died);assert.equal(row.xpReceipts.length,1);
+});
 test('a submillisecond horizon advances a real native frame instead of spinning on a rounded zero deadline',()=>{
  const script=`import {clinicalCertificationContent,runClinicalCaseScenario} from './qa/v5/certify-clinical-cases.mjs';
  const content=await clinicalCertificationContent(),c=content.cases.find(x=>x.id==='APP-001');

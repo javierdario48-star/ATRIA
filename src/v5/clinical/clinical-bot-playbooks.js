@@ -15,7 +15,7 @@ export const CLINICAL_BOT_PLAYBOOK=Object.freeze({
   consult:'/consulta cirugia',wait:4},
  'PERI-TER-001':{dx:'peritonitis terciaria',dest:'uti',
   history:['¿Cuántas operaciones previas?','¿Evolución desde la cirugía?','¿Tiene defensas bajas?'],
-  studies:['ter_culture'],meds:['Enfermera una vía',
+  studies:['ter_cbc','ter_ct'],pendingStudies:['ter_culture'],meds:['Enfermera una vía',
    'Enfermera Ringer 1000 ml y piperacilina tazobactam 4.5 g y noradrenalina 0.05 mcg/kg/min IV y oxigeno 4 L/min'],
   consult:'/consulta uti',wait:5},
  'CHOLANG-001':{dx:'colangitis aguda',dest:'procedimiento',history:['¿Desde cuándo empezó el dolor?'],

@@ -107,7 +107,8 @@ export function deriveClinicalCertificationPlan(c,content){
   if(treatmentIds.some(id=>policy.eligibility?.[id]?.requiresSafeSwallowOrEnteralTube)&&offered.has('swallow_screen'))
    treatmentIds.unshift('swallow_screen');
  }
- const studyIds=unique([...(policy||!Array.isArray(legacy?.studies)?c.keyStudies||[]:legacy.studies),...(rule?.requiredStudies||[]),
+ const pendingStudyIds=policy?[]:unique(legacy?.pendingStudies||[]);
+ const studyIds=unique([...(policy||!Array.isArray(legacy?.studies)?c.keyStudies||[]:legacy.studies),...pendingStudyIds,...(rule?.requiredStudies||[]),
   ...(rule?.study||[]).flat(),
   ...treatmentIds.flatMap(id=>[...(policy?.eligibility?.[id]?.requiredStudies||[]),
    ...(policy?.eligibility?.[id]?.requiresStudiesAfterTreatments||[]).map(rule=>rule.studyId)])]).filter(id=>!isPhysicianExamStudy(id));
@@ -123,7 +124,7 @@ export function deriveClinicalCertificationPlan(c,content){
  }
  const history=[...(legacy?.history||[]).map((text,index)=>({intentId:'native-question-'+index,text})),...historyQuestions(c)];
  return {caseId:c.id,diagnosis:legacy?.dx||c.dx?.[0],destination,history,exams,
-  studyIds,treatmentIds,consults,legacyMedicationCommands:policy?null:(legacy?.meds||[]),
+  studyIds,pendingStudyIds,treatmentIds,consults,legacyMedicationCommands:policy?null:(legacy?.meds||[]),
   minimumObservationSeconds:legacy?.wait??0,critical};
 }
 
@@ -284,7 +285,10 @@ function finalEvidence(row,view,checkpoint,c,plan){
  const administrativeIntegrity=row.administrations.every(a=>a.patientUid===p.uid&&a.sourceEventId&&
   p.treatments.filter(t=>t.sourceEventId===a.sourceEventId&&t.id===a.id).length===1)&&
   new Set(row.administrations.map(x=>x.sourceEventId)).size===row.administrations.length;
- const confirmedStudies=plan.studyIds.length>0?plan.studyIds.every(id=>done.has(id)):
+ const pendingStudyIds=plan.pendingStudyIds||[];
+ const confirmedStudies=plan.studyIds.length>0?plan.studyIds.every(id=>done.has(id)||pendingStudyIds.includes(id)&&
+  p.orders.some(order=>order.id===id&&order.patientUid===p.uid&&order.sourceEventId&&order.status==='pending'&&
+   order.requestedAtMinute<=s.clock.clinicalMinute&&order.readyAtMinute>s.clock.clinicalMinute)):
   requiredExams.length>0&&targeted; // A required physician examination is explicitly diagnostic evidence.
  const closure=p.closure;
  const actualClosure=!!closure?.closed&&closure.patientUid===p.uid&&closure.destination===plan.destination&&
@@ -488,7 +492,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     recovered=true;observe(false);
    }
    const current=runtime.view(actorId).clinical;
-   const allStudies=plan.studyIds.every(id=>current.patient.orders.some(o=>o.id===id&&o.status==='done'));
+   const allStudies=plan.studyIds.every(id=>current.patient.orders.some(o=>o.id===id&&
+    (o.status==='done'||plan.pendingStudyIds.includes(id)&&o.status==='pending'&&o.sourceEventId)));
    const allTreatments=plan.treatmentIds.every(id=>actualTreatment(current.patient,id,current.clock.nativeMinute));
    // Original case owners decide their own native conduct/receipt contract.
    // A policy-only prefilter must not prevent asking that owner for handoff.
