@@ -1,7 +1,7 @@
 // Pure identity/history bridge. Never restores, advances or edits physiology.
 import {generatePatientVariation,DEFAULT_PATIENT_VARIATION} from './patient-variation.js';
 
-const identityFields=['name','age','personality','opening','variation','backgroundHistory','allergyHistory','allergies','severeAllergies','intolerances'];
+const identityFields=['name','age','personality','behavior','opening','variation','backgroundHistory','allergyHistory','allergies','severeAllergies','intolerances'];
 function assertIdentity(patient,caseData){
  if(!patient?.uid||!patient?.caseId||patient.caseId!==caseData?.id)throw Error('patient identity/case mismatch');
 }
@@ -46,7 +46,7 @@ export function materializeGuardPatient(patient,caseData,checkpoint=null,options
  }
  const name=patient.name&&patient.name!==caseData.demo?patient.name:v.name;
  return {...patient,name,age:patient.age??v.age,
-  personality:patient.personality||v.personality,opening:patient.opening||v.opening,
+  personality:patient.personality||v.personality,behavior:patient.behavior||v.behavior,opening:patient.opening||v.opening,
   allergies:[...allergies],
   ...(severe.size?{severeAllergies:[...severe]}:{}),
   ...(intolerances.size?{intolerances:[...intolerances]}:{}),
