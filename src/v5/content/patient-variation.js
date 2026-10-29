@@ -1,6 +1,7 @@
 // Deterministic identity/history metadata. Clinical owners decide all physiology,
 // medication effects and complication progression.
 import {PATIENT_NAME_BANK_ID,PATIENT_NAME_BANKS} from './patient-name-bank.js';
+import {buildBehaviorProfile} from './patient-behavior.js';
 
 export const PATIENT_PERSONALITIES=Object.freeze([
  'calm','anxious','reserved','talkative','irritable','scared','uncooperative'
@@ -90,6 +91,7 @@ export function generatePatientVariation(input,seed,context={}){
  const personality=choose(v.personalities,r),opening=choose(v.openings,r);
  return {
   seed:String(seed),name:firstName+' '+lastName,age,personality,opening,
+  behavior:buildBehaviorProfile(seed,personality),
   ...(v.nameBankId?{nameBankId:v.nameBankId}:{}),
   ...(nameIndex!==undefined?{nameIndex,guardSeed:String(context.guardSeed??seed),patientIndex:context.patientIndex}:{}),
   // Retain authored reaction type, severity and disclosure. Intolerance never
