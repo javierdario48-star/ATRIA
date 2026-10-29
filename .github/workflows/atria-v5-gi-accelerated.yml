@@ -1,0 +1,30 @@
+name: ATRIA 5 GI Accelerated Physiology
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths: [.github/workflows/atria-v5-gi-accelerated.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  accelerated-gi-bots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Execute 15 GI cases x 3 profiles with accelerated clock
+        run: node qa/v5/gi-accelerated-physiology.mjs "${{ matrix.shard }}" 3
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-gi-accelerated-${{ matrix.shard }}
+          path: qa/v5-gi-fast-results/
+          if-no-files-found: warn
+          retention-days: 14
