@@ -13,7 +13,7 @@ import {tmpdir} from 'node:os';
 import {observeRtcBrowser} from './rtc-diagnostics.mjs';
 import {COLLIDING_BROWSER_CLIENTS} from './presence-collision-fixture.mjs';
 
-export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFallback=false,accounts=null}={}){
+export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFallback=false,accounts=null,browserArgs=[]}={}){
  const rtcDiagnostics=process.env.V5_QA_RTC_TRACE==='1',signalTrace=new Map();
  const collisionKeys=process.env.V5_QA_COLLIDING_CLIENTS==='1'?COLLIDING_BROWSER_CLIENTS:null;
  let contextIndex=0;
@@ -34,7 +34,7 @@ export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFa
    const result=await social.route({method:'GET',path:'/api/rooms/'+roomId+'/messages',headers,query:{after:0}});
    return result.status===200?result.body.room:null;
   }}):null;
- const types={'.js':'text/javascript','.json':'application/json','.html':'text/html','.css':'text/css','.webp':'image/webp','.png':'image/png','.avif':'image/avif'};
+ const types={'.js':'text/javascript','.json':'application/json','.html':'text/html','.css':'text/css','.webp':'image/webp','.png':'image/png','.avif':'image/avif','.m4a':'audio/mp4','.wav':'audio/wav'};
  const server=createServer(async(req,res)=>{
   try{
    const url=new URL(req.url,'http://localhost'),pathname=decodeURIComponent(url.pathname);
@@ -72,7 +72,7 @@ export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFa
   }catch{requests.push({path:req.url,status:404});res.writeHead(404);res.end('not found');}
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
- const launch=async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-timer-throttling'],
+ const launch=async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-timer-throttling',...browserArgs],
   ...(process.env.CHROMIUM_EXECUTABLE_PATH?{executablePath:process.env.CHROMIUM_EXECUTABLE_PATH}:{})});
   if(collisionKeys){const create=browser.newContext.bind(browser);browser.newContext=async(...args)=>{
    const context=await create(...args),key=collisionKeys[contextIndex++];

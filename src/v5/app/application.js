@@ -27,7 +27,8 @@ import {receptionBoardHTML} from '../ui/reception-board.js';
 import {canHearWardDoctor,canHearWardPatient} from '../ui/spatial-ward-speech.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {createHospitalAudio} from '../ui/hospital-audio.js';
-import {uiSoundForTarget} from '../ui/ui-sound-policy.js';
+import {uiSoundForTarget,uiSoundForChange} from '../ui/ui-sound-policy.js';
+import {audioSettingsHTML,renderMusicToggle} from '../ui/audio-settings.js';
 import {createChatTranscript} from '../ui/chat-transcript.js';
 import {visibleWardChatRows,pruneWardSpeechPreviews} from '../ui/guard-chat-view.js';
 import {clinicalCompletions,spellingSuggestions} from '../ui/clinical-autocomplete.js';
@@ -100,8 +101,18 @@ export async function createApplication({document,window,content,signal}){
  let invitingColleagues=false;
  let restoreRoomId=null;try{restoreRoomId=window.localStorage.getItem('atria.v5.coop.room');}catch{}
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
- const renderer=await createHospitalRenderer(canvas,content,{signal,window});
  const scheduler=new FrameScheduler({mobileRenderHz:60}),listeners=[];
+ const hospitalAudio=createHospitalAudio({window,storage:window.localStorage});
+ // Attempt immediately; a blocked browser context is retried inside the first
+ // trusted pointer/keyboard gesture, including gestures outside menu buttons.
+ listen(document,'pointerdown',()=>hospitalAudio.unlock(),{capture:true,passive:true});
+ listen(document,'keydown',()=>hospitalAudio.unlock(),{capture:true});
+ hospitalAudio.unlock();
+ const renderMusic=()=>renderMusicToggle(document,hospitalAudio.state(),{inHospital:world.snapshot().phase!=='title'});
+ renderMusic();
+ const renderer=await createHospitalRenderer(canvas,content,{signal,window}).catch(error=>{
+  hospitalAudio.destroy();rootLifecycle.leave();throw error;
+ });
  const presentation=createPresentationTimeline(world.snapshot());
  const patientWheel=createPatientActionWheel({document,window});
  const unassignedGlow=createUnassignedPatientGlow({document});
@@ -117,7 +128,6 @@ export async function createApplication({document,window,content,signal}){
  // only among cases with certified clinical executors.
  const localShift=createLocalShift({caseIds:content.cases.map(c=>c.id),
   rotationCaseIds:[...playableIds]});
- const hospitalAudio=createHospitalAudio({window,storage:window.localStorage});
  let audioPatient=null,lastAudioRead=-Infinity;
  const chatSuggestions=ui('chatSuggestions'),nurseQuick=ui('nurseQuickButton');
  let autocompleteCaseId=null;
@@ -957,17 +967,7 @@ export async function createApplication({document,window,content,signal}){
   }else selectRecipient(entity.kind);
  }
  function showAudioSettings(){
-  const s=hospitalAudio.state();
-  const channel=(id,label)=>'<label class="audio-option"><input type="checkbox" data-audio-channel="'+id+'" '+(s.channels[id]?'checked':'')+'>'+label+'</label>';
-  open('<h2>Audio del hospital</h2><p>Música del ATRIA clásico, sonidos de personajes y pitidos reales del monitor.</p>'+
-   '<label class="audio-option"><input type="checkbox" id="audioEnabled" '+(s.enabled?'checked':'')+'>Activar sonido</label>'+
-   '<label class="field">Volumen <input id="audioVolume" type="range" min="0" max="100" value="'+Math.round(s.volume*100)+'"></label>'+
-   channel('music','Música suave')+channel('monitor','Monitor y alarmas')+
-   channel('speech','Pacientes y enfermería')+channel('effects','Acciones y resultados')+
-   channel('ambient','Ambiente del hospital')+
-   '<label class="field">Melodía<select id="audioTrack"><option value="guardia" '+(s.track==='guardia'?'selected':'')+'>Guardia clásica</option><option value="enfoque" '+(s.track==='enfoque'?'selected':'')+'>Enfoque tranquilo</option></select></label>'+
-   '<p class="audio-note">El sonido comienza al interactuar con el juego y se detiene si silenciás o salís de la aplicación.</p>'+
-   '<div class="actions"><button class="primary" data-action="close">Volver al juego</button></div>','audio');
+  open(audioSettingsHTML(hospitalAudio.state()),'audio');
  }
  function showProfile(){
   const s=world.snapshot();
@@ -1032,6 +1032,9 @@ export async function createApplication({document,window,content,signal}){
   const cue=uiSoundForTarget(event.target);
   if(cue){hospitalAudio.unlock();hospitalAudio.cue(cue);}
  },{capture:true});
+ listen(document,'change',event=>{
+  const cue=uiSoundForChange(event.target);if(cue){hospitalAudio.unlock();hospitalAudio.cue(cue);}
+ },{capture:true});
  listen(ui('profileForm'),'submit',event=>{
   event.preventDefault();hospitalAudio.unlock();if(welcome.avatarSubmit())return;profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico',
    sex:avatarCreator.read().sex,scrubColor:avatarCreator.read().color};
@@ -1041,6 +1044,9 @@ export async function createApplication({document,window,content,signal}){
  });
  listen(ui('notificationsButton'),'click',showPeople);
  listen(ui('audioButton'),'click',()=>{hospitalAudio.unlock();showAudioSettings();});
+ listen(ui('musicToggleButton'),'click',()=>{
+  hospitalAudio.setChannel('music',!hospitalAudio.state().channels.music);hospitalAudio.unlock();renderMusic();
+ });
  listen(ui('friendRequestAccept'),'click',async()=>{
   const id=ui('friendRequestNotice').dataset.user;if(!id)return;
   try{await social.acceptFriend(id);}catch(error){toast(error.message||'No se pudo aceptar la amistad.');}
@@ -1190,6 +1196,12 @@ export async function createApplication({document,window,content,signal}){
   if(event.target?.id==='audioVolume'){
    hospitalAudio.setVolume(Number(event.target.value)/100);hospitalAudio.unlock();return;
   }
+  if(event.target?.id==='audioMusicVolume'){
+   hospitalAudio.setMusicVolume(Number(event.target.value)/100);hospitalAudio.unlock();renderMusic();return;
+  }
+  if(event.target?.id==='audioEffectsVolume'){
+   hospitalAudio.setEffectsVolume(Number(event.target.value)/100);hospitalAudio.unlock();return;
+  }
   clinicalUI.onInput(event.target);
  });
  listen(dialog,'change',event=>{
@@ -1197,7 +1209,11 @@ export async function createApplication({document,window,content,signal}){
    hospitalAudio.setEnabled(event.target.checked);if(event.target.checked)hospitalAudio.unlock();
   }else if(event.target?.dataset.audioChannel){
    hospitalAudio.setChannel(event.target.dataset.audioChannel,event.target.checked);
+   if(event.target.checked)hospitalAudio.unlock();
+  }else if(event.target?.dataset.audioScreen){
+   hospitalAudio.setMusicTrack(event.target.dataset.audioScreen,event.target.value);
   }else if(event.target?.id==='audioTrack')hospitalAudio.setTrack(event.target.value);
+  renderMusic();
  });
  listen(dialog,'pointerdown',event=>{if(event.target.closest('[data-action="diagnosis-suggestion"]'))event.preventDefault();});
  listen(dialog,'keydown',event=>{
@@ -1287,6 +1303,7 @@ export async function createApplication({document,window,content,signal}){
    const sample=guardSession&&audioPatient?.uid?
     guardSession.monitorRead(audioPatient.uid):null;
    hospitalAudio.tick(now,{phase:document.body.dataset.phase,patient:sample});
+   renderMusic();
   }
   stage='scheduler';
   scheduler.tick(now,{simulate:dt=>{stage='simulation';world.step(dt,now);presentation.advance(world.snapshot());},maintain:()=>{stage='maintenance';if(localSessions.size)for(const s of localSessions.values())s.finishNurseArrivals();
@@ -1331,7 +1348,7 @@ export async function createApplication({document,window,content,signal}){
   }
  }
  function resume(){if(!destroyed&&raf===null){const now=window.performance.now();lastClinicalFrame=now;
-  clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);presentation.reset(world.snapshot());raf=window.requestAnimationFrame(frame);}}
+  hospitalAudio.unlock();clinicalTyping=/INPUT|TEXTAREA/.test(document.activeElement?.tagName);scheduler.reset(now);presentation.reset(world.snapshot());raf=window.requestAnimationFrame(frame);}}
  function pause(){if(raf!==null){window.cancelAnimationFrame(raf);raf=null;}
   const now=window.performance.now();
   try{hospitalAudio.pause();advanceClinicalTo(now);}catch(error){recordFrameError(error,'pause',now);}

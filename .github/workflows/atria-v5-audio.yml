@@ -1,0 +1,47 @@
+name: ATRIA 5 Audio Integration
+
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - 'src/v5/ui/*audio*'
+      - 'src/v5/ui/music-transport*'
+      - 'src/v5/ui/ui-sound-policy*'
+      - 'src/v5/content/audio/**'
+      - 'src/v5/app/application.js'
+      - 'src/v5/web/**'
+      - 'qa/v5/audio-browser.mjs'
+      - 'qa/v5/browser-harness.mjs'
+      - '.github/workflows/atria-v5-audio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audio-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Audio, UI, navigation, rendering and social regression without clinical simulations
+        run: node --test src/v5/ui/*.test.js src/v5/app/*.test.js src/v5/render/*.test.js src/v5/social/*.test.js
+      - name: Verify architecture and build canonical audio assets
+        run: node scripts/audit-v5-boundary.mjs && npm run build:v5
+      - name: Install existing isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-audio-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Real Web Audio loop, crossfade, strict autoplay, mobile UI and all four guard modes
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-audio-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/audio-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-audio-evidence
+          path: qa/v5-audio-results/
+          if-no-files-found: ignore
+          retention-days: 14

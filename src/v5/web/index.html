@@ -9,6 +9,11 @@
  <link rel="stylesheet" href="./src/v5/web/game.css">
 </head>
 <body>
+ <div id="titleMusicSlot" class="title-music-slot">
+  <button id="musicToggleButton" class="music-toggle" type="button" aria-label="Silenciar música" aria-pressed="true" title="Silenciar música" data-muted="false">
+   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17V5l10-2v12M10 8l10-2"/><ellipse cx="7" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/><path class="music-muted-line" d="M3 3l18 18"/></svg>
+  </button>
+ </div>
  <canvas id="game" aria-label="Hospital ATRIA. Tocá el mapa para caminar." tabindex="0"></canvas>
  <nav id="patientWheel" class="patient-wheel" aria-label="Acciones sobre el paciente" hidden></nav>
  <nav id="patientClinicalActions" class="patient-clinical-actions" aria-label="Impresión diagnóstica del paciente" hidden></nav>
@@ -20,7 +25,7 @@
   <small id="guardTimeProgress">00:00 / 24:00</small>
  </aside>
  <header id="hud" hidden>
-  <div class="brand"><span class="logo">A</span><div><b>ATRIA</b><small id="status">5.0 · Experimental</small><small id="playerProgress">Nivel 1 · 0/200 XP</small></div></div>
+  <div class="brand"><span id="hudMusicSlot"></span><div><b>ATRIA</b><small id="status">5.0 · Experimental</small><small id="playerProgress">Nivel 1 · 0/200 XP</small></div></div>
   <div class="hud-actions"><button id="guardButton" class="primary">Hacer guardia</button><button id="receptionButton" type="button" aria-label="Recepción" title="Recepción · triaje y nuevos ingresos" hidden>Recepción</button><button id="peopleButton">Personas</button><button id="profileButton">Perfil</button><button id="audioButton" type="button" aria-label="Audio del hospital" title="Música y sonidos">♫</button><button id="notificationsButton" type="button" aria-label="Notificaciones" title="Notificaciones">🔔 <span id="notificationsCount" hidden>0</span></button></div>
  </header>
  <aside id="receptionGuide" class="reception-guide" role="status" aria-live="polite" hidden>
