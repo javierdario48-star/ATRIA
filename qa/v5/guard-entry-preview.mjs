@@ -12,7 +12,7 @@ const output=process.env.V5_QA_OUTPUT||'qa/v5-guard-entry-results';await fs.mkdi
 const require=createRequire(import.meta.url),{chromium,devices}=require(process.env.PLAYWRIGHT_MODULE_PATH||process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright');
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,
  args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-timer-throttling']});
-const contexts=[],pages=[],errors=[],traffic=[],results=[];let stage='boot';
+const contexts=[],pages=[],errors=[],traffic=[],results=[];let stage='boot',applicationHash=null;
 const suffix=Date.now().toString(36),password=randomBytes(24).toString('base64url');
 const api=(p,path,body)=>p.evaluate(async({path,body})=>{
  const r=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -80,10 +80,18 @@ async function release(p){
  await p.locator('#welcomeContinue').click();await p.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');
 }
 try{
- const app=await (await fetch(origin+'/src/v5/app/application.js')).text();
  const expected=await fs.readFile(new URL('../../src/v5/app/application.js',import.meta.url),'utf8');
- assert.equal(createHash('sha256').update(app).digest('hex'),createHash('sha256').update(expected).digest('hex'),
-  'the real preview must serve the checked-out application');
+ const expectedHash=createHash('sha256').update(expected).digest('hex'),deadline=Date.now()+120000;
+ stage='wait for the checked-out Preview application';
+ while(applicationHash!==expectedHash){
+  try{
+   const response=await fetch(origin+'/src/v5/app/application.js',{cache:'no-store',signal:AbortSignal.timeout(10000)});
+   if(response.ok)applicationHash=createHash('sha256').update(await response.text()).digest('hex');
+  }catch{/* A deployment can be building; never test an older application. */}
+  if(applicationHash===expectedHash)break;
+  assert(Date.now()<deadline,'the real preview must serve the checked-out application');
+  await new Promise(resolve=>setTimeout(resolve,2000));
+ }
  const host=await boot();stage='register host';await register(host,'A');
  for(const mode of ['solo','apprentice']){
   stage='enter '+mode;await choose(host,mode);await host.locator('[data-action="start-guard"]').click();
@@ -116,8 +124,8 @@ try{
   stage='enter '+mode;const uids=await Promise.all([host,guest].map(p=>entered(p,mode)));
   stage='interact '+mode;await interact(host,uids[0],mode);await release(host);await release(guest);
  }
- assert.deepEqual(errors,[]);await fs.writeFile(output+'/results.json',JSON.stringify({passed:true,origin,results,traffic,errors},null,2));
- console.log('ATRIA LIVE GUARD ENTRY PASS '+JSON.stringify({origin,results,errors}));
+ assert.deepEqual(errors,[]);await fs.writeFile(output+'/results.json',JSON.stringify({passed:true,origin,applicationHash,results,traffic,errors},null,2));
+ console.log('ATRIA LIVE GUARD ENTRY PASS '+JSON.stringify({origin,applicationHash,results,errors}));
 }catch(error){
  const diagnostics=await Promise.all(pages.map(async p=>{
   await p.screenshot({path:output+'/failure-'+pages.indexOf(p)+'.png'}).catch(()=>{});

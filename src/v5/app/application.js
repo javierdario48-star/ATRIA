@@ -803,7 +803,13 @@ export async function createApplication({document,window,content,signal}){
   guardSession=localSessions.get(next.uid);clinicalUI.reset();patientWheel.hide();announcedClosure=null;
   close();renderGuardCommunication();updateHud();return true;
  }
+ function showGuardRecovery(){
+  if(!account.read()?.activeGuardId)return false;
+  open('<h2>Tenés una guardia en curso</h2><p>Podés recuperarla en este dispositivo.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
+  return true;
+ }
  function guardSetup(){
+  if(showGuardRecovery())return;
   if(['coop','competitive'].includes(draftMode))socialEnabled=true;
   open(`<h2>Hacer guardia</h2><p>Elegí la modalidad y el caso de práctica.</p><div class="modes">
    <button class="mode ${draftMode==='apprentice'?'active':''}" data-mode="apprentice"><b>Aprendiz</b><small>Con Dr. Vega. Navegación disponible; tutor clínico en migración.</small></button>
@@ -1023,7 +1029,7 @@ export async function createApplication({document,window,content,signal}){
    await social.flush();if(social.state().room)await social.leave();
    applyAccount(verified);restoreRoomId=null;world.enterLobby();drawWorld();loadingProgress(65);
    await social.connect();loadingProgress(100);enterLobby();
-   if(verified.activeGuardId)open('<h2>Tenés una guardia en curso</h2><p>Podés recuperarla en este dispositivo.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
+   showGuardRecovery();
   }
  });
  ui('enterButton').textContent='Entrar al hospital →';ui('enterButton').disabled=false;
