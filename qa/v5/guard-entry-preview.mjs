@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {randomBytes,createHash} from 'node:crypto';
 import fs from 'node:fs/promises';
-import {walk,send} from './cooperative-ui.mjs';
+import {send} from './cooperative-ui.mjs';
 
 const origin=new URL(process.env.V5_BROWSER_URL).origin;
 assert(origin.startsWith('https://night-shift-clinical-')&&origin.endsWith('.vercel.app'));
@@ -87,7 +87,24 @@ try{
  const host=await boot();stage='register host';await register(host,'A');
  for(const mode of ['solo','apprentice']){
   stage='enter '+mode;await choose(host,mode);await host.locator('[data-action="start-guard"]').click();
-  const uid=await entered(host,mode);stage='interact '+mode;await interact(host,uid,mode);await release(host);
+  const uid=await entered(host,mode);stage='interact '+mode;await interact(host,uid,mode);
+  if(mode==='solo'){
+   stage='resume an existing guard after dismissing its reminder';
+   await host.reload();await host.waitForFunction(()=>document.body.dataset.boot==='ready');
+   await host.locator('#welcomeContinue').click();await host.locator('[data-action="account-recover"]').waitFor({state:'visible'});
+   await host.locator('[data-action="close"]').click();await host.locator('#guardButton').click();
+   if(await host.locator('[data-action="account-recover"]').isVisible()){
+    await host.locator('[data-action="account-recover"]').click();
+   }else{
+    // Reproduce the player's ordinary selection flow when the entry point
+    // forgets the retained guard. The real server then rejects a second one.
+    await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('CIRR-001');
+    await host.locator('[data-action="start-guard"]').click();
+   }
+   assert.equal(await entered(host,'solo'),uid,'re-entry must retain the existing patient');
+   results.push({retainedGuard:true,reminderDismissed:true,samePatient:true});
+  }
+  await release(host);
  }
  const guest=await boot(true);stage='register guest';await register(guest,'B');
  const guestName='QA Guardia B '+suffix;
