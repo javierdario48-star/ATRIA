@@ -19,7 +19,7 @@ const antithromboticScale=Object.freeze({heparin_therapeutic:1,enoxaparin:1,
  aspirin:.35,clopidogrel:.4,ticagrelor:.45,alteplase_pe:1.15,alteplase_stroke:1.15});
 function confirmedRows(p,atNativeMinute){
  const candidates=(p.administrationLog||[]).filter(row=>row.action!=='stop'&&
-  (row.id==='anticoagulation'||row.id==='epi_im'||Object.hasOwn(antithromboticScale,row.id)||
+  (row.id==='anticoagulation'||row.id==='epi_im'||row.id==='furosemide'||Object.hasOwn(antithromboticScale,row.id)||
    matchesMedicationAllergy487(p,row.id,true)||matchesMedicationHypersensitivity487(p,row.id)));
  if(!candidates.length)return [];
  if(!Number.isFinite(atNativeMinute)||atNativeMinute<0)throw Error('invalid adverse-reaction clock');
@@ -120,6 +120,22 @@ export function confirmedMedicationHarms487(p,c,atNativeMinute){
     manifestation:'Prurito y habones cutáneos leves sin compromiso de vía aérea, respiración ni circulación; retirar el desencadenante y reevaluar por progresión.'});
   }
  }
+ // Document an adverse event only after actual pressure decline is observed.
+ // This pure evidence projection never applies a second furosemide offset.
+ const diuretic=rows.filter(row=>row.id==='furosemide'&&row.route==='iv');
+ if(diuretic.length>=3&&p.liveVitals){
+  const totalMg=diuretic.reduce((sum,row)=>sum+row.dose.amount,0);
+  const first=diuretic.reduce((a,b)=>a.administeredAtNativeMinute<=b.administeredAtNativeMinute?a:b);
+  const initialSys=Number(String(c?.vitals?.bp||'').split('/')[0]);
+  const drop=initialSys-p.liveVitals.sys;
+  if(totalMg>=120&&atNativeMinute-first.administeredAtNativeMinute>=5&&
+   Number.isFinite(initialSys)&&drop>=10){
+   reactions.push({kind:'diuretic-volume-depletion',sourceEventId:first.sourceEventId,
+    patientUid:p.uid,drugId:'furosemide',label:first.label||'Furosemida IV',
+    severity:Math.min(1,drop/30),offsets:zero(),
+    manifestation:'Hipotensión observada tras diurético IV repetido; reevaluar perfusión, balance y función renal.'});
+  }
+ }
  // Preserve the original bounded response; no invented linear stacking.
  // A later confirmed dose can trigger a new episode after recovery.
  const severe=reactions.filter(x=>x.kind==='severe-drug-allergy');
@@ -218,6 +234,8 @@ export function documentMedicationComplications487(p,c,clock){
     'Reacción alérgica grave tras '+r.label+': deterioro respiratorio y hemodinámico. Adrenalina IM inmediata, O2, soporte circulatorio y reevaluación.':r.kind==='cutaneous-drug-hypersensitivity'?
     'Hipersensibilidad cutánea tras '+r.label+': prurito y habones sin compromiso ABC. Retirar el desencadenante y reevaluar.':r.kind==='antithrombotic-bleeding'?
     'Sangrado agravado tras '+r.label+' en un paciente con riesgo hemorrágico documentado: deterioro progresivo de perfusión. Reevaluar, suspender la exposición y tratar el sangrado según su causa.':
+    r.kind==='diuretic-volume-depletion'?
+    'Hipotensión observada tras dosis repetidas de furosemida IV: posible depleción de volumen y riesgo de lesión renal. Reevaluar perfusión, balance y nuevas dosis.':
     'Sangrado agravado tras heparina: taquicardia e hipotensión por pérdida sanguínea. Priorizar estabilización.'};
   p.adverseEvents.push(event);created.push(structuredClone(event));
  }
