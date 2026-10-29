@@ -129,10 +129,12 @@ export function confirmedMedicationHarms487(p,c,atNativeMinute){
   const initialSys=Number(String(c?.vitals?.bp||'').split('/')[0]);
   const drop=initialSys-p.liveVitals.sys;
   if(totalMg>=120&&atNativeMinute-first.administeredAtNativeMinute>=5&&
-   Number.isFinite(initialSys)&&drop>=10){
+   Number.isFinite(initialSys)){
+   // Keep a zero-severity observation after recovery so the existing
+   // adverse-event state machine can mark this episode resolved.
    reactions.push({kind:'diuretic-volume-depletion',sourceEventId:first.sourceEventId,
     patientUid:p.uid,drugId:'furosemide',label:first.label||'Furosemida IV',
-    severity:Math.min(1,drop/30),offsets:zero(),
+    severity:drop>=10?Math.min(1,drop/30):0,offsets:zero(),
     manifestation:'Hipotensión observada tras diurético IV repetido; reevaluar perfusión, balance y función renal.'});
   }
  }
