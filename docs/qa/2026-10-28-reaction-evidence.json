@@ -1,0 +1,521 @@
+{
+  "authority": "createGuardRuntime",
+  "revision": "eea7a09ad575aa0e15dd0fe04e72c62d097c4e9d",
+  "sourceDigest": "0a922f0c48ee489255d4d64baa6bd70f5c3d161fda5b810b6fbdda7bee1c6453",
+  "sourceFiles": [
+    {
+      "path": "package.json",
+      "sha256": "ef3344ca82586cbfdd0b8e44f3cec9115eca84d41b67f6101a83e3cef14ccaa7"
+    },
+    {
+      "path": "qa/v5/certify-clinical-cases.mjs",
+      "sha256": "f7d590300fa2fdbe9847736b1042753b5521f1cb626ab533a5eebcf605d77027"
+    },
+    {
+      "path": "qa/v5/clinical-integral-matrix.mjs",
+      "sha256": "fdef8db2efe222a2af312d4b4563ce52c69acf8a9ed76033f38b60208a4861a0"
+    },
+    {
+      "path": "src/clinical/anamnesis-intents.js",
+      "sha256": "1017299f943ad576977b4dabb6722a554fc249195f50b3c11b12aea69e638850"
+    },
+    {
+      "path": "src/clinical/case-completion-487.js",
+      "sha256": "12b23c50ad85991a4b6fce279c89b1d381bd83d3d9ca4d5d3adcb5dcb2459f0e"
+    },
+    {
+      "path": "src/clinical/clinical-clock-487.js",
+      "sha256": "60613ffae22c6adff08c6d3230c3516bfa09d7c7cfd571e9ad34210ed04e0a09"
+    },
+    {
+      "path": "src/clinical/contextual-study-results.js",
+      "sha256": "a45061e84473c6fd69052fc09c3e5448973f5e18c944f578c77b1d2456e15775"
+    },
+    {
+      "path": "src/clinical/critical-rescue-487.js",
+      "sha256": "11185265d33b9bfdfc26c0542a3e795bce17113961a79f22bbc63a544d78b949"
+    },
+    {
+      "path": "src/clinical/diagnostic-impression-487.js",
+      "sha256": "4ab5959777426a6880cb325906f2b12018e19df82a788ce135caacda72c4cece"
+    },
+    {
+      "path": "src/clinical/general-therapy-487.js",
+      "sha256": "d2ddf8fd75b6f0658822c715f768e4d3e180e16939f90f5380e4540f2d1587b5"
+    },
+    {
+      "path": "src/clinical/grace-survival-487.js",
+      "sha256": "27a514b94a8d0322d7922e1646c3c811bdfb0c089ddf41d4de20a25d4a5a3adc"
+    },
+    {
+      "path": "src/clinical/nurse-scanner-487.js",
+      "sha256": "c1bcd3587b4bf2b41c67ee03fd13023cdd922ccb0e69fc5b728e22a83cbc8251"
+    },
+    {
+      "path": "src/clinical/peritonitis-pathways.js",
+      "sha256": "dcf164d9ef483dc62e1a93d0846706999992de07b827385ddb38eca6685b9bc6"
+    },
+    {
+      "path": "src/clinical/pharmacology-outcomes-487.js",
+      "sha256": "dc55f61b7902487f5608b65a616e3076a7a1de192882450afbf9d77977207d38"
+    },
+    {
+      "path": "src/clinical/pharmacology-registry-487.js",
+      "sha256": "1f750c443661f3d07bd1bcc10f587029dc4735d8cff69f51082c458024bd58b4"
+    },
+    {
+      "path": "src/clinical/secondary-sepsis-bridge-487.js",
+      "sha256": "be707ad20186d8b35782172c0e024d6adb40dcb857101135e70ed820ec351a39"
+    },
+    {
+      "path": "src/clinical/study-registry.js",
+      "sha256": "8ec9d6d4d79a02fd6095de6876ee3664ea9e24a6a68f5c7adfa6f06925dda355"
+    },
+    {
+      "path": "src/clinical/surgical-review-487.js",
+      "sha256": "b5b20a4d619e19f39aa56eeb934f25fbe574b5c54e80f71169efccfb72990eff"
+    },
+    {
+      "path": "src/clinical/urgent-care-487.js",
+      "sha256": "64ef59e75405280bcef9439b7d5d0299f07081be0fa1be817397635095ef821b"
+    },
+    {
+      "path": "src/social/remote-motion.js",
+      "sha256": "923152c73faccdee42c9b32f28695406a5393862b5b7bb38d56d7815f92c2e20"
+    },
+    {
+      "path": "src/v5/adapters/native-clinical-port.js",
+      "sha256": "2bd3dfac8184233e42ae1c11d87e56967f6f353ce4fa45d6838c2d922e213827"
+    },
+    {
+      "path": "src/v5/app/avatar-appearance.js",
+      "sha256": "fd22911e6c64ba94c1d8e41dca501b64ad9d69fd4dd033d23b0dc31f2ae871c4"
+    },
+    {
+      "path": "src/v5/app/world.js",
+      "sha256": "1d296ec7bf565ee9b0a793d4443da16c1bc18893ac3883c6ec7ed1447c1963c8"
+    },
+    {
+      "path": "src/v5/clinical/acuity.js",
+      "sha256": "ff31bf70fe264e682c963a984c85ab3794e5980e0f1e0bd01aa452e0e8b4bd52"
+    },
+    {
+      "path": "src/v5/clinical/acute-care.js",
+      "sha256": "6d8659b1ece65b80b1e8295f1876daaaecbd3f474c4f571516b002ff342a75a1"
+    },
+    {
+      "path": "src/v5/clinical/additional-case-care.js",
+      "sha256": "c6d02b9c5bd4d6108b6aeb5ce1a38f9cc0eac5ed8b95a26934d7f522954d5a19"
+    },
+    {
+      "path": "src/v5/clinical/antimicrobial-regimens-487.js",
+      "sha256": "857733e99ea3e39e7a438ac832cd2f03c895f28dc1cef8587166f7779ffac598"
+    },
+    {
+      "path": "src/v5/clinical/app-care.js",
+      "sha256": "48a4be9f5c597114c93dde3167033b57fd3099b6426581dd508b05939e475133"
+    },
+    {
+      "path": "src/v5/clinical/app-disease-progression.js",
+      "sha256": "f927cbfc1702aacc0707da54e8d4b3525c592c802ecf0145156e34a992531d17"
+    },
+    {
+      "path": "src/v5/clinical/cholangitis-care.js",
+      "sha256": "908ee9f61c47fdd71b33ea511f39b3dc7fa46038ed39d0adac8509a1ae166df2"
+    },
+    {
+      "path": "src/v5/clinical/chole-care.js",
+      "sha256": "0f3b485a1e8d3ddf9ddbd2a02f80feee4cbba175a8998ec3ffcfb4df8de8c36a"
+    },
+    {
+      "path": "src/v5/clinical/cirr-care.js",
+      "sha256": "1bca5d2bed756e86a07b9f399a5d19b1d42777d5c0d8dfb31a7da9cf5a512b8e"
+    },
+    {
+      "path": "src/v5/clinical/clinical-bot-playbooks.js",
+      "sha256": "4d95418545a9214cc095158e8fbf80886ff346b877cdbb3215e28ade698350fe"
+    },
+    {
+      "path": "src/v5/clinical/clinical-policy-closure.js",
+      "sha256": "bfeb50dfc32962729adf35877e4883f9cc865460a68c232cd450c84efdfbe797"
+    },
+    {
+      "path": "src/v5/clinical/clinical-policy-effects.js",
+      "sha256": "81adef35cb534ea103b3fe1db45a70888bc0393a4b0fece5cb0a0fd5ba0a7209"
+    },
+    {
+      "path": "src/v5/clinical/clinical-risk.js",
+      "sha256": "4a18b3044f8dcd3ee1ea481d4d9edba1d77f86cb958c4f1bb7548fd2c0fe2f1d"
+    },
+    {
+      "path": "src/v5/clinical/closure-debrief.js",
+      "sha256": "57c864b7cfb556ed28852bab454651f243b1af472898536abce3e3c000b84198"
+    },
+    {
+      "path": "src/v5/clinical/complication-eligibility.js",
+      "sha256": "5ec99deafb2b4db1a2c16bdbcbb8ca36ab9ac642743c36b9f8d3a1c9329ba081"
+    },
+    {
+      "path": "src/v5/clinical/crystalloid-overload.js",
+      "sha256": "b2fb1c46a7ff8a9f4ebdad99648f68376a3e06766fc2a3cdac5e9df523542b6f"
+    },
+    {
+      "path": "src/v5/clinical/diagnostic-evidence.js",
+      "sha256": "b618df93bb95e64b13a362ae9b60e7210f477146c633fed77a92f7f08c51ec07"
+    },
+    {
+      "path": "src/v5/clinical/ecg-morphology.js",
+      "sha256": "67305aa26cc3d14c86564cfa3e107b8494737979bef6375517ca8c7fe01e6414"
+    },
+    {
+      "path": "src/v5/clinical/exam-contract.js",
+      "sha256": "287cc6f654edc58e7c7ff269ab63b14bf0a5d42cacd57688b86b27a1979b37c7"
+    },
+    {
+      "path": "src/v5/clinical/fluid-feedback.js",
+      "sha256": "6d447135a0ad88d0959b55108248b8d5425b6332f8b4bc9488d00f26954b57ad"
+    },
+    {
+      "path": "src/v5/clinical/gastro-closure-v5.js",
+      "sha256": "56fe5c64136c876bf6184c4a15ef2ef1e32e7992769440412f8df21d447f07aa"
+    },
+    {
+      "path": "src/v5/clinical/gastro-expansion-policies.js",
+      "sha256": "c7059e3fcd38d3b7b8a76d6da3fa9f6aac04da44ebfa9e53138f26dfb020dacb"
+    },
+    {
+      "path": "src/v5/clinical/gastro-expansion-presentations.js",
+      "sha256": "47f016d9d8857d4c2163608cf3ee60f30566b7f7f515ec32c5fbf5ea39e14c1d"
+    },
+    {
+      "path": "src/v5/clinical/gastro-medication-rules.js",
+      "sha256": "72ff8bf00a6f8b34db23cff5f02543262b0c058a49327d2f229860c16b04c436"
+    },
+    {
+      "path": "src/v5/clinical/guard-clock.js",
+      "sha256": "f6c4cb834bca64fa12e5c9211b9911a11ee0e6ef5b502f3b11eb7d764626a228"
+    },
+    {
+      "path": "src/v5/clinical/guard-runtime.js",
+      "sha256": "966c64fe8d739ead35f8acd5caeae9e55abc723063e32dbfc4f98f1b37630173"
+    },
+    {
+      "path": "src/v5/clinical/guard-selection-policy.js",
+      "sha256": "f6c5f22e51405279a0a78921f0fad9900254df3dcdc10bbdd2c557f119a29678"
+    },
+    {
+      "path": "src/v5/clinical/guard-session.js",
+      "sha256": "da1f35887b7c3334d66cc0dac676fd3c95911d756208c00e1632d985224a418b"
+    },
+    {
+      "path": "src/v5/clinical/iv-dose-contracts-487.js",
+      "sha256": "a7e50b7bf1995308447b91cdfa9ecccdb8311b822740a3a0d64d3dc2e21c5208"
+    },
+    {
+      "path": "src/v5/clinical/medication-exposure.js",
+      "sha256": "c516315de3661d528fbc9e943e4de2abe1129d8cdba623a33f7928a2fe89cb15"
+    },
+    {
+      "path": "src/v5/clinical/medication-harms-487.js",
+      "sha256": "04520a764c7895c2d884815ab365ab5fb8de1aa12c675717e3566ab9dc628d31"
+    },
+    {
+      "path": "src/v5/clinical/medication-safety-487.js",
+      "sha256": "d6b026f9441701aafbd12fff23f7f3243a86eac48f235e7c34610b16a282135d"
+    },
+    {
+      "path": "src/v5/clinical/morphine-487.js",
+      "sha256": "256bccf33f643872ce86091f4cf415b099a211bbf62c332ab96e2c9bd882a2f6"
+    },
+    {
+      "path": "src/v5/clinical/native-additional-cases.js",
+      "sha256": "38617d53b202862d6cdd17ee3c7ff7b52e9eed7266e219ec4c9b724734bcef76"
+    },
+    {
+      "path": "src/v5/clinical/native-app.js",
+      "sha256": "a5926e4e319e5838f41a5dc963783e26aa5264fd46d27566c702c0689307da45"
+    },
+    {
+      "path": "src/v5/clinical/native-chole.js",
+      "sha256": "2cff424181947a270e07a4f874e50879f36c9febfd9209de29306807bada346e"
+    },
+    {
+      "path": "src/v5/clinical/native-cirr.js",
+      "sha256": "8b151f5808cffab5c084d5296c811bf9b81d986e741892136d66058b98316b1f"
+    },
+    {
+      "path": "src/v5/clinical/native-medication-eligibility.js",
+      "sha256": "b8f8448c6ddb74f37eec177e4dc222c5c7cd804c3b761616d82c74fe74b429ee"
+    },
+    {
+      "path": "src/v5/clinical/native-medications.js",
+      "sha256": "89b1ec3ca51404626624b458aa77874d02c0611a3cb36f25cda2321d6dfeb954"
+    },
+    {
+      "path": "src/v5/clinical/native-panc.js",
+      "sha256": "62567bf25553481632826b6e59a8a37d6d32fbc5b086e479bbc6089d9a87f2de"
+    },
+    {
+      "path": "src/v5/clinical/native-peritonitis.js",
+      "sha256": "2e6c51a851be7db884fa51553ae7aae7f65d790476a2af075acd2d9522e311fa"
+    },
+    {
+      "path": "src/v5/clinical/native-support-487.js",
+      "sha256": "0c68f8ce4a417fb3711a2e9bc7b3bd9ce88cf19f833f15c24ee757dcf8222800"
+    },
+    {
+      "path": "src/v5/clinical/nursing-access-plan.js",
+      "sha256": "cd0f077e1c3a1d490c52cdab825e936daf09bb0b30b253dc6ac034413cb84c7c"
+    },
+    {
+      "path": "src/v5/clinical/observations.js",
+      "sha256": "57564a2d721a5f2eb31ffe343d37894a18b1a9f358c12b18458a884524b62696"
+    },
+    {
+      "path": "src/v5/clinical/oxygen-physiology.js",
+      "sha256": "f3e1576ca4bc2171faec1b533d130f0240799857c674345f66c0cad59b677d94"
+    },
+    {
+      "path": "src/v5/clinical/panc-care.js",
+      "sha256": "869073a3cc983f5eecf5df6c3476de2a2b8282db92644a23939711f869443fdc"
+    },
+    {
+      "path": "src/v5/clinical/partial-closure.js",
+      "sha256": "5afb61f9c23622be72c62083999c08a68a62cc52859a919af428a0e346385d7c"
+    },
+    {
+      "path": "src/v5/clinical/patient-dialogue.js",
+      "sha256": "b1a51a6a91c1631eb388685ca7913a9c45e5b3ccdbaffdebeb9340cb43ad80af"
+    },
+    {
+      "path": "src/v5/clinical/patient-observations.js",
+      "sha256": "fce3ea44b45e56cfd6ecf63e207e82b2e344cfbef5152b1ed52c0fe51529fa39"
+    },
+    {
+      "path": "src/v5/clinical/patient-profiles.js",
+      "sha256": "27b3c5abe7143617ae1144342f7e91e7ba722f5d0225d4c7d78fcc2a7982c930"
+    },
+    {
+      "path": "src/v5/clinical/peritonitis-care.js",
+      "sha256": "3eabe3d14aa69baa6103e0a9fda708aefbb4eef4ef131086e1ea276ff844f80c"
+    },
+    {
+      "path": "src/v5/clinical/pharmacology-catalog.js",
+      "sha256": "5d1d853e46edd8afce0c082295f7621482290709da91ab6b651b7c75e211b9f0"
+    },
+    {
+      "path": "src/v5/clinical/physical-exam.js",
+      "sha256": "e0f7d2af532c8e34991915b8e0e4bef9e06d9fbb8a184ecf8d956f00ece4b0aa"
+    },
+    {
+      "path": "src/v5/clinical/progression.js",
+      "sha256": "aee6368f8c81a4174ff3c256805b7cd1dd38ee9297576f7e9c88153361136194"
+    },
+    {
+      "path": "src/v5/clinical/receipts.js",
+      "sha256": "b04d5b6345082946b9a2f6681bd019f593c39330cbf13f32165f3feca2b2d994"
+    },
+    {
+      "path": "src/v5/clinical/sepsis-physiology-487-core.js",
+      "sha256": "7a10b2bd111cab16b905e6924fc180fc0cff6e79698f59b8fa3aca9ea0742bfc"
+    },
+    {
+      "path": "src/v5/clinical/shift-flow.js",
+      "sha256": "77ab7c1c1cab5e3fc34a22fdcd194a6e7d51899f4a138d30b139a19b4ae835c7"
+    },
+    {
+      "path": "src/v5/clinical/studies.js",
+      "sha256": "376df1809aa3494d0598ab24ed6a7772d9e5fa8b4d9b5837eece2acf590ca19e"
+    },
+    {
+      "path": "src/v5/clinical/surgical-consultation.js",
+      "sha256": "61f588e87ab3feea4da085d00d8ddf0c25e255adf312c2c2ef7e1b63d6e7dbd9"
+    },
+    {
+      "path": "src/v5/clinical/survival-487-bridge.js",
+      "sha256": "b9272a1441b37541fad09ef74c404e722945d91b54bbfd947f01ceb046982258"
+    },
+    {
+      "path": "src/v5/clinical/vega-guidance.js",
+      "sha256": "803d3f3a8c747185c2d903e7d221e873b1763700beb95a9c18b2763165a8e456"
+    },
+    {
+      "path": "src/v5/content/beds.json",
+      "sha256": "21f05c617d17e1fc7047ca723333d4adeeb10da5ab6de4cded5517332ad4a23e"
+    },
+    {
+      "path": "src/v5/content/cases.json",
+      "sha256": "a92b3868da83f05f2a71f5b3928309026b216fee71960bc116546d2a08f61725"
+    },
+    {
+      "path": "src/v5/content/clinical-case-definition.js",
+      "sha256": "45edf4f03132b2e727ff18178b419621f41c52fc95fcd2244d13f01fec77cd79"
+    },
+    {
+      "path": "src/v5/content/clinical-cases.js",
+      "sha256": "1f8e4be9a7bcd666c641f744c63dd8907a2d69312a8be0a80a5101da7e103a89"
+    },
+    {
+      "path": "src/v5/content/clinical-content.js",
+      "sha256": "8baeb1ff7bae8d6df373645d4e12a53b407989a5866e1bfa44838391c95f61e5"
+    },
+    {
+      "path": "src/v5/content/clinical-treatment-definitions.js",
+      "sha256": "d597b33e1519efe4ebaff840edf1dbe6be4ed695e99bdfd66c82e16e21d151f5"
+    },
+    {
+      "path": "src/v5/content/default-doses.json",
+      "sha256": "ce4b09db9a92539501904def3c2bb64deb3ef9e4374cd9b1fd8e613c9eca474e"
+    },
+    {
+      "path": "src/v5/content/guard-patient-variation.js",
+      "sha256": "680724712e17e4509272ebf12f5f78bf261454e615a76827b798cb15ad754763"
+    },
+    {
+      "path": "src/v5/content/hospital.json",
+      "sha256": "5d0b816054b695e3cbf31706bea4b3f50f066368c22c41ab70792ded7c237f7c"
+    },
+    {
+      "path": "src/v5/content/legacy-patient-variation.js",
+      "sha256": "02ef5866255099c573223fdb77f62c32980a4a2a1b826af8de86273ff86bdbb2"
+    },
+    {
+      "path": "src/v5/content/packs/cardiology-pack.js",
+      "sha256": "123a4012e58f0a44a9ac95424a3d19ea7f58f89623e6fbfbe78ca7ae7715f3ea"
+    },
+    {
+      "path": "src/v5/content/packs/cardiology-treatments.js",
+      "sha256": "ef6b5c3a52e225b52ac74d677cef77d1ba225e0c9bda53fddd810cee1165dda6"
+    },
+    {
+      "path": "src/v5/content/packs/common-complications.js",
+      "sha256": "50904e4f0d7f37897293857a0348a6272d0c0612f66bb41c4386fa5f1b32f280"
+    },
+    {
+      "path": "src/v5/content/packs/neurology-pack.js",
+      "sha256": "05fe45909c6b62ce9d77f2a6226b121343b7f58865ed99b5d41ce14e16f20920"
+    },
+    {
+      "path": "src/v5/content/packs/neurology-treatments.js",
+      "sha256": "dbbf6695e1fd658af46b08c30dd85046f718590bcb5ca7f66b1df83427797268"
+    },
+    {
+      "path": "src/v5/content/packs/respiratory-pack.js",
+      "sha256": "93fb6b66eea640011bf7e9bc383924e8e0a487f4f513f1858233ec2646b9983a"
+    },
+    {
+      "path": "src/v5/content/packs/respiratory-treatments.js",
+      "sha256": "75616e84c1b7eb9d996a9bb240fb66e05d189b17d082948f3fda921b0d9fb252"
+    },
+    {
+      "path": "src/v5/content/packs/safety-treatments.js",
+      "sha256": "8ea8b63f32cc414f299d59820c00dac3bfa3d38ee2ddc79bfa08363b17a72093"
+    },
+    {
+      "path": "src/v5/content/patient-name-bank.js",
+      "sha256": "3b53da9b6689f6b7574bc57497c9b589628e3453cdcab6fb3c84d15f27c9c0ec"
+    },
+    {
+      "path": "src/v5/content/patient-variation.js",
+      "sha256": "3f571d4bb2d7e5d966758f867380ea785650bff689944e96460c1fd9c7c3a257"
+    },
+    {
+      "path": "src/v5/content/therapies.json",
+      "sha256": "2ce404393babea0cb31b1932cb5bb099868897114fc312d101050b0d802520cf"
+    },
+    {
+      "path": "src/v5/core/room-authority.js",
+      "sha256": "fad172eba31e87d5045eaaa38facfd9a4f3f136df598b0dcc5d99a3da51e0e5a"
+    },
+    {
+      "path": "src/v5/core/speech-router.js",
+      "sha256": "ddce5120f5f68b1353add2825750f42b6723f9c1fea61d426e5195dcf95d438e"
+    },
+    {
+      "path": "src/v5/engine/bedside-layout.js",
+      "sha256": "02373ddb63061f271661c0aee4e22881f23afceab666caf801fa9d065c0087e3"
+    },
+    {
+      "path": "src/v5/engine/interactions.js",
+      "sha256": "ad7109f4c7d4555a86aec4ce17e6faa0085f638a5f2c0d907b133e3b13887ba8"
+    },
+    {
+      "path": "src/v5/engine/movement-progression.js",
+      "sha256": "e3455db087e6ba4ada7c463447fff9a77d9f70e01b9f8d4f880b584705dd3b6e"
+    },
+    {
+      "path": "src/v5/engine/navigation.js",
+      "sha256": "f2a66f4a7dd41901eb258b808e7e58da3a320ab129ab133872fcc000a6cb5005"
+    },
+    {
+      "path": "src/v5/engine/nurse-dispatcher.js",
+      "sha256": "0f37ad76d135b32c324093ba3bd0d335a37a4d959299540775177e8fa5560b26"
+    },
+    {
+      "path": "src/v5/social/cooperative-lifecycle.js",
+      "sha256": "ba9b2febeeabd166ab1536bd7f6ccc6d35e61c83cef8ef5ac6dfa27f395363ba"
+    },
+    {
+      "path": "src/v5/social/room-motion-scope.js",
+      "sha256": "e45fbf3d0438e8eb91e87dab6986f779910a5b93057d2846165a5de10f4b58c5"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "generated-severe-allergy",
+      "caseId": "APP-001",
+      "seed": "generated-severe-allergy:5",
+      "profile": "wrong-medication",
+      "outcome": "accepted-destination",
+      "reactions": [
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy",
+        "severe-drug-allergy"
+      ],
+      "administrations": 13,
+      "xp": 91,
+      "evidenceDigest": "ed248a66fdc43300644473e49e6cd2f52e4efe1a625736a59b98442816ab5dec",
+      "integrityPassed": true
+    },
+    {
+      "id": "opioid-overdose",
+      "caseId": "RESP-01",
+      "seed": "opioid-overdose:0",
+      "profile": "wrong-medication",
+      "outcome": "alive-unclosed",
+      "reactions": [
+        "opioid-respiratory-depression"
+      ],
+      "administrations": 13,
+      "xp": 0,
+      "evidenceDigest": "94f09e9d0efeb824f5e48b5fe0b1ee37bbef77252006256e881591bf9f933912",
+      "integrityPassed": true
+    },
+    {
+      "id": "intolerance-is-not-anaphylaxis",
+      "caseId": "RESP-01",
+      "seed": "intolerance-is-not-anaphylaxis:0",
+      "profile": "competent",
+      "outcome": "accepted-destination",
+      "reactions": [],
+      "administrations": 1,
+      "xp": 133,
+      "evidenceDigest": "ec0eec0682e03f6ca6b744e6a8e4f10686acd224c57df6e9c26f908d5b5ffd99",
+      "integrityPassed": true
+    }
+  ],
+  "rawEvidence": {
+    "path": "docs/qa/2026-10-28-reaction-evidence.jsonl.gz",
+    "sha256": "1d3cebd117460d77c37d15a4780bb40d79e3fd56bf5748c24c080d4df83cf3ed",
+    "executions": 3
+  }
+}
