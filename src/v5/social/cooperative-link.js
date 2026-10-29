@@ -46,12 +46,9 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   room=value;desiredRoomId=room.id;savedRoom=room.id;invites=invites.filter(x=>x.roomId!==room.id);
   try{storage.setItem(ROOM_KEY,room.id);storage.setItem(ROOM_ACTOR_KEY,user.id);}catch{}onRoom(structuredClone(room),user);
  }
- function roomMotionSession(userId){
-  const session=roster.find(x=>x.userId===userId)?.motionSession;
-  return typeof session==='string'&&session.startsWith(privateRoomMotionPrefix(room.id))?session:null;
- }
+ function remoteMotionSession(userId){return roster.find(x=>x.userId===userId)?.motionSession||null;}
  function peer(member,initiator){
-  const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roomMotionSession(member.userId),link:null};
+  const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:remoteMotionSession(member.userId),link:null};
   entry.link=createWardPeer({RTCPeerConnection:window.RTCPeerConnection,initiator,
    scope:privateRoomMotionPrefix(room.id),
    signal:description=>api('',{signal:{type:description.type,fromUserId:user.id,fromPeerId:peerId,toPeerId:member.peerId,description}},true),
@@ -103,8 +100,14 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   for(const member of remotes){
    if(!member.peerId)continue;
    let p=peers.get(member.userId);
-   const motionSession=roomMotionSession(member.userId);
-   if(p&&motionSession&&p.motionSession&&p.motionSession!==motionSession){
+   const motionSession=remoteMotionSession(member.userId),scope=privateRoomMotionPrefix(room.id);
+   const enteringWard=motionSession?.startsWith(scope)&&!p?.motionSession?.startsWith(scope);
+   // Only the host initiates a replacement negotiation. A guest follows its
+   // new offer, which may arrive before that host's new presence. Recreating
+   // the guest again on presence would answer the same offer from another PC.
+   // A reloaded guest can still announce its new lobby session while waiting
+   // for clinical state; its later lobby-to-ward transition is not a reload.
+   if(host&&p&&motionSession&&p.motionSession&&p.motionSession!==motionSession&&!enteringWard){
     p.link.dispose();peers.delete(member.userId);recovery.forget(member.userId);p=null;
    }
    // The first ward-scoped pose follows lobby presence during admission.

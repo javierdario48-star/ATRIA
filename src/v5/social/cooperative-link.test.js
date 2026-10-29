@@ -102,11 +102,50 @@ test('lobby-to-ward presence transition retains the accepted RTC offer while a l
   for(const now of [3500,4800]){a.maintain(now,{x:420,y:700,phase:'lobby'});await a.flush();}
   assert.equal(pcs.length,1,'entering the ward must not replace the connection that owns its accepted SDP');
   assert(!pcs[0].closed);
-  await presence(scope+crypto.randomUUID(),epoch+2);await offer('reloaded','a=ice-ufrag:reloaded');
+  // The new offer can beat presence after a host reload. Its later pose must
+  // not dispose the very connection that already answered that offer.
+  await offer('reloaded','a=ice-ufrag:reloaded');
   for(const now of [6100,7400]){a.maintain(now,{x:420,y:700,phase:'lobby'});await a.flush();}
   assert(pcs[0].closed,'a real subsequent ward session must retire the old connection');
   assert.equal(pcs.at(-1).remoteDescription.sdp,'a=ice-ufrag:reloaded');
+  const accepted=pcs.at(-1),count=pcs.length;
+  await presence(scope+crypto.randomUUID(),epoch+2);
+  for(const now of [8700,10000]){a.maintain(now,{x:420,y:700,phase:'lobby'});await a.flush();}
+  assert.equal(pcs.length,count,'late host presence cannot create a second answer for its current offer');
+  assert(!accepted.closed);
  }finally{a.dispose();}
+});
+test('a host replaces a reloaded guest still in lobby, then preserves its connection on ward entry',async()=>{
+ const f=fixture(),pcs=[];class Peer{
+  constructor(){pcs.push(this);this.connectionState='new';}
+  createDataChannel(){return {readyState:'connecting',close(){}};}
+  async createOffer(){return {type:'offer',sdp:'a=ice-ufrag:host-'+pcs.length};}
+  async setLocalDescription(x){this.localDescription=x;}
+  async setRemoteDescription(x){this.remoteDescription=x;}
+  close(){this.closed=true;}
+ }
+ f.win.RTCPeerConnection=Peer;const host=f.make();await host.connect();
+ const registered=await f.backend.route({method:'POST',path:'register',body:{clientKey:crypto.randomUUID(),name:'Bruno'}});
+ const headers={authorization:'Bearer '+registered.body.token},guest=registered.body.user.id;
+ const presence=async(session,epoch)=>{
+  const result=await f.backend.signalRoute({method:'POST',headers,body:{presence:{peerId:'guest-peer',
+   motionSession:session,motionEpoch:epoch,seq:1,x:420,y:700}}});assert.equal(result.status,200);
+ };
+ const poll=async times=>{for(const now of times){host.maintain(now,{x:400,y:700,phase:'guard',roomId:room.id});await host.flush();}};
+ const epoch=Date.now();await presence(crypto.randomUUID(),epoch);
+ host.maintain(1000,{x:400,y:700,phase:'lobby'});await host.flush();
+ const room=await host.invite([guest]),scope=privateRoomMotionPrefix(room.id);
+ assert.equal((await f.backend.route({method:'POST',path:'rooms/join',headers,body:{roomId:room.id,peerId:'guest-peer'}})).status,200);
+ try{
+  await poll([2200]);assert.equal(pcs.length,1);
+  await presence(scope+crypto.randomUUID(),epoch+1);await poll([3500,4800]);
+  assert.equal(pcs.length,1,'initial admission keeps the original host offer');
+  await presence(crypto.randomUUID(),epoch+2);await poll([6100,7400]);
+  assert.equal(pcs.length,2,'a guest waiting in lobby after reload still needs a new host offer');
+  assert(pcs[0].closed);const resumed=pcs[1];
+  await presence(scope+crypto.randomUUID(),epoch+3);await poll([8700,10000]);
+  assert.equal(pcs.length,2,'entering the ward cannot replace the renewed host offer');assert(!resumed.closed);
+ }finally{host.dispose();}
 });
 test('canceling an already committed join removes its remote membership',async()=>{
  const f=fixture(),a=f.make(),host=await invited(f,a);f.delay('/api/rooms/join');const joining=a.join(host.id);
