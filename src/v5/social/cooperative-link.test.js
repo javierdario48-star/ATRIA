@@ -69,6 +69,45 @@ async function invited(f,a){
  const result=await f.backend.route({method:'POST',path:'rooms',headers,body:{mode:'coop',invitees:[a.state().user.id],peerId:'host-peer'}});
  return {id:result.body.room.id,headers};
 }
+test('lobby-to-ward presence transition retains the accepted RTC offer while a later ward reload retires it',async()=>{
+ const f=fixture(),pcs=[];class Peer{
+  constructor(){pcs.push(this);this.connectionState='new';}
+  async setRemoteDescription(x){this.remoteDescription=x;}
+  async createAnswer(){return {type:'answer',sdp:'a=ice-ufrag:guest-'+pcs.length};}
+  async setLocalDescription(x){this.localDescription=x;}
+  close(){this.closed=true;}
+ }
+ f.win.RTCPeerConnection=Peer;
+ const a=f.make(),host=await invited(f,a),scope=privateRoomMotionPrefix(host.id);
+ const hostId=(await f.backend.route({path:'rooms/'+host.id+'/messages',headers:host.headers})).body.room.hostUserId;
+ const presence=async(session,epoch)=>{
+  const result=await f.backend.signalRoute({method:'POST',headers:host.headers,body:{presence:{
+   peerId:'host-peer',motionSession:session,motionEpoch:epoch,seq:1,x:400,y:700,phase:session.startsWith(scope)?'guard':'lobby',roomId:host.id}}});
+  assert.equal(result.status,200);
+ };
+ const offer=async(id,sdp)=>{
+  const toPeerId='v5-'+f.win.localStorage.getItem('atria.v5.social.client').slice(0,32);
+  const result=await f.backend.signalRoute({method:'POST',headers:host.headers,body:{signal:{
+   type:'offer',fromUserId:hostId,fromPeerId:'host-peer',toPeerId,
+   description:{type:'offer',sdp,negotiationId:scope+id}}}});
+  assert.equal(result.status,200);
+ };
+ try{
+  const epoch=Date.now();await presence(crypto.randomUUID(),epoch);
+  a.maintain(1000,{x:420,y:700,phase:'lobby'});await a.flush();
+  await a.join(host.id);await offer('first','a=ice-ufrag:host');
+  a.maintain(2200,{x:420,y:700,phase:'lobby'});await a.flush();
+  assert.equal(pcs.length,1);assert.equal(pcs[0].remoteDescription.sdp,'a=ice-ufrag:host');
+  await presence(scope+crypto.randomUUID(),epoch+1);
+  for(const now of [3500,4800]){a.maintain(now,{x:420,y:700,phase:'lobby'});await a.flush();}
+  assert.equal(pcs.length,1,'entering the ward must not replace the connection that owns its accepted SDP');
+  assert(!pcs[0].closed);
+  await presence(scope+crypto.randomUUID(),epoch+2);await offer('reloaded','a=ice-ufrag:reloaded');
+  for(const now of [6100,7400]){a.maintain(now,{x:420,y:700,phase:'lobby'});await a.flush();}
+  assert(pcs[0].closed,'a real subsequent ward session must retire the old connection');
+  assert.equal(pcs.at(-1).remoteDescription.sdp,'a=ice-ufrag:reloaded');
+ }finally{a.dispose();}
+});
 test('canceling an already committed join removes its remote membership',async()=>{
  const f=fixture(),a=f.make(),host=await invited(f,a);f.delay('/api/rooms/join');const joining=a.join(host.id);
  while(!f.held())await Promise.resolve();await a.leave();f.release();await assert.rejects(joining,/cancelada/);

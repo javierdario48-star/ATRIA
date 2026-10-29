@@ -46,8 +46,12 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   room=value;desiredRoomId=room.id;savedRoom=room.id;invites=invites.filter(x=>x.roomId!==room.id);
   try{storage.setItem(ROOM_KEY,room.id);storage.setItem(ROOM_ACTOR_KEY,user.id);}catch{}onRoom(structuredClone(room),user);
  }
+ function roomMotionSession(userId){
+  const session=roster.find(x=>x.userId===userId)?.motionSession;
+  return typeof session==='string'&&session.startsWith(privateRoomMotionPrefix(room.id))?session:null;
+ }
  function peer(member,initiator){
-  const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roster.find(x=>x.userId===member.userId)?.motionSession,link:null};
+  const entry={id:member.userId,roomId:room.id,peerId:member.peerId,motionSession:roomMotionSession(member.userId),link:null};
   entry.link=createWardPeer({RTCPeerConnection:window.RTCPeerConnection,initiator,
    scope:privateRoomMotionPrefix(room.id),
    signal:description=>api('',{signal:{type:description.type,fromUserId:user.id,fromPeerId:peerId,toPeerId:member.peerId,description}},true),
@@ -99,10 +103,13 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   for(const member of remotes){
    if(!member.peerId)continue;
    let p=peers.get(member.userId);
-   const motionSession=roster.find(x=>x.userId===member.userId)?.motionSession;
+   const motionSession=roomMotionSession(member.userId);
    if(p&&motionSession&&p.motionSession&&p.motionSession!==motionSession){
     p.link.dispose();peers.delete(member.userId);recovery.forget(member.userId);p=null;
    }
+   // The first ward-scoped pose follows lobby presence during admission.
+   // Bind it to this connection; only a later ward session denotes a reload.
+   if(p&&motionSession)p.motionSession=motionSession;
    // A single tested recovery policy owns state transitions, backoff, and
    // cooldown. No timer, per-view retry or duplicate signaling channel.
    if(p&&recovery.shouldRestart(member.userId,p.link.state(),now)){

@@ -56,7 +56,10 @@ export function createWardPeer({RTCPeerConnection,initiator,signal,onMessage,onS
     }return;
    }
    if(disposed||!description||!['offer','answer'].includes(description.type)||typeof description.sdp!=='string'||description.sdp.length>12000)return;
-   if(pc.remoteDescription?.sdp===description.sdp)return;
+   // The authenticated mailbox republishes this negotiation while ICE gathers.
+   // Candidates have their own slot; an SDP retry must not generate a second
+   // answer or apply an updated answer after the connection returned to stable.
+   if(pc.remoteDescription?.type===description.type)return;
    await pc.setRemoteDescription(description);
    if(description.type==='offer')await pc.setLocalDescription(await pc.createAnswer());
    await applyCandidates();

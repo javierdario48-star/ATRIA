@@ -1,6 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWardPacketCodec,createWardPeer} from './ward-peer.js';
+test('trickled SDP retries keep one answer per negotiation and never reapply an answer in stable state',async()=>{
+ const peers=[],signals=[];class Peer{
+  constructor(){peers.push(this);this.connectionState='new';this.remoteCalls=0;this.answers=0;}
+  createDataChannel(){return {readyState:'connecting',close(){}};}
+  async createOffer(){return {type:'offer',sdp:'a=ice-ufrag:host'};}
+  async createAnswer(){this.answers++;return {type:'answer',sdp:'a=ice-ufrag:guest'};}
+  async setLocalDescription(x){this.localDescription=x;}
+  async setRemoteDescription(x){
+   if(x.type==='answer'&&this.remoteDescription)throw Error('answer applied in stable state');
+   this.remoteDescription=x;this.remoteCalls++;
+  }
+  close(){}
+ }
+ const host=createWardPeer({RTCPeerConnection:Peer,initiator:true,signal:async x=>signals.push(x),onMessage:()=>{}});
+ const guest=createWardPeer({RTCPeerConnection:Peer,initiator:false,signal:async()=>{},onMessage:()=>{}});
+ try{
+  await host.start();await host.maintain();const offer=signals[0];
+  await guest.receive(offer);await guest.receive({...offer,sdp:offer.sdp+'\r\na=candidate:later'});
+  assert.equal(peers[1].answers,1,'candidate gathering cannot mint a second answer');
+  await host.receive({type:'answer',sdp:'a=ice-ufrag:guest',negotiationId:offer.negotiationId});
+  await assert.doesNotReject(host.receive({type:'answer',sdp:'a=ice-ufrag:guest\r\na=candidate:later',negotiationId:offer.negotiationId}));
+  assert.equal(peers[0].remoteCalls,1);
+ }finally{host.dispose();guest.dispose();}
+});
 test('ICE failure remains observable when the reliable channel still reports open',async()=>{
  let pc;class Peer{constructor(){pc=this;this.connectionState='connected';}createDataChannel(){return {readyState:'open',close(){}};}async createOffer(){return {type:'offer',sdp:'a=ice-ufrag:abc'};}async setLocalDescription(x){this.localDescription=x;}close(){}}
  const link=createWardPeer({RTCPeerConnection:Peer,initiator:true,signal:async()=>{},onMessage:()=>{}});await link.start();
