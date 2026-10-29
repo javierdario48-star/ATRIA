@@ -7,6 +7,7 @@ const output='qa/v5-audio-results';await fs.mkdir(output,{recursive:true});
 // Web Audio on a top-level page requires document activation; the older
 // user-gesture policy only blocks cross-origin frames in current Chromium.
 const h=await browserHarness({durable:true,browserArgs:['--autoplay-policy=document-user-activation-required']}),errors=[],results=[];
+const initialAudio=new WeakMap();
 async function pageFor(context,name){
  const p=await context.newPage();p.setDefaultTimeout(45000);p.on('pageerror',e=>errors.push(e.message));
  await p.addInitScript(()=>{
@@ -20,7 +21,23 @@ async function pageFor(context,name){
    }
   };
  });
- await p.goto(h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
+ await p.goto(h.url);
+ // Playwright evaluate/waitForFunction grants a synthetic user gesture. Read
+ // initial state through passive CDP so the observer cannot unlock the audio.
+ const observer=await context.newCDPSession(p),deadline=Date.now()+45000;
+ try{
+  while(true){
+   const {result,exceptionDetails}=await observer.send('Runtime.evaluate',{
+    expression:"({ready:document.body?.dataset.boot==='ready',audio:window.atriaV5?.diagnostics().audio,activated:navigator.userActivation.hasBeenActive})",
+    returnByValue:true,userGesture:false});
+   assert(!exceptionDetails,'passive audio observation must succeed');
+   if(result.value?.ready&&result.value.audio?.music?.status==='ready'){
+    initialAudio.set(p,result.value);break;
+   }
+   if(Date.now()>deadline)throw Error('Audio did not become ready: '+JSON.stringify(result.value));
+   await new Promise(resolve=>setTimeout(resolve,50));
+  }
+ }finally{await observer.detach();}
  if(name)await p.locator('#playerName').fill(name);return p;
 }
 const audio=p=>p.evaluate(()=>atriaV5.diagnostics().audio);
@@ -80,11 +97,12 @@ try{
   const context=await h.browser.newContext(options);
   try{
    const p=await pageFor(context);
-   await p.waitForFunction(()=>atriaV5.diagnostics().audio.music?.status==='ready');
-   const locked=await audio(p);assert.equal(locked.lobbyTrack,'new');assert.equal(locked.guardTrack,'classic');
-   assert.equal(locked.contextState,'suspended','strict autoplay policy blocks until a gesture');await visibleControl(p);
-   await p.screenshot({path:output+'/'+name+'-title.png'});
+   const initial=initialAudio.get(p),locked=initial.audio;
+   assert.equal(initial.activated,false,'audio inspection must not grant user activation');
+   assert.equal(locked.lobbyTrack,'new');assert.equal(locked.guardTrack,'classic');
+   assert.equal(locked.contextState,'suspended','strict autoplay policy blocks until a gesture');
    await p.locator('#avatarNextColor').click();await p.waitForFunction(()=>atriaV5.diagnostics().audio.contextState==='running');
+   await visibleControl(p);await p.screenshot({path:output+'/'+name+'-title.png'});
    await p.locator('#playerName').fill('Audio '+name);
    assert.equal((await audio(p)).music.track,'new');assert.equal((await audio(p)).clickStatus,'ready');
    const first=(await audio(p)).music.starts;assert.equal(first,1);
