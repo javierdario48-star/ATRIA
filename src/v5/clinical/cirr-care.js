@@ -72,7 +72,8 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
     if(job){job.commands.push(copy(cmd));return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};}
     const label=c.interventions.find(i=>i.id===intent.id)?.label||intent.id;
     if(intent.id==='sal_restriccion'){
-     const t={id:intent.id,label,dose,sourceEventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,administeredAtNativeMinute:clock.nativeMinute,administeredAtRealSecond:clock.clinicalMinute};
+     const t={id:intent.id,label,dose,route:'documented',kind:'documented-clinical-conduct',
+      sourceEventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,administeredAtNativeMinute:clock.nativeMinute,administeredAtRealSecond:clock.clinicalMinute};
      p.treatments.push(t);return txReceipt(cmd,t);
     }
     const task={id:intent.id,label,dose,sourceEventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,
@@ -123,7 +124,9 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
     }else{
      const t={id:task.id,label:task.label,dose:copy(task.dose),sourceEventId:task.sourceEventId,
       patientUid:p.uid,actorId:task.actorId,administeredAtRealSecond:at,
-      administeredAtNativeMinute:nativeMinute};
+      administeredAtNativeMinute:nativeMinute,completedAtRealSecond:at,completedAtNativeMinute:nativeMinute,
+      completionStatus:'completed',...(task.id==='espironolactona'?{route:'oral',kind:'medication.administered'}:
+       {route:'procedure',kind:'procedure.performed',performed:true})};
      p.treatments.push(t);p.administrationLog.push(copy(t));pending.delete(task.id);
      p.pendingTreatments=p.pendingTreatments.filter(x=>x.sourceEventId!==task.sourceEventId);
      for(const cmd of task.commands)completions.push(txReceipt(cmd,t));

@@ -120,7 +120,8 @@ export function deriveClinicalCertificationPlan(c,content){
  if(treatmentIds.includes('dexamethasone')){
   treatmentIds.splice(treatmentIds.indexOf('dexamethasone'),1);treatmentIds.unshift('dexamethasone');
  }
- return {caseId:c.id,diagnosis:legacy?.dx||c.dx?.[0],destination,history:historyQuestions(c),exams,
+ const history=[...(legacy?.history||[]).map((text,index)=>({intentId:'native-question-'+index,text})),...historyQuestions(c)];
+ return {caseId:c.id,diagnosis:legacy?.dx||c.dx?.[0],destination,history,exams,
   studyIds,treatmentIds,consults,legacyMedicationCommands:policy?null:(legacy?.meds||[]),
   minimumObservationSeconds:legacy?.wait??0,critical};
 }
@@ -300,7 +301,8 @@ function finalEvidence(row,view,checkpoint,c,plan){
 /** One real player journey. The runtime owns fixed world steps and the native
  * clinical rate. Advancing wall time never assigns its native clock directly. */
 export async function runClinicalCaseScenario(c,{content,mode='solo',profile='competent',
- seed='clinical-certification-v1',horizon=1440,recovery=false,traceEvery=10,source={}}={}){
+ seed='clinical-certification-v1',horizon=1440,recovery=false,traceEvery=10,source={},
+ wrongMedicationCommand='Enfermera furosemida 40 mg'}={}){
  if(!CLINICAL_CERTIFICATION_PROFILES.includes(profile)||!CLINICAL_CERTIFICATION_MODES.includes(mode)||
   !Number.isFinite(horizon)||horizon<=0||horizon>1440)throw Error('invalid clinical certification scenario');
  const options={mode,profile},row={caseId:c.id,profile,mode,seed:String(seed),authority:'createGuardRuntime',
@@ -311,6 +313,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
  let runtime;
  try{
   content??=await clinicalCertificationContent([c]);
+  c=content.cases.find(candidate=>candidate.id===c.id)||c;
+  row.source.caseDefinitionDigest=hash(c);
   const plan=deriveClinicalCertificationPlan(c,content);row.plan=copy(plan);
   // The authored receiving surgical pathway is a handoff, not an operation
   // performed at the bedside. Keep the native complication active until an
@@ -401,7 +405,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     }else for(const text of plan.legacyMedicationCommands){const ordered=await action(text);firstOrder??=ordered;}
    }else if(profile==='wrong-medication'){
     await action('Enfermera una vía');
-    firstOrder=await action('Enfermera furosemida 40 mg');
+    row.unsafeMedicationCommand=wrongMedicationCommand;firstOrder=await action(wrongMedicationCommand);
    }
   }
   const requested=new Set(),consulted=new Set(),rescued=new Set();let nextReassessment=0,recovered=false;
@@ -451,7 +455,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     }
    }
    if(profile==='wrong-medication'&&second>=wrongRepeatAt&&second<120){
-    await send('Enfermera furosemida 40 mg');wrongRepeatAt=second+10;
+    await send(wrongMedicationCommand);wrongRepeatAt=second+10;
    }
    if(recovery&&!recovered&&firstOrder&&second>=firstOrder.issuedAtRealSecond+1){
     const saved=await runtime.checkpoint(),before=runtime.view(actorId),beforeP=before.clinical.patient;
@@ -470,9 +474,12 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    const current=runtime.view(actorId).clinical;
    const allStudies=plan.studyIds.every(id=>current.patient.orders.some(o=>o.id===id&&o.status==='done'));
    const allTreatments=plan.treatmentIds.every(id=>actualTreatment(current.patient,id,current.clock.nativeMinute));
-   const canAttempt=['omit-studies','inexperienced','negligent','wrong-medication'].includes(profile)||allStudies&&allTreatments;
+   // Original case owners decide their own native conduct/receipt contract.
+   // A policy-only prefilter must not prevent asking that owner for handoff.
+   const canAttempt=!c.clinicalPolicy||['omit-studies','inexperienced','negligent','wrong-medication'].includes(profile)||allStudies&&allTreatments;
    const complicationObservationComplete=profile!=='complication-rescue'||!c.clinicalPolicy?.complications?.length||
-    (current.patient.policyState?.complications||[]).some(x=>x.status==='recovered');
+    (current.patient.policyState?.complications||[]).some(episode=>episode.status==='recovered'||
+     (c.clinicalPolicy.complications.find(def=>def.id===episode.id)?.rescueAllOf||[]).some(id=>transferredProcedures.has(id)));
    if(profile!=='abandon'&&canAttempt&&complicationObservationComplete&&
     (profile==='negligent'||second>=plan.minimumObservationSeconds)&&second-lastCloseAttempt>=15){
     await action('/reevaluar');await action('/disposicion '+plan.destination);lastCloseAttempt=second;

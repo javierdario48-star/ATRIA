@@ -26,6 +26,7 @@ import {patientAllergyFacts487} from './medication-safety-487.js';
 import {documentMedicationComplications487} from './medication-harms-487.js';
 import {CASE_CLOSURE_RULES_487,CLOSURE_DEST_LABELS_487} from '../../clinical/case-completion-487.js';
 import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
+import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {isExaminationCommand,isExaminationKind,isPhysicianExamStudy} from './exam-contract.js';
 
 const copy=value=>structuredClone(value);
@@ -133,6 +134,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(nursing&&intent.kind==='case.close'&&nursingWorkPending())
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
    const ivMedicine=!!care&&intent.kind==='therapy.request'&&isNativeMedicine(intent.id);
+   const nativeOralMedicine=!!care&&intent.kind==='therapy.request'&&!!GASTRO_CONDUCT_DOSES[intent.id];
    const definition=nativeMedicineDefinition(intent.id,caseData)||CLINICAL_TREATMENTS[intent.id];
    const requiresAccess=!!definition?.requiresAccess;
    const clinicalProcedure=!!care&&intent.kind==='therapy.request'&&CLINICAL_TREATMENTS[intent.id]?.kind!=='medication'&&!!CLINICAL_TREATMENTS[intent.id];
@@ -141,7 +143,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    const cirrBedside=caseData.id==='CIRR-001'&&intent.kind==='therapy.request'&&
     ['espironolactona','paracentesis_ter'].includes(intent.id);
    const physical=nursing&&(intent.kind==='procedure.request'&&['iv','monitor','vitals'].includes(intent.id)||
-    intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||clinicalProcedure||infusionStop||cirrBedside||oxygenAction);
+    intent.kind==='monitor.set'&&intent.id==='connect'||ivMedicine||nativeOralMedicine||clinicalProcedure||infusionStop||cirrBedside||oxygenAction);
    if(physical){
     if(nativePatient.caseEnded)return {status:'rejected',patientUid,eventId,reason:'patient-not-active'};
     // Native case policy remains the only executor. These are the same
