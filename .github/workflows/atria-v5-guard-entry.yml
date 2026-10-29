@@ -5,7 +5,10 @@ on:
     branches: [atria-5.0-core-rebuild-experimental]
     paths:
       - 'qa/v5/guard-entry-preview.mjs'
+      - 'qa/v5/authority-presence-preview.mjs'
       - 'src/v5/app/application.js'
+      - 'src/v5/server/account-gateway*'
+      - 'src/v5/render/hospital*'
       - 'src/v5/ui/audio-settings.js'
       - '.github/workflows/atria-v5-guard-entry.yml'
   workflow_dispatch:
@@ -30,10 +33,18 @@ jobs:
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
           V5_BROWSER_URL: https://night-shift-clinical-git-atria-50-c-fd8524-javierdario4878-7324.vercel.app
         run: node qa/v5/guard-entry-preview.mjs
+      - name: Live independent devices, visible avatars, authority transfer and case closure
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-guard-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          V5_BROWSER_URL: https://night-shift-clinical-git-atria-50-c-fd8524-javierdario4878-7324.vercel.app
+        run: node qa/v5/authority-presence-preview.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: atria-live-guard-entry
-          path: qa/v5-guard-entry-results/
+          path: |
+            qa/v5-guard-entry-results/
+            qa/v5-authority-presence-results/
           if-no-files-found: error
           retention-days: 14
