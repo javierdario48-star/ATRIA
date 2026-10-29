@@ -1,0 +1,74 @@
+{
+  "method": "All within-case pairs with identical clinical-invariant digest, identical doctor style, identical fifteen-question schedule and different behavioral signatures. No greetings, punctuation or emotional remarks earn body diversity.",
+  "controlledComparison": {
+    "all": {
+      "pairs": 146895,
+      "bodyNearIdenticalPairs": 72366,
+      "primaryFactsNearIdenticalPairs": 84187,
+      "exactBodies": 52677,
+      "bodyMeanTrigramJaccard": 0.9158206630166714,
+      "bodyNearIdenticalFraction": 0.49263759828448894,
+      "primaryFactsMeanTrigramJaccard": 0.9362563574498818,
+      "primaryFactsNearIdenticalFraction": 0.5731100445896729
+    },
+    "fullSpeech": {
+      "pairs": 104175,
+      "bodyNearIdenticalPairs": 29646,
+      "primaryFactsNearIdenticalPairs": 41467,
+      "exactBodies": 9957,
+      "bodyMeanTrigramJaccard": 0.8813004683834058,
+      "bodyNearIdenticalFraction": 0.28457883369330456,
+      "primaryFactsMeanTrigramJaccard": 0.9101164159117268,
+      "primaryFactsNearIdenticalFraction": 0.3980513558915287
+    }
+  },
+  "utteranceCounts": {
+    "turns": 150150,
+    "repeatTurnsEligibleForVariation": 28575,
+    "repeatTurnsWithDifferentFormulation": 11324,
+    "emotionalRemarks": 12606,
+    "emotionalQuestions": 4665
+  },
+  "archetypeCounts": {
+    "calm": {
+      "interviews": 1430,
+      "spontaneousFacts": 171
+    },
+    "anxious": {
+      "interviews": 1430,
+      "spontaneousFacts": 401,
+      "emotionalQuestions": 1199
+    },
+    "reserved": {
+      "interviews": 1430,
+      "spontaneousFacts": 0,
+      "emotionalQuestions": 211
+    },
+    "talkative": {
+      "interviews": 1430,
+      "spontaneousFacts": 1803,
+      "emotionalQuestions": 453
+    },
+    "irritable": {
+      "interviews": 1430,
+      "spontaneousFacts": 70,
+      "emotionalQuestions": 1020
+    },
+    "scared": {
+      "interviews": 1430,
+      "spontaneousFacts": 0,
+      "emotionalQuestions": 1226
+    },
+    "uncooperative": {
+      "interviews": 1430,
+      "spontaneousFacts": 0,
+      "emotionalQuestions": 556
+    }
+  },
+  "uniqueFullUtterancesAcrossConversations": 5863,
+  "uniqueFullSpeechSubstantiveBodies": 1896,
+  "limitations": [
+    "Authored clinical facts remain shared by design. Physical or neurological impairment intentionally restricts personality expression.",
+    "Unique full utterances include meaningful emotional variation; the stricter substantive-body count excludes it."
+  ]
+}

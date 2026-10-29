@@ -1,0 +1,574 @@
+{
+  "schemaVersion": 1,
+  "head": "19bc5d416fb7fa77a03793229711283de71271b7",
+  "engine": "createGuardSession.post → speech-router → room-authority → native clinical executor",
+  "caseCount": 55,
+  "requestedInterviews": 1100,
+  "completeAnamneses": 1040,
+  "dialogueTurns": 16500,
+  "distinctBehaviorProfiles": 1099,
+  "distinctSubstantiveConversations": 110,
+  "caseCounts": {
+    "CIRR-001": 20,
+    "PANC-001": 20,
+    "CROHN-001": 20,
+    "HDA-001": 20,
+    "COLON-001": 20,
+    "PERI-PBE-001": 20,
+    "PERI-SEC-001": 20,
+    "PERI-TER-001": 20,
+    "APP-001": 20,
+    "CHOLE-001": 20,
+    "ILEO-001": 20,
+    "MESI-001": 20,
+    "CHOLANG-001": 20,
+    "VARIX-001": 20,
+    "ENCEF-001": 20,
+    "UC-AS-001": 20,
+    "CDI-001": 20,
+    "DIVERT-001": 20,
+    "LGIB-001": 20,
+    "HEPAT-001": 20,
+    "DIARR-001": 20,
+    "FECAL-001": 20,
+    "PUD-001": 20,
+    "CELIAC-001": 20,
+    "ACAL-001": 20,
+    "RESP-01": 20,
+    "RESP-02": 20,
+    "RESP-03": 20,
+    "RESP-04": 20,
+    "RESP-05": 20,
+    "RESP-06": 20,
+    "RESP-07": 20,
+    "RESP-08": 20,
+    "RESP-09": 20,
+    "RESP-10": 20,
+    "CARD-01": 20,
+    "CARD-02": 20,
+    "CARD-03": 20,
+    "CARD-04": 20,
+    "CARD-05": 20,
+    "CARD-06": 20,
+    "CARD-07": 20,
+    "CARD-08": 20,
+    "CARD-09": 20,
+    "CARD-10": 20,
+    "NEUR-01": 20,
+    "NEUR-02": 20,
+    "NEUR-03": 20,
+    "NEUR-04": 20,
+    "NEUR-05": 20,
+    "NEUR-06": 20,
+    "NEUR-07": 20,
+    "NEUR-08": 20,
+    "NEUR-09": 20,
+    "NEUR-10": 20
+  },
+  "doctorCounts": {
+    "expert": 220,
+    "beginner": 220,
+    "empathetic": 165,
+    "brusque": 165,
+    "hurried": 165,
+    "meticulous": 165
+  },
+  "comparisonSample": {
+    "pairs": 10450,
+    "meanTrigramJaccard": 0.9739880800236118,
+    "nearIdenticalPairs": 7696,
+    "exactBodyPairs": 7645,
+    "uniqueSubstantiveBodies": 110
+  },
+  "quality": {
+    "facts": 0,
+    "spontaneous": 0,
+    "realizations": 0,
+    "emotionalRemarks": 0,
+    "repeatedRemarks": 0
+  },
+  "meanWordsByArchetype": {
+    "calm": 183.91772151898735,
+    "anxious": 202.71974522292993,
+    "reserved": 184.10828025477707,
+    "talkative": 198.98726114649682,
+    "irritable": 196.87261146496814,
+    "scared": 200.56687898089172,
+    "uncooperative": 190.03821656050957
+  },
+  "failedAnamneses": 60,
+  "failures": [
+    {
+      "caseId": "ENCEF-001",
+      "index": 14,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 18,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 24,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 69,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 73,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 79,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 124,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 128,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 134,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 179,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 183,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 189,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 234,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 238,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 244,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 289,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 293,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 299,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 344,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 348,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 354,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 399,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 403,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 409,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 454,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 458,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 464,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 509,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 513,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 519,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 564,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 568,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 574,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 619,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 623,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 629,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 674,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 678,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 684,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 729,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 733,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 739,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 784,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 788,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 794,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 839,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 843,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 849,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 894,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 898,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 904,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 949,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 953,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 959,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 1004,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 1008,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 1014,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    },
+    {
+      "caseId": "ENCEF-001",
+      "index": 1059,
+      "failures": [
+        "unanswered:1:¿Está confundida?",
+        "unanswered:12:¿Está confundida?",
+        "unanswered:13:Para confirmar: ¿Está confundida?"
+      ]
+    },
+    {
+      "caseId": "LGIB-001",
+      "index": 1063,
+      "failures": [
+        "unanswered:2:¿Toma anticoagulantes?"
+      ]
+    },
+    {
+      "caseId": "ACAL-001",
+      "index": 1069,
+      "failures": [
+        "unanswered:2:¿Regurgita?"
+      ]
+    }
+  ],
+  "corpusDigest": "dc91bc678bfffd38d13d7dc2bc43679bb5bc355cfc8adaf975c047a1459b39db",
+  "criteria": {
+    "complete": false,
+    "clinicalAndBehavioral": false,
+    "substantiveDiversity": false
+  },
+  "limitations": [
+    "Surface grammar checks are deterministic heuristics, not an independent medical or human naturalness judgment.",
+    "Neurological impairment and indirect history intentionally restrict personality expression.",
+    "Pairwise similarity samples the first twenty interviews per case; exact substantive fingerprints cover the full campaign."
+  ],
+  "passed": false
+}
