@@ -258,6 +258,20 @@ export function applyConfirmedIVTargetOffsets(target,patient,caseDef,atNativeMin
    target.sys=Math.min(target.sys,patient.liveVitals.sys+offsets.sys);
    target.dia=Math.min(target.dia,patient.liveVitals.dia+offsets.dia);
   }
+  // The inherited first-dose response is deliberately not multiplied by
+  // repeated orders. However, confirmed excessive boluses cannot be inert:
+  // after a delayed onset, cumulative diuresis may contract circulating
+  // volume. This bounded teaching envelope is not a dose-response PK model.
+  // The peritonitis executor owns its own repeat-diuretic shock response and
+  // does not call this projector, preventing duplicate harm.
+  const maturedMg=doses.reduce((sum,row)=>sum+
+   (atNativeMinute-row.administeredAtNativeMinute>=5?row.dose.amount:0),0);
+  const excess=Math.min(1,Math.max(0,(maturedMg-80)/240));
+  const onset=Math.min(1,Math.max(0,(atNativeMinute-first-5)/15));
+  const depletion=excess*onset;
+  target.sys-=25*depletion;
+  target.dia-=12*depletion;
+  target.hr+=14*depletion;
  }
  return target;
 }
