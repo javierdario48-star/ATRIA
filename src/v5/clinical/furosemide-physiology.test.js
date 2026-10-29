@@ -140,3 +140,26 @@ test('C12.e2 Solitario/Aprendiz require nurse arrival and IV access before confi
   }finally{session.dispose();world.enterLobby();}
  }
 });
+
+test('C12.e2 confirmed excessive repeat diuresis has delayed bounded circulatory harm',()=>{
+ for(const id of ['APP-001','CIRR-001']){
+  const f=fixture(id),p=f.p;
+  for(let i=0;i<13;i++){
+   const row={id:'furosemide',patientUid:p.uid,sourceEventId:'repeat-'+i,
+    dose:{amount:40,unit:'mg'},route:'iv',administeredAtNativeMinute:i};
+   p.administrationLog.push(row);p.treatments.push({...row});
+  }
+  const firstOnly={...p,administrationLog:p.administrationLog.slice(0,1),
+   treatments:p.treatments.slice(0,1)};
+  const baseline={...p.liveVitals};
+  const early=applyConfirmedIVTargetOffsets({...baseline},firstOnly,f.c,2);
+  const lateSingle=applyConfirmedIVTargetOffsets({...baseline},firstOnly,f.c,72);
+  const lateRepeated=applyConfirmedIVTargetOffsets({...baseline},p,f.c,72);
+  assert(lateRepeated.sys<lateSingle.sys-20,id+' repeated IV furosemide must lower perfusion');
+  assert(lateRepeated.dia<lateSingle.dia-10,id+' repeated IV furosemide must lower diastolic pressure');
+  assert(lateRepeated.hr>lateSingle.hr+10,id+' compensatory tachycardia expected');
+  assert(Number.isFinite(early.sys));
+  assert(lateRepeated.sys>baseline.sys-60,'bounded educational adverse response');
+  f.care.dispose();
+ }
+});
