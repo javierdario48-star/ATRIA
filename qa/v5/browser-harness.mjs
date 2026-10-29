@@ -11,11 +11,11 @@ import {createClinicalHttp} from '../../src/v5/server/clinical-http.js';
 import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {observeRtcBrowser} from './rtc-diagnostics.mjs';
+import {COLLIDING_BROWSER_CLIENTS} from './presence-collision-fixture.mjs';
 
 export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFallback=false,accounts=null}={}){
  const rtcDiagnostics=process.env.V5_QA_RTC_TRACE==='1',signalTrace=new Map();
- const collisionKeys=process.env.V5_QA_COLLIDING_CLIENTS==='1'?
-  ['atria-presence-collision-client-5','atria-presence-collision-client-7']:null;
+ const collisionKeys=process.env.V5_QA_COLLIDING_CLIENTS==='1'?COLLIDING_BROWSER_CLIENTS:null;
  let contextIndex=0;
  const require=createRequire(import.meta.url);
  const {chromium,devices}=require(process.env.PLAYWRIGHT_MODULE_PATH||
