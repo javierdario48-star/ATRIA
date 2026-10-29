@@ -2,6 +2,7 @@ import {csAnamnesisFact} from '../../clinical/anamnesis-intents.js';
 import {PATIENT_PROFILES} from './patient-profiles.js';
 import {readPatientObservations} from './patient-observations.js';
 import {discloseAllergies,normalizePatientPersonality} from '../content/patient-variation.js';
+import {styleClinicalAnswer} from '../content/patient-behavior.js';
 
 const normalize=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
  .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
@@ -200,7 +201,9 @@ export function executePatientDialogue(p,c,cmd,clock){
  if(proxyHistory)for(const entry of p.intentHistory)if(entry.eventId===cmd.eventId){
   entry.historySource={kind:informant.kind,label:informant.label};entry.source='indirect-history:'+entry.source;
  }
- const answer=proxyHistory&&rawAnswer?informant.label+' (anamnesis indirecta): '+rawAnswer:canStyle&&prefix?prefix+rawAnswer:rawAnswer;
+ const answer=proxyHistory&&rawAnswer?informant.label+' (anamnesis indirecta): '+rawAnswer:
+  canStyle&&p.behavior?styleClinicalAnswer(rawAnswer,{behavior:p.behavior,seed:p.variation?.seed??p.uid,
+   question:raw,eventId:cmd.eventId,sensitive:sensitiveHistory}):canStyle&&prefix?prefix+rawAnswer:rawAnswer;
  const receipt={patientUid:p.uid,eventId:cmd.eventId,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,
   source:'native.patient-dialogue',...(answer?{answer}:{}),message:answer||'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'};
  return {status:answer?'executed':'rejected',patientUid:p.uid,eventId:cmd.eventId,
