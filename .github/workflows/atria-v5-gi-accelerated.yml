@@ -2,7 +2,7 @@ name: ATRIA 5 GI Accelerated Physiology
 on:
   push:
     branches: [atria-5.0-core-rebuild-experimental]
-    paths: [.github/workflows/atria-v5-gi-accelerated.yml, src/v5/clinical/pharmacology-catalog.js, src/v5/clinical/furosemide-physiology.test.js, src/v5/clinical/native-additional-cases.test.js, src/v5/clinical/medication-harms-487.js, src/v5/clinical/medication-harms-487.test.js]
+    paths: [.github/workflows/atria-v5-gi-accelerated.yml, qa/v5/gi-accelerated-physiology.mjs, src/v5/clinical/pharmacology-catalog.js, src/v5/clinical/furosemide-physiology.test.js, src/v5/clinical/native-additional-cases.test.js, src/v5/clinical/medication-harms-487.js, src/v5/clinical/medication-harms-487.test.js]
   workflow_dispatch:
 permissions:
   contents: read
