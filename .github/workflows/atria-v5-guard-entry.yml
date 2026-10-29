@@ -27,18 +27,18 @@ jobs:
           node-version: '22'
       - name: Install isolated browser driver
         run: npm install --prefix "$RUNNER_TEMP/atria-guard-browser" --no-save --ignore-scripts playwright@1.58.2
-      - name: Real Preview accounts, four guard modes, patient interaction and music
-        env:
-          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-guard-browser/node_modules/playwright
-          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
-          V5_BROWSER_URL: https://night-shift-clinical-git-atria-50-c-fd8524-javierdario4878-7324.vercel.app
-        run: node qa/v5/guard-entry-preview.mjs
       - name: Live independent devices, visible avatars, authority transfer and case closure
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-guard-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
           V5_BROWSER_URL: https://night-shift-clinical-git-atria-50-c-fd8524-javierdario4878-7324.vercel.app
         run: node qa/v5/authority-presence-preview.mjs
+      - name: Real Preview accounts, four guard modes, patient interaction and music
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-guard-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          V5_BROWSER_URL: https://night-shift-clinical-git-atria-50-c-fd8524-javierdario4878-7324.vercel.app
+        run: node qa/v5/guard-entry-preview.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

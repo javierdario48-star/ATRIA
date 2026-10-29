@@ -24,11 +24,12 @@ async function boot(mobile=false){
  const c=await browser.newContext(mobile?devices['Pixel 5']:{viewport:{width:1280,height:900}});contexts.push(c);
  await c.addInitScript(()=>{
   const original=CanvasRenderingContext2D.prototype.drawImage,frames=new WeakMap();
-  window.avatarPaint={frames:[],invalid:[]};
+  window.avatarPaint={frames:[],invalid:[]};window.avatarSources=[];
   CanvasRenderingContext2D.prototype.drawImage=function(image,...args){
    if(image?.src?.endsWith('player-wardrobe.avif')&&args.length===8){
     const pixels=this.getImageData(0,0,this.canvas.width,this.canvas.height).data;
     frames.set(this.canvas,{atlas:[args[0],args[1]],width:this.canvas.width,height:this.canvas.height,alphaBefore:pixels.some((x,i)=>i%4===3&&x>0)});
+    if(!window.avatarSources.includes(this.canvas))window.avatarSources.push(this.canvas);
    }
    if(this.canvas.id==='game'&&frames.has(image)){
     const frame=frames.get(image);
@@ -82,12 +83,39 @@ try{
    assert(paint.frames.length&&paint.frames.every(x=>x.opaquePixels>1000),'the female avatar must contain visible pixels');
   }
  });
+ // A restored offscreen Canvas2D has lost its bitmap independently of the
+ // main hospital canvas. Reproduce the name/shadow-without-body failure at
+ // that browser boundary, without changing any world or presence state.
+ await check('remote avatar redraws after its own Canvas2D restoration',async()=>{
+  await a.evaluate(()=>{
+   const source=window.avatarSources.find(x=>x.width===384&&x.height===576);
+   if(!source)throw Error('the remote female avatar source was not drawn');
+   window.restoredAvatarSource=source;source.getContext('2d').reset();
+   source.dispatchEvent(new Event('contextrestored'));
+  });
+  await a.waitForFunction(()=>{
+   const c=window.restoredAvatarSource,bytes=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+   return bytes.some((x,i)=>i%4===3&&x>0);
+  },null,{timeout:5000});
+ });
+ await a.screenshot({path:output+'/avatar-source-restored.png'});
+ if(failures.length){
+  await a.reload();await a.waitForFunction(()=>document.body.dataset.boot==='ready');await a.locator('#welcomeContinue').click();
+  await a.waitForFunction(()=>atriaV5.snapshot().phase==='lobby'&&document.getElementById('splash').hidden);
+ }
  stage='start an account without a guard';await a.locator('#guardButton').click();await a.locator('[data-mode="solo"]').click();
  await a.locator('input[name="guardScope"][value="specific"]').check();await a.locator('#caseChoice').selectOption('FECAL-001');
  await a.locator('[data-action="start-guard"]').click();await a.waitForFunction(()=>atriaV5.snapshot().phase==='guard');
  const opened=await a.evaluate(()=>atriaV5.snapshot()),roomId=opened.clinical.room.roomId,uid=opened.clinical.patient.uid;
  checks.push(stage);
- const sync=p=>api(p,'clinical',{action:'sync',roomId});
+ const sync=async p=>{
+  for(let i=0;i<8;i++){
+   const r=await api(p,'clinical',{action:'sync',roomId});
+   if(r.status!==409||!['busy','fenced'].includes(r.body.code))return r;
+   await new Promise(resolve=>setTimeout(resolve,300));
+  }
+  throw Error('clinical authority did not settle after bounded contention retries');
+ };
  await check('another account cannot claim or control the guard',async()=>{
   assert.equal((await sync(b)).status,403);assert.equal((await api(b,'account/take-control',{})).status,409);
   assert.equal((await sync(a)).status,200);
@@ -110,7 +138,9 @@ try{
  await a.locator('#receptionButton').click();await a.locator('[data-action="reception-approach"][data-patient-uid="'+uid+'"]').click();
  await a.locator('#patientWheel').waitFor({state:'visible',timeout:60000});await a.locator('#patientWheel [data-patient-action="talk"]').click();
  for(const text of clinicalBotAssessmentActions({id:'FECAL-001'},'competent'))await send(a,text);
- await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.administrationLog?.some(x=>x.id==='disimpaction'),null,{timeout:90000});
+ // This documented procedure is a confirmed treatment receipt, rather than
+ // a medication administrationLog row. Do not alter clinical rules for QA.
+ await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.treatments?.some(x=>x.id==='disimpaction'),null,{timeout:90000});
  await send(a,'/reevaluar');await chooseDestination(a,'alta');
  await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.closure?.closed);
  const saved=(await api(a,'account/session')).body.account;assert(saved.xp>0);assert.equal(saved.casesResolved,1);checks.push(stage);
@@ -131,7 +161,8 @@ try{
  const diagnostics=await Promise.all(pages.map(async(p,i)=>{
   if(p.isClosed())return null;await p.screenshot({path:output+'/failure-'+i+'.png'}).catch(()=>{});
   return p.evaluate(()=>({phase:atriaV5.snapshot().phase,player:atriaV5.snapshot().player,others:atriaV5.snapshot().others,
-   toast:document.getElementById('toast').textContent,modal:document.getElementById('modalContent').textContent,paint:window.avatarPaint})).catch(()=>null);
+   toast:document.getElementById('toast').textContent,modal:document.getElementById('modalContent').textContent,
+   clinical:atriaV5.snapshot().clinical,paint:window.avatarPaint})).catch(()=>null);
  }));
  const report={passed:false,origin,stage,error:error.message,checks,failures,errors,diagnostics};
  await fs.writeFile(output+'/failure.json',JSON.stringify(report,null,2));console.error('ATRIA LIVE AUTHORITY PRESENCE FAIL '+JSON.stringify(report));throw error;
