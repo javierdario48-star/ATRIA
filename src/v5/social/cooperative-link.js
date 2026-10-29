@@ -110,8 +110,7 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
    if(host&&p&&motionSession&&p.motionSession&&p.motionSession!==motionSession&&!enteringWard){
     p.link.dispose();peers.delete(member.userId);recovery.forget(member.userId);p=null;
    }
-   // The first ward-scoped pose follows lobby presence during admission.
-   // Bind it to this connection; only a later ward session denotes a reload.
+   // Track the observed pose session without replacing a guest negotiation.
    if(p&&motionSession)p.motionSession=motionSession;
    // A single tested recovery policy owns state transitions, backoff, and
    // cooldown. No timer, per-view retry or duplicate signaling channel.

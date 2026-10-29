@@ -1,0 +1,30 @@
+name: ATRIA 5 Native Clinical Matrix
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths: [qa/v5/clinical-integral-ci-shard.mjs]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-journeys:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resume completed evidence and execute remaining public-runtime journeys
+        run: node qa/v5/clinical-integral-ci-shard.mjs "${{ matrix.shard }}" 8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-native-journeys-${{ matrix.shard }}
+          path: qa/v5-integral-shard-results/
+          if-no-files-found: error
+          retention-days: 30

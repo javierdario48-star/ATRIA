@@ -13,7 +13,7 @@ import {assessIntegralJourney,summarizeIntegralRows,integralSourceIdentity} from
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const read=path=>JSON.parse(readFileSync(path));
-const evidenceDigest=row=>hash({caseId:row.caseId,initial:row.initial,final:row.final,
+export const clinicalEvidenceDigest=row=>hash({caseId:row.caseId,initial:row.initial,final:row.final,
  administrations:row.administrations,studies:row.studies,closure:row.closureReceipt,xp:row.xpReceipts,deathEvents:row.deathEvents});
 const same=(actual,expected,message)=>assert.equal(hash(actual),hash(expected),message);
 
@@ -43,7 +43,7 @@ export async function verifyClinicalEvidenceArchive(path,{verifySources=true,min
   assert.equal(row.configurationDigest,manifest.configurationDigest,'execution configuration changed');
   assert.equal(row.source.sourceDigest,manifest.sourceDigest,'execution sources changed');
   assert.equal(row.source.caseDefinitionDigest,manifest.caseDefinitions.find(c=>c.caseId===row.caseId)?.digest,'case definition changed');
-  assert.equal(row.evidenceDigest,evidenceDigest(row),'recorded clinical receipts changed');
+  assert.equal(row.evidenceDigest,clinicalEvidenceDigest(row),'recorded clinical receipts changed');
   const actual=assessIntegralJourney(row);
   same(actual,row.integral,'stored assessment differs from recorded receipts');
   assert(actual.complete&&actual.integrityPassed,'incomplete or invalid native journey '+row.scenarioId);
@@ -51,6 +51,7 @@ export async function verifyClinicalEvidenceArchive(path,{verifySources=true,min
  }
  assert(manifest,'empty evidence archive');assert.equal(rows.length,manifest.scenarios.length,'missing executions');
  const counts=summarizeIntegralRows(rows);
+ assert.equal(counts.patientCount,rows.length,'executions reuse an admitted patient');
  for(const c of manifest.caseDefinitions)assert(counts.byCase[c.caseId]?.executed>=minimumPerCase,'insufficient executions for '+c.caseId);
  for(const [key,value] of Object.entries(counts))same(summary[key],value,'summary counter changed: '+key);
  assert(summary.evidenceComplete&&summary.runtimeIntegrityPassed,'summary does not certify complete native evidence');
