@@ -11,6 +11,7 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   images['player-navy']=createNavyAvatar(images['player-green'],canvas.ownerDocument);
  // One compressed atlas, decoded once into draw-ready frames; no per-frame
  // asset allocation and no alternate sprite animation implementation.
+ const wardrobeRestorers=new Map();
  function rebuildWardrobe(){if(images.wardrobe&&canvas.ownerDocument?.createElement){
   const coords={'player-female-black':[0,0],'player-female-navy':[1,0],
    'player-female-green':[2,0],'player-female-gray':[3,0],
@@ -18,8 +19,16 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
    'player-female-burgundy':[2,1],'player-burgundy':[3,1]};
   for(const [key,[col,row]] of Object.entries(coords)){
    const frame=images[key]||canvas.ownerDocument.createElement('canvas');
-   frame.width=images.wardrobe.naturalWidth/4;frame.height=images.wardrobe.naturalHeight/2;
-   frame.getContext('2d').drawImage(images.wardrobe,col*frame.width,row*frame.height,frame.width,frame.height,0,0,frame.width,frame.height);
+   if(!wardrobeRestorers.has(frame)){
+    // Each auxiliary Canvas2D can lose its bitmap independently of the main
+    // hospital surface, especially after mobile background/GPU recovery.
+    const repaint=()=>{
+     frame.width=images.wardrobe.naturalWidth/4;frame.height=images.wardrobe.naturalHeight/2;
+     frame.getContext('2d').drawImage(images.wardrobe,col*frame.width,row*frame.height,frame.width,frame.height,0,0,frame.width,frame.height);
+    };
+    wardrobeRestorers.set(frame,repaint);frame.addEventListener('contextrestored',repaint);
+   }
+   wardrobeRestorers.get(frame)();
    images[key]=frame;
   }
  }}
@@ -195,6 +204,8 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
  }
  function destroy(){if(disposed)return;disposed=true;
   canvas.removeEventListener('contextlost',lost);canvas.removeEventListener('contextrestored',restored);
+  for(const [frame,repaint] of wardrobeRestorers)frame.removeEventListener('contextrestored',repaint);
+  wardrobeRestorers.clear();
  }
  function drawAvatar(target,appearance){
   const key=playerSpriteKey(appearance),img=key==='player-black'?images.player:images[key];
@@ -206,5 +217,5 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
  resize();return Object.freeze({draw,resize,setPlayableBounds,toWorld,screen,destroy,drawAvatar,
   metrics:()=>({width,height,scale,dpr,anchorX,anchorY,camera:{...camera},
    playableBounds:playBounds?{...playBounds}:null,images:Object.keys(images).length,
-   draws,lastDrawAt,contextLost,contextLosses,restorations,recoveries,failures,lastError,listeners:disposed?0:2})});
+   draws,lastDrawAt,contextLost,contextLosses,restorations,recoveries,failures,lastError,listeners:disposed?0:2+wardrobeRestorers.size})});
 }

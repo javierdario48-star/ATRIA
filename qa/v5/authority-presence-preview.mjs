@@ -153,6 +153,12 @@ try{
   const account=(await api(releaseDevice,'account/session')).body.account;
   assert.equal(account.activeGuardId,null);assert.equal(account.xp,saved.xp);assert.equal(account.casesResolved,1);
   assert.equal((await sync(a)).status,403,'the ended guard cannot reassert authority');
+  await releaseDevice.locator('#guardButton').click();await releaseDevice.locator('[data-mode="solo"]').click();
+  await releaseDevice.locator('input[name="guardScope"][value="specific"]').check();await releaseDevice.locator('#caseChoice').selectOption('CIRR-001');
+  await releaseDevice.locator('[data-action="start-guard"]').click();
+  await releaseDevice.waitForFunction(()=>atriaV5.snapshot().phase==='guard'&&atriaV5.snapshot().patients.length>0);
+  const fresh=(await api(releaseDevice,'account/session')).body.account;
+  assert(fresh.activeGuardId&&fresh.activeGuardId!==roomId);assert.equal(fresh.xp,saved.xp);
  });
  assert.deepEqual(errors,[]);assert.deepEqual(failures,[]);
  const report={passed:true,origin,checks,errors};await fs.writeFile(output+'/results.json',JSON.stringify(report,null,2));

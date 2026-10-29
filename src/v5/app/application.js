@@ -805,7 +805,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function showGuardRecovery(){
   if(!account.read()?.activeGuardId)return false;
-  open('<h2>Tenés una guardia en curso</h2><p>Podés recuperarla en este dispositivo.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
+  open('<h2>Tenés una guardia en curso</h2><p>Recuperar o finalizar tu participación trasladará el control a este dispositivo. El dispositivo anterior dejará de controlarla.</p><div class="actions"><button data-action="account-recover">Recuperar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
   return true;
  }
  function guardSetup(){
@@ -1190,12 +1190,14 @@ export async function createApplication({document,window,content,signal}){
   if(button.dataset.action==='account-logout'){
    try{await welcome.logout();}catch(error){toast(error.message);}
   }
-  if(button.dataset.action==='account-recover'){
-   try{await account.call('take-control',{});await startPersonalAccountGuard(null,'solo',true);}
-   catch(error){toast(error.message);}
-  }
-  if(button.dataset.action==='account-release'){
-   try{await account.call('release-guard',{});await social.leave();restoreRoomId=null;await account.restore();close();}
+  if(['account-recover','account-release'].includes(button.dataset.action)){
+   try{
+    // Both are explicit same-account transfers. The authenticated server RPC
+    // validates identity/membership and fences the previous device atomically.
+    await account.call('take-control',{});
+    if(button.dataset.action==='account-recover')await startPersonalAccountGuard(null,'solo',true);
+    else{await account.call('release-guard',{});await social.leave();restoreRoomId=null;await account.restore();close();}
+   }
    catch(error){toast(error.message);}
   }
  });
