@@ -29,6 +29,10 @@ export function anamnesisQuestions(c,content,doctor='expert'){
  for(const text of ['¿Qué edad tiene?','¿Cómo se siente ahora?','¿Qué otros síntomas tiene?'])
   if(selected.length<12&&!selected.includes(text))selected.push(text);
  while(selected.length<12)selected.push(questions[1]||questions[0]);
+ if(doctor==='beginner'){
+  const background=selected.slice(1).filter(q=>/antecedentes|alerg|medic/i.test(q));
+  selected.splice(1,11,...background,...selected.slice(1).filter(q=>!background.includes(q)));
+ }
  const repeated=selected[1]||selected[0];
  const repeatBody=repeated.replace(/^[¿?]+|[¿?]+$/g,'');
  selected.push(repeated,'Para confirmar: ¿'+repeatBody+'?',questions[0]);

@@ -1,5 +1,6 @@
 // Pure identity/history bridge. Never restores, advances or edits physiology.
-import {generatePatientVariation,DEFAULT_PATIENT_VARIATION} from './patient-variation.js';
+import {generatePatientVariation,DEFAULT_PATIENT_VARIATION,normalizePatientPersonality} from './patient-variation.js';
+import {buildBehaviorProfile} from './patient-behavior.js';
 
 const identityFields=['name','age','personality','behavior','opening','variation','backgroundHistory','allergyHistory','allergies','severeAllergies','intolerances'];
 function assertIdentity(patient,caseData){
@@ -16,19 +17,20 @@ function guardContext(patient,options){
 const drugId=a=>typeof a==='string'?a:a?.drugId??a?.groupId;
 const isIntolerance=a=>(a?.type??a?.reactionType)==='intolerance';
 const isSevere=a=>a?.severity==='severe'||a?.type==='severe'||a?.reactionType==='severe';
+const withBehavior=p=>p.behavior||!p.personality?p:{...p,behavior:buildBehaviorProfile(p.variation?.seed??p.uid+':'+p.caseId,normalizePatientPersonality(p.personality))};
 
 export function materializeGuardPatient(patient,caseData,checkpoint=null,options={}){
  const saved=checkpoint?.patient;
  if(saved?.variation){
   assertIdentity(patient,caseData);
   if(saved.uid!==patient.uid||saved.caseId!==patient.caseId)throw Error('checkpoint patient identity/case mismatch');
-  return {...patient,...Object.fromEntries(identityFields.filter(k=>saved[k]!==undefined).map(k=>[k,structuredClone(saved[k])]))};
+  return withBehavior({...patient,...Object.fromEntries(identityFields.filter(k=>saved[k]!==undefined).map(k=>[k,structuredClone(saved[k])]))});
  }
  // Preserve legacy checkpoints instead of re-rolling an existing patient.
- if(checkpoint)return patient;
+ if(checkpoint)return withBehavior(patient);
  if(patient.variation?.seed!==undefined&&patient.name&&Number.isInteger(patient.age)&&
   patient.personality&&patient.opening&&Array.isArray(patient.allergyHistory)){
-  assertIdentity(patient,caseData);return patient;
+  assertIdentity(patient,caseData);return withBehavior(patient);
  }
  const profile=caseData?.variation===true?DEFAULT_PATIENT_VARIATION:caseData?.variation;
  if(!profile)return patient;

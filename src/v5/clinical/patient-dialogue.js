@@ -2,7 +2,7 @@ import {csAnamnesisFact} from '../../clinical/anamnesis-intents.js';
 import {PATIENT_PROFILES} from './patient-profiles.js';
 import {readPatientObservations} from './patient-observations.js';
 import {discloseAllergies,normalizePatientPersonality} from '../content/patient-variation.js';
-import {styleClinicalAnswer} from '../content/patient-behavior.js';
+import {patientRelationship,spontaneousHistory,composePatientConversation} from './patient-conversation.js';
 
 const normalize=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
  .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
@@ -38,6 +38,9 @@ const symptomQuestions=[
 ];
 function lay(text){
  let result=text.replace(/(?:Comorbilidad|Contexto etiológico|Dato acompañante):[^.]*\.\s*/gi,'');
+ result=result.replace(/\ben la fosa il[ií]aca derecha\b/gi,'abajo a la derecha de la panza')
+  .replace(/\ben el hipocondrio derecho\b/gi,'debajo de las costillas a la derecha')
+  .replace(/\ben el epigastrio\b/gi,'en la boca del estómago');
  for(const [re,to] of [[/\bhipocondrio derecho\b/gi,'debajo de las costillas a la derecha'],[/\bfosa il[ií]aca derecha\b/gi,'abajo a la derecha de la panza'],
   [/\bepigastrio\b/gi,'boca del estómago'],[/\bictericia\b/gi,'piel y ojos amarillos'],[/\bcoluria\b/gi,'pis muy oscuro'],
   [/\bhematemesis\b/gi,'vómitos con sangre'],[/\bmelena\b/gi,'caca negra'],[/\bdisnea\b/gi,'falta de aire'],
@@ -45,7 +48,9 @@ function lay(text){
  return result;
 }
 function exactFact(c,text){
- return c.intents.filter(i=>i.keys.some(k=>(' '+text+' ').includes(' '+normalize(k)+' ')))
+ const inflect=x=>x.replace(/\banticoagulantes\b/g,'anticoagulante').replace(/\bregurgita\b/g,'regurgitacion');
+ text=inflect(text);
+ return c.intents.filter(i=>i.keys.some(k=>(' '+text+' ').includes(' '+inflect(normalize(k))+' ')))
   .sort((a,b)=>Math.max(...b.keys.map(k=>normalize(k).length))-Math.max(...a.keys.map(k=>normalize(k).length)))[0];
 }
 function authoredProfile(c){
@@ -65,10 +70,11 @@ export function executePatientDialogue(p,c,cmd,clock){
  if(cmd.intent.kind!=='history.ask')return null;
  const profile=PATIENT_PROFILES[c.id]??authoredProfile(c);if(!profile)return null;
  p.interview??={lastSymptom:null,dimensions:{},symptoms:{},subjective:null};
- const context=p.interview,observed=readPatientObservations(p,c.id,clock.nativeMinute),answers=[];
+ const context=p.interview,observed=readPatientObservations(p,c.id,clock.nativeMinute),answers=[],disclosures=[];
  let sensitiveHistory=false;
  function note(id,answer,source){
   const entry={id,answer:lay(answer),source,eventId:cmd.eventId,patientUid:p.uid,nativeMinute:clock.nativeMinute};
+  disclosures.push(entry);
   if(id&&!p.intentHistory.some(x=>x.id===id))p.intentHistory.push(entry);
   return entry;
  }
@@ -102,6 +108,9 @@ export function executePatientDialogue(p,c,cmd,clock){
   // question/conjunction; a special answer must not swallow another domain.
   const clauses=String(raw||'').split(/[?¿;]+/).flatMap(x=>normalize(x).replace(/^y /,'').split(/\s+(?:y|ademas|tambien)\s+/)).filter(Boolean);
   for(const clause of clauses){
+   // Bedside empathy/explanations are relationship input, not evidence that
+   // the patient answered a symptom question ("con calma" is not analgesia).
+   if(/^(?:le escucho|te escucho|le explico|te explico|estas preguntas ayudan|tomese su tiempo|tomate tu tiempo|necesito precisar|conteste rapido|no tengo tiempo|por favor sea breve)\b/.test(clause))continue;
    const openQuestion=openHistoryIntent(clause);
    if(openQuestion==='reason'){
     answers.push(note('interview:symptoms',profile.symptoms,'native.patient-profile.symptoms').answer);
@@ -111,7 +120,7 @@ export function executePatientDialogue(p,c,cmd,clock){
    if(/como (?:estas|esta|te (?:sientes|sentis)|se siente)\b|(?:te|se) (?:sientes|sentis|siente) (?:mejor|peor)\b|estas (?:mejor|peor)\b|como (?:sigues|sigue|vas)\b|\b(?:mejoraste|mejoro)\b/.test(clause)){
     answers.push(subjective());continue;
    }
-   if(/(?:sabes|sabe|decime|digame|en que lugar|donde).*(?:estas|esta|estamos)|(?:estas|esta) (?:orientado|confuso|confundido)|que (?:dia|fecha) es|como (?:te llamas|se llama)/.test(clause)){
+   if(/(?:sabes|sabe|decime|digame|en que lugar|donde).*(?:estas|esta|estamos)|(?:estas|esta) (?:orientad[oa]|confus[oa]|confundid[oa])|que (?:dia|fecha) es|como (?:te llamas|se llama)/.test(clause)){
     answers.push(verbal===4?'No sé bien… ¿estoy en mi casa? ¿Dónde estamos?':/como.*llama/.test(clause)?'Me llamo '+(p.name||c.common?.name||'Paciente')+'.':
      /dia|fecha/.test(clause)?'Sé qué día es; me acuerdo de haber venido hoy a la guardia.':'Estoy en la guardia del hospital, para que me atiendan.');continue;
    }
@@ -201,11 +210,27 @@ export function executePatientDialogue(p,c,cmd,clock){
  if(proxyHistory)for(const entry of p.intentHistory)if(entry.eventId===cmd.eventId){
   entry.historySource={kind:informant.kind,label:informant.label};entry.source='indirect-history:'+entry.source;
  }
- const answer=proxyHistory&&rawAnswer?informant.label+' (anamnesis indirecta): '+rawAnswer:
-  canStyle&&p.behavior?styleClinicalAnswer(rawAnswer,{behavior:p.behavior,seed:p.variation?.seed??p.uid,
-   question:raw,eventId:cmd.eventId,sensitive:sensitiveHistory}):canStyle&&prefix?prefix+rawAnswer:rawAnswer;
+ let dialogue=null;
+ let answer=proxyHistory&&rawAnswer?informant.label+' (anamnesis indirecta): '+rawAnswer:
+  canStyle&&!p.behavior&&prefix?prefix+rawAnswer:rawAnswer;
+ if(canStyle&&p.behavior){
+  const interaction=patientRelationship(context,cmd.actorId,p.behavior,raw),r=interaction.relationship;
+  const facts=[...new Set(answers)].map((text,i)=>{
+   const canonical=lay(text.replace(/^Hola, doctor\. /,'')),entry=disclosures.find(e=>e.answer===canonical);
+   return {id:entry?.id??'interview:response:'+i,canonical,source:entry?.source??'native.patient-observation'};
+  });
+  const topic=disclosures.some(e=>e.id==='interview:symptoms')?'reason':
+   disclosures.some(e=>e.id==='onset')?'onset':disclosures[0]?.id??'observation';
+  const limited=p.liveVitals.spo2<90||p.liveVitals.sys<80||p.liveVitals.rr>=32;
+  if(!sensitiveHistory&&!limited)for(const extra of spontaneousHistory(c,p.behavior,r,topic,facts)){
+   const entry=note(extra.id,extra.canonical,extra.source);facts.push({...extra,canonical:entry.answer});
+  }
+  const composed=composePatientConversation(facts,{behavior:p.behavior,seed:p.variation?.seed??p.uid,
+   relationship:r,topic,question:raw,interaction,sensitive:sensitiveHistory,greeting,limited});
+  answer=composed.answer;dialogue=composed.evidence;
+ }
  const receipt={patientUid:p.uid,eventId:cmd.eventId,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,
-  source:'native.patient-dialogue',...(answer?{answer}:{}),message:answer||'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'};
+  source:'native.patient-dialogue',...(answer?{answer}:{}),...(dialogue?{dialogue}:{}),message:answer||'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'};
  return {status:answer?'executed':'rejected',patientUid:p.uid,eventId:cmd.eventId,
   ...(!answer?{reason:'unknown-question'}:{}),receipt};
 }

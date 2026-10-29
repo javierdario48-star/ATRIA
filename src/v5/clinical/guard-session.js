@@ -78,7 +78,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  const care=factory?factory(nativePatient,caseData,options):null;
  // Factories initialize their native fields. Restore the SAME owned object
  // afterwards so every executor and pending task keeps its original reference.
- if(checkpoint){for(const k of Object.keys(nativePatient))delete nativePatient[k];Object.assign(nativePatient,copy(checkpoint.patient));}
+ if(checkpoint){
+  for(const k of Object.keys(nativePatient))delete nativePatient[k];Object.assign(nativePatient,copy(checkpoint.patient));
+  nativePatient.behavior??=copy(resolvedPatient.behavior);
+ }
  const studies=createStudyService(content.cases,checkpoint?.studies),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
  const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))].filter(s=>!isPhysicianExamStudy(s.id));
  const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map(),waitingForAccess=new Map();

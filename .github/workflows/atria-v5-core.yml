@@ -9,6 +9,30 @@ permissions:
   contents: read
 
 jobs:
+  npc-personality-certification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Native dialogue integration, adversarial behavior, four modes and durable personality recovery
+        run: node --test qa/tests/patient-personality-*.test.mjs
+      - name: Initial 55 cases by 20 behavioral profiles by 15 native dialogue turns
+        run: node qa/v5/certify-patient-personalities.mjs --count 1100 --output qa/v5-personality-initial-results
+      - name: Certify 10010 complete native anamneses and 150150 dialogue turns
+        run: node qa/v5/certify-patient-personalities.mjs --count 10010 --output qa/v5-personality-certified-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-npc-personality-native-anamneses
+          path: |
+            qa/v5-personality-initial-results/
+            qa/v5-personality-certified-results/
+          if-no-files-found: error
+          retention-days: 30
+
   specialty-runtime-certification:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -41,7 +65,7 @@ jobs:
           node-version: '22'
       - name: Bot-check 40 admissions per variable case for identity personality allergy and recovery
         run: node --test qa/tests/clinical-patient-variation-55.test.mjs
-      - name: Certify 10000 behavior profiles and 10000 twelve-turn anamneses
+      - name: Pure deterministic behavior unit samples (native anamneses run in the dedicated certification job)
         run: node --test qa/tests/patient-behavior-accelerated.test.mjs qa/tests/patient-behavior-conversations.test.mjs
       - name: Verify the original module based core
         run: npm run test:v5-core

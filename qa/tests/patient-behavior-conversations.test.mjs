@@ -11,10 +11,10 @@ const facts=[
  'No tomo medicamentos todos los días.','Me duele más que al llegar.'
 ];
 const archetypes=['calm','anxious','reserved','talkative','irritable','scared','uncooperative'];
-test('10000 accelerated multi-turn anamneses retain all authored facts',()=>{
+test('finite pure wrapper samples retain authored facts (not complete native anamneses)',()=>{
  const profiles=new Set(),conversations=new Set(),responses=new Set();
  let turns=0,remarks=0;
- for(let i=0;i<10000;i++){
+ for(let i=0;i<64;i++){
   const seed='conversation-'+i,archetype=archetypes[i%archetypes.length];
   const behavior=buildBehaviorProfile(seed,archetype);
   const transcript=[];
@@ -31,8 +31,7 @@ test('10000 accelerated multi-turn anamneses retain all authored facts',()=>{
   profiles.add(TRAIT_KEYS.map(k=>behavior[k]).join(','));
   conversations.add(transcript.join(' | '));
  }
- assert(profiles.size>1000,'insufficient behavioral diversity');
- assert(conversations.size>1000,'insufficient conversational diversity');
+ assert(profiles.size>50,'insufficient behavioral diversity');
+ assert(conversations.size>20,'insufficient conversational diversity');
  assert(remarks<turns/3,'excessive emotional repetition');
- console.log(JSON.stringify({anamneses:10000,turns,uniqueProfiles:profiles.size,uniqueConversations:conversations.size,uniqueResponses:responses.size,emotionalRemarks:remarks}));
 });
