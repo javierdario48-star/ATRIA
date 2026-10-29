@@ -195,3 +195,29 @@ test('physical nursing preserves travel and preparation before an unblocked alle
   assert.equal(accepted.length,3);
  }finally{s.dispose();}
 });
+
+test('repeated confirmed IV diuretic causes a documented event only after measured hypotension',()=>{
+ const p={uid:'P',liveVitals:{temp:38,hr:120,rr:20,sys:110,dia:70,spo2:98},
+  administrationLog:[],treatments:[],adverseEvents:[]};
+ for(let i=0;i<13;i++){
+  const row={id:'furosemide',label:'Furosemida IV',patientUid:p.uid,sourceEventId:'furo-'+i,
+   route:'iv',dose:{amount:40,unit:'mg'},administeredAtNativeMinute:i};
+  p.administrationLog.push(row);p.treatments.push({...row});
+ }
+ assert.equal(confirmedMedicationHarms487(p,c,20).reactions.length,0,'dose count alone does not invent injury');
+ p.liveVitals.sys=92;
+ const harm=confirmedMedicationHarms487(p,c,20);
+ assert.equal(harm.reactions.length,1);
+ assert.equal(harm.reactions[0].kind,'diuretic-volume-depletion');
+ assert.equal(harm.offsets.sys,0,'documentation never doubles the native pressure effect');
+ const events=documentMedicationComplications487(p,c,{nativeMinute:20,clinicalMinute:166});
+ assert.equal(events.length,1);
+ assert.match(events[0].message,/furosemida IV/);
+ assert.equal(documentMedicationComplications487(p,c,{nativeMinute:21,clinicalMinute:175}).length,0,
+  'repeated observations cannot duplicate the same event');
+ p.caseEnded=true;
+ assert.deepEqual(documentMedicationComplications487(p,c,{nativeMinute:22,clinicalMinute:183}),[]);
+ const invalid={...p,caseEnded:false,administrationLog:p.administrationLog,
+  treatments:p.treatments.slice(1)};
+ assert.throws(()=>confirmedMedicationHarms487(invalid,c,22),/unique confirmed/);
+});
