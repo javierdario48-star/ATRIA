@@ -190,6 +190,9 @@ jobs:
   lobby-social-acceptance:
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    env:
+      V5_QA_RTC_TRACE: '1'
+      V5_QA_COLLIDING_CLIENTS: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

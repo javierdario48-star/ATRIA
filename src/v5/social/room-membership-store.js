@@ -4,6 +4,7 @@ import {clinicalContent} from '../server/content.js';
 import {playableClinicalCaseIds} from '../content/clinical-cases.js';
 const cases=clinicalContent.cases;
 import {resolveGuardSelection} from '../clinical/guard-selection-policy.js';
+import {scopedPresenceStorage,publishPresenceSerially} from './presence-storage.js';
 // Storage composition only: the characterized V4 backend remains byte-identical.
 // A room has one host-owned metadata record and a distinct acceptance key per
 // guest. Joining doctors cannot overwrite each other's room membership.
@@ -58,7 +59,11 @@ export function createV5QaSocialServer(storage,options){
   return {actorId:id,name:user.name,username:user.handle,scrubColor:appearance.color,sex:appearance.sex,
    verified:false,friendsCount:Array.isArray(friends)?friends.length:0,status:live?'disponible':'desconectado',self:viewer===id};
  }
- return {...legacy,readPlayerProfile,async route(request){
+ return {...legacy,readPlayerProfile,
+  signalRoute(request){
+   const run=()=>createQaSocialServer(scopedPresenceStorage(slots),options).signalRoute(request);
+   return request.method==='POST'&&request.body?.presence?publishPresenceSerially(storage,request,run):run();
+  },async route(request){
   const path=String(request.path||'').replace(/^\/?(?:api\/)?/,'');
   let guardSelection=null;
   if(path==='rooms'&&request.method==='POST'&&request.body?.guardSelection!=null){
