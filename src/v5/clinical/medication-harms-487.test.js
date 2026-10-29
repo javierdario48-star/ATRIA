@@ -204,7 +204,8 @@ test('repeated confirmed IV diuretic causes a documented event only after measur
    route:'iv',dose:{amount:40,unit:'mg'},administeredAtNativeMinute:i};
   p.administrationLog.push(row);p.treatments.push({...row});
  }
- assert.equal(confirmedMedicationHarms487(p,c,20).reactions.length,0,'dose count alone does not invent injury');
+ assert.equal(confirmedMedicationHarms487(p,c,20).reactions[0].severity,0,
+  'dose count alone does not invent an observed injury');
  p.liveVitals.sys=92;
  const harm=confirmedMedicationHarms487(p,c,20);
  assert.equal(harm.reactions.length,1);
@@ -215,6 +216,9 @@ test('repeated confirmed IV diuretic causes a documented event only after measur
  assert.match(events[0].message,/furosemida IV/);
  assert.equal(documentMedicationComplications487(p,c,{nativeMinute:21,clinicalMinute:175}).length,0,
   'repeated observations cannot duplicate the same event');
+ p.liveVitals.sys=116;
+ assert.equal(documentMedicationComplications487(p,c,{nativeMinute:22,clinicalMinute:183}).length,0);
+ assert.equal(p.adverseEvents[0].status,'resolved','recovery must clear active adverse-event state');
  p.caseEnded=true;
  assert.deepEqual(documentMedicationComplications487(p,c,{nativeMinute:22,clinicalMinute:183}),[]);
  const invalid={...p,caseEnded:false,administrationLog:p.administrationLog,
