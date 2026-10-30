@@ -67,8 +67,10 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
   const preparation=consultationPreparationReview(readiness(destinationFor(id)),{transfer,
    pendingTreatments:clinicalTransferContinuation(p,c,destinationFor(id)).pendingBlockers.length});
   if(preparation)return preparation;
+  const withheld=clinicalTransferContinuation(p,c,destinationFor(id)).withheldPreparations||[];
   return {accepted:true,status:'accepted',decision:'ACCEPTED',reasonCode:null,reason:(serviceLabels[id]||id)+
-   ' acepta la recepción del paciente. Mantener soporte y vigilancia durante el traslado; la aceptación no acredita un procedimiento realizado.'};
+   ' acepta la recepción del paciente. Mantener soporte y vigilancia durante el traslado; la aceptación no acredita un procedimiento realizado.'+
+   (withheld.length?' No retrasar el tratamiento definitivo para administrar una preparación actualmente contraindicada; esa omisión queda documentada en el traslado.':'')};
  }
  function evaluate(id,options){
   try{return reviewFor(id,options);}

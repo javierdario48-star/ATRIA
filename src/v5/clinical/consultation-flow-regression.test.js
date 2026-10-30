@@ -5,10 +5,11 @@ import {createGuardSession} from './guard-session.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
 import {closureDecisionHTML} from '../ui/clinical-closure-panel.js';
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
+import {generatePatientVariation} from '../content/patient-variation.js';
 
-function fixture(caseId) {
+function fixture(caseId,patientUid) {
  let sequence=0;
- const c=content.cases.find(c=>c.id===caseId),uid='regression-'+caseId;
+ const c=content.cases.find(c=>c.id===caseId),uid=patientUid||'regression-'+caseId;
  const s=createGuardSession({roomId:uid,mode:'solo',actorId:'doctor',actorName:'Médico',
   patient:{uid,caseId},content,resolveContext:()=>({patientUid:uid})});
  const post=text=>s.post({id:'cmd-'+(++sequence),text});
@@ -21,6 +22,48 @@ function fixture(caseId) {
  }
  return {c,s,uid,post,advance,workup};
 }
+
+for(const priorRescue of [false,true])test('CARD-08 with actual leak, allergic hypotension and rescue transfers without contraindicated beta blockade'+(priorRescue?' after a prior rescue dose':''),async()=>{
+ const c=content.cases.find(c=>c.id==='CARD-08');
+ let uid;
+ for(let i=0;i<1000&&!uid;i++){
+  const candidate='card08-leak-contra-'+i;
+  const generated=generatePatientVariation(c.variation,candidate+':'+c.id);
+  if(generated.complicationCandidates.some(x=>x.id==='card08-aortic-leak')&&
+   generated.allergies.some(x=>x.drugId==='morphine'&&x.severity==='severe'))uid=candidate;
+ }
+ assert(uid,'select an ordinary authored leak admission');
+ const f=fixture(c.id,uid);
+ try{
+  await f.workup();await f.post('¿Tiene alergias?');await f.post('/estudio g_card08_cta');
+  await f.post('Enfermera oxígeno 4 L/min');
+  if(priorRescue){await f.post('/tratamiento epi_im');await f.advance(1);}
+  while(f.s.read().patient.liveVitals.sys>=110&&!f.s.read().patient.patientDied&&f.s.read().clock.clinicalMinute<900)await f.advance(5);
+  assert(f.s.read().patient.policyState.complications.some(x=>x.id==='card08-aortic-leak'));
+  const analgesia=await f.post('Enfermera morfina 4 mg');
+  assert(analgesia.clinical.some(x=>['pending','executed'].includes(x.status)),JSON.stringify(analgesia));
+  while(f.s.read().patient.liveVitals.sys>=100&&!f.s.read().patient.patientDied&&f.s.read().clock.clinicalMinute<1000)await f.advance(2);
+  const p=f.s.read().patient;
+  assert(p.liveVitals.sys<100&&!p.patientDied,JSON.stringify(p.liveVitals));
+  await f.post('/reevaluar');
+  assert.equal((await f.post('/disposicion quirofano')).clinical[0].status,'rejected',
+   'withholding beta blockade cannot replace rescue of the active anaphylaxis');
+  const rescue=await f.post('/tratamiento epi_im');
+  assert(rescue.clinical.some(x=>['pending','executed'].includes(x.status)),JSON.stringify(rescue));
+  await f.advance(1);
+  for(const id of ['esmolol','metoprolol'])
+   assert.equal((await f.post('/tratamiento '+id)).clinical[0].reason,'clinical-blood-pressure-limit');
+  await f.post('/reevaluar');
+  const request=await f.post('/disposicion quirofano');
+  assert.equal(request.clinical[0].status,'pending',JSON.stringify(request.clinical));
+  await f.advance(3.5);
+  const closed=f.s.read();assert.equal(closed.patient.closure?.destination,'quirofano');
+  assert.equal(closed.progress.receipts.length,1);
+  assert.equal(closed.patient.closure.quality.treatment,0,'a withheld unsafe drug earns no administration credit');
+  assert(!closed.patient.treatments.some(x=>['esmolol','metoprolol','aortic_surgery'].includes(x.id)));
+  assert.deepEqual(closed.patient.closure.handoff.withheldPreparations.map(x=>x.id).sort(),['esmolol','metoprolol']);
+ }finally{f.s.dispose();}
+});
 
 test('authored diagnoses containing sin retain their clinical meaning, while negated impressions cannot authorize transfer',()=>{
  for(const [id,dx] of [['CARD-02','IAM sin elevación del ST'],['CARD-02','síndrome coronario agudo sin elevación del ST'],['RESP-05','TEP sin shock']]){
