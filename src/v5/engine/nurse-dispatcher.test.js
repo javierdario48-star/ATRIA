@@ -111,6 +111,18 @@ test('an unreachable nursing journey expires visibly, releases the nurse and can
  assert.equal(d.snapshot()[1].stage,'at-bed');
 });
 
+test('a legitimate lengthy bedside preparation does not expire the next queued order',()=>{
+ const f=fixture();
+ f.dispatcher.enqueue({eventId:'preparation',patientUid:'P1',kind:'vancomycin_iv'});
+ arrive(f.dispatcher);
+ f.dispatcher.enqueue({eventId:'following',patientUid:'P1',kind:'ampicillin'});
+ f.dispatcher.advance(100);
+ assert.equal(f.dispatcher.snapshot().find(t=>t.eventId==='following').stage,'queued');
+ assert.deepEqual(f.dispatcher.takeArrivals(),[]);
+ f.dispatcher.acceptClinicalResult({eventId:'preparation',patientUid:'P1',status:'executed',receipt:{eventId:'preparation',patientUid:'P1'}});
+ assert.equal(arrive(f.dispatcher)[0].eventId,'following');
+});
+
 test('C08a compound order never floods one patient with multiple nurse sprites',()=>{
  const nav=createNavigation(openMap());
  const nurses=[actor(nav,'N1',1,1),actor(nav,'N2',1,2)];

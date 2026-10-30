@@ -62,6 +62,12 @@ export function createNurseDispatcher({navigation,nurses,patients,checkpoint=nul
    if(disposed)return;
    if(!Number.isFinite(dt)||dt<0)throw Error('invalid nursing step');
    for(const task of tasks.values())if(['queued','travelling'].includes(task.stage)){
+    // Waiting behind an assigned bedside preparation is queue progress, not
+    // a failed route. Its native owner will release the nurse when ready.
+    const waitingForTurn=task.stage==='queued'&&(
+     [...tasks.values()].some(other=>other!==task&&other.patientUid===task.patientUid&&['travelling','at-bed'].includes(other.stage))||
+     nurses.length>0&&nurses.every(n=>n.journeyId));
+    if(waitingForTurn)continue;
     task.waitedSeconds=(task.waitedSeconds||0)+dt;
     if(task.waitedSeconds<TRAVEL_TIMEOUT_SECONDS)continue;
     task.stage='rejected';release(task);
