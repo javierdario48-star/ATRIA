@@ -312,7 +312,7 @@ function finalEvidence(row,view,checkpoint,c,plan){
   exam:!!examExecuted&&targeted,studies:confirmedStudies,
   treatment:(c.clinicalPolicy?plan.treatmentIds.length>0:legacyActions.length>0)&&nativeTreatments&&administrativeIntegrity,
   trajectory:!!row.firstMeaningfulPhysiologicalDelta,
-  closure:actualClosure&&plan.consults.every(id=>p.consults.some(x=>x.id===id&&x.patientUid===p.uid&&x.accepted&&x.status==='done')),
+  closure:actualClosure&&(!plan.consults.length||plan.consults.some(id=>p.consults.some(x=>x.id===id&&x.patientUid===p.uid&&x.accepted&&x.status==='done'))),
   xp};
  Object.assign(row,assessClinicalCertificationEvidence(row));
  row.outcome=p.patientDied?'native-death':closure?.closed?'accepted-destination':'alive-unclosed';
