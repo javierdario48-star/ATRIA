@@ -249,10 +249,21 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    return label+': ejecución no confirmada; comprobá el estado del paciente antes de repetir.';
   if(item.status!=='rejected')return null;
   if(item.receipt?.message)return 'No ejecutado: '+item.receipt.message;
-  if(item.reason==='clinical-action-not-migrated')
+  if(item.reason==='clinical-action-not-migrated'){
+   // Unsupported clinical execution is a system limitation, not a clinical
+   // contraindication. Never tell the learner that surgery is inappropriate.
+   if(item.kind==='case.close')
+    return 'ATRIA: no se pudo evaluar el destino de este paciente. La derivación no fue registrada; no se trata de un rechazo clínico. Conservá la atención y reportá el caso '+caseData.id+'.';
+   if(item.kind==='consult.request')
+    return 'ATRIA: no se pudo registrar la interconsulta. No implica que el servicio haya rechazado al paciente. Caso '+caseData.id+'.';
    return item.kind==='therapy.request'?
-    label+': no hay una regla de tratamiento validada para '+caseData.id+'. No administrado.':
-    label+': este procedimiento no está implementado para '+caseData.id+'. No ejecutado.';
+    label+': la orden no se pudo evaluar en este caso; no fue administrada.':
+    label+': la orden no se pudo evaluar; no fue ejecutada.';
+  }
+  if(item.reason==='nursing-work-in-progress')
+   return label+': todavía hay órdenes de enfermería en curso. Esperá su confirmación antes de cerrar la atención.';
+  if(item.reason==='patient-not-active')
+   return label+': el caso ya finalizó; no se admiten nuevas órdenes.';
   if(item.reason==='oxygen-not-active')return label+': no hay oxígeno activo que suspender.';
   if(item.reason==='venous-access-required')
    return label+': necesitás una vía venosa confirmada antes de administrarlo.';
