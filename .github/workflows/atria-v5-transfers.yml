@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test src/v5/clinical/consultation-flow-regression.test.js src/v5/clinical/accepted-transfer.test.js src/v5/clinical/receiver-transfer-contract.test.js src/v5/engine/nurse-dispatcher.test.js
+      - run: node --test src/v5/clinical/consultation-flow-regression.test.js src/v5/clinical/automatic-transfer-runtime.test.js src/v5/clinical/accepted-transfer.test.js src/v5/clinical/receiver-transfer-contract.test.js src/v5/engine/nurse-dispatcher.test.js
   clinical-bots:
     runs-on: ubuntu-latest
     timeout-minutes: 15
