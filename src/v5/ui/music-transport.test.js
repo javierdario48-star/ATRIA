@@ -25,6 +25,24 @@ function fixture(load=async()=>({duration:164.4135})){
  const settle=async()=>{await Promise.resolve();await Promise.resolve();music.tick();};
  return {context,music,settle,advance(t){context.currentTime=t;music.tick();}};
 }
+test('both compositions get the same modest output lift while user volume still scales and mutes them',async()=>{
+ const gainAtEnd=node=>{
+  let gain=1;
+  for(let n=node;n.output;n=n.output)if(n.gain){
+   const event=n.gain.events.filter(x=>x[0]==='set'||x[0]==='ramp').at(-1);
+   gain*=event?event[1]:n.gain.value;
+  }
+  return gain;
+ };
+ const f=fixture();f.music.select('new');await f.settle();f.advance(3);
+ assert(Math.abs(gainAtEnd(f.context.sources[0].output)-.308)<1e-9,'new theme output gain, including its original relative trim');
+ f.music.select('classic');f.advance(6);
+ assert(Math.abs(gainAtEnd(f.music.classicOutput)-1.4)<1e-9,'classic receives the same music-only lift');
+ f.music.setLevel(.5);f.advance(7);
+ assert(Math.abs(gainAtEnd(f.music.classicOutput)-.7)<1e-9);
+ f.music.setLevel(1,false);f.advance(8);
+ assert.equal(gainAtEnd(f.music.classicOutput),0);
+});
 test('new theme loops once, without restarting across title, lobby and guard selection of the same track',async()=>{
  const f=fixture();f.music.select('new');await f.settle();f.advance(1);
  assert.equal(f.music.state().sourceCount,1);

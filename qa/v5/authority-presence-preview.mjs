@@ -2,17 +2,19 @@
 // same account. Credentials remain in memory; evidence contains no auth state.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {randomBytes,createHash} from 'node:crypto';
+import {randomBytes} from 'node:crypto';
 import fs from 'node:fs/promises';
 import {send,chooseDestination} from './cooperative-ui.mjs';
 import {clinicalBotAssessmentActions} from '../../src/v5/clinical/clinical-bot-playbooks.js';
+import {waitForPreviewBuild} from './preview-build.mjs';
 
 const origin=new URL(process.env.V5_BROWSER_URL).origin;
 assert(origin.startsWith('https://night-shift-clinical-')&&origin.endsWith('.vercel.app'));
-const output='qa/v5-authority-presence-results';await fs.mkdir(output,{recursive:true});
+const output=process.env.V5_QA_OUTPUT||'qa/v5-authority-presence-results';await fs.mkdir(output,{recursive:true});
 const require=createRequire(import.meta.url),{chromium,devices}=require(process.env.PLAYWRIGHT_MODULE_PATH);
-const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,
+const launch=()=>chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,
  args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-timer-throttling']});
+const browser=await launch(),browsers=[browser];
 const contexts=[],pages=[],errors=[],checks=[],failures=[];
 const suffix=Date.now().toString(36),password=randomBytes(24).toString('base64url');
 const names=['QA Control A '+suffix,'QA Control B '+suffix];let stage='boot';
@@ -21,7 +23,8 @@ const api=(p,path,body)=>p.evaluate(async({path,body})=>{
   ...(body?{body:JSON.stringify(body)}:{})});return {status:r.status,body:await r.json()};
 },{path,body});
 async function boot(mobile=false){
- const c=await browser.newContext(mobile?devices['Pixel 5']:{viewport:{width:1280,height:900}});contexts.push(c);
+ const independent=contexts.length?await launch():browser;if(independent!==browser)browsers.push(independent);
+ const c=await independent.newContext(mobile?devices['Pixel 5']:{viewport:{width:1280,height:900}});contexts.push(c);
  await c.addInitScript(()=>{
   const original=CanvasRenderingContext2D.prototype.drawImage,frames=new WeakMap();
   window.avatarPaint={frames:[],invalid:[]};window.avatarSources=[];
@@ -70,18 +73,8 @@ async function moveAndObserve(p,other,name){
   return a&&Math.hypot(a.x-target.x,a.y-target.y)<4;},{name,target});
 }
 try{
- const expected=createHash('sha256').update(await fs.readFile(new URL('../../src/v5/app/application.js',import.meta.url))).digest('hex');
  stage='wait for the checked-out preview';
- const deadline=Date.now()+120000;let served=null;
- while(served!==expected){
-  try{
-   const response=await fetch(origin+'/src/v5/app/application.js',{cache:'no-store',signal:AbortSignal.timeout(10000)});
-   if(response.ok)served=createHash('sha256').update(await response.text()).digest('hex');
-  }catch{/* Vercel builds asynchronously; never certify the old deployment. */}
-  if(served===expected)break;
-  assert(Date.now()<deadline,'the real preview must serve the checked-out application');
-  await new Promise(resolve=>setTimeout(resolve,2000));
- }
+ const verifiedFiles=await waitForPreviewBuild(origin),expected=verifiedFiles['src/v5/app/application.js'];
  const a=await boot(),b=await boot(true);await register(a,0);await register(b,1);
  await check('mutual lobby presence and movement',async()=>{
   await Promise.all([a,b].map((p,i)=>p.waitForFunction(name=>atriaV5.snapshot().others.some(x=>x.name===name),names[1-i])));
@@ -108,6 +101,19 @@ try{
   },null,{timeout:5000});
  });
  await a.screenshot({path:output+'/avatar-source-restored.png'});
+ await check('verified profiles and persistent friend request acceptance',async()=>{
+  await a.locator('#peopleButton').click();
+  await a.locator('#lobbyContacts [data-action="inspect-player"]').filter({hasText:names[1]}).click();
+  await a.locator('.doctor-stats').waitFor();
+  assert.match(await a.locator('.doctor-profile').innerText(),/Casos resueltos/);
+  await a.screenshot({path:output+'/verified-profile.png'});
+  await a.locator('[data-action="add-friend"]').click();await a.locator('#modalClose').click();
+  await b.locator('#friendRequestNotice').waitFor({state:'visible'});await b.locator('#friendRequestAccept').click();
+  await a.waitForFunction(async name=>(await (await fetch('/api/me')).json()).friends.some(x=>x.name===name),names[1]);
+  await a.locator('#peopleButton').click();
+  await a.locator('#lobbyContacts [data-action="inspect-player"]').filter({hasText:names[1]}).click();
+  await a.locator('[data-action="remove-friend"]').waitFor();await a.locator('#modalClose').click();
+ });
  if(failures.length){
   await a.reload();await a.waitForFunction(()=>document.body.dataset.boot==='ready');await a.locator('#welcomeContinue').click();
   await a.waitForFunction(()=>atriaV5.snapshot().phase==='lobby'&&document.getElementById('splash').hidden);
@@ -130,6 +136,7 @@ try{
   assert.equal((await sync(a)).status,200);
  });
  const second=await boot(true);await login(second);
+ assert((await api(second,'me')).body.friends.some(x=>x.name===names[1]),'friendship survives a second-device login');
  await check('second login does not silently steal active authority',async()=>{
   assert.equal((await sync(second)).status,403);assert.equal((await api(second,'account/release-guard',{})).status,409);
   assert.equal((await sync(a)).status,200);
@@ -170,7 +177,7 @@ try{
   assert(fresh.activeGuardId&&fresh.activeGuardId!==roomId);assert.equal(fresh.xp,saved.xp);
  });
  assert.deepEqual(errors,[]);assert.deepEqual(failures,[]);
- const report={passed:true,origin,applicationHash:expected,checks,errors,
+ const report={passed:true,origin,applicationHash:expected,verifiedFiles,independentBrowserProcesses:browsers.length,physicalDevices:false,checks,errors,
   progress:{xp:saved.xp,casesResolved:saved.casesResolved}};
  await fs.writeFile(output+'/results.json',JSON.stringify(report,null,2));
  console.log('ATRIA LIVE AUTHORITY PRESENCE PASS '+JSON.stringify(report));
@@ -185,5 +192,5 @@ try{
  await fs.writeFile(output+'/failure.json',JSON.stringify(report,null,2));console.error('ATRIA LIVE AUTHORITY PRESENCE FAIL '+JSON.stringify(report));throw error;
 }finally{
  for(const p of pages)if(!p.isClosed()){await api(p,'account/release-guard',{}).catch(()=>{});await api(p,'account/logout',{}).catch(()=>{});}
- await browser.close();
+ for(const instance of browsers)await instance.close();
 }

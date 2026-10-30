@@ -2,9 +2,10 @@
 // memory; no cookies, tokens, auth state or request bodies enter the evidence.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {randomBytes,createHash} from 'node:crypto';
+import {randomBytes} from 'node:crypto';
 import fs from 'node:fs/promises';
 import {send} from './cooperative-ui.mjs';
+import {waitForPreviewBuild} from './preview-build.mjs';
 
 const origin=new URL(process.env.V5_BROWSER_URL).origin;
 assert(origin.startsWith('https://night-shift-clinical-')&&origin.endsWith('.vercel.app'));
@@ -80,18 +81,8 @@ async function release(p){
  await p.locator('#welcomeContinue').click();await p.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');
 }
 try{
- const expected=await fs.readFile(new URL('../../src/v5/app/application.js',import.meta.url),'utf8');
- const expectedHash=createHash('sha256').update(expected).digest('hex'),deadline=Date.now()+120000;
  stage='wait for the checked-out Preview application';
- while(applicationHash!==expectedHash){
-  try{
-   const response=await fetch(origin+'/src/v5/app/application.js',{cache:'no-store',signal:AbortSignal.timeout(10000)});
-   if(response.ok)applicationHash=createHash('sha256').update(await response.text()).digest('hex');
-  }catch{/* A deployment can be building; never test an older application. */}
-  if(applicationHash===expectedHash)break;
-  assert(Date.now()<deadline,'the real preview must serve the checked-out application');
-  await new Promise(resolve=>setTimeout(resolve,2000));
- }
+ const verifiedFiles=await waitForPreviewBuild(origin);applicationHash=verifiedFiles['src/v5/app/application.js'];
  const host=await boot();stage='register host';await register(host,'A');
  for(const mode of ['solo','apprentice']){
   stage='enter '+mode;await choose(host,mode);await host.locator('[data-action="start-guard"]').click();
@@ -124,7 +115,7 @@ try{
   stage='enter '+mode;const uids=await Promise.all([host,guest].map(p=>entered(p,mode)));
   stage='interact '+mode;await interact(host,uids[0],mode);await release(host);await release(guest);
  }
- assert.deepEqual(errors,[]);await fs.writeFile(output+'/results.json',JSON.stringify({passed:true,origin,applicationHash,results,traffic,errors},null,2));
+ assert.deepEqual(errors,[]);await fs.writeFile(output+'/results.json',JSON.stringify({passed:true,origin,applicationHash,verifiedFiles,physicalDevices:false,results,traffic,errors},null,2));
  console.log('ATRIA LIVE GUARD ENTRY PASS '+JSON.stringify({origin,applicationHash,results,errors}));
 }catch(error){
  const diagnostics=await Promise.all(pages.map(async p=>{

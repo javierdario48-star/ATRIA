@@ -86,7 +86,7 @@ async function offlineOriginalLoop(p){
   music.select('new');await Promise.resolve();await Promise.resolve();
   const rendered=await ctx.startRendering(),x=rendered.getChannelData(0),source=buffer.getChannelData(0);
   const offset=7200;const result={duration:buffer.duration,frames,starts:music.state().starts,
-   repeated:x[frames+offset],expected:source[offset]*.22,seamDelta:Math.abs(x[frames]-x[frames-1]),
+   repeated:x[frames+offset],expected:source[offset]*.308,seamDelta:Math.abs(x[frames]-x[frames-1]),
    outputAfterLoop:x.slice(frames+4800,frames+9600).some(v=>Math.abs(v)>.001)};
   music.destroy();cache.destroy();return result;
  });
@@ -142,8 +142,8 @@ try{
    await p.waitForFunction(()=>atriaV5.diagnostics().audio.music.mix.new===1);
    assert.equal(await p.evaluate(()=>qaAudio.contexts),1);assert((await p.evaluate(()=>qaAudio.decodes))<=3);
    if(name==='desktop'){
-    const real=await offlineGraph(p);assert(Math.abs(real.crossHalf-.61)<.002,JSON.stringify(real));
-    assert(Math.abs(real.classic-1)<.002);assert(Math.abs(real.muteHalf-.5)<.002);assert.equal(real.muted,0);
+    const real=await offlineGraph(p);assert(Math.abs(real.crossHalf-.854)<.002,JSON.stringify(real));
+    assert(Math.abs(real.classic-1.4)<.002);assert(Math.abs(real.muteHalf-.7)<.002);assert.equal(real.muted,0);
     const loop=await offlineOriginalLoop(p);assert(loop.duration>164&&loop.duration<165);assert.equal(loop.starts,1);
     assert(Math.abs(loop.repeated-loop.expected)<.00001);assert(loop.seamDelta<.00001);assert.equal(loop.outputAfterLoop,true);
     results.push({realWebAudioCrossfade:real,realOriginalLoop:loop});

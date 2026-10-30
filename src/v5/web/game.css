@@ -552,18 +552,18 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 @media(prefers-reduced-motion:no-preference){.avatar-sex-choice button,.avatar-carousel>button{transition:background .16s ease,border-color .16s ease,transform .16s ease}.avatar-carousel>button:active{transform:scale(.94)}}
 
 /* Read-only guard clock. Top-right under the HUD; the scoreboard is below it. */
-.guard-time{position:fixed;z-index:12;top:calc(75px + env(safe-area-inset-top));
+.guard-time{position:fixed;z-index:12;top:calc(64px + env(safe-area-inset-top));
  right:max(8px,env(safe-area-inset-right));display:grid;justify-items:end;gap:1px;
  padding:6px 10px;border-radius:11px;border:1px solid #8acbb677;
  background:#071f27e8;backdrop-filter:blur(8px);
  box-shadow:0 5px 14px #0005;pointer-events:none;font-variant-numeric:tabular-nums}
-.guard-time-caption{font-size:7px;letter-spacing:.09em;font-weight:800;color:#9fcfc5}
+.guard-time-caption{font-size:7px;line-height:1;letter-spacing:.09em;font-weight:800;color:#9fcfc5}
 #guardTimeNow{font-size:21px;line-height:1;font-weight:800;color:#b9ffdf}
-#guardTimeProgress{font-size:9px;color:#bad1cb;letter-spacing:.03em}
+#guardTimeProgress{font-size:9px;line-height:1;color:#bad1cb;letter-spacing:.03em}
 .guard-time[data-ended="true"] #guardTimeNow{color:#f1d391}
 body[data-phase="guard"] .guard-scoreboard{top:calc(121px + env(safe-area-inset-top))}
 @media(max-width:430px){
- .guard-time{top:calc(70px + env(safe-area-inset-top));padding:5px 8px}
+ .guard-time{top:calc(62px + env(safe-area-inset-top));padding:5px 8px}
  #guardTimeNow{font-size:18px}
  body[data-phase="guard"] .guard-scoreboard{top:calc(112px + env(safe-area-inset-top))}
 }

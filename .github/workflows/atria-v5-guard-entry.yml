@@ -6,10 +6,13 @@ on:
     paths:
       - 'qa/v5/guard-entry-preview.mjs'
       - 'qa/v5/authority-presence-preview.mjs'
+      - 'qa/v5/preview-build.mjs'
       - 'src/v5/app/application.js'
       - 'src/v5/server/account-gateway*'
       - 'src/v5/render/hospital*'
       - 'src/v5/ui/audio-settings.js'
+      - 'src/v5/ui/music-transport.js'
+      - 'src/v5/web/game.css'
       - '.github/workflows/atria-v5-guard-entry.yml'
   workflow_dispatch:
 

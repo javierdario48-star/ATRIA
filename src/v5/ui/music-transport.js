@@ -1,10 +1,13 @@
 const clamp=n=>Math.max(0,Math.min(1,Number(n)||0));
-const CROSSFADE=2.5,MUTE_FADE=.25,THEME_TRIM=.22;
+const CROSSFADE=2.5,MUTE_FADE=.25,THEME_TRIM=.22,MUSIC_GAIN=1.4;
 
 /** Gain automation and a single looping source; never owns a clock or context. */
 export function createMusicTransport({context,destination,loadBuffer,initialLevel=1}){
- const level=context.createGain(),classic=context.createGain(),theme=context.createGain(),trim=context.createGain();
- classic.connect(level);theme.connect(trim).connect(level);level.connect(destination);
+ const level=context.createGain(),classic=context.createGain(),theme=context.createGain(),trim=context.createGain(),output=context.createGain();
+ // +2.92 dB on music only. Keep the relative composition trim and clinical
+ // master unchanged; user volume, mute and crossfades remain upstream.
+ output.gain.value=MUSIC_GAIN;
+ classic.connect(level);theme.connect(trim).connect(level);level.connect(output).connect(destination);
  trim.gain.value=THEME_TRIM;
  let destroyed=false,paused=false,requested=null,track=null,buffer=null,loading=null,status='unloaded',error=null,
   source=null,startedAt=0,offset=0,starts=0;
@@ -78,6 +81,6 @@ export function createMusicTransport({context,destination,loadBuffer,initialLeve
    duration:buffer?.duration||null,starts,sourceCount:source?1:0,
    transitionRemaining:Math.max(0,mix.new.end-now(),mix.classic.end-now())}),
   destroy(){if(destroyed)return;destroyed=true;release();buffer=null;loading=null;
-   for(const node of [classic,theme,trim,level])try{node.disconnect();}catch{}}
+   for(const node of [classic,theme,trim,level,output])try{node.disconnect();}catch{}}
  });
 }

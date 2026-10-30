@@ -11,6 +11,9 @@ on:
       - 'src/v5/app/application.js'
       - 'src/v5/web/**'
       - 'qa/v5/audio-browser.mjs'
+      - 'qa/v5/audio-level-browser.mjs'
+      - 'qa/v5/guard-score-browser.mjs'
+      - 'qa/tests/v5-guard-score-position.test.mjs'
       - 'qa/v5/browser-harness.mjs'
       - '.github/workflows/atria-v5-audio.yml'
   workflow_dispatch:
@@ -28,7 +31,7 @@ jobs:
         with:
           node-version: '22'
       - name: Audio, UI, navigation, rendering and social regression without clinical simulations
-        run: node --test src/v5/ui/*.test.js src/v5/app/*.test.js src/v5/render/*.test.js src/v5/social/*.test.js
+        run: node --test src/v5/ui/*.test.js src/v5/app/*.test.js src/v5/render/*.test.js src/v5/social/*.test.js qa/tests/v5-guard-score-position.test.mjs
       - name: Verify architecture and build canonical audio assets
         run: node scripts/audit-v5-boundary.mjs && npm run build:v5
       - name: Install existing isolated browser driver
@@ -38,10 +41,25 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-audio-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/audio-browser.mjs
+      - name: Render production music and clinical mix at default and maximum volume
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-audio-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/audio-level-browser.mjs
+      - name: Install WebKit for iPhone engine coverage
+        run: node "$RUNNER_TEMP/atria-audio-browser/node_modules/playwright/cli.js" install --with-deps webkit
+      - name: Guard scoreboard geometry on Android portrait and landscape, desktop, and iPhone WebKit
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-audio-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/guard-score-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: atria-v5-audio-evidence
-          path: qa/v5-audio-results/
+          path: |
+            qa/v5-audio-results/
+            qa/v5-audio-level-results/
+            qa/v5-guard-score-results/
           if-no-files-found: ignore
           retention-days: 14
