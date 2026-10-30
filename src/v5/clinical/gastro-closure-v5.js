@@ -8,7 +8,7 @@ export function evaluateGastroDisposition(a={}){
  const rule=GASTRO_CASE_RULES[a.caseId];if(!rule)return null;
  const done=new Set(a.delivered||[]),studies=new Set(a.studiesDone||[]),missing=[];
  const target=a.disposition||rule.destinations[0];
- const matched=(a.acceptedDiagnoses||[]).some(x=>norm(a.diagnosis).includes(norm(x)));
+ const matched=a.diagnosticAssessment?.sufficient??(a.acceptedDiagnoses||[]).some(x=>norm(a.diagnosis).includes(norm(x)));
  const critical=Number(a.initialSys||120)<90||Number(a.sys||120)<90;
  if(a.dead||a.ended)return {caseId:a.caseId,ready:false,missing:['Atención finalizada.'],action:null};
  if(!a.vitalsKnown)missing.push('Registrar signos vitales.');
@@ -45,7 +45,7 @@ export function evaluateGastroDisposition(a={}){
  // 'studies'. Adapt real required physician observations into that slot;
  // this never adds an order/result or creates another quality/XP calculator.
  const examEvidence=requiredExams.map(id=>'exam:'+id),
-  qualityInput={...a,keyStudies:[...(a.keyStudies||[]),...examEvidence]},
+  qualityInput={...a,acceptedDiagnoses:matched?[...(a.acceptedDiagnoses||[]),a.diagnosis]:a.acceptedDiagnoses,keyStudies:[...(a.keyStudies||[]),...examEvidence]},
   qualityEvidence=new Set([...studies,...requiredExams.filter(id=>examined.has(id)).map(id=>'exam:'+id)]);
  return {caseId:a.caseId,ready,action:ready?target:null,destination:rule.destinations[0],
   choices:ready?[...rule.destinations]:[],missing,diagnostic:matched,

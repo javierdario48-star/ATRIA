@@ -9,12 +9,18 @@ function fixture(caseId,roomId){
  let seq=0;
  const s=createGuardSession({roomId,mode:'solo',actorId:'doctor',actorName:'Medica',
   patient:{uid:'P',caseId},content,resolveContext:()=>({patientUid:'P'})});
- return {s,post:text=>s.post({id:'t'+(++seq),text}),async advance(seconds){s.advance(seconds);await s.flush();}};
+ return {s,caseId,post:text=>s.post({id:'t'+(++seq),text}),async advance(seconds){s.advance(seconds);await s.flush();}};
 }
 async function basicWorkup(f,diagnosis){
  await f.post('/diagnostico '+diagnosis);await f.post('/signos');
  for(const technique of ['general','inspection','auscultation','percussion','palpation'])
   await f.post('/examen '+technique);
+ await f.post('¿Qué antecedentes tiene?');await f.post('Enfermera una vía');
+ await f.post('/estudio '+({'APP-001':'app_us','CHOLE-001':'chole_us','CHOLANG-001':'cholang_liver'}[f.caseId]));
+ if(f.caseId==='CHOLE-001')await f.post('Enfermera nada por boca');
+ if(f.caseId!=='APP-001')await f.post('Enfermera Ringer 500 ml');
+ await f.post('Enfermera ceftriaxona 1 g y metronidazol 500 mg');
+ await f.advance(95);await f.post('/reevaluar');
 }
 test('APP direct OR transfer is pending before surgical acceptance, closes automatically after 3.5s and awards XP only once',async()=>{
  const f=fixture('APP-001','transfer-app');

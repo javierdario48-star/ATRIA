@@ -47,7 +47,7 @@ test('natural surgical transfer without evidence is rejected at request time; di
     assert.equal(s.read().patient.pendingConsults.length,0);
    }else{
     assert.equal(result.clinical[0]?.status,'rejected');
-    assert.equal(result.clinical[0]?.reason,'closure-not-ready');
+    assert.equal(result.clinical[0]?.receipt.reasonCode,'destination-not-indicated');
    }
    assert.equal(s.read().patient.caseEnded,false);
    assert.equal(s.read().progress.xp,0);

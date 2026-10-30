@@ -66,7 +66,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    s.patient.caseEnded||s.patient.patientDied)return;
   if(!['observacion','sala','alta','quirofano','uti','procedimiento'].includes(id))return;
   patientUid=patient.uid;
-  notify('Solicitud de destino recibida. Aguardando evaluación del equipo clínico.');
+  notify('Enviando solicitud de destino. Aguardando evaluación del equipo clínico.');
   try{
    // One authoritative command owns consultation, acceptance and closure.
    // Reconnection or closing this panel cannot interrupt a browser-side chain.

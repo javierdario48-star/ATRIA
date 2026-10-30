@@ -11,9 +11,10 @@ import {additionalCaseInitialVitals,advanceAdditionalCaseVitals,ADDITIONAL_CASE_
 import {physicianExaminationsPerformed,diagnosticRequirements} from './diagnostic-evidence.js';
 import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
 import {evaluateClinicalPolicyDisposition} from './clinical-policy-closure.js';
+import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 export {createPancCare};
 function snapshot(p,c,destination){
- return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,
+ return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,diagnosticAssessment:assessDiagnosticImpression(c,p.diagnosis),
   historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
   examDone:p.examDone,examRegionsCount:Object.keys(p.examFindings||{}).length,
   examPerformed:physicianExaminationsPerformed(p),

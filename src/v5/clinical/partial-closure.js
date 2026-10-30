@@ -1,6 +1,7 @@
 import {CASE_CLOSURE_RULES_487} from '../../clinical/case-completion-487.js';
 import {csDxMatchesCase487,csDxNorm487} from '../../clinical/diagnostic-impression-487.js';
 import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
+import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 
 // V5 opt-in partial evaluation using the *existing* native score, safety data,
 // consultation and closure receipt owner. No second case executor or XP ledger.
@@ -21,6 +22,8 @@ export function diagnosticMultiplier(p,c,cases){
  const value=csDxNorm487(p.diagnosis);
  if(!value)return 0;
  if(c.id==='CIRR-001'&&/\bcirrosis compensada\b/.test(value))return .6;
+ const assessment=assessDiagnosticImpression(c,p.diagnosis);
+ if(assessment.compatible)return assessment.factor;
  if(csDxMatchesCase487(cases,c.id,p.diagnosis))return 1;
  return BROAD_DIAGNOSIS[c.id]?.test(value)?0.6:0;
 }
@@ -35,7 +38,7 @@ export function partialDisposition(p,c,destination,assessment,{cases}={}){
  if((destination==='alta'||destination==='sala'||destination==='observacion')&&
   (p.liveVitals.sys<90||p.liveVitals.spo2<90))
   return {ready:false,missing:['El paciente está inestable; no corresponde cerrar con ese destino.']};
- if(destination==='quirofano'&&!csDxMatchesCase487(cases,c.id,p.diagnosis))
+ if(destination==='quirofano'&&!assessDiagnosticImpression(c,p.diagnosis).sufficient)
   return {ready:false,missing:['Cirugía rechaza el traslado: la impresión diagnóstica no justifica la indicación.']};
  if(rule?.consult?.[destination]?.length||['quirofano','uti','procedimiento'].includes(destination)){
   const services=rule?.consult?.[destination]||[destination==='quirofano'?'cirugia':destination==='uti'?'uti':'gastro'];

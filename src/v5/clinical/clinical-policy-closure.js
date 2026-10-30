@@ -6,6 +6,8 @@ import {physicianExaminationsPerformed} from './diagnostic-evidence.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
+import {assessDiagnosticImpression} from './diagnostic-assessment.js';
+import {clinicalTransferContinuation} from './transfer-continuation.js';
 
 const text = value => typeof value === 'string' && value.trim().length > 0;
 const norm = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -53,13 +55,11 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  const confirmed = treatmentIds.map(id => currentClinicalTreatment(patient, id, minute))
   .filter(row => row && !matchesMedicationAllergy487(patient, row.id));
  const done = new Set(confirmed.map(row => row.id));
+ const continuation=clinicalTransferContinuation(patient,caseData,target,minute);
+ const transferred=new Set([...done,...continuation.continuingAdministrations.map(row=>row.id),...continuation.deferredTreatmentIds]);
  const access = patient.procedures?.iv;
  if (patient.venousAccessCount > 0 && access?.patientUid === patient.uid && text(access.eventId)) done.add('iv');
- const diagnosis = norm(patient.diagnosis);
- const matched = !!diagnosis && (caseData.dx || []).some(value => {
-  const accepted = norm(value);
-  return accepted && (' ' + diagnosis + ' ').includes(' ' + accepted + ' ');
- });
+ const matched = assessDiagnosticImpression(caseData,patient.diagnosis).sufficient;
  const vitals = patient.liveVitals || {}, measured = patient.lastVitalsKnown;
  const vitalsKnown = measured?.patientUid === patient.uid && text(measured.eventId);
  if (!vitalsKnown) missing.push('Registrar signos vitales.');
@@ -70,17 +70,17 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  for (const id of requiredExams) if (!examined.has(id)) missing.push('Completar la exploración dirigida: ' + id + '.');
  if (!matched) missing.push('Registrar un diagnóstico presuntivo compatible.');
  const historyAnswered = [...new Set((patient.intentHistory || []).map(row => row.id))];
- const relevant = historyAnswered.filter(id => (caseData.requiredHistory || []).includes(id) || contextualHistory.has(id));
+ const relevant = historyAnswered.filter(id => (caseData.requiredHistory || []).includes(id) || contextualHistory.has(id)||contextualHistory.has('anamnesis:'+id));
  const initialSys = Number(String(caseData.vitals?.bp || '').split('/')[0]);
  if (!relevant.length && !(initialSys < 90 || vitals.sys < 90)) missing.push('Obtener al menos un dato relevante de anamnesis.');
  const orientedStudy = (rule.study || []).some(group => group.some(id => studies.has(id)));
  const evidence = orientedStudy || (rule.requiredStudies || []).some(id => studies.has(id)) ||
   requiredExams.length > 0 && requiredExams.every(id => examined.has(id));
  if (rule.study?.length && !orientedStudy && !rule.urgentStudyBypass) missing.push('Completar un estudio orientador.');
- for (const id of rule.requiredStudies || [])
+ for (const id of (rule.requiredStudies || []).filter(id=>!continuation.deferredStudyIds.includes(id)))
   if (!studies.has(id)) missing.push('Revisar estudio imprescindible ' + id + ' antes de cerrar el caso.');
  const requiredTreatmentGroups = rule.treatmentByDestination?.[target] || rule.treatment;
- if (!requiredTreatmentGroups?.some(group => group.length > 0 && group.every(id => done.has(id))))
+ if (!requiredTreatmentGroups?.some(group => group.length > 0 && group.every(id => transferred.has(id))))
   missing.push('Confirmar las intervenciones imprescindibles y su ejecución real.');
  if (target === 'alta' && (rule.dischargeTreatments || []).some(id => !done.has(id)))
   missing.push('Documentar el tratamiento y plan de seguimiento antes del alta.');
@@ -88,8 +88,8 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  const reassessed = Number(patient.reassessments) > 0 && text(reassessment?.eventId) && finiteMinute(reassessment?.nativeMinute) &&
   reassessment.nativeMinute <= minute && confirmed.every(row =>
    row.administeredAtNativeMinute <= reassessment.nativeMinute && (reassessment.interventionEvents || []).includes(row.sourceEventId));
- if (!reassessed) missing.push('Reevaluar tras las intervenciones realmente ejecutadas.');
- if ((patient.pendingTreatments || []).length || (patient.pendingConsults || []).length)
+ if (!reassessed||continuation.continuingAdministrations.some(row=>!(reassessment?.administrationEvents||[]).includes(row.sourceEventId))) missing.push('Reevaluar tras las intervenciones realmente ejecutadas.');
+ if (continuation.pendingBlockers.length || (patient.pendingConsults || []).length)
   missing.push('Esperar las administraciones y las respuestas del equipo receptor pendientes.');
  const observationStart = finiteMinute(patient.policyState?.startedAtNativeMinute) ? patient.policyState.startedAtNativeMinute : 0;
  if (minute - observationStart < (rule.minimumObservationMinutes || 0))

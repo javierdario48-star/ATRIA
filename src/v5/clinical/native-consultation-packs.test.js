@@ -15,7 +15,7 @@ function fixture(id){
  const send=(service,eventId)=>q.request(cmd(service,eventId),{clinicalMinute:0,nativeMinute:0});
  const finish=()=>q.due({}, {clinicalMinute:3.5}).flatMap(t=>q.finish(t,3.5));
  function evidence(){
-  p.diagnosis=c.dx[0];p.lastVitalsKnown={patientUid:'P'};p.examDone=true;
+  p.diagnosis=c.dx[0];p.lastVitalsKnown={patientUid:'P',eventId:'actual-measurement'};p.examDone=true;
   p.examFindings={thorax:{auscultation:{patientUid:'P',eventId:'exam-thorax',rows:[{text:'Hallazgos torácicos'}]}},
    neurological:{neurological:{patientUid:'P',eventId:'exam-neuro',rows:[{text:'Hallazgos neurológicos'}]}}};
  }
@@ -26,7 +26,7 @@ test('declared specialty consultations use one delayed queue and require actual 
  const f=fixture('CARD-01');
  assert.equal(f.send('cardiologia').status,'pending');assert.deepEqual(f.p.consults,[]);
  const rejected=f.finish();assert.equal(rejected[0].receipt.accepted,false);
- assert.equal(f.p.consults[0].reviewStatus,'missing-evidence');
+ assert.equal(f.p.consults[0].reasonCode,'diagnosis-missing');
  f.evidence();f.send('cardiologia','valid');f.send('cardiologia','second');
  assert.equal(f.p.pendingConsults.length,1);assert.equal(f.q.due({}, {clinicalMinute:3.49}).length,0);
  const reply=f.finish();assert.equal(reply.length,2);assert(reply.every(r=>r.receipt.accepted));

@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createGuardSession} from './guard-session.js';
-import {csSurgicalReview487} from '../../clinical/surgical-review-487.js';
 
 const load=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name+'.json',import.meta.url)));
 const content={cases:load('cases'),therapies:load('therapies'),defaultDoses:load('default-doses')};
@@ -24,14 +23,14 @@ test('surgical reply uses the original 3500ms delay and rejects an unsubstantiat
  await f.advance(3.49);
  assert.deepEqual(f.s.read().patient.consults,[],'no fabricated early acceptance');
  await f.advance(.01);
- const p=f.s.read().patient,original=csSurgicalReview487({diagnosis:''},content.cases.find(c=>c.id==='APP-001'));
+ const p=f.s.read().patient;
  assert.equal(p.pendingConsults.length,0);
  assert.equal(p.consults.length,1);
- assert.equal(p.consults[0].accepted,original.accepted);
- assert.equal(p.consults[0].reviewStatus,original.status);
- assert.equal(p.consults[0].advice,original.reason);
+ assert.equal(p.consults[0].accepted,false);
+ assert.equal(p.consults[0].reasonCode,'diagnosis-missing');
+ assert.match(p.consults[0].advice,/impresión diagnóstica/);
  assert.equal(p.consults[0].status,'rejected');
- assert(f.s.read().messages.some(x=>x.role==='nurse'&&x.text.includes(original.reason)));
+ assert(f.s.read().messages.some(x=>x.role==='nurse'&&x.text.includes(p.consults[0].advice)));
  for(const id of ['first','second']){
   const retry=await f.send(id==='first'?'Enfermera cirugía':'/consulta cirugia',id);
   assert.equal(retry.clinical[0].status,'executed','reply completed even when the specialist declined');
@@ -47,8 +46,10 @@ test('a rejected consultation can be corrected, accepted and reused without perf
  await f.send('/diagnostico cirrosis');await f.send('/consulta cirugia');await f.advance(3.5);
  assert.equal(f.s.read().patient.consults.at(-1).reviewStatus,'unsubstantiated');
  await f.send('/diagnostico apendicitis aguda');await f.send('/consulta cirugia');await f.advance(3.5);
- assert.equal(f.s.read().patient.consults.at(-1).reviewStatus,'missing-exam');
- await examine(f);await f.send('/consulta cirugia','valid');await f.advance(3.5);
+ assert.equal(f.s.read().patient.consults.at(-1).reasonCode,'vitals-missing');
+ await examine(f);await f.send('/estudio app_us');await f.send('Enfermera una vía');
+ await f.send('Enfermera ceftriaxona 1 g y metronidazol 500 mg');await f.advance(95);
+ await f.send('/consulta cirugia','valid');await f.advance(3.5);
  const state=f.s.read(),accepted=state.patient.consults.at(-1);
  assert.equal(accepted.accepted,true);
  assert.equal(accepted.status,'done');
@@ -71,8 +72,8 @@ test('medical CIRR consultation receives the original clinical refusal, never a 
  await f.send('/consulta cirugia');await f.advance(3.5);
  const p=f.s.read().patient;
  assert.equal(p.consults.at(-1).accepted,false);
- assert.equal(p.consults.at(-1).reviewStatus,'review');
- assert.match(p.consults.at(-1).advice,/no hay una indicación de control quirúrgico/i);
+ assert.equal(p.consults.at(-1).reasonCode,'destination-not-indicated');
+ assert.match(p.consults.at(-1).advice,/no hay una indicación/i);
  assert.equal(p.treatments.length,0);
  f.s.dispose();
 });

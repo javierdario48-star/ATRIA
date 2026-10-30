@@ -28,6 +28,7 @@ import {CASE_CLOSURE_RULES_487,CLOSURE_DEST_LABELS_487} from '../../clinical/cas
 import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {isExaminationCommand,isExaminationKind,isPhysicianExamStudy} from './exam-contract.js';
+import {consultationEvidenceReview} from './consultation-evidence.js';
 
 const copy=value=>structuredClone(value);
 const survivalSensitiveIV=new Set(['anticoagulation','morphine','albumin','transfusion','vasopressor','ppi']);
@@ -134,8 +135,20 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   validateReceipt:assertMatchingClinicalReceipt,
   withPatient:async(uid,fn)=>{if(uid!==nativePatient.uid)throw Error('patient not in this room');return fn(nativePatient);},
   invoke:async({eventId,actorId,patientUid,intent})=>{
+   if(intent.kind==='case.close'){
+    const rule=caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id];
+    if(rule&&!rule.destinations.includes(intent.id))return {status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
+     receipt:{patientUid,eventId,decision:'REJECTED_NO_INDICATION',reasonCode:'destination-not-indicated',
+      message:'El destino solicitado no está indicado con la situación clínica actual. Revisá la necesidad de vigilancia, tratamiento y nivel de cuidado.'}};
+   }
    if(nursing&&intent.kind==='case.close'&&nursingWorkPending())
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
+   if(intent.kind==='case.close'&&!intent.partial){
+    const rule=caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id];
+    const issue=consultationEvidenceReview(nativePatient,caseData,rule);
+    if(issue)return {status:'rejected',patientUid,eventId,reason:rule?.consult?.[intent.id]?.length?'transfer-not-accepted':'closure-not-ready',
+     receipt:{eventId,patientUid,decision:issue.decision,reasonCode:issue.reasonCode,message:issue.reason}};
+   }
    const ivMedicine=!!care&&intent.kind==='therapy.request'&&isNativeMedicine(intent.id);
    const nativeOralMedicine=!!care&&intent.kind==='therapy.request'&&!!GASTRO_CONDUCT_DOSES[intent.id];
    const definition=nativeMedicineDefinition(intent.id,caseData)||CLINICAL_TREATMENTS[intent.id];
@@ -246,7 +259,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   // An unanswered history question is a patient reply, not a failed nursing procedure.
   if(item.kind==='history.ask')return null;
   if(item.status==='unconfirmed')
-   return label+': ejecución no confirmada; comprobá el estado del paciente antes de repetir.';
+   return item.receipt?.message||'ATRIA: error técnico recuperable. '+label+': ejecución no confirmada; comprobá el estado del paciente antes de repetir.';
   if(item.status!=='rejected')return null;
   if(item.receipt?.message)return 'No ejecutado: '+item.receipt.message;
   if(item.reason==='clinical-action-not-migrated'){
@@ -345,6 +358,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(disposed)throw Error('guard session disposed');
    if(!Number.isFinite(deltaRealSeconds)||deltaRealSeconds<0||deltaRealSeconds>86400)
     throw Error('invalid guard delta');
+   if(nativePatient.caseEnded)return [];
    // A long presentation frame must preserve adverse episodes, support changes
    // and fatal exposure in the SAME clock/executor path. A pending medicine
    // only selects time resolution; effects still require actual administration.
@@ -437,6 +451,18 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    for(const arrival of nursing.takeArrivals()){
     const task=pendingNurseJobs.get(arrival.eventId);
     if(!task||task.patientUid!==arrival.patientUid)continue;
+    if(arrival.status==='error-recoverable'){
+     const error={status:'unconfirmed',eventId:task.eventId,patientUid:task.patientUid,reason:arrival.reason,
+      receipt:{eventId:task.eventId,patientUid:task.patientUid,decision:'ERROR_RECOVERABLE',
+       message:'Enfermería: no se pudo llegar a la cama dentro del tiempo previsto. La orden no se ejecutó; revisá el acceso y reintentá.'}};
+     port.complete(error);pendingNurseJobs.delete(task.eventId);
+     if(task.intent.kind==='procedure.request'&&task.intent.id==='iv')for(const [id,waiting] of waitingForAccess){
+      waitingForAccess.delete(id);port.complete({...error,eventId:id,patientUid:waiting.patientUid,
+       receipt:{eventId:id,patientUid:waiting.patientUid,decision:'ERROR_RECOVERABLE',
+        message:'Enfermería: acceso venoso no confirmado por una demora técnica. Tratamiento no administrado; podés reintentar.'}});
+     }
+     results.push(error);continue;
+    }
     const result=nativePatient.caseEnded?
      {status:'rejected',patientUid:task.patientUid,eventId:task.eventId,reason:'patient-not-active'}:
      care?.execute(task,clock)??{

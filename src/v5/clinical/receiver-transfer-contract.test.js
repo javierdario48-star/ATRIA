@@ -114,15 +114,16 @@ test('accepted surgery cannot hand off tension pneumothorax before immediate dec
  try {
   await f.workup();
   const attempt = await f.post('/disposicion procedimiento');
-  assert.equal(attempt.clinical[0].status, 'pending');
-  await f.advance(3.5);
+  assert.equal(attempt.clinical[0].status, 'rejected');
+  assert.equal(attempt.clinical[0].receipt.reasonCode, 'stabilization-insufficient');
   const state = f.s.read();
-  assert(state.patient.consults.some(row => row.id === 'cirugia' && row.accepted));
+  assert(!state.patient.consults.some(row => row.id === 'cirugia' && row.accepted));
   assert.equal(state.patient.caseEnded, false);
   assert.equal(state.progress.receipts.length, 0);
   assert.match(state.messages.at(-1).text, /intervenciones imprescindibles/);
   await f.care('/tratamiento needle_decompression'); await f.settle(); await f.care('/reevaluar');
-  assert.equal((await f.post('/disposicion procedimiento')).clinical[0].status, 'executed');
+  assert.equal((await f.post('/disposicion procedimiento')).clinical[0].status, 'pending');
+  await f.advance(3.5);
   assert.equal(f.s.read().progress.receipts.length, 1);
  } finally {f.s.dispose();}
 });
@@ -141,7 +142,8 @@ test('a real pending infusion remains a handoff gate even after the receiver acc
   assert.equal(attempt.clinical[0].reason, 'pending-clinical-treatment');
   assert.equal(f.s.read().progress.receipts.length, 0);
   await f.settle();
-  assert.equal((await f.post('/disposicion procedimiento')).clinical[0].reason, 'closure-not-ready', 'completed new care needs reassessment');
+  const reassessment=await f.post('/disposicion procedimiento');
+  assert.equal(reassessment.clinical[0].receipt.reasonCode, 'stabilization-insufficient', 'completed new care needs reassessment');
   await f.care('/reevaluar');
   assert.equal((await f.post('/disposicion procedimiento')).clinical[0].status, 'executed');
   assert.equal(f.s.read().progress.receipts.length, 1);

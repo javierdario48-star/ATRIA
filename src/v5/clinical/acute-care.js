@@ -12,6 +12,7 @@ import {clinicalInterventionEligibility} from './native-medication-eligibility.j
 import {createSurgicalConsultation} from './surgical-consultation.js';
 import {GASTRO_CASE_CONDUCTS} from './gastro-expansion-policies.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
+import {clinicalTransferContinuation} from './transfer-continuation.js';
 
 const copy=x=>structuredClone(x);
 export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null},policy){
@@ -50,7 +51,8 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   const xp=nativeCaseXP({score:evaluation.quality.score,mode});
   const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,
    caseId:c.id,destination:cmd.intent.id,quality:copy(evaluation.quality),
-   debrief:createClosureDebrief(p,c,evaluation.quality),xp,closed:true};
+   debrief:createClosureDebrief(p,c,evaluation.quality),xp,closed:true,
+   handoff:clinicalTransferContinuation(p,c,cmd.intent.id)};
   progress.award(receipt);p.caseEnded=true;p.closure=copy(receipt);
   return executed(cmd,{closure:copy(receipt),message:policy.closureMessage(receipt)});
  }
@@ -61,10 +63,10 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   // The accepting service owns definitive surgery/procedure AFTER transfer.
   // Missing nonessential studies and treatments affect XP, not the handoff gate.
   // A confirmed pending drug is not discarded while the patient is leaving.
-  if(p.pendingTreatments.length)return rejected(cmd,'pending-clinical-treatment',
+  if(clinicalTransferContinuation(p,c,cmd.intent.id).pendingBlockers.length)return rejected(cmd,'pending-clinical-treatment',
    'Esperá la administración pendiente antes de completar el traslado.');
   const assessed=readiness(cmd.intent.id);
-  if(c.clinicalPolicy&&!cmd.intent.partial&&!assessed?.ready)
+  if(!cmd.intent.partial&&!assessed?.ready)
    return rejected(cmd,'closure-not-ready',(assessed?.missing||['Destino no disponible.']).join(' '));
   const evaluation=partialDisposition(p,c,cmd.intent.id,assessed,{cases});
   if(!evaluation.ready)return rejected(cmd,'transfer-not-authorized',evaluation.missing.join(' '));
@@ -73,7 +75,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
  function readiness(destination){
   const out=policy.evaluate(p,c,destination);
   if(!out)return null;
-  if(p.pendingTreatments.length||p.pendingConsults.length){
+  if(clinicalTransferContinuation(p,c,destination).pendingBlockers.length||p.pendingConsults.length){
    out.ready=false;out.action=null;out.missing.push('Esperar las administraciones y las respuestas del equipo receptor pendientes.');
   }
   if(policy.reassessmentRequired&&p.treatments.some(t=>!p.lastReassessment?.interventionEvents?.includes(t.sourceEventId))){
@@ -237,7 +239,9 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
       if(administered)policy.onAdministration?.(p,c,administered);
      }
     }
+    if(p.caseEnded)break;
    }
+   if(p.caseEnded)return results;
    ivMedicines.advanceDelivery(clockAfter.nativeMinute);
    policy.advanceVitals(p,c,Math.max(0,clockAfter.clinicalMinute-cursor),clockAfter.nativeMinute);
    return results;
