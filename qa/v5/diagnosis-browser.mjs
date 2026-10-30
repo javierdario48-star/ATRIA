@@ -81,7 +81,12 @@ try{
   await openEditor();assert.equal(await field.inputValue(),'apendicitis aguda');
   await closeIfOpen();
   await send('Enfermera cirugía');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===2);
-  assert.equal((await state()).patient.consults[1].reviewStatus,'missing-exam');
+  assert.equal((await state()).patient.consults[1].reviewStatus,'missing-vitals');
+  assert.equal((await state()).patient.consults[1].reasonCode,'vitals-missing');
+  await send('/signos');await send('Enfermera cirugía');
+  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===3);
+  assert.equal((await state()).patient.consults[2].reviewStatus,'missing-exam');
+  assert.equal((await state()).patient.consults[2].reasonCode,'examination-incomplete');
   assert.equal((await state()).patient.treatments.length,0);
   assert.equal((await state()).progress.receipts.length,0);
   await page.locator('#guardButton').click();
