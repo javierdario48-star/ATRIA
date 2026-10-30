@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Public controls only. evaluate() observes snapshots and dispatches an IME
 // key event; it never writes clinical state or issues a hidden medication.
 import assert from 'node:assert/strict';
@@ -50,7 +51,7 @@ try{
    const badge=page.locator('[data-patient-diagnosis]');
    const floating=await badge.isVisible();
    if(floating)await badge.click();
-   else await page.locator('#peopleButton').click();
+   else await clickHudAction(page,'peopleButton');
    return floating;
   };
   const closeIfOpen=async()=>{

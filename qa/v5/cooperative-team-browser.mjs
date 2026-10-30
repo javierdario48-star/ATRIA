@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Run only after the two-doctor clinical route has passed. Every physician
 // uses a separate Chromium process, the public UI and the same host executor.
 import assert from 'node:assert/strict';
@@ -18,7 +19,7 @@ async function invite(caseId){
  assert(roomId,'the public invitation must be committed before colleagues accept');
  const round={caseId,roomId,accepted:[]};(report.invitationRounds??=[]).push(round);
  for(const [i,p] of pages.slice(1).entries()){
-  await p.locator('#peopleButton').click();const accept=p.locator('[data-action="join-coop"]');
+  await clickHudAction(p,'peopleButton');const accept=p.locator('[data-action="join-coop"]');
   const selected=await accept.getAttribute('data-room');assert.equal(selected,roomId,'the visible invitation must belong to this new guard');
   round.accepted.push({doctor:i+1,roomId:selected});await accept.click();
   // Wait for the server-ACKNOWLEDGED join before the next doctor joins.
@@ -37,7 +38,7 @@ try{
   const ctx=await browsers[i].newContext(i===count-1?h.devices['Pixel 5']:{viewport:{width:1024,height:768}});contexts.push(ctx);
   const p=await ctx.newPage();pages.push(p);p.setDefaultTimeout(30000);p.on('pageerror',e=>errors.push({doctor:i,message:e.message,stack:e.stack}));
   await p.goto(process.env.V5_BROWSER_URL||h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
-  await p.locator('#playerName').fill(names[i]);await p.locator('#enterButton').click();await p.locator('#peopleButton').click();await p.locator('#modalClose').click();
+  await p.locator('#playerName').fill(names[i]);await p.locator('#enterButton').click();await clickHudAction(p,'peopleButton');await p.locator('#modalClose').click();
  }
  const a=pages[0],last=pages.at(-1);stage='accepted team and real remote movement';
  await a.waitForFunction(n=>atriaV5.snapshot().others.length===n-1,count);const uid=await invite('PERI-PBE-001');report.patientUid=uid;
@@ -74,14 +75,14 @@ try{
  await send(a,'Enfermera monitor');await send(pages[1],'Enfermera ceftriaxona 1 g');await send(pages[2],'Enfermera albumina 1.5 g/kg');
  if(count===4)await send(pages[3],'Enfermera oxigeno 2 L/min');
  for(const [i,text] of ['¿Tiene cirrosis?','¿Tiene ascitis?','¿Tuvo fiebre?','¿Notó confusión?'].entries())await send(pages[i%count],text);
- for(const p of pages){await p.locator('#peopleButton').click();await p.locator('[data-action="examination"]').click();await p.locator('#examRegions [data-exam-region="general"]').click();await p.locator('#modalClose').click();}
- await a.locator('#peopleButton').click();await a.locator('[data-action="record-vitals"]').click();await a.locator('[data-action="examination"]').click();await a.locator('#examRegions [data-exam-region="abdomen"]').click();
+ for(const p of pages){await clickHudAction(p,'peopleButton');await p.locator('[data-action="examination"]').click();await p.locator('#examRegions [data-exam-region="general"]').click();await p.locator('#modalClose').click();}
+ await clickHudAction(a,'peopleButton');await a.locator('[data-action="record-vitals"]').click();await a.locator('[data-action="examination"]').click();await a.locator('#examRegions [data-exam-region="abdomen"]').click();
 await a.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.abdomen?.palpation);await a.locator('#modalClose').click();
  await study(pages[1],'pbe_paracentesis');await study(last,'pbe_renal');
  await a.locator('[data-patient-diagnosis]').click();await a.locator('#diagnosisInput').fill('PBE');await a.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();await a.locator('#diagnosisInput').press('Enter');await a.waitForFunction(()=>document.querySelector('#modal')?.open===false);
  await a.waitForFunction(n=>atriaV5.snapshot().clinical.patient.administrationLog.length===n,count===4?3:2,{timeout:45000});
  await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders.every(x=>x.status==='done'),null,{timeout:75000});
- await last.locator('#peopleButton').click();await last.locator('[data-action="reassess"]').click();await last.locator('#modalClose').click();
+ await clickHudAction(last,'peopleButton');await last.locator('[data-action="reassess"]').click();await last.locator('#modalClose').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical.eligibleDestinations.includes('sala'))));
  const ready=await clinical(a);assert.equal(new Set(ready.patient.administrationLog.map(x=>x.sourceEventId)).size,ready.patient.administrationLog.length);
  assert.equal(new Set(ready.room.transcript.map(x=>x.actorId)).size,count);

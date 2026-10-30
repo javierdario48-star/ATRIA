@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Audio acceptance only: no clinical commands, accelerated cases or physiology writes.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -42,7 +43,7 @@ async function pageFor(context,name){
 }
 const audio=p=>p.evaluate(()=>atriaV5.diagnostics().audio);
 async function lobby(p){await p.locator('#enterButton').click();await p.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');}
-async function settings(p){await p.locator('#audioButton').click();}
+async function settings(p){await clickHudAction(p,'audioButton');}
 async function leaveSettings(p){await p.locator('#modalClose').click();}
 async function choose(p,mode){
  await p.locator('#guardButton').click();await p.locator('[data-mode="'+mode+'"]').click();

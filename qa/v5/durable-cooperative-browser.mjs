@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Browser acceptance of the preview-gated C5.b.3 route. Unlike the legacy
 // cooperative tests, this mounts the real durable HTTP authority over SQLite.
 import assert from 'node:assert/strict';
@@ -29,7 +30,7 @@ try{
   assert.equal(await page.locator('#startingColor').inputValue(),i===0?'green':'burgundy');
   assert.equal(await page.locator('#startingSex').inputValue(),i===0?'female':'male');
   await page.locator('#enterButton').click();
-  await page.locator('#peopleButton').click();await page.locator('#modalClose').click();
+  await clickHudAction(page,'peopleButton');await page.locator('#modalClose').click();
  }
  const [host,guest]=pages;
  stage='lobby roster and accepted invitation';
@@ -39,7 +40,7 @@ try{
  await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('PERI-PBE-001');
  await host.locator('#coopDoctors label').filter({hasText:'Dr. Bruno'}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
- await guest.locator('#peopleButton').click();
+ await clickHudAction(guest,'peopleButton');
  await guest.locator('[data-action="join-coop"]').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>{
   const snapshot=atriaV5.snapshot(),debug=atriaV5.diagnostics();

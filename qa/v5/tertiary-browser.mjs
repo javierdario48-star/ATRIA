@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 import {chooseDestination} from './cooperative-ui.mjs';
 // Public UI only, desktop and Pixel. Snapshot reads never mutate the game.
 import assert from 'node:assert/strict';
@@ -51,7 +52,7 @@ try{
   assert.equal(await page.locator('[data-patient-destination]').count(),0);
   const floatingDiagnosis=await page.locator('[data-patient-diagnosis]').isVisible();
   if(floatingDiagnosis)await page.locator('[data-patient-diagnosis]').click();
-  else await page.locator('#peopleButton').click();
+  else await clickHudAction(page,'peopleButton');
   await page.locator('#diagnosisInput').fill('peritonitis');
   await page.locator('[data-diagnosis="Peritonitis terciaria"]').click();await page.locator('#diagnosisInput').press('Enter');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis terciaria');
@@ -59,7 +60,7 @@ try{
   else await page.locator('#modalClose').click();
   // Document current signs before the receiving-team request. Hidden initial vitals
   // cannot substitute for the doctor's actual measurement.
-  await page.locator('#peopleButton').click();await page.locator('[data-action="record-vitals"]').click();
+  await clickHudAction(page,'peopleButton');await page.locator('[data-action="record-vitals"]').click();
   await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.lastVitalsKnown);
   await page.locator('#modalClose').click();
   await send('/consulta uti');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
@@ -73,7 +74,7 @@ try{
   assert.deepEqual(prescribed.eligibleDestinations,[]);
   // Obtain history and an actual directed exam while nursing prepares care.
   for(const text of ['¿Cuántas operaciones previas?','¿Evolución desde la cirugía?','¿Tiene defensas bajas?','¿Tiene alergias?'])await send(text);
-  await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
+  await clickHudAction(page,'peopleButton');await page.locator('[data-action="examination"]').click();
   // Selecting a body region now executes all real constituent maneuvers.
   // The old per-maneuver buttons live under an optional collapsed detail.
   await page.locator('#examRegions [data-exam-region="general"]').click();
@@ -85,7 +86,7 @@ try{
   await page.locator('#modalClose').click();
   for(const id of ['ter_cbc','ter_ct','ter_culture']){
    stage=name+' study '+id;
-   await page.locator('#peopleButton').click();await page.locator('[data-action="studies"]').click();
+   await clickHudAction(page,'peopleButton');await page.locator('[data-action="studies"]').click();
    await page.locator('#studyChoice').selectOption(id);await page.locator('[data-action="request-study"]').click();
    await page.waitForFunction(id=>atriaV5.snapshot().clinical.patient.orders.some(x=>x.id===id),id);
   }
@@ -101,7 +102,7 @@ try{
   assert.match((await state()).patient.orders.find(x=>x.id==='ter_ct').result,/sin un absceso intraabdominal único/);
   assert.equal((await state()).patient.orders.find(x=>x.id==='ter_culture').status,'pending','late culture cannot delay urgent handoff');
   stage=name+' reevaluation and original ICU handoff';
-  await page.locator('#peopleButton').click();await page.locator('[data-action="reassess"]').click();
+  await clickHudAction(page,'peopleButton');await page.locator('[data-action="reassess"]').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.reassessments>0);
   await page.locator('#modalClose').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.eligibleDestinations.includes('uti'));

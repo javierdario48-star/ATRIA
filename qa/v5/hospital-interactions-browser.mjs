@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Real UI only. Diagnostics are read-only: no movement/clinical state injection.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -14,7 +15,7 @@ try{
  const send=async text=>{const n=(await state()).room.transcript.length;await page.locator('#dieInput').fill(text);await page.locator('#chatForm [type="submit"]').click();
   await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,n);};
  // The chart is readable from the HUD; recording an exam still requires actual range.
- await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="examination"]').click();
  await page.locator('#examRegions [data-exam-region="general"]').focus();
  await page.waitForTimeout(1200);
  assert.equal(await page.evaluate(()=>document.activeElement?.dataset.examRegion),'general',

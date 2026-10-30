@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 import {chooseDestination} from './cooperative-ui.mjs';
 // Complete public UI journey, no game mutations or accelerated clinical clock.
 import assert from 'node:assert/strict';
@@ -46,20 +47,20 @@ try{
   stage=name+' initial confusion';assert.equal((await state()).patient.phys.sourceControlled,true);
   assert.equal((await state()).patient.glasgow,null);assert.equal(await page.locator('[data-patient-destination]').count(),0);
   async function glasgow(){
-   await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
+   await clickHudAction(page,'peopleButton');await page.locator('[data-action="examination"]').click();
    await page.locator('#examRegions [data-exam-region="neurological"]').click();
    await page.waitForFunction(()=>{const g=atriaV5.snapshot().clinical.patient.glasgow;
     return !!g?.eye&&!!g?.verbal&&!!g?.motor;});
    const total=(await state()).patient.glasgow.total;await page.locator('#modalClose').click();return total;
   }
   assert.equal(await glasgow(),14);
-  await page.locator('#peopleButton').click();await page.locator('[data-action="record-vitals"]').click();await page.locator('#modalClose').click();
+  await clickHudAction(page,'peopleButton');await page.locator('[data-action="record-vitals"]').click();await page.locator('#modalClose').click();
   stage=name+' physical nursing';await send('Enfermera monitor y ceftriaxona 1 g y albumina 1.5 g/kg');
   const prescribed=await state(),batch=prescribed.room.events.filter(x=>x.type==='chat.posted').at(-1);
   assert.equal(batch.clinical.length,4);assert(batch.clinical.every(x=>x.status==='pending'));
   assert.equal(prescribed.patient.administrationLog.length,0);
   for(const text of ['¿Tiene cirrosis?','¿Tiene ascitis?','¿Tuvo fiebre?','¿Notó confusión?'])await send(text);
-  await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
+  await clickHudAction(page,'peopleButton');await page.locator('[data-action="examination"]').click();
   // Selecting a body region now executes all real constituent maneuvers.
   // The old per-maneuver buttons live under an optional collapsed detail.
   await page.locator('#examRegions [data-exam-region="general"]').click();
@@ -69,7 +70,7 @@ try{
   await page.locator('.exam-advanced > summary').click();
   assert.match(await page.locator('#examResults').innerText(),/Molestia difusa leve/);await page.locator('#modalClose').click();
   for(const id of ['pbe_paracentesis','pbe_renal']){
-   stage=name+' study '+id;await page.locator('#peopleButton').click();await page.locator('[data-action="studies"]').click();
+   stage=name+' study '+id;await clickHudAction(page,'peopleButton');await page.locator('[data-action="studies"]').click();
    await page.locator('#studyChoice').selectOption(id);await page.locator('[data-action="request-study"]').click();
    await page.waitForFunction(id=>atriaV5.snapshot().clinical.patient.orders.some(x=>x.id===id),id);
   }
@@ -79,7 +80,7 @@ try{
   }
   stage=name+' floating diagnosis';const floatingDiagnosis=await page.locator('[data-patient-diagnosis]').isVisible();
   if(floatingDiagnosis)await page.locator('[data-patient-diagnosis]').click();
-  else await page.locator('#peopleButton').click();
+  else await clickHudAction(page,'peopleButton');
   await page.locator('#diagnosisInput').fill('PBE');
   await page.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();await page.locator('#diagnosisInput').press('Enter');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='Peritonitis bacteriana espontánea');if(floatingDiagnosis)assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,'floating diagnosis editor auto-closes');
@@ -91,7 +92,7 @@ try{
   await page.waitForFunction(()=>{const p=atriaV5.snapshot().clinical.patient;return p.orders.every(x=>x.status==='done')&&p.phys.inflammation<.62*.8&&p.liveVitals.sys>=100;},null,{timeout:120000});
   assert.match((await state()).patient.orders.find(x=>x.id==='pbe_paracentesis').result,/780 PMN/);
   assert.equal(await glasgow(),15,'neurological recovery requires actual physiological improvement');
-  await page.locator('#peopleButton').click();await page.locator('[data-action="reassess"]').click();await page.locator('#modalClose').click();
+  await clickHudAction(page,'peopleButton');await page.locator('[data-action="reassess"]').click();await page.locator('#modalClose').click();
   assert.deepEqual((await state()).eligibleDestinations,['sala']);await page.screenshot({path:out+'/pbe-'+name+'-ready.png'});
   stage=name+' unique ward closure';await chooseDestination(page,'sala');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
   const closed=await state();assert.equal(closed.patient.closure.quality.score,100);assert.equal(closed.progress.xp,133);assert.equal(closed.progress.receipts.length,1);

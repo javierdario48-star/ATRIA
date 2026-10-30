@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 import assert from 'node:assert/strict';
 import {browserHarness} from './browser-harness.mjs';
 const h=await browserHarness();const findings=[];
@@ -19,7 +20,7 @@ try{
    if(scenario.includes('stops-walk')){
     const box=await page.locator('#game').boundingBox();await page.locator('#game').click({position:{x:box.width/2,y:box.height/2-150}});
     await page.waitForFunction(()=>atriaV5.snapshot().player.moving);
-    if(scenario==='modal-stops-walk')await page.locator('#profileButton').click();else await page.locator('#dieInput').focus();
+    if(scenario==='modal-stops-walk')await clickHudAction(page,'profileButton');else await page.locator('#dieInput').focus();
     assert.equal(await page.evaluate(()=>atriaV5.snapshot().player.moving),false,'focus/modal must immediately stop movement');
     assert.equal(await page.evaluate(()=>atriaV5.snapshot().player.target),null);
    }

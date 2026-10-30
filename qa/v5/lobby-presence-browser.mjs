@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Lobby discovery must be automatic after entering the hospital. Opening
 // Personas / choosing Cooperative is NOT allowed to start presence as a side effect.
 import assert from 'node:assert/strict';
@@ -30,7 +31,7 @@ try{
  const reads=h.requests.filter(x=>x.path==='/api/lobby'&&x.status===200);
  assert(writes.length>=2,'both clients should publish server presence');
  assert(reads.length>=2,'both clients should read lobby online roster');
- await Promise.all(pages.map(p=>p.locator('#peopleButton').click()));
+ await Promise.all(pages.map(p=>clickHudAction(p,'peopleButton')));
  assert.match(await first.locator('#coopDoctors').innerText(),/Dr\. Bruno/);
  assert.match(await second.locator('#coopDoctors').innerText(),/Dra\. Ana/);
  assert.deepEqual(errors,[],'auto-updating lobby must not introduce browser errors');

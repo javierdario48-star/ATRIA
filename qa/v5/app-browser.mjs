@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // APP-001 public-interface end-to-end. Never mutates clinical state through evaluate().
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -38,7 +39,7 @@ try{
   await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
  }
  for(const question of ['¿desde cuando empezo?','¿se movio el dolor?','¿tiene apetito?'])await send(question);
- await page.locator('#peopleButton').click();
+ await clickHudAction(page,'peopleButton');
  await page.locator('[data-action="examination"]').click();
  // Selecting a region performs the real component examination techniques.
  await page.locator('#examRegions [data-exam-region="general"]').click();
@@ -49,7 +50,7 @@ try{
  await page.locator('.exam-advanced > summary').click();
  assert.match(await page.locator('#examResults').innerText(),/McBurney/);
  await page.locator('#modalClose').click();
- await page.locator('#peopleButton').click();
+ await clickHudAction(page,'peopleButton');
  await page.locator('[data-action="record-vitals"]').click();
  assert.match(await page.locator('#clinicalVitals').innerText(),/118\/72/);
  await page.locator('#modalClose').click();
@@ -86,13 +87,13 @@ try{
  assert.match(await page.locator('#chatHistory').innerText(),/orden combinada no ejecutada/i);
 
  for(const id of ['app_cbc','app_us']){
-  await page.locator('#peopleButton').click();
+  await clickHudAction(page,'peopleButton');
   await page.locator('[data-action="studies"]').click();
   await page.locator('#studyChoice').selectOption(id);
   await page.locator('[data-action="request-study"]').click();
   await page.waitForFunction(key=>atriaV5.snapshot().clinical.patient.orders.some(o=>o.id===key),id);
  }
- await page.locator('#peopleButton').click();
+ await clickHudAction(page,'peopleButton');
  await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('ceftriaxona 1 g y metronidazol 500 mg');
  await page.locator('[data-action="order-therapy"]').click();
@@ -134,7 +135,7 @@ try{
  assert.deepEqual(repeated.patient.administrationLog.map(x=>x.dose.amount),[1000,500,1000,500]);
  assert.equal(repeated.patient.venousAccessCount,1,
   'new doses reuse physical access, never the previous drug receipt');
- await page.locator('#peopleButton').click();
+ await clickHudAction(page,'peopleButton');
  await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('Ringer 500 ml');
  await page.locator('[data-action="order-therapy"]').click();
@@ -143,7 +144,7 @@ try{
  assert.equal(afterFluid.patient.administrationLog.length,5);
  assert.equal(afterFluid.patient.administrationLog[4].id,'fluid');
  assert(afterFluid.patient.liveVitals.hr<108);
- await page.locator('#peopleButton').click();
+ await clickHudAction(page,'peopleButton');
  await page.locator('[data-action="treatment"]').click();
  await page.locator('[data-action="request-surgery"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
@@ -152,7 +153,7 @@ try{
  assert.equal(consult.reviewStatus,'missing-dx');
  assert.match(await page.locator('#chatHistory').innerText(),/Falta registrar una impresión/i);
  assert.equal((await state()).eligibleDestinations.includes('quirofano'),false,'refused surgical consult cannot unlock destination');
- await page.locator('#peopleButton').click(); // the clinical chart remains available when the floating badge is safely hidden
+ await clickHudAction(page,'peopleButton'); // the clinical chart remains available when the floating badge is safely hidden
  await page.locator('#diagnosisInput').fill('peritonitis');
  const suggestions=await page.locator('#diagnosisSuggestions').innerText();
  for(const term of ['Peritonitis secundaria','Peritonitis terciaria','Peritonitis bacteriana espontánea'])assert(suggestions.includes(term));
@@ -172,7 +173,7 @@ try{
  assert.equal((await state()).eligibleDestinations.length,0,'accepted consultation still needs reassessment');
  assert.equal((await state()).patient.treatments.some(x=>x.id==='source_control'),false,'handoff is not performed surgery');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders.every(o=>o.status==='done'),null,{timeout:150000});
- await page.locator('#peopleButton').click();
+ await clickHudAction(page,'peopleButton');
  await page.locator('[data-action="reassess"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.reassessments>0);
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.eligibleDestinations.includes('quirofano'));

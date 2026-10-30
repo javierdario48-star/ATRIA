@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Real UI interactions; snapshots only observe authoritative records.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -16,7 +17,7 @@ try{
  await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CIRR-001');
  await page.locator('[data-action="start-guard"]').click();
  const state=()=>page.evaluate(()=>atriaV5.snapshot().clinical);
- const openExam=async()=>{await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();};
+ const openExam=async()=>{await clickHudAction(page,'peopleButton');await page.locator('[data-action="examination"]').click();};
  const choose=async region=>{
   await page.locator('#examRegions [data-exam-region="'+region+'"]').click();
   await page.waitForFunction(()=>['executed','rejected','unconfirmed'].includes(document.getElementById('examFeedback')?.dataset.status));

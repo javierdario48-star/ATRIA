@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Real mobile UI for EVERY case. Production sessions and DOM actions only;
 // diagnostics observe pixels, render errors and authoritative exam provenance.
 import assert from 'node:assert/strict';
@@ -22,7 +23,7 @@ try{
   const uid=(await state()).patient.uid;
   const before=await page.evaluate(()=>atriaV5.diagnostics().frames);
   for(const section of ['examination','clinical-history','studies','treatment']){
-   await page.locator('#peopleButton').click();
+   await clickHudAction(page,'peopleButton');
    await page.locator('[data-action="'+section+'"]').first().click();
    assert.equal(await page.locator('#modalContent').getAttribute('data-patient-uid'),uid);
    if(section==='examination')await page.locator('#examRegions').waitFor();
@@ -38,7 +39,7 @@ try{
     await page.waitForFunction(()=>atriaV5.snapshot().player.moving);
     await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
    }
-   await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
+   await clickHudAction(page,'peopleButton');await page.locator('[data-action="examination"]').click();
    await page.locator('#examRegions [data-exam-region="perineum"]').click();
    await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings.perineum?.rectal);
    assert.match(await page.locator('#examRegions [data-exam-region="perineum"]').innerText(),/materia fecal dura/i);

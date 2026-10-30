@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // True public-interface cooperative reception: two independent browsers and
 // one durable server. A default patient snapshot is not a confirmed claim.
 import assert from 'node:assert/strict';
@@ -15,7 +16,7 @@ try{
   await page.goto(h.url);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#playerName').fill(i?'Bruno':'Ana');
   await page.locator('#enterButton').click();
-  await page.locator('#peopleButton').click();await page.locator('#modalClose').click();
+  await clickHudAction(page,'peopleButton');await page.locator('#modalClose').click();
  }
  const [host,guest]=pages;
  await host.waitForFunction(()=>atriaV5.snapshot().others.some(p=>p.name==='Bruno'));
@@ -24,7 +25,7 @@ try{
  await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('CIRR-001');
  await host.locator('#coopDoctors label').filter({hasText:'Bruno'}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
- await guest.locator('#peopleButton').click();
+ await clickHudAction(guest,'peopleButton');
  await guest.locator('[data-action="join-coop"]').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>
   atriaV5.snapshot().mode==='coop'&&!!atriaV5.snapshot().clinical?.shift&&

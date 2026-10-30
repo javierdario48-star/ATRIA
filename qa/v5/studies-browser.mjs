@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
@@ -46,7 +47,7 @@ try{
  let state=await page.evaluate(()=>atriaV5.snapshot().clinical);
  assert.equal(state.patient.orders.length,1);assert.deepEqual(state.patient.treatments,[]);
  assert.equal(state.patient.orders[0].status,'pending');
- await page.locator('#peopleButton').click();await page.locator('[data-action="studies"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="studies"]').click();
  assert.equal(await page.locator('[data-study="hemograma"]').getAttribute('data-status'),'pending');
  await page.screenshot({path:out+'/android-studies-pending.png'});
  // Actual elapsed game clock in real Chromium, no fixture completion or direct state mutation.
@@ -67,7 +68,7 @@ try{
  // when another case has an identically named study in the global catalog.
  await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('APP-001');
  await page.locator('[data-action="start-guard"]').click();await approachPatient();
- await page.locator('#peopleButton').click();await page.locator('[data-action="studies"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="studies"]').click();
  await page.locator('#studyChoice').selectOption('app_ct');await page.locator('[data-action="request-study"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders.length===1);
  const selected=await page.evaluate(()=>atriaV5.snapshot().clinical.patient.orders[0]);

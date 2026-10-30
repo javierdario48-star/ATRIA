@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Real UI end-to-end. evaluate() only reads diagnostics; no fixture mutations,
 // fast-forwarding, hidden clinical calls or direct awards/closures.
 import assert from 'node:assert/strict';
@@ -36,7 +37,7 @@ try{
  await send('¿Desde cuándo empezó la hinchazón?');await send('¿Toma alcohol?');
  assert.match(await page.locator('#chatHistory').innerText(),/varias semanas/);
  assert.match(await page.locator('#chatHistory').innerText(),/muchos años|durante años/);
- await page.locator('#peopleButton').click();await page.locator('[data-action="examination"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="examination"]').click();
  // A region card performs its actual constituent examination techniques.
  await page.locator('#examRegions [data-exam-region="general"]').click();
  await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings.general);
@@ -48,11 +49,11 @@ try{
  assert((await state()).patient.examDone);
  await page.locator('.exam-advanced > summary').click();
  assert.match(await page.locator('#examResults').innerText(),/Esplenomegalia/);
- await page.locator('#modalClose').click();await page.locator('#peopleButton').click();
+ await page.locator('#modalClose').click();await clickHudAction(page,'peopleButton');
  await page.locator('[data-action="record-vitals"]').click();await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.lastVitalsKnown);
  assert.match(await page.locator('#clinicalVitals').innerText(),/108\/68/);await page.locator('#modalClose').click();
  for(const study of ['hepatograma','renal','eco','paracentesis']){
-  await page.locator('#peopleButton').click();await page.locator('[data-action="studies"]').click();
+  await clickHudAction(page,'peopleButton');await page.locator('[data-action="studies"]').click();
   await page.locator('#studyChoice').selectOption(study);await page.locator('[data-action="request-study"]').click();
   await page.waitForFunction(id=>atriaV5.snapshot().clinical.patient.orders.some(o=>o.id===id),study);
  }
@@ -70,10 +71,10 @@ try{
  await send('Enfermera no administres albúmina');
  await send('Enfermera ceftriaxona 2 g'); // an unsupported dose cannot leak into CIRR care
  assert.equal((await state()).patient.treatments.some(t=>t.id==='ceftriaxone'),false);
- await page.locator('#peopleButton').click();await page.locator('[data-action="treatment"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('espironolactona 50 mg');await page.locator('[data-action="order-therapy"]').click();
  assert.equal((await state()).patient.treatments.length,0,'uncertified dose has no hidden default administration');
- await page.locator('#peopleButton').click();await page.locator('[data-action="treatment"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('espironolactona 100 mg oral');await page.locator('[data-action="order-therapy"]').click();
  const pending=await state();assert.equal(pending.patient.treatments.length,0);
  assert.equal(pending.patient.pendingTreatments.length,0,'preparation cannot start before nurse reaches B1');
@@ -88,7 +89,7 @@ try{
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders.every(o=>o.status==='done'),null,{timeout:150000});
  const readyStudies=await state();assert.equal(readyStudies.patient.orders.length,4);
  assert.match(readyStudies.patient.orders.find(o=>o.id==='renal').result,/K 4,3/);
- await page.locator('#peopleButton').click();await page.locator('[data-action="reassess"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="reassess"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.reassessments>0);
  // Exact original CIRR behavior: spironolactone is delivered but has no acute
  // vital/ascites kinetics. A normal-looking textual improvement would be false.
@@ -97,7 +98,7 @@ try{
  await page.locator('#diagnosisInput').fill('cirrosis descompensada');await page.locator('[data-action="save-diagnosis"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='cirrosis descompensada');
  await page.locator('#modalClose').click();await send('/disposicion alta');assert(!(await state()).patient.caseEnded);
- await page.locator('#peopleButton').click();await page.locator('[data-destination="sala"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-destination="sala"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
  const closed=await state();assert.equal(closed.patient.closure.quality.score,100);assert.equal(closed.progress.xp,133);
  assert.equal(closed.progress.receipts.length,1);assert.equal(closed.room.patients[0].closed,true);
@@ -123,7 +124,7 @@ try{
   await page.locator('#game').click({position:{x:(x-a.p.x)*a.r.scale+a.r.width/2,y:(y-a.p.y)*a.r.scale+a.r.height/2}});
   await page.waitForFunction(()=>atriaV5.snapshot().player.moving);await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
  }
- await page.locator('#peopleButton').click();await page.locator('[data-action="treatment"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('paracentesis terapéutica');await page.locator('[data-action="order-therapy"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.liveVitals.hr<93.9&&atriaV5.snapshot().clinical.patient.liveVitals.rr<19.9);
  const procedure=await state();assert.deepEqual(procedure.patient.treatments.map(t=>t.id),['paracentesis_ter']);assert.equal(procedure.progress.xp,133);
@@ -138,7 +139,7 @@ try{
  assert.match(await page.locator('#chatHistory').innerText(),/Administración confirmada: Cristaloides/i);
  assert.equal(afterFluid.patient.treatments.some(t=>t.id==='ceftriaxone'),false);
  assert.equal(afterFluid.progress.xp,133);
- await page.locator('#peopleButton').click();await page.locator('[data-action="record-vitals"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="record-vitals"]').click();
  await page.screenshot({path:out+'/cirr-native-procedure-response.png'});await page.locator('#modalClose').click();await page.locator('#guardButton').click();
  assert.deepEqual(errors,[]);
  const report={realBrowser:true,androidEmulated:true,physicalAndroid:false,url:page.url(),caseId:'CIRR-001',

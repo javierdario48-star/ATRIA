@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Independent browsers verify two real beds and separate clinical owners.
 import assert from 'node:assert/strict';
 import {browserHarness} from './browser-harness.mjs';
@@ -10,7 +11,7 @@ try{
   const p=await ctx.newPage();p.setDefaultTimeout(70000);p.on('pageerror',e=>errors.push(e.message));
   pages.push(p);await p.goto(h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
   await p.locator('#playerName').fill(i?'Bruno':'Ana');await p.locator('#enterButton').click();
-  await p.locator('#peopleButton').click();await p.locator('#modalClose').click();
+  await clickHudAction(p,'peopleButton');await p.locator('#modalClose').click();
  }
  const [host,guest]=pages;
  await host.waitForFunction(()=>atriaV5.snapshot().others.some(x=>x.name==='Bruno'));
@@ -18,7 +19,7 @@ try{
  await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('PERI-PBE-001');
  await host.locator('#coopDoctors label').filter({hasText:'Bruno'}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
- await guest.locator('#peopleButton').click();await guest.locator('[data-action="join-coop"]').click();
+ await clickHudAction(guest,'peopleButton');await guest.locator('[data-action="join-coop"]').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical?.shift?.patients.length===2&&atriaV5.snapshot().mode==='competitive')));
  const records=(await clinical(host)).shift.patients;
  assert.notEqual(records[0].bedId,records[1].bedId);

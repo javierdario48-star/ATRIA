@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Actual independent browsers, accepted competitive invitation, physical first
 // contact and server-enforced ownership. No test-engine clinical shortcuts.
 import assert from 'node:assert/strict';
@@ -25,7 +26,7 @@ try{
   });
   await page.goto(h.url);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#playerName').fill(names[i]);await page.locator('#enterButton').click();
-  await page.locator('#peopleButton').click();await page.locator('#modalClose').click();
+  await clickHudAction(page,'peopleButton');await page.locator('#modalClose').click();
  }
  const host=pages[0],owner=pages[1];
  stage='create competitive party';
@@ -42,7 +43,7 @@ try{
  await host.locator('[data-action="start-guard"]').click();
  await host.getByRole('heading',{name:'Invitación enviada'}).waitFor();
  for(const guest of pages.slice(1)){
-  await guest.locator('#peopleButton').click();
+  await clickHudAction(guest,'peopleButton');
   await guest.locator('[data-action="join-coop"]').click();
  }
  await Promise.all(pages.map(p=>p.waitForFunction(()=>{

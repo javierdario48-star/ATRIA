@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
@@ -55,7 +56,7 @@ try{
  await page.waitForFunction(p=>Math.hypot(atriaV5.snapshot().player.x-p.x,atriaV5.snapshot().player.y-p.y)>25,spawn);
  await page.waitForFunction(()=>!atriaV5.snapshot().player.moving);
  const located=await page.evaluate(()=>atriaV5.snapshot());
- await page.locator('#profileButton').click();
+ await clickHudAction(page,'profileButton');
  await page.locator('#aliasChoice').fill('Dr. Torres');
  await page.locator('#colorChoice').selectOption('teal');
  await page.locator('[data-action="save-profile"]').click();

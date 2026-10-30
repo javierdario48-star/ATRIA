@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // No clinical state mocks: three actual browsers, accepted HTTP invitations,
 // durable SQLite authority, delayed bootstrap and RTC requests kept pending.
 import assert from 'node:assert/strict';
@@ -40,7 +41,7 @@ try{
   });
   await page.goto(h.url);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#playerName').fill(names[actor]);await page.locator('#enterButton').click();
-  await page.locator('#peopleButton').click();await page.locator('#modalClose').click();
+  await clickHudAction(page,'peopleButton');await page.locator('#modalClose').click();
  }
  const [host,firstGuest,lastGuest]=pages;
  await host.waitForFunction(()=>atriaV5.snapshot().others.length===2);
@@ -48,11 +49,11 @@ try{
  await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('PERI-PBE-001');
  for(const name of names.slice(1))await host.locator('#coopDoctors label').filter({hasText:name}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
- await firstGuest.locator('#peopleButton').click();await firstGuest.locator('[data-action="join-coop"]').click();
+ await clickHudAction(firstGuest,'peopleButton');await firstGuest.locator('[data-action="join-coop"]').click();
  // Neither this guest nor the host can receive another social room poll.
  // Their cached allAccepted flag still excludes the third doctor's consent.
  await until(()=>blocked.has(0)&&blocked.has(1)&&guestMissing);
- await lastGuest.locator('#peopleButton').click();await lastGuest.locator('[data-action="join-coop"]').click();
+ await clickHudAction(lastGuest,'peopleButton');await lastGuest.locator('[data-action="join-coop"]').click();
  releaseStart();
  await Promise.all(pages.map(page=>page.waitForFunction(()=>{
   const s=atriaV5.snapshot(),d=atriaV5.diagnostics();

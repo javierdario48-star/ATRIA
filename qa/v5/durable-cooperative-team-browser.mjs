@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // C5.b.3: independent Chrome processes exercise the durable server path for
 // three/four doctors. This is NOT a host-owned C5.a clinical session.
 import assert from 'node:assert/strict';
@@ -21,7 +22,7 @@ try{
   await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#playerName').fill(names[i]);
   await page.locator('#enterButton').click();
-  await page.locator('#peopleButton').click();await page.locator('#modalClose').click();
+  await clickHudAction(page,'peopleButton');await page.locator('#modalClose').click();
  }
  const host=pages[0],guest=pages.at(-1);
  stage='create accepted cooperative room';
@@ -36,7 +37,7 @@ try{
  const roomId=await host.evaluate(()=>localStorage.getItem('atria.v5.coop.room'));
  assert(roomId);
  for(const p of pages.slice(1)){
-  await p.locator('#peopleButton').click();
+  await clickHudAction(p,'peopleButton');
   const button=p.locator('[data-action="join-coop"]');
   assert.equal(await button.getAttribute('data-room'),roomId);
   await button.click();

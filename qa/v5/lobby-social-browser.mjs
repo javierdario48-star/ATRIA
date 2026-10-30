@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 import assert from 'node:assert/strict';
 import {browserHarness} from './browser-harness.mjs';
 
@@ -23,7 +24,7 @@ try{
  stage='real HTTP lobby movement across two independent browsers';
  // Keep the directory open on the observing device: fast roster updates must
  // not replace the button the player is about to tap.
- await ana.locator('#peopleButton').click();
+ await clickHudAction(ana,'peopleButton');
  assert.match(await ana.locator('#peopleButton').innerText(),/Personas · 1/);
  assert.equal(await ana.locator('#onlineDoctorsCount').innerText(),'1');
  await ana.evaluate(()=>window.__contactBeforeMotion=document.querySelector('#lobbyContacts [data-action="inspect-player"]'));
@@ -89,7 +90,7 @@ try{
  await bruno.locator('#friendRequestNotice').waitFor({state:'hidden'});
  await bruno.locator('#notificationsCount').waitFor({state:'hidden'});
  stage='direct invitation from tapped friend';
- await ana.locator('#peopleButton').click();
+ await clickHudAction(ana,'peopleButton');
  await ana.locator('#lobbyContacts [data-action="inspect-player"]').filter({hasText:'Dr. Bruno'}).click();
  await ana.locator('[data-action="invite-friend"]').waitFor();
  assert.equal(await ana.locator('#friendCase').inputValue(),'PERI-PBE-001');

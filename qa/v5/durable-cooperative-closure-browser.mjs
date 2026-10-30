@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // C5.b.3 clinical acceptance: real UI and durable HTTP authority, including
 // physical nursing, required studies, shared disposition and once-only XP.
 import assert from 'node:assert/strict';
@@ -26,7 +27,7 @@ try{
   await p.goto(i===1&&process.env.V5_GUEST_BROWSER_URL||process.env.V5_BROWSER_URL||h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
   await p.locator('#playerName').fill(names[i]);
   await p.locator('#enterButton').click();
-  await p.locator('#peopleButton').click();await p.locator('#modalClose').click();
+  await clickHudAction(p,'peopleButton');await p.locator('#modalClose').click();
  }
  let host=pages[0];const guest=pages[1];
  stage='accepted two-physician durable room';
@@ -35,7 +36,7 @@ try{
  await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('PERI-PBE-001');
  await host.locator('#coopDoctors label').filter({hasText:names[1]}).locator('input').check();
  await host.locator('[data-action="start-guard"]').click();
- await guest.locator('#peopleButton').click();await guest.locator('[data-action="join-coop"]').click();
+ await clickHudAction(guest,'peopleButton');await guest.locator('[data-action="join-coop"]').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>{
   const s=atriaV5.snapshot(),d=atriaV5.diagnostics();
   return s.mode==='coop'&&s.clinical?.patient.caseId==='PERI-PBE-001'&&d.cooperative.durable&&!d.cooperative.authority;
@@ -48,12 +49,12 @@ try{
  stage='distributed interrogation, exam, diagnostic impression and studies';
  for(const [p,questions] of [[host,['¿Tiene cirrosis?','¿Tuvo fiebre?']],[guest,['¿Tiene ascitis?','¿Notó confusión?']]])
   for(const text of questions)await send(p,text);
- await host.locator('#peopleButton').click();await host.locator('[data-action="record-vitals"]').click();
+ await clickHudAction(host,'peopleButton');await host.locator('[data-action="record-vitals"]').click();
  await host.locator('[data-action="examination"]').click();
  await host.locator('#examRegions [data-exam-region="abdomen"]').click();
   await host.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.abdomen?.palpation);
  await host.locator('#modalClose').click();
- await guest.locator('#peopleButton').click();await guest.locator('[data-action="examination"]').click();
+ await clickHudAction(guest,'peopleButton');await guest.locator('[data-action="examination"]').click();
  await guest.locator('#examRegions [data-exam-region="general"]').click();await guest.locator('#modalClose').click();
  await study(guest,'pbe_paracentesis');await study(host,'pbe_renal');
  await host.locator('[data-patient-diagnosis]').click();
@@ -108,7 +109,7 @@ try{
  assert.deepEqual(recovered.patient.orders,treated.patient.orders);
  assert.deepEqual(recovered.patient.intentHistory,treated.patient.intentHistory);
  stage='reassessment and actual shared destination';
- await guest.locator('#peopleButton').click();await guest.locator('[data-action="reassess"]').click();
+ await clickHudAction(guest,'peopleButton');await guest.locator('[data-action="reassess"]').click();
  await guest.locator('#modalClose').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical?.eligibleDestinations.includes('sala'),null,{timeout:80000})));
  await chooseDestination(host,'sala');

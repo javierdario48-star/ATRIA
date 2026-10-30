@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
@@ -32,7 +33,7 @@ try{
  assert.equal(app.lastVitalsKnown,null);assert.equal(app.examDone,false);assert.equal(app.reassessments,0);assert.deepEqual(app.treatments,[]);
  await send('¿Tiene apetito?');assert((await state()).patient.intentHistory.some(x=>x.id==='anorexia'));
  await send('¿Cómo te sentís ahora?');assert.equal((await state()).patient.reassessments,0);
- await page.locator('#peopleButton').click();await page.locator('[data-action="clinical-history"]').click();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="clinical-history"]').click();
  const chart=await page.locator('#fullClinicalHistory').innerText();assert.match(chart,/ALiCIA/);assert.match(chart,/ocho horas/);assert.match(chart,/7 de 10/);
  await page.screenshot({path:out+'/contextual-patient-history.png'});await page.locator('#modalClose').click();
  await page.locator('#recipientButton').click();

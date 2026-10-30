@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Public UI, actual authenticated social API, two independent Chromium
 // processes, one WebRTC host, the same native guard and physical nursing.
 import assert from 'node:assert/strict';
@@ -9,7 +10,7 @@ await fs.mkdir(out,{recursive:true});const contexts=[],pages=[],errors=[],report
 async function invite(caseId){
  const [a,b]=pages;await a.locator('#guardButton').click();await a.locator('[data-mode="coop"]').click();await a.locator('input[name="guardScope"][value="specific"]').check();await a.locator('#caseChoice').selectOption(caseId);
  await a.locator('#coopDoctors label').filter({hasText:'Dr. Bruno'}).locator('input').check();await a.locator('[data-action="start-guard"]').click();
- await b.locator('#peopleButton').click();await b.locator('[data-action="join-coop"]').click();
+ await clickHudAction(b,'peopleButton');await b.locator('[data-action="join-coop"]').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().mode==='coop'&&!!atriaV5.snapshot().clinical,null,{timeout:60000})));
  const [x,y]=await Promise.all(pages.map(clinical));assert.equal(x.patient.uid,y.patient.uid);assert.equal(x.room.roomId,y.room.roomId);
  assert.equal(x.room.mode,'coop');assert.equal(x.room.members.length,2);
@@ -37,7 +38,7 @@ try{
   const p=await ctx.newPage();p.setDefaultTimeout(30000);p.on('pageerror',e=>errors.push({doctor:i,message:e.message,stack:e.stack}));pages.push(p);
   await p.goto(process.env.V5_BROWSER_URL||h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
   await p.locator('#playerName').fill(i===0?'Dra. Ana':'Dr. Bruno');await p.locator('#enterButton').click();
-  await p.locator('#peopleButton').click();await p.locator('#modalClose').click();
+  await clickHudAction(p,'peopleButton');await p.locator('#modalClose').click();
  }
  const [a,b]=pages;
  stage='real lobby/invitation and remote walking';await a.waitForFunction(()=>atriaV5.snapshot().others.some(x=>x.name==='Dr. Bruno'));
@@ -49,9 +50,9 @@ try{
  await send(a,'Hola, estamos atendiendo juntos');await send(b,'Enfermera monitor y ceftriaxona 1 g');await send(a,'Enfermera albumina 1.5 g/kg');
  assert.equal((await clinical(a)).patient.administrationLog.length,0,'no effects before physical nurse arrival');
  for(const [p,questions] of [[a,['¿Tiene cirrosis?','¿Tuvo fiebre?']],[b,['¿Tiene ascitis?','¿Notó confusión?']]])for(const text of questions)await send(p,text);
- await a.locator('#peopleButton').click();await a.locator('[data-action="record-vitals"]').click();await a.locator('[data-action="examination"]').click();
+ await clickHudAction(a,'peopleButton');await a.locator('[data-action="record-vitals"]').click();await a.locator('[data-action="examination"]').click();
  await a.locator('#examRegions [data-exam-region="general"]').click();await a.locator('#modalClose').click();
- await b.locator('#peopleButton').click();await b.locator('[data-action="examination"]').click();
+ await clickHudAction(b,'peopleButton');await b.locator('[data-action="examination"]').click();
  await b.locator('#examRegions [data-exam-region="abdomen"]').click();
 await b.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.abdomen?.palpation);await b.locator('#modalClose').click();
  await study(b,'pbe_paracentesis');await study(a,'pbe_renal');
@@ -67,7 +68,7 @@ await b.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.examFindings?.
  if(await b.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')await b.locator('#keyboardToggleButton').click();
  stage='shared actual results, reassessment and confirmed closure delivery';
  await a.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders.every(x=>x.status==='done'),null,{timeout:75000});
- await b.locator('#peopleButton').click();await b.locator('[data-action="reassess"]').click();await b.locator('#modalClose').click();
+ await clickHudAction(b,'peopleButton');await b.locator('[data-action="reassess"]').click();await b.locator('#modalClose').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical.eligibleDestinations.includes('sala'))));
  for(const [i,p] of pages.entries())await p.screenshot({path:out+'/coop-'+(i?'pixel':'desktop')+'-ready.png'});
  // Stall only the guest runtime, not clinical state. The host must keep the
