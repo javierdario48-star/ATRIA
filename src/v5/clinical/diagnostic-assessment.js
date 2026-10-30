@@ -11,7 +11,10 @@ export function assessDiagnosticImpression(c,value){
  const aortic=forms.some(x=>/diseccion.*(?:aort|stanford)/.test(x));
  const alternatives=variceal?['hemorragia digestiva alta variceal','hemorragia digestiva alta por varices','hda variceal','sangrado variceal','hemorragia variceal']:[];
  if(aortic)alternatives.push('diseccion aortica stanford a','diseccion de aorta tipo a');
- const exact=!/\b(?:descartad[ao]|descarto|sin|no es|no tiene)\b/.test(n)&&[...forms,...alternatives].some(x=>
+ // Scope negation to the impression, not diagnostic qualifiers such as
+ // "IAM sin elevación del ST" or "TEP sin shock" in the authored catalog.
+ const negated=/^(?:descartad[ao]|descarto|sin|no es|no tiene)\b/.test(n)||/\bdescartad[ao]$/.test(n);
+ const exact=!negated&&[...forms,...alternatives].some(x=>
   n===x||n.startsWith(x+' con ')||n.startsWith(x+' complicada')||n.startsWith(x+' descompensada')||n.endsWith(' por '+x));
  if(exact)return {level:'specific',compatible:true,sufficient:true,factor:1};
  if(variceal&&['hemorragia digestiva alta','sangrado digestivo alto','hda'].includes(n))

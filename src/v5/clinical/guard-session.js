@@ -391,6 +391,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      pendingNurseJobs.delete(result.eventId);
     }
    }
+   // A consultation can close during care.advance above. Its authoritative
+   // receipt is already published; no later subsystem may mutate this patient
+   // in the same tick, including a study that matures before the outer frame.
+   if(nativePatient.caseEnded){publishReadiness();return [];}
    // The bedside task confirms START of a real timed infusion, while the
    // clinical port remains pending until its administered dose is complete.
    // This lets the same nurse initiate another infusion without fabricating

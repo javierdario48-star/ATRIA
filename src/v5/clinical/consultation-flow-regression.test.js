@@ -4,6 +4,7 @@ import {clinicalContent as content} from '../server/content.js';
 import {createGuardSession} from './guard-session.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
 import {closureDecisionHTML} from '../ui/clinical-closure-panel.js';
+import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 
 function fixture(caseId) {
  let sequence=0;
@@ -20,6 +21,33 @@ function fixture(caseId) {
  }
  return {c,s,uid,post,advance,workup};
 }
+
+test('authored diagnoses containing sin retain their clinical meaning, while negated impressions cannot authorize transfer',()=>{
+ for(const [id,dx] of [['CARD-02','IAM sin elevación del ST'],['CARD-02','síndrome coronario agudo sin elevación del ST'],['RESP-05','TEP sin shock']]){
+  const c=content.cases.find(c=>c.id===id);
+  assert.equal(assessDiagnosticImpression(c,dx).sufficient,true,id+': '+dx);
+  for(const negated of ['sin '+dx,'no tiene '+dx,dx+' descartado'])
+   assert.equal(assessDiagnosticImpression(c,negated).compatible,false,negated);
+ }
+});
+
+test('a study maturing in the transfer completion tick cannot alter the closed CARD-08 patient',async()=>{
+ const f=fixture('CARD-08');
+ try{
+  await f.workup();await f.post('/estudio g_card08_cta');await f.post('/tratamiento esmolol');
+  await f.advance(18.55);await f.post('/estudio g_card08_ecg');await f.advance(1.45);
+  await f.post('/reevaluar');
+  assert.equal((await f.post('/disposicion quirofano')).clinical[0].status,'pending');
+  await f.advance(.1);
+  const results=f.s.advance(3.5);await f.s.flush();
+  const final=f.s.read();assert.equal(final.patient.caseEnded,true);
+  assert.equal(final.progress.receipts.length,1);
+  assert.equal(final.patient.orders.find(x=>x.id==='g_card08_ecg').status,'pending');
+  assert(!results.some(x=>x.id==='g_card08_ecg'));
+  const frozen=structuredClone(final.patient);await f.advance(20);
+  assert.deepEqual(f.s.read().patient,frozen);
+ }finally{f.s.dispose();}
+});
 
 test('CARD-08 real catalog: generic surgery opinion routes to cardiovascular and a single UI destination closes with one XP award',async()=>{
  const f=fixture('CARD-08');
