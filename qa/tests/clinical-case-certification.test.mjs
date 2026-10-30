@@ -21,13 +21,16 @@ test('cooperative endocarditis with valvular edema transfers for surgery without
  const c=cardiologyPack.cases.find(x=>x.id==='CARD-09'),composed=await certification.clinicalCertificationContent([c]);
  const seed=chooseClinicalScenarioSeed(composed.cases.find(x=>x.id===c.id),'valvular-edema',
   variant=>variant.complicationCandidates.some(x=>x.id==='card09-valvular-edema'),{mode:'coop'});
- const row=await runClinicalCaseScenario(c,{mode:'coop',seed,horizon:1440,recovery:true});
+ const row=await runClinicalCaseScenario(c,{mode:'coop',profile:'complication-rescue',seed,horizon:1440,recovery:true});
  assert.equal(row.passed,true,JSON.stringify(row.failures));
  assert.equal(row.closureReceipt.destination,'quirofano');
  assert(row.complications.some(x=>x.id==='card09-valvular-edema'));
+ assert(row.complications.every(x=>x.status!=='recovered'),'receiving surgical acceptance cannot repair the valve');
  assert(row.consultations.some(x=>x.id==='cardiovascular'&&x.accepted===true));
  assert(!row.treatments.some(x=>x.id==='valve_surgery'),'transfer cannot invent a completed operation');
- assert.equal(row.pendingTreatments.length,0);assert.equal(row.xpReceipts.length,1);
+ assert(row.pendingTreatments.every(pending=>row.handoffContinuations.continuingAdministrations
+  .some(delivered=>delivered.sourceEventId===pending.sourceEventId)),'only confirmed infusions can accompany the handoff');
+ assert.equal(row.xpReceipts.length,1);
 });
 test('abandonment preserves a single irreversible death when postmortem commands have no bedside target',async()=>{
  const c=respiratoryPack.cases.find(x=>x.id==='RESP-04'),row=await runClinicalCaseScenario(c,{profile:'abandon',horizon:400,seed:'abandoned-terminal'});

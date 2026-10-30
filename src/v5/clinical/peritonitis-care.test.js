@@ -48,7 +48,8 @@ test('urgent surgical acceptance does not fabricate the abdominal exam, drugs or
   assert.equal(f.s.read().patient.consults.at(-1).accepted,false);
   await f.send('/diagnostico peritonitis secundaria');await f.send('/signos');
   await f.send('Enfermera cirugía');await f.advance(3.5);
-  assert.equal(f.s.read().patient.consults.at(-1).accepted,true,'specific shock permits early assessment');
+  assert.equal(f.s.read().patient.consults.at(-1).accepted,false,'a diagnosis cannot fabricate the directed examination');
+  assert.equal(f.s.read().patient.consults.at(-1).reasonCode,'examination-incomplete');
   assert(f.s.read().closure.missing.some(x=>/examen físico abdominal/.test(x)));
   assert.deepEqual(f.s.read().eligibleDestinations,[]);
   const surgery=await f.send('Enfermera control de foco');
@@ -108,6 +109,9 @@ test('the physical PERI guard shares IV access, five genuine support doses, surg
   assert.equal(given.administrationLog.length,5);assert.equal(given.venousAccessCount,1);
   assert(given.procedures.monitor.connected);assert.equal(given.procedures.vasopressor.dose.amount,.05);
   assert(world.nurseJourneySnapshot().every(x=>x.stage==='confirmed'));
+  assert.equal(s.read().patient.consults.at(-1).accepted,false,'early request preceded administered preparation');
+  await send('/consulta cirugia');s.advance(3.5);await s.flush();
+  assert.equal(s.read().patient.consults.at(-1).accepted,true);
   await send('/reevaluar');assert.deepEqual(s.read().eligibleDestinations,['quirofano']);
   const closed=await send('/disposicion quirofano');assert.equal(closed.clinical[0].status,'executed');
   assert.equal(s.read().patient.phys.sourceControlled,false);assert.equal(s.read().patient.closure.quality.score,87);

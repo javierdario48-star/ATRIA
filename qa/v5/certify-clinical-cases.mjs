@@ -228,6 +228,14 @@ export function assessClinicalCertificationEvidence(row){
  const complicationRescue=row.profile!=='complication-rescue'||!definitions.length?null:
   episodes.length>0&&episodes.every(episode=>{
    const observed=(row.complicationObservations||[]).find(x=>x.id===episode.id);
+   const definition=definitions.find(def=>def.id===episode.id);
+   // A definitive operation owned by the accepting surgical receiver is a
+   // verified handoff of the active complication, never a recovered episode.
+   const transferred=(definition?.rescueAllOf||[]).filter(id=>row.receiverOwnedDefinitiveProcedures?.includes(id));
+   if(transferred.length&&closure?.closed&&closure.destination==='quirofano')return !!observed&&
+    Number.isFinite(episode.onsetAt)&&episode.status!=='recovered'&&
+    !row.treatments.some(t=>transferred.includes(t.id))&&
+    row.plan.consults.some(id=>row.consultations.some(c=>c.id===id&&c.accepted===true&&c.status==='done'));
    return definitions.some(def=>def.id===episode.id)&&observed&&episode.status==='recovered'&&
     Number.isFinite(episode.onsetAt)&&episode.rescueAt>=episode.onsetAt&&episode.recoveredAt>episode.onsetAt&&
     episode.rescueEvents?.length>0&&episode.rescueEvents.every(eventId=>row.treatments.some(t=>
@@ -260,6 +268,8 @@ function finalEvidence(row,view,checkpoint,c,plan){
  row.readiness=copy(s.closure);row.eligibleDestinations=copy(s.eligibleDestinations);
  row.pendingTreatments=copy(p.pendingTreatments||[]);row.policyState=copy(p.policyState??null);
  row.patientDigest=hash(p);row.complicationDefinitions=copy(c.clinicalPolicy?.complications||[]);
+ row.receiverOwnedDefinitiveProcedures=(c.clinicalPolicy?.definitiveInterventions||[])
+  .filter(id=>nativeTreatmentDefinition(id,c)?.kind==='procedure');
  row.safetyHistory={allergyQuestionAsked:row.history.some(x=>x.id==='allergies'||x.id==='anamnesis:allergies'),
   medicationQuestionAsked:row.history.some(x=>x.id==='meds'||x.id==='anamnesis:meds'),
   documentedAllergies:copy(p.allergies||[]),severeAllergies:copy(p.severeAllergies||[])};

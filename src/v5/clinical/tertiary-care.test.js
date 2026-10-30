@@ -61,7 +61,7 @@ test('tertiary surgery rejects an unsubstantiated request and accepts corrected 
   await f.send('/consulta cirugia');await f.advance(3.5);assert.equal(f.s.read().patient.consults[0].accepted,false);
   await assess(f);await support(f);await f.send('/consulta cirugia');await f.advance(3.5);
   assert.equal(f.s.read().patient.consults.at(-1).accepted,true);assert.deepEqual(f.s.read().eligibleDestinations,['uti']);
-  assert.match(f.s.read().patient.consults.at(-1).advice,/mantener reanimación/i);
+  assert.match(f.s.read().patient.consults.at(-1).advice,/mantener soporte y vigilancia durante el traslado/i);
  }finally{f.s.dispose();}
 });
 test('real therapy improves perfusion without erasing persistent tertiary infection or initial shock',async()=>{

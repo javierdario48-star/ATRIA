@@ -75,9 +75,14 @@ test('a critical PBE handoff offers ICU after real support, without requiring pr
   assert.equal(ready.patient.orders.find(x=>x.id==='pbe_culture').status,'pending');
   assert.deepEqual(ready.eligibleDestinations,['uti']);assert.equal(ready.closure.ready,true);
   assert.equal((await f.send('/disposicion sala')).clinical[0].status,'rejected');
-  assert.equal((await f.send('/disposicion uti')).clinical[0].status,'executed');
+  assert.equal((await f.send('/disposicion uti')).clinical[0].status,'pending');
+  assert.equal(f.s.read().patient.caseEnded,false);
+  await f.advance(3.5);
   assert.equal(f.s.read().patient.closure.destination,'uti');assert(f.s.read().progress.xp>0);
-  assert.equal(f.s.read().patient.consults.length,0,'the original PBE evaluator does not invent a surgical gate');
+  assert.equal(f.s.read().patient.consults.length,1);
+  assert.equal(f.s.read().patient.consults[0].id,'uti');
+  assert.equal(f.s.read().patient.consults[0].accepted,true);
+  assert(!f.s.read().patient.consults.some(x=>x.id==='cirugia'),'medical handoff must not invent a surgical gate');
  }finally{f.s.dispose();}
 });
 test('a harmful PBE aminoglycoside remains executable and reduces renal reserve before later appropriate support',async()=>{
