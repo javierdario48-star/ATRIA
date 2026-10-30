@@ -5,3 +5,11 @@ export async function clickHudAction(page,id){
  if(!await action.isVisible())await page.locator('#hudMenu > summary').click();
  await action.click();
 }
+
+// Compact screens expose the same music channel in the public Audio dialog.
+export async function musicControl(page){
+ const shortcut=page.locator('#musicToggleButton');
+ if(await shortcut.isVisible())return {action:shortcut,close:async()=>{}};
+ await clickHudAction(page,'audioButton');
+ return {action:page.locator('[data-audio-channel="music"]'),close:()=>page.locator('#modalClose').click()};
+}

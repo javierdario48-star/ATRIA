@@ -1,4 +1,4 @@
-import {clickHudAction} from './hud-actions.mjs';
+import {clickHudAction,musicControl} from './hud-actions.mjs';
 // Real Preview navigation with disposable QA identities. Credentials stay in
 // memory; no cookies, tokens, auth state or request bodies enter the evidence.
 import assert from 'node:assert/strict';
@@ -20,6 +20,7 @@ const api=(p,path,body)=>p.evaluate(async({path,body})=>{
  const r=await fetch('/api/'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  return {status:r.status,body:await r.json()};
 },{path,body});
+async function toggleMusic(p){const control=await musicControl(p);await control.action.click();await control.close();}
 async function boot(mobile=false){
  const context=await browser.newContext(mobile?devices['Pixel 5']:{viewport:{width:1280,height:900}});contexts.push(context);
  const p=await context.newPage();pages.push(p);p.setDefaultTimeout(45000);
@@ -51,12 +52,13 @@ async function entered(p,mode){
  const value=await p.evaluate(()=>({patient:atriaV5.snapshot().clinical.patient,
   patients:atriaV5.snapshot().patients,frameErrors:atriaV5.diagnostics().frameErrors}));
  assert(value.patients.some(x=>x.uid===value.patient.uid),'the admitted patient is present in the rendered world');
- assert.equal(value.patient.caseId,'CIRR-001');assert(await p.locator('#musicToggleButton').isVisible());
+ assert.equal(value.patient.caseId,'CIRR-001');
+ const music=await musicControl(p);assert(await music.action.isVisible());await music.close();
  await p.waitForFunction(()=>atriaV5.diagnostics().audio.music.track==='classic');
- await p.locator('#musicToggleButton').click();
+ await toggleMusic(p);
  await p.waitForFunction(()=>atriaV5.diagnostics().audio.music.level===0);
  assert.equal(await p.evaluate(()=>atriaV5.diagnostics().audio.channels.monitor),true);
- await p.locator('#musicToggleButton').click();
+ await toggleMusic(p);
  await clickHudAction(p,'audioButton');await p.locator('[data-audio-screen="guard"]').selectOption('new');
  await p.locator('#modalClose').click();await p.waitForFunction(()=>atriaV5.diagnostics().audio.music.mix.new===1);
  await clickHudAction(p,'audioButton');await p.locator('[data-audio-screen="guard"]').selectOption('classic');await p.locator('#modalClose').click();

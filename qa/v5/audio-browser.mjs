@@ -1,4 +1,4 @@
-import {clickHudAction} from './hud-actions.mjs';
+import {clickHudAction,musicControl} from './hud-actions.mjs';
 // Audio acceptance only: no clinical commands, accelerated cases or physiology writes.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -51,6 +51,11 @@ async function choose(p,mode){
 }
 async function start(p,mode){await choose(p,mode);await p.locator('[data-action="start-guard"]').click();await p.waitForFunction(()=>atriaV5.snapshot().phase==='guard');}
 async function visibleControl(p){
+ if(!await p.locator('#musicToggleButton').isVisible()){
+  const control=await musicControl(p);
+  assert(await control.action.isVisible(),'compact Audio menu exposes the music channel');
+  await control.close();return;
+ }
  assert(await p.locator('#musicToggleButton').isVisible());
  const layout=await p.evaluate(()=>{
   const a=document.getElementById('musicToggleButton').getBoundingClientRect();
@@ -60,6 +65,12 @@ async function visibleControl(p){
   return {overlaps,fits:a.left>=0&&a.top>=0&&a.right<=innerWidth&&a.bottom<=innerHeight};
  });
  assert.equal(layout.fits,true);assert.deepEqual(layout.overlaps,[]);
+}
+async function toggleMusic(p,{double=false}={}){
+ const control=await musicControl(p),before=(await audio(p)).counters.effects;
+ if(double)await control.action.dblclick();else await control.action.click();
+ const effects=(await audio(p)).counters.effects-before;
+ await control.close();return effects;
 }
 async function offlineGraph(p){
  return p.evaluate(async()=>{
@@ -110,13 +121,13 @@ try{
    await p.locator('[data-avatar-sex="female"]').click();await lobby(p);await visibleControl(p);
    assert.equal((await audio(p)).music.starts,first,'title/avatar/lobby share the same source');
    await p.waitForTimeout(120);
-   const beforeTap=(await audio(p)).counters.effects;await p.locator('#musicToggleButton').dblclick();
-   assert.equal((await audio(p)).counters.effects-beforeTap,1,'rapid double-click produces exactly one sample');
-   await p.locator('#musicToggleButton').click();
+   const tapEffects=await toggleMusic(p,{double:true});
+   assert.equal(tapEffects,1,'rapid double-click produces exactly one sample');
+   await toggleMusic(p);
    await p.waitForFunction(()=>{const m=atriaV5.diagnostics().audio.music;return m.level===0&&m.sourceCount===0;});
    const muted=await audio(p);assert.equal(muted.channels.monitor,true);assert.equal(muted.channels.speech,true);
    assert.equal(muted.music.sourceCount,0);const offset=muted.music.position;
-   await p.locator('#musicToggleButton').click();await p.waitForFunction(()=>atriaV5.diagnostics().audio.music.sourceCount===1);
+   await toggleMusic(p);await p.waitForFunction(()=>atriaV5.diagnostics().audio.music.sourceCount===1);
    const starts=await p.evaluate(()=>qaAudio.starts.filter(s=>s.loop));assert(Math.abs(starts.at(-1).offset-offset)<.02);
    await settings(p);
    for(const [id,value] of [['audioMusicVolume','47'],['audioEffectsVolume','61']])
@@ -149,10 +160,10 @@ try{
     assert(Math.abs(loop.repeated-loop.expected)<.00001);assert(loop.seamDelta<.00001);assert.equal(loop.outputAfterLoop,true);
     results.push({realWebAudioCrossfade:real,realOriginalLoop:loop});
    }
-   await p.locator('#musicToggleButton').click();await p.reload();await p.waitForFunction(()=>document.body.dataset.boot==='ready');
+   await toggleMusic(p);await p.reload();await p.waitForFunction(()=>document.body.dataset.boot==='ready');
    const saved=await audio(p);assert.equal(saved.channels.music,false);assert.equal(saved.musicVolume,.47);assert.equal(saved.effectsVolume,.61);
    assert.equal(saved.guardTrack,'new');assert.equal(saved.lobbyTrack,'new');assert.equal(saved.music.sourceCount,0);
-   await p.locator('#musicToggleButton').click();await p.waitForFunction(()=>atriaV5.diagnostics().audio.contextState==='running');
+   await toggleMusic(p);await p.waitForFunction(()=>atriaV5.diagnostics().audio.contextState==='running');
    await p.evaluate(()=>atriaV5.destroy());const disposed=await audio(p);assert.equal(disposed.music.sourceCount,0);assert.equal(disposed.activeNodes,0);
    assert.equal(disposed.contextState,'uninitialized');results.push({viewport:name,autoplay:true,solo:true,apprentice:true,persistence:true,cleanup:true});
   }finally{await context.close();}
@@ -169,7 +180,7 @@ try{
    for(const p of [host,guest]){
     await p.waitForFunction(mode=>atriaV5.snapshot().phase==='guard'&&atriaV5.snapshot().mode===mode&&atriaV5.diagnostics().cooperative.durable,mode);
     await p.waitForFunction(()=>atriaV5.diagnostics().audio.music.track==='classic');await visibleControl(p);
-    await p.locator('#musicToggleButton').click();assert.equal((await audio(p)).channels.monitor,true);
+    await toggleMusic(p);assert.equal((await audio(p)).channels.monitor,true);
    }
    results.push({mode,desktopAndMobile:true,durable:true,musicAndClinicalChannelsIndependent:true});
   }finally{for(const c of contexts)await c.close();}
