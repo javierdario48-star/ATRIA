@@ -75,7 +75,13 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    if(reply?.status==='rejected'||reply?.routeError)pendingDisposition=null;
    return;
   }
-  pendingDisposition=null;await post('/cierre-parcial '+id);
+  pendingDisposition=null;
+  const reply=await post('/cierre-parcial '+id);
+  if(reply?.status==='rejected'||reply?.routeError){
+   notify(reply?.reason==='nursing-work-in-progress'?
+    'Todavía hay órdenes de enfermería en curso. Esperá la confirmación antes de derivar.':
+    'No se pudo confirmar el destino. Revisá la respuesta clínica antes de volver a intentarlo.');
+  }
  }
  function finishPendingDisposition(s){
   const pending=pendingDisposition;
