@@ -25,8 +25,8 @@
   <small id="guardTimeProgress">00:00 / 24:00</small>
  </aside>
  <header id="hud" hidden>
-  <div class="brand"><span id="hudMusicSlot"></span><div><b>ATRIA</b><small id="status">5.0 · Experimental</small><small id="playerProgress">Nivel 1 · 0/200 XP</small></div></div>
-  <div class="hud-actions"><button id="guardButton" class="primary">Hacer guardia</button><button id="receptionButton" type="button" aria-label="Recepción" title="Recepción · triaje y nuevos ingresos" hidden>Recepción</button><button id="peopleButton">Personas</button><button id="profileButton">Perfil</button><button id="audioButton" type="button" aria-label="Audio del hospital" title="Música y sonidos">♫</button><button id="notificationsButton" type="button" aria-label="Notificaciones" title="Notificaciones">🔔 <span id="notificationsCount" hidden>0</span></button></div>
+  <div class="brand"><span id="hudMusicSlot"></span><div><b>ATRIA</b><small id="status">5.0 · Experimental</small><small id="playerProgress">Nivel 1 · 0/200 XP</small><progress id="hudXpBar" max="200" value="0" aria-label="Progreso al siguiente nivel"></progress></div></div>
+  <div class="hud-actions"><button id="guardButton" class="primary">Hacer guardia</button><button id="receptionButton" type="button" aria-label="Recepción" title="Recepción · triaje y nuevos ingresos" hidden>Recepción</button><div id="hudClockSlot"></div><button id="notificationsButton" type="button" aria-label="Notificaciones" title="Notificaciones">🔔 <span id="notificationsCount" hidden>0</span></button><details id="hudMenu"><summary aria-label="Menú de ATRIA" title="Más opciones">☰</summary><div class="hud-menu-items"><button id="peopleButton">Personas</button><button id="profileButton">Perfil</button><button id="audioButton" type="button" aria-label="Audio del hospital" title="Música y sonidos">Audio</button></div></details></div>
  </header>
  <aside id="receptionGuide" class="reception-guide" role="status" aria-live="polite" hidden>
   <span aria-hidden="true" class="reception-guide-arrow">↑</span>
