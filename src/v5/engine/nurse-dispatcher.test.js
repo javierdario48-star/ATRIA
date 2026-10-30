@@ -92,6 +92,25 @@ test('C08a closed door prevents misleading arrival even if a task was queued',()
  assert.equal(d.snapshot()[0].stage,'at-bed');
 });
 
+test('an unreachable nursing journey expires visibly, releases the nurse and can be retried after checkpoint recovery',()=>{
+ const map=openMap(5,3);
+ for(let c=0;c<5;c++){map.state_matrix[0][c]=1;map.state_matrix[2][c]=1;}
+ map.state_matrix[1][2]=2;map.doors=[{id:'ward',tiles:[[2,1]],initial_open:false}];map.door_state={ward:false};
+ const nav=createNavigation(map),n=actor(nav,'N',1,1),patients=[{uid:'P',approach:[3,1]}];
+ let d=createNurseDispatcher({navigation:nav,nurses:[n],patients});
+ d.enqueue({eventId:'blocked',patientUid:'P',kind:'iv'});d.advance(45);
+ const checkpoint=d.checkpoint();
+ d=createNurseDispatcher({navigation:nav,nurses:[n],patients,checkpoint});d.advance(46);
+ const errors=d.takeArrivals();
+ assert.equal(errors.length,1);assert.equal(errors[0].status,'error-recoverable');
+ assert.equal(errors[0].reason,'nursing-arrival-timeout');
+ assert.equal(d.snapshot()[0].stage,'rejected');assert.equal(n.journeyId,undefined);
+ nav.setDoor('ward',true);
+ assert.equal(d.enqueue({eventId:'retry',patientUid:'P',kind:'iv'}).status,'travelling');
+ assert.equal(arrive(d)[0].eventId,'retry');
+ assert.equal(d.snapshot()[1].stage,'at-bed');
+});
+
 test('C08a compound order never floods one patient with multiple nurse sprites',()=>{
  const nav=createNavigation(openMap());
  const nurses=[actor(nav,'N1',1,1),actor(nav,'N2',1,2)];

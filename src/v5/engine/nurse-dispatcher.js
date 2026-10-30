@@ -8,6 +8,7 @@
  */
 const id=value=>typeof value==='string'&&value.length>0&&value.length<=160;
 const copy=value=>structuredClone(value);
+const TRAVEL_TIMEOUT_SECONDS=90;
 
 export function createNurseDispatcher({navigation,nurses,patients,checkpoint=null}={}){
  if(!navigation||!Array.isArray(nurses)||!Array.isArray(patients))throw Error('nursing spatial context required');
@@ -60,6 +61,13 @@ export function createNurseDispatcher({navigation,nurses,patients,checkpoint=nul
   advance(dt){
    if(disposed)return;
    if(!Number.isFinite(dt)||dt<0)throw Error('invalid nursing step');
+   for(const task of tasks.values())if(['queued','travelling'].includes(task.stage)){
+    task.waitedSeconds=(task.waitedSeconds||0)+dt;
+    if(task.waitedSeconds<TRAVEL_TIMEOUT_SECONDS)continue;
+    task.stage='rejected';release(task);
+    arrivals.push({eventId:task.eventId,patientUid:task.patientUid,kind:task.kind,
+     status:'error-recoverable',reason:'nursing-arrival-timeout'});
+   }
    for(const nurse of nurses){
     if(!nurse.journeyId)continue;
     const task=tasks.get(nurse.journeyId);
