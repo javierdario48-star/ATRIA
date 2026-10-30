@@ -33,7 +33,9 @@ test('declared specialty consultations use one delayed queue and require actual 
  assert.deepEqual(f.p.treatments,[]);assert.deepEqual(f.p.administrationLog,[]);
  assert(!f.p.procedures.coronary_reperfusion,'consultation is not reperfusion');
  assert.equal(f.send('cardiologia','reuse').receipt.reused,true);
- assert.equal(f.send('neurosurgery','not-declared'),null);
+ assert.equal(f.send('neurosurgery','not-declared').status,'pending');
+ assert.equal(f.finish()[0].receipt.accepted,false);
+ assert.equal(f.p.consults.at(-1).reviewStatus,'no-indication','an implemented but inappropriate service must give a clinical refusal');
  f.q.dispose();
 });
 

@@ -41,6 +41,8 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
  const pending=new Set(structuredClone(checkpoint?.pending??[]));
  const declared=c.clinicalPolicy?.closure?.consult;
  const declaredServices=new Set(Object.values(declared||{}).flat());
+ const resolveService=id=>id==='cirugia'&&!declaredServices.has(id)?
+  ['cardiovascular','neurosurgery'].find(service=>declaredServices.has(service))||id:id;
  function declaredReview(id){
   const evidence=surgicalReviewSnapshot(p,c,cases);
   const performed=new Set(physicianExaminationsPerformed(p));
@@ -62,7 +64,9 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
  }
  const destinationFor=id=>declared?Object.entries(declared).find(([,services])=>services.includes(id))?.[0]:
   id==='uti'?'uti':id==='gastro'?'procedimiento':'quirofano';
- const reviewFor=id=>declared&&declaredServices.has(id)?declaredReview(id):id==='uti'?
+ const reviewFor=id=>declared&&!declaredServices.has(id)?{accepted:false,status:'no-indication',
+  reason:(serviceLabels[id]||id)+': con los hallazgos actuales no hay indicación de recepción por este servicio. Continuar el manejo y reevaluar el destino.'}:
+  declared?declaredReview(id):id==='uti'?
   criticalCareReview487(p.liveVitals,{recentShock:Number(String(c.vitals.bp).split('/')[0])<90}):
   id==='gastro'?gastroReview():specialSurgicalReview()||csSurgicalReview487(surgicalReviewSnapshot(p,c,cases),c);
  function gastroReview(){
@@ -106,11 +110,11 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
      c.id==='PANC-001'?['uti']:[]);
    if(destination&&(!permitted.includes(destination)||typeof acceptTransfer!=='function'))return null;
    const service=destination?(declared?declared[destination]?.[0]:destination==='quirofano'?'cirugia':destination==='uti'?'uti':destination==='procedimiento'?'gastro':null):null;
-   if(!service&&(![...(declared?declaredServices:['cirugia','uti','gastro'])].includes(intent.id)||
+   if(!service&&(!CLINICAL_CONSULT_SERVICES.includes(intent.id)||
       !['consult.request','procedure.request'].includes(intent.kind)))return null;
    if(destination&&p.pendingTreatments.length)
     return {status:'rejected',patientUid:p.uid,eventId:cmd.eventId,reason:'pending-clinical-treatment'};
-   const id=service||intent.id;
+   const id=resolveService(service||intent.id);
    const prior=p.consults.find(x=>x.id===id&&x.status==='done'&&x.accepted);
    if(prior)return destination?acceptTransfer(cmd,prior):receipt(cmd,prior,true);
    // Check the clinical basis when the transfer is REQUESTED, not 3.5s

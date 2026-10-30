@@ -17,7 +17,7 @@ import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} fro
  */
 export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[],therapies=[],onMonitorOpen=()=>{}}){
  const ui=id=>document.getElementById(id);
- let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,examFeedback=null,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='',pendingDisposition=null;
+ let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,examFeedback=null,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='';
  const ecgSweep=createEcgSweep();
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
  const post=text=>send(text,{patientUid});
@@ -66,36 +66,16 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    s.patient.caseEnded||s.patient.patientDied)return;
   if(!['observacion','sala','alta','quirofano','uti','procedimiento'].includes(id))return;
   patientUid=patient.uid;
-  const service=id==='quirofano'?'cirugia':id==='uti'?'uti':null;
-  if(service&&!s.patient.consults?.some(c=>c.id===service&&c.status==='done'&&c.accepted)){
-   pendingDisposition={patientUid:patient.uid,destination:id,service,
-    priorConsults:(s.patient.consults||[]).filter(c=>c.id===service).length};
-   notify('Enfermera: aviso a '+(service==='cirugia'?'Cirugía':'UTI')+'. Aguardamos su respuesta.');
-   const reply=await post('Enfermera, interconsulta a '+service);
-   if(reply?.status==='rejected'||reply?.routeError)pendingDisposition=null;
-   return;
-  }
-  pendingDisposition=null;
-  const reply=await post('/cierre-parcial '+id);
-  if(reply?.status==='rejected'||reply?.routeError){
-   notify(reply?.reason==='nursing-work-in-progress'?
-    'Todavía hay órdenes de enfermería en curso. Esperá la confirmación antes de derivar.':
-    'No se pudo confirmar el destino. Revisá la respuesta clínica antes de volver a intentarlo.');
-  }
- }
- function finishPendingDisposition(s){
-  const pending=pendingDisposition;
-  if(!pending||s.patient.uid!==pending.patientUid||s.patient.caseEnded||s.patient.patientDied){
-   pendingDisposition=null;return;
-  }
-  const consultations=(s.patient.consults||[]).filter(c=>c.id===pending.service);
-  const last=consultations.at(-1);
-  if(last?.status==='done'&&last.accepted){
-   pendingDisposition=null;
-   Promise.resolve().then(()=>post('/cierre-parcial '+pending.destination));
-  }else if(consultations.length>pending.priorConsults&&last?.status==='rejected'){
-   pendingDisposition=null;
-   notify('El servicio no aceptó el traslado. Revisá el diagnóstico y los estudios.');
+  notify('Solicitud de destino recibida. Aguardando evaluación del equipo clínico.');
+  try{
+   // One authoritative command owns consultation, acceptance and closure.
+   // Reconnection or closing this panel cannot interrupt a browser-side chain.
+   const reply=await post('/disposicion '+id);
+   const refusal=reply?.clinical?.find(row=>['rejected','unconfirmed'].includes(row.status));
+   if(refusal||reply?.status==='rejected'||reply?.routeError)
+    notify(refusal?.receipt?.message||'No se pudo confirmar el destino. Revisá la respuesta clínica y reintentá.');
+  }catch{
+   notify('Error de comunicación: no se confirmó el destino. Conservá la atención y comprobá el estado antes de reintentar.');
   }
  }
  function showMonitor(patient){
@@ -244,7 +224,6 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  }
  function render(){
   const s=state();if(!s){if(patientUid){close();patientUid=null;}return;}const p=s.patient;
-  finishPendingDisposition(s);
   if(document.getElementById('modal')?.dataset.panel==='case-close'){
    const content=ui('modalContent'),markup=closureDecisionHTML(s);
    if(content&&lastClosureMarkup!==markup){
@@ -378,5 +357,5 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   render();return true;
  }
  return Object.freeze({showPatient,showClosure,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
-  reset(){patientUid=null;pendingDisposition=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
+  reset(){patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }
