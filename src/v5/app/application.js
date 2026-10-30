@@ -681,7 +681,9 @@ export async function createApplication({document,window,content,signal}){
   const elapsed=clinical?.shift?.elapsedSeconds??localAdmissions?.elapsed()??
    localShift.totalMinutes(clinical?.clock?.gameMinute||0);
   const clock=formatGuardTime(elapsed),minute=Math.floor(elapsed),total=8*60+15+minute;
+  const clockSlot=ui('hudClockSlot');
   const timeBadge=ui('guardTime');
+  if(clockSlot&&timeBadge&&timeBadge.parentElement!==clockSlot)clockSlot.append(timeBadge);
   if(timeBadge){
    timeBadge.hidden=!guard;
    if(guard){
@@ -705,7 +707,9 @@ export async function createApplication({document,window,content,signal}){
    focusedPatientUid,selecting:!!receptionAssignment.status()||!!directSelection.status()
   });
   ui('peopleButton').textContent=guard?'Historia':'Personas';
-  const stats=career();ui('playerProgress').textContent='Nivel '+stats.level+' · '+(stats.xp%200)+'/200 XP';world.setLevel(account.read()?stats.level:1);
+  const stats=career();ui('playerProgress').textContent='Nivel '+stats.level+' · '+(stats.xp%200)+'/200 XP';
+  const xpBar=ui('hudXpBar');if(xpBar)xpBar.value=stats.xp%200;
+  world.setLevel(account.read()?stats.level:1);
   ui('recipientButton').textContent=guard?({nurse:'Enfermera',vega:'Dr. Vega'}[focusedNpc]||'Paciente cercano'):'Lobby · público';
   if(nurseQuick)nurseQuick.hidden=!guard;
   input.placeholder=guard?'Hablar en la guardia…':'Hablar en el lobby…';
