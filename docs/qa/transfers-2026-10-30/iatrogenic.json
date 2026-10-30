@@ -1,0 +1,1109 @@
+[
+  {
+    "caseId": "ACAL-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "1861c9ff96966594e9bbe1a147adc4e82b12dbc5c4fa4a87e8c8f21136aec1f5"
+  },
+  {
+    "caseId": "APP-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": false,
+    "outcome": "native-death",
+    "xp": 0,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": false,
+      "xp": false,
+      "physiologyChanged": true
+    },
+    "evolution": "native-change",
+    "evidenceSHA256": "46bba52b8b125e958e993d074ed027bca0fe0b4199168cc58594ce4cd3dd04ec"
+  },
+  {
+    "caseId": "CARD-01",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "683c10f3bb567e076040fd28644160fb25110c089672ec0876f8742ca7360bb3"
+  },
+  {
+    "caseId": "CARD-02",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 131,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "55b95ae9a8127844442658e330f5f47861d65bfa5d69bf63b0589c57311d28a2"
+  },
+  {
+    "caseId": "CARD-03",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 109,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "eff6cb1904c3ff099876484153de10e91f91d55e6190a5418f649c775a23aa73"
+  },
+  {
+    "caseId": "CARD-04",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "5cf4031249bdb42c1b98b5c4cc60f0c8955adc2fb605ebfa71e8983c4731e22a"
+  },
+  {
+    "caseId": "CARD-05",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 100,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "632fa52df705cf75b0ffe5e07ce02d97fc797ee7b9a1710dd30138a9d8c2ccca"
+  },
+  {
+    "caseId": "CARD-06",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "95b1635ba8a1c1f7631e108f128b053755db6ace78d25e9876478f3ea7997462"
+  },
+  {
+    "caseId": "CARD-07",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": false,
+    "outcome": "native-death",
+    "xp": 0,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": false,
+      "xp": false,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "998e870472f51d743f49a770add13a8f7cca567d5740928a34c043a18cb718a8"
+  },
+  {
+    "caseId": "CARD-08",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 120,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "9efa3deb2576a39325fdef93b33caacb8d205fb1a6ef5ec368592a17c820259a"
+  },
+  {
+    "caseId": "CARD-09",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 85,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "9d6a94b832d239bebba0f4ae93fa2791b2a43f9c1c07233ac3ef93c1ce9dff91"
+  },
+  {
+    "caseId": "CARD-10",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "a36cc649be94b182d1676ad8070a62c60620ecbb33991a69b71b7afa2b75f0c7"
+  },
+  {
+    "caseId": "CDI-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": false,
+    "outcome": "native-death",
+    "xp": 0,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": false,
+      "xp": false,
+      "physiologyChanged": true
+    },
+    "evolution": "native-change",
+    "evidenceSHA256": "8866627c3576a4acdb7b0d458d5209fdb2c3ae5860b62a0f068e1be447f36d57"
+  },
+  {
+    "caseId": "CELIAC-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "f7eaa59c97dd019b7aaa65f304d5f238b61ef67bfc7aeffb809e3cc87f2969c0"
+  },
+  {
+    "caseId": "CHOLANG-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 121,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "17b119ec40f31d2ad968a040c670bee4b03c83ea82851a231794838321a2ba99"
+  },
+  {
+    "caseId": "CHOLE-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 102,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "64c2936520474c135e2d2696272fa47266647d9652e2c9d82828a95685840493"
+  },
+  {
+    "caseId": "CIRR-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 125,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "2cac33027c55040089768393d9156f930c85d8772f9c7948992911e9759998f9"
+  },
+  {
+    "caseId": "COLON-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 92,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "b31f65be80cf9e9188e0b90ada2b217b652ae963ddbbdd986ce4cfab88480588"
+  },
+  {
+    "caseId": "CROHN-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": false,
+    "outcome": "native-death",
+    "xp": 0,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": false,
+      "xp": false,
+      "physiologyChanged": true
+    },
+    "evolution": "native-change",
+    "evidenceSHA256": "5df7b5d74a4e5b9e896aa77d7119eb5aa32a881c15fc2c415afc824bc9ebdb07"
+  },
+  {
+    "caseId": "DIARR-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": false,
+    "outcome": "native-death",
+    "xp": 0,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": false,
+      "xp": false,
+      "physiologyChanged": true
+    },
+    "evolution": "native-change",
+    "evidenceSHA256": "c006c308944946afd3c2bb47db9913dffab750cac19b48ca1049031619b4e1a6"
+  },
+  {
+    "caseId": "DIVERT-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "f89e335a1c3c4d94b1613811f2fc4e35176e9693f5cc0206add560e941c26ac0"
+  },
+  {
+    "caseId": "ENCEF-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": false,
+    "outcome": "native-death",
+    "xp": 0,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": false,
+      "xp": false,
+      "physiologyChanged": true
+    },
+    "evolution": "native-change",
+    "evidenceSHA256": "31395971fd55615978a658471277a3d76de49c8ccca4df1db63c1a36b129dfe0"
+  },
+  {
+    "caseId": "FECAL-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": false,
+    "outcome": "native-death",
+    "xp": 0,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": false,
+      "xp": false,
+      "physiologyChanged": true
+    },
+    "evolution": "native-change",
+    "evidenceSHA256": "2a9be2062071bcc65c216a692b78362dfb2598d16ffb289a020f11130c272fbd"
+  },
+  {
+    "caseId": "HDA-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 97,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "c23abbb69b684b9c13c75998060867155b7fce40639fcc750f41bd6456135d70"
+  },
+  {
+    "caseId": "HEPAT-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": false,
+    "outcome": "native-death",
+    "xp": 0,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": false,
+      "xp": false,
+      "physiologyChanged": true
+    },
+    "evolution": "native-change",
+    "evidenceSHA256": "8c22fd5375fc1ec260d1a4c1046c3bb173226694b1290992801dd1f9da87a610"
+  },
+  {
+    "caseId": "ILEO-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 121,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "cc20fb677688e45b822a0d99abd36417331df8d743f92efcf03c661bcb8c28f0"
+  },
+  {
+    "caseId": "LGIB-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 120,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "f893d1625e8268070398f20a25ff3606063ae897433bed9bab381cced2e6cbc3"
+  },
+  {
+    "caseId": "MESI-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 97,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "3c97201afb35be40419f22795f223c763e9f552c9551a49664b9a50a86a914ca"
+  },
+  {
+    "caseId": "NEUR-01",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 100,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "6c9f7c18ca8ff1ffefc9d65c4cc93dc75b91d8a94dbe915d267074278058436b"
+  },
+  {
+    "caseId": "NEUR-02",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "6a6bde6907da6a179da0ac663353c8833cae280fe3a6de7cc98e57f8e35ffa19"
+  },
+  {
+    "caseId": "NEUR-03",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "7e12d43e7a2f5a221c1876dcb529c15712eb77458a4f083b9de35c61f8a882a1"
+  },
+  {
+    "caseId": "NEUR-04",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 128,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "5db78fa30f66de1ef3494c6641f03ed79d96ac19cc6a9c1bd6fd40d65eaa54cc"
+  },
+  {
+    "caseId": "NEUR-05",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 106,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "f31f1d9d5fa6d5a8e6cf74cb72db7f76fefcac83c0b72862a6de36dc4ece3b57"
+  },
+  {
+    "caseId": "NEUR-06",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 120,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "8b2b612feaaa86ee5d75d1d02fca153f75f5f4daa6aafc0ba2340ac15b9afbce"
+  },
+  {
+    "caseId": "NEUR-07",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 91,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "4a116fb0051872c07df8d96d488da8bdc5864904a2bb58772263b524ff5e8109"
+  },
+  {
+    "caseId": "NEUR-08",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 102,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "d7b1e3bf78f09ade4e12504512ff723c3cfc15345cca98c4c36680088cb15448"
+  },
+  {
+    "caseId": "NEUR-09",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "6d7555ed843df56bb2a09e94a65299b73bf944e2153e1b396e8a91f20febc469"
+  },
+  {
+    "caseId": "NEUR-10",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "cbf5c65f941bc720de3d61028b0d90f92dcd02ed35a3160db3bf9dbbd6b842af"
+  },
+  {
+    "caseId": "PANC-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 104,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "2e68120bac85fa82d8120d8a41367e06284262282672ef01a65708359f59363c"
+  },
+  {
+    "caseId": "PERI-PBE-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "10ac7151ac1bd00456f4b5e6715c5a14d57e677afd41b880e48221727f155df9"
+  },
+  {
+    "caseId": "PERI-SEC-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 122,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "126fc082522d06cada1e901d0c71fb135cb2815043cfeaab1875e2e76eb9b1e2"
+  },
+  {
+    "caseId": "PERI-TER-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 99,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "3c4ee4a1b336c8b468d2b62defb43bdb9b25ab4508c871f99ab9f43c5c11de10"
+  },
+  {
+    "caseId": "PUD-001",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "258baa8563fb06be251eeffe5ef15e400d5824242fccec46f9c5ef4acdff0c74"
+  },
+  {
+    "caseId": "RESP-01",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "fecba12f5ad3965cbcc694527303c4e01992f03ee9d067d99c0cc4f7fd251ba5"
+  },
+  {
+    "caseId": "RESP-02",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 124,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "072b12532154bccc0596e246ae58470574a7f80fc943047cd69840f0c12f7784"
+  },
+  {
+    "caseId": "RESP-03",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "59a7618d925b22dff2e66436d51047109f65ed01025ae6098ac668727cd7e880"
+  },
+  {
+    "caseId": "RESP-04",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "ff0bf3d01730403de9eafbc19a0a7deae5d676c6b92928d31193efab25c67cc4"
+  },
+  {
+    "caseId": "RESP-05",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "787f7ecbc1a5b43054367cd81fe5dbb320390e3d1fd91960967445286de9b169"
+  },
+  {
+    "caseId": "RESP-06",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 112,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "2da3815b40811b6791a86e0551b37927fcf691cf11f522234844124a62b70c50"
+  },
+  {
+    "caseId": "RESP-07",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "434aa367b9e3acb0980f995c346854bf520c483b0818e691c9486fb2cb3e3651"
+  },
+  {
+    "caseId": "RESP-08",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "c4004f745f17920b7eb18eaccec1df2ab8923fe81e13beb17c4129afbb8ff60d"
+  },
+  {
+    "caseId": "RESP-09",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 105,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "2d65ad259d3c1caf4b303a265f126d25a57e8631f5809c25c7fa4b9a83caf284"
+  },
+  {
+    "caseId": "RESP-10",
+    "profile": "iatrogenic",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "5a3bfbf8e312fdd1d743da811d665512984f4d94248ca59a55d562f30a59e35d"
+  },
+  {
+    "caseId": "UC-AS-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": false,
+    "outcome": "native-death",
+    "xp": 0,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": false,
+      "xp": false,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "99b1b511ec6bf2c07fa899d7ecf27c5ec4c1e377de77f83223069e7640433a76"
+  },
+  {
+    "caseId": "VARIX-001",
+    "profile": "iatrogenic",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 106,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "83ba0b6383e3e838baa535a518a8a00cb3be6e6c5235e58927923af329388bbd"
+  }
+]

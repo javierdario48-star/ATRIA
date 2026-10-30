@@ -1,0 +1,1103 @@
+[
+  {
+    "caseId": "ACAL-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "659547f4c6174fb8e205e3a4432f5a434900529d1e1824ba1ffda1dcc9b69158"
+  },
+  {
+    "caseId": "APP-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "fcb92c1d1b95e1be5f75a6dac51dec90610574e22a25a65a7786b67649f1dad3"
+  },
+  {
+    "caseId": "CARD-01",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "2881dd597f00228615a57cfaecff66efbb3af716494d2b1b465190806dd3ef61"
+  },
+  {
+    "caseId": "CARD-02",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 131,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "fdc20fcda1fea3178b728253348b66f51ca4064fb026585ff6d056e8fccd9a39"
+  },
+  {
+    "caseId": "CARD-03",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 98,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "6474e7fdc762295c03491a24d1e33a37cbd7beabc8cb71ca1119d0a27e67859c"
+  },
+  {
+    "caseId": "CARD-04",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "d9f6e3792d89c92edfc46b8c1bcdb189bdf5251ca01099d266351e3e434dea76"
+  },
+  {
+    "caseId": "CARD-05",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 100,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "727e5a3ef85dd1cf49b4793546edf6301e9db4eacd610d413e4c7e0cceb2abbe"
+  },
+  {
+    "caseId": "CARD-06",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "ff1e88600080dd21ccb7294078e0579900e7ff5601ac3d8a95a376b18ccaeaf8"
+  },
+  {
+    "caseId": "CARD-07",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evolution": "native-change",
+    "evidenceSHA256": "8a9af30e4d1d3d8c07309814dff9164b9ec54197d73de4f345bc18313209ad95"
+  },
+  {
+    "caseId": "CARD-08",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 125,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "1ed454a8c2761f1a887b1beb8afa8cb5501aa50269099f3e05111d9f751d1742"
+  },
+  {
+    "caseId": "CARD-09",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 85,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "fb1978d6d35727e29063e345c3269a69efd29f88755752b26bda4abc6b6722b2"
+  },
+  {
+    "caseId": "CARD-10",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "cb5e971963399f2141adeafa6de706a08dd1a3e73e43bd6ffc3994fa7d5bd401"
+  },
+  {
+    "caseId": "CDI-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 125,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "f910868081f7122eb0a2e38c38481c312f8f73156ae72b041f73e1d6891c9aa6"
+  },
+  {
+    "caseId": "CELIAC-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "1bdfc22629f41ccd8d667de2a5e23d3304ec174771cbe946e671351718e50f97"
+  },
+  {
+    "caseId": "CHOLANG-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 121,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "b7a10ecc5b3e68ffc3c54ee98f81adc868032030c266168c69a9e0ae2819eaff"
+  },
+  {
+    "caseId": "CHOLE-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 102,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "3005f9519f53805567f43f0da75ee03789e0028f18177e288f15e61edf1fad40"
+  },
+  {
+    "caseId": "CIRR-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "8a91d42abb97a0cae6effc71c9626489e1632aa37e994eb8b8212964f7535597"
+  },
+  {
+    "caseId": "COLON-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 92,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "86a4132c8fa16d01c57e1eaae5f5a3a93eb481b16dfc0df256da26db5061bdb7"
+  },
+  {
+    "caseId": "CROHN-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 121,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "23d17f5dff2f3e5f85ddd2de15c10c9922578b8a2b745e6e4721a110a6fb6321"
+  },
+  {
+    "caseId": "DIARR-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "4279e236c303b37cfdf3e01696f5515c1a96e128cba635f20b8a9409be0afaa7"
+  },
+  {
+    "caseId": "DIVERT-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "3cb0d0d4ac4401d77c3c1222e301860e4f9012d72fbbef842463c70925aab030"
+  },
+  {
+    "caseId": "ENCEF-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "41bc6521a7a9690a37a2282221c8a082bdddb205c2ab55fd6d62ea02c0a07e7c"
+  },
+  {
+    "caseId": "FECAL-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "41a0bcbe91a1a6710ae06773c8664dd3980ff70412ed9529bd0287ca20f2057c"
+  },
+  {
+    "caseId": "HDA-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 106,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "f6cd6a69e4ad99c9883880b29ffaf85f4ef23b3f3b0c19fc063d5afe8d369b34"
+  },
+  {
+    "caseId": "HEPAT-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 104,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "81b55b46ee956135461e3b6e1f387c3b6f43279915c0ca3bd070fc659bc468cc"
+  },
+  {
+    "caseId": "ILEO-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 121,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "80361da2c54abe9bccf475c98abc5ebc8ca1e4d62011ed2379f8ac81a34564d7"
+  },
+  {
+    "caseId": "LGIB-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "df42198371c7c608c2210653e5d91ba09ccde0e6c1ac79b4d86af93dc8f3d006"
+  },
+  {
+    "caseId": "MESI-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 97,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "c7917f0d3d02a045d9bbb9136b569d62b2979252ccc0fc12556bfc596c08db63"
+  },
+  {
+    "caseId": "NEUR-01",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 100,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "8a7565e3f25f8403f42ce4f1e3dcd59fe7c67b5d71f587c1d5e73824c790ac89"
+  },
+  {
+    "caseId": "NEUR-02",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "4b560b0936b417dfd56d508482a24aa081e23c27f5b9d200528fd381073d7536"
+  },
+  {
+    "caseId": "NEUR-03",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "a6dc040c1d95f771ce75bfde3b3b3d4c15ac0d330c5ef8b0ea5e4c1d45d9b1e4"
+  },
+  {
+    "caseId": "NEUR-04",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "3123e9b68eef3ee4d31b1d37a720cea99aa530b29fb1b7e97f6e518fa0f3bac8"
+  },
+  {
+    "caseId": "NEUR-05",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "bec326e558aae989e5ae4cd3560dea02e1386f28982f5a22d5cbcc1f23a2c136"
+  },
+  {
+    "caseId": "NEUR-06",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 120,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "251dfa12d5e57f2c76f4838e75c84658669b7c716b0fbc236b880381f52df55c"
+  },
+  {
+    "caseId": "NEUR-07",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 91,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "5edd1e93ee01c177f6412bc136a78b7ef6cb78a8a058f8410e847526cc7d4172"
+  },
+  {
+    "caseId": "NEUR-08",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 102,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "4733206ca37f34e3a4577ef010d662ebe65cb06e769db2954602abbc1814ec4c"
+  },
+  {
+    "caseId": "NEUR-09",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "01a3a95092d9f3d29c1485f94db3dcccd6e659faf48522df0c1628a35b72ea94"
+  },
+  {
+    "caseId": "NEUR-10",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "e0c48c16f6711e07b7a06f0f3ec21054d58acf930894c43b83f8ec6996c36290"
+  },
+  {
+    "caseId": "PANC-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 104,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "a70ceffdfe8a98d777d4dffd464a3ab69a1584a4ca8b3bb5b2e85803aa4d95e0"
+  },
+  {
+    "caseId": "PERI-PBE-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "11f082399f9a29e4fc1ad7bd084835696342dd0535ae1393ebb0410f1311656b"
+  },
+  {
+    "caseId": "PERI-SEC-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 124,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "fdf547fd78a0e9984d0b226060485662b9ba67962bd348a898f449201567fcc4"
+  },
+  {
+    "caseId": "PERI-TER-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 103,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "583f4c73b951e7025e9fc23571dcef17111c9194169a2745c72b80030c3cac36"
+  },
+  {
+    "caseId": "PUD-001",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "584282d9a1978b0e383d39949678fbb186de5a31f135e53fd47d350406f26b2f"
+  },
+  {
+    "caseId": "RESP-01",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "7008e41f3dcb247e085d09a01c84aa911b909b405f16d391aab6b52119145541"
+  },
+  {
+    "caseId": "RESP-02",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 124,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "07a121dbc81a1baabfd666dca442bab2065dbf4e870ef67330df3864c041bb00"
+  },
+  {
+    "caseId": "RESP-03",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "91b6658f8b3cca6d8963563308b938da51034f44c3f91ca79a0b9faa10866e68"
+  },
+  {
+    "caseId": "RESP-04",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "bdaa44112c059f4b803462967173a69b244d626436bd60d3d26300f661c58693"
+  },
+  {
+    "caseId": "RESP-05",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "47c91098e539878701408b86c89345ace6e97692a36cdfefea9280d0231103c5"
+  },
+  {
+    "caseId": "RESP-06",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 112,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "fed8cd080484a5af72cf7b2d88f1d02e788a6dfd8e8706847128b0ac64a0024b"
+  },
+  {
+    "caseId": "RESP-07",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "d0b0f1a9d1e6ac4d92fb3188955ecc245c089b71d8e24a005ca330865d4ac1ce"
+  },
+  {
+    "caseId": "RESP-08",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "d2c25504eed9d48ce67f3a45b91137e141a1b15326b8e3a194908e8c56266f15"
+  },
+  {
+    "caseId": "RESP-09",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 105,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "4ea53973ca05111e50335e362deafaf773803105535f59b9ba36c5645eef571d"
+  },
+  {
+    "caseId": "RESP-10",
+    "profile": "competent",
+    "mode": "solo",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 133,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "505b1d75d5d159ae4080064df2a09046e02edebc22da44dc65e48abd7fad37cc"
+  },
+  {
+    "caseId": "UC-AS-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": false
+    },
+    "evidenceSHA256": "cd9381a61d72e56d7967eaa76f9ca6a396cd028b7a8e59b9178b8e15e082f0a9"
+  },
+  {
+    "caseId": "VARIX-001",
+    "profile": "competent",
+    "mode": "apprentice",
+    "authority": "createGuardSession",
+    "passed": true,
+    "closed": true,
+    "outcome": "accepted-destination",
+    "xp": 111,
+    "checks": {
+      "noDuplicateXP": true,
+      "monitorRecorded": true,
+      "examination": true,
+      "ordersAnswered": true,
+      "closed": true,
+      "xp": true,
+      "physiologyChanged": true
+    },
+    "evidenceSHA256": "073b9928611724570b055136ada5210780ffaf2997f0b92c29fa1ec0eb863a96"
+  }
+]
