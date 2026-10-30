@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Live preview acceptance. Never persist passwords, cookies, Auth state or HAR.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -41,7 +42,7 @@ try{
  const restored=await login(a,name);assert.equal(restored.activeGuardId,guard);await a.locator('[data-action=account-recover]').click();await a.waitForFunction(()=>atriaV5.snapshot().phase==='guard');assert.equal(await a.evaluate(()=>atriaV5.snapshot().clinical.patient.uid),patient);summary.checks.push('logout revokes old session; reauthentication offers and recovers same real guard/patient');
  // Release only the QA guard after verifying recovery; do not manufacture a clinical outcome.
  assert.equal((await api(a,'account/release-guard',{})).status,200);await a.reload();await a.waitForFunction(()=>document.body.dataset.boot==='ready');await a.locator('#welcomeContinue').click();await lobby(a);
- stage='switch/create';await a.locator('#profileButton').click();await a.locator('[data-action=account-logout]').click();await a.locator('#welcomeNameForm').waitFor({state:'visible'});await login(a,raceName);assert.equal((await api(a,'account/session')).body.account.actorId,wa.actorId);
+ stage='switch/create';await clickHudAction(a,'profileButton');await a.locator('[data-action=account-logout]').click();await a.locator('#welcomeNameForm').waitFor({state:'visible'});await login(a,raceName);assert.equal((await api(a,'account/session')).body.account.actorId,wa.actorId);
  await a.reload();await a.waitForFunction(()=>document.body.dataset.boot==='ready');await a.locator('#welcomeNew').click();await a.locator('#doctorName').fill('Médico Nuevo '+suffix);await a.locator('#welcomeNameForm button').click();await a.locator('#enterButton').click();await a.locator('#newDoctorPassword').fill(password);await a.locator('#welcomePasswordForm button').click();await lobby(a);const bb=(await api(a,'account/session')).body.account;assert.notEqual(bb.actorId,wa.actorId);assert.notEqual(bb.actorId,aa.actorId);assert.equal(bb.xp,0);assert.equal((await api(a,'me')).body.friends.length,0);summary.accounts.push({actorId:bb.actorId,name:bb.name});summary.checks.push('switch account and create new doctor keep XP/friends/guard isolated');
  assert.equal((await api(mobile,'account/session')).body.account.actorId,aa.actorId);assert((await api(mobile,'me')).body.friends.some(x=>x.id===wa.actorId));
  assert.deepEqual(errors,[]);summary.errors=errors;summary.passed=true;

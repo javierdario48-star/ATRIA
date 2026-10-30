@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Real Preview acceptance. Passwords/tokens stay in memory and browser cookies;
 // no HAR, credentials, sessions or secrets are written to evidence artifacts.
 import assert from 'node:assert/strict';
@@ -29,7 +30,7 @@ async function openPage(mobile=false){
 }
 async function credentialForm(page,kind,username){
  const button=kind==='register'?'[data-action="account-register"]':'#accountLoginButton';
- if(kind==='register')await page.locator('#profileButton').click();await page.locator(button).click();
+ if(kind==='register')await clickHudAction(page,'profileButton');await page.locator(button).click();
  await page.locator('#accountUsername').fill(username);await page.locator('#accountPassword').fill(password);
  const response=page.waitForResponse(r=>new URL(r.url()).pathname==='/api/account/'+kind&&r.request().method()==='POST');
  await page.locator('#accountForm button[type="submit"]').click();const result=await response;const data=await result.json();
@@ -58,14 +59,14 @@ try{
  assert.equal((await api(outsider,'clinical',{action:'sync',clientKey:oldKey,roomId:'personal-not-a-room'})).status,401);
  summary.checks.push('claimed device key rejected');
  stage='second device';const second=await credentialForm(outsider,'login',aa.username);assert.equal(second.actorId,aa.actorId);
- await outsider.locator('#profileButton').click();await outsider.locator('#colorChoice').selectOption('pink');await outsider.locator('#sexChoice').selectOption('female');
+ await clickHudAction(outsider,'profileButton');await outsider.locator('#colorChoice').selectOption('pink');await outsider.locator('#sexChoice').selectOption('female');
  await outsider.locator('[data-action="save-profile"]').click();
  await outsider.waitForFunction(()=>!document.getElementById('modal').open);
  const back=await api(a,'account/session');assert.equal(back.body.account.scrubColor,'pink');assert.equal(back.body.account.sex,'female');
  summary.checks.push('second-device account appearance and friends');
  stage='server stats permissions';const tampered=await api(outsider,'account/profile',{name:aa.name,sex:'female',scrubColor:'pink',xp:999999,level:999,casesResolved:999});
  assert.equal(tampered.body.account.xp,0);assert.equal(tampered.body.account.level,1);summary.checks.push('client cannot award XP or levels');
- stage='profile card';await outsider.locator('#profileButton').click();await outsider.locator('[data-action="own-social-profile"]').click();
+ stage='profile card';await clickHudAction(outsider,'profileButton');await outsider.locator('[data-action="own-social-profile"]').click();
  await outsider.locator('.doctor-stats').waitFor();assert((await outsider.locator('.doctor-profile').innerText()).includes('Casos resueltos'));
  await outsider.screenshot({path:'/tmp/atria-account-profile.png'});await outsider.locator('#modalClose').click();summary.checks.push('real profile card');
  stage='personal guard';await outsider.locator('#guardButton').click();await outsider.locator('input[name="guardScope"][value="specific"]').check();await outsider.locator('#caseChoice').selectOption('CIRR-001');

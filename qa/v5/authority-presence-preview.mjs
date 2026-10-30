@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Live Vercel acceptance. Two doctors and a second independent device for the
 // same account. Credentials remain in memory; evidence contains no auth state.
 import assert from 'node:assert/strict';
@@ -102,7 +103,7 @@ try{
  });
  await a.screenshot({path:output+'/avatar-source-restored.png'});
  await check('verified profiles and persistent friend request acceptance',async()=>{
-  await a.locator('#peopleButton').click();
+  await clickHudAction(a,'peopleButton');
   await a.locator('#lobbyContacts [data-action="inspect-player"]').filter({hasText:names[1]}).click();
   await a.locator('.doctor-stats').waitFor();
   assert.match(await a.locator('.doctor-profile').innerText(),/Casos resueltos/);
@@ -110,7 +111,7 @@ try{
   await a.locator('[data-action="add-friend"]').click();await a.locator('#modalClose').click();
   await b.locator('#friendRequestNotice').waitFor({state:'visible'});await b.locator('#friendRequestAccept').click();
   await a.waitForFunction(async name=>(await (await fetch('/api/me')).json()).friends.some(x=>x.name===name),names[1]);
-  await a.locator('#peopleButton').click();
+  await clickHudAction(a,'peopleButton');
   await a.locator('#lobbyContacts [data-action="inspect-player"]').filter({hasText:names[1]}).click();
   await a.locator('[data-action="remove-friend"]').waitFor();await a.locator('#modalClose').click();
  });

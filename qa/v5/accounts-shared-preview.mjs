@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Opt-in acceptance using disposable QA accounts in a private scratch file.
 // The file, passwords, cookies and tokens are never included in evidence.
 import assert from 'node:assert/strict';
@@ -27,12 +28,12 @@ try{
  const [host,guest]=pages;
  await Promise.all(pages.map((p,i)=>p.waitForFunction(id=>atriaV5.snapshot().others.some(x=>x.id===id),accounts[1-i].actorId)));
  stage='profiles';
- await guest.locator('#peopleButton').click();await guest.locator('[data-action="inspect-player"][data-user="'+accounts[0].actorId+'"]').click();
+ await clickHudAction(guest,'peopleButton');await guest.locator('[data-action="inspect-player"][data-user="'+accounts[0].actorId+'"]').click();
  await guest.locator('.doctor-profile').waitFor();assert((await guest.locator('.doctor-profile').innerText()).includes('133 XP'));
  await guest.screenshot({path:'/tmp/atria-profile-portrait.png'});await guest.setViewportSize({width:851,height:393});
  await guest.screenshot({path:'/tmp/atria-profile-landscape.png'});assert(await guest.locator('.doctor-profile').evaluate(el=>el.getBoundingClientRect().width<=innerWidth));
  await guest.locator('#modalClose').click();summary.checks.push('persisted XP and compact profile in portrait/landscape');
- stage='cooperative invite';await host.locator('#peopleButton').click();await host.locator('[data-action="inspect-player"][data-user="'+accounts[1].actorId+'"]').click();
+ stage='cooperative invite';await clickHudAction(host,'peopleButton');await host.locator('[data-action="inspect-player"][data-user="'+accounts[1].actorId+'"]').click();
  await host.locator('#friendCase').selectOption('PUD-001');await host.locator('[data-action="invite-friend"]').click();
  await guest.locator('#coopInviteNotice').waitFor({state:'visible'});await guest.locator('#coopInviteAccept').click();
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().phase==='guard'&&atriaV5.snapshot().mode==='coop'&&atriaV5.diagnostics().cooperative.durable)));

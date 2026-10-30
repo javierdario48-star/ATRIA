@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Real deployed account/cookie/clinical/reward acceptance. No credentials,
 // sessions, HAR or physiological state injection are written to evidence.
 import assert from 'node:assert/strict';
@@ -27,7 +28,7 @@ async function api(p,path,body){return p.evaluate(async({path,body})=>{
 },{path,body});}
 async function credentials(p,kind,username){
  if(kind==='register'){
-  await p.locator('#enterButton').click();await p.locator('#profileButton').click();await p.locator('[data-action="account-register"]').click();
+  await p.locator('#enterButton').click();await clickHudAction(p,'profileButton');await p.locator('[data-action="account-register"]').click();
  }else await p.locator('#accountLoginButton').click();
  await p.locator('#accountUsername').fill(username);await p.locator('#accountPassword').fill(password);
  const response=p.waitForResponse(r=>new URL(r.url()).pathname==='/api/account/'+kind&&r.request().method()==='POST');

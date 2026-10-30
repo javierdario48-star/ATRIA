@@ -1,3 +1,4 @@
+import {clickHudAction} from './hud-actions.mjs';
 // Real Preview navigation with disposable QA identities. Credentials stay in
 // memory; no cookies, tokens, auth state or request bodies enter the evidence.
 import assert from 'node:assert/strict';
@@ -56,9 +57,9 @@ async function entered(p,mode){
  await p.waitForFunction(()=>atriaV5.diagnostics().audio.music.level===0);
  assert.equal(await p.evaluate(()=>atriaV5.diagnostics().audio.channels.monitor),true);
  await p.locator('#musicToggleButton').click();
- await p.locator('#audioButton').click();await p.locator('[data-audio-screen="guard"]').selectOption('new');
+ await clickHudAction(p,'audioButton');await p.locator('[data-audio-screen="guard"]').selectOption('new');
  await p.locator('#modalClose').click();await p.waitForFunction(()=>atriaV5.diagnostics().audio.music.mix.new===1);
- await p.locator('#audioButton').click();await p.locator('[data-audio-screen="guard"]').selectOption('classic');await p.locator('#modalClose').click();
+ await clickHudAction(p,'audioButton');await p.locator('[data-audio-screen="guard"]').selectOption('classic');await p.locator('#modalClose').click();
  return value.patient.uid;
 }
 async function interact(p,uid,mode){
