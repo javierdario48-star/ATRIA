@@ -575,6 +575,42 @@ body[data-phase="guard"] .guard-scoreboard{top:calc(121px + env(safe-area-inset-
  body[data-phase="guard"] .guard-scoreboard{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;margin-left:0}
 }
 
+/* Guard scoreboard sits beside the clock instead of obscuring the playfield.
+   Narrow screens use a stacked metric layout to preserve the clinical rail. */
+body[data-phase="guard"] .guard-scoreboard{
+ top:calc(64px + env(safe-area-inset-top));
+ left:auto;right:calc(190px + max(8px,env(safe-area-inset-right)));
+ transform:none;margin-left:0;
+ background:rgba(7,31,39,.62);backdrop-filter:blur(8px);
+ padding:4px 8px 5px;
+}
+@media(max-width:600px){
+ body[data-phase="guard"] .guard-scoreboard,
+ body[data-phase="guard"]:has(.bedside-checklist:not([hidden])) .guard-scoreboard{
+  top:calc(62px + env(safe-area-inset-top));
+  right:calc(116px + max(8px,env(safe-area-inset-right)));
+  left:auto;transform:none;margin-left:0;
+  width:118px;max-width:118px;padding:4px 6px;
+ }
+ body[data-phase="guard"] .guard-score-metrics{
+  flex-direction:column;align-items:stretch;gap:1px;white-space:normal;font-size:8px;
+ }
+ body[data-phase="guard"] .guard-score-metrics>div{justify-content:space-between;gap:3px}
+ body[data-phase="guard"] .guard-score-metrics i{display:none}
+ body[data-phase="guard"] .guard-score-metrics b{font-size:12px}
+ body[data-phase="guard"] .guard-score-title{font-size:7px;letter-spacing:.6px}
+}
+@media(max-width:370px){
+ body[data-phase="guard"] .guard-scoreboard,
+ body[data-phase="guard"]:has(.bedside-checklist:not([hidden])) .guard-scoreboard{
+  right:calc(109px + max(5px,env(safe-area-inset-right)));width:104px;max-width:104px;
+ }
+ body[data-phase="guard"] .guard-score-metrics{font-size:7px}
+}
+@media(max-height:500px) and (min-width:601px){
+ body[data-phase="guard"] .guard-scoreboard{top:calc(64px + env(safe-area-inset-top));right:calc(190px + max(8px,env(safe-area-inset-right)))}
+}
+
 /* The creator canvas retains its source aspect ratio; raster backing is
    allocated at device pixel density by avatar-creator.js. */
 #avatarPreview{aspect-ratio:320 / 380;image-rendering:auto;flex:none}
