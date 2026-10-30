@@ -13,7 +13,7 @@ test('guard score is raised and remains above the prior guard offsets',()=>{
  assert.ok(px(mobile)>=112&&px(mobile)<130);
  assert.ok(px(mobile)<px(desktop));
 });
-test('guard scoreboard is read-only and remains horizontally centered',()=>{
+test('guard scoreboard is read-only and preserves its default center anchor',()=>{
  assert.match(css,/\.guard-scoreboard\{[^}]*left:50%;transform:translateX\(-50%\)/);
  assert.match(css,/\.guard-scoreboard\{[^}]*pointer-events:none/);
 });

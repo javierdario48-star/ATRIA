@@ -567,6 +567,13 @@ body[data-phase="guard"] .guard-scoreboard{top:calc(121px + env(safe-area-inset-
  #guardTimeNow{font-size:18px}
  body[data-phase="guard"] .guard-scoreboard{top:calc(112px + env(safe-area-inset-top))}
 }
+/* Reserve the left clinical checklist without moving the score down. */
+@media(max-width:600px){
+ body[data-phase="guard"]:has(.bedside-checklist:not([hidden])) .guard-scoreboard{margin-left:65px;max-width:calc(100vw - 150px)}
+}
+@media(max-height:500px) and (min-width:431px){
+ body[data-phase="guard"] .guard-scoreboard{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;margin-left:0}
+}
 
 /* The creator canvas retains its source aspect ratio; raster backing is
    allocated at device pixel density by avatar-creator.js. */
