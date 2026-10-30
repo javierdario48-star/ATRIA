@@ -34,7 +34,7 @@ try{
    const geometry=await p.evaluate(()=>{
     const score=document.getElementById('guardScoreboard'),a=score.getBoundingClientRect();
     const overlaps=[...document.querySelectorAll('#guardTime,#hud,#chatDock,#patientWheel,#clinicalPanel,button')]
-     .filter(el=>!el.hidden&&getComputedStyle(el).visibility!=='hidden').filter(el=>{
+     .filter(el=>!el.closest('[hidden],details:not([open])')&&getComputedStyle(el).visibility!=='hidden').filter(el=>{
       const b=el.getBoundingClientRect();return b.width&&b.height&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
      }).map(el=>el.id||el.className);
     return {score:a.toJSON(),clock:document.getElementById('guardTime').getBoundingClientRect().toJSON(),overlaps,
@@ -63,6 +63,7 @@ try{
     const sprite={left:x-width/2,right:x+width/2,top:y-height/2,bottom:y+height/2},score=document.getElementById('guardScoreboard').getBoundingClientRect();
     const overlaps=b=>score.left<b.right&&score.right>b.left&&score.top<b.bottom&&score.bottom>b.top;
     const controls=[...document.querySelectorAll('#patientWheel,#bedsideChecklist,button')].filter(el=>{
+     if(el.closest('[hidden],details:not([open])'))return false;
      const b=el.getBoundingClientRect();return b.width&&b.height&&getComputedStyle(el).visibility!=='hidden'&&overlaps(b);
     }).map(el=>el.id||el.className);
     return {patient:sprite,patientOverlapped:overlaps(sprite),controls};
