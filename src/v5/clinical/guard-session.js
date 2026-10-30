@@ -1,3 +1,5 @@
+import {clinicalHintRequirements,hintDestination} from './clinical-hint-requirements.js';
+import {selectClinicalHint} from './clinical-hints.js';
 import {createRoomAuthority} from '../core/room-authority.js';
 import {clinicalExecutorFor} from '../content/clinical-cases.js';
 import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
@@ -353,6 +355,14 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     patient:nativePatient,clock:guardClock.checkpoint(),deathPublished,progress:progress.read(),
     care:care?.checkpoint()??null,studies:studies.checkpoint(),port:port.checkpoint(),authority:authority.checkpoint(),
     pendingStudyRequests:[...pendingStudyRequests].map(([k,v])=>[k,[...v]]),pendingNurseJobs:[...pendingNurseJobs],waitingForAccess:[...waitingForAccess]});
+  },
+  clinicalHintRequirements(){const destination=hintDestination(nativePatient,caseData);return clinicalHintRequirements(nativePatient,caseData,closureReadiness(destination),destination);},
+  clinicalHint(){
+   const destination=hintDestination(nativePatient,caseData),assessment=closureReadiness(destination);
+   const subject={...nativePatient,hintPendingActions:[...pendingNurseJobs.values(),...waitingForAccess.values()].map(j=>({id:j.intent.id}))};
+   return selectClinicalHint({patient:subject,caseData,content,clock,destination,
+    fulfilledTreatmentIds:assessment?.fulfilledTreatmentIds||[],
+    requirements:clinicalHintRequirements(nativePatient,caseData,assessment,destination)});
   },
   catalog:()=>copy(orderedStudies),
   async post(envelope,authenticatedCredentials=credentials){
