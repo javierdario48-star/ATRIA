@@ -167,6 +167,10 @@ try{
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='apendicitis aguda');
  await page.locator('#modalClose').click();
  await page.screenshot({path:out+'/app-chart-diagnosis.png'});
+ await page.waitForFunction(()=>{
+  const p=atriaV5.snapshot().clinical.patient;
+  return p.orders.every(o=>o.status==='done')&&p.pendingTreatments.length===0;
+ },null,{timeout:150000});
  await send('/consulta cirugia');
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===2);
  assert.equal((await state()).patient.consults[1].accepted,true,'corrected request is evaluated again');
