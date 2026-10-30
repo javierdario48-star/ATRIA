@@ -55,6 +55,8 @@ test('surgery does not accept a diagnosis-free request and accepted review canno
   await f.post('/consulta cirugia');await f.advance(3.5);
   assert.equal(f.s.read().patient.consults.at(-1).accepted,false);
   await examine(f);await f.post('/diagnostico colecistitis aguda');
+  await f.post('/estudio chole_us');await f.post('Enfermera nada por boca');await f.post('Enfermera una vía');
+  await f.post('Enfermera ceftriaxona 1 g y metronidazol 500 mg');await f.advance(75);
   await f.post('/consulta cirugia');await f.advance(3.5);
   const p=f.s.read().patient;
   assert.equal(p.consults.at(-1).accepted,true);
@@ -76,6 +78,7 @@ test('confirmed NPO and antibiotics with actual ultrasound, surgical acceptance 
   assert.deepEqual(f.s.read().eligibleDestinations,[]);
   await f.advance(75);
   await f.post('/reevaluar');
+  await f.post('/consulta cirugia');await f.advance(3.5);
   const ready=f.s.read();
   assert(ready.patient.orders.some(x=>x.id==='chole_us'&&x.status==='done'));
   assert(ready.patient.consults.some(x=>x.id==='cirugia'&&x.accepted));

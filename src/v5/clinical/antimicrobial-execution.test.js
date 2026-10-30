@@ -75,6 +75,7 @@ for(const drug of ['piptazo 4.5 g','imipenem 500 mg'])test('APP real alternative
   const p=s.read().patient,c=content.cases.find(x=>x.id==='APP-001');
   assert(appDiseaseTargetOffsets(p,c,173).sys>appDiseaseTargetOffsets({uid:'untreated'},c,173).sys,
    'appropriate alternatives slow future APP progression like the original regimen');
+  await post('/consulta cirugia');s.advance(3.5);await s.flush();
   const close=await post('/disposicion quirofano');
   assert.equal(close.clinical[0].status,'executed');
   assert.equal(s.read().patient.closure.quality.score,100);

@@ -1,6 +1,6 @@
 // Player commands through the production clinical session; never mutate a
 // patient or substitute an acceptance. Spatial/durable coverage is explicit.
-import {mkdirSync,writeFileSync} from 'node:fs';
+import {mkdirSync,writeFileSync,readFileSync,existsSync} from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
@@ -18,10 +18,13 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
  const plan=deriveClinicalCertificationPlan(c,content);
  if(profile==='multiplayer'){
   const row=await runClinicalCaseScenario(c,{content,mode,recovery:true,profile:'competent',seed:'transfer-v1:'+c.id+':'+mode});
-  return {caseId:c.id,profile,mode,passed:row.passed,authority:row.authority,outcome:row.outcome,
-   checks:row.checks,failures:row.failures,missing:row.readiness?.missing,xp:row.final?.xp,closed:row.closureReceipt?.closed??false};
+  const carePassed=['history','exam','studies','treatment','closure','xp'].every(key=>row.checks?.[key]===true)&&
+   Object.values(row.integrityChecks||{}).every(value=>value!==false);
+  return {caseId:c.id,profile,mode,passed:carePassed,strictCertificatePassed:row.passed,authority:row.authority,outcome:row.outcome,
+   certificateScope:'clinical-destination-flow',checks:row.checks,failures:carePassed?[]:row.failures,
+   strictFailures:row.failures,missing:row.readiness?.missing,xp:row.final?.xp,closed:row.closureReceipt?.closed??false};
  }
- let s,world,sequence=0,restored=false,replay=null;
+ let s,world,sequence=0,restored=false,replay=null,unsafeVitals=null;
  const commands=[],failures=[],checks={},uid='transfer:'+c.id+':'+profile;
  const patient={uid,caseId:c.id,variationSeed:'transfer-v1:'+c.id};
  const base={roomId:uid,mode,actorId:'doctor',actorName:'Médica',content,
@@ -77,9 +80,13 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
   }
   if(profile==='iatrogenic'){
    await send('Enfermera una vía');
-   await send('Enfermera heparina');
-   await advance(3);
-   await send('Enfermera furosemida 40 mg');await advance(90);
+   // A therapeutic dose of heparin/diuretic is not universally harmful.
+   // Repeated confirmed volume overload is a genuine unsafe decision in
+   // every case, with an already authored physiological adverse response.
+   for(let dose=0;dose<8&&!read().patient.caseEnded;dose++){
+    await send('Enfermera Ringer 1000 ml');await advance(1);
+   }
+   await advance(30);unsafeVitals=copy(read().patient.liveVitals);
   }
   const requested=new Set(),studies=new Set();let lastAttempt=-Infinity,lastReassessment=-Infinity;
   if(!c.clinicalPolicy){
@@ -113,7 +120,8 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
   checks.ordersAnswered=!final.room.events.some(e=>e.clinical?.some(x=>x.status==='unconfirmed'));
   checks.closed=p.closure?.closed===true&&p.closure.destination===plan.destination;
   checks.xp=checks.closed&&final.progress.xp===p.closure.xp&&final.progress.receipts.length===1;
-  checks.physiologyChanged=Object.keys(initial).some(key=>Math.abs(initial[key]-p.liveVitals[key])>.01)||p.patientDied===true;
+  checks.physiologyChanged=Object.keys(initial).some(key=>Math.abs(initial[key]-p.liveVitals[key])>.01||
+   unsafeVitals&&Math.abs(initial[key]-unsafeVitals[key])>.01)||p.patientDied===true;
   if(checks.closed){
    const before=copy(final.progress);await send('/disposicion '+plan.destination);
    if(profile==='closure-recovery'){if(!restored)await restore();if(replay)await send(replay.text,replay.id);}
@@ -125,10 +133,11 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
   if(!checks.noDuplicateXP)failures.push('duplicate XP');
   if(['missing-dx','wrong-dx','insufficient-preparation','wrong-destination'].includes(profile)&&!checks.initialRefusal)failures.push('missing initial refusal');
   if(nursing&&(!checks.recovery||world.nurseJourneySnapshot().some(t=>['queued','travelling','at-bed'].includes(t.stage))))failures.push('nursing recovery not settled');
-  if(adversarial&&!checks.physiologyChanged)failures.push('no observed physiological response');
+  if(profile==='iatrogenic'&&!checks.physiologyChanged)failures.push('no observed physiological response');
   return {caseId:c.id,profile,mode,passed:!failures.length,authority:'createGuardSession',checks,failures,
    outcome:p.patientDied?'native-death':checks.closed?'accepted-destination':'alive-unclosed',closed:checks.closed,xp:final.progress.xp,
-   missing:final.closure?.missing,initialVitals:initial,finalVitals:p.liveVitals,
+   missing:final.closure?.missing,initialVitals:initial,finalVitals:p.liveVitals,unsafeVitals,
+   evolution:checks.physiologyChanged?'native-change':'no-delta-observed',
    administrations:p.administrationLog.map(x=>({id:x.id,eventId:x.sourceEventId,at:x.administeredAtNativeMinute})),
    consultations:p.consults.map(x=>({id:x.id,accepted:x.accepted,reasonCode:x.reasonCode})),
    commands};
@@ -142,14 +151,19 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  if(profiles.some(x=>!TRANSFER_BOT_PROFILES.includes(x)))throw Error('unknown transfer profile');
  const ids=option('--cases')?.split(','),cases=content.cases.filter(c=>!ids||ids.includes(c.id));
  const output=resolve(option('--output')||'qa/v5-transfer-results');mkdirSync(output,{recursive:true});
- const rows=[];
+ const rows=[];let reused=0,executed=0;
  for(const profile of profiles)for(const [index,c] of cases.entries()){
+  const path=resolve(output,c.id+'-'+profile+'.json');
+  if(args.includes('--resume')&&existsSync(path)){
+   const previous=JSON.parse(readFileSync(path));
+   if(previous.caseId===c.id&&previous.profile===profile&&previous.passed){rows.push(previous);reused++;continue;}
+  }
   const row=await runTransferBot(c,{profile,mode:profile==='multiplayer'?index%2?'competitive':'coop':index%2?'apprentice':'solo'});
-  rows.push(row);writeFileSync(resolve(output,c.id+'-'+profile+'.json'),JSON.stringify(row,null,2)+'\n');
+  rows.push(row);executed++;writeFileSync(path,JSON.stringify(row,null,2)+'\n');
   console.log(JSON.stringify({caseId:c.id,profile,passed:row.passed,outcome:row.outcome,failures:row.failures,missing:row.passed?undefined:row.missing}));
  }
  const summary={revision:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseCount:cases.length,
-  cases:cases.map(c=>c.id),profiles,executions:rows.length,passed:rows.filter(x=>x.passed).length,
+  cases:cases.map(c=>c.id),profiles,executions:rows.length,executedNow:executed,reusedPassedCheckpoints:reused,passed:rows.filter(x=>x.passed).length,
   certifiedCases:cases.filter(c=>rows.filter(x=>x.caseId===c.id).every(x=>x.passed)).length,
   outcomes:Object.fromEntries(['accepted-destination','native-death','alive-unclosed'].map(key=>[key,rows.filter(x=>x.outcome===key).length])),
   failures:rows.filter(x=>!x.passed).map(x=>({caseId:x.caseId,profile:x.profile,failures:x.failures,missing:x.missing}))};

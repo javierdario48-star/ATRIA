@@ -9,7 +9,8 @@ import {CLINICAL_BOT_PLAYBOOK} from '../../src/v5/clinical/clinical-bot-playbook
 import {isPhysicianExamStudy} from '../../src/v5/clinical/exam-contract.js';
 import {nativeTreatmentDefinition} from '../../src/v5/clinical/native-medications.js';
 import {clinicalInterventionEligibility} from '../../src/v5/clinical/native-medication-eligibility.js';
-import {confirmedClinicalTreatment} from '../../src/v5/clinical/receipts.js';
+import {confirmedClinicalTreatment,isDeliveredClinicalAdministration} from '../../src/v5/clinical/receipts.js';
+import {clinicalTransferContinuation} from '../../src/v5/clinical/transfer-continuation.js';
 import {generatePatientVariation} from '../../src/v5/content/patient-variation.js';
 import {diagnosticRequirements} from '../../src/v5/clinical/diagnostic-evidence.js';
 
@@ -279,14 +280,22 @@ function finalEvidence(row,view,checkpoint,c,plan){
   return row.examLog.some(x=>x.regionId===region&&x.technique===technique)||!!p.examFindings?.[region]?.[technique];
  });
  const legacyActions=row.legacyTreatmentActions||[];
- const nativeTreatments=c.clinicalPolicy?plan.treatmentIds.every(id=>actualTreatment(p,id,s.clock.nativeMinute)):
+ const handoff=p.closure?.closed?p.closure.handoff:null;
+ const continuing=(handoff?.continuingAdministrations||[]).filter(proof=>p.administrationLog.some(a=>
+  a.id===proof.id&&a.sourceEventId===proof.sourceEventId&&a.deliveryFraction===proof.deliveredFraction&&
+  isDeliveredClinicalAdministration(p,a,s.clock.nativeMinute)));
+ const ongoingIds=new Set(continuing.map(x=>x.id)),ongoingEvents=new Set(continuing.map(x=>x.sourceEventId));
+ const deferredTreatments=(handoff?.deferredTreatmentIds||[]).filter(id=>c.clinicalPolicy?.eligibility?.[id]?.requiresCompletedTreatments?.some(prior=>ongoingIds.has(prior)));
+ const deferredStudies=(handoff?.deferredStudyIds||[]).filter(id=>c.studies.find(s=>s.id===id)?.requiresCompletedTreatments?.some(prior=>ongoingIds.has(prior)));
+ row.handoffContinuations={continuingAdministrations:copy(continuing),deferredTreatments,deferredStudies};
+ const nativeTreatments=c.clinicalPolicy?plan.treatmentIds.every(id=>actualTreatment(p,id,s.clock.nativeMinute)||ongoingIds.has(id)||deferredTreatments.includes(id)):
   legacyActions.length>0&&legacyActions.every(action=>receipts.some(receipt=>receipt.patientUid===p.uid&&
    receipt.commandId===action.commandId&&receipt.id===action.id&&receipt.kind===action.kind));
  const administrativeIntegrity=row.administrations.every(a=>a.patientUid===p.uid&&a.sourceEventId&&
-  p.treatments.filter(t=>t.sourceEventId===a.sourceEventId&&t.id===a.id).length===1)&&
+  (p.treatments.filter(t=>t.sourceEventId===a.sourceEventId&&t.id===a.id).length===1||ongoingEvents.has(a.sourceEventId)))&&
   new Set(row.administrations.map(x=>x.sourceEventId)).size===row.administrations.length;
  const pendingStudyIds=plan.pendingStudyIds||[];
- const confirmedStudies=plan.studyIds.length>0?plan.studyIds.every(id=>done.has(id)||pendingStudyIds.includes(id)&&
+ const confirmedStudies=plan.studyIds.length>0?plan.studyIds.every(id=>done.has(id)||deferredStudies.includes(id)||pendingStudyIds.includes(id)&&
   p.orders.some(order=>order.id===id&&order.patientUid===p.uid&&order.sourceEventId&&order.status==='pending'&&
    order.requestedAtMinute<=s.clock.clinicalMinute&&order.readyAtMinute>s.clock.clinicalMinute)):
   requiredExams.length>0&&targeted; // A required physician examination is explicitly diagnostic evidence.
@@ -493,9 +502,11 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     recovered=true;observe(false);
    }
    const current=runtime.view(actorId).clinical;
-   const allStudies=plan.studyIds.every(id=>current.patient.orders.some(o=>o.id===id&&
+   const continuation=clinicalTransferContinuation(current.patient,c,plan.destination,current.clock.nativeMinute);
+   const allStudies=plan.studyIds.every(id=>continuation.deferredStudyIds.includes(id)||current.patient.orders.some(o=>o.id===id&&
     (o.status==='done'||plan.pendingStudyIds.includes(id)&&o.status==='pending'&&o.sourceEventId)));
-   const allTreatments=plan.treatmentIds.every(id=>actualTreatment(current.patient,id,current.clock.nativeMinute));
+   const allTreatments=plan.treatmentIds.every(id=>actualTreatment(current.patient,id,current.clock.nativeMinute)||
+    continuation.continuingAdministrations.some(row=>row.id===id)||continuation.deferredTreatmentIds.includes(id));
    // Original case owners decide their own native conduct/receipt contract.
    // A policy-only prefilter must not prevent asking that owner for handoff.
    const canAttempt=['omit-studies','inexperienced','negligent','wrong-medication'].includes(profile)||

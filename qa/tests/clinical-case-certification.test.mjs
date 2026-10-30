@@ -39,16 +39,17 @@ for(const id of ['NEUR-03','NEUR-07'])test('neurological certification observes 
  assert.equal(row.passed,true,JSON.stringify(row.failures));
  assert.equal(row.closureIntegrity.singleClosureReceipt,true);assert.equal(row.xpReceipts.length,1);
 });
-test('a competent doctor can rescue refractory PE hypoxemia while the real thrombolytic infusion completes',async()=>{
+test('a competent doctor transfers high-risk PE with a real thrombolytic infusion and defers post-lysis care to the accepting UTI',async()=>{
  const c=respiratoryPack.cases.find(x=>x.id==='RESP-06');
  assert(c.interventions.some(x=>x.id==='intubation'),'refractory hypoxemia needs an executable airway option');
  const row=await runClinicalCaseScenario(c,{seed:'pe-refractory-rescue',horizon:1300,recovery:true});
  assert.equal(row.passed,true,JSON.stringify({failures:row.failures,missing:row.readiness?.missing}));
- assert(row.treatments.some(t=>t.id==='intubation'&&t.kind==='procedure.performed'));
  const lysis=row.administrations.find(t=>t.id==='alteplase_pe');
- assert(lysis.completedAtNativeMinute-lysis.administeredAtNativeMinute>=120-1e-8);
- const sample=row.studies.find(x=>x.id==='g_resp06_coag_followup');
- assert(sample.sampledAtNativeMinute>=lysis.completedAtNativeMinute);
+ assert.equal(row.closureReceipt.destination,'uti');
+ assert.equal(lysis.status,'administering');assert(lysis.deliveryFraction>0&&lysis.deliveryFraction<1);
+ assert(row.handoffContinuations.continuingAdministrations.some(row=>row.id==='alteplase_pe'));
+ assert(row.handoffContinuations.deferredStudies.includes('g_resp06_coag_followup'));
+ assert(!row.studies.some(x=>x.id==='g_resp06_coag_followup'),'a sample after dose completion belongs to the receiver');
 });
 for(const [id,horizon] of [['RESP-02',720],['RESP-03',150],['RESP-05',150]])
  test('actual specialty transfer closes '+id+' with native support, procedures and one XP receipt',async()=>{
@@ -185,7 +186,8 @@ test('post-thrombolysis studies and heparin are deferred until actual lytic comp
   'a new post-treatment sample cannot be requested during the lytic infusion');
  assert(!row.commands.some(x=>x.text.startsWith('/tratamiento heparin_therapeutic ')),
   'pending alteplase and baseline coagulation cannot authorize the later heparin order');
- assert.equal(row.passed,false,'an in-progress infusion is not a completed journey');
+ assert.equal(row.closureReceipt?.destination,'uti','an accepted transfer completes initial care while preserving the unfinished infusion');
+ assert(row.administrations.some(x=>x.id==='alteplase_pe'&&x.status==='administering'));
 });
 
 test('the negligent profile attempts disposition without credit for omitted bedside care',async()=>{

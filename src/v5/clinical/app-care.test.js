@@ -99,11 +99,13 @@ test('APP surgical referral requires completed studies, both IV drugs and confir
  await f.send('/diagnostico apendicitis aguda');
  assert.equal((await f.send('/disposicion quirofano')).clinical[0].status,'rejected');
  f.s.advance(120);await f.s.flush();
+ assert.equal(f.s.read().patient.consults[0].accepted,false,'the first request lacked completed preparation');
+ await f.send('/consulta cirugia','prepared-consult');f.s.advance(3.5);await f.s.flush();
  const p=f.s.read().patient;
  assert.equal(p.pendingTreatments.length,0);
  assert.equal(p.administrationLog.length,2);
- assert.equal(p.consults.length,1);
- assert.equal(p.consults[0].accepted,true);
+ assert.equal(p.consults.length,2);
+ assert.equal(p.consults.at(-1).accepted,true);
  assert(p.orders.every(o=>o.status==='done'));
  const settled=await f.send('/consulta cirugia','consult');assert.equal(settled.clinical[0].status,'executed');
  assert.deepEqual(f.s.read().eligibleDestinations,[],'full-care readiness still needs reassessment');

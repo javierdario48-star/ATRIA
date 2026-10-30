@@ -1,0 +1,48 @@
+name: ATRIA 5 Clinical Transfers
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - src/v5/clinical/**
+      - src/v5/engine/nurse-dispatcher*
+      - src/v5/ui/clinical-controller.js
+      - qa/v5/transfer-certification.mjs
+      - qa/v5/certify-clinical-cases.mjs
+      - .github/workflows/atria-v5-transfers.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atria-v5-transfers-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  transfer-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test src/v5/clinical/consultation-flow-regression.test.js src/v5/clinical/accepted-transfer.test.js src/v5/clinical/receiver-transfer-contract.test.js src/v5/engine/nurse-dispatcher.test.js
+  clinical-bots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [competent, missing-dx, wrong-dx, insufficient-preparation, wrong-destination, slow, iatrogenic, nursing-recovery, closure-recovery, multiplayer]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run player commands against all 55 production cases
+        run: node qa/v5/transfer-certification.mjs --profiles "${{ matrix.profile }}" --output qa/v5-transfer-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-transfers-${{ matrix.profile }}
+          path: qa/v5-transfer-results/
+          if-no-files-found: error
+          retention-days: 30

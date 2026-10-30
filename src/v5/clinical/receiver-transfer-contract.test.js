@@ -128,7 +128,7 @@ test('accepted surgery cannot hand off tension pneumothorax before immediate dec
  } finally {f.s.dispose();}
 });
 
-test('a real pending infusion remains a handoff gate even after the receiver accepts', async () => {
+test('an unreevaluated infusion cannot bypass an earlier receiver acceptance', async () => {
  const scenario = scenarios.find(row => row.caseId === 'CARD-01'), f = fixture(scenario);
  try {
   await f.workup(); await f.care('/consulta cardiologia'); await f.advance(3.5);
@@ -139,7 +139,7 @@ test('a real pending infusion remains a handoff gate even after the receiver acc
   assert(administering.deliveryFraction < 1);
   const attempt = await f.post('/disposicion procedimiento');
   assert.equal(attempt.clinical[0].status, 'rejected');
-  assert.equal(attempt.clinical[0].reason, 'pending-clinical-treatment');
+  assert.equal(attempt.clinical[0].receipt.reasonCode, 'stabilization-insufficient');
   assert.equal(f.s.read().progress.receipts.length, 0);
   await f.settle();
   const reassessment=await f.post('/disposicion procedimiento');

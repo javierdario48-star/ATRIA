@@ -41,6 +41,8 @@ test('explicit Gastroenterology consultation is patient-bound and cannot perform
   await f.post('/consulta gastro');await f.advance(3.5);
   assert.equal(f.session.read().patient.consults.at(-1).accepted,false);
   await examine(f);await f.post('/diagnostico '+diagnosis);
+  await f.post('/estudio cholang_liver');await f.post('Enfermera una vía');
+  await f.post('Enfermera Ringer 500 ml y ceftriaxona 1 g y metronidazol 500 mg');await f.advance(70);
   await f.post('/consulta gastro');await f.advance(3.5);
   const p=f.session.read().patient;
   assert.equal(p.consults.at(-1).accepted,true);
@@ -79,6 +81,7 @@ test('CHOLANG diagnostic evidence, antimicrobial treatment, specialist handoff a
   assert.deepEqual(f.session.read().eligibleDestinations,[]);
   await f.advance(70);
   await f.post('/reevaluar');
+  await f.post('/consulta gastro');await f.advance(3.5);
   const prepared=f.session.read();
   assert.equal(prepared.patient.consults.at(-1).accepted,true);
   assert(prepared.patient.orders.some(x=>x.id==='cholang_liver'&&x.status==='done'));

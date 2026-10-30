@@ -59,6 +59,7 @@ async function successful(caseId){
   const preCompletion=await f.send('/disposicion '+(caseId==='APP-001'?'quirofano':'sala'));
   f.session.advance(120);await f.session.flush();
   await f.send('/reevaluar');
+  if(caseId==='APP-001'){await f.send('/consulta cirugia');f.session.advance(3.5);await f.session.flush();}
   const intended=CASE_CLOSURE_RULES_487[caseId].destinations[0];
   const wrong=await f.send('/disposicion '+(caseId==='APP-001'?'alta':'quirofano'));
   const close=await f.send(caseId==='APP-001'?'Enfermera cirugía':'Enfermera internar en sala');
