@@ -121,8 +121,12 @@ try{
    await p.locator('[data-avatar-sex="female"]').click();await lobby(p);await visibleControl(p);
    assert.equal((await audio(p)).music.starts,first,'title/avatar/lobby share the same source');
    await p.waitForTimeout(120);
-   const tapEffects=await toggleMusic(p,{double:true});
-   assert.equal(tapEffects,1,'rapid double-click produces exactly one sample');
+   // Debounced UI sounds belong to the native button. Compact screens use
+   // the channel checkbox, whose changes do not synthesize button sounds.
+   if(await p.locator('#musicToggleButton').isVisible()){
+    const tapEffects=await toggleMusic(p,{double:true});
+    assert.equal(tapEffects,1,'rapid double-click produces exactly one sample');
+   }
    await toggleMusic(p);
    await p.waitForFunction(()=>{const m=atriaV5.diagnostics().audio.music;return m.level===0&&m.sourceCount===0;});
    const muted=await audio(p);assert.equal(muted.channels.monitor,true);assert.equal(muted.channels.speech,true);
