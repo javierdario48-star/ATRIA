@@ -1,6 +1,7 @@
 // Player commands through the production clinical session; never mutate a
 // patient or substitute an acceptance. Spatial/durable coverage is explicit.
-import {mkdirSync,writeFileSync,readFileSync,existsSync} from 'node:fs';
+import {mkdirSync,writeFileSync,readFileSync,existsSync,readdirSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
@@ -14,6 +15,22 @@ import {CASE_CLOSURE_RULES_487} from '../../src/clinical/case-completion-487.js'
 import {deriveClinicalCertificationPlan,treatmentCommand,runClinicalCaseScenario} from './certify-clinical-cases.mjs';
 export const TRANSFER_BOT_PROFILES=['competent','missing-dx','wrong-dx','insufficient-preparation','wrong-destination','slow','iatrogenic','nursing-recovery','closure-recovery','multiplayer'];
 const copy=x=>structuredClone(x);
+export function transferCertificationFingerprint(){
+ const digest=createHash('sha256').update('atria-transfer-certificate-v2\n').update(JSON.stringify(content));
+ const sourceRoot=new URL('../../src/',import.meta.url);
+ function visit(directory,prefix=''){
+  for(const entry of readdirSync(directory,{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name))){
+   const path=prefix+entry.name,url=new URL(entry.name+(entry.isDirectory()?'/':''),directory);
+   if(entry.isDirectory())visit(url,path+'/');
+   else if(/\.(?:js|json)$/.test(path)&&!/(?:\.test\.|(?:^|\/)__tests__\/)/.test(path))
+    digest.update(path+'\0').update(readFileSync(url)).update('\0');
+  }
+ }
+ visit(sourceRoot);
+ for(const name of ['transfer-certification.mjs','certify-clinical-cases.mjs'])
+  digest.update(name+'\0').update(readFileSync(new URL(name,import.meta.url)));
+ return digest.digest('hex');
+}
 export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
  const plan=deriveClinicalCertificationPlan(c,content);
  if(profile==='multiplayer'){
@@ -151,18 +168,21 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  if(profiles.some(x=>!TRANSFER_BOT_PROFILES.includes(x)))throw Error('unknown transfer profile');
  const ids=option('--cases')?.split(','),cases=content.cases.filter(c=>!ids||ids.includes(c.id));
  const output=resolve(option('--output')||'qa/v5-transfer-results');mkdirSync(output,{recursive:true});
+ const certificationFingerprint=transferCertificationFingerprint();
  const rows=[];let reused=0,executed=0;
  for(const profile of profiles)for(const [index,c] of cases.entries()){
+  const mode=profile==='multiplayer'?index%2?'competitive':'coop':index%2?'apprentice':'solo';
   const path=resolve(output,c.id+'-'+profile+'.json');
   if(args.includes('--resume')&&existsSync(path)){
    const previous=JSON.parse(readFileSync(path));
-   if(previous.caseId===c.id&&previous.profile===profile&&previous.passed){rows.push(previous);reused++;continue;}
+   if(previous.caseId===c.id&&previous.profile===profile&&previous.mode===mode&&previous.passed&&
+    previous.certificationFingerprint===certificationFingerprint){rows.push(previous);reused++;continue;}
   }
-  const row=await runTransferBot(c,{profile,mode:profile==='multiplayer'?index%2?'competitive':'coop':index%2?'apprentice':'solo'});
+  const row={...await runTransferBot(c,{profile,mode}),certificationFingerprint};
   rows.push(row);executed++;writeFileSync(path,JSON.stringify(row,null,2)+'\n');
   console.log(JSON.stringify({caseId:c.id,profile,passed:row.passed,outcome:row.outcome,failures:row.failures,missing:row.passed?undefined:row.missing}));
  }
- const summary={revision:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),caseCount:cases.length,
+ const summary={revision:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),certificationFingerprint,caseCount:cases.length,
   cases:cases.map(c=>c.id),profiles,executions:rows.length,executedNow:executed,reusedPassedCheckpoints:reused,passed:rows.filter(x=>x.passed).length,
   certifiedCases:cases.filter(c=>rows.filter(x=>x.caseId===c.id).every(x=>x.passed)).length,
   outcomes:Object.fromEntries(['accepted-destination','native-death','alive-unclosed'].map(key=>[key,rows.filter(x=>x.outcome===key).length])),
