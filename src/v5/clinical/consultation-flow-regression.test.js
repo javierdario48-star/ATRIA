@@ -26,7 +26,7 @@ test('authored diagnoses containing sin retain their clinical meaning, while neg
  for(const [id,dx] of [['CARD-02','IAM sin elevación del ST'],['CARD-02','síndrome coronario agudo sin elevación del ST'],['RESP-05','TEP sin shock']]){
   const c=content.cases.find(c=>c.id===id);
   assert.equal(assessDiagnosticImpression(c,dx).sufficient,true,id+': '+dx);
-  for(const negated of ['sin '+dx,'no tiene '+dx,dx+' descartado'])
+  for(const negated of ['sin '+dx,'no tiene '+dx,dx+' descartado',dx+' con diagnóstico descartado tras estudios'])
    assert.equal(assessDiagnosticImpression(c,negated).compatible,false,negated);
  }
 });

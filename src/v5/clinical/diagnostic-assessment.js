@@ -13,7 +13,7 @@ export function assessDiagnosticImpression(c,value){
  if(aortic)alternatives.push('diseccion aortica stanford a','diseccion de aorta tipo a');
  // Scope negation to the impression, not diagnostic qualifiers such as
  // "IAM sin elevación del ST" or "TEP sin shock" in the authored catalog.
- const negated=/^(?:descartad[ao]|descarto|sin|no es|no tiene)\b/.test(n)||/\bdescartad[ao]$/.test(n);
+ const negated=/\b(?:descartad[ao]|descarto|no es|no tiene)\b/.test(n)||/^sin\b/.test(n);
  const exact=!negated&&[...forms,...alternatives].some(x=>
   n===x||n.startsWith(x+' con ')||n.startsWith(x+' complicada')||n.startsWith(x+' descompensada')||n.endsWith(' por '+x));
  if(exact)return {level:'specific',compatible:true,sufficient:true,factor:1};
