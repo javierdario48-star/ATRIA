@@ -674,6 +674,8 @@ body[data-phase="guard"] .guard-scoreboard{
 /* Consolidated HUD: reception stays one tap away; guard score remains independent. */
 #hudXpBar{display:block;width:min(130px,100%);height:5px;margin-top:3px;accent-color:#91e9cf}
 #hudMenu{position:relative;flex:0 0 auto}
+/* An invitation remains actionable without covering the open HUD menu. */
+#hud:has(#hudMenu[open]){z-index:32}
 #hudMenu>summary{list-style:none;display:grid;place-items:center;cursor:pointer;min-width:34px;min-height:36px;border:1px solid #86cbca3b;border-radius:10px;background:#12333be0;color:#e5f4f1;font-size:18px}
 #hudMenu>summary::-webkit-details-marker{display:none}
 .hud-menu-items{position:absolute;right:0;top:calc(100% + 8px);display:grid;gap:5px;min-width:126px;padding:8px;background:#092631f5;border:1px solid #8bd6d055;border-radius:12px;box-shadow:0 8px 24px #0009;z-index:20}
