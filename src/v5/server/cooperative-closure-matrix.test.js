@@ -51,6 +51,9 @@ for(const [index,caseId] of cases.entries()){
        !before.clinical.patient.caseEnded){
     now+=40000;await call('b');await send('/reevaluar');before=await call('b');
    }
+   if(!before.clinical.patient.caseEnded&&plan.consult){
+    await send(plan.consult);now+=3500;before=await call('b');
+   }
    assert(before.clinical.eligibleDestinations.includes(plan.dest),
     caseId+' destination unexpectedly unavailable: '+JSON.stringify({
      destinations:before.clinical.eligibleDestinations,dying:before.clinical.patient.patientDied,

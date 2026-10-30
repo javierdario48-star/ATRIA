@@ -91,6 +91,9 @@ for(const caseId of cases){
       !before.clinical.patient.caseEnded){
     now+=40000;await call('b');await send('/reevaluar');before=await call('b');
    }
+   if(!before.clinical.patient.caseEnded&&p.consult){
+    await send(p.consult);now+=3500;before=await call('b');
+   }
    assert(before.clinical.eligibleDestinations.includes(p.dest),
     caseId+' absent valid handoff: '+JSON.stringify({eligible:before.clinical.eligibleDestinations,
      missing:before.clinical.closure?.missing,

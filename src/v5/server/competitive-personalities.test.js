@@ -110,6 +110,9 @@ for(const [index,caseId] of caseIds.entries())for(const profile of CLINICAL_BOT_
        !assessed.clinical.eligibleDestinations.includes(plans[caseId].dest)){
      await advance(40);assessed=await post('/reevaluar');
     }
+    if(!assessed.clinical.patient.caseEnded&&plans[caseId].consult){
+     await post(plans[caseId].consult);await advance(3.5);assessed=await call();
+    }
     if(!assessed.clinical.patient.caseEnded&&assessed.clinical.eligibleDestinations.includes(plans[caseId].dest))
      await post('/disposicion '+plans[caseId].dest);
     const terminal=await call();

@@ -68,6 +68,10 @@ test('accepted surgical handoff is reflected in durable reception, vacates the r
     '/examen general','/examen inspection','/examen auscultation',
     '/examen percussion','/examen palpation'])
    await call({commands:[{id:'e'+text,text}]});
+  const preparation=['¿Desde cuándo empezó el dolor?','/estudio app_us','Enfermera una vía',
+   'Enfermera ceftriaxona 1 g y metronidazol 500 mg'];
+  for(const [i,text] of preparation.entries())await call({commands:[{id:'preparation-'+i,text}]});
+  now+=95000;await call();await call({commands:[{id:'prepared-reassessment',text:'/reevaluar'}]});
   const request=await call({commands:[{id:'handoff-transfer',text:'/disposicion quirofano'}]});
   assert.equal(request.acknowledgements[0].clinical[0].status,'pending');
   assert.equal(request.clinical.shift.patients[0].closed,false);
