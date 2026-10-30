@@ -48,7 +48,12 @@ export async function compareMedicalPeritonitisQuality({caseId,diagnosis,destina
    assert.deepEqual(s.read().eligibleDestinations,[destination]);
    assert.equal(ctx.window.csSetDisposition(destination),true);ctx.finishCase('completed');
    assert(p.caseEnded&&p._careerEndProcessed&&p.nsOutcome.career.resolved);
-   assert.equal((await send('/disposicion '+destination)).clinical[0].status,'executed');
+   const transfer=await send('/disposicion '+destination);
+   if(transfer.clinical[0].status==='pending'){
+    assert.equal(s.read().patient.caseEnded,false,'receiver evaluation is not a completed transfer');
+    s.advance(3.5);await s.flush();
+   }else assert.equal(transfer.clinical[0].status,'executed');
+   assert.equal(s.read().patient.caseEnded,true,'only an accepted receiver can finish the requested transfer');
    const migrated=s.read().patient.closure,original=ctx.csBreakdown();
    for(const field of ['score','diagnosis','history','safety','studies','treatment','efficiency'])assert.equal(migrated.quality[field],original[field],spec.id+'/'+field);
    assert.equal(migrated.xp,p.nsOutcome.career.xpDelta,spec.id+' actual native XP');
