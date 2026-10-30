@@ -4,6 +4,14 @@ import {clinicalInterventionEligibility} from './native-medication-eligibility.j
 import {nativeTreatmentDefinition} from './native-medications.js';
 import {confirmedMedicationHarms487} from './medication-harms-487.js';
 
+export function unrescuedTransferReactions(p,c,minute){
+ const active=p.adverseEvents?.filter(e=>e.kind==='severe-drug-allergy'&&e.status==='active')||[];
+ if(!active.length)return [];
+ const reactions=confirmedMedicationHarms487(p,c,minute).reactions;
+ return active.filter(event=>!reactions.find(r=>r.kind===event.kind&&r.sourceEventId===event.sourceEventId)
+  ?.rescueSourceEventIds?.length);
+}
+
 function withheldTransferPreparations(p,c,destination,minute,ongoing){
  const rule=c.clinicalPolicy?.closure,groups=rule?.treatmentByDestination?.[destination]||rule?.treatment;
  const access=p.procedures?.iv,confirmedAccess=p.venousAccessCount>0&&access?.patientUid===p.uid&&
@@ -15,14 +23,7 @@ function withheldTransferPreparations(p,c,destination,minute,ongoing){
  if(groups.some(group=>group.length&&group.every(delivered)))return [];
  // Withholding an unsafe preparation never substitutes for rescue of an
  // actual severe drug reaction before transport.
- const activeAllergies=p.adverseEvents?.filter(e=>e.kind==='severe-drug-allergy'&&e.status==='active')||[];
- if(activeAllergies.length){
-  // Reuse the native reaction owner's validated, dose-specific rescue
-  // receipts. A dose predating the trigger cannot stabilize this episode.
-  const reactions=confirmedMedicationHarms487(p,c,minute).reactions;
-  if(activeAllergies.some(event=>!reactions.find(r=>r.kind===event.kind&&r.sourceEventId===event.sourceEventId)
-   ?.rescueSourceEventIds?.length))return [];
- }
+ if(unrescuedTransferReactions(p,c,minute).length)return [];
  const withheld=new Map();
  const justified=groups.every(group=>group.length&&group.every(id=>{
   if(delivered(id))return true;

@@ -29,6 +29,7 @@ import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {isExaminationCommand,isExaminationKind,isPhysicianExamStudy} from './exam-contract.js';
 import {consultationEvidenceReview} from './consultation-evidence.js';
+import {unrescuedTransferReactions} from './transfer-continuation.js';
 
 const copy=value=>structuredClone(value);
 const survivalSensitiveIV=new Set(['anticoagulation','morphine','albumin','transfusion','vasopressor','ppi']);
@@ -68,7 +69,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   nativePatient.allergyHistoryAnswer='Tengo alergia a '+nativePatient.allergies.map(id=>
    (labels.get(id)||id)+(nativePatient.severeAllergies.includes(id)?' (reacción grave)':'')).join(', ')+'.';
  }
- const options={mode,defaultDoses:content.defaultDoses,progress,cases:content.cases,checkpoint:checkpoint?.care};
+ const options={mode,defaultDoses:content.defaultDoses,progress,cases:content.cases,checkpoint:checkpoint?.care,clinicalClock:()=>clock};
  // Every case inherits the validated global formulary (including cases that
  // do not yet have an active clinical executor). This is a PURE interpreter,
  // not a replacement for the native APP/CIRR physiological owner.
@@ -140,6 +141,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     if(rule&&!rule.destinations.includes(intent.id))return {status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
      receipt:{patientUid,eventId,decision:'REJECTED_NO_INDICATION',reasonCode:'destination-not-indicated',
       message:'El destino solicitado no está indicado con la situación clínica actual. Revisá la necesidad de vigilancia, tratamiento y nivel de cuidado.'}};
+    if(unrescuedTransferReactions(nativePatient,caseData,clock.nativeMinute).length)
+     return {status:'rejected',patientUid,eventId,reason:'stabilization-insufficient',
+      receipt:{patientUid,eventId,decision:'REJECTED_STABILIZATION_INSUFFICIENT',reasonCode:'stabilization-insufficient',
+       message:'Reacción alérgica grave activa: falta un rescate confirmado posterior al desencadenante antes del traslado.'}};
    }
    if(nursing&&intent.kind==='case.close'&&nursingWorkPending())
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};

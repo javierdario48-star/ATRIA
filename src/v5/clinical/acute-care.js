@@ -12,10 +12,10 @@ import {clinicalInterventionEligibility} from './native-medication-eligibility.j
 import {createSurgicalConsultation} from './surgical-consultation.js';
 import {GASTRO_CASE_CONDUCTS} from './gastro-expansion-policies.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
-import {clinicalTransferContinuation} from './transfer-continuation.js';
+import {clinicalTransferContinuation,unrescuedTransferReactions} from './transfer-continuation.js';
 
 const copy=x=>structuredClone(x);
-export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null},policy){
+export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null,clinicalClock},policy){
  Object.assign(p,{liveVitals:policy.initialVitals(c),baselineVitals:policy.initialVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,
   lastVitalsKnown:null,diagnosis:'',reassessments:0,lastReassessment:null,
   pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,
@@ -75,6 +75,10 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
  function readiness(destination){
   const out=policy.evaluate(p,c,destination);
   if(!out)return null;
+  if(unrescuedTransferReactions(p,c,clinicalClock?.().nativeMinute??p.policyState?.nativeMinute??p.phys?.lastNativeMinute??0).length){
+   out.ready=false;out.action=null;
+   out.missing.push('Reacción alérgica grave activa: falta un rescate confirmado posterior al desencadenante antes del traslado.');
+  }
   if(clinicalTransferContinuation(p,c,destination).pendingBlockers.length||p.pendingConsults.length){
    out.ready=false;out.action=null;out.missing.push('Esperar las administraciones y las respuestas del equipo receptor pendientes.');
   }

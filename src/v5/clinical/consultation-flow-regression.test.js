@@ -23,7 +23,7 @@ function fixture(caseId,patientUid) {
  return {c,s,uid,post,advance,workup};
 }
 
-for(const priorRescue of [false,true])test('CARD-08 with actual leak, allergic hypotension and rescue transfers without contraindicated beta blockade'+(priorRescue?' after a prior rescue dose':''),async()=>{
+for(const scenario of ['withheld-beta','prior-rescue','prepared-beta'])test('CARD-08 with actual leak, allergic hypotension and rescue: '+scenario,async()=>{
  const c=content.cases.find(c=>c.id==='CARD-08');
  let uid;
  for(let i=0;i<1000&&!uid;i++){
@@ -37,7 +37,8 @@ for(const priorRescue of [false,true])test('CARD-08 with actual leak, allergic h
  try{
   await f.workup();await f.post('¿Tiene alergias?');await f.post('/estudio g_card08_cta');
   await f.post('Enfermera oxígeno 4 L/min');
-  if(priorRescue){await f.post('/tratamiento epi_im');await f.advance(1);}
+  if(scenario==='prior-rescue'){await f.post('/tratamiento epi_im');await f.advance(1);}
+  if(scenario==='prepared-beta'){await f.post('/tratamiento esmolol');await f.advance(1);}
   while(f.s.read().patient.liveVitals.sys>=110&&!f.s.read().patient.patientDied&&f.s.read().clock.clinicalMinute<900)await f.advance(5);
   assert(f.s.read().patient.policyState.complications.some(x=>x.id==='card08-aortic-leak'));
   const analgesia=await f.post('Enfermera morfina 4 mg');
@@ -59,9 +60,12 @@ for(const priorRescue of [false,true])test('CARD-08 with actual leak, allergic h
   await f.advance(3.5);
   const closed=f.s.read();assert.equal(closed.patient.closure?.destination,'quirofano');
   assert.equal(closed.progress.receipts.length,1);
-  assert.equal(closed.patient.closure.quality.treatment,0,'a withheld unsafe drug earns no administration credit');
-  assert(!closed.patient.treatments.some(x=>['esmolol','metoprolol','aortic_surgery'].includes(x.id)));
-  assert.deepEqual(closed.patient.closure.handoff.withheldPreparations.map(x=>x.id).sort(),['esmolol','metoprolol']);
+  assert(!closed.patient.treatments.some(x=>x.id==='aortic_surgery'));
+  if(scenario!=='prepared-beta'){
+   assert.equal(closed.patient.closure.quality.treatment,0,'a withheld unsafe drug earns no administration credit');
+   assert(!closed.patient.treatments.some(x=>['esmolol','metoprolol'].includes(x.id)));
+   assert.deepEqual(closed.patient.closure.handoff.withheldPreparations.map(x=>x.id).sort(),['esmolol','metoprolol']);
+  }
  }finally{f.s.dispose();}
 });
 

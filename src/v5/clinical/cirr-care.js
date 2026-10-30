@@ -5,6 +5,7 @@ import {nativeCaseXP} from './progression.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {createClosureDebrief} from './closure-debrief.js';
 import {partialDisposition} from './partial-closure.js';
+import {unrescuedTransferReactions} from './transfer-continuation.js';
 import {createIVAdministration} from './native-medications.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
@@ -26,7 +27,7 @@ export function closureSnapshot(p,c,destination){return {
 /** One migrated native care executor, operating on the SAME patient as C1.
  * No UI, timers, global binding, pharmacology wrapper or alternate patient state.
  */
-export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null}){
+export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null,clinicalClock}){
  if(c.id!=='CIRR-001')throw Error('C2 care only supports CIRR-001');
  Object.assign(p,{liveVitals:initialCirrVitals(c),baselineVitals:initialCirrVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,lastVitalsKnown:null,
   diagnosis:'',reassessments:0,lastReassessment:null,pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,consults:[],pendingConsults:[],caseEnded:false,closure:null});
@@ -44,6 +45,10 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
  const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,checkpoint:checkpoint?.surgery});
  function readiness(destination){
   const out=csEvaluateClosure487(closureSnapshot(p,c,destination));
+  if(unrescuedTransferReactions(p,c,clinicalClock?.().nativeMinute??p.phys?.lastNativeMinute??0).length){
+   out.ready=false;out.action=null;
+   out.missing.push('Reacción alérgica grave activa: falta un rescate confirmado posterior al desencadenante antes del traslado.');
+  }
   if(p.pendingTreatments.length||p.pendingConsults.length){out.ready=false;out.action=null;out.missing.push('Esperar la ejecución o resolución de las intervenciones y consultas pendientes.');}
   if(p.treatments.some(t=>!p.lastReassessment?.interventionEvents?.includes(t.sourceEventId))){
    out.ready=false;out.action=null;out.missing.push('Reevaluar después de la última intervención efectivamente ejecutada.');
