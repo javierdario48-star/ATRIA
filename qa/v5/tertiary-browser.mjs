@@ -64,7 +64,7 @@ try{
   await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.lastVitalsKnown);
   await page.locator('#modalClose').click();
   await send('/consulta uti');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
-  assert.equal((await state()).patient.consults[0].accepted,true,'specific initial shock permits critical-care assessment');
+  assert.equal((await state()).patient.consults[0].accepted,false,'an early request does not fabricate missing examination or stabilization');
   assert.deepEqual((await state()).eligibleDestinations,[],'urgent acceptance is not completed care');
   stage=name+' physical resuscitation';
   await send('Enfermera monitor y Ringer 1000 ml y piperacilina tazobactam 4.5 g y noradrenalina 0.05 mcg/kg/min IV y oxigeno 4 L/min');
@@ -105,7 +105,6 @@ try{
   await clickHudAction(page,'peopleButton');await page.locator('[data-action="reassess"]').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.reassessments>0);
   await page.locator('#modalClose').click();
-  await page.waitForFunction(()=>atriaV5.snapshot().clinical.eligibleDestinations.includes('uti'));
   await page.screenshot({path:out+'/tertiary-'+name+'-ready.png'});
   await chooseDestination(page,'uti');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);

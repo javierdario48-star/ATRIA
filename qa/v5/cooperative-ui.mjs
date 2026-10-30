@@ -1,5 +1,6 @@
 // Public-UI helpers shared by the independently launched 2/3/4-browser runs.
 import assert from 'node:assert/strict';
+import {clickHudAction} from './hud-actions.mjs';
 import {readFileSync} from 'node:fs';
 import {createNavigation} from '../../src/v5/engine/navigation.js';
 const navigation=createNavigation(JSON.parse(readFileSync(new URL('../../src/v5/content/hospital.json',import.meta.url),'utf8')));
@@ -81,7 +82,7 @@ export async function walk(p,lastX=144,lastY=420){
   }
  }
 }
-export async function study(p,id){const before=await messageIds(p);await p.locator('#peopleButton').click();await p.locator('[data-action="studies"]').click();await p.locator('#studyChoice').selectOption(id);await p.locator('[data-action="request-study"]').click();await waitForMessage(p,'/estudio '+id,before);}
+export async function study(p,id){const before=await messageIds(p);await clickHudAction(p,'peopleButton');await p.locator('[data-action="studies"]').click();await p.locator('#studyChoice').selectOption(id);await p.locator('[data-action="request-study"]').click();await waitForMessage(p,'/estudio '+id,before);}
 
 // Complete patient handoff through public map, patient wheel, and the single
 // canonical closure panel; never invoke clinical engine APIs in browser QA.

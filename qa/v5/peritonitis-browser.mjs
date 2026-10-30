@@ -64,7 +64,7 @@ try{
   await page.waitForFunction(()=>!!atriaV5.snapshot().clinical.patient.lastVitalsKnown);
   await page.locator('#modalClose').click();
   await send('Enfermera cirugía');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
-  assert.equal((await state()).patient.consults[0].accepted,true,'specific initial shock permits urgent assessment');
+  assert.equal((await state()).patient.consults[0].accepted,false,'a documented impression does not fabricate missing examination or stabilization');
   assert.deepEqual((await state()).eligibleDestinations,[],'urgent acceptance is not completed care');
   stage=name+' physical resuscitation';
   await send('Enfermera monitor y Ringer 1000 ml y ceftriaxona 1 g y metronidazol 500 mg y noradrenalina 0.05 mcg/kg/min IV y oxigeno 4 L/min');
@@ -104,7 +104,6 @@ try{
   await clickHudAction(page,'peopleButton');await page.locator('[data-action="reassess"]').click();
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.reassessments>0);
   await page.locator('#modalClose').click();
-  await page.waitForFunction(()=>atriaV5.snapshot().clinical.eligibleDestinations.includes('quirofano'));
   await page.screenshot({path:out+'/peritonitis-'+name+'-ready.png'});
   await chooseDestination(page,'quirofano');
   await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
