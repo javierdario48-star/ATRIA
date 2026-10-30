@@ -85,7 +85,7 @@ jobs:
         run: node qa/v5/characterize-cirr-native.mjs
       - name: Characterize original APP dual antibiotics and fluid response (QA-only)
         run: node qa/v5/characterize-app-native.mjs
-      - name: Original surgical requests, delayed refusals and corrected acceptance remain equivalent
+      - name: Original consultation timing and V5 diagnosis, preparation and retry rules
         run: node qa/v5/characterize-surgery-native.mjs
       - name: Original special support doses, respiratory harm, infusion titration and withdrawal remain equivalent
         run: node qa/v5/characterize-special-support-native.mjs
