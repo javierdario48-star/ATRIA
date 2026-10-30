@@ -358,7 +358,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(disposed)throw Error('guard session disposed');
    if(!Number.isFinite(deltaRealSeconds)||deltaRealSeconds<0||deltaRealSeconds>86400)
     throw Error('invalid guard delta');
-   if(nativePatient.caseEnded)return [];
+   if(nativePatient.caseEnded){clock=guardClock.advance(deltaRealSeconds,typing);return [];}
    // A long presentation frame must preserve adverse episodes, support changes
    // and fatal exposure in the SAME clock/executor path. A pending medicine
    // only selects time resolution; effects still require actual administration.
