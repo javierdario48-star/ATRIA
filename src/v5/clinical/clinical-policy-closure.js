@@ -56,9 +56,9 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   .filter(row => row && !matchesMedicationAllergy487(patient, row.id));
  const done = new Set(confirmed.map(row => row.id));
  const continuation=clinicalTransferContinuation(patient,caseData,target,minute);
- const transferred=new Set([...done,...continuation.continuingAdministrations.map(row=>row.id),...continuation.deferredTreatmentIds]);
  const access = patient.procedures?.iv;
  if (patient.venousAccessCount > 0 && access?.patientUid === patient.uid && text(access.eventId)) done.add('iv');
+ const transferred=new Set([...done,...continuation.continuingAdministrations.map(row=>row.id),...continuation.deferredTreatmentIds]);
  const matched = assessDiagnosticImpression(caseData,patient.diagnosis).sufficient;
  const vitals = patient.liveVitals || {}, measured = patient.lastVitalsKnown;
  const vitalsKnown = measured?.patientUid === patient.uid && text(measured.eventId);

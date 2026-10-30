@@ -162,6 +162,17 @@ test('NEUR-07 transfers monitored antibiotic infusions to UTI after actual deliv
  }finally{f.s.dispose();}
 });
 
+test('CARD-07 recognizes real IV preparation for urgent receiver-owned pericardial drainage',async()=>{
+ const f=fixture('CARD-07');
+ try{
+  await f.workup();await f.post('/estudio g_card07_echo');await f.advance(15);await f.post('/reevaluar');
+  const request=await f.post('/disposicion procedimiento');
+  assert.equal(request.clinical[0].status,'pending',JSON.stringify(request.clinical));
+  await f.advance(3.5);assert.equal(f.s.read().patient.closure?.destination,'procedimiento');
+  assert(!f.s.read().patient.treatments.some(x=>x.id==='pericardial_drainage'));
+ }finally{f.s.dispose();}
+});
+
 test('CARD-08 UI starts and completes a transfer without any preceding manual consultation',async()=>{
  const f=fixture('CARD-08');
  try{
