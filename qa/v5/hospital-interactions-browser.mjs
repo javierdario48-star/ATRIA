@@ -181,7 +181,19 @@ try{
  assert.deepEqual(orderEvent.clinical.map(x=>[x.id,x.status]),
   [['oxygen','pending'],['iv','pending']],
   'both oxygen and IV have distinct real pending nurse jobs');
- await page.waitForFunction(()=>document.querySelector('#monitorOrderFeedback')?.dataset.status==='pending',null,{timeout:10000});
+ // The authoritative chat event above proves that both jobs began pending.
+ // A busy browser can observe the DOM after nearby nurses finish; requiring
+ // that transient label then waits forever for a state which already passed.
+ await page.waitForFunction(({commandId,patientUid})=>{
+  const feedback=document.querySelector('#monitorOrderFeedback');
+  if(!feedback||feedback.hidden)return false;
+  if(feedback.dataset.status==='pending')return true;
+  if(feedback.dataset.status!=='executed'||!feedback.textContent.includes('2/2'))return false;
+  const events=atriaV5.snapshot().clinical.room.events;
+  return ['oxygen','iv'].every(id=>events.some(e=>e.type==='clinical.completed'&&
+   e.commandId===commandId&&e.patientUid===patientUid&&e.clinical.some(x=>
+    x.id===id&&x.status==='executed'&&x.receipt?.patientUid===patientUid&&x.receipt?.eventId===e.eventId)));
+ },{commandId:orderEvent.message.id,patientUid:uid},{timeout:10000});
  const initialOxygen=await state();
  if(initialOxygen.patient.procedures.oxygen?.active){
   // Spatial NPC movement may finish during Playwright's async DOM inspection.
@@ -229,7 +241,7 @@ try{
  await page.locator('#guardButton').click();assert.equal(await state(),null);
  const report={test:'hospital-interactions',realBrowser:true,physicalAndroid:false,androidEmulated:true,
   url:page.url(),worldHitboxes:true,visibleNativeMonitorScreen:true,explicitPatientUid:true,unknownMonitorNoLeak:true,spotAndContinuousMeasurement:true,
-  anatomyAndTechniques:true,partialExamDoesNotComplete:true,glasgowByComponents:true,historyAcquiredEvidence:true,
+  anatomyAndTechniques:true,partialExamDoesNotComplete:true,glasgowByComponents:true,historyAcquiredEvidence:true,lateMonitorObservationRequiresNativeReceipts:true,
   keyboardOpenAndClosed:true,worldAnchoredPatientActions:true,deviceMonitorReadout:true,periodicRefreshPreservesFocusAndPress:true,rejectedExamDoesNotFlip:true,rotated:true,cleanLobbyReturn:true,errors};
  assert.deepEqual(errors,[]);await fs.writeFile(out+'/hospital-interactions-summary.json',JSON.stringify(report,null,2));
  console.log('HOSPITAL INTERACTIONS REAL UI PASS',JSON.stringify(report));await context.close();
