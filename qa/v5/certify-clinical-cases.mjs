@@ -132,7 +132,7 @@ function treatmentDefinition(content,id,c){
  const source=content.clinicalTreatments;
  return nativeTreatmentDefinition(id,c)||(source instanceof Map?source.get(id):source?.[id])||content.therapies.find(x=>x.id===id);
 }
-function treatmentCommand(c,content,id){
+export function treatmentCommand(c,content,id){
  if(id==='iv')return 'Enfermera una vía';
  if(id==='monitor')return '/monitor conectar';
  const definition=treatmentDefinition(content,id,c),regimen=c.clinicalPolicy?.regimens?.[id];
@@ -428,7 +428,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     row.unsafeMedicationCommand=wrongMedicationCommand;firstOrder=await action(wrongMedicationCommand);
    }
   }
-  const requested=new Set(),consulted=new Set(),rescued=new Set();let nextReassessment=0,recovered=false;
+  const requested=new Set(),consulted=new Map(),rescued=new Set();let nextReassessment=0,recovered=false;
   let lastCloseAttempt=-Infinity,wrongRepeatAt=0;
   while(view.clinical.clock.clinicalMinute<horizon-1e-8){
    const s=view.clinical,p=s.patient,second=s.clock.clinicalMinute;
@@ -456,8 +456,9 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
       issuedAtNativeMinute:s.clock.nativeMinute,issuedAtRealSecond:command.issuedAtRealSecond});
     }
    }
-   if(competent)for(const service of plan.consults)if(!consulted.has(service)){
-    await action('/consulta '+service);consulted.add(service);
+   if(competent)for(const service of plan.consults)if(!p.consults.some(row=>row.id===service&&row.accepted)&&
+    !p.pendingConsults.some(row=>row.id===service)&&second-(consulted.get(service)??-Infinity)>=15){
+    await action('/consulta '+service);consulted.set(service,second);
    }
    if(competent&&second>=nextReassessment){await action('/reevaluar');nextReassessment=second+15;}
    // Rescue is triggered by an observed native complication. No seed, flag,

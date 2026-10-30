@@ -93,6 +93,9 @@ async function scenario(bot,caseId,mode,skill){
  if(!state.patient.caseEnded&&!state.eligibleDestinations.includes(plan.dest)&&caseId==='PERI-SEC-001'){
   await bot.advance(40);await bot.post('/reevaluar');state=s.read();
  }
+ if(!state.patient.caseEnded&&plan.consult){
+  await bot.post(plan.consult);await bot.advance(3.5);state=s.read();
+ }
  if(!state.patient.caseEnded&&state.eligibleDestinations.includes(plan.dest)){
   const closure=await bot.post('/disposicion '+plan.dest);
   assert.equal(closure.clinical[0]?.status,'executed',caseId+' must close by authenticated destination');

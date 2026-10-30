@@ -36,6 +36,7 @@ async function intelligent(f,caseId,mode){
  if(cfg.consult)await f.post(cfg.consult);
  await f.advance(cfg.wait);
  await f.post('/reevaluar');
+ if(cfg.consult){await f.post(cfg.consult);await f.advance(3.5);}
  const status=f.s.read();
  assert.equal(!!status.patient.patientDied,false,caseId+' '+mode+' competent bot died');
  assert.equal(status.patient.pendingTreatments.length,0,
