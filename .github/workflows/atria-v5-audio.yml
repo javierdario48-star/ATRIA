@@ -7,6 +7,7 @@ on:
       - 'src/v5/ui/*audio*'
       - 'src/v5/ui/music-transport*'
       - 'src/v5/ui/ui-sound-policy*'
+      - 'src/v5/ui/bedside-presentation.test.js'
       - 'src/v5/content/audio/**'
       - 'src/v5/app/application.js'
       - 'src/v5/web/**'
