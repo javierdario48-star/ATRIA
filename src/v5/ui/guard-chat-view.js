@@ -57,12 +57,3 @@ export function createWardChatHistory({storage}={}){
   }
  });
 }
-/** Preview only. A confirmed server turn always replaces its fast preview.
- * Unconfirmed remote speech expires; a different patient's view cannot
- * keep echoing the prior actor after a selection changes. */
-export function pruneWardSpeechPreviews(previews,{rows,scene,self,navigation,now}){
- const ids=new Set(rows.map(row=>row.id));
- for(const [id,p] of previews)
-  if(ids.has(id)||now-p.time>15000||
-    !canHearWardDoctor(scene,p.actorId,self,navigation))previews.delete(id);
-}

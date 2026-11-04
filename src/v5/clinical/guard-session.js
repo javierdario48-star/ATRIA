@@ -82,7 +82,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  }
  const options={mode,defaultDoses:content.defaultDoses,
   progress:{...progress,award:receipt=>progress.award(rewardFor(receipt,receipt.actorId))},
-  cases:content.cases,checkpoint:checkpoint?.care,clinicalClock:()=>clock};
+  cases:content.cases,checkpoint:checkpoint?.care,clinicalClock:()=>clock,
+  nursingWorkPending:()=>nursingWorkPending()};
  // Every case inherits the validated global formulary (including cases that
  // do not yet have an active clinical executor). This is a PURE interpreter,
  // not a replacement for the native APP/CIRR physiological owner.

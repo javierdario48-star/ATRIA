@@ -68,16 +68,15 @@ test('invalid credentials rejected before a clinical request',()=>{
  assert.throws(()=>createDurableCooperativeReplica({window:{},roomId:'../wrong',clientKey}),/invalid/);
 });
 
-test('a stalled HTTP request releases the clinical lane and retains the original visible order',async()=>{
+for(const phase of ['headers','body'])test('a stall before the HTTP '+phase+' releases the lane and retains the original order',async()=>{
  const f=harness(), sent=[], errors=[];
  const storage={getItem:k=>f.store.get(k),setItem:(k,v)=>f.store.set(k,v)};
  const client=createDurableCooperativeReplica({roomId,clientKey,storage,requestTimeoutMs:25,
   window:{fetch:async(_url,options)=>{
    const request=JSON.parse(options.body);sent.push(request);
-   if(sent.length===1){
-    assert(options.signal,'a stalled fetch needs a deadline');
-    await new Promise((_,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));
-   }
+   const wait=()=>new Promise((_,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));
+   if(sent.length===1&&phase==='headers')await wait();
+   if(sent.length===1&&phase==='body')return {ok:true,json:wait};
    return {ok:true,json:async()=>({epoch:1,clinical:{room:{roomId},patient:{uid:'P'}},
     acknowledgements:[{commandId:'stalled-order',status:'received'}]})};
   }},onError:e=>errors.push(e)});

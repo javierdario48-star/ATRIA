@@ -31,7 +31,7 @@ import {createHospitalAudio} from '../ui/hospital-audio.js';
 import {uiSoundForTarget,uiSoundForChange} from '../ui/ui-sound-policy.js';
 import {audioSettingsHTML,renderMusicToggle} from '../ui/audio-settings.js';
 import {createChatTranscript} from '../ui/chat-transcript.js';
-import {visibleWardChatRows,pruneWardSpeechPreviews,createWardChatHistory} from '../ui/guard-chat-view.js';
+import {visibleWardChatRows,createWardChatHistory} from '../ui/guard-chat-view.js';
 import {clinicalCompletions,spellingSuggestions} from '../ui/clinical-autocomplete.js';
 import {createClinicalInterface} from '../ui/clinical-controller.js';
 import {clinicalWorkflow} from '../ui/clinical-workflow.js';
@@ -50,6 +50,15 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 const PROFILE_KEY='atria.v5.profile.v1';
 const PROGRESS_KEY='atria.v5.progress.v1';
 const supportedColors=new Set(SCRUB_COLORS);
+const clinicalRejectionMessages=Object.freeze({
+ 'approach-patient-to-claim':'Acercate a una cama para hablar con ese paciente.',
+ 'ambiguous-patient-selection':'Hay varios pacientes cerca. Tocá la cama que querés atender.',
+ 'other-player-owns-patient':'Ese paciente pertenece a otro médico. Acercate a otro box libre.',
+ 'patient-selection-changed':'El paciente seleccionado cambió. Repetí la orden en el box correcto.',
+ 'patient-claim-conflict':'No se pudo confirmar la asignación. Volvé a seleccionar al paciente.',
+ 'patient-not-active':'La atención ya finalizó. El mensaje no se ejecutó.',
+ 'shift-ended':'La guardia finalizó. El mensaje no se ejecutó.'
+});
 export function readProfile(storage){
  try{
   const saved=JSON.parse(storage.getItem(PROFILE_KEY)||storage.getItem('clinicalShift.profile.v1')||'null');
@@ -180,7 +189,7 @@ export async function createApplication({document,window,content,signal}){
  const history=[],transcript=createChatTranscript({document,element:ui('chatHistory'),history}),
   wardChatHistory=createWardChatHistory({storage:window.sessionStorage}),
   seenLobbyMessages=new Set(),seenGuardMessages=new Set(),seenNpcMessages=new Set(),
-  seenNurseCues=new Set(),nurseCueRows=[],fastWardSpeech=new Map();let lastNurseCueAt=-Infinity,lastPatientSpeechAt=-Infinity,selectedLobbyPlayerId=null,selectedLobbyCardState=null;
+  seenNurseCues=new Set(),nurseCueRows=[];let lastNurseCueAt=-Infinity,lastPatientSpeechAt=-Infinity,selectedLobbyPlayerId=null,selectedLobbyCardState=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
  function renderLobbyMessages(s){
   if(world.snapshot().phase!=='lobby')return;
@@ -373,6 +382,8 @@ export async function createApplication({document,window,content,signal}){
     lastReceivedPatientCount=count;
     const revision=patientUid+':'+value.clinical.room.revision;
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
+    else if(value.acknowledgements?.length)renderGuardCommunication();
+    for(const receipt of value.acknowledgements||[])notifyClinicalRejection(receipt);
     const confirmedDirect=directSelection.observe(value.clinical,self);
     if(confirmedDirect?.status==='occupied'||confirmedDirect?.status==='unavailable'){
      pendingPatientAction=null;
@@ -417,7 +428,7 @@ export async function createApplication({document,window,content,signal}){
   durableClient=client;replica=client;guardSession=client;lastRemoteRevision=-1;
   if(spatial)world.applySharedSpatial(spatial,window.performance.now(),client.lastAcknowledgedMotion(social.state().user?.id));
   lastClinicalFrame=window.performance.now();clinicalUI.reset();close();
-  seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;lastNurseCueAt=-Infinity;lastPatientSpeechAt=-Infinity;fastWardSpeech.clear();resetChat(current.competition?.mode==='competitive'?'Guardia competitiva: el primer médico en atender al paciente obtiene su responsabilidad clínica.':'Guardia cooperativa persistente: el servidor controla la clínica.');
+  seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;lastNurseCueAt=-Infinity;lastPatientSpeechAt=-Infinity;resetChat(current.competition?.mode==='competitive'?'Guardia competitiva: el primer médico en atender al paciente obtiene su responsabilidad clínica.':'Guardia cooperativa persistente: el servidor controla la clínica.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;
   clinicalChanged();updateHud();
  }
@@ -551,15 +562,12 @@ export async function createApplication({document,window,content,signal}){
   if(!durableClient||roomId!==coopRoomId||typeof id!=='string'||
      typeof text!=='string'||text.length>280||!social.isMember(userId))return;
   const key='player:'+userId+':'+id;
-  if(seenGuardMessages.has(key)||fastWardSpeech.has(key)||
+  if(seenGuardMessages.has(key)||
     !canHearWardDoctor(world.snapshot(),userId,social.state().user?.id,world.navigation))return;
-  const name=social.state().room?.members.find(m=>m.userId===userId)?.name||'Médico';
-  const time=window.performance.now();
-  fastWardSpeech.set(key,{id:key,name,text,time,actorId:userId});
   seenGuardMessages.add(key);
-  world.showGuardMessage(userId,text,time);
-  line(name,text); // social speech preview: not a medication or medical receipt
-  if(fastWardSpeech.size>60)fastWardSpeech.delete(fastWardSpeech.keys().next().value);
+  // Room speech can animate a nearby speaker. Only the authenticated
+  // clinical stream and this doctor's pending queue enter the transcript.
+  world.showGuardMessage(userId,text,window.performance.now());
  }
  function renderGuardCommunication(){
   if(!guardSession)return;
@@ -612,8 +620,6 @@ export async function createApplication({document,window,content,signal}){
   }
   if(seenGuardMessages.size>800)for(const id of [...seenGuardMessages].slice(0,seenGuardMessages.size-500))
    seenGuardMessages.delete(id);
-  pruneWardSpeechPreviews(fastWardSpeech,{rows,scene,self,
-   navigation:world.navigation,now:window.performance.now()});
   // The final sentence is derived from one authenticated clinical receipt.
   const farewell=finalNurseMessage(clinicalState);
   if(farewell&&(!coopRoomId||nearBed)&&!seenNpcMessages.has(farewell.id)){
@@ -623,12 +629,10 @@ export async function createApplication({document,window,content,signal}){
   }
   const confirmed=visibleClinicalRows(wardChatHistory.read(chatContext,rows),{concluded});
   const pendingOrders=(durableClient?.pendingCommands()||[])
-   .filter(order=>!order.targetPatientUid||order.targetPatientUid===patientId);
+   .filter(order=>order.targetPatientUid===patientId);
   const pending=pendingOrders.map(order=>({id:'pending:'+order.id,name:'ATRIA',role:'system',text:'Pendiente de confirmación · '+order.text}));
-  const pendingPreviews=new Set(pendingOrders.map(order=>'player:'+self+':'+order.id));
   const showFarewell=farewell&&(!coopRoomId||nearBed||clinicalState.patient.closure?.actorId===self);
-  transcript.replace([...confirmed,...nurseCueRows,...(showFarewell?[farewell]:[]),...pending],
-   [...fastWardSpeech.values()].filter(preview=>!pendingPreviews.has(preview.id)));
+  transcript.replace([...confirmed,...nurseCueRows,...(showFarewell?[farewell]:[]),...pending]);
   clinicalUI.render();
   const closure=clinicalState.caseReward||clinicalState.patient.closure;
   if(!durableClient&&closure?.closed){
@@ -826,7 +830,7 @@ export async function createApplication({document,window,content,signal}){
   if(caseSequence)caseId=caseSequence[0];
   localAdmissions=createShiftFlow({content,mode:draftMode,roomId:localRoomId,firstCaseId:caseId,allowedCaseIds,caseSequence});
   const first=localAdmissions.advance(0)[0];if(!first)return false;
-  fastWardSpeech.clear();announcedClosure=null;announcedDeathUid=null;
+  announcedClosure=null;announcedDeathUid=null;
   seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;
   pendingPatientAction=null;clinicalUI.reset();patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();
   world.enterGuard({mode:draftMode,caseId,patientUid:first.uid,bedId:first.bedId});
@@ -901,6 +905,10 @@ export async function createApplication({document,window,content,signal}){
   const prefix=kind==='nurse'?'Enfermera, ':kind==='vega'?'Vega, ':'';
   input.value=prefix+text;updateHud();input.focus({preventScroll:true});input.setSelectionRange(prefix.length,prefix.length);updateTypingAssistance();
  }
+ function notifyClinicalRejection(receipt){
+  if(receipt?.status==='rejected')
+   toast(clinicalRejectionMessages[receipt.reason]||'El servidor rechazó el mensaje. No se ejecutó ninguna orden.');
+ }
  async function submitText(text,{patientUid}={}){
   if(!text.trim())return;
   if(localAdmissions?.ended()&&!durableClient){toast('La guardia finalizó: no se admiten nuevas órdenes.');return;}
@@ -925,44 +933,29 @@ export async function createApplication({document,window,content,signal}){
   // Never suppress all messages based on its owner. The authority selects
   // this speaker's physical bedside and enforces that bed's ownership.
   advanceClinicalTo(window.performance.now());
-  // Speech is a visual local action, NOT an executed treatment. Display it
-  // without waiting for PostgreSQL; clinical replies still require an ACK.
-  const examination=isExaminationCommand(text);
-  if(!examination)world.showGuardMessage('local-player',text,window.performance.now());
   const id='message-'+(coopRoomId?messageEpoch+'-':'')+(++messageNumber);
-  if(durableClient&&coopRoomId&&!examination){
-   const sender=social.state().user?.id;
-   if(sender)showWardSpeech({roomId:coopRoomId,userId:sender,id,text});
-   // Room speech is a display preview, never an order or a second authority.
-   // Do not wait for this network path before submitting clinical action.
-   social.postRoomSpeech({id,text}).catch(()=>{});
-  }
   const session=guardSession;
   try{
-   // The view's patient may be another doctor's. Keep the one read-only
-   // target policy beside direct selection, not inside the UI coordinator.
+   const actorId=social.state().user?.id,nearbyUids=durableClient?world.nearbyPatientsFor(actorId):null;
    const targetPatientUid=resolveClinicalMessageTarget({
     clinical:session.read(),explicitUid:patientUid,focusedUid:focusedPatientUid,
-    actorId:social.state().user?.id,durable:!!durableClient
+    actorId,durable:!!durableClient,nearbyUids
    });
+   if(durableClient&&!targetPatientUid){
+    toast(nearbyUids.length?'Seleccioná al paciente que querés atender.':'Acercate a una cama para hablar con el paciente.');
+    return {status:'rejected',reason:'patient-selection-changed'};
+   }
+   if(!isExaminationCommand(text)){
+    if(durableClient&&coopRoomId&&actorId){
+     showWardSpeech({roomId:coopRoomId,userId:actorId,id,text});
+     social.postRoomSpeech({id,text}).catch(()=>{});
+    }else world.showGuardMessage('local-player',text,window.performance.now());
+   }
    const sent=session.post({id,text,...(targetPatientUid?{targetPatientUid}:{})});
    if(durableClient)renderGuardCommunication();
    const receipt=await sent;
    if(guardSession!==session)return receipt;
-   if(receipt?.status==='rejected'&&receipt.reason==='approach-patient-to-claim')
-    toast('Acercate a una cama para hablar con ese paciente.');
-   if(receipt?.status==='rejected'&&receipt.reason==='ambiguous-patient-selection')
-    toast('Hay varios pacientes cerca. Tocá la cama que querés atender.');
-   if(receipt?.status==='rejected'&&receipt.reason==='other-player-owns-patient')
-    toast('Ese paciente pertenece a otro médico. Acercate a otro box libre.');
-   if(receipt?.status==='rejected'&&receipt.reason==='patient-selection-changed')
-    toast('El paciente seleccionado cambió. Repetí la orden en el box correcto.');
-   if(receipt?.status==='rejected'&&receipt.reason==='patient-claim-conflict')
-    toast('No se pudo confirmar la asignación. Volvé a seleccionar al paciente.');
-   if(receipt?.status==='rejected'&&receipt.reason==='patient-not-active')
-    toast('La atención ya finalizó. El mensaje no se ejecutó.');
-   if(receipt?.status==='rejected'&&receipt.reason==='shift-ended')
-    toast('La guardia finalizó. El mensaje no se ejecutó.');
+   if(!durableClient)notifyClinicalRejection(receipt);
    return receipt;
   }
   catch{if(guardSession===session)toast('No pude confirmar el mensaje.');}

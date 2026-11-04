@@ -46,12 +46,15 @@ export function createDirectPatientSelection(){
  * snapshots may show another doctor's patient; only our confirmed owned UID
  * can be forwarded. The single server authority checks proximity again.
  */
-export function resolveClinicalMessageTarget({clinical,explicitUid=null,focusedUid=null,actorId=null,durable=false}={}){
+export function resolveClinicalMessageTarget({clinical,explicitUid=null,focusedUid=null,actorId=null,durable=false,nearbyUids=null}={}){
  const competitive=durable&&clinical?.competition?.mode==='competitive';
  const selected=explicitUid||focusedUid;
- const record=clinical?.shift?.patients?.find(p=>p.uid===selected);
- if(selected&&(!competitive||record?.ownerId===actorId))return selected;
- // In cooperative guard the shared active patient is a valid default;
- // competitive must not borrow the last published global patient snapshot.
- return durable&&!competitive?clinical?.patient?.uid??null:null;
+ if(!competitive)return selected||(durable?clinical?.patient?.uid??null:null);
+ const records=clinical.shift?.patients||[];
+ const eligible=uid=>records.some(p=>p.uid===uid&&!p.closed&&(!p.ownerId||p.ownerId===actorId));
+ const nearby=uid=>!nearbyUids||nearbyUids.includes(uid);
+ if(explicitUid)return nearby(explicitUid)&&eligible(explicitUid)?explicitUid:null;
+ if(focusedUid&&nearby(focusedUid)&&records.some(p=>p.uid===focusedUid&&!p.closed&&p.ownerId===actorId))return focusedUid;
+ const sole=nearbyUids?.length===1?nearbyUids[0]:null;
+ return sole&&eligible(sole)?sole:null;
 }

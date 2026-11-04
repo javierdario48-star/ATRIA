@@ -15,7 +15,7 @@ import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {clinicalTransferContinuation,unrescuedTransferReactions} from './transfer-continuation.js';
 
 const copy=x=>structuredClone(x);
-export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null,clinicalClock},policy){
+export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null,clinicalClock,nursingWorkPending},policy){
  Object.assign(p,{liveVitals:policy.initialVitals(c),baselineVitals:policy.initialVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,
   lastVitalsKnown:null,diagnosis:'',reassessments:0,lastReassessment:null,
   pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,
@@ -47,7 +47,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   proof,rejected,checkpoint:checkpoint?.iv});
  const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,
   prepareTransfer:(cmd,clock)=>prepareDispositionReassessment(p,clock,cmd),
-  acceptTransfer:completeAcceptedTransfer,checkpoint:checkpoint?.surgery});
+  acceptTransfer:completeAcceptedTransfer,nursingWorkPending,checkpoint:checkpoint?.surgery});
  function finalize(cmd,evaluation){
   const xp=nativeCaseXP({score:evaluation.quality.score,mode});
   const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,

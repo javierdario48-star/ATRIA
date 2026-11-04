@@ -79,6 +79,10 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  const firstUid=shift.records()[0].uid;
  const preferred=id=>focused.get(id)||firstUid;
  const activeSession=id=>sessions.get(preferred(id))||sessions.get(firstUid);
+ function setFocus(actorId,uid){
+  if(focused.get(actorId)!==uid)focusVersions.set(actorId,(focusVersions.get(actorId)||0)+1);
+  focused.set(actorId,uid);
+ }
  function claimPatient(actorId,uid){
   const r=shift.record(uid);
   if(!members.some(m=>m.id===actorId)||!r||r.closed||shift.ended())return false;
@@ -90,8 +94,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(r.ownerId&&r.ownerId!==actorId)return false;
    if(!r.ownerId&&!shift.owner(uid,actorId))return false;
   }
-  if(focused.get(actorId)!==uid)focusVersions.set(actorId,(focusVersions.get(actorId)||0)+1);
-  focused.set(actorId,uid);return true;
+  setFocus(actorId,uid);return true;
  }
  function awardMembers(){
   for(const r of shift.records()){
@@ -174,6 +177,9 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    for(const [uid,session] of sessions)
     if(session.hasCommand(actorId,envelope.id))
      return session.post({...envelope,targetPatientUid:envelope.targetPatientUid??uid},actorId);
+   // An old client queue with no bedside binding may look up a committed
+   // receipt, but cannot execute a fresh order after the doctor has moved.
+   if(envelope.targetPatientUid===null)return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-selection-changed'};
    if(shift.ended())return {roomId,commandId:envelope.id,status:'rejected',reason:'shift-ended'};
    let uid=preferred(actorId),record=shift.record(uid);
    if(mode==='competitive'){
@@ -183,7 +189,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     const bedside=world.nearbyPatientsFor(actorId).map(id=>shift.record(id))
      .filter(r=>r&&!r.closed);
     const explicit=envelope.targetPatientUid;
-    if(explicit&&explicit!==focused.get(actorId))
+    if(explicit&&explicit!==focused.get(actorId)&&(bedside.length!==1||bedside[0].uid!==explicit))
      return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-selection-changed'};
     if(explicit)record=bedside.find(r=>r.uid===explicit)||null;
     else{
@@ -200,7 +206,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     // bedside contact. Speaking from a corridor or another box never is.
     if(!record.ownerId&&!shift.owner(record.uid,actorId))
      return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-claim-conflict'};
-    focused.set(actorId,record.uid);uid=record.uid;
+    setFocus(actorId,record.uid);uid=record.uid;
    }else if(envelope.targetPatientUid&&envelope.targetPatientUid!==uid)
     return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-selection-changed'};
    if(!record||record.closed)return {roomId,commandId:envelope.id,status:'rejected',

@@ -82,6 +82,15 @@ test('cooperative and local messages retain their existing context resolution',(
  assert.equal(resolveClinicalMessageTarget({clinical:coop,durable:false}), null);
 });
 
+test('the first competitive bedside message binds to the one reachable unassigned patient',()=>{
+ const clinical={...state('B1','doctorB',null),competition:{mode:'competitive'}};
+ const bind=(nearbyUids,extra={})=>resolveClinicalMessageTarget({clinical,actorId:'doctorA',durable:true,nearbyUids,...extra});
+ assert.equal(bind(['B2']),'B2');
+ assert.equal(bind(['B1','B2']),null);
+ assert.equal(bind(['B2'],{explicitUid:'B1'}),null,'an explicit rejected target cannot fall through to a different patient');
+ assert.equal(bind([]),null);
+});
+
 test('cooperative default patient snapshot cannot bypass physical claim confirmation',()=>{
  const s=state('B1',null,null,'coop');
  s.shift.confirmedFocusPatientUid=null;

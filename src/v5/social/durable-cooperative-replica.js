@@ -23,11 +23,12 @@ export function createDurableCooperativeReplica({
   const retained=JSON.parse(storage?.getItem(key)||'[]');
   if(Array.isArray(retained))for(const envelope of retained)
    if(typeof envelope?.id==='string'&&typeof envelope?.text==='string'&&!pending.has(envelope.id))
-    pending.set(envelope.id,{envelope:clone(envelope),resolve:null});
+    pending.set(envelope.id,{envelope:clone({...envelope,targetPatientUid:envelope.targetPatientUid??null}),resolve:null});
  }catch{}
  function accept(response){
-  if(!response?.clinical||response.clinical.room?.roomId!==roomId||!Number.isSafeInteger(response.epoch)
-   ||response.epoch<epoch)return false;
+  if(!response?.clinical||response.clinical.room?.roomId!==roomId||!Number.isSafeInteger(response.epoch))
+   throw Error('invalid clinical response');
+  if(response.epoch<epoch)return false;
   epoch=response.epoch;
   current=clone(response);
   for(const ack of response.acknowledgements||[]){
@@ -41,11 +42,14 @@ export function createDurableCooperativeReplica({
   return true;
  }
  async function request(action,extra={}){
+  const signal=AbortSignal.timeout(requestTimeoutMs);
   const response=await window.fetch('/api/clinical',{method:'POST',cache:'no-store',
-   signal:AbortSignal.timeout(requestTimeoutMs),
+   signal,
    headers:{'Content-Type':'application/json',...(authorization()?{Authorization:authorization()}:{})},
    body:JSON.stringify({action,clientKey,roomId,...extra})});
-  let value;try{value=await response.json();}catch{value={};}
+  let value;
+  try{value=await response.json();}
+  catch(error){signal.throwIfAborted();if(response.ok)throw error;value={};}
   if(!response.ok){
    const error=Error(value.error||'clinical-'+response.status);
    error.status=response.status;error.code=value.code||'unavailable';

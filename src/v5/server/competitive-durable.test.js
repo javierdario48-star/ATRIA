@@ -165,7 +165,7 @@ test('two competitive doctors type beside distant beds: each message targets onl
   // Physician A still has the old first-patient snapshot. The unscoped
   // typed greeting must NOT be sent to B's patient and must not be blocked.
   assert.equal((await call('a')).clinical.patient.uid,first.uid);
-  const greeting=await call('a',{commands:[{id:'next-box-hello',text:'hola'}]});
+  const greeting=await call('a',{commands:[{id:'next-box-hello',text:'hola',targetPatientUid:second.uid}]});
   assert.equal(greeting.acknowledgements[0].status,'received');
   assert.equal(greeting.clinical.patient.uid,second.uid);
   assert.equal(greeting.clinical.shift.patients[1].ownerId,'a');
@@ -177,6 +177,9 @@ test('two competitive doctors type beside distant beds: each message targets onl
   assert(!stranger.clinical.room.transcript.some(m=>m.text==='hola'&&m.patientUid===second.uid));
   const stale=await call('a',{commands:[{id:'stale-first-target',text:'/signos',targetPatientUid:first.uid}]});
   assert.equal(stale.acknowledgements[0].reason,'patient-selection-changed');
+  const legacy=await call('a',{commands:[{id:'unbound-old-order',text:'Enfermera oxígeno 4 L/min',targetPatientUid:null}]});
+  assert.equal(legacy.acknowledgements[0].reason,'patient-selection-changed');
+  assert(!legacy.clinical.room.transcript.some(m=>m.id==='unbound-old-order'));
   authority=create();
   const restored=await call('a',{commands:[{id:'persisted-second-target',text:'/signos'}]});
   assert.equal(restored.clinical.patient.uid,second.uid);

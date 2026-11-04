@@ -7,11 +7,11 @@ import {closureDecisionHTML} from '../ui/clinical-closure-panel.js';
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 import {generatePatientVariation} from '../content/patient-variation.js';
 
-function fixture(caseId,patientUid) {
+function fixture(caseId,patientUid,nursing) {
  let sequence=0;
  const c=content.cases.find(c=>c.id===caseId),uid=patientUid||'regression-'+caseId;
  const s=createGuardSession({roomId:uid,mode:'solo',actorId:'doctor',actorName:'Médico',
-  patient:{uid,caseId},content,resolveContext:()=>({patientUid:uid})});
+  patient:{uid,caseId},content,nursing,resolveContext:()=>({patientUid:uid})});
  const post=text=>s.post({id:'cmd-'+(++sequence),text});
  const advance=async seconds=>{s.advance(seconds);await s.flush();};
  async function workup(){
@@ -22,6 +22,34 @@ function fixture(caseId,patientUid) {
  }
  return {c,s,uid,post,advance,workup};
 }
+
+test('a new bedside nursing order during receiver review completes before automatic handoff',async()=>{
+ const arrivals=[];
+ const f=fixture('CARD-08',undefined,{
+  enqueue(task){arrivals.push(task);return {status:'travelling'};},
+  takeArrivals:()=>arrivals.splice(0),
+  accept:result=>({status:result.status==='executed'?'confirmed':'rejected'})
+ });
+ const arrive=async()=>{f.s.finishNurseArrivals();await f.s.flush();};
+ try{
+  await f.workup();await arrive();
+  await f.post('/estudio g_card08_cta');await f.post('/tratamiento esmolol');await arrive();
+  await f.advance(22);
+  const referral=await f.post('/disposicion quirofano');
+  assert.equal(referral.clinical[0].status,'pending');
+  const oxygen=await f.post('Enfermera oxígeno 4 L/min');
+  assert.equal(oxygen.clinical[0].status,'pending');
+  await f.advance(3.5);
+  assert.equal(f.s.read().patient.caseEnded,false,'a travelling nurse has yet to confirm the new intervention');
+  assert.equal(f.s.read().patient.pendingConsults.length,1,'the original transfer stays queued');
+  await arrive();await f.advance(.25);
+  const final=f.s.read();
+  assert.equal(final.patient.closure?.destination,'quirofano');
+  assert.equal(final.patient.procedures.oxygen.active,true);
+  assert(final.patient.lastReassessment.interventionEvents.includes(final.patient.procedures.oxygen.sourceEventId));
+  assert.equal(final.progress.receipts.length,1);
+ }finally{f.s.dispose();}
+});
 
 for(const scenario of ['withheld-beta','prior-rescue','prepared-beta'])test('CARD-08 with actual leak, allergic hypotension and rescue: '+scenario,async()=>{
  const c=content.cases.find(c=>c.id==='CARD-08');
