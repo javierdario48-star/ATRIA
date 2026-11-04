@@ -163,10 +163,11 @@ export async function createApplication({document,window,content,signal}){
   }else renderer.setPlayableBounds(null);
   const worldSnapshot=world.snapshot();
   renderer.draw(world.presentNurses(presentation.sample(worldSnapshot,alpha)),now);
-  patientWheel.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top);
-  unassignedGlow.position(renderer,ui('hud').getBoundingClientRect().bottom,
-   ui('chatDock').getBoundingClientRect().top);
-  patientClinical.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top,
+  const hudBottom=ui('hud').getBoundingClientRect().bottom,dockTop=ui('chatDock').getBoundingClientRect().top;
+  patientWheel.position(renderer,hudBottom,dockTop);
+  vegaHintCard.position(hudBottom);
+  unassignedGlow.position(renderer,hudBottom,dockTop);
+  patientClinical.position(renderer,hudBottom,dockTop,
    {obscured:dialog.open||patientWheel.isOpen()||worldSnapshot.phase!=='guard',
     // Read-only collision query from the SAME navigation owner. The badge
     // cannot intercept a reachable tile when a solid anchor is available.
@@ -622,7 +623,7 @@ export async function createApplication({document,window,content,signal}){
   transcript.replace([...rows,...nurseCueRows,...(farewell&&(!coopRoomId||nearBed)?[farewell]:[])],
    fastWardSpeech.values());
   clinicalUI.render();
-  const closure=guardSession.read().patient.closure;
+  const closure=clinicalState.caseReward||clinicalState.patient.closure;
   if(!durableClient&&closure?.closed){
    if(localAdmissions)settleLocalPatient(closure);
    if(coopRoomId){
@@ -680,7 +681,7 @@ export async function createApplication({document,window,content,signal}){
     toast('Recepción: nuevo ingreso en '+r.bedId+'. Consultá el tablero.');
    }
    for(const session of localSessions.values()){
-    const closure=session.read().patient.closure;
+    const state=session.read(),closure=state.caseReward||state.patient.closure;
     if(closure?.closed)settleLocalPatient(closure);
    }
    if(localAdmissions.ended()&&!shiftEndedAnnounced){

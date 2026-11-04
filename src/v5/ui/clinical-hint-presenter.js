@@ -53,6 +53,9 @@ export function createVegaHintCard({document,portraitUrl}){
    root.dataset.patientUid=hint.patientUid;root.dataset.encounterId=hint.encounterId;root.hidden=false;
    return root.isConnected;
   },
+  position(hudBottom){
+   if(!root.hidden&&Number.isFinite(hudBottom))root.style.top=Math.max(8,Math.ceil(hudBottom)+8)+'px';
+  },
   hide(){root.hidden=true;delete root.dataset.patientUid;delete root.dataset.encounterId;},
   destroy(){root.remove();}
  });

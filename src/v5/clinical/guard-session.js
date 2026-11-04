@@ -558,10 +558,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   pharmacologyRead:()=>pharmacology.evaluate(caseData.id,nativePatient,clock.nativeMinute),
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
   read(doctorId=actorId){const room=authority.snapshot(),subject=copy(nativePatient);
-   if(subject.closure)subject.closure=rewardFor(subject.closure,doctorId);
+   const caseReward=subject.closure?rewardFor(subject.closure,doctorId):null;
    const displayMessages=messages(room);
-   if(subject.closure&&hintLedger.count(doctorId))for(const row of displayMessages)row.text=row.text.replace(/\+\d+ XP\./g,'+'+subject.closure.xp+' XP.');
-   return {hintBinding:{roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId},hintCount:hintLedger.count(doctorId),room,patient:subject,exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:displayMessages,progress:progress.read(),
+   if(caseReward?.hintCount)for(const row of displayMessages)row.text=row.text.replace(/\+\d+ XP\./g,'+'+caseReward.xp+' XP.');
+   return {hintBinding:{roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId},hintCount:hintLedger.count(doctorId),
+   caseReward,room,patient:subject,exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:displayMessages,progress:progress.read(),
    eligibleDestinations:eligibleDestinations(),
    closure:copy(closureReadiness(executor==='peritonitis'?undefined:
     (caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations?.[0]||'sala'))};},

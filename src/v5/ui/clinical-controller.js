@@ -256,7 +256,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    '<small>Progreso documentado, no implica corrección diagnóstica ni tratamiento completo.</small>');
   if(ui('caseReadiness'))ui('caseReadiness').textContent=p.caseEnded?'Atención cerrada.':s.eligibleDestinations?.length?'Evaluación completa. Elegí cómo continúa el cuidado.':(s.closure?.missing||[]).join(' ');
   setHTML(ui('caseDestinations'),p.caseEnded||s.canEdit===false?'':destinationButtonsHTML(s.eligibleDestinations));
-  setHTML(ui('caseResult'),caseDebriefHTML(p.closure));
+  setHTML(ui('caseResult'),caseDebriefHTML(s.caseReward||p.closure));
   const feedback=ui('examFeedback');
   if(feedback){feedback.hidden=!examFeedback;feedback.textContent=examFeedback?.text||'';feedback.dataset.status=examFeedback?.status||'';}
   renderExamination(document,p,regionId,flippedRegion);

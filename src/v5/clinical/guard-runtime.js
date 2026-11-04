@@ -117,10 +117,10 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     score:p?.closure?.quality?.score??null};
   });
   const outcomes=items.filter(r=>r.closed||r.patientDied).map(r=>{
-   const p=sessions.get(r.uid).read(mode==='competitive'?(r.ownerId||actorId):actorId).patient;
+   const {patient:p,caseReward}=sessions.get(r.uid).read(mode==='competitive'?(r.ownerId||actorId):actorId);
    return {patientUid:r.uid,ownerId:r.ownerId,closed:!!p.closure?.closed,
     survived:!p.patientDied,score:p.closure?.quality?.score??0,
-    xp:p.closure?.xp??0,points:p.closure?.quality?.score??0};
+    xp:caseReward?.xp??p.closure?.xp??0,points:p.closure?.quality?.score??0};
   });
   state.shift={mode,elapsedSeconds:shift.elapsed(),remainingSeconds:shift.remaining(),ended:shift.ended(),
    guardSelection:guardSelection?{scope:guardSelection.scope,selection:guardSelection.selection,multiplier:guardScopeMultiplier(guardSelection.scope)}:null,

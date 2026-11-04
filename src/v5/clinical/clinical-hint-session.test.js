@@ -32,3 +32,17 @@ test('individual reward applies hint factor without changing clinical score or a
  assert.equal(s.rewardFor(raw,'a').xp,126);assert.equal(s.rewardFor(raw,'a').quality.score,100);
  assert.equal(s.rewardFor(raw,'b').xp,133);s.dispose();
 });
+test('both doctors see the same canonical clinical closure with separate XP projections',async()=>{
+ const s=createGuardSession(options);
+ await reveal(s,'a');
+ await s.post({id:'dx',text:'/diagnostico cirrosis descompensada'},'b');
+ await s.post({id:'close',text:'/cierre-parcial observacion'},'b');
+ const a=s.read('a'),b=s.read('b');
+ assert.equal(b.patient.closure.actorId,'b');
+ assert.deepEqual(a.patient,b.patient);
+ assert.equal(a.caseReward.xp,Math.floor(b.caseReward.xp*95/100));
+ assert.equal(a.caseReward.quality.score,b.caseReward.quality.score);
+ const late=await s.hint({...s.hintBinding('a'),op:'prepare',requestId:'closed-encounter'},'a');
+ assert.equal(late.reason,'patient-not-active');assert.equal(s.hintCount('a'),1);
+ s.dispose();
+});
