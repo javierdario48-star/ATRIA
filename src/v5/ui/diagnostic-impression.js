@@ -2,8 +2,8 @@ import {csDxSpecificity487,csDxCatalog487,csDxSuggest487} from '../../clinical/d
 import {esc,setHTML} from './render-content.js';
 import {positionPatientOverlay} from './patient-overlay-layout.js';
 
-export const DESTINATION_LABELS=Object.freeze({quirofano:'Derivar a quirófano',sala:'Internar en sala',
- observacion:'Dejar en observación',uti:'Derivar a UTI',alta:'Dar el alta',procedimiento:'Derivar a procedimiento'});
+import {DESTINATION_LABELS} from '../content/clinical-controls.js';
+export {DESTINATION_LABELS};
 export function destinationButtonsHTML(choices=[],{floating=false}={}){
  return choices.filter(id=>Object.hasOwn(DESTINATION_LABELS,id)).map(id=>
   '<button type="button" '+(floating?'data-patient-destination':'data-destination')+'="'+id+'">'+DESTINATION_LABELS[id]+'</button>').join('');

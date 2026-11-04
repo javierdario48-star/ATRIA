@@ -1,3 +1,4 @@
+import {CLINICAL_CONTROLS} from '../content/clinical-controls.js';
 import {clinicalWorkflow} from './clinical-workflow.js';
 import {destinationButtonsHTML} from './diagnostic-impression.js';
 import {esc} from './render-content.js';
@@ -13,7 +14,7 @@ export function closureDecisionHTML(state){
  const pending=steps.filter(s=>s.status==='pending'||s.status==='partial'||s.status==='attention')
   .map(s=>s.label);
  return '<div class="case-close-content">'+
-  '<h2>Cierre de atención</h2><p class="case-close-subtitle">Definí el destino del paciente cuando corresponda.</p>'+
+  '<h2>'+CLINICAL_CONTROLS.closureTitle+'</h2><p class="case-close-subtitle">Definí el destino del paciente cuando corresponda.</p>'+
   '<div class="case-close-diagnosis"><span>Tu impresión diagnóstica</span><strong>'+
     esc(diagnostic||'Todavía no registrada')+'</strong></div>'+
   (choices.length?

@@ -1,16 +1,17 @@
+import {CLINICAL_CONTROLS} from '../content/clinical-controls.js';
 /**
  * UI-only context menu projected from the active world's patient coordinates.
  * No navigation, clinical execution, identity selection, or timers live here.
  * Rendering and event ownership stay with the single application lifecycle.
  */
 export const PATIENT_ACTIONS=Object.freeze([
- {id:'talk',symbol:'✦',label:'Hablar'},
- {id:'diagnosis',symbol:'✎',label:'Impresión diagnóstica'},
- {id:'examination',symbol:'♧',label:'Examinar'},
- {id:'history',symbol:'▤',label:'Historia'},
- {id:'studies',symbol:'⌁',label:'Estudios'},
- {id:'treatment',symbol:'✚',label:'Tratamiento'},
- {id:'patient',symbol:'✓',label:'Cerrar caso'}
+ {id:'talk',symbol:'✦',label:CLINICAL_CONTROLS.talk},
+ {id:'diagnosis',symbol:'✎',label:CLINICAL_CONTROLS.diagnosis},
+ {id:'examination',symbol:'♧',label:CLINICAL_CONTROLS.examination},
+ {id:'history',symbol:'▤',label:CLINICAL_CONTROLS.history},
+ {id:'studies',symbol:'⌁',label:CLINICAL_CONTROLS.studies},
+ {id:'treatment',symbol:'✚',label:CLINICAL_CONTROLS.treatment},
+ {id:'patient',symbol:'✓',label:CLINICAL_CONTROLS.patient}
 ]);
 export function createPatientActionWheel({document,window}){
  const root=document.getElementById('patientWheel');
