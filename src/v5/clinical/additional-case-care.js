@@ -13,6 +13,7 @@ import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js'
 import {evaluateClinicalPolicyDisposition} from './clinical-policy-closure.js';
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 import {postInterventionReassessments} from './observations.js';
+import {patientStudyOrders,studyEvidenceId} from './study-evidence.js';
 export {createPancCare};
 export function additionalCaseClosureSnapshot(p,c,destination){
  return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,diagnosticAssessment:assessDiagnosticImpression(c,p.diagnosis),
@@ -20,8 +21,8 @@ export function additionalCaseClosureSnapshot(p,c,destination){
   examDone:p.examDone,examRegionsCount:Object.keys(p.examFindings||{}).length,
   examPerformed:physicianExaminationsPerformed(p),
   vitalsKnown:!!p.lastVitalsKnown,reassessments:postInterventionReassessments(p),
-  studiesDone:p.orders.filter(x=>x.status==='done').map(x=>x.id),
-  extraStudies:p.orders.filter(x=>!c.keyStudies.includes(x.id)).map(x=>x.id),
+  studiesDone:patientStudyOrders(p,'done').map(x=>studyEvidenceId(c,x.id)),
+  extraStudies:p.orders.map(x=>studyEvidenceId(c,x.id)).filter(id=>!c.keyStudies.includes(id)),
   keyStudies:diagnosticRequirements(c).studies,keyInterventions:c.keyInterventions,
   delivered:[...new Set([...p.treatments.filter(x=>!matchesMedicationAllergy487(p,x.id)).map(x=>x.id),
    ...(p.venousAccessCount>0?['iv']:[])])],

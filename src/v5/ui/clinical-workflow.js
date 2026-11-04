@@ -26,6 +26,7 @@ export function clinicalWorkflow(state){
  const options=state.eligibleDestinations||[];
  const ended=!!p.caseEnded||!!p.patientDied||!!p.closure?.closed;
  const surgicalImpression=/apendicit|perforaci|peritonitis secundaria|foco quirurg|abdomen agudo quirurg|isquemia intestinal|obstruccion quirurg/.test(normalize(diagnosis));
+ const checklist=state.clinicalChecklist;
  const steps=[
   {id:'history',label:'Anamnesis',status:assessed?'partial':'pending'},
   {id:'exam',label:'Examen físico',status:p.examDone?'done':examined?'partial':'pending'},
@@ -35,18 +36,19 @@ export function clinicalWorkflow(state){
   {id:'treatment',label:'Tratamiento',status:therapy&&options.length?'done':therapy||treatmentWaiting?'partial':'pending'},
   {id:'destination',label:'Destino',status:ended?'done':options.length?'ready':'pending'}
  ];
+ for(const step of steps)step.status=checklist?.[step.id]??step.status;
  let cue=null;
  if(!ended){
   if(unstable)cue={id:'unstable',text:'Doctor, los signos registrados siguen comprometidos. ¿Qué hacemos?'};
-  else if(!diagnosis&&diagnosticReady)cue={id:'diagnosis',
+  else if(!diagnosis&&(checklist?['history','exam','studies'].every(id=>checklist[id]==='done'):diagnosticReady))cue={id:'diagnosis',
    text:'Doctor, con la anamnesis y el examen realizados, ¿cuál es su impresión diagnóstica?'};
-  else if(diagnosis&&surgicalImpression&&!consulted(p,'cirugia'))
+  else if(!checklist&&diagnosis&&surgicalImpression&&!consulted(p,'cirugia'))
    cue={id:'surgery:'+normalize(diagnosis),text:'Doctor, según su impresión diagnóstica, ¿quiere que avise a cirugía?'};
-  else if(diagnosis&&options.length)cue={id:'disposition',text:'Doctor, ya podemos definir cómo continúa el cuidado. ¿Qué destino indica?'};
+  else if(diagnosis&&(checklist?checklist.destination==='ready':options.length))cue={id:'disposition',text:'Doctor, ya podemos definir cómo continúa el cuidado. ¿Qué destino indica?'};
   else if(diagnosis&&surgicalImpression&&rejectedConsult(p,'cirugia'))
    cue=null; // The surgical service already explained what is missing.
-  else if(diagnosis&&!therapy&&!treatmentWaiting)cue={id:'plan:'+normalize(diagnosis),text:'Doctor, ya tenemos su impresión diagnóstica. ¿Cómo continuamos el tratamiento?'};
-  else if(diagnosis&&therapy&&!options.length&&!treatmentWaiting)cue={id:'reassess',text:'Doctor, ya hay intervenciones registradas. ¿Cómo seguimos con la reevaluación?'};
+  else if(diagnosis&&(checklist?checklist.diagnosis==='done'&&checklist.treatment==='pending':!therapy)&&!treatmentWaiting)cue={id:'plan:'+normalize(diagnosis),text:'Doctor, ya tenemos su impresión diagnóstica. ¿Cómo continuamos el tratamiento?'};
+  else if(!checklist&&diagnosis&&therapy&&!options.length&&!treatmentWaiting)cue={id:'reassess',text:'Doctor, ya hay intervenciones registradas. ¿Cómo seguimos con la reevaluación?'};
  }
  return {steps,cue,diagnosisRecorded:!!diagnosis,unstable,closed:ended};
 }

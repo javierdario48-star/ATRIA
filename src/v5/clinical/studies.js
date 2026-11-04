@@ -3,6 +3,7 @@ import {buildStudyCatalog,resolveStudyById,materializeStudy,studyTurnaroundMinut
 import {isPhysicianExamStudy} from './exam-contract.js';
 import {confirmedClinicalTreatment} from './receipts.js';
 import {readRespiratoryObservation,readNeurologicalState} from './patient-observations.js';
+import {studyEvidenceId} from './study-evidence.js';
 
 const identity=x=>typeof x==='string'&&x.trim().length>0;
 const minute=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
@@ -80,14 +81,15 @@ export function createStudyService(cases,checkpoint=null){
  const patientValid=p=>identity(p?.uid)&&byCase.has(p.caseId)&&Array.isArray(p.orders);
  const rejected=(p,eventId,reason)=>({status:'rejected',patientUid:p?.uid??null,eventId:eventId??null,reason});
  function acknowledged(p,eventId,order){
-  if(order.status!=='done')return {status:'pending',patientUid:p.uid,eventId};
+  if(order.status!=='done')return {status:'pending',patientUid:p.uid,eventId,sourceEventId:order.sourceEventId};
   return {status:'executed',patientUid:p.uid,eventId,receipt:{
-   patientUid:p.uid,eventId,studyId:order.id,sourceEventId:order.sourceEventId,
+   patientUid:p.uid,eventId,studyId:events.get(eventId)?.studyId??order.id,sourceEventId:order.sourceEventId,
    actorId:order.actorId,result:order.result,resultSource:order.resultSource,
    requestedAtMinute:order.requestedAtMinute,readyAtMinute:order.readyAtMinute
   }};
  }
  return Object.freeze({
+  acknowledged,
   checkpoint:()=>copy({events:[...events]}),
   catalog:()=>copy(catalog.map(s=>localTiming.has(s.id)?{...s,gameHours:localTiming.get(s.id)/60}:s)),
   request(patient,command={}){
@@ -105,15 +107,15 @@ export function createStudyService(cases,checkpoint=null){
    const source=patient.orders.find(o=>o.sourceEventId===eventId);
    if(source&&(source.id!==id||source.actorId!==actorId||
       source.patientUid!==patient.uid))return rejected(patient,eventId,'study-event-identity-collision');
-   const caseDef=byCase.get(patient.caseId),native=caseDef.studies.find(s=>s.id===id),
+   const caseDef=byCase.get(patient.caseId),evidenceId=studyEvidenceId(caseDef,id),native=caseDef.studies.find(s=>s.id===evidenceId),
     repeatable=!!caseDef.clinicalPolicy&&!!native&&(native.repeatable===true||!!native.dynamic),
     bound=source||prior?.sourceEventId&&patient.orders.find(o=>o.sourceEventId===prior.sourceEventId),
-    existing=bound||patient.orders.find(o=>o.id===id&&(!repeatable||o.status==='pending'));
+    existing=bound||patient.orders.find(o=>studyEvidenceId(caseDef,o.id)===evidenceId&&(!repeatable||o.status==='pending'));
    // A stale snapshot must not rebind an old event to a newer sample.
    if(prior?.sourceEventId&&!bound)return rejected(patient,eventId,'study-order-missing');
    if(existing){
     if(existing.patientUid!==patient.uid)return rejected(patient,eventId,'study-patient-mismatch');
-    events.set(eventId,{fingerprint,sourceEventId:existing.sourceEventId});
+    events.set(eventId,{fingerprint,sourceEventId:existing.sourceEventId,studyId:id});
     return acknowledged(patient,eventId,existing);
    }
    const sampleMinute=atNativeMinute??
@@ -123,8 +125,8 @@ export function createStudyService(cases,checkpoint=null){
    events.set(eventId,{fingerprint});
    const study=resolveStudyById(id,caseDef,catalog);
    if(!study)return rejected(patient,eventId,'unknown-study');
-   const definition=materializeStudy(study,caseDef);
-   const order={id:definition.id,label:definition.label,type:definition.type,
+   const definition=materializeStudy(native||study,caseDef);
+   const order={id,label:study.label,type:definition.type,
     patientUid:patient.uid,result:native&&caseDef.clinicalPolicy?
      currentStudyResult(definition,caseDef,patient,sampleMinute):definition.result,
     ...(native&&(native.dynamic||native.requiresCompletedTreatments?.length)&&caseDef.clinicalPolicy?
@@ -134,7 +136,7 @@ export function createStudyService(cases,checkpoint=null){
     status:'pending',requestedAtMinute:atMinute,
     readyAtMinute:atMinute+(localTiming.get(definition.id)??studyTurnaroundMinutes(definition)),sourceEventId:eventId,actorId};
    patient.orders.push(order);
-   events.set(eventId,{fingerprint,sourceEventId:eventId});
+   events.set(eventId,{fingerprint,sourceEventId:eventId,studyId:id});
    return acknowledged(patient,eventId,order);
   },
   advance(patient,atMinute){

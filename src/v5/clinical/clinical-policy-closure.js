@@ -1,3 +1,4 @@
+import {studyEvidenceId} from './study-evidence.js';
 // Policy-based cases use the existing disposition/quality contract. This is a
 // read-only adapter over native receipts; it owns neither closure nor XP.
 import {csClosureQuality487} from '../../clinical/case-completion-487.js';
@@ -51,7 +52,7 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  if (!patient || patient.patientDied || patient.caseEnded)
   return {caseId, ready: false, missing: ['Atención finalizada.'], action: null};
  const minute = nativeMinute(patient), examined = actualExaminations(patient), requiredExams = rule.requiredExams || [];
- const rows = completedStudies(patient, minute), studies = new Set(rows.map(row => row.id));
+ const rows = completedStudies(patient, minute), studies = new Set(rows.map(row => studyEvidenceId(caseData,row.id)));
  const treatmentIds = [...new Set((patient.treatments || []).map(row => row.id))];
  const confirmed = treatmentIds.map(id => currentClinicalTreatment(patient, id, minute))
   .filter(row => row && !matchesMedicationAllergy487(patient, row.id));

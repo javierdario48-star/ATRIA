@@ -6,6 +6,7 @@ import {selectClinicalHint,clinicalHintCoverage} from './clinical-hints.js';
 import {hintDestination} from './clinical-hint-requirements.js';
 import {additionalCaseClosureSnapshot} from './additional-case-care.js';
 import {evaluateGastroDisposition} from './gastro-closure-v5.js';
+import {clinicalWorkflow} from '../ui/clinical-workflow.js';
 
 function fixture(caseId='CIRR-001',supplied=content){
  const patient={uid:'hint-patient',caseId};
@@ -23,6 +24,28 @@ test('first hint is one executable priority and selection never mutates a patien
 test('real closure gates advance the hint when an action is completed',async()=>{
  const f=fixture();await f.post('/signos');
  assert.notEqual(f.next().action.kind,'vitals');f.session.dispose();
+});
+test('HEPAT accepts an equivalent INR and glucose panel and shares its status with Ruta clínica',async()=>{
+ const f=fixture('HEPAT-001');
+ try{
+  for(const text of ['/signos','¿Tiene alergias?', '/examen general','/examen inspection','/examen palpation','/diagnostico hepatitis aguda'])
+   await f.post(text);
+  const requested=await f.post('/estudio g_encef_liver');
+  const repeated=await f.post('/estudio g_hepat_inr');
+  assert.equal(requested.clinical[0].status,'pending');
+  assert.equal(repeated.clinical[0].status,'pending');
+  assert.equal(f.session.read().patient.orders.length,1,'equivalent orders share one specimen');
+  const stage=()=>clinicalWorkflow(f.session.read()).steps.find(s=>s.id==='studies').status;
+  assert.equal(stage(),'partial');
+  f.session.advance(180);await f.session.flush();
+  const result=f.session.read().patient.orders[0];
+  assert.match(result.result,/INR 1,2; glucemia normal/);
+  assert.equal(stage(),'done');
+  assert(!f.session.clinicalHintRequirements().some(r=>r.type==='study'));
+  assert.notEqual(f.next().action?.kind,'study');
+  assert.equal((await f.post('/estudio g_hepat_inr')).clinical[0].status,'executed');
+  assert.equal(f.session.read().patient.orders.length,1);
+ }finally{f.session.dispose();}
 });
 test('history instructions use an authored question that satisfies the actual closure gate',async()=>{
  const f=fixture();await f.post('/signos');const first=f.next();assert.equal(first.action.kind,'history');
@@ -57,7 +80,7 @@ test('destination selection falls back to an authored safe option when the prima
  assert.equal(hintDestination(p,f.caseData,d=>evaluateGastroDisposition(additionalCaseClosureSnapshot(p,f.caseData,d))),'observacion');
  f.session.dispose();
 });
-test('a refused transfer prioritizes its specific unresolved diagnostic gate',async()=>{
+test('a refused transfer preserves the order of the remaining clinical checklist',async()=>{
  const f=fixture('APP-001');await f.post('/signos');await f.post('¿Tiene alergias a medicamentos?');
  for(const region of ['general','abdomen']){
   const techniques=region==='general'?['general']:['inspection','auscultation','percussion','palpation'];
@@ -66,7 +89,7 @@ test('a refused transfer prioritizes its specific unresolved diagnostic gate',as
  assert.equal(f.next().action.kind,'study');
  const reply=await f.post('/disposicion quirofano');
  assert.equal(reply.clinical[0].receipt.reasonCode,'diagnosis-missing');
- assert.equal(f.next().action.kind,'diagnosis');f.session.dispose();
+ assert.equal(f.next().action.kind,'study');f.session.dispose();
 });
 test('routed dose phrases remain executable after the actual nursing scanner normalization',async()=>{
  const f=fixture('NEUR-06'),p=f.session.read().patient;

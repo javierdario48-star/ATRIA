@@ -82,3 +82,25 @@ export function clinicalHintRequirements(p,c,assessment,destination=hintDestinat
  if(assessment?.missing?.some(s=>/^Esperar/.test(s)&&/pendientes|tareas físicas|ejecución o resolución/.test(s)))requirements.push({type:'wait'});
  return hasRecordedVitals(p)?requirements.filter(r=>r.type!=='reassess'):requirements;
 }
+
+// The same typed gates drive hints and the player-facing checklist. Activity
+// distinguishes an untouched stage from one whose requirements are still open.
+export const CHECKLIST_PRIORITY=Object.freeze({
+ vitals:100,history:80,examination:75,study:70,diagnosis:60,treatment:50,reassess:20,closure:10
+});
+
+export function clinicalChecklist(patient,requirements,ready){
+ const closed=!!(patient.caseEnded||patient.patientDied||patient.closure?.closed);
+ const pending=(...types)=>requirements.some(r=>types.includes(r.type));
+ const stage=(activity,...types)=>closed||!pending(...types)?'done':activity?'partial':'pending';
+ const stabilization=stage(hasRecordedVitals(patient),'vitals','reassess','stability');
+ return {
+  history:stage(patient.intentHistory?.length,'history'),
+  exam:stage(Object.keys(patient.examFindings||{}).length,'examination'),
+  studies:stage(patient.orders?.length,'study'),
+  stabilization:pending('stability')?'attention':stabilization,
+  diagnosis:stage(patient.diagnosis,'diagnosis'),
+  treatment:stage(patient.treatments?.length||patient.pendingTreatments?.length||patient.administrationLog?.length,'treatment'),
+  destination:closed?'done':ready?'ready':'pending'
+ };
+}

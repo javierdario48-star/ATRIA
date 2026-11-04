@@ -1,5 +1,5 @@
 import {createClinicalHintLedger,hintAdjustedXP} from './clinical-hint-ledger.js';
-import {clinicalHintRequirements,hintDestination} from './clinical-hint-requirements.js';
+import {clinicalChecklist,clinicalHintRequirements,hintDestination} from './clinical-hint-requirements.js';
 import {selectClinicalHint} from './clinical-hints.js';
 import {createRoomAuthority} from '../core/room-authority.js';
 import {clinicalExecutorFor} from '../content/clinical-cases.js';
@@ -239,9 +239,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(intent.kind==='study.request'){
     const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute,atNativeMinute:clock.nativeMinute});
     if(result.status==='pending'){
-     const order=nativePatient.orders.find(o=>o.id===intent.id);
-     if(!pendingStudyRequests.has(order.sourceEventId))pendingStudyRequests.set(order.sourceEventId,new Set());
-     pendingStudyRequests.get(order.sourceEventId).add(eventId);
+     const source=result.sourceEventId;
+     if(!pendingStudyRequests.has(source))pendingStudyRequests.set(source,new Set());
+     pendingStudyRequests.get(source).add(eventId);
     }
     return result;
    }
@@ -266,6 +266,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    out.missing.push('Esperar la ejecución o resolución de las tareas físicas de enfermería pendientes.');
   }
   return out;
+ }
+ function currentChecklist(){
+  const destination=hintDestination(nativePatient,caseData,closureReadiness),assessment=closureReadiness(destination);
+  return {destination,assessment,requirements:clinicalHintRequirements(nativePatient,caseData,assessment,destination)};
  }
  function eligibleDestinations(){
   if(!care||nativePatient.caseEnded)return [];
@@ -384,20 +388,15 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(nativePatient.caseEnded||nativePatient.patientDied)return {status:'rejected',reason:'patient-not-active'};
    if(resolveContext({actorId:identity.id,targetPatientUid:nativePatient.uid})?.patientUid!==nativePatient.uid)
     return {status:'rejected',reason:'approach-patient-to-claim'};
-   try{return hintLedger.request(request,this.clinicalHint(identity.id));}
+   try{return hintLedger.request(request,this.clinicalHint());}
    catch{return {status:'unavailable',reason:'hint-evaluation-failed'};}
   },
-  clinicalHintRequirements(){const destination=hintDestination(nativePatient,caseData,closureReadiness);return clinicalHintRequirements(nativePatient,caseData,closureReadiness(destination),destination);},
-  clinicalHint(doctorId=actorId){
-   const destination=hintDestination(nativePatient,caseData,closureReadiness),assessment=closureReadiness(destination);
+  clinicalHintRequirements(){return currentChecklist().requirements;},
+  clinicalHint(){
+   const {destination,assessment,requirements}=currentChecklist();
    const subject={...nativePatient,hintPendingActions:[...pendingNurseJobs.values(),...waitingForAccess.values()].map(j=>({id:j.intent.id}))};
-   const recentClose=authority.snapshot().events.toReversed()
-    .filter(event=>(event.actorId||event.message?.actorId)===doctorId)
-    .flatMap(event=>event.clinical||[]).find(item=>item.kind==='case.close'&&item.id===destination);
-   return selectClinicalHint({patient:subject,caseData,content,clock,destination,
-    rejectedGate:recentClose?.status==='rejected'?recentClose.receipt?.reasonCode||recentClose.reason:null,
-    fulfilledTreatmentIds:assessment?.fulfilledTreatmentIds||[],
-    requirements:clinicalHintRequirements(nativePatient,caseData,assessment,destination)});
+   return selectClinicalHint({patient:subject,caseData,content,clock,destination,requirements,
+    fulfilledTreatmentIds:assessment?.fulfilledTreatmentIds||[]});
   },
   catalog:()=>copy(orderedStudies),
   hasCommand:authority.hasCommand,
@@ -488,9 +487,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    const ready=studies.advance(nativePatient,clock.clinicalMinute);
    for(const order of ready){
     for(const eventId of pendingStudyRequests.get(order.sourceEventId)||[order.sourceEventId])
-     port.complete({eventId,patientUid:nativePatient.uid,status:'executed',
-      receipt:{eventId,patientUid:nativePatient.uid,studyId:order.id,sourceEventId:order.sourceEventId,
-       actorId:order.actorId,result:order.result,resultSource:order.resultSource}});
+     port.complete(studies.acknowledged(nativePatient,eventId,order));
     pendingStudyRequests.delete(order.sourceEventId);
    }
    publishReadiness();return copy(ready);
@@ -563,13 +560,16 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   // available for each case; monitor paint never recalculates pharmacology.
   pharmacologyRead:()=>pharmacology.evaluate(caseData.id,nativePatient,clock.nativeMinute),
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
-  read(doctorId=actorId){const room=authority.snapshot(),subject=copy(nativePatient);
+  read(doctorId=actorId,{includeChecklist=true}={}){const room=authority.snapshot(),subject=copy(nativePatient);
    const caseReward=subject.closure?rewardFor(subject.closure,doctorId):null;
-   const displayMessages=messages(room);
+   const displayMessages=messages(room),options=eligibleDestinations();
+   const checklist=includeChecklist&&currentChecklist();
    if(caseReward?.hintCount)for(const row of displayMessages)row.text=row.text.replace(/\+\d+ XP\./g,'+'+caseReward.xp+' XP.');
    return {hintBinding:{roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId},hintCount:hintLedger.count(doctorId),
    caseReward,room,patient:subject,exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:displayMessages,progress:progress.read(),
-   eligibleDestinations:eligibleDestinations(),
+   eligibleDestinations:options,
+   ...(checklist?{clinicalChecklist:clinicalChecklist(nativePatient,checklist.requirements,options.length>0||
+    !!checklist.assessment&&checklist.requirements.every(r=>r.type==='closure'))}:{}),
    closure:copy(closureReadiness(executor==='peritonitis'?undefined:
     (caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations?.[0]||'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}

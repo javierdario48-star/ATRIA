@@ -693,7 +693,7 @@ export async function createApplication({document,window,content,signal}){
     toast('Recepción: nuevo ingreso en '+r.bedId+'. Consultá el tablero.');
    }
    for(const session of localSessions.values()){
-    const state=session.read(),closure=state.caseReward||state.patient.closure;
+    const state=session.read(undefined,{includeChecklist:false}),closure=state.caseReward||state.patient.closure;
     if(closure?.closed)settleLocalPatient(closure);
    }
    if(localAdmissions.ended()&&!shiftEndedAnnounced){
@@ -702,7 +702,7 @@ export async function createApplication({document,window,content,signal}){
      '<div class="actions"><button data-action="reception">Recepción</button><button data-action="return-lobby">Volver al lobby</button></div>','shift-finished');
    }
   }else guardSession.advance(delta,{typing:clinicalTyping});
-  announceDeath(guardSession.read()?.patient);
+  announceDeath(guardSession.read(undefined,{includeChecklist:false})?.patient);
  }
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard',clinical=guardSession?.read();

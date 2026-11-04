@@ -1,6 +1,7 @@
 // Pure clinical preflight shared by nursing and the native bedside executor.
 // This reads documented evidence; it never orders a study or changes a patient.
 import {confirmedClinicalTreatment} from './receipts.js';
+import {patientStudyOrders,studyEvidenceId} from './study-evidence.js';
 const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const noBleedingDrugs=new Set(['aspirin','ticagrelor','clopidogrel','enoxaparin','heparin_therapeutic','alteplase_stroke','alteplase_pe']);
 const fail=(reason,message,prerequisites)=>({reason,message,...(prerequisites?{prerequisites}:{})});
@@ -10,9 +11,9 @@ export function clinicalInterventionEligibility(p,c,id,clock={}){
  const policy=c?.clinicalPolicy;if(!policy)return null; // The 25 GI contracts retain their exact freedom of execution.
  const rule=policy.eligibility?.[id]||{},traits=new Set([...(policy.traits||[]),...(p.clinicalTraits||[])]);
  const minute=Number.isFinite(clock.nativeMinute)?clock.nativeMinute:0;
- const studies=(p.orders||[]).filter(o=>o.patientUid===p.uid&&o.status==='done'&&
+ const studies=patientStudyOrders(p,'done').filter(o=>
   (!Number.isFinite(o.readyAtMinute)||!Number.isFinite(clock.clinicalMinute)||o.readyAtMinute<=clock.clinicalMinute+1e-9));
- const done=new Set(studies.map(o=>o.id));
+ const done=new Set(studies.map(o=>studyEvidenceId(c,o.id)));
  const history=new Set((p.intentHistory||[]).filter(x=>x.patientUid===undefined||x.patientUid===p.uid)
   .map(x=>typeof x.id==='string'?x.id.replace(/^anamnesis:/,''):x.id));
  const evidence=studies.map(o=>norm(o.result)).join('\n');
@@ -29,10 +30,11 @@ export function clinicalInterventionEligibility(p,c,id,clock={}){
   const treatment=complete(p,prerequisite.treatmentId,minute);
   if(!treatment)return fail('clinical-treatment-required','Confirmar la finalización real del tratamiento previo antes de esta intervención.');
   const completedAt=treatment.completedAtNativeMinute??treatment.administeredAtNativeMinute;
-  const after=studies.some(o=>o.id===prerequisite.studyId&&typeof o.sourceEventId==='string'&&o.sourceEventId&&
+  const after=studies.some(o=>studyEvidenceId(c,o.id)===prerequisite.studyId&&typeof o.sourceEventId==='string'&&o.sourceEventId&&
    (p.orders||[]).filter(x=>x.sourceEventId===o.sourceEventId).length===1&&
    Number.isFinite(o.sampledAtNativeMinute)&&o.sampledAtNativeMinute>=completedAt&&o.sampledAtNativeMinute<=minute);
-  if(!after)return fail('clinical-post-treatment-study-required','Confirmar el estudio de control obtenido después de completar el tratamiento previo.');
+  if(!after)return fail('clinical-post-treatment-study-required',
+   'Confirmar el estudio de control obtenido después de completar el tratamiento previo.',{studyAfterTreatment:prerequisite.studyId});
  }
  const bp=rule.bpLimit;
  if(bp&&(!Number.isFinite(v.sys)||!Number.isFinite(v.dia)||
