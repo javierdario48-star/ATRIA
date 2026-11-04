@@ -69,12 +69,26 @@ async function interact(p,uid,mode){
  await p.locator('#receptionButton').click();
  await p.locator('[data-action="reception-approach"][data-patient-uid="'+uid+'"]').click();
  await p.locator('#patientWheel').waitFor({state:'visible',timeout:60000});
+ const before=await p.evaluate(()=>atriaV5.snapshot().clinical);
+ const hint=p.locator('#patientWheel [data-patient-action="hint"]');
+ await hint.click();
+ await p.locator('#vegaClinicalHint').waitFor({state:'visible'});
+ assert.equal(await p.locator('#vegaClinicalHint').getAttribute('data-patient-uid'),uid);
+ await p.waitForFunction(n=>atriaV5.snapshot().clinical.hintCount===n,before.hintCount+1);
+ const after=await p.evaluate(()=>atriaV5.snapshot().clinical);
+ assert.equal(after.patient.treatments.length,before.patient.treatments.length);
+ assert.equal(after.patient.orders.length,before.patient.orders.length);
+ await p.screenshot({path:output+'/'+mode+'-hint.png'});
+ await p.locator('#vegaClinicalHint button').click();
+ await p.locator('#receptionButton').click();
+ await p.locator('[data-action="reception-approach"][data-patient-uid="'+uid+'"]').click();
+ await p.locator('#patientWheel').waitFor({state:'visible',timeout:60000});
  await p.locator('#patientWheel [data-patient-action="talk"]').click();
  await send(p,'¿Desde cuándo empezó la hinchazón?');
  await p.waitForFunction(()=>atriaV5.snapshot().clinical.messages.some(x=>x.role==='patient'));
  assert.equal(await p.evaluate(()=>atriaV5.snapshot().phase),'guard');
  await p.screenshot({path:output+'/'+mode+'-guard.png'});
- results.push({mode,patientVisible:true,realAccount:true,patientReplied:true,musicControls:true});
+ results.push({mode,patientVisible:true,realAccount:true,patientReplied:true,contextualHint:true,individualHintFee:true,musicControls:true});
 }
 async function release(p){
  if(await p.evaluate(()=>atriaV5.snapshot().phase==='guard'))await p.locator('#guardButton').click();
@@ -104,6 +118,7 @@ try{
     await host.locator('[data-action="start-guard"]').click();
    }
    assert.equal(await entered(host,'solo'),uid,'re-entry must retain the existing patient');
+   assert.equal(await host.evaluate(()=>atriaV5.snapshot().clinical.hintCount),1,'recovery retains the revealed hint');
    results.push({retainedGuard:true,reminderDismissed:true,samePatient:true});
   }
   await release(host);

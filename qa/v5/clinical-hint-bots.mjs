@@ -2,13 +2,12 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {clinicalContent as content} from '../../src/v5/server/content.js';
 import {createGuardSession} from '../../src/v5/clinical/guard-session.js';
-import {EXAM_REGIONS} from '../../src/v5/clinical/exam-contract.js';
 import {clinicalHintCoverage} from '../../src/v5/clinical/clinical-hints.js';
 
 const output=process.env.V5_HINT_OUTPUT||'qa/v5-hint-results';
 await mkdir(output,{recursive:true});
 const census=clinicalHintCoverage(content);assert.deepEqual(census.errors,[]);assert.equal(census.cases.length,55);
-const ids=(process.env.V5_HINT_CASES||'CIRR-001,APP-001,PERI-PBE-001,PERI-SEC-001,PERI-TER-001,HDA-001,VARIX-001,RESP-01,RESP-03,CARD-08,NEUR-01,NEUR-06').split(',');
+const ids=process.env.V5_HINT_CASES?.split(',')||content.cases.map(c=>c.id);
 const results=[];
 for(const caseId of ids){
  const c=content.cases.find(c=>c.id===caseId);
@@ -16,7 +15,7 @@ for(const caseId of ids){
   resolveContext:()=>({patientUid:'patient'})});
  const steps=[],failures=[];
  try{
-  for(let n=0;n<120&&!session.read().patient.caseEnded;n++){
+  for(let n=0;n<720&&!session.read().patient.caseEnded;n++){
    const before=structuredClone(session.read().patient),h=session.clinicalHint();
    assert.deepEqual(session.read().patient,before,'hint must never execute an intervention');
    if(!h?.action){failures.push({reason:h?.error||'empty-hint'});break;}

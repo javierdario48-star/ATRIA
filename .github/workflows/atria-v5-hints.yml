@@ -23,7 +23,7 @@ jobs:
           node-version: '22'
       - name: Patient binding, priorities, real commands, individual XP, durable recovery and stale responses
         run: node --test src/v5/clinical/clinical-hint*.test.js src/v5/server/clinical-hints-durable.test.js src/v5/ui/clinical-hint-presenter.test.js
-      - name: All 55 action references and representative hint-guided native trajectories
+      - name: All 55 action references and hint-guided native trajectories
         run: node qa/v5/clinical-hint-bots.mjs
       - uses: actions/upload-artifact@v4
         if: always()

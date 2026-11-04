@@ -6,6 +6,7 @@ import fs from 'node:fs/promises';
 export async function waitForPreviewBuild(origin,{timeout=120000}={}){
  const files={};
  for(const path of ['src/v5/app/application.js','src/v5/ui/music-transport.js','src/v5/ui/hospital-audio.js','src/v5/web/game.css',
+  'src/v5/ui/clinical-hint-presenter.js','src/v5/clinical/clinical-hints.js','src/v5/clinical/clinical-hint-ledger.js',
   'src/v5/clinical/guard-session.js','src/v5/clinical/acute-care.js','src/v5/clinical/cirr-care.js',
   'src/v5/clinical/clinical-policy-closure.js','src/v5/clinical/surgical-consultation.js',
   'src/v5/clinical/transfer-continuation.js','src/v5/clinical/diagnostic-assessment.js',

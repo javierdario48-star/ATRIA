@@ -117,4 +117,3 @@ begin
  return jsonb_build_object('xp',balance,'casesResolved',resolved);
 end;
 $function$
-
