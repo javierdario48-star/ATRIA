@@ -3,7 +3,7 @@
 import {confirmedClinicalTreatment} from './receipts.js';
 const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const noBleedingDrugs=new Set(['aspirin','ticagrelor','clopidogrel','enoxaparin','heparin_therapeutic','alteplase_stroke','alteplase_pe']);
-const fail=(reason,message)=>({reason,message});
+const fail=(reason,message,prerequisites)=>({reason,message,...(prerequisites?{prerequisites}:{})});
 const complete=(p,id,minute)=>confirmedClinicalTreatment(p,id,minute);
 
 export function clinicalInterventionEligibility(p,c,id,clock={}){
@@ -91,8 +91,12 @@ export function clinicalInterventionEligibility(p,c,id,clock={}){
   return fail('clinical-indication-not-supported','No se documentó elegibilidad para trombólisis cerebral.');
  if(id==='alteplase_pe'){
   if(!traits.has('obstructiveShockPE'))return fail('clinical-indication-not-supported','La trombólisis pulmonar está reservada a TEP de alto riesgo elegible.');
-  if(!history.has('bleeding')||!history.has('meds')||!studies.some(o=>/echo|ctpa/.test(o.id)))
-   return fail('clinical-evidence-required','Documentar riesgo hemorrágico, medicación y evidencia de TEP de alto riesgo antes de reperfundir.');
+  const missingHistory=['bleeding','meds'].filter(id=>!history.has(id));
+  const studyAlternatives=studies.some(o=>/echo|ctpa/.test(o.id))?[]:
+   c.studies.filter(s=>/echo|ctpa/.test(s.id)).map(s=>s.id);
+  if(missingHistory.length||!studies.some(o=>/echo|ctpa/.test(o.id)))
+   return fail('clinical-evidence-required','Documentar riesgo hemorrágico, medicación y evidencia de TEP de alto riesgo antes de reperfundir.',
+    {history:missingHistory,studyAlternatives});
  }
  if(id==='lung_protective_ventilation'&&!complete(p,'intubation',minute))
   return fail('clinical-airway-required','Confirmar intubación antes de ajustar ventilación invasiva protectora.');

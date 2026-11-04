@@ -379,14 +379,18 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(nativePatient.caseEnded||nativePatient.patientDied)return {status:'rejected',reason:'patient-not-active'};
    if(resolveContext({actorId:identity.id,targetPatientUid:nativePatient.uid})?.patientUid!==nativePatient.uid)
     return {status:'rejected',reason:'approach-patient-to-claim'};
-   try{return hintLedger.request(request,this.clinicalHint());}
+   try{return hintLedger.request(request,this.clinicalHint(identity.id));}
    catch{return {status:'unavailable',reason:'hint-evaluation-failed'};}
   },
-  clinicalHintRequirements(){const destination=hintDestination(nativePatient,caseData);return clinicalHintRequirements(nativePatient,caseData,closureReadiness(destination),destination);},
-  clinicalHint(){
-   const destination=hintDestination(nativePatient,caseData),assessment=closureReadiness(destination);
+  clinicalHintRequirements(){const destination=hintDestination(nativePatient,caseData,closureReadiness);return clinicalHintRequirements(nativePatient,caseData,closureReadiness(destination),destination);},
+  clinicalHint(doctorId=actorId){
+   const destination=hintDestination(nativePatient,caseData,closureReadiness),assessment=closureReadiness(destination);
    const subject={...nativePatient,hintPendingActions:[...pendingNurseJobs.values(),...waitingForAccess.values()].map(j=>({id:j.intent.id}))};
+   const recentClose=authority.snapshot().events.toReversed()
+    .filter(event=>(event.actorId||event.message?.actorId)===doctorId)
+    .flatMap(event=>event.clinical||[]).find(item=>item.kind==='case.close'&&item.id===destination);
    return selectClinicalHint({patient:subject,caseData,content,clock,destination,
+    rejectedGate:recentClose?.status==='rejected'?recentClose.receipt?.reasonCode||recentClose.reason:null,
     fulfilledTreatmentIds:assessment?.fulfilledTreatmentIds||[],
     requirements:clinicalHintRequirements(nativePatient,caseData,assessment,destination)});
   },

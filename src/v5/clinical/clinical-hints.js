@@ -26,7 +26,7 @@ function semanticHintKey(action,p,c){
  return base;
 }
 
-export function selectClinicalHint({patient:p,caseData:c,requirements=[],content,clock,destination,fulfilledTreatmentIds=[]}){
+export function selectClinicalHint({patient:p,caseData:c,requirements=[],content,clock,destination,fulfilledTreatmentIds=[],rejectedGate}){
  if(!p||p.caseEnded||p.patientDied)return null;
  const context={patient:p,caseData:c,content,clock},minute=clock.nativeMinute;
  const done=new Set(fulfilledTreatmentIds),pending=new Set([
@@ -43,12 +43,22 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   shock=v.sys<90||(v.sys+2*v.dia)/3<65,hypoxemia=v.spo2<90;
  const candidates=[],errors=[],waiting=[];
  const action=(kind,id)=>clinicalActionDescriptor(kind,id,context);
- function add(a,priority,reason){if(a)candidates.push({action:a,priority,requirement:reason});else errors.push(reason);}
- function study(id,priority,reason){
+ const recoveryPriority={
+  'diagnosis-missing':'diagnosis','diagnosis-specificity':'diagnosis','diagnosis-incompatible':'diagnosis',
+  'vitals-missing':'vitals','examination-incomplete':'examination','indispensable-study-pending':'study',
+  'stabilization-insufficient':'treatment'
+ }[rejectedGate];
+ function add(a,priority,reason){
+  if(a)candidates.push({action:a,priority:priority+(reason===recoveryPriority?25:0),requirement:reason});
+  else errors.push(reason);
+ }
+ function study(id,priority,reason,seen=new Set()){
+  const key='study:'+id;
+  if(seen.has(key)){errors.push('dependency-cycle:'+key);return;}
   if(requested.has(id)){waiting.push(id);return;}
   const def=c.studies.find(s=>s.id===id);
   const prerequisite=def?.requiresCompletedTreatments?.find(t=>!done.has(t));
-  if(prerequisite){treatment(prerequisite,priority,reason,new Set());return;}
+  if(prerequisite){treatment(prerequisite,priority,reason,new Set([...seen,key]));return;}
   add(action('study',id),priority,reason);
  }
  function treatment(id,priority,reason,seen){
@@ -60,12 +70,20 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
    ['clinical-contraindication','clinical-indication-not-supported','clinical-onset-window-exceeded','clinical-anticoagulant-mismatch'].includes(issue?.reason))return false;
   const eligibility=c.clinicalPolicy?.eligibility?.[id]||{},def=nativeTreatmentDefinition(id,c);
   if(issue){
+   const historyRequired=issue.prerequisites?.history?.[0];
+   if(historyRequired){add(action('history',historyRequired),priority+1,reason);return true;}
+   const studyAlternatives=issue.prerequisites?.studyAlternatives;
+   if(studyAlternatives?.length){
+    if(studyAlternatives.some(id=>requested.has(id)))waiting.push('study');
+    else study(studyAlternatives[0],priority+1,reason,seen);
+    return true;
+   }
    const prior=eligibility.requiresCompletedTreatments?.find(t=>!done.has(t));
    if(prior)return treatment(prior,priority+1,reason,seen);
    const requiredStudy=eligibility.requiredStudies?.find(s=>!studies.has(s))||
     eligibility.requiresStudiesAfterTreatments?.find(s=>!p.orders?.some(o=>o.id===s.studyId&&o.status==='done'&&
      o.sampledAtNativeMinute>=(currentClinicalTreatment(p,s.treatmentId,minute)?.completedAtNativeMinute??Infinity)))?.studyId;
-   if(requiredStudy){study(requiredStudy,priority+1,reason);return true;}
+   if(requiredStudy){study(requiredStudy,priority+1,reason,seen);return true;}
    const priorHistory=eligibility.requiresHistory?.find(h=>!p.intentHistory?.some(x=>x.id.replace(/^anamnesis:/,'')===h));
    if(priorHistory){add(action('history',priorHistory),priority+1,reason);return true;}
    if(issue.reason==='clinical-swallow-assessment-required')return treatment('swallow_screen',priority+1,reason,seen);
@@ -130,14 +148,17 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   }else if(r.type==='reassess'){
    if(!blocking)add(action('reassess'),20,'reassess');else waiting.push('reassessment');
   }else if(r.type==='closure'){
-   if(!blocking&&requirements.every(item=>item.type==='closure'))add(action('closure',r.destination||destination),10,'closure');else waiting.push('receiver');
-  }else if(r.type==='wait'||r.type==='stability')waiting.push(r.type);
+   if(!blocking&&requirements.every(item=>item.type==='closure'))add(action('closure',r.destination||destination),10,'closure');
+  }else if(r.type==='wait')waiting.push(r.reason||'execution');
  }
  if(!requirements.length&&!blocking)add(action('closure',destination),10,'closure');
  const next=candidates.sort((a,b)=>b.priority-a.priority)[0];
  if(next)return {text:next.action.text,action:next.action,chargeable:true,
   key:semanticHintKey(next.action,p,c),requirement:next.requirement,severity:severity.state};
- if(waiting.length){const a=action('wait');return {text:a.text,action:a,key:'wait',chargeable:false};}
+ if(waiting.length||blocking){
+  const reason=p.pendingConsults?.length?'receiver':requested.size?'study':waiting.includes('observation')?'observation':'execution';
+  const a=action('wait',reason);return {text:a.text,action:a,key:'wait:'+reason,chargeable:false};
+ }
  return {text:'No hay una pista ejecutable disponible para este estado. No se descontó XP.',action:null,key:null,
   chargeable:false,error:errors.length?errors.join(','):'unmapped-clinical-requirement'};
 }

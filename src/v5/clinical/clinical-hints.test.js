@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import {clinicalContent as content} from '../server/content.js';
 import {createGuardSession} from './guard-session.js';
 import {selectClinicalHint,clinicalHintCoverage} from './clinical-hints.js';
+import {hintDestination} from './clinical-hint-requirements.js';
+import {additionalCaseClosureSnapshot} from './additional-case-care.js';
+import {evaluateGastroDisposition} from './gastro-closure-v5.js';
 
 function fixture(caseId='CIRR-001',supplied=content){
  const patient={uid:'hint-patient',caseId};
@@ -27,6 +30,43 @@ test('history instructions use an authored question that satisfies the actual cl
 });
 test('all 55 initial sessions can calculate their own requirement projection',()=>{
  for(const c of content.cases){const f=fixture(c.id);try{assert(f.next()?.action,c.id);}finally{f.session.dispose();}}
+});
+test('PUD history hint satisfies the existing gate through actual dialogue',async()=>{
+ const f=fixture('PUD-001');await f.post('/signos');const h=f.next();
+ assert.equal(h.action.kind,'history');await f.post(h.action.command);
+ assert(!f.session.clinicalHintRequirements().some(r=>r.type==='history'));f.session.dispose();
+});
+test('reperfusion hint starts with the actual pulmonary thrombolysis evidence gate',()=>{
+ const f=fixture('RESP-06');const state=f.session.read();
+ const hint=selectClinicalHint({patient:state.patient,caseData:f.caseData,content,clock:state.clock,
+  requirements:[{type:'treatment',anyOf:[['alteplase_pe']]}]});
+ assert.equal(hint.action?.kind,'history');assert.equal(hint.action.id,'bleeding');f.session.dispose();
+});
+test('an explicit onset question works after a different topic in the native interview',async()=>{
+ const f=fixture('NEUR-01');await f.post('¿Tiene alergias a medicamentos?');
+ const state=f.session.read();
+ const c={...f.caseData,clinicalPolicy:{...f.caseData.clinicalPolicy,eligibility:{
+  alteplase_stroke:{requiresHistory:['onset']}}}};
+ const hint=selectClinicalHint({patient:state.patient,caseData:c,content,clock:state.clock,
+  requirements:[{type:'treatment',anyOf:[['alteplase_stroke']]}]});
+ await f.post(hint.action.command);
+ assert(f.session.read().patient.intentHistory.some(r=>r.id==='onset'));f.session.dispose();
+});
+test('destination selection falls back to an authored safe option when the primary route is blocked',()=>{
+ const f=fixture('DIARR-001'),p=f.session.read().patient;p.liveVitals.sys=95;
+ assert.equal(hintDestination(p,f.caseData,d=>evaluateGastroDisposition(additionalCaseClosureSnapshot(p,f.caseData,d))),'observacion');
+ f.session.dispose();
+});
+test('a refused transfer prioritizes its specific unresolved diagnostic gate',async()=>{
+ const f=fixture('APP-001');await f.post('/signos');await f.post('¿Tiene alergias a medicamentos?');
+ for(const region of ['general','abdomen']){
+  const techniques=region==='general'?['general']:['inspection','auscultation','percussion','palpation'];
+  for(const technique of techniques)await f.post('/examen '+region+' '+technique);
+ }
+ assert.equal(f.next().action.kind,'study');
+ const reply=await f.post('/disposicion quirofano');
+ assert.equal(reply.clinical[0].receipt.reasonCode,'diagnosis-missing');
+ assert.equal(f.next().action.kind,'diagnosis');f.session.dispose();
 });
 test('routed dose phrases remain executable after the actual nursing scanner normalization',async()=>{
  const f=fixture('NEUR-06'),p=f.session.read().patient;

@@ -13,10 +13,13 @@ export function clinicalActionDescriptor(kind,id,{caseData,content,patient,clock
  if(kind==='diagnosis')return {...base,id:'diagnosis',section:'diagnosis',label:CLINICAL_CONTROLS.diagnosis,
   text:'Abre «'+CLINICAL_CONTROLS.diagnosis+'» y registra tu hipótesis.'};
  if(kind==='history'){
-  id=id&&id!=='reason'?id:caseData.requiredHistory?.[0];
-  const question=caseData.intents.find(i=>i.id===id?.replace(/^anamnesis:/,''))?.keys?.[0];
-  return {...base,id:id||'reason',section:'talk',label:CLINICAL_CONTROLS.talk,command:question?question+'?':'¿Qué te pasó?',
-   text:'Abre «'+CLINICAL_CONTROLS.talk+'» y pregunta «'+(question?question+'?':'¿Qué te pasó?')+'».'};
+  const topic=id?.replace(/^anamnesis:/,'')||'allergies';
+  const aliases=caseData.intents.find(i=>i.id===topic)?.keys||[];
+  const command=topic==='allergies'?'¿Tiene alergias a medicamentos?':
+   topic==='onset'&&aliases.includes('inicio')?'¿A qué hora fue el inicio?':aliases[0]?'¿'+aliases[0]+'?':null;
+  if(!command)return null;
+  return {...base,id:topic,section:'talk',label:CLINICAL_CONTROLS.talk,command,
+   text:'Abre «'+CLINICAL_CONTROLS.talk+'» y pregunta «'+command+'».'};
  }
  if(kind==='examination'){
   const region=id?.split(':')[0]?.replace(/^(?:heart|lungs)$/,'thorax')||'abdomen';
@@ -34,7 +37,11 @@ export function clinicalActionDescriptor(kind,id,{caseData,content,patient,clock
   return {...base,section:'patient',label,command:'/disposicion '+id,
    text:'Abre «'+CLINICAL_CONTROLS.closureTitle+'» y selecciona «'+label+'».'};
  }
- if(kind==='wait')return {...base,id:id||'execution',label:'En curso',text:'Espera la confirmación pendiente de Enfermería y vuelve a consultar.'};
+ if(kind==='wait'){
+  const text={receiver:'Espera la respuesta del servicio receptor.',study:'Espera el resultado del estudio solicitado.',
+   observation:'Completa el tiempo de observación clínica.',execution:'Espera la confirmación pendiente de Enfermería.'}[id];
+  return {...base,id:id||'execution',label:'En curso',text:text||'Espera la confirmación pendiente.'};
+ }
  if(kind!=='treatment')return null;
  const item=caseData.interventions.find(x=>x.id===id)||content.therapies.find(x=>x.id===id),definition=nativeTreatmentDefinition(id,caseData);
  const alias=definition?.aliases?.[0]||content.therapies.find(x=>x.id===id)?.aliases?.[0]||item?.aliases?.[0];

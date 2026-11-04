@@ -31,9 +31,16 @@ function legacyProjection(p,c){
   consultsDone:['cirugia','uti','gastro']});
  return {snapshot,evaluate,rule,medicines,fulfilled,destination:full.action||rule?.destinations[0]};
 }
-export function hintDestination(p,c){
+export function hintDestination(p,c,readiness){
  const rule=clinicalClosureRule(c);
- return rule?.destinations[0]||legacyProjection(p,c).destination;
+ if(!rule)return legacyProjection(p,c).destination;
+ const allowed=rule.destinations;
+ if(!readiness||allowed.length===1)return allowed[0];
+ return allowed.find(destination=>{
+  const assessment=readiness(destination);
+  return assessment&&!assessment.requirements?.some(r=>r.type==='stability')&&
+   !assessment.missing?.some(message=>/signos vitales inestables|shock o hipoxemia grave|estabilización antes de internar/i.test(message));
+ })||allowed[0];
 }
 function legacyRequirements(p,c,destination){
  const {snapshot,evaluate,rule,medicines,fulfilled}=legacyProjection(p,c);
