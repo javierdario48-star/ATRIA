@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createStudyService} from './studies.js';
+import {studyEvidenceId} from './study-evidence.js';
 
 const cases=[
  {id:'CASE-A',studies:[
@@ -162,19 +163,24 @@ test('all 25 cases can complete global studies without changing their original c
   const p=patient('canonical:'+c.id,c.id);
   for(const study of catalog){
    const eventId=c.id+':'+study.id;
-   assert.equal(service.request(p,command(study.id,eventId,0)).status,'pending');
-   const order=p.orders.at(-1),native=c.studies.find(x=>x.id===study.id);
+   const request=service.request(p,command(study.id,eventId,0));
+   assert.equal(request.status,'pending');
+   const id=studyEvidenceId(c,study.id),order=p.orders.find(x=>studyEvidenceId(c,x.id)===id);
+   const native=c.studies.find(x=>x.id===id);
    if(native){assert.equal(order.result,native.result);assert.equal(order.resultSource,'native');}
    assert.equal(order.patientUid,p.uid);
-   assert.equal(order.sourceEventId,eventId);
+   assert.equal(order.sourceEventId,request.sourceEventId);
    ordered++;
   }
   const end=Math.max(...p.orders.map(o=>o.readyAtMinute));
-  completed+=service.advance(p,end).length;
+  const uniqueOrders=new Set(catalog.map(s=>studyEvidenceId(c,s.id))).size;
+  const results=service.advance(p,end);
+  assert.equal(results.length,uniqueOrders);
+  completed+=results.length;
   assert(p.orders.every(o=>o.status==='done'));
   assert.deepEqual(service.advance(p,end+1),[]);
  }
  assert.equal(ordered,25*catalog.length);
- assert.equal(completed,ordered);
+ assert.equal(completed,canonical.reduce((sum,c)=>sum+new Set(catalog.map(s=>studyEvidenceId(c,s.id))).size,0));
  assert.deepEqual(canonical,before);
 });

@@ -86,9 +86,13 @@ async function interact(p,uid,mode){
  await p.locator('#patientWheel [data-patient-action="talk"]').click();
  await send(p,'¿Desde cuándo empezó la hinchazón?');
  await p.waitForFunction(()=>atriaV5.snapshot().clinical.messages.some(x=>x.role==='patient'));
+ await send(p,'¿Qué remedios usás?');
+ await p.waitForFunction(()=>atriaV5.snapshot().clinical.messages.some(x=>x.role==='patient'&&/presión/i.test(x.text)));
+ await send(p,'¿Cuáles?');
+ await p.waitForFunction(()=>atriaV5.snapshot().clinical.messages.some(x=>x.role==='patient'&&/no recuerdo el nombre/i.test(x.text)));
  assert.equal(await p.evaluate(()=>atriaV5.snapshot().phase),'guard');
  await p.screenshot({path:output+'/'+mode+'-guard.png'});
- results.push({mode,patientVisible:true,realAccount:true,patientReplied:true,contextualHint:true,individualHintFee:true,musicControls:true});
+ results.push({mode,patientVisible:true,realAccount:true,patientReplied:true,contextualHint:true,individualHintFee:true,medicationFollowUp:true,musicControls:true});
 }
 async function release(p){
  if(await p.evaluate(()=>atriaV5.snapshot().phase==='guard'))await p.locator('#guardButton').click();

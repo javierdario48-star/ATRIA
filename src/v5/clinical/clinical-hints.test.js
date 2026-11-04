@@ -138,3 +138,28 @@ test('a modified canonical rule is reflected without authored hint prose',()=>{
 test('all active cases expose real requirements and executable action references',()=>{
  const census=clinicalHintCoverage(content);assert.equal(census.cases.length,55);assert.deepEqual(census.errors,[]);
 });
+
+test('a pathological completed panel and a restored equivalent panel are not recommended again',async()=>{
+ const encef=fixture('ENCEF-001'),hepat=fixture('HEPAT-001');let restored;
+ try{
+  await encef.post('/estudio g_encef_liver');
+  encef.session.advance(180);await encef.session.flush();
+  const completed=encef.session.read();
+  assert.match(completed.patient.orders[0].result,/INR 1,6/);
+  assert.equal(completed.clinicalChecklist.studies,'done');
+  assert(!encef.session.clinicalHintRequirements().some(r=>r.type==='study'));
+
+  await hepat.post('/estudio g_encef_liver');
+  hepat.session.advance(180);await hepat.session.flush();
+  const checkpoint=await hepat.session.checkpoint();
+  // Older builds stored the equivalent panel under its requested catalog ID.
+  Object.assign(checkpoint.patient.orders[0],{result:'Función hepática, INR y glucosa: Sin alteraciones significativas;',
+   resultSource:'universal-fallback',nativeResult:false,universalFallback:true});
+  restored=createGuardSession({roomId:'hint-room',mode:'solo',actorId:'doctor',actorName:'Médico',
+   patient:{uid:'hint-patient',caseId:'HEPAT-001'},content,checkpoint,
+   resolveContext:()=>({patientUid:'hint-patient'})});
+  assert.equal(restored.read().clinicalChecklist.studies,'done');
+  assert(!restored.clinicalHintRequirements().some(r=>r.type==='study'));
+  assert.notEqual(restored.clinicalHint().action?.kind,'study');
+ }finally{encef.session.dispose();hepat.session.dispose();restored?.dispose();}
+});
