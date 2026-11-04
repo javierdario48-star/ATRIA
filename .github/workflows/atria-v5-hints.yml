@@ -1,0 +1,53 @@
+name: ATRIA 5 Contextual Clinical Hints
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - src/v5/**
+      - qa/v5/clinical-hint*
+      - .github/workflows/atria-v5-hints.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atria-v5-hints-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  requirements-authority-xp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Patient binding, priorities, real commands, individual XP, durable recovery and stale responses
+        run: node --test src/v5/clinical/clinical-hint*.test.js src/v5/server/clinical-hints-durable.test.js src/v5/ui/clinical-hint-presenter.test.js
+      - name: All 55 action references and representative hint-guided native trajectories
+        run: node qa/v5/clinical-hint-bots.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-clinical-hint-bots
+          path: qa/v5-hint-results/
+  patient-menu-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-browser" --no-save --ignore-scripts playwright@1.58.2
+      - run: npm run build:v5
+      - name: Desktop and Android patient menu, private Vega hint and display-only XP
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/clinical-hints-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-clinical-hint-browser
+          path: qa/v5-hint-browser-results/
