@@ -16,7 +16,7 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
    return {epoch:0,...runtime.view(actorId)};
   }finally{runtime.dispose();}
  }
- async function transact({roomId,actorId,commands=[],motion=null,motionSequence=null,claim=null,typing=null,confirmation=null,actorProfile=null}){
+ async function transact({roomId,actorId,commands=[],motion=null,motionSequence=null,claim=null,typing=null,confirmation=null,actorProfile=null,hintRequest=null}){
   if(!Array.isArray(commands)||commands.length>16)throw fail('invalid','invalid command batch');
   const before=await store.read(roomId);if(!before)throw fail('missing','clinical guard not found');
   const record=before.value;
@@ -31,7 +31,7 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
   try{
    runtime=await createGuardRuntime({content,roomId,nowMs:at,checkpoint:fenced.runtime});
    const recovery=await runtime.advanceTo(Math.max(at,Math.ceil(fenced.runtime.lastWallMs)),{maxSteps});
-   const acknowledgements=[];let confirmationAccepted=null;
+   const acknowledgements=[];let confirmationAccepted=null,hintAcknowledgement=null;
    if(!recovery.recovering){
     if(actorProfile&&Number.isSafeInteger(actorProfile.level)&&actorProfile.level>0)
      runtime.updateDoctorLevel(actorId,actorProfile.level);
@@ -40,12 +40,13 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
     if(typeof typing==='boolean')runtime.typing(actorId,typing,at);
     if(confirmation)confirmationAccepted=runtime.confirm(actorId,confirmation.revision,confirmation.outcomeId);
     for(const command of commands)acknowledgements.push(await runtime.post(actorId,command));
+    if(hintRequest)hintAcknowledgement=await runtime.hint(actorId,hintRequest);
    }
    const next={schemaVersion:1,roomId,epoch,lease:null,runtime:await runtime.checkpoint()};
    // Every external effect is clinical data in this aggregate. A stale worker
    // can calculate privately but cannot publish, ACK or execute a second dose.
    if(now()>=lease.untilMs||!await store.compareAndSwap(roomId,acquired,next))throw fail('fenced','previous clinical authority fenced');
-   return {epoch,recovering:recovery.recovering,acknowledgements,confirmationAccepted,...runtime.view(actorId)};
+   return {epoch,recovering:recovery.recovering,acknowledgements,confirmationAccepted,...(hintRequest?{hintAcknowledgement,hintRequestId:hintRequest.requestId}:{}),...runtime.view(actorId)};
   }finally{runtime?.dispose();}
  }
  return Object.freeze({bootstrap,transact});

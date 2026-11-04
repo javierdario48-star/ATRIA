@@ -33,7 +33,7 @@ export function createClinicalHttp({authority,verifiedRoom,probe,onUnavailable=(
    await beforeTransact({identity,roomId:body.roomId,action:'sync'});
    const result=await authority.transact({roomId:body.roomId,actorId,actorProfile:identity?.account?await memberProfile({id:actorId,name:identity.account.name}):null,
     commands:body.commands??[],motion:body.motion??null,motionSequence:body.motionSequence??null,claim:body.claim??null,
-    typing:body.typing??null,confirmation:body.confirmation??null});
+    typing:body.typing??null,confirmation:body.confirmation??null,hintRequest:body.hintRequest??null});
    const account=await afterTransact({identity,roomId:body.roomId,result,action:'sync'});
    return {status:200,body:{...result,...(account?{account}:{})}};
   }catch(error){

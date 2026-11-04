@@ -49,7 +49,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  if(!checkpoint)world.enterGuard({mode,caseId,patientUid:roomId+':patient',members});
  const shift=createShiftFlow({content,mode,firstCaseId:caseId,roomId,snapshot:checkpoint?.shift,
   allowedCaseIds:guardSelection?.caseIds??null,caseSequence});
- const sessions=new Map(),focused=new Map(clone(checkpoint?.focused??[]));
+ const sessions=new Map(),focused=new Map(clone(checkpoint?.focused??[])),focusVersions=new Map(clone(checkpoint?.focusVersions??[]));
  const claims=new Map(clone(checkpoint?.claims??[])),deliveries=new Map(clone(checkpoint?.deliveries??[])),
   motionReceipts=new Map(clone(checkpoint?.motionReceipts??[]));
  let lastWallMs=checkpoint?.lastWallMs??nowMs,pendingQuanta=checkpoint?.pendingQuanta??0,
@@ -90,6 +90,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(r.ownerId&&r.ownerId!==actorId)return false;
    if(!r.ownerId&&!shift.owner(uid,actorId))return false;
   }
+  if(focused.get(actorId)!==uid)focusVersions.set(actorId,(focusVersions.get(actorId)||0)+1);
   focused.set(actorId,uid);return true;
  }
  function awardMembers(){
@@ -101,13 +102,14 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    for(const m of members){
     if(mode==='competitive'&&m.id!==r.ownerId)continue;
     const key=r.index===0?m.id:m.id+':'+r.index;
-    if(!claims.has(key))claims.set(key,{...clone(receipt),actorId:m.id});
+    if(!claims.has(key))claims.set(key,sessions.get(r.uid).rewardFor(receipt,m.id));
    }
   }
  }
  async function flush(){for(const s of sessions.values())await s.flush();}
  function clinicalView(actorId){
-  const state=activeSession(actorId).read(),rows=shift.records();
+  const state=activeSession(actorId).read(actorId),rows=shift.records();
+  state.hintBinding.selectionRevision=focusVersions.get(actorId)||0;
   const items=rows.map(r=>{
    const p=sessions.get(r.uid)?.read().patient,c=content.cases.find(x=>x.id===r.caseId);
    const triage=receptionAcuity({caseData:c,patient:p,waitingSeconds:r.ownerId?0:Math.max(0,shift.elapsed()-r.arrivalAt)});
@@ -155,6 +157,16 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    await flush();awardMembers();return {recovering:pendingQuanta>=1000,steps,lastWallMs};
   },
   claim:claimPatient,
+  async hint(actorId,request){
+   const reject=reason=>({status:'rejected',reason});
+   if(!members.some(m=>m.id===actorId)||request?.actorId!==actorId)return reject('hint-forbidden');
+   if(shift.ended())return reject('shift-ended');
+   const uid=request.patientUid,r=shift.record(uid);
+   if(request.roomId!==roomId||!r||r.closed)return reject('patient-not-active');
+   if(focused.get(actorId)!==uid||request.selectionRevision!==(focusVersions.get(actorId)||0))return reject('patient-selection-changed');
+   if(mode==='competitive'&&r.ownerId!==actorId)return reject('other-player-owns-patient');
+   return sessions.get(uid).hint(request,actorId);
+  },
   async post(actorId,envelope){
    if(!members.some(m=>m.id===actorId))throw Error('not a clinical member');
    if(shift.ended())return {roomId,commandId:envelope.id,status:'rejected',reason:'shift-ended'};
@@ -218,7 +230,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    await flush();
    return clone({schemaVersion:1,modelVersion:CLINICAL_RUNTIME_VERSION,contentHash,roomId,caseId,members,hostId,mode,
     ...(guardSelection?{guardSelection}:{}),
-    ownerId:shift.record(firstUid)?.ownerId??null,shift:shift.checkpoint(),focused:[...focused],
+    ownerId:shift.record(firstUid)?.ownerId??null,shift:shift.checkpoint(),focused:[...focused],focusVersions:[...focusVersions],
     lastWallMs,pendingQuanta,typingUntilMs,motionReceipts:[...motionReceipts],claims:[...claims],
     deliveries:[...deliveries],world:world.checkpoint(),
     session:await sessions.get(firstUid).checkpoint(),

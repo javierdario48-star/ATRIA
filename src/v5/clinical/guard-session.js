@@ -1,3 +1,4 @@
+import {createClinicalHintLedger,hintAdjustedXP} from './clinical-hint-ledger.js';
 import {clinicalHintRequirements,hintDestination} from './clinical-hint-requirements.js';
 import {selectClinicalHint} from './clinical-hints.js';
 import {createRoomAuthority} from '../core/room-authority.js';
@@ -71,7 +72,17 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   nativePatient.allergyHistoryAnswer='Tengo alergia a '+nativePatient.allergies.map(id=>
    (labels.get(id)||id)+(nativePatient.severeAllergies.includes(id)?' (reacción grave)':'')).join(', ')+'.';
  }
- const options={mode,defaultDoses:content.defaultDoses,progress,cases:content.cases,checkpoint:checkpoint?.care,clinicalClock:()=>clock};
+ const encounterId=checkpoint?.encounterId||roomId+':care:'+nativePatient.uid;
+ const hintLedger=createClinicalHintLedger({roomId,encounterId,patientUid:nativePatient.uid},checkpoint?.hints);
+ function rewardFor(receipt,doctorId){
+  if(!receipt)return receipt;
+  const baseXP=receipt.baseXP??receipt.xp,count=hintLedger.count(doctorId);
+  return {...copy(receipt),actorId:doctorId,...(count||receipt.baseXP!==undefined?
+   {baseXP,hintCount:count,xp:hintAdjustedXP(baseXP,count)}:{})};
+ }
+ const options={mode,defaultDoses:content.defaultDoses,
+  progress:{...progress,award:receipt=>progress.award(rewardFor(receipt,receipt.actorId))},
+  cases:content.cases,checkpoint:checkpoint?.care,clinicalClock:()=>clock};
  // Every case inherits the validated global formulary (including cases that
  // do not yet have an active clinical executor). This is a PURE interpreter,
  // not a replacement for the native APP/CIRR physiological owner.
@@ -352,9 +363,24 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   async checkpoint(){
    if(disposed)throw Error('guard session disposed');await authority.flush();
    return copy({schemaVersion:1,modelVersion:'atria-clinical-c5b-1',roomId,mode,actorId,actorName,members,
-    patient:nativePatient,clock:guardClock.checkpoint(),deathPublished,progress:progress.read(),
+    patient:nativePatient,encounterId,hints:hintLedger.checkpoint(),clock:guardClock.checkpoint(),deathPublished,progress:progress.read(),
     care:care?.checkpoint()??null,studies:studies.checkpoint(),port:port.checkpoint(),authority:authority.checkpoint(),
     pendingStudyRequests:[...pendingStudyRequests].map(([k,v])=>[k,[...v]]),pendingNurseJobs:[...pendingNurseJobs],waitingForAccess:[...waitingForAccess]});
+  },
+  hintBinding(doctorId=actorId){return {roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId};},
+  hintCount:doctorId=>hintLedger.count(doctorId),
+  rewardFor,
+  async hint(request,authenticatedCredentials=credentials){
+   if(disposed)return {status:'rejected',reason:'room-disposed'};
+   await authority.flush();
+   const identity=authenticatedCredentials===credentials?{id:actorId,roomId}:authenticate?.(authenticatedCredentials);
+   if(!identity||identity.roomId!==roomId||!memberNames.has(identity.id)||request?.actorId!==identity.id)
+    return {status:'rejected',reason:'hint-forbidden'};
+   if(nativePatient.caseEnded||nativePatient.patientDied)return {status:'rejected',reason:'patient-not-active'};
+   if(resolveContext({actorId:identity.id,targetPatientUid:nativePatient.uid})?.patientUid!==nativePatient.uid)
+    return {status:'rejected',reason:'approach-patient-to-claim'};
+   try{return hintLedger.request(request,this.clinicalHint());}
+   catch{return {status:'unavailable',reason:'hint-evaluation-failed'};}
   },
   clinicalHintRequirements(){const destination=hintDestination(nativePatient,caseData);return clinicalHintRequirements(nativePatient,caseData,closureReadiness(destination),destination);},
   clinicalHint(){
@@ -527,7 +553,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   // available for each case; monitor paint never recalculates pharmacology.
   pharmacologyRead:()=>pharmacology.evaluate(caseData.id,nativePatient,clock.nativeMinute),
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
-  read(){const room=authority.snapshot();return {room,patient:copy(nativePatient),exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:messages(room),progress:progress.read(),
+  read(doctorId=actorId){const room=authority.snapshot(),subject=copy(nativePatient);
+   if(subject.closure)subject.closure=rewardFor(subject.closure,doctorId);
+   const displayMessages=messages(room);
+   if(subject.closure&&hintLedger.count(doctorId))for(const row of displayMessages)row.text=row.text.replace(/\+\d+ XP\./g,'+'+subject.closure.xp+' XP.');
+   return {hintBinding:{roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId},hintCount:hintLedger.count(doctorId),room,patient:subject,exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:displayMessages,progress:progress.read(),
    eligibleDestinations:eligibleDestinations(),
    closure:copy(closureReadiness(executor==='peritonitis'?undefined:
     (caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations?.[0]||'sala'))};},
