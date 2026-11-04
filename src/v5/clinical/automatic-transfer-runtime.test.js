@@ -66,7 +66,10 @@ for(const mode of ['coop','competitive'])for(const caseId of ['CARD-08','HDA-001
    assert.equal(final.progress.receipts.length,1);assert(final.progress.xp>0);
    assert.equal(final.shift.outcomes.length,1);
    const before=runtime.view('doctor'),saved=await runtime.checkpoint();runtime.dispose();runtime=await make(saved);
-   await send(transfer.text,transfer.id);await advance(5);
+   const replay=await send(transfer.text,transfer.id);
+   assert.equal(replay.clinical[0].receipt?.closure?.eventId,final.patient.closure.eventId,
+    'a lost acknowledgement after closure must replay the original committed transfer');
+   await advance(5);
    assert.deepEqual(read().patient,before.clinical.patient);
    assert.deepEqual(read().progress,before.clinical.progress);
    const claims=runtime.view('doctor').claims;

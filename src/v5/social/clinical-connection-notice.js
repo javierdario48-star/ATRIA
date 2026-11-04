@@ -12,7 +12,7 @@ export function createClinicalConnectionNotice({failuresBeforeWarning=4,cooldown
    consecutive++;lastFailure=now;
    // Invalid authorization is not ordinary connection contention.
    const denied=error?.status===401||error?.status===403;
-   if(!denied&&consecutive<failuresBeforeWarning)return null;
+   if(!denied&&error?.name!=='TimeoutError'&&consecutive<failuresBeforeWarning)return null;
    if(now-lastNotice<cooldownMs)return null;
    lastNotice=now;return denied?accessWarning:warning;
   },

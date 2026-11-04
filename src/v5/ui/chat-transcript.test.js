@@ -40,3 +40,16 @@ test('filtered clinical messages replace transcript with deterministic roles and
  assert.equal(element.children[3].dataset.role,undefined);
  r.clear();assert.deepEqual(history,[]);assert.equal(element.children.length,0);
 });
+test('an unchanged clinical poll preserves the DOM and reading position',()=>{
+ const {document,element}=fakeDom(),history=[],r=createChatTranscript({document,element,history});
+ const rows=[{id:'a',role:'patient',name:'Paciente',text:'Me duele'}];
+ r.replace(rows);
+ const first=element.firstChild;
+ element.scrollHeight=500;element.clientHeight=100;element.scrollTop=120;
+ r.replace(structuredClone(rows));
+ assert.equal(element.firstChild,first);
+ assert.equal(element.scrollTop,120);
+ r.replace([...rows,{id:'b',role:'nurse',name:'Enfermera',text:'Orden confirmada'}]);
+ assert.equal(element.scrollTop,120);
+ assert.equal(element.children.length,2);
+});

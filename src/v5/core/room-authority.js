@@ -178,6 +178,7 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
    return enqueue(()=>process(envelope,credentials));
   },
   async flush(){let pending;do{pending=sequence;await pending;}while(pending!==sequence);},
+  hasCommand:(actorId,commandId)=>seen.has(actorId+':'+commandId),
   checkpoint:()=>copy({...snapshot(),seen:[...seen],pendingExecutions:[...pendingExecutions],
    complications:[...complications],readyDestinations:[...readyDestinations]}),
   // Native minimum-requirement transition, published to the same room stream.

@@ -103,7 +103,8 @@ export function routeWardSpeech(text,context={}){
   focus==='nurse'?'nurse':focus==='vega'?'vega':'patient';
  const patientUid=context.patientUid??null;
  if(recipient!=='nurse')return {recipient,patientUid,intents:context.clinicalEvaluation&&recipient==='patient'&&patientUid?
-  [{kind:'history.ask',id:'dialogue',sourceText:original}]:[],original};
+  [{kind:'history.ask',id:'dialogue',sourceText:original}]:[],original,
+  ...(context.clinicalEvaluation&&recipient==='patient'&&!patientUid?{error:'no-patient-target'}:{})};
  if(/\btacto rectal\b/.test(normalized))return {recipient,patientUid,intents:[],original,error:'physician-exam-required'};
  const vocabulary=nursingFormulationVocabulary487(original,context);
  const parsed=csNurseScan487(vocabulary.text,vocabulary.studies,vocabulary.therapies,context.interventions||[]);

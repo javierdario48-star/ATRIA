@@ -68,6 +68,31 @@ test('invalid credentials rejected before a clinical request',()=>{
  assert.throws(()=>createDurableCooperativeReplica({window:{},roomId:'../wrong',clientKey}),/invalid/);
 });
 
+test('a stalled HTTP request releases the clinical lane and retains the original visible order',async()=>{
+ const f=harness(), sent=[], errors=[];
+ const storage={getItem:k=>f.store.get(k),setItem:(k,v)=>f.store.set(k,v)};
+ const client=createDurableCooperativeReplica({roomId,clientKey,storage,requestTimeoutMs:25,
+  window:{fetch:async(_url,options)=>{
+   const request=JSON.parse(options.body);sent.push(request);
+   if(sent.length===1){
+    assert(options.signal,'a stalled fetch needs a deadline');
+    await new Promise((_,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));
+   }
+   return {ok:true,json:async()=>({epoch:1,clinical:{room:{roomId},patient:{uid:'P'}},
+    acknowledgements:[{commandId:'stalled-order',status:'received'}]})};
+  }},onError:e=>errors.push(e)});
+ const order={id:'stalled-order',text:'Enfermera ceftriaxona 1 g',targetPatientUid:'P'};
+ const posted=client.post(order);
+ assert.deepEqual(client.pendingCommands(),[order]);
+ const hold=setTimeout(()=>{},100);
+ try{await assert.rejects(client.flush(),{name:'TimeoutError'});}finally{clearTimeout(hold);}
+ assert.equal(errors.length,1);
+ await client.sync();assert.equal((await posted).commandId,order.id);
+ assert.deepEqual(sent.map(x=>x.commands),[[order],[order]]);
+ assert.deepEqual(client.pendingCommands(),[]);
+ client.dispose();
+});
+
 test('a patient utterance arriving during a server read flushes immediately after it, without duplicate writes',async()=>{
  const f=harness(),client=f.client();let release;
  const gate=new Promise(resolve=>release=resolve);f.blockNextSync(gate);

@@ -37,7 +37,7 @@ import {unrescuedTransferReactions} from './transfer-continuation.js';
 const copy=value=>structuredClone(value);
 const survivalSensitiveIV=new Set(['anticoagulation','morphine','albumin','transfusion','vasopressor','ppi']);
 const routeReason={
- 'no-patient-target':'Acercate al paciente para indicar el estudio.',
+ 'no-patient-target':'Acercate al paciente y volvé a enviar el mensaje.',
  'physician-exam-required':'El tacto rectal lo realizás desde Examen físico → Periné.',
  'question-or-negation':'Pregunta o indicación negada: no ejecuté ninguna acción.',
  'unknown-clause':'La indicación necesita una aclaración; no ejecuté acciones.',
@@ -293,6 +293,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   }
   if(item.reason==='nursing-work-in-progress')
    return label+': todavía hay órdenes de enfermería en curso. Esperá su confirmación antes de cerrar la atención.';
+  if(item.reason==='pending-clinical-treatment')
+   return 'El traslado está pendiente de preparación. Enfermería todavía debe iniciar o confirmar una intervención.';
   if(item.reason==='patient-not-active')
    return label+': el caso ya finalizó; no se admiten nuevas órdenes.';
   if(item.reason==='oxygen-not-active')return label+': no hay oxígeno activo que suspender.';
@@ -317,7 +319,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      actorId:message.actorId,patientUid:message.patientUid,text,role:'player'});
     const physicianGuidance=examination||event.routeError==='physician-exam-required';
     if(event.routeError)rows.push({id:'route:'+message.id,name:physicianGuidance?'ATRIA':'Enfermera',role:physicianGuidance?'system':'nurse',
-     text:examination?(event.routeError==='no-patient-target'?'Examen no registrado. Acercate al paciente para explorarlo.':
+     actorId:message.actorId,text:examination?(event.routeError==='no-patient-target'?'Examen no registrado. Acercate al paciente para explorarlo.':
       'Examen no registrado. Revisá la región y la maniobra seleccionadas.'):
       routeReason[event.routeError]||'No pude ejecutar esa indicación.'});
     for(let i=0;i<event.clinical.length;i++){
@@ -326,15 +328,16 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      const nativeText=item.receipt?.message;
      const feedback=resultText(item,label)||
       (nativeText|| (item.status==='pending'?
+       item.kind==='case.close'?'Traslado solicitado. Enfermería verificó los signos; esperamos la respuesta del servicio receptor.':
        item.kind==='study.request'?label+': solicitado; pendiente de resultado.':
         label+': orden recibida; pendiente de enfermería o preparación, todavía no ejecutada.':
        label+': resultado disponible.'));
      rows.push({id:'ack:'+message.id+':'+i,
       name:isExaminationKind(item.kind)?'ATRIA':item.kind==='history.ask'?'Paciente':'Enfermera',
-      role:isExaminationKind(item.kind)?'system':item.kind==='history.ask'?'patient':'nurse',text:feedback});
+      role:isExaminationKind(item.kind)?'system':item.kind==='history.ask'?'patient':'nurse',actorId:message.actorId,text:feedback});
     }
     if(event.npcReply?.role==='mentor')
-     rows.push({id:'npc:'+message.id,name:event.npcReply.name,role:'mentor',text:event.npcReply.text});
+     rows.push({id:'npc:'+message.id,name:event.npcReply.name,role:'mentor',actorId:message.actorId,text:event.npcReply.text});
    }else if(event.type==='clinical.care-ready'){
     rows.push({id:'ready:'+event.patientUid+':'+event.revision,name:'Enfermera',role:'nurse',
      text:'Se cumplen los requisitos mínimos para continuar el cuidado: '+event.destinations.map(id=>CLOSURE_DEST_LABELS_487[id]).join(' · ')+'. Podés elegir el destino junto al paciente.'});
@@ -349,7 +352,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     for(const item of event.clinical){
      if(isExaminationKind(item.kind)&&item.status==='executed'||isPhysicianExamStudy(item.id))continue;
      const source=item.receipt?.sourceEventId||event.eventId;if(announcedResults.has(source))continue;
-     announcedResults.add(source);rows.push({id:'completion:'+source,name:'Enfermera',role:'nurse',
+     announcedResults.add(source);rows.push({id:'completion:'+source,name:'Enfermera',role:'nurse',actorId:event.actorId,
       text:resultText(item,labels.get(item.id)||item.id)||
        (item.receipt?.message||(labels.get(item.id)||item.id)+': resultado disponible.')});
     }
@@ -395,6 +398,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     requirements:clinicalHintRequirements(nativePatient,caseData,assessment,destination)});
   },
   catalog:()=>copy(orderedStudies),
+  hasCommand:authority.hasCommand,
   async post(envelope,authenticatedCredentials=credentials){
    if(disposed)return {status:'rejected',reason:'room-disposed'};
    const reply=await authority.dispatch({kind:'chat.post',...envelope},authenticatedCredentials);publishReadiness();return reply;

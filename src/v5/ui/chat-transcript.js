@@ -7,6 +7,7 @@ export function createChatTranscript({document,element,history,maxRows=300}){
  if(!document?.createElement||!document?.createTextNode||!element?.replaceChildren||
    !Array.isArray(history)||!Number.isSafeInteger(maxRows)||maxRows<1)
   throw Error('invalid chat transcript presentation');
+ let lastView=null;
  function makeLine(name,text,{role,system=false,id}={}){
   const el=document.createElement('div');
   el.className='line'+(role==='patient'||role==='nurse'?' '+role:system?' system':'');
@@ -16,6 +17,7 @@ export function createChatTranscript({document,element,history,maxRows=300}){
   return el;
  }
  function append(name,text,system=false){
+  lastView=null;
   history.push({name,text,system});
   if(history.length>maxRows)history.shift();
   element.append(makeLine(name,text,{system}));
@@ -23,19 +25,21 @@ export function createChatTranscript({document,element,history,maxRows=300}){
   element.scrollTop=element.scrollHeight;
  }
  function replace(rows,previews=[]){
+  const view=[...rows,...previews].slice(-maxRows).map(({id,role,name,text})=>({id,role,name,text}));
+  const signature=JSON.stringify(view);
+  if(signature===lastView)return;
+  const scrollTop=element.scrollTop;
+  const follow=lastView===null||element.scrollHeight-scrollTop-element.clientHeight<=16;
   const fragment=document.createDocumentFragment();
   history.length=0;
-  for(const row of rows){
-   history.push({name:row.name,text:row.text,system:row.role!=='player'});
+  for(const row of view){
+   history.push({name:row.name,text:row.text,system:!!row.role&&row.role!=='player'});
    fragment.append(makeLine(row.name,row.text,{role:row.role,id:row.id}));
   }
-  for(const preview of previews){
-   history.push({name:preview.name,text:preview.text,system:false});
-   fragment.append(makeLine(preview.name,preview.text,{id:preview.id}));
-  }
   element.replaceChildren(fragment);
-  element.scrollTop=element.scrollHeight;
+  element.scrollTop=follow?element.scrollHeight:scrollTop;
+  lastView=signature;
  }
- function clear(){history.length=0;element.replaceChildren();}
+ function clear(){lastView=null;history.length=0;element.replaceChildren();}
  return Object.freeze({append,replace,clear});
 }

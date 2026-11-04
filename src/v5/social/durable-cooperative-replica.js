@@ -1,3 +1,4 @@
+export const CLINICAL_REQUEST_TIMEOUT_MS=12000;
 /**
  * C5.b.3 client transport. It does not create a GuardSession, progress clock,
  * dispense a drug, or make a second clinical authority in the browser.
@@ -5,7 +6,8 @@
  * animation frame; no timers or new scheduling loops are added.
  */
 export function createDurableCooperativeReplica({
- window,roomId,clientKey,storage,authorization=()=>null,onSnapshot=()=>{},onError=()=>{}
+ window,roomId,clientKey,storage,authorization=()=>null,onSnapshot=()=>{},onError=()=>{},
+ requestTimeoutMs=CLINICAL_REQUEST_TIMEOUT_MS
 }){
  if(!/^[A-Za-z0-9_-]{1,100}$/.test(roomId)||!/^[-a-zA-Z0-9]{32,120}$/.test(clientKey))
   throw Error('invalid durable cooperative credentials');
@@ -40,6 +42,7 @@ export function createDurableCooperativeReplica({
  }
  async function request(action,extra={}){
   const response=await window.fetch('/api/clinical',{method:'POST',cache:'no-store',
+   signal:AbortSignal.timeout(requestTimeoutMs),
    headers:{'Content-Type':'application/json',...(authorization()?{Authorization:authorization()}:{})},
    body:JSON.stringify({action,clientKey,roomId,...extra})});
   let value;try{value=await response.json();}catch{value={};}
@@ -62,7 +65,7 @@ export function createDurableCooperativeReplica({
    ...(claim?{claim}:{}),...(typingState!==null?{typing:typingState}:{}),...(receipt?{confirmation:receipt}:{})})
    .then(response=>{
     if(disposed)return null;
-    accept(response);
+    if(!accept(response))return null;
     // Do not discard motion on a recovering response: the server did not
     // admit new commands, movement or confirmations during catch-up.
     if(!response.recovering){
@@ -87,6 +90,7 @@ export function createDurableCooperativeReplica({
    }
   },
   sync:synchronize,
+  pendingCommands:()=>[...pending.values()].map(x=>clone(x.envelope)),
   maintain(now){
    // Physiological advancement and CAS writes are NOT a sprite transport.
    // Movement is visible through the existing room-scoped social presence,
@@ -165,6 +169,12 @@ export function createDurableCooperativeReplica({
   advance(){},finishNurseArrivals(){return [];},flush:()=>inflight||Promise.resolve(),
   hasSnapshot:()=>!!current,
   isRecovering:()=>!!current?.recovering,
-  dispose(){disposed=true;pending.clear();for(const h of pendingHints.values())h.resolve?.({status:'rejected',reason:'replica-disposed'});pendingHints.clear();},
+  dispose(){
+   disposed=true;
+   for(const item of pending.values())item.resolve?.({status:'rejected',reason:'replica-disposed'});
+   pending.clear();
+   for(const h of pendingHints.values())h.resolve?.({status:'rejected',reason:'replica-disposed'});
+   pendingHints.clear();
+  },
  });
 }

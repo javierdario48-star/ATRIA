@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {visibleWardChatRows,pruneWardSpeechPreviews} from './guard-chat-view.js';
+import * as wardChat from './guard-chat-view.js';
+const {visibleWardChatRows,pruneWardSpeechPreviews}=wardChat;
 import {createNavigation} from '../engine/navigation.js';
 import fs from 'node:fs';
 const map=JSON.parse(fs.readFileSync(new URL('../content/hospital.json',import.meta.url)));
@@ -30,4 +31,18 @@ test('fast room preview vanishes after clinical acknowledgement or if actor move
  assert.deepEqual([...cache.keys()],['m2']);
  pruneWardSpeechPreviews(cache,{rows:[],scene,self:'A',navigation,now:16000});
  assert.equal(cache.size,0);
+});
+
+test('confirmed patient and nurse replies survive moving away and reloading the same guard',()=>{
+ const saved=new Map(),storage={getItem:k=>saved.get(k),setItem:(k,v)=>saved.set(k,v)};
+ const scene={player:{...point,id:'A'},others:[{...point,id:'B'}],
+  patients:[{uid:'P',...point,approach:[4,14]}]};
+ const args={clinicalState:clinic,scene,self:'A',roomId:'R',navigation};
+ const history=wardChat.createWardChatHistory({storage});
+ assert.deepEqual(history.read(args).map(row=>row.id),['own','patient']);
+ const late=[{id:'nurse:own',role:'nurse',actorId:'A',text:'Orden completada',name:'Enfermera'},
+  {id:'nurse:other',role:'nurse',actorId:'B',text:'Orden de otra médica',name:'Enfermera'}];
+ const away={...args,scene:{...scene,player:{id:'A',x:800,y:1300}},clinicalState:{...clinic,messages:[...clinic.messages,...late]}};
+ assert.deepEqual(wardChat.createWardChatHistory({storage}).read(away).map(row=>row.id),['own','patient','nurse:own']);
+ assert.deepEqual(history.read({...away,roomId:'other',clinicalState:{patient:{uid:'Q'},messages:[]}}),[]);
 });

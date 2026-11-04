@@ -36,3 +36,7 @@ test('failures separated by a long idle period cannot accumulate into a false wa
  assert.equal(p.failed(offline,12000),null);
  assert.equal(p.state().consecutive,1);
 });
+test('a timed-out transport alerts the physician while the same order stays queued',()=>{
+ const p=createClinicalConnectionNotice();
+ assert.match(p.failed(new DOMException('expired','TimeoutError'),12000),/Las órdenes pendientes se conservan/);
+});

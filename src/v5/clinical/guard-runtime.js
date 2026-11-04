@@ -169,6 +169,11 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   },
   async post(actorId,envelope){
    if(!members.some(m=>m.id===actorId))throw Error('not a clinical member');
+   // The existing room receipt is authoritative even after movement,
+   // another selection or closure. Revalidate the original payload there.
+   for(const [uid,session] of sessions)
+    if(session.hasCommand(actorId,envelope.id))
+     return session.post({...envelope,targetPatientUid:envelope.targetPatientUid??uid},actorId);
    if(shift.ended())return {roomId,commandId:envelope.id,status:'rejected',reason:'shift-ended'};
    let uid=preferred(actorId),record=shift.record(uid);
    if(mode==='competitive'){
