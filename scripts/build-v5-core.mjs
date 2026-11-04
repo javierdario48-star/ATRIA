@@ -10,6 +10,8 @@ const files=[
  'src/v5/clinical/nursing-access-plan.js',
  'src/v5/clinical/native-medications.js',
  'src/v5/clinical/native-medication-eligibility.js',
+ 'src/v5/clinical/study-evidence.js',
+ 'src/v5/clinical/gastro-expansion-policies.js',
  'src/v5/clinical/receipts.js',
  'src/v5/content/clinical-treatment-definitions.js',
  'src/v5/content/packs/respiratory-treatments.js',
