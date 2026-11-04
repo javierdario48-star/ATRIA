@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
 import {walk} from './cooperative-ui.mjs';
+import {clickHudAction} from './hud-actions.mjs';
 
 const h=await browserHarness(),results=[],errors=[];
 await mkdir('qa/v5-hint-browser-results',{recursive:true});
@@ -24,11 +25,15 @@ try{
      return {x:(e.x-r.camera.x)*r.scale+r.anchorX,y:(e.y-r.camera.y)*r.scale+r.anchorY};});
     await p.locator('#game').click({position:xy});await p.locator('#patientWheel').waitFor({state:'visible'});
    };
+   await clickHudAction(p,'audioButton');
+   await p.locator('#modalClose').click();
+   assert(await p.locator('#hudMenu').evaluate(menu=>menu.open),'Audio leaves the HUD menu open');
    await tap();const before=await p.evaluate(()=>atriaV5.snapshot().clinical),uid=before.patient.uid;
    const button=p.locator('#patientWheel [data-patient-action="hint"]');await button.waitFor({state:'visible'});
    assert.equal(await button.textContent(),'💡¿Qué hago ahora? · −5% XP');
    const rect=await button.boundingBox();assert(rect.width>=180&&rect.height>=40);
    await button.click();await p.locator('#vegaClinicalHint').waitFor({state:'visible'});
+   assert.equal(await p.locator('#hudMenu').evaluate(menu=>menu.open),false,'Vega help dismisses the overlapping HUD menu');
    await p.waitForFunction(()=>atriaV5.snapshot().clinical.hintCount===1);
    assert.equal(await p.locator('#vegaClinicalHint').getAttribute('data-patient-uid'),uid);
    assert.match(await p.locator('#vegaClinicalHint').textContent(),/Dr. Vega — Pista clínica/);

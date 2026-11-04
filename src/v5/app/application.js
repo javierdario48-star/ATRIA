@@ -1138,7 +1138,13 @@ export async function createApplication({document,window,content,signal}){
    const b=event.target.closest('button[data-patient-action]');if(!b)return;
    const p=world.snapshot().patients.find(p=>p.uid===patientWheel.patientUid());
    patientWheel.hide();if(!p)return;
-   if(b.dataset.patientAction==='hint'){if(clinicalHintContext()?.patientUid===p.uid)void clinicalHintPresenter.reveal();return;}
+   if(b.dataset.patientAction==='hint'){
+    if(clinicalHintContext()?.patientUid===p.uid){
+     ui('hudMenu').open=false;
+     void clinicalHintPresenter.reveal();
+    }
+    return;
+   }
    clinicalUI.openSection(p,b.dataset.patientAction);
   });
  listen(dialog,'change',event=>{
