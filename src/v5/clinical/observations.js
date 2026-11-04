@@ -26,6 +26,25 @@ export function monitorMeasurement(p,clock){
 export function recordVitalMeasurement(p,clock,eventId,source){
  p.lastVitalsKnown={patientUid:p.uid,vitals:source==='monitor'?monitorMeasurement(p,clock):copy(p.liveVitals),nativeMinute:clock.nativeMinute,eventId,source};
 }
+export function hasRecordedVitals(p){
+ return p.lastVitalsKnown?.patientUid===p.uid&&!!p.lastVitalsKnown.eventId;
+}
+export function recordClinicalReassessment(p,clock,eventId,{routine=false}={}){
+ if(p.lastReassessment?.eventId!==eventId)p.reassessments++;
+ p.lastReassessment={nativeMinute:clock.nativeMinute,eventId,vitals:copy(p.liveVitals),
+  administrationEvents:p.administrationLog.map(t=>t.sourceEventId),
+  interventionEvents:p.treatments.map(t=>t.sourceEventId),...(routine?{source:'disposition'}:{})};
+ if(routine&&p.procedures?.monitor?.connected)refreshMonitoring(p,clock);
+ else recordVitalMeasurement(p,clock,eventId,routine?'disposition':'reassessment');
+ return copy(p.lastReassessment);
+}
+export function prepareDispositionReassessment(p,clock,cmd){
+ if(cmd.intent.kind==='case.close'&&!cmd.intent.partial&&hasRecordedVitals(p))
+  recordClinicalReassessment(p,clock,cmd.eventId+':reassessment',{routine:true});
+}
+export function postInterventionReassessments(p){
+ return p.treatments.every(t=>p.lastReassessment?.interventionEvents?.includes(t.sourceEventId))?p.reassessments:0;
+}
 /** Recording is an observation, never a physiological step or an administration. */
 export function executeObservation(p,cmd,clock){
  const {intent}=cmd;

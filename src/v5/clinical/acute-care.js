@@ -2,7 +2,7 @@
 // the authority, IV tasks, consultation, bedside receipts and XP remain unique.
 import {executePatientDialogue} from './patient-dialogue.js';
 import {initializeExamination,executePhysicalExam} from './physical-exam.js';
-import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
+import {executeObservation,executeVenousAccess,executeOxygenSupport,recordClinicalReassessment,prepareDispositionReassessment} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
 import {createClosureDebrief} from './closure-debrief.js';
@@ -46,6 +46,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
   proof,rejected,checkpoint:checkpoint?.iv});
  const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,
+  prepareTransfer:(cmd,clock)=>prepareDispositionReassessment(p,clock,cmd),
   acceptTransfer:completeAcceptedTransfer,checkpoint:checkpoint?.surgery});
  function finalize(cmd,evaluation){
   const xp=nativeCaseXP({score:evaluation.quality.score,mode});
@@ -82,9 +83,6 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   if(clinicalTransferContinuation(p,c,destination).pendingBlockers.length||p.pendingConsults.length){
    out.ready=false;out.action=null;out.missing.push('Esperar las administraciones y las respuestas del equipo receptor pendientes.');
   }
-  if(policy.reassessmentRequired&&p.treatments.some(t=>!p.lastReassessment?.interventionEvents?.includes(t.sourceEventId))){
-   out.ready=false;out.action=null;out.missing.push('Reevaluar tras las intervenciones realmente ejecutadas.');
-  }
   return out;
  }
  return Object.freeze({
@@ -103,6 +101,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
     const issue=clinicalInterventionEligibility(p,c,intent.id,clock);
     if(issue)return rejected(cmd,issue.reason,issue.message);
    }
+   prepareDispositionReassessment(p,clock,cmd);
    const consult=surgery.request(cmd,clock);if(consult)return consult;
    const iv=ivMedicines.request(cmd,clock);if(iv)return iv;
    if(['therapy.request','procedure.request'].includes(intent.kind)&&(policy.conducts||[]).includes(intent.id)){
@@ -158,12 +157,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
     return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
    }
    if(intent.kind==='patient.reassess'){
-    p.reassessments++;
-    p.lastReassessment={nativeMinute:clock.nativeMinute,eventId:cmd.eventId,vitals:copy(p.liveVitals),
-     administrationEvents:p.administrationLog.map(t=>t.sourceEventId),
-     interventionEvents:p.treatments.map(t=>t.sourceEventId)};
-    recordVitalMeasurement(p,clock,cmd.eventId,'reassessment');
-    return executed(cmd,{assessment:copy(p.lastReassessment),
+    return executed(cmd,{assessment:recordClinicalReassessment(p,clock,cmd.eventId),
      message:policy.reassessmentMessage(p)});
    }
    if(intent.kind==='diagnosis.record'){
@@ -237,7 +231,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
      }
      for(const command of task.commands)results.push(proof(command,done,command.eventId!==task.sourceEventId));
     }else{
-     results.push(...(consultation?surgery.finish(task,at):ivMedicines.finish(task,at,nativeMinute)));
+     results.push(...(consultation?surgery.finish(task,at,nativeMinute):ivMedicines.finish(task,at,nativeMinute)));
      if(!consultation){
       const administered=p.administrationLog.find(row=>row.sourceEventId===task.sourceEventId);
       if(administered)policy.onAdministration?.(p,c,administered);

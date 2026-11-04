@@ -1,5 +1,6 @@
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 import {physicianExaminationsPerformed} from './diagnostic-evidence.js';
+import {hasRecordedVitals} from './observations.js';
 
 const refusal=(status,reasonCode,reason,decision='REJECTED_STABILIZATION_INSUFFICIENT')=>
  ({accepted:false,status,reasonCode,reason,decision});
@@ -8,7 +9,7 @@ export function consultationEvidenceReview(p,c,rule){
  const dx=assessDiagnosticImpression(c,p.diagnosis);
  if(!dx.sufficient)return refusal(dx.level==='missing'?'missing-dx':dx.level==='incompatible'?'unsubstantiated':'insufficient-dx',
   dx.reasonCode,dx.message,'REJECTED_DIAGNOSIS_INSUFFICIENT');
- if(p.lastVitalsKnown?.patientUid!==p.uid||!p.lastVitalsKnown.eventId)
+ if(!hasRecordedVitals(p))
   return refusal('missing-vitals','vitals-missing','La impresión está registrada. Faltan signos vitales efectivamente medidos; solicitar un monitor todavía no acredita su conexión.');
  const performed=new Set(physicianExaminationsPerformed(p)),required=rule?.requiredExams||[];
  const remaining=required.filter(key=>!performed.has(key==='neurological:all'?'neurological:neurological':key.replace(/^(?:heart|lungs):/,'thorax:')));

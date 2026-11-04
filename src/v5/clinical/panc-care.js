@@ -6,11 +6,12 @@ import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {initialPancVitals,advancePancVitals} from './native-panc.js';
+import {postInterventionReassessments} from './observations.js';
 export function pancClosureSnapshot(p,c,destination){
  return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,
   historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
   examDone:p.examDone,examRegionsCount:Object.keys(p.examFindings||{}).length,
-  vitalsKnown:!!p.lastVitalsKnown,reassessments:p.reassessments,
+  vitalsKnown:!!p.lastVitalsKnown,reassessments:postInterventionReassessments(p),
   studiesDone:p.orders.filter(o=>o.status==='done').map(o=>o.id),
   extraStudies:p.orders.filter(o=>!c.keyStudies.includes(o.id)).map(o=>o.id),
   keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,
@@ -29,7 +30,7 @@ export function createPancCare(p,c,options){
  return createAcuteCare(p,c,options,{
   initialVitals:initialPancVitals,advanceVitals:advancePancVitals,
   evaluate:(patient,caseData,destination)=>csEvaluateClosure487(pancClosureSnapshot(patient,caseData,destination)),
-  conducts:['npo'],reassessmentRequired:true,
+  conducts:['npo'],
   reassessmentMessage:patient=>'Reevaluación: PA '+Math.round(patient.liveVitals.sys)+'/'+
    Math.round(patient.liveVitals.dia)+', FC '+Math.round(patient.liveVitals.hr)+
    '. Valorar diuresis, oxigenación y persistencia de hipoperfusión antes de confirmar traslado.',

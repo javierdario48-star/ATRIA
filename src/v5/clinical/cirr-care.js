@@ -9,7 +9,7 @@ import {unrescuedTransferReactions} from './transfer-continuation.js';
 import {createIVAdministration} from './native-medications.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
-import {executeObservation,executeVenousAccess,executeOxygenSupport,recordVitalMeasurement} from './observations.js';
+import {executeObservation,executeVenousAccess,executeOxygenSupport,recordClinicalReassessment,prepareDispositionReassessment,postInterventionReassessments} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {createSurgicalConsultation} from './surgical-consultation.js';
 
@@ -17,7 +17,7 @@ const copy=x=>structuredClone(x);
 export const CIRR_EXAM_NAMES=EXAM_TECHNIQUES;
 export function closureSnapshot(p,c,destination){return {
  caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
- examDone:p.examDone,examRegionsCount:p.examDone?2:Object.keys(p.exam).length?1:0,vitalsKnown:!!p.lastVitalsKnown,reassessments:p.reassessments,
+ examDone:p.examDone,examRegionsCount:p.examDone?2:Object.keys(p.exam).length?1:0,vitalsKnown:!!p.lastVitalsKnown,reassessments:postInterventionReassessments(p),
  studiesDone:p.orders.filter(o=>o.status==='done').map(o=>o.id),extraStudies:p.orders.filter(o=>!c.keyStudies.includes(o.id)).map(o=>o.id),
  keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,delivered:p.treatments.filter(t=>!matchesMedicationAllergy487(p,t.id)).map(t=>t.id),consultsDone:[],disposition:destination,
  sys:p.liveVitals.sys,hr:p.liveVitals.hr,spo2:p.liveVitals.spo2,rr:p.liveVitals.rr,initialSys:initialCirrVitals(c).sys,
@@ -50,9 +50,6 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
    out.missing.push('Reacción alérgica grave activa: falta un rescate confirmado posterior al desencadenante antes del traslado.');
   }
   if(p.pendingTreatments.length||p.pendingConsults.length){out.ready=false;out.action=null;out.missing.push('Esperar la ejecución o resolución de las intervenciones y consultas pendientes.');}
-  if(p.treatments.some(t=>!p.lastReassessment?.interventionEvents?.includes(t.sourceEventId))){
-   out.ready=false;out.action=null;out.missing.push('Reevaluar después de la última intervención efectivamente ejecutada.');
-  }
   return out;
  }
  return Object.freeze({
@@ -87,15 +84,13 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
     return {status:'pending',eventId:cmd.eventId,patientUid:p.uid};
    }
    if(intent.kind==='patient.reassess'){
-    p.reassessments++;p.lastReassessment={nativeMinute:clock.nativeMinute,eventId:cmd.eventId,vitals:copy(p.liveVitals),
-     administrationEvents:p.administrationLog.map(t=>t.sourceEventId),interventionEvents:p.treatments.map(t=>t.sourceEventId)};
-    recordVitalMeasurement(p,clock,cmd.eventId,'reassessment');
-    return executed(cmd,{assessment:copy(p.lastReassessment),message:'Reevaluación registrada. PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+' · FC '+Math.round(p.liveVitals.hr)+'. Ascitis y respuesta diurética no tienen cinética modelada en la semilla original; continuar seguimiento.'});
+    return executed(cmd,{assessment:recordClinicalReassessment(p,clock,cmd.eventId),message:'Reevaluación registrada. PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+' · FC '+Math.round(p.liveVitals.hr)+'. Ascitis y respuesta diurética no tienen cinética modelada en la semilla original; continuar seguimiento.'});
    }
    if(intent.kind==='diagnosis.record'){
     p.diagnosis=intent.value;return executed(cmd,{diagnosis:p.diagnosis,message:p.diagnosis?'Impresión diagnóstica registrada: '+p.diagnosis+'.':'Impresión diagnóstica borrada.'});
    }
    if(intent.kind==='case.close'){
+    prepareDispositionReassessment(p,clock,cmd);
     const strict=readiness(intent.id);
     const evaluation=intent.partial?partialDisposition(p,c,intent.id,strict,{cases}):strict;
     if(!evaluation?.ready)return rejected(cmd,'closure-not-ready',(evaluation?.missing||['Destino no disponible.']).join(' '));

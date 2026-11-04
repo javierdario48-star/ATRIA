@@ -14,6 +14,7 @@ import {peritonitisClosureSnapshot} from './peritonitis-care.js';
 import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 import {isNativeMedicine} from './native-medications.js';
+import {hasRecordedVitals} from './observations.js';
 
 export const clinicalClosureRule=c=>c.clinicalPolicy?.closure||GASTRO_CASE_RULES[c.id]||CASE_CLOSURE_RULES_487[c.id];
 const unique=items=>[...new Set(items)];
@@ -78,7 +79,6 @@ export function clinicalHintRequirements(p,c,assessment,destination=hintDestinat
  const requirements=assessment?.requirements?structuredClone(assessment.requirements):legacyRequirements(p,c,destination);
  // These requirements are added by the existing care/session wrapper, after
  // its case evaluator. Read that verdict rather than reimplementing its gate.
- if(assessment?.missing?.some(s=>/^Reevaluar/.test(s))&&!requirements.some(r=>r.type==='reassess'))requirements.push({type:'reassess'});
  if(assessment?.missing?.some(s=>/^Esperar/.test(s)&&/pendientes|tareas físicas|ejecución o resolución/.test(s)))requirements.push({type:'wait'});
- return requirements;
+ return hasRecordedVitals(p)?requirements.filter(r=>r.type!=='reassess'):requirements;
 }

@@ -12,13 +12,14 @@ import {physicianExaminationsPerformed,diagnosticRequirements} from './diagnosti
 import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
 import {evaluateClinicalPolicyDisposition} from './clinical-policy-closure.js';
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
+import {postInterventionReassessments} from './observations.js';
 export {createPancCare};
 export function additionalCaseClosureSnapshot(p,c,destination){
  return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,diagnosticAssessment:assessDiagnosticImpression(c,p.diagnosis),
   historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
   examDone:p.examDone,examRegionsCount:Object.keys(p.examFindings||{}).length,
   examPerformed:physicianExaminationsPerformed(p),
-  vitalsKnown:!!p.lastVitalsKnown,reassessments:p.reassessments,
+  vitalsKnown:!!p.lastVitalsKnown,reassessments:postInterventionReassessments(p),
   studiesDone:p.orders.filter(x=>x.status==='done').map(x=>x.id),
   extraStudies:p.orders.filter(x=>!c.keyStudies.includes(x.id)).map(x=>x.id),
   keyStudies:diagnosticRequirements(c).studies,keyInterventions:c.keyInterventions,
@@ -62,7 +63,7 @@ export function createAdditionalCaseCare(p,c,options){
   evaluate:(patient,caseData,destination)=>caseData.clinicalPolicy?evaluateClinicalPolicyDisposition(patient,caseData,destination):GASTRO_CASE_RULES[caseData.id]?
    evaluateGastroDisposition(additionalCaseClosureSnapshot(patient,caseData,destination)):
    csEvaluateClosure487(additionalCaseClosureSnapshot(patient,caseData,destination)),
-  conducts:policy.conducts,reassessmentRequired:true,
+  conducts:policy.conducts,
   reassessmentMessage:patient=>'Reevaluación: PA '+Math.round(patient.liveVitals.sys)+'/'+Math.round(patient.liveVitals.dia)+
    ', FC '+Math.round(patient.liveVitals.hr)+
    '. Reevaluar evolución, tratamientos realizados y riesgo antes de decidir destino.',

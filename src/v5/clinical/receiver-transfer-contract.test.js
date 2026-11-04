@@ -128,24 +128,23 @@ test('accepted surgery cannot hand off tension pneumothorax before immediate dec
  } finally {f.s.dispose();}
 });
 
-test('an unreevaluated infusion cannot bypass an earlier receiver acceptance', async () => {
+test('the nurse verifies an actual ongoing infusion before reusing receiver acceptance', async () => {
  const scenario = scenarios.find(row => row.caseId === 'CARD-01'), f = fixture(scenario);
  try {
   await f.workup(); await f.care('/consulta cardiologia'); await f.advance(3.5);
   assert(f.s.read().patient.consults.some(row => row.id === 'cardiologia' && row.accepted));
-  await f.care('/tratamiento metoprolol 2.5 mg IV'); await f.advance(3);
+  await f.care('/tratamiento metoprolol 2.5 mg IV');
+  const unstarted=await f.post('/disposicion procedimiento');
+  assert.equal(unstarted.clinical[0].reason, 'pending-clinical-treatment');
+  await f.advance(3);
   const administering = f.s.read().patient.administrationLog.find(row => row.id === 'metoprolol');
   assert.equal(administering.status, 'administering');
   assert(administering.deliveryFraction < 1);
   const attempt = await f.post('/disposicion procedimiento');
-  assert.equal(attempt.clinical[0].status, 'rejected');
-  assert.equal(attempt.clinical[0].receipt.reasonCode, 'stabilization-insufficient');
-  assert.equal(f.s.read().progress.receipts.length, 0);
-  await f.settle();
-  const reassessment=await f.post('/disposicion procedimiento');
-  assert.equal(reassessment.clinical[0].receipt.reasonCode, 'stabilization-insufficient', 'completed new care needs reassessment');
-  await f.care('/reevaluar');
-  assert.equal((await f.post('/disposicion procedimiento')).clinical[0].status, 'executed');
-  assert.equal(f.s.read().progress.receipts.length, 1);
+  assert.equal(attempt.clinical[0].status, 'executed');
+  const state=f.s.read();
+  assert(state.patient.lastReassessment.administrationEvents.includes(administering.sourceEventId));
+  assert(state.patient.closure.handoff.continuingAdministrations.some(row=>row.sourceEventId===administering.sourceEventId&&row.deliveredFraction<1));
+  assert.equal(state.progress.receipts.length, 1);
  } finally {f.s.dispose();}
 });

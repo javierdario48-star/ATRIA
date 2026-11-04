@@ -162,10 +162,15 @@ for(const caseId of ['HDA-001','VARIX-001'])test(caseId+': syndromic HDA, actual
  try{
   await f.workup();await f.post('/diagnostico HDA');
   await f.post('/estudio '+(caseId==='HDA-001'?'hda_lab':'g_varix_cbc'));
-  await f.post('Enfermera Ringer 500 ml');
-  if(caseId==='HDA-001')await f.post('Enfermera pantoprazol 40 mg');
-  else{await f.post('Enfermera ceftriaxona 1 g');await f.post('Enfermera terlipresina 2 mg');}
-  await f.advance(100);await f.post('/reevaluar');
+  if(caseId==='HDA-001'){
+   await f.post('Enfermera Ringer 500 ml');await f.post('Enfermera pantoprazol 40 mg');
+  }else{
+   await f.post('/tratamiento transfusion');await f.post('Enfermera ceftriaxona 1 g');
+   await f.post('Enfermera terlipresina 2 mg');
+  }
+  await f.advance(100);
+  assert.equal(f.s.read().patient.reassessments,0,'the doctor has not requested a manual reassessment');
+  assert.equal(f.s.clinicalHint().action?.kind,'closure','routine preparation is included in the disposition, not a charged hint');
   const wrong=await f.post('/disposicion quirofano');
   assert.equal(wrong.clinical[0].status,'rejected');
   assert.equal(wrong.clinical[0].receipt?.reasonCode,'destination-not-indicated');
@@ -178,6 +183,7 @@ for(const caseId of ['HDA-001','VARIX-001'])test(caseId+': syndromic HDA, actual
   assert.equal(state.patient.closure?.destination,'procedimiento',JSON.stringify(state.closure));
   assert(state.patient.consults.some(x=>x.id==='gastro'&&x.accepted));
   assert.equal(state.patient.lastVitalsKnown.source,'monitor','the actual connected monitor remains sufficient without another spot measurement');
+  assert(state.patient.treatments.every(t=>state.patient.lastReassessment.interventionEvents.includes(t.sourceEventId)));
   assert.equal(state.progress.receipts.length,1);assert(state.progress.xp>0);
   assert.equal(state.patient.closure.quality.diagnosticFactor,caseId==='VARIX-001'?.6:1);
   assert(!state.patient.treatments.some(x=>x.id==='variceal_ligation'));

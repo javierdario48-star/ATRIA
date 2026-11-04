@@ -36,7 +36,7 @@ export function surgicalReviewSnapshot(p,c,cases=[c]){
   initialShock:Number(String(c.vitals.bp).split('/')[0])<90,
   imagingDone:p.orders.some(o=>o.status==='done'&&/^(peri_ct|peri_rx|ter_ct)|ct|rx|imagen|radiografia|tomografia/i.test(o.id))};
 }
-export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acceptTransfer,checkpoint=null}){
+export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,prepareTransfer,acceptTransfer,checkpoint=null}){
  // Native transfer callback is optional: CIRR's historical consultations have
  // no direct transfer finalizer and must retain their existing behavior.
  const pending=new Set(structuredClone(checkpoint?.pending??[]));
@@ -123,11 +123,13 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,acc
   },
   due:(_before,after)=>[...pending].filter(t=>t.readyAtRealSecond<=after.clinicalMinute+1e-9),
   owns:task=>pending.has(task),
-  finish(task,at){
+  finish(task,at,nativeMinute){
    if(!pending.delete(task))return [];
    p.pendingConsults=p.pendingConsults.filter(x=>x.sourceEventId!==task.sourceEventId);
    if(p.caseEnded||p.patientDied)return task.commands.map(cmd=>({status:'rejected',patientUid:p.uid,eventId:cmd.eventId,reason:'patient-not-active'}));
-   const review=evaluate(task.id,{transfer:task.commands.some(cmd=>cmd.intent.kind==='case.close'&&!cmd.intent.partial)});
+   const transfer=task.commands.find(cmd=>cmd.intent.kind==='case.close'&&!cmd.intent.partial);
+   if(transfer)prepareTransfer?.(transfer,{clinicalMinute:at,nativeMinute});
+   const review=evaluate(task.id,{transfer:!!transfer});
    const consult={id:task.id,patientUid:p.uid,sourceEventId:task.sourceEventId,
     status:review.decision==='ERROR_RECOVERABLE'?'error':review.accepted?'done':'rejected',accepted:review.accepted,
     decision:review.decision,reasonCode:review.reasonCode,

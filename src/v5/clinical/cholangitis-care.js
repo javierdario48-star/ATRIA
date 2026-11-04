@@ -5,6 +5,7 @@ import {createAcuteCare} from './acute-care.js';
 import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
+import {postInterventionReassessments} from './observations.js';
 import {initialPeritonitisVitals,initializeNativePeritonitis,advancePeritonitisVitals,
  applyConfirmedSepsisAdministration487} from './native-peritonitis.js';
 
@@ -15,7 +16,7 @@ export function cholangitisClosureSnapshot(p,c,destination){
  return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,
   historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
   examDone:p.examDone,examRegionsCount:Object.keys(p.examFindings||{}).length,
-  vitalsKnown:!!p.lastVitalsKnown,reassessments:p.reassessments,
+  vitalsKnown:!!p.lastVitalsKnown,reassessments:postInterventionReassessments(p),
   studiesDone:p.orders.filter(o=>o.status==='done').map(o=>o.id),
   extraStudies:p.orders.filter(o=>!c.keyStudies.includes(o.id)).map(o=>o.id),
   keyStudies:c.keyStudies,keyInterventions:c.keyInterventions,
@@ -34,7 +35,6 @@ export function createCholangitisCare(patient,caseData,options){
   initialize:initializeNativePeritonitis,
   advanceVitals:advancePeritonitisVitals,
   onAdministration:applyConfirmedSepsisAdministration487,
-  reassessmentRequired:true,
   evaluate:(p,c,destination)=>csEvaluateClosure487(cholangitisClosureSnapshot(p,c,destination)),
   reassessmentMessage:p=>'Reevaluación: PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+
    ', FC '+Math.round(p.liveVitals.hr)+'. Sospecha de infección biliar obstructiva: comprobar respuesta y coordinar drenaje con el servicio receptor.',
