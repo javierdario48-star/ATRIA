@@ -418,7 +418,7 @@ test('medication paraphrases resolve to the case fact and preserve its clinical 
  const f=setup('HEPAT-001');
  try{
   for(const text of ['¿Toma alguna medicación?','¿Qué medicamentos tomas?','¿Qué remedios usás?',
-   '¿Qué medcamentos tomás?','¿Qué medicamento?','¿Cuáles tomás?','¿Cuáles recordás?']){
+   '¿Qué medcamentos tomás?','¿Qué tomaste para el dolor?','¿Qué medicamento?','¿Cuáles tomás?','¿Cuáles recordás?']){
    const result=await f.send(text);
    assert.equal(result.clinical[0].status,'executed',text);
    assert.match(answer(result),/No tomé paracetamol en exceso ni otros fármacos nuevos/,text);
@@ -435,6 +435,12 @@ test('medication details stay within the authored record and unknown answers ear
   assert.match(answer(await known.send('¿Tomás algo para la presión?')),/presión/);
   assert.match(answer(await known.send('¿Cuáles?')),/no recuerdo (?:el nombre|cómo se llama)/i);
   assert.match(answer(await known.send('¿Cuánto tomás?')),/no.*dosis/i);
+  assert.match(answer(await known.send('¿Y qué dosis de esa pastilla?')),/no.*dosis/i);
+  assert.match(answer(await known.send('¿Desde cuándo toma esa pastilla?')),/no.*cuándo/i);
+  assert.match(answer(await known.send('¿Cuánto toma esa pastilla?')),/no.*dosis/i);
+  assert.match(answer(await known.send('¿Toma medicación para la fiebre?')),/presión/i);
+  assert(!known.s.read().patient.intentHistory.some(x=>x.id==='fever'));
+
   assert.match(answer(await known.send('¿Desde cuándo?')),/no.*cuándo/i);
   assert.match(answer(await known.send('¿Y antes?')),/no.*antes/i);
   assert.match(answer(await known.send('¿Por qué?')),/presión/i);
@@ -479,5 +485,6 @@ test('follow-ups disclose an authored dose, surgical course or known negative al
   assert.match(answer(await surgical.send('¿Cuántas cirugías tuvo?')),/operaron varias veces/i);
   assert.match(answer(await surgical.send('¿Y después?')),/nunca terminé de mejorar/i);
   assert(surgical.s.read().patient.intentHistory.some(x=>x.id==='course'));
+  assert.match(answer(await surgical.send('¿Cuáles?')),/operaron varias veces/i);
  }finally{cardio.s.dispose();surgical.s.dispose();s.dispose();}
 });

@@ -21,10 +21,13 @@ export function medicationQuestion(text){
   text.split(' ').some(word=>medicineWords.some(reference=>nearWord(word,reference)));
 }
 
-export function followUpQuestion(text){
+export function followUpQuestion(text,topic){
+ // A demonstrative links the trailing drug reference to the current topic.
+ if(topic==='meds')text=text.replace(/ (?:de )?(?:esa|ese|esas|esos) (?:medicamentos?|remedios?|pastillas?|farmacos?)$/,'');
+
  if(/^(?:cual(?:es)?|que|que mas)(?: (?:de (?:esos|esas)|fue|fueron|son|era|eran|te acordas|recuerda[sn]?|recordas|toma[sn]?|usa[sn]?|medicamentos?|remedios?|pastillas?))?$/.test(text))return 'which';
  if(/^(?:cuanto|cuanta|cuantos|cuantas|que dosis)(?: (?:toma[sn]?|usa[sn]?|de (?:eso|esa|ese)))?$/.test(text))return 'amount';
- if(/^(?:desde cuando|hace cuanto|cuando (?:fue|empezo|comenzo|arranco))(?: (?:empezo|comenzo|arranco|a (?:tomar|usarlo)))?$/.test(text))return 'when';
+ if(/^(?:desde cuando|hace cuanto|cuando (?:fue|empezo|comenzo|arranco))(?: (?:empezo|comenzo|arranco|toma[sn]?|usa[sn]?|a (?:tomar|usarlo)))?$/.test(text))return 'when';
  if(/^(?:cuando (?:fue la ultima dosis|lo tomaste)|ultima dosis)$/.test(text))return 'lastDose';
  if(/^(?:antes|como (?:era|estaba) antes|que (?:tomaba[sn]?|paso) antes)$/.test(text))return 'previous';
  if(/^(?:despues|que paso despues|como (?:fue|siguio))$/.test(text))return 'course';

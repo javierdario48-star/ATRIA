@@ -89,7 +89,7 @@ export const CHECKLIST_PRIORITY=Object.freeze({
  vitals:100,history:80,examination:75,study:70,diagnosis:60,treatment:50,reassess:20,closure:10
 });
 
-export function clinicalChecklist(patient,requirements,ready){
+export function clinicalChecklist(patient,requirements,ready,activeReaction=false){
  const closed=!!(patient.caseEnded||patient.patientDied||patient.closure?.closed);
  const pending=(...types)=>requirements.some(r=>types.includes(r.type));
  const stage=(activity,...types)=>closed||!pending(...types)?'done':activity?'partial':'pending';
@@ -98,7 +98,7 @@ export function clinicalChecklist(patient,requirements,ready){
   history:stage(patient.intentHistory?.length,'history'),
   exam:stage(Object.keys(patient.examFindings||{}).length,'examination'),
   studies:stage(patient.orders?.length,'study'),
-  stabilization:pending('stability')?'attention':stabilization,
+  stabilization:activeReaction||pending('stability')?'attention':stabilization,
   diagnosis:stage(patient.diagnosis,'diagnosis'),
   treatment:stage(patient.treatments?.length||patient.pendingTreatments?.length||patient.administrationLog?.length,'treatment'),
   destination:closed?'done':ready?'ready':'pending'

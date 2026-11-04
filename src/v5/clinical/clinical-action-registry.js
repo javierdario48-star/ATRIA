@@ -39,7 +39,7 @@ export function clinicalActionDescriptor(kind,id,{caseData,content,patient,clock
  }
  if(kind==='wait'){
   const text={receiver:'Espera la respuesta del servicio receptor.',study:'Espera el resultado del estudio solicitado.',
-   observation:'Completa el tiempo de observación clínica.',execution:'Espera la confirmación pendiente de Enfermería.'}[id];
+   observation:'Completa el tiempo de observación clínica.',rescue:'Reevalúa la respuesta a la adrenalina antes del traslado.',execution:'Espera la confirmación pendiente de Enfermería.'}[id];
   return {...base,id:id||'execution',label:'En curso',text:text||'Espera la confirmación pendiente.'};
  }
  if(kind!=='treatment')return null;

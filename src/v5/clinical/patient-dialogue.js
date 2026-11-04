@@ -153,9 +153,9 @@ export function executePatientDialogue(p,c,cmd,clock){
    if(openQuestion==='reason'){
     disclose('chiefComplaint','interview:symptoms',profile.symptoms,'native.patient-profile.symptoms');continue;
    }
-   if(openQuestion==='status'){answers.push(subjective());continue;}
+   if(openQuestion==='status'){remember('status');answers.push(subjective());continue;}
    if(/como (?:estas|esta|te (?:sientes|sentis)|se siente)\b|(?:te|se) (?:sientes|sentis|siente) (?:mejor|peor)\b|estas (?:mejor|peor)\b|como (?:sigues|sigue|vas)\b|\b(?:mejoraste|mejoro)\b/.test(clause)){
-    answers.push(subjective());continue;
+    remember('status');answers.push(subjective());continue;
    }
    if(/(?:sabes|sabe|decime|digame|en que lugar|donde).*(?:estas|esta|estamos)|(?:estas|esta) (?:orientad[oa]|confus[oa]|confundid[oa])|que (?:dia|fecha) es|como (?:te llamas|se llama)/.test(clause)){
     answers.push(verbal===4?'No sé bien… ¿estoy en mi casa? ¿Dónde estamos?':/como.*llama/.test(clause)?'Me llamo '+(p.name||c.common?.name||'Paciente')+'.':
@@ -164,8 +164,14 @@ export function executePatientDialogue(p,c,cmd,clock){
    const reactionQuestion=/\breaccion(?:es)?\b/.test(clause)&&/\b(?:medicamentos?|farmacos?|antibioticos?)\b/.test(clause);
    const personalHistory=/\bantecedentes?\b/.test(clause)&&!/alerg|reacci|quirurg|cirugi|operaci|familiar|medic|farmac/.test(clause);
    const historyQuestion=reactionQuestion?'alergias':personalHistory?'antecedentes personales':clause;
-   const exact=exactFact(c,clause),duration=dimensions[1][1].test(clause),explicitPain=/\b(dolor|duele|molesta|hinchazon|hinchando)\b/.test(clause);
-   const named=symptomQuestions.filter(([,re])=>re.test(clause));
+   const exact=exactFact(c,clause),duration=dimensions[1][1].test(clause);
+   const topic=speaker.topic,shorthand=followUpQuestion(clause,topic);
+   let fact=csAnamnesisFact(c,historyQuestion);
+   const medicine=(!fact||fact.intent==='meds'||/ para /.test(clause)&&
+    !['allergies','drugs','alcohol','surgeries'].includes(fact.intent))&&medicationQuestion(clause);
+   if(medicine&&fact?.intent!=='meds')fact=csAnamnesisFact(c,'medicación');
+   const explicitPain=!medicine&&/\b(dolor|duele|molesta|hinchazon|hinchando)\b/.test(clause);
+   const named=medicine?[]:symptomQuestions.filter(([,re])=>re.test(clause));
    // A composite authored symptom (for example vomiting blood) carries
    // more information than the generic symptom word it contains.
    if(exact&&named.length&&!duration&&exact.keys.some(key=>normalize(key).includes(' ')&&
@@ -175,24 +181,20 @@ export function executePatientDialogue(p,c,cmd,clock){
    // Explicit postoperative history must not be swallowed by the generic
    // "surgeries" domain. A bare pain/fever duration follow-up still follows
    // its current symptom and cannot earn a postoperative-course fact.
-   if(exact&&!explicitPain&&(exact.id==='surgery_history'||exact.id==='course'&&!duration)){
+   if(exact&&!medicine&&!explicitPain&&(exact.id==='surgery_history'||exact.id==='course'&&!duration)){
     disclose(exact.id,exact.id,exact.answers[0],'case.intents.'+exact.id);continue;
    }
-   const shorthand=followUpQuestion(clause),topic=speaker.topic;
-   let fact=csAnamnesisFact(c,historyQuestion);
-   const medicine=!named.length&&!explicitPain&&(!fact||fact.intent==='meds')&&medicationQuestion(clause);
-   if(medicine&&!fact)fact=csAnamnesisFact(c,'medicación');
    const identityAge=fact?.intent==='age'&&Number.isInteger(p.age)?'Tengo '+p.age+' años.':null;
    const historyIntent=fact?.intent??exact?.id;
    if(sensitiveTopics.has(historyIntent))sensitiveHistory=true;
    const timedSymptom=shorthand==='when'&&symptomQuestions.some(([id])=>id===topic);
    if(!explicitPain&&!named.length&&topic&&shorthand&&!timedSymptom&&
-     (!exact||['onset','course','meds'].includes(exact.id))&&
+     (medicine||!exact||['onset','course','meds'].includes(exact.id))&&
      !(shorthand==='when'&&['pain','chiefComplaint'].includes(topic))&&
      !(topic==='pain'&&shorthand==='amount')&&(!medicine||topic==='meds')){
     if(shorthand==='course'&&topic==='surgery_history'){
      const course=c.intents.find(i=>i.id==='course');
-     if(course){disclose(topic,course.id,course.answers[0],'case.intents.course');continue;}
+     if(course){answers.push(note(course.id,course.answers[0],'case.intents.course').answer);continue;}
     }
     follow(shorthand,topic);continue;
    }

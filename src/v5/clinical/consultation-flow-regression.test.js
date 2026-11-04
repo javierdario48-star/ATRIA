@@ -77,7 +77,11 @@ for(const scenario of ['withheld-beta','prior-rescue','prepared-beta'])test('CAR
   await f.post('/reevaluar');
   assert.equal((await f.post('/disposicion quirofano')).clinical[0].status,'rejected',
    'withholding beta blockade cannot replace rescue of the active anaphylaxis');
-  const rescue=await f.post('/tratamiento epi_im');
+  assert.equal(f.s.read().clinicalChecklist.stabilization,'attention');
+  assert.notEqual(f.s.read().clinicalChecklist.destination,'ready');
+  const hint=f.s.clinicalHint();
+  assert.equal(hint.action?.id,'epi_im','a completed dose before the reaction cannot substitute for rescue');
+  const rescue=await f.post(hint.action.command);
   assert(rescue.clinical.some(x=>['pending','executed'].includes(x.status)),JSON.stringify(rescue));
   await f.advance(1);
   for(const id of ['esmolol','metoprolol'])

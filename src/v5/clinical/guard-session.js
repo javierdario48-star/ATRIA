@@ -564,12 +564,16 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    const caseReward=subject.closure?rewardFor(subject.closure,doctorId):null;
    const displayMessages=messages(room),options=eligibleDestinations();
    const checklist=includeChecklist&&currentChecklist();
+   // Ready to request includes checks performed as part of the handoff. The
+   // existing eligibleDestinations still reports destinations accepted now.
+   const activeReaction=checklist&&unrescuedTransferReactions(nativePatient,caseData,clock.nativeMinute).length>0;
+   const canRequest=checklist&&!!checklist.assessment&&checklist.requirements.every(r=>r.type==='closure')&&!activeReaction;
    if(caseReward?.hintCount)for(const row of displayMessages)row.text=row.text.replace(/\+\d+ XP\./g,'+'+caseReward.xp+' XP.');
    return {hintBinding:{roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId},hintCount:hintLedger.count(doctorId),
    caseReward,room,patient:subject,exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:displayMessages,progress:progress.read(),
    eligibleDestinations:options,
    ...(checklist?{clinicalChecklist:clinicalChecklist(nativePatient,checklist.requirements,options.length>0||
-    !!checklist.assessment&&checklist.requirements.every(r=>r.type==='closure'))}:{}),
+    canRequest,activeReaction)}:{}),
    closure:copy(closureReadiness(executor==='peritonitis'?undefined:
     (caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations?.[0]||'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}

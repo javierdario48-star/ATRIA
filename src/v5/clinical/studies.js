@@ -126,7 +126,7 @@ export function createStudyService(cases,checkpoint=null){
    const study=resolveStudyById(id,caseDef,catalog);
    if(!study)return rejected(patient,eventId,'unknown-study');
    const definition=materializeStudy(native||study,caseDef);
-   const order={id,label:study.label,type:definition.type,
+   const order={id,label:definition.label,type:definition.type,
     patientUid:patient.uid,result:native&&caseDef.clinicalPolicy?
      currentStudyResult(definition,caseDef,patient,sampleMinute):definition.result,
     ...(native&&(native.dynamic||native.requiresCompletedTreatments?.length)&&caseDef.clinicalPolicy?

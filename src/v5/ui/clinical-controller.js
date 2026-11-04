@@ -254,7 +254,10 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    '<span class="care-step" data-status="'+step.status+'">'+esc(step.label)+' <b>'+
     ({done:'✓',partial:'◐',ready:'→',review:'◐',attention:'!',pending:'·'}[step.status])+'</b></span>').join('')+'</div>'+
    '<small>Progreso documentado, no implica corrección diagnóstica ni tratamiento completo.</small>');
-  if(ui('caseReadiness'))ui('caseReadiness').textContent=p.caseEnded?'Atención cerrada.':s.eligibleDestinations?.length?'Evaluación completa. Elegí cómo continúa el cuidado.':(s.closure?.missing||[]).join(' ');
+  if(ui('caseReadiness'))ui('caseReadiness').textContent=p.caseEnded?'Atención cerrada.':
+   s.eligibleDestinations?.length||s.clinicalChecklist?.destination==='ready'?
+    'Elegí cómo continúa el cuidado. Enfermería verifica el traslado si corresponde.':
+    s.clinicalChecklist?'Revisá las etapas pendientes de la atención.':(s.closure?.missing||[]).join(' ');
   setHTML(ui('caseDestinations'),p.caseEnded||s.canEdit===false?'':destinationButtonsHTML(s.eligibleDestinations));
   setHTML(ui('caseResult'),caseDebriefHTML(s.caseReward||p.closure));
   const feedback=ui('examFeedback');

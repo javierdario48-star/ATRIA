@@ -6,7 +6,7 @@ import {clinicalInterventionEligibility} from './native-medication-eligibility.j
 import {currentClinicalTreatment} from './receipts.js';
 import {clinicalAcuity} from './acuity.js';
 import {medicationSafety487,matchesMedicationAllergy487,hasMedicationSafetyMetadata487} from './medication-safety-487.js';
-import {nativeTreatmentDefinition} from './native-medications.js';
+import {nativeTreatmentDefinition,preflightNativeMedicine} from './native-medications.js';
 import {physicianExaminationsPerformed} from './diagnostic-evidence.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 import {clinicalTransferContinuation,unrescuedTransferReactions} from './transfer-continuation.js';
@@ -44,6 +44,19 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   shock=v.sys<90||(v.sys+2*v.dia)/3<65,hypoxemia=v.spo2<90;
  const candidates=[],errors=[],waiting=[];
  const action=(kind,id)=>clinicalActionDescriptor(kind,id,context);
+ const activeReactions=unrescuedTransferReactions(p,c,minute);
+ if(activeReactions.length){
+  const id='epi_im',rescue=action('treatment',id);
+  let inProgress=pending.has(id);
+  if(rescue&&!inProgress)try{
+   preflightNativeMedicine(id,rescue.command,{caseData:c,reference:content.defaultDoses[id],patient:p,clock});
+   return {text:rescue.text,action:rescue,chargeable:true,requirement:'active-anaphylaxis',severity:severity.state,
+    key:semanticHintKey(rescue,p,c)+':'+JSON.stringify(activeReactions.map(r=>r.sourceEventId).sort())};
+  }catch(error){inProgress=error.message==='administration-interval-required';}
+  const wait=inProgress?action('wait','rescue'):null;
+  return {text:wait?.text||'Hay una reacción grave activa. Revisá la estabilización antes del traslado.',
+   action:wait,chargeable:false,key:wait?'wait:rescue':null};
+ }
  function add(a,priority,reason){
   if(a)candidates.push({action:a,priority,requirement:reason});
   else errors.push(reason);
@@ -110,7 +123,6 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   const monitored=clinicalTransferContinuation({...p,procedures:{...p.procedures,monitor:{connected:true}}},c,destination,minute);
   if(monitored.continuingAdministrations.length)treatment('monitor',90,'handoff-monitoring',new Set());
  }
- if(unrescuedTransferReactions(p,c,minute).length)treatment('epi_im',2000,'active-anaphylaxis',new Set());
  for(const r of requirements){
   if(r.type==='vitals'){if(pending.has('vitals')||pending.has('monitor'))waiting.push('vitals');else add(action('vitals'),priority.vitals,'vitals');}
   else if(r.type==='examination'){

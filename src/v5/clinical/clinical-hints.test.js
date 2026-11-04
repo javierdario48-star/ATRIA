@@ -45,6 +45,14 @@ test('HEPAT accepts an equivalent INR and glucose panel and shares its status wi
   assert.notEqual(f.next().action?.kind,'study');
   assert.equal((await f.post('/estudio g_hepat_inr')).clinical[0].status,'executed');
   assert.equal(f.session.read().patient.orders.length,1);
+  await f.post('Enfermera, plan de seguimiento y signos de alarma');
+  f.session.advance(5);await f.session.flush();
+  const before=f.session.read();
+  assert.equal(before.clinicalChecklist.destination,'ready');
+  assert.equal(f.next().action?.id,'alta');
+  assert.equal(before.patient.reassessments,0,'checklist reads must never record a reassessment');
+  await f.post('/disposicion alta');
+  assert.equal(f.session.read().patient.caseEnded,true);
  }finally{f.session.dispose();}
 });
 test('history instructions use an authored question that satisfies the actual closure gate',async()=>{
