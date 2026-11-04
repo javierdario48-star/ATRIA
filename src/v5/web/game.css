@@ -712,3 +712,18 @@ body[data-phase="guard"] .guard-scoreboard{top:calc(74px + env(safe-area-inset-t
  #hudClockSlot .guard-time{min-width:70px}
  .hud-actions #guardButton{max-width:68px;font-size:7px}
 }
+
+/* Contextual help stays inside the existing patient's action wheel. */
+.patient-wheel{height:274px}
+.patient-wheel-caption{top:42%}
+.patient-wheel-action[hidden]{display:none}
+.action-hint{left:8px;top:228px;width:214px;min-height:44px;display:flex;justify-content:center;gap:6px;padding:4px 8px;border:1px solid #c9b476a0;border-radius:12px;background:#173a3ff5;color:#fff0be;font-size:10px;white-space:nowrap}
+.action-hint .patient-wheel-glyph{width:28px;height:28px;font-size:17px;box-shadow:none;border:0;background:none;flex-shrink:0}
+.vega-clinical-hint{position:fixed;z-index:25;top:88px;right:12px;width:min(360px,calc(100vw - 24px));box-sizing:border-box;display:flex;gap:10px;align-items:center;padding:12px;background:#12383df5;border:1px solid #8bc7b6;border-radius:14px;box-shadow:0 8px 24px #0006;color:#f1fffa;font:13px/1.4 system-ui,sans-serif}
+.vega-clinical-hint[hidden]{display:none}
+.vega-clinical-hint strong{display:block;font-size:12px;color:#c6f4df}
+.vega-clinical-hint small{display:block;font-size:10px;color:#b5cdcb;margin-top:2px}
+.vega-clinical-hint p{margin:6px 0 0}
+.vega-hint-portrait{width:36px;height:54px;object-fit:contain;flex-shrink:0}
+.vega-clinical-hint button{align-self:flex-start;min-width:34px;min-height:34px;padding:0;background:transparent;border:0;color:inherit;font-size:23px}
+@media(max-height:500px){.vega-clinical-hint{top:58px;right:8px;width:min(340px,calc(100vw - 16px));padding:9px}.vega-hint-portrait{height:40px}}

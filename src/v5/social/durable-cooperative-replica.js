@@ -11,7 +11,10 @@ export function createDurableCooperativeReplica({
   throw Error('invalid durable cooperative credentials');
  const key='atria.v5.durable.pending:'+roomId;
  let disposed=false,current=null,epoch=-1,lastPoll=-Infinity,inflight=null,queuedMotion=null,queuedClaim=null,queuedMotionSequence=null,latestMotionSequence=0,typing=null,confirmation=null;
- const pending=new Map();
+ const pending=new Map(),pendingHints=new Map();
+ const hintStorageKey=key+':displayed-hints';
+ function saveHints(){try{storage?.setItem(hintStorageKey,JSON.stringify([...pendingHints.values()].map(x=>x.request).filter(r=>r.op==='displayed')));}catch{}}
+ try{for(const request of JSON.parse(storage?.getItem(hintStorageKey)||'[]'))if(request?.op==='displayed'&&typeof request.requestId==='string')pendingHints.set(request.requestId,{request,resolve:null});}catch{}
  const clone=x=>structuredClone(x);
  function save(){try{storage?.setItem(key,JSON.stringify([...pending.values()].map(x=>x.envelope)));}catch{}}
  try{
@@ -30,6 +33,8 @@ export function createDurableCooperativeReplica({
    const waiting=pending.get(ack.commandId);
    if(waiting){pending.delete(ack.commandId);waiting.resolve?.(clone(ack));}
   }
+  const requested=response.hintRequestId,ack=response.hintAcknowledgement,waitingHint=pendingHints.get(requested);
+  if(ack&&waitingHint){pendingHints.delete(requested);waitingHint.resolve?.(clone(ack));saveHints();}
   save();onSnapshot(clone(current));
   return true;
  }
@@ -51,8 +56,9 @@ export function createDurableCooperativeReplica({
   if(disposed)return Promise.reject(Error('replica-disposed'));
   if(inflight)return inflight;
   const batch=[...pending.values()].slice(0,16).map(x=>clone(x.envelope));
-  const motion=queuedMotion,motionSequence=queuedMotionSequence,claim=queuedClaim,typingState=typing,receipt=confirmation;
-  inflight=request('sync',{commands:batch,...(motion?{motion,...(motionSequence!==null?{motionSequence}:{})}:{}),
+  const motion=queuedMotion,motionSequence=queuedMotionSequence,claim=queuedClaim,typingState=typing,receipt=confirmation,
+   hint=[...pendingHints.values()][0]?.request;
+  inflight=request('sync',{commands:batch,...(hint?{hintRequest:clone(hint)}:{}),...(motion?{motion,...(motionSequence!==null?{motionSequence}:{})}:{}),
    ...(claim?{claim}:{}),...(typingState!==null?{typing:typingState}:{}),...(receipt?{confirmation:receipt}:{})})
    .then(response=>{
     if(disposed)return null;
@@ -111,6 +117,19 @@ export function createDurableCooperativeReplica({
     }else synchronize().catch(()=>{/* on next RAF retry same id */});
    });
   },
+  hintBinding(){return current?clone(current.clinical.hintBinding):null;},
+  hint(request){
+   if(disposed)return Promise.reject(Error('replica-disposed'));
+   if(typeof request?.requestId!=='string')return Promise.reject(Error('invalid hint request'));
+   return new Promise(resolve=>{
+    const old=pendingHints.get(request.requestId);
+    if(old){const prior=old.resolve;old.resolve=ack=>{prior?.(ack);resolve(ack);};}
+    else pendingHints.set(request.requestId,{request:clone(request),resolve});
+    saveHints();const busy=inflight;
+    if(busy)busy.then(()=>{if(!disposed&&pendingHints.has(request.requestId))synchronize().catch(()=>{});},()=>{});
+    else synchronize().catch(()=>{});
+   });
+  },
   claim(patientUid){
    if(typeof patientUid!=='string'||!patientUid||disposed)return false;
    queuedClaim=patientUid;
@@ -146,6 +165,6 @@ export function createDurableCooperativeReplica({
   advance(){},finishNurseArrivals(){return [];},flush:()=>inflight||Promise.resolve(),
   hasSnapshot:()=>!!current,
   isRecovering:()=>!!current?.recovering,
-  dispose(){disposed=true;pending.clear();},
+  dispose(){disposed=true;pending.clear();for(const h of pendingHints.values())h.resolve?.({status:'rejected',reason:'replica-disposed'});pendingHints.clear();},
  });
 }

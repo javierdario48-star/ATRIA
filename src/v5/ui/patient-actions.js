@@ -11,7 +11,8 @@ export const PATIENT_ACTIONS=Object.freeze([
  {id:'history',symbol:'▤',label:CLINICAL_CONTROLS.history},
  {id:'studies',symbol:'⌁',label:CLINICAL_CONTROLS.studies},
  {id:'treatment',symbol:'✚',label:CLINICAL_CONTROLS.treatment},
- {id:'patient',symbol:'✓',label:CLINICAL_CONTROLS.patient}
+ {id:'patient',symbol:'✓',label:CLINICAL_CONTROLS.patient},
+ {id:'hint',symbol:'💡',label:CLINICAL_CONTROLS.hint}
 ]);
 export function createPatientActionWheel({document,window}){
  const root=document.getElementById('patientWheel');
@@ -21,7 +22,7 @@ export function createPatientActionWheel({document,window}){
  root.replaceChildren(title,controls);
  for(const {id,symbol,label} of PATIENT_ACTIONS){
   const button=document.createElement('button');button.type='button';button.dataset.patientAction=id;
-  button.className='patient-wheel-action action-'+id;button.setAttribute('aria-label',label);
+  button.hidden=id==='hint';button.className='patient-wheel-action action-'+id;button.setAttribute('aria-label',label);
   const glyph=document.createElement('span');glyph.className='patient-wheel-glyph';glyph.setAttribute('aria-hidden','true');glyph.textContent=symbol;
   const text=document.createElement('span');text.textContent=label;button.append(glyph,text);controls.append(button);
  }
@@ -53,5 +54,6 @@ export function createPatientActionWheel({document,window}){
   const y=high>=low?Math.max(low,Math.min(high,preferred)):Math.max(rect.height/2,Math.min(vh-rect.height/2,preferred));
   root.style.left=x+'px';root.style.top=y+'px';
  }
- return Object.freeze({show,hide,guide,position,isOpen:()=>!!patient,patientUid:()=>patient?.uid||null,root});
+ return Object.freeze({show,hide,guide,position,
+  hintAvailable(allowed){const button=controls.querySelector('[data-patient-action="hint"]');if(button){button.hidden=!allowed;button.disabled=!allowed;}},isOpen:()=>!!patient,patientUid:()=>patient?.uid||null,root});
 }
