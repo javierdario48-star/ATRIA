@@ -162,7 +162,6 @@ export async function createApplication({document,window,content,signal}){
     bottom:ui('chatDock').getBoundingClientRect().top-origin-5});
   }else renderer.setPlayableBounds(null);
   const worldSnapshot=world.snapshot();
-  clinicalHintPresenter.maintain();
   renderer.draw(world.presentNurses(presentation.sample(worldSnapshot,alpha)),now);
   patientWheel.position(renderer,ui('hud').getBoundingClientRect().bottom,ui('chatDock').getBoundingClientRect().top);
   unassignedGlow.position(renderer,ui('hud').getBoundingClientRect().bottom,
@@ -194,6 +193,7 @@ export async function createApplication({document,window,content,signal}){
  }
  function toast(message){ui('toast').textContent=message;ui('toast').hidden=false;toastUntil=window.performance.now()+3200;}
  function open(html,kind='clinical'){
+  clinicalHintPresenter.cancel();
   world.stop();drag=null;patientWheel.hide();dialog.dataset.panel=kind;
   ui('modalContent').innerHTML=html;if(!dialog.open)dialog.showModal();
  }
@@ -288,6 +288,7 @@ export async function createApplication({document,window,content,signal}){
   finally{invitingColleagues=false;}
  }
  function clinicalChanged(){
+  clinicalHintPresenter.maintain();
   renderGuardCommunication();
   const patient=guardSession?.read()?.patient;
   if(durableClient)announceDeath(patient);
@@ -745,6 +746,7 @@ export async function createApplication({document,window,content,signal}){
   renderMusic();
  }
  function enterLobby(leaveShared=false){
+  clinicalHintPresenter.cancel();
   if(durableClient&&account.read()){
    const retired=durableClient;retired.dispose();
    accountTransition=retired.flush().catch(()=>{}).then(()=>account.call('release-guard',{}))

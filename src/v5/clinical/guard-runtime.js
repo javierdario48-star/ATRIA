@@ -117,7 +117,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     score:p?.closure?.quality?.score??null};
   });
   const outcomes=items.filter(r=>r.closed||r.patientDied).map(r=>{
-   const p=sessions.get(r.uid).read().patient;
+   const p=sessions.get(r.uid).read(mode==='competitive'?(r.ownerId||actorId):actorId).patient;
    return {patientUid:r.uid,ownerId:r.ownerId,closed:!!p.closure?.closed,
     survived:!p.patientDied,score:p.closure?.quality?.score??0,
     xp:p.closure?.xp??0,points:p.closure?.quality?.score??0};

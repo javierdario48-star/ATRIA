@@ -41,7 +41,8 @@ export function createClinicalHintLedger(binding,saved={}){
     (r.selectionRevision??0)!==offer.selectionRevision){offer.stage='cancelled';return remember({status:'stale',reason:'clinical-state-changed'});}
    if(r.op==='revalidate'){
     offer.stage=offer.stage==='displayed'?'displayed':'verified';
-    return remember({status:'verified',offerId:offer.offerId,roomId,encounterId,patientUid,actorId:r.actorId,...copy(offer.hint)});
+    return remember({status:'verified',offerId:offer.offerId,roomId,encounterId,patientUid,
+     actorId:r.actorId,selectionRevision:offer.selectionRevision,...copy(offer.hint)});
    }
    if(!['verified','displayed'].includes(offer.stage))return remember(reject('hint-not-verified'));
    const isNew=offer.hint.chargeable&&!history.some(row=>row.actorId===r.actorId&&row.key===offer.hint.key);

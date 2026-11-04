@@ -31,7 +31,7 @@ export function createClinicalHintPresenter({context,request,show,hide,notify,pa
     if(!current(g,binding)||!visible()){if(current(g,binding))hide();return;}
     const receipt=await call('displayed',prepared.offerId);
     if(!current(g,binding))return;
-    if(receipt?.status==='displayed')onCount(receipt.hintCount);
+    if(receipt?.status==='displayed'){delete active.offerId;onCount(receipt.hintCount);}
     else{hide();notify('El estado de la atención cambió. Esta pista no se cobró.');}
    }catch{if(current(g,binding)){hide();notify('No se pudo confirmar la pista. Revisa la conexión.');}}
   }

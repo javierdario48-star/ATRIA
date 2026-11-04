@@ -50,6 +50,7 @@ test('hint acknowledgement is committed by the existing durable CAS before deliv
   for(const op of ['prepare','revalidate','displayed']){
    const request={...binding,op,requestId:'request-'+op,...(state.hintAcknowledgement?.offerId?{offerId:state.hintAcknowledgement.offerId}:{})};
    state=await server.transact({roomId:'durable-hints',actorId:'a',hintRequest:request});
+   if(op==='revalidate')assert.equal(state.hintAcknowledgement.selectionRevision,binding.selectionRevision);
   }
   assert.equal(state.hintAcknowledgement.status,'displayed');assert.equal(state.clinical.hintCount,1);
   assert.equal((await store.read('durable-hints')).value.runtime.session.hints.history.length,1);
