@@ -20,9 +20,9 @@ export function closureDecisionHTML(state){
   (choices.length?
    '<p class="case-close-ready">Seleccioná un destino para evaluar el cierre</p>'+
    '<div id="caseClosureOptions" class="case-close-choices">'+destinationButtonsHTML(choices)+'</div>'+
-   '<p class="case-close-note">Las omisiones reducen los puntos sin impedir el intento. Cirugía y UTI deben aceptar la derivación.</p>':
+   '<p class="case-close-note">Enfermería verifica los signos registrados y coordina la recepción cuando el destino lo requiere.</p>':
    '<p class="case-close-waiting">El servidor aún no habilita un destino de cierre.</p>'+
-   '<p class="case-close-note">Revisá la atención documentada. La lista de seguimiento orienta sin revelar los criterios ocultos de cada caso.</p>'+
+   '<p class="case-close-note">Revisá la atención documentada y las tareas que siguen pendientes.</p>'+
    (pending.length?'<div class="case-close-pending">Por revisar: '+esc(pending.slice(0,4).join(' · '))+'</div>':''))+
   '<div class="actions case-close-actions">'+
    (canEdit?'<button type="button" data-action="close-diagnosis">Impresión diagnóstica</button>':'')+

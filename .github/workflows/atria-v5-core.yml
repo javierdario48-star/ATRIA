@@ -329,6 +329,11 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/app-browser.mjs
+      - name: VARIX transfusion and public procedure handoff in desktop and Pixel without manual reassessment
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/varix-handoff-browser.mjs
       - name: Floating diagnosis, global vocabulary, IME, clear and surgical refusals in desktop and Pixel
         env:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-browser/node_modules/playwright

@@ -73,7 +73,7 @@ test('explicit oral dose after the drug name reaches nursing without an accident
   assert.equal(f.s.read().patient.administrationLog[0].dose.amount,100);assert.equal(f.s.read().patient.procedures.iv,undefined);f.s.dispose();
  }
 });
-test('closure waits for every pending treatment and a reassessment after its actual delivery',async()=>{
+test('closure waits for pending treatment and automatically verifies its actual delivery',async()=>{
  const f=setup();await evaluate(f);await f.send('/estudio renal');await f.send('Enfermera espironolactona');
  f.s.advance(120);await f.s.flush();await f.send('/diagnostico cirrosis');await f.send('/reevaluar');
  assert(f.s.read().closure.ready);
@@ -82,16 +82,21 @@ test('closure waits for every pending treatment and a reassessment after its act
  assert.equal(f.s.read().patient.caseEnded,false);assert.equal(f.s.read().progress.xp,0);
  f.s.advance(.55);await f.s.flush();assert.equal(f.s.read().patient.pendingTreatments.length,0);
  assert.equal((await f.send('Enfermera paracentesis terapeutica','para')).clinical[0].status,'executed');
- assert.equal((await f.send('/disposicion sala')).clinical[0].status,'rejected','old reassessment cannot validate new intervention');
- await f.send('/reevaluar');assert.equal((await f.send('/disposicion sala')).clinical[0].status,'executed');
+ assert.equal(f.s.read().closure.ready,false,'the old reassessment does not validate new intervention');
+ assert.equal((await f.send('/disposicion sala')).clinical[0].status,'executed');
+ const p=f.s.read().patient;
+ assert(p.lastReassessment.interventionEvents.includes(p.treatments.find(t=>t.id==='paracentesis_ter').sourceEventId));
  assert.equal(f.s.read().progress.receipts.length,1);f.s.dispose();
 });
-test('same-timestamp diet after reassessment requires a new reassessment by intervention provenance',async()=>{
+test('same-timestamp diet after reassessment is verified by intervention provenance at closure',async()=>{
  const f=setup();await evaluate(f);await f.send('/estudio renal');await f.send('Enfermera espironolactona');
  f.s.advance(120);await f.s.flush();await f.send('/diagnostico cirrosis');await f.send('/reevaluar');
  assert(f.s.read().closure.ready);await f.send('Enfermera dieta sin sal');
- assert.equal((await f.send('/disposicion sala')).clinical[0].status,'rejected');
- await f.send('/reevaluar');assert.equal((await f.send('/disposicion sala')).clinical[0].status,'executed');f.s.dispose();
+ assert.equal(f.s.read().closure.ready,false);
+ assert.equal((await f.send('/disposicion sala')).clinical[0].status,'executed');
+ const p=f.s.read().patient;
+ assert(p.lastReassessment.interventionEvents.includes(p.treatments.find(t=>t.id==='sal_restriccion').sourceEventId));
+ f.s.dispose();
 });
 test('residual dose quantities cannot silently become the reference treatment',async()=>{
  for(const text of ['Enfermera espironolactona 100 mg 50 ml','Enfermera espironolactona 100 mg y 50']){

@@ -10,7 +10,9 @@ export async function waitForPreviewBuild(origin,{timeout=120000}={}){
   'src/v5/clinical/guard-session.js','src/v5/clinical/acute-care.js','src/v5/clinical/cirr-care.js',
   'src/v5/clinical/clinical-policy-closure.js','src/v5/clinical/surgical-consultation.js',
   'src/v5/clinical/transfer-continuation.js','src/v5/clinical/diagnostic-assessment.js',
-  'src/v5/clinical/consultation-evidence.js','src/v5/engine/nurse-dispatcher.js','src/v5/ui/clinical-controller.js'])
+  'src/v5/clinical/consultation-evidence.js','src/v5/engine/nurse-dispatcher.js','src/v5/ui/clinical-controller.js',
+  'src/v5/clinical/observations.js','src/v5/core/speech-router.js','src/v5/ui/guard-chat-view.js',
+  'src/v5/ui/chat-transcript.js','src/v5/social/durable-cooperative-replica.js'])
   files[path]=createHash('sha256').update(await fs.readFile(new URL('../../'+path,import.meta.url))).digest('hex');
  const deadline=Date.now()+timeout;
  while(true){

@@ -62,7 +62,20 @@ try{
  await host.locator('[data-diagnosis="Peritonitis bacteriana espontánea"]').click();
  await host.locator('#diagnosisInput').press('Enter');await host.waitForFunction(()=>document.querySelector('#modal')?.open===false);
  stage='bedside treatment using physical nurse';
- await send(host,'Enfermera monitor y ceftriaxona 1 g');
+ const nurseOrder='Enfermera monitor y ceftriaxona 1 g';
+ let releaseOrder;
+ const delayedOrder=new Promise(resolve=>{releaseOrder=resolve;});
+ const holdOrder=async route=>{
+  if(route.request().postDataJSON()?.commands?.some(command=>command.text===nurseOrder))await delayedOrder;
+  await route.continue();
+ };
+ await host.route('**/api/clinical',holdOrder);
+ const submitting=send(host,nurseOrder);submitting.catch(()=>{});
+ try{
+  await host.locator('#chatHistory').getByText('Pendiente de confirmación · '+nurseOrder).waitFor();
+ }finally{releaseOrder();}
+ await submitting;await host.unroute('**/api/clinical',holdOrder);
+ assert.equal(await host.locator('#chatHistory').getByText('Pendiente de confirmación · '+nurseOrder).count(),0);
  const early=await clinical(host);
  assert.equal(early.patient.administrationLog.length,0,'an order must not bypass physical nurse');
  assert.equal(early.patient.orders.length,2,'both real studies must be admitted');
@@ -108,15 +121,14 @@ try{
  assert.deepEqual(recovered.patient.administrationLog,treated.patient.administrationLog);
  assert.deepEqual(recovered.patient.orders,treated.patient.orders);
  assert.deepEqual(recovered.patient.intentHistory,treated.patient.intentHistory);
- stage='reassessment and actual shared destination';
- await clickHudAction(guest,'peopleButton');await guest.locator('[data-action="reassess"]').click();
- await guest.locator('#modalClose').click();
- await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical?.eligibleDestinations.includes('sala'),null,{timeout:80000})));
+ stage='automatic nursing verification at the actual shared destination';
+ assert.equal(recovered.patient.reassessments,0);
  await chooseDestination(host,'sala');
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical?.patient.caseEnded,null,{timeout:60000})));
  const closed=await Promise.all(pages.map(clinical));
  assert.equal(closed[0].patient.uid,uid);assert.equal(closed[1].patient.uid,uid);
  assert.equal(closed[0].patient.closure.quality.score,100);
+ assert.equal(closed[0].patient.lastReassessment.source,'disposition');
  assert.equal(closed[0].progress.xp,111);
  assert.equal(closed[1].progress.xp,111);
  assert.deepEqual(closed[0].patient.closure,closed[1].patient.closure);
