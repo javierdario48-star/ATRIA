@@ -52,6 +52,19 @@ test('pending nursing/native orders cannot be recommended a second time',async()
   requirements:[{type:'treatment',anyOf:[['espironolactona']]}]});
  assert.equal(hint.chargeable,false);assert.equal(hint.action.kind,'wait');f.session.dispose();
 });
+test('a pending indispensable study prevents a premature closure instruction',async()=>{
+ const f=fixture();await f.post('/estudio hepatograma');
+ const h=selectClinicalHint({patient:f.session.read().patient,caseData:f.caseData,content,clock:f.session.read().clock,destination:'sala',
+  requirements:[{type:'study',anyOf:[['hepatograma']]},{type:'closure',destination:'sala'}]});
+ assert.equal(h.action.kind,'wait');assert.equal(h.chargeable,false);f.session.dispose();
+});
+test('neurological region instructions include the real directed exam and Glasgow',async()=>{
+ const f=fixture('NEUR-01'),h=selectClinicalHint({patient:f.session.read().patient,caseData:f.caseData,content,clock:f.session.read().clock,
+  requirements:[{type:'examination',ids:['neurological:all']}]});
+ for(const text of h.action.commands)await f.post(text);
+ assert(!f.session.clinicalHintRequirements().some(r=>r.type==='examination'&&r.ids?.includes('neurological:all')));
+ f.session.dispose();
+});
 test('a modified canonical rule is reflected without authored hint prose',()=>{
  const changed=structuredClone(content),c=changed.cases.find(c=>c.id==='RESP-01');
  c.clinicalPolicy.closure.requiredStudies.push(c.studies.find(s=>s.id!==c.clinicalPolicy.closure.requiredStudies[0]).id);

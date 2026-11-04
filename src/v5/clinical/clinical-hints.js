@@ -11,6 +11,21 @@ import {physicianExaminationsPerformed} from './diagnostic-evidence.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 import {clinicalTransferContinuation,unrescuedTransferReactions} from './transfer-continuation.js';
 
+function semanticHintKey(action,p,c){
+ const base=action.kind+':'+action.id;
+ if(action.kind==='reassess')return base+':'+JSON.stringify([...new Set([
+  ...(p.treatments||[]).map(t=>t.sourceEventId),
+  ...(p.administrationLog||[]).filter(t=>t.status==='administering').map(t=>t.sourceEventId)
+ ])].filter(Boolean).sort());
+ if(action.kind==='study'){
+  const dependencies=[...(c.studies.find(s=>s.id===action.id)?.requiresCompletedTreatments||[]),
+   ...Object.values(c.clinicalPolicy?.eligibility||{}).flatMap(rule=>rule.requiresStudiesAfterTreatments||[])
+    .filter(rule=>rule.studyId===action.id).map(rule=>rule.treatmentId)];
+  if(dependencies.length)return base+':'+JSON.stringify(dependencies.map(id=>p.treatments?.filter(t=>t.id===id).at(-1)?.sourceEventId||'pending'));
+ }
+ return base;
+}
+
 export function selectClinicalHint({patient:p,caseData:c,requirements=[],content,clock,destination,fulfilledTreatmentIds=[]}){
  if(!p||p.caseEnded||p.patientDied)return null;
  const context={patient:p,caseData:c,content,clock},minute=clock.nativeMinute;
@@ -73,13 +88,20 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
     (hypoxemia&&response.offsets?.[5]>0||shock&&response.offsets?.[3]>0))priority=Math.max(priority,900);
   return priority;
  }
+ // Ask the actual handoff adapter whether verified monitoring would allow an
+ // ongoing infusion to continue at the receiver. Never wait for a full course
+ // when a documented handoff dependency is the only thing still missing.
+ if(!p.procedures?.monitor?.connected){
+  const monitored=clinicalTransferContinuation({...p,procedures:{...p.procedures,monitor:{connected:true}}},c,destination,minute);
+  if(monitored.continuingAdministrations.length)treatment('monitor',90,'handoff-monitoring',new Set());
+ }
  if(unrescuedTransferReactions(p,c,minute).length)treatment('epi_im',2000,'active-anaphylaxis',new Set());
  for(const r of requirements){
-  if(r.type==='vitals')add(action('vitals'),100,'vitals');
+  if(r.type==='vitals'){if(pending.has('vitals')||pending.has('monitor'))waiting.push('vitals');else add(action('vitals'),100,'vitals');}
   else if(r.type==='examination'){
    const performed=new Set(physicianExaminationsPerformed(p));
    const id=r.ids?.find(id=>!performed.has(id.replace(/^(?:heart|lungs):/,'thorax:').replace('neurological:all','neurological:neurological')))||
-    (p.examFindings?.abdomen?'general':'abdomen');
+    (!p.examFindings?.general?.general?'general':'abdomen');
    add(action('examination',id),75,'examination');
   }else if(r.type==='history')add(action('history'),80,'history');
   else if(r.type==='diagnosis')add(action('diagnosis'),60,'diagnosis');
@@ -108,13 +130,13 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   }else if(r.type==='reassess'){
    if(!blocking)add(action('reassess'),20,'reassess');else waiting.push('reassessment');
   }else if(r.type==='closure'){
-   if(!blocking&&!requirements.some(item=>item.type==='wait'))add(action('closure',r.destination||destination),10,'closure');else waiting.push('receiver');
+   if(!blocking&&requirements.every(item=>item.type==='closure'))add(action('closure',r.destination||destination),10,'closure');else waiting.push('receiver');
   }else if(r.type==='wait'||r.type==='stability')waiting.push(r.type);
  }
  if(!requirements.length&&!blocking)add(action('closure',destination),10,'closure');
  const next=candidates.sort((a,b)=>b.priority-a.priority)[0];
  if(next)return {text:next.action.text,action:next.action,chargeable:true,
-  key:next.action.kind+':'+next.action.id,requirement:next.requirement,severity:severity.state};
+  key:semanticHintKey(next.action,p,c),requirement:next.requirement,severity:severity.state};
  if(waiting.length){const a=action('wait');return {text:a.text,action:a,key:'wait',chargeable:false};}
  return {text:'No hay una pista ejecutable disponible para este estado. No se descontó XP.',action:null,key:null,
   chargeable:false,error:errors.length?errors.join(','):'unmapped-clinical-requirement'};

@@ -20,3 +20,11 @@ export const isExaminationKind=kind=>kind==='exam.record'||kind==='exam.glasgow'
 export function validExamSelection(regionId,technique){
  return Object.hasOwn(EXAM_REGIONS,regionId)&&EXAM_REGIONS[regionId].techniques.includes(technique);
 }
+
+// A neurological region includes the directed examination and its Glasgow
+// component assessment. One shared mapping for the panel, hints and QA.
+export function examinationRegionCommands(region){
+ const definition=EXAM_REGIONS[region];if(!definition)return [];
+ return [...definition.techniques.map(technique=>'/examen '+region+' '+technique),
+  ...(region==='neurological'?['/glasgow all']:[])];
+}

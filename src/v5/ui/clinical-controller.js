@@ -1,6 +1,6 @@
 import {patientHTML,vitalsHTML,therapyHTML,monitorHTML,historyHTML,esc} from './clinical-panels.js';
 import {examinationHTML,renderExamination} from './examination-panel.js';
-import {EXAM_REGIONS,isExaminationKind} from '../clinical/exam-contract.js';
+import {EXAM_REGIONS,isExaminationKind,examinationRegionCommands} from '../clinical/exam-contract.js';
 import {clinicalWorkflow} from './clinical-workflow.js';
 import {closureDecisionHTML} from './clinical-closure-panel.js';
 import {setHTML} from './render-content.js';
@@ -297,20 +297,18 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    if(flippedRegion===selected){flippedRegion=null;render();return true;}
    examBusy=true;examFeedback={status:'pending',text:'Explorando la región seleccionada…'};render();
    try{
-    const techniques=selected==='neurological'?['all']:
-     (EXAM_REGIONS[selected]?.techniques||[]);
+    const commands=examinationRegionCommands(selected);
     // One region click, existing validated maneuvers (same nurse/clinical
     // server authority). No client-side findings or fictitious completion.
     let confirmed=true;
-    for(const technique of techniques){
+    for(const command of commands){
      const before=state()?.patient;if(!before||before.caseEnded)break;
      // Deliberate examination must remain repeatable after physiological
      // evolution. The old "already performed" short-circuit froze Glasgow at
      // the admission score even after treatment improved consciousness.
      // An active panel is still protected by examBusy and flip-to-close.
      if(!before.uid)break;
-     const recorded=await recordExamination(selected==='neurological'?'/glasgow all':
-      '/examen '+selected+' '+technique);
+     const recorded=await recordExamination(command);
      if(!recorded){confirmed=false;break;}
     }
     if(confirmed)flippedRegion=selected;

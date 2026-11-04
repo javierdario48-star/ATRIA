@@ -72,6 +72,6 @@ export function clinicalHintRequirements(p,c,assessment,destination=hintDestinat
  // These requirements are added by the existing care/session wrapper, after
  // its case evaluator. Read that verdict rather than reimplementing its gate.
  if(assessment?.missing?.some(s=>/^Reevaluar/.test(s))&&!requirements.some(r=>r.type==='reassess'))requirements.push({type:'reassess'});
- if(assessment?.missing?.some(s=>/^Esperar/.test(s)))requirements.push({type:'wait'});
+ if(assessment?.missing?.some(s=>/^Esperar/.test(s)&&/pendientes|tareas físicas|ejecución o resolución/.test(s)))requirements.push({type:'wait'});
  return requirements;
 }

@@ -1,5 +1,5 @@
 import {CLINICAL_CONTROLS,DESTINATION_LABELS} from '../content/clinical-controls.js';
-import {EXAM_REGIONS} from './exam-contract.js';
+import {EXAM_REGIONS,examinationRegionCommands} from './exam-contract.js';
 import {nativeTreatmentDefinition,isNativeMedicine,preflightNativeMedicine} from './native-medications.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {routeWardSpeech} from '../core/speech-router.js';
@@ -21,7 +21,7 @@ export function clinicalActionDescriptor(kind,id,{caseData,content,patient,clock
  if(kind==='examination'){
   const region=id?.split(':')[0]?.replace(/^(?:heart|lungs)$/,'thorax')||'abdomen';
   const definition=EXAM_REGIONS[region];if(!definition)return null;
-  return {...base,id:region,section:'examination',label:definition.label,
+  return {...base,id:region,section:'examination',label:definition.label,commands:examinationRegionCommands(region),
    text:'Abre «'+CLINICAL_CONTROLS.examination+'» y explora «'+definition.label+'».'};
  }
  if(kind==='study'){
