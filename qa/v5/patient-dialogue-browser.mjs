@@ -13,7 +13,10 @@ try{
   await page.waitForFunction(n=>atriaV5.snapshot().clinical.room.transcript.length>n,before);return (await state()).messages.at(-1);};
  async function guard(caseId){
   await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption(caseId);await page.locator('[data-action="start-guard"]').click();
-  const before=(await state()).messages.length;await send('¿Dónde te duele?');assert.equal((await state()).messages.length,before+1,'distant question is global but has no patient reply');
+  const before=(await state()).messages.length;await send('¿Dónde te duele?');
+  const distant=(await state()).messages.slice(before);
+  assert.deepEqual(distant.map(row=>row.role),['player','system'],'a distant question receives guidance without a patient reply');
+  assert.match(distant[1].text,/Acercate al paciente/);
   await page.locator('#dieInput').blur();if(await page.evaluate(()=>atriaV5.diagnostics().keyboard.open))await page.locator('#keyboardToggleButton').click();
   await page.waitForFunction(()=>atriaV5.diagnostics().renderer.playableBounds===null);
   for(const [x,y] of [[496,1060],[496,800],[400,580],[250,470],[144,420]]){

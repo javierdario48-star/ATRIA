@@ -318,8 +318,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     const text=selected&&labels.has(selected[1])?'Enfermera, '+labels.get(selected[1]):message.text;
     if(!examOnly&&!examination)rows.push({id:'player:'+message.id,name:memberNames.get(message.actorId)||actorName,
      actorId:message.actorId,patientUid:message.patientUid,text,role:'player'});
-    const physicianGuidance=examination||event.routeError==='physician-exam-required';
-    if(event.routeError)rows.push({id:'route:'+message.id,name:physicianGuidance?'ATRIA':'Enfermera',role:physicianGuidance?'system':'nurse',
+    const systemGuidance=examination||event.routeError==='physician-exam-required'||
+     event.routeError==='no-patient-target'&&message.recipient==='patient';
+    if(event.routeError)rows.push({id:'route:'+message.id,name:systemGuidance?'ATRIA':'Enfermera',role:systemGuidance?'system':'nurse',
      actorId:message.actorId,text:examination?(event.routeError==='no-patient-target'?'Examen no registrado. Acercate al paciente para explorarlo.':
       'Examen no registrado. Revisá la región y la maniobra seleccionadas.'):
       routeReason[event.routeError]||'No pude ejecutar esa indicación.'});

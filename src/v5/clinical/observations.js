@@ -29,7 +29,13 @@ export function recordVitalMeasurement(p,clock,eventId,source){
 export function hasRecordedVitals(p){
  return p.lastVitalsKnown?.patientUid===p.uid&&!!p.lastVitalsKnown.eventId;
 }
+export function hasPhysicianReassessment(p){
+ return p.physicianReassessed??(p.reassessments>0&&p.lastReassessment?.source!=='disposition');
+}
 export function recordClinicalReassessment(p,clock,eventId,{routine=false}={}){
+ // Older checkpoints recorded only physician reassessments. Preserve that
+ // evidence before the routine transfer check replaces the latest snapshot.
+ p.physicianReassessed=!routine||hasPhysicianReassessment(p);
  if(p.lastReassessment?.eventId!==eventId)p.reassessments++;
  p.lastReassessment={nativeMinute:clock.nativeMinute,eventId,vitals:copy(p.liveVitals),
   administrationEvents:p.administrationLog.map(t=>t.sourceEventId),

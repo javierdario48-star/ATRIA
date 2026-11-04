@@ -3,6 +3,7 @@ import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
 import {csPeritonitisEvaluate487} from '../../clinical/peritonitis-pathways.js';
 import {csDxMatchesCase487} from '../../clinical/diagnostic-impression-487.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
+import {hasPhysicianReassessment} from './observations.js';
 import {initialPeritonitisVitals,initializeNativePeritonitis,advancePeritonitisVitals,
  applyConfirmedSepsisAdministration487,confirmedSepsisView487} from './native-peritonitis.js';
 export function peritonitisClosureSnapshot(p,c,cases=[c]){
@@ -24,7 +25,7 @@ export function peritonitisClosureQuality487(p,c,snapshot,destination,safeHandof
  const started=c.keyInterventions.some(id=>delivered.has(id));
  let diagnosis=snapshot.diagnosticCompatible?15:0;
  let history=Math.round(15*c.requiredHistory.filter(id=>historyAnswered.has(id)).length/Math.max(1,c.requiredHistory.length));
- let safety=Math.min(25,(snapshot.vitalsKnown?8:0)+(p.examDone?7:0)+(started?(p.reassessments>0?5:2):0)+(destination?5:0));
+ let safety=Math.min(25,(snapshot.vitalsKnown?8:0)+(p.examDone?7:0)+(started?(hasPhysicianReassessment(p)?5:2):0)+(destination?5:0));
  let studies=Math.round(15*c.keyStudies.filter(id=>snapshot.studiesDone.includes(id)).length/Math.max(1,c.keyStudies.length));
  let treatment=c.keyInterventions.length?Math.round(25*c.keyInterventions.filter(id=>delivered.has(id)).length/c.keyInterventions.length):25;
  const extraStudies=p.orders.filter(x=>!c.keyStudies.includes(x.id)).length,extraStudyPenalty=Math.min(5,extraStudies);

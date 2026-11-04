@@ -10,6 +10,7 @@ const h=await browserHarness({apiLatency:Number(process.env.V5_DURABLE_LATENCY||
 const other=await h.newBrowser(),contexts=[],pages=[],errors=[],acknowledgements=[];
 const out=process.env.V5_QA_OUTPUT||'qa/v5-browser-results';
 const names=['Dra. Ana','Dr. Bruno'].map(name=>name+(process.env.V5_QA_NAME_SUFFIX?' '+process.env.V5_QA_NAME_SUFFIX:''));
+const score=97,perDoctorXp=108;
 await fs.mkdir(out,{recursive:true});
 let stage='boot';
 try{
@@ -127,17 +128,24 @@ try{
  await Promise.all(pages.map(p=>p.waitForFunction(()=>atriaV5.snapshot().clinical?.patient.caseEnded,null,{timeout:60000})));
  const closed=await Promise.all(pages.map(clinical));
  assert.equal(closed[0].patient.uid,uid);assert.equal(closed[1].patient.uid,uid);
- assert.equal(closed[0].patient.closure.quality.score,100);
+ assert.equal(closed[0].patient.closure.quality.score,score);
  assert.equal(closed[0].patient.lastReassessment.source,'disposition');
- assert.equal(closed[0].progress.xp,111);
- assert.equal(closed[1].progress.xp,111);
+ assert.equal(closed[0].progress.xp,perDoctorXp);
+ assert.equal(closed[1].progress.xp,perDoctorXp);
  assert.deepEqual(closed[0].patient.closure,closed[1].patient.closure);
  assert.equal(closed[0].patient.administrationLog.length,2);
  for(const p of pages){
-  await p.waitForFunction(()=>JSON.parse(localStorage.getItem('atria.v5.progress.v1')||'{}').xp===111);
+  await p.waitForFunction(xp=>JSON.parse(localStorage.getItem('atria.v5.progress.v1')||'{}').xp===xp,perDoctorXp);
   assert.equal((await p.evaluate(()=>JSON.parse(localStorage.getItem('atria.v5.progress.v1')))).receipts.length,1);
  }
  stage='reload both recipients after closure, no duplicate doses, results or XP';
+ // An older client could have retained an order without a bedside UID.
+ // Recovery must communicate its rejection instead of silently clearing it.
+ await guest.addInitScript(roomId=>{
+  sessionStorage.setItem('atria.v5.durable.pending:'+roomId,JSON.stringify([
+   {id:'legacy-unbound-order',text:'Enfermera ceftriaxona 1 g'}
+  ]));
+ },closed[1].room.roomId);
  for(const p of pages){
   await p.reload();await p.waitForFunction(()=>document.body.dataset.boot==='ready');
   await p.locator('#enterButton').click();
@@ -147,8 +155,13 @@ try{
   assert.deepEqual(resumed.patient.administrationLog,treated.patient.administrationLog);
   assert.deepEqual(resumed.patient.orders,treated.patient.orders);
   assert.deepEqual(resumed.patient.intentHistory,treated.patient.intentHistory);
-  assert.equal(resumed.progress.xp,111);
+  assert.equal(resumed.progress.xp,perDoctorXp);
   assert.equal((await p.evaluate(()=>JSON.parse(localStorage.getItem('atria.v5.progress.v1')))).receipts.length,1);
+  if(p===guest){
+   await p.waitForFunction(()=>document.getElementById('toast').textContent.includes('El paciente seleccionado cambió'),
+    null,{timeout:10000});
+   assert(!resumed.room.transcript.some(row=>row.id==='legacy-unbound-order'));
+  }
  }
  assert.deepEqual(errors,[]);
  await fs.writeFile(out+'/durable-cooperative-closure-summary.json',JSON.stringify({
@@ -157,9 +170,9 @@ try{
   initialVitals:early.patient.liveVitals,treatedVitals:treated.patient.liveVitals,
   initialInflammation:early.patient.phys.inflammation,treatedInflammation:treated.patient.phys.inflammation,
   closure:closed[0].patient.closure,administrations:treated.patient.administrationLog,
-  orders:treated.patient.orders,perDoctorXp:111,noDuplicateXpOnBothReloads:true,errors
+  orders:treated.patient.orders,perDoctorXp,noDuplicateXpOnBothReloads:true,errors
  },null,2)+'\n');
- console.log('DURABLE PBE CLOSURE PASS',JSON.stringify({score:100,perDoctorXp:111,uniqueAdminReceipts:2,
+ console.log('DURABLE PBE CLOSURE PASS',JSON.stringify({score,perDoctorXp,uniqueAdminReceipts:2,
   studies:2,sharedClosure:true,hostLostWithWorkPending:true,hostRecovered:true,noDuplicateXpOnBothReloads:true}));
 }catch(error){
  const snapshots=await Promise.all(pages.map(async(p,i)=>{

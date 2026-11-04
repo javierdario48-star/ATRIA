@@ -409,7 +409,7 @@ export async function createApplication({document,window,content,signal}){
    }});
   return client;
  }
- function attachDurableRoom(room,client){
+ function attachDurableRoom(room,client,initialResponse){
   const current=client.read(),spatial=client.snapshotSpatial();
   if(!current?.patient?.uid||!playableIds.has(current.patient.caseId))
    throw Error('Invalid persistent clinical session');
@@ -431,13 +431,14 @@ export async function createApplication({document,window,content,signal}){
   seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;lastNurseCueAt=-Infinity;lastPatientSpeechAt=-Infinity;resetChat(current.competition?.mode==='competitive'?'Guardia competitiva: el primer médico en atender al paciente obtiene su responsabilidad clínica.':'Guardia cooperativa persistente: el servidor controla la clínica.');
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;
   clinicalChanged();updateHud();
+  for(const receipt of initialResponse?.acknowledgements||[])notifyClinicalRejection(receipt);
  }
  async function maybeRecoverStoredRoom(){
   if(!restoreRoomId||durableJoining||durableStarting||coopRoomId||guardSession||
    world.snapshot().phase!=='lobby'||!social.state().user?.id)return;
   const id=restoreRoomId;durableJoining=true;let client;
   try{
-   client=makeDurableClient({id});await client.sync();
+   client=makeDurableClient({id});const initialResponse=await client.sync();
    if(destroyed||coopRoomId||guardSession||world.snapshot().phase!=='lobby'||restoreRoomId!==id){
     client.dispose();return;
    }
@@ -445,7 +446,7 @@ export async function createApplication({document,window,content,signal}){
    const members=clinical.room.members.map(userId=>({userId,name:spatial.doctors.find(d=>d.id===userId)?.name||'Médico'}));
    const room=social.state().room?.id===id?social.state().room:
     {id,hostUserId:spatial.doctors[0]?.id,members,allAccepted:true};
-   restoreRoomId=null;attachDurableRoom(room,client);
+   restoreRoomId=null;attachDurableRoom(room,client,initialResponse);
   }catch(error){
    client?.dispose();
    if(error.code==='recovery-client-not-enabled'||error.code==='missing'||error.status===404)
@@ -472,9 +473,9 @@ export async function createApplication({document,window,content,signal}){
    // Durable admission depends on the authenticated HTTP room, not an RTC
    // hello. A guest retries a not-yet-created room on the next social poll.
    client=makeDurableClient(room);
-   if(host)await client.start(coopCaseId,null,coopGuardSelection);else await client.sync();
+   const initialResponse=host?await client.start(coopCaseId,null,coopGuardSelection):await client.sync();
    if(destroyed||coopRoomId||social.state().room?.id!==room.id){client.dispose();return;}
-   attachDurableRoom(room,client);
+   attachDurableRoom(room,client,initialResponse);
    social.broadcast({kind:'durable.hello',roomId:room.id});
   }catch(error){client?.dispose();if(host&&!destroyed&&!coopRoomId&&!(error.status===403&&!room.allAccepted))
    toast('No se inició la guardia: no se confirmó la autoridad del servidor.');}
@@ -484,9 +485,9 @@ export async function createApplication({document,window,content,signal}){
   if(durableJoining||durableStarting||coopRoomId)return;
   durableJoining=true;let client;
   try{
-   client=makeDurableClient(room);await client.sync();
+   client=makeDurableClient(room);const initialResponse=await client.sync();
    if(destroyed||coopRoomId||social.state().room?.id!==room.id){client.dispose();return;}
-   attachDurableRoom(room,client);
+   attachDurableRoom(room,client,initialResponse);
   }catch{client?.dispose();if(!destroyed)toast('Esperando recuperar la guardia persistente.');}
   finally{durableJoining=false;}
  }
@@ -1060,8 +1061,8 @@ export async function createApplication({document,window,content,signal}){
    const a=account.read(),id=recover?a.activeGuardId:'personal-'+window.crypto.randomUUID();
    if(!id)throw Error('No hay una guardia para recuperar.');
    const room={id,mode,members:[{userId:a.actorId,name:a.name}]};client=makeDurableClient(room);
-   if(recover)await client.sync();else await client.start(caseId,mode,guardSelection);
-   attachDurableRoom(room,client);
+   const initialResponse=recover?await client.sync():await client.start(caseId,mode,guardSelection);
+   attachDurableRoom(room,client,initialResponse);
   }catch(error){client?.dispose();toast(error.message);}
   finally{durableStarting=false;}
  }
