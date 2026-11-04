@@ -1,8 +1,13 @@
+import {clinicalExecutorFor} from '../content/clinical-cases.js';
+import {choleClosureSnapshot} from './chole-care.js';
+import {pancClosureSnapshot} from './panc-care.js';
+import {cholangitisClosureSnapshot} from './cholangitis-care.js';
 // Read-only requirement projection. Declarative V5 gates report their own
 // requirements. Characterized legacy gates are queried with evidence snapshots;
 // neither the real patient nor the legacy evaluator is modified.
 import {CASE_CLOSURE_RULES_487,csEvaluateClosure487} from '../../clinical/case-completion-487.js';
 import {PERITONITIS_IDS_V487,csPeritonitisEvaluate487} from '../../clinical/peritonitis-pathways.js';
+import {additionalCaseClosureSnapshot} from './additional-case-care.js';
 import {appClosureSnapshot} from './app-care.js';
 import {closureSnapshot} from './cirr-care.js';
 import {peritonitisClosureSnapshot} from './peritonitis-care.js';
@@ -14,7 +19,8 @@ export const clinicalClosureRule=c=>c.clinicalPolicy?.closure||GASTRO_CASE_RULES
 const unique=items=>[...new Set(items)];
 function legacyProjection(p,c){
  const peritonitis=PERITONITIS_IDS_V487.includes(c.id),rule=clinicalClosureRule(c);
- const snapshot=peritonitis?peritonitisClosureSnapshot(p,c):c.id==='CIRR-001'?closureSnapshot(p,c):appClosureSnapshot(p,c);
+ const snapshots={cirr:closureSnapshot,app:appClosureSnapshot,chole:choleClosureSnapshot,panc:pancClosureSnapshot,cholangitis:cholangitisClosureSnapshot,additional:additionalCaseClosureSnapshot,peritonitis:peritonitisClosureSnapshot};
+ const snapshot=snapshots[clinicalExecutorFor(c)](p,c);
  const evaluate=peritonitis?csPeritonitisEvaluate487:csEvaluateClosure487;
  const medicines=unique([...(c.interventions||[]).map(x=>x.id),...antimicrobialRegimens487(c).flat(),
   'fluid','vasopressor','oxygen']).filter(id=>isNativeMedicine(id)||id==='oxygen'||c.interventions.some(x=>x.id===id));

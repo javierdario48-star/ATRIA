@@ -5,11 +5,11 @@ import {clinicalClosureRule} from './clinical-hint-requirements.js';
 import {clinicalInterventionEligibility} from './native-medication-eligibility.js';
 import {currentClinicalTreatment} from './receipts.js';
 import {clinicalAcuity} from './acuity.js';
-import {medicationSafety487,matchesMedicationAllergy487} from './medication-safety-487.js';
+import {medicationSafety487,matchesMedicationAllergy487,hasMedicationSafetyMetadata487} from './medication-safety-487.js';
 import {nativeTreatmentDefinition} from './native-medications.js';
 import {physicianExaminationsPerformed} from './diagnostic-evidence.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
-import {unrescuedTransferReactions} from './transfer-continuation.js';
+import {clinicalTransferContinuation,unrescuedTransferReactions} from './transfer-continuation.js';
 
 export function selectClinicalHint({patient:p,caseData:c,requirements=[],content,clock,destination,fulfilledTreatmentIds=[]}){
  if(!p||p.caseEnded||p.patientDied)return null;
@@ -23,6 +23,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
  if(p.procedures?.monitor?.connected)done.add('monitor');
  const studies=new Set((p.orders||[]).filter(x=>x.status==='done'&&x.patientUid===p.uid).map(x=>x.id)),
   requested=new Set((p.orders||[]).filter(x=>x.status!=='done'&&!['failed','rejected','cancelled'].includes(x.status)&&x.patientUid===p.uid).map(x=>x.id));
+ const blocking=clinicalTransferContinuation(p,c,destination,minute).pendingBlockers.length||p.hintPendingActions?.length||p.pendingConsults?.length;
  const severity=clinicalAcuity(p.liveVitals,{rhythm:p.ecg?.rhythm}),v=p.liveVitals||{},
   shock=v.sys<90||(v.sys+2*v.dia)/3<65,hypoxemia=v.spo2<90;
  const candidates=[],errors=[],waiting=[];
@@ -39,7 +40,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   if(done.has(id))return true;
   if(pending.has(id)){waiting.push(id);return true;}
   if(seen.has(id)){errors.push('dependency-cycle:'+id);return false;}seen=new Set([...seen,id]);
-  const safety=['iv','monitor','oxygen'].includes(id)?{}:medicationSafety487(c,p,id),issue=clinicalInterventionEligibility(p,c,id,clock);
+  const safety=hasMedicationSafetyMetadata487(id)?medicationSafety487(c,p,id):{},issue=clinicalInterventionEligibility(p,c,id,clock);
   if(matchesMedicationAllergy487(p,id)||safety.blocked||safety.contraindicated||
    ['clinical-contraindication','clinical-indication-not-supported','clinical-onset-window-exceeded','clinical-anticoagulant-mismatch'].includes(issue?.reason))return false;
   const eligibility=c.clinicalPolicy?.eligibility?.[id]||{},def=nativeTreatmentDefinition(id,c);
@@ -94,7 +95,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
    // An already running acceptable strategy outranks ordering another one.
    if(groups.some(g=>g.every(id=>pending.has(id)))){waiting.push('treatment');continue;}
    const usable=groups.filter(g=>g.every(id=>!matchesMedicationAllergy487(p,id)&&
-    !(['iv','monitor','oxygen'].includes(id)?{}:medicationSafety487(c,p,id)).contraindicated&&!['clinical-contraindication','clinical-indication-not-supported','clinical-onset-window-exceeded']
+    !(hasMedicationSafetyMetadata487(id)?medicationSafety487(c,p,id):{}).contraindicated&&!['clinical-contraindication','clinical-indication-not-supported','clinical-onset-window-exceeded']
      .includes(clinicalInterventionEligibility(p,c,id,clock)?.reason)));
    usable.sort((a,b)=>a.filter(id=>!pending.has(id)).length-b.filter(id=>!pending.has(id)).length);
    let found=false;
@@ -105,12 +106,12 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
    }
    if(!found)errors.push('no-executable-treatment-alternative');
   }else if(r.type==='reassess'){
-   if(!pending.size)add(action('reassess'),20,'reassess');else waiting.push('reassessment');
+   if(!blocking)add(action('reassess'),20,'reassess');else waiting.push('reassessment');
   }else if(r.type==='closure'){
-   if(!p.pendingConsults?.length)add(action('closure',r.destination||destination),10,'closure');else waiting.push('receiver');
+   if(!blocking&&!requirements.some(item=>item.type==='wait'))add(action('closure',r.destination||destination),10,'closure');else waiting.push('receiver');
   }else if(r.type==='wait'||r.type==='stability')waiting.push(r.type);
  }
- if(!requirements.length&&!p.pendingConsults?.length&&!pending.size)add(action('closure',destination),10,'closure');
+ if(!requirements.length&&!blocking)add(action('closure',destination),10,'closure');
  const next=candidates.sort((a,b)=>b.priority-a.priority)[0];
  if(next)return {text:next.action.text,action:next.action,chargeable:true,
   key:next.action.kind+':'+next.action.id,requirement:next.requirement,severity:severity.state};

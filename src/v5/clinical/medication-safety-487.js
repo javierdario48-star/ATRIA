@@ -74,6 +74,7 @@ export function matchesMedicationHypersensitivity487(p,id){
  const facts=patientAllergyFacts487(p);
  return !matches(facts.severeAllergies,id)&&matches(facts.hypersensitivities,id);
 }
+export const hasMedicationSafetyMetadata487=id=>known.has(id);
 export function medicationSafety487(c,p,id){
  if(!known.has(id))throw Error('unreviewed medication '+String(id));
  const definition=CLINICAL_TREATMENTS[id];

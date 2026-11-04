@@ -13,7 +13,7 @@ import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js'
 import {evaluateClinicalPolicyDisposition} from './clinical-policy-closure.js';
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 export {createPancCare};
-function snapshot(p,c,destination){
+export function additionalCaseClosureSnapshot(p,c,destination){
  return {caseId:c.id,diagnosis:p.diagnosis,acceptedDiagnoses:c.dx,diagnosticAssessment:assessDiagnosticImpression(c,p.diagnosis),
   historyAnswered:p.intentHistory.map(x=>x.id),historyRelevant:c.requiredHistory,
   examDone:p.examDone,examRegionsCount:Object.keys(p.examFindings||{}).length,
@@ -60,8 +60,8 @@ export function createAdditionalCaseCare(p,c,options){
    if(c.clinicalPolicy.observationResponses)patient.observationResponses=structuredClone(c.clinicalPolicy.observationResponses);
   }},
   evaluate:(patient,caseData,destination)=>caseData.clinicalPolicy?evaluateClinicalPolicyDisposition(patient,caseData,destination):GASTRO_CASE_RULES[caseData.id]?
-   evaluateGastroDisposition(snapshot(patient,caseData,destination)):
-   csEvaluateClosure487(snapshot(patient,caseData,destination)),
+   evaluateGastroDisposition(additionalCaseClosureSnapshot(patient,caseData,destination)):
+   csEvaluateClosure487(additionalCaseClosureSnapshot(patient,caseData,destination)),
   conducts:policy.conducts,reassessmentRequired:true,
   reassessmentMessage:patient=>'Reevaluación: PA '+Math.round(patient.liveVitals.sys)+'/'+Math.round(patient.liveVitals.dia)+
    ', FC '+Math.round(patient.liveVitals.hr)+

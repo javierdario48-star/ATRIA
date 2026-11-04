@@ -21,6 +21,20 @@ test('real closure gates advance the hint when an action is completed',async()=>
  const f=fixture();await f.post('/signos');
  assert.notEqual(f.next().action.kind,'vitals');f.session.dispose();
 });
+test('history instructions use an authored question that satisfies the actual closure gate',async()=>{
+ const f=fixture();await f.post('/signos');const first=f.next();assert.equal(first.action.kind,'history');
+ await f.post(first.action.command);assert.notEqual(f.next().key,first.key);f.session.dispose();
+});
+test('all 55 initial sessions can calculate their own requirement projection',()=>{
+ for(const c of content.cases){const f=fixture(c.id);try{assert(f.next()?.action,c.id);}finally{f.session.dispose();}}
+});
+test('routed dose phrases remain executable after the actual nursing scanner normalization',async()=>{
+ const f=fixture('NEUR-06'),p=f.session.read().patient;
+ const h=selectClinicalHint({patient:p,caseData:f.caseData,content,clock:f.session.read().clock,
+  requirements:[{type:'treatment',anyOf:[['lorazepam']]}]});
+ const reply=await f.post(h.action.command);
+ assert(!reply.clinical.some(x=>x.status==='rejected'),JSON.stringify(reply));f.session.dispose();
+});
 test('critical hypoxemia chooses oxygen before secondary examination',()=>{
  const f=fixture('RESP-03');const p=f.session.read().patient;
  const hint=selectClinicalHint({patient:{...p,liveVitals:{...p.liveVitals,spo2:80}},caseData:f.caseData,content,
