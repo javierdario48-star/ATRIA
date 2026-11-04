@@ -5,6 +5,7 @@ import {createGuardSession} from './guard-session.js';
 import {executePatientDialogue} from './patient-dialogue.js';
 import {createClinicalContent} from '../content/clinical-content.js';
 import {respiratoryPack} from '../content/packs/respiratory-pack.js';
+import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
 const read=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const content={cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')};
@@ -411,4 +412,72 @@ test('asking how the patient was before acquires authored baseline rather than c
  assert.equal(result.receipt.answer,c.history.baseline);
  assert(p.intentHistory.some(x=>x.id==='baseline'));
  assert.equal(p.interview.subjective,null);
+});
+
+test('medication paraphrases resolve to the case fact and preserve its clinical history ID',async()=>{
+ const f=setup('HEPAT-001');
+ try{
+  for(const text of ['¿Toma alguna medicación?','¿Qué medicamentos tomas?','¿Qué remedios usás?',
+   '¿Qué medcamentos tomás?','¿Qué medicamento?','¿Cuáles tomás?','¿Cuáles recordás?']){
+   const result=await f.send(text);
+   assert.equal(result.clinical[0].status,'executed',text);
+   assert.match(answer(result),/No tomé paracetamol en exceso ni otros fármacos nuevos/,text);
+  }
+  const facts=f.s.read().patient.intentHistory.filter(x=>x.id==='meds');
+  assert.equal(facts.length,1);
+  assert.equal(facts[0].source,'case.intents.meds');
+ }finally{f.s.dispose();}
+});
+
+test('medication details stay within the authored record and unknown answers earn no history',async()=>{
+ const known=setup('CIRR-001'),unknown=setup('ENCEF-001');
+ try{
+  assert.match(answer(await known.send('¿Tomás algo para la presión?')),/presión/);
+  assert.match(answer(await known.send('¿Cuáles?')),/no recuerdo (?:el nombre|cómo se llama)/i);
+  assert.match(answer(await known.send('¿Cuánto tomás?')),/no.*dosis/i);
+  assert.match(answer(await known.send('¿Desde cuándo?')),/no.*cuándo/i);
+  assert.match(answer(await known.send('¿Y antes?')),/no.*antes/i);
+  assert.match(answer(await known.send('¿Por qué?')),/presión/i);
+  assert(!known.s.read().patient.intentHistory.some(x=>x.id==='onset'));
+  assert.match(answer(await unknown.send('¿Qué remedios usás?')),/no recuerdo/i);
+  assert.match(answer(await unknown.send('¿Cuáles?')),/no recuerdo/i);
+  assert.deepEqual(unknown.s.read().patient.intentHistory,[]);
+ }finally{known.s.dispose();unknown.s.dispose();}
+});
+
+test('only the asking doctor retains a patient topic through checkpoint recovery',async()=>{
+ const uid='conversation-context',members=[{id:'doctor',name:'Doctor'},{id:'other',name:'Other'}];
+ const identity={id:'other',roomId:uid},otherToken={};
+ const options={roomId:uid,mode:'coop',actorId:'doctor',actorName:'Doctor',members,patient:{uid,caseId:'CIRR-001'},content,
+  authenticate:token=>token===otherToken?identity:null,resolveContext:()=>({patientUid:uid})};
+ const first=createGuardSession(options);let restored;
+ try{
+  assert.match(answer(await first.post({id:'history-1',text:'¿Qué remedios usás?'})),/presión/);
+  assert.match(answer(await first.post({id:'history-2',text:'¿Tuvo fiebre?'},otherToken)),/No tuve fiebre/);
+  restored=createGuardSession({...options,checkpoint:await first.checkpoint()});
+  const a=await restored.post({id:'history-3',text:'¿Cuáles?'});
+  const b=await restored.post({id:'history-4',text:'¿Desde cuándo?'},otherToken);
+  assert.match(answer(a),/no recuerdo (?:el nombre|cómo se llama)/i);
+  assert.match(answer(b),/No tuve fiebre/);
+  assert(!restored.read().patient.intentHistory.some(x=>x.id==='onset'));
+ }finally{first.dispose();restored?.dispose();}
+});
+
+test('follow-ups disclose an authored dose, surgical course or known negative allergy without inventing details',async()=>{
+ const cardio=setup('CIRR-001'),surgical=setup('PERI-TER-001');
+ const uid='known-dose',s=createGuardSession({roomId:uid,mode:'solo',actorId:'doctor',actorName:'Doctor',
+  patient:{uid,caseId:'CARD-02'},content:createClinicalContent(content,{additionalCases:
+   cardiologyPack.cases.filter(c=>c.id==='CARD-02')}),
+  resolveContext:()=>({patientUid:uid})});
+ try{
+  await s.post({id:'dose-1',text:'¿Qué medicamentos tomás?'});
+  const dose=await s.post({id:'dose-2',text:'¿Cuánto tomás?'});
+  assert.match(answer(dose),/Aspirina 100 mg diarios/);
+  assert.equal(s.read().patient.intentHistory.filter(x=>x.id==='meds').length,1);
+  assert.match(answer(await cardio.send('¿Tuvo alguna reacción a medicamentos?')),/no tengo alergias/i);
+  assert.match(answer(await cardio.send('¿Cuáles?')),/no tengo alergias/i);
+  assert.match(answer(await surgical.send('¿Cuántas cirugías tuvo?')),/operaron varias veces/i);
+  assert.match(answer(await surgical.send('¿Y después?')),/nunca terminé de mejorar/i);
+  assert(surgical.s.read().patient.intentHistory.some(x=>x.id==='course'));
+ }finally{cardio.s.dispose();surgical.s.dispose();s.dispose();}
 });

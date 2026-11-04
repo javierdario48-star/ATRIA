@@ -3,9 +3,10 @@ import {PATIENT_PROFILES} from './patient-profiles.js';
 import {readPatientObservations} from './patient-observations.js';
 import {discloseAllergies,normalizePatientPersonality} from '../content/patient-variation.js';
 import {patientRelationship,spontaneousHistory,composePatientConversation} from './patient-conversation.js';
+import {normalizePatientQuestion as normalize,medicationQuestion,followUpQuestion,followUpDetail} from './patient-question-context.js';
 
-const normalize=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
- .replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const sensitiveTopics=new Set(['allergies','meds','drugs','anticoagulants','anticoagulation','medications']);
+const unavailable=text=>!text||/^(?:no recuerdo todos los medicamentos puedo explicar|puedo comentarle mis antecedentes si me pregunta|no se documentaron otros antecedentes|no (?:puedo (?:precisar|ponerle un numero|describirlo con mas precision)|tengo claro))\b/.test(normalize(text));
 // Open-ended bedside questions are a distinct HISTORY intent, not a guessed
 // organ finding. Matching only broad question shapes prevents stealing
 // specific history, pain, orientation or treatment inquiries.
@@ -62,6 +63,22 @@ function authoredProfile(c){
   character:h.character||h.pain||'No puedo describirlo con más precisión ahora.',
   worse:h.worse||'No tengo claro qué lo empeora.',relief:h.relief||'No tengo claro qué lo alivia.'};
 }
+function knownAllergyAnswer(p){
+ const disclosures=discloseAllergies(p,true);
+ const reactionType=a=>a?.type??a?.reactionType;
+ const isSevere=a=>a?.severity==='severe'||reactionType(a)==='severe';
+ const allergyDisclosures=disclosures.filter(a=>reactionType(a)!=='intolerance');
+ const covered=new Set(allergyDisclosures.map(a=>a.drugId)),coveredSevere=new Set(allergyDisclosures.filter(isSevere).map(a=>a.drugId));
+ const documented=[...(p.allergies||[]),...(p.clinicalFlags?.drugAllergies||[])];
+ const severe=[...(p.severeAllergies||[]),...(p.clinicalFlags?.severeAllergies||[]),...documented.filter(isSevere)];
+ const idOf=a=>typeof a==='string'?a:a?.drugId??a?.groupId;
+ const needsFallback=!disclosures.length||documented.some(a=>reactionType(a)!=='intolerance'&&!covered.has(idOf(a)))||
+  severe.some(a=>!coveredSevere.has(idOf(a)));
+ const knownAllergy=documented.some(a=>reactionType(a)!=='intolerance'&&idOf(a))||severe.some(a=>idOf(a));
+ const fallback=p.allergyHistoryAnswer||(knownAllergy?'Tuve reacciones a medicamentos, pero no puedo precisar el detalle ahora.':null);
+ return [...new Set([...disclosures.map(a=>a.answer),
+  ...(needsFallback&&fallback?[fallback]:[])])].join(' ');
+}
 /** Case-bound conversation context is not a second chat or clinical executor.
  * The authority records one global utterance/reply; this function only acquires
  * history and subjective observations. It never measures, treats or reassesses.
@@ -72,19 +89,40 @@ export function executePatientDialogue(p,c,cmd,clock){
  p.interview??={lastSymptom:null,dimensions:{},symptoms:{},subjective:null};
  const context=p.interview,observed=readPatientObservations(p,c.id,clock.nativeMinute),answers=[],disclosures=[];
  let sensitiveHistory=false;
+ // A case's acquired history is shared. The conversational reference belongs
+ // to the authenticated speaker and lives in the existing patient checkpoint.
+ context.speakers??={};
+ if(!Object.hasOwn(context.speakers,cmd.actorId))
+  Object.defineProperty(context.speakers,cmd.actorId,{value:{topic:null,entry:null},enumerable:true});
+ const speaker=context.speakers[cmd.actorId];
+ function remember(topic,entry=null){
+  speaker.topic=topic;speaker.entry=entry;context.lastSymptom=topic;
+ }
  function note(id,answer,source){
   const entry={id,answer:lay(answer),source,eventId:cmd.eventId,patientUid:p.uid,nativeMinute:clock.nativeMinute};
   disclosures.push(entry);
   if(id&&!p.intentHistory.some(x=>x.id===id))p.intentHistory.push(entry);
   return entry;
  }
+ function disclose(topic,id,text,source){
+  const entry=note(id,text,source);
+  remember(topic,entry);answers.push(entry.answer);
+ }
+ function follow(kind,topic,entry=speaker.entry){
+  if(sensitiveTopics.has(topic))sensitiveHistory=true;
+  const detail=followUpDetail(entry?.id?entry:null,kind,topic);
+  // Rephrasing or narrowing a previously acquired fact cannot award a new one.
+  answers.push(note(null,detail.answer,detail.source||'native.history-detail-unavailable').answer);
+ }
  function symptom(id,duration){
   const def=symptomQuestions.find(s=>s[0]===id),fact=c.intents.find(i=>i.id===id||id==='diarrhea'&&i.id==='bowel');
   const timed=fact?.answers.find(a=>/\b(hace|ayer|anoche|hoy|desde|semana\w*|hora\w*|dia\w*)\b|no (?:tuve|tengo|note)/.test(normalize(a)));
   const text=duration?timed||'No recuerdo exactamente cuándo empezó '+(def?.[2]||'ese síntoma')+'.':
    fact?.answers[0]||'No puedo precisar bien '+(def?.[2]||'ese síntoma')+' ahora.';
-  const entry=note(fact?.id||'symptom:'+id,text,fact&&(!duration||timed)?'case.intents.'+fact.id:'native.symptom-unknown');
-  context.lastSymptom=id;context.symptoms[id]=entry;answers.push(entry.answer);
+  const known=!!fact&&(!duration||!!timed);
+  const entry=note(known?fact.id:null,text,known?'case.intents.'+fact.id:'native.symptom-unknown');
+  remember(id,known?entry:speaker.topic===id?speaker.entry:null);
+  context.symptoms[id]=entry;answers.push(entry.answer);
  }
  function subjective(){
   let text;
@@ -113,8 +151,7 @@ export function executePatientDialogue(p,c,cmd,clock){
    if(/^(?:le escucho|te escucho|le explico|te explico|estas preguntas ayudan|tomese su tiempo|tomate tu tiempo|necesito precisar|conteste rapido|no tengo tiempo|por favor sea breve)\b/.test(clause))continue;
    const openQuestion=openHistoryIntent(clause);
    if(openQuestion==='reason'){
-    answers.push(note('interview:symptoms',profile.symptoms,'native.patient-profile.symptoms').answer);
-    context.lastSymptom='chiefComplaint';continue;
+    disclose('chiefComplaint','interview:symptoms',profile.symptoms,'native.patient-profile.symptoms');continue;
    }
    if(openQuestion==='status'){answers.push(subjective());continue;}
    if(/como (?:estas|esta|te (?:sientes|sentis)|se siente)\b|(?:te|se) (?:sientes|sentis|siente) (?:mejor|peor)\b|estas (?:mejor|peor)\b|como (?:sigues|sigue|vas)\b|\b(?:mejoraste|mejoro)\b/.test(clause)){
@@ -127,57 +164,70 @@ export function executePatientDialogue(p,c,cmd,clock){
    const reactionQuestion=/\breaccion(?:es)?\b/.test(clause)&&/\b(?:medicamentos?|farmacos?|antibioticos?)\b/.test(clause);
    const personalHistory=/\bantecedentes?\b/.test(clause)&&!/alerg|reacci|quirurg|cirugi|operaci|familiar|medic|farmac/.test(clause);
    const historyQuestion=reactionQuestion?'alergias':personalHistory?'antecedentes personales':clause;
-   const exact=exactFact(c,clause),fact=csAnamnesisFact(c,historyQuestion),duration=dimensions[1][1].test(clause),explicitPain=/\b(dolor|duele|molesta|hinchazon|hinchando)\b/.test(clause);
+   const exact=exactFact(c,clause),duration=dimensions[1][1].test(clause),explicitPain=/\b(dolor|duele|molesta|hinchazon|hinchando)\b/.test(clause);
    const named=symptomQuestions.filter(([,re])=>re.test(clause));
    // A composite authored symptom (for example vomiting blood) carries
    // more information than the generic symptom word it contains.
    if(exact&&named.length&&!duration&&exact.keys.some(key=>normalize(key).includes(' ')&&
     (' '+clause+' ').includes(' '+normalize(key)+' '))){
-    answers.push(note(exact.id,exact.answers[0],'case.intents.'+exact.id).answer);
-    context.lastSymptom=exact.id;continue;
+    disclose(exact.id,exact.id,exact.answers[0],'case.intents.'+exact.id);continue;
    }
    // Explicit postoperative history must not be swallowed by the generic
    // "surgeries" domain. A bare pain/fever duration follow-up still follows
    // its current symptom and cannot earn a postoperative-course fact.
    if(exact&&!explicitPain&&(exact.id==='surgery_history'||exact.id==='course'&&!duration)){
-    answers.push(note(exact.id,exact.answers[0],'case.intents.'+exact.id).answer);context.lastSymptom=exact.id;continue;
+    disclose(exact.id,exact.id,exact.answers[0],'case.intents.'+exact.id);continue;
    }
-   // The effective 4.8.7 anamnesis adapter resolves these factual domains
-   // before older case keyword scoring (for example, medication history).
+   const shorthand=followUpQuestion(clause),topic=speaker.topic;
+   let fact=csAnamnesisFact(c,historyQuestion);
+   const medicine=!named.length&&!explicitPain&&(!fact||fact.intent==='meds')&&medicationQuestion(clause);
+   if(medicine&&!fact)fact=csAnamnesisFact(c,'medicación');
    const identityAge=fact?.intent==='age'&&Number.isInteger(p.age)?'Tengo '+p.age+' años.':null;
    const historyIntent=fact?.intent??exact?.id;
-   if(['allergies','meds','drugs','anticoagulants','anticoagulation','medications'].includes(historyIntent))sensitiveHistory=true;
-   const backgroundAnswer=historyIntent==='pmh'?p.backgroundHistory?.history?.pmh:null;
-   if(!named.length&&(fact?.text||identityAge||backgroundAnswer)&&!['onset','radiation','location','features','intensity','otherSymptoms','reason'].includes(historyIntent)){
-    const id=exact?.id===historyIntent?exact.id:'anamnesis:'+historyIntent;
-    const disclosures=historyIntent==='allergies'?discloseAllergies(p,true):[];
-    const reactionType=a=>a?.type??a?.reactionType;
-    const isSevere=a=>a?.severity==='severe'||reactionType(a)==='severe';
-    const allergyDisclosures=disclosures.filter(a=>reactionType(a)!=='intolerance');
-    const covered=new Set(allergyDisclosures.map(a=>a.drugId)),coveredSevere=new Set(allergyDisclosures.filter(isSevere).map(a=>a.drugId));
-    const documented=[...(p.allergies||[]),...(p.clinicalFlags?.drugAllergies||[])];
-    const severe=[...(p.severeAllergies||[]),...(p.clinicalFlags?.severeAllergies||[]),...documented.filter(isSevere)];
-    const idOf=a=>typeof a==='string'?a:a?.drugId??a?.groupId;
-    const needsFallback=!disclosures.length||documented.some(a=>reactionType(a)!=='intolerance'&&!covered.has(idOf(a)))||
-     severe.some(a=>!coveredSevere.has(idOf(a)));
-    const knownAllergy=documented.some(a=>reactionType(a)!=='intolerance'&&idOf(a))||severe.some(a=>idOf(a));
-    const fallback=p.allergyHistoryAnswer||(knownAllergy?'Tuve reacciones a medicamentos, pero no puedo precisar el detalle ahora.':null);
-    const allergyAnswer=[...new Set([...disclosures.map(a=>a.answer),
-     ...(needsFallback&&fallback?[fallback]:[])])].join(' ');
-    const actual=identityAge||backgroundAnswer||(historyIntent==='allergies'&&allergyAnswer?allergyAnswer:fact.text);
-    if(historyIntent==='allergies')sensitiveHistory=true;
-    answers.push(note(id,actual,identityAge?'patient.identity':backgroundAnswer?'patient.backgroundHistory':
-     historyIntent==='allergies'&&allergyAnswer?'patient.allergies':fact.source).answer);context.lastSymptom=historyIntent;continue;
+   if(sensitiveTopics.has(historyIntent))sensitiveHistory=true;
+   const timedSymptom=shorthand==='when'&&symptomQuestions.some(([id])=>id===topic);
+   if(!explicitPain&&!named.length&&topic&&shorthand&&!timedSymptom&&
+     (!exact||['onset','course','meds'].includes(exact.id))&&
+     !(shorthand==='when'&&['pain','chiefComplaint'].includes(topic))&&
+     !(topic==='pain'&&shorthand==='amount')&&(!medicine||topic==='meds')){
+    if(shorthand==='course'&&topic==='surgery_history'){
+     const course=c.intents.find(i=>i.id==='course');
+     if(course){disclose(topic,course.id,course.answers[0],'case.intents.course');continue;}
+    }
+    follow(shorthand,topic);continue;
+   }
+   const backgroundAnswer=p.backgroundHistory?.history?.[historyIntent];
+   const authoredFact=c.intents.find(i=>i.id===historyIntent);
+   const defaultFact=fact?.text;
+   const authoredAnswer=c.history?.[historyIntent]||authoredFact?.answers?.find(answer=>!unavailable(answer));
+   if(!named.length&&fact&&!['onset','radiation','location','features','intensity','otherSymptoms','reason'].includes(historyIntent)&&
+     (defaultFact||identityAge||backgroundAnswer||authoredAnswer||historyIntent==='meds')){
+    const id=exact?.id===historyIntent||historyIntent==='meds'&&authoredFact?historyIntent:'anamnesis:'+historyIntent;
+    const allergyAnswer=historyIntent==='allergies'?knownAllergyAnswer(p):null;
+    const selected=[
+     [identityAge,'patient.identity'],[backgroundAnswer,'patient.backgroundHistory'],
+     [historyIntent==='allergies'&&allergyAnswer,'patient.allergies'],
+     [!unavailable(defaultFact)&&defaultFact,fact?.source],
+     [authoredAnswer,c.history?.[historyIntent]?'case.history.'+historyIntent:'case.intents.'+historyIntent]
+    ].find(([text])=>!unavailable(text)&&typeof text==='string'&&text.trim());
+    if(selected)disclose(historyIntent,id,...selected);
+    else{
+     const answer=historyIntent==='meds'?'No recuerdo qué medicamentos tomo.':'No lo recuerdo con más detalle.';
+     disclose(historyIntent,null,answer,'native.history-detail-unavailable');
+    }
+    continue;
    }
    if(named.length){for(const [id] of named)symptom(id,duration);if(!explicitPain)continue;}
    let matches=dimensions.filter(([,re])=>re.test(clause));
-   if(!matches.length&&context.lastSymptom==='pain'&&/^(como es|que tan fuerte|cuanto)$/.test(clause))
+   if(!matches.length&&speaker.topic==='pain'&&/^(como es|que tan fuerte|cuanto)$/.test(clause))
     matches=[dimensions.find(d=>d[0]===(clause==='como es'?'character':'intensity'))];
-   if(matches.length===1&&matches[0][0]==='onset'&&!explicitPain&&context.lastSymptom&&context.lastSymptom!=='pain'){
-    if(context.lastSymptom==='chiefComplaint'){
-     answers.push(note('onset',profile.onset,'case.history.onset').answer);continue;
+   if(matches.length===1&&matches[0][0]==='onset'&&!explicitPain){
+    if(speaker.topic==='chiefComplaint'){
+     if(profile.onset)disclose('chiefComplaint','onset',profile.onset,'case.history.onset');
+     else follow('when','chiefComplaint');
+     continue;
     }
-    symptom(context.lastSymptom,true);continue;
+    if(symptomQuestions.some(([id])=>id===speaker.topic)){symptom(speaker.topic,true);continue;}
    }
    if(matches.length){
     for(const [key] of matches){
@@ -186,12 +236,14 @@ export function executePatientDialogue(p,c,cmd,clock){
      // Original markHistory could credit onset on a greeting, or migration on
      // intensity alone. Only a dimension that actually discloses it earns that fact.
      const historyId=key==='onset'?'onset':['place','radiation'].includes(key)?(c.intents.some(i=>i.id==='pain')?'pain':'migration'):'interview:'+key;
-     context.dimensions[key]=note(historyId,text,'native.patient-profile.'+key);answers.push(lay(text));
+     context.dimensions[key]=note(unavailable(text)?null:historyId,text||'No puedo precisarlo.',
+      'native.patient-profile.'+key);
+     answers.push(context.dimensions[key].answer);
     }
-    context.lastSymptom='pain';continue;
+    remember('pain',context.dimensions[matches.at(-1)[0]]);continue;
    }
-   if(exact){answers.push(note(exact.id,exact.answers[0],'case.intents.'+exact.id).answer);context.lastSymptom=exact.id;continue;}
-   if(fact?.text){answers.push(note('anamnesis:'+fact.intent,fact.text,fact.source).answer);context.lastSymptom=fact.intent;continue;}
+   if(exact){disclose(exact.id,exact.id,exact.answers[0],'case.intents.'+exact.id);continue;}
+   if(fact?.text){disclose(fact.intent,'anamnesis:'+fact.intent,fact.text,fact.source);continue;}
    if(/que (?:te |le )?pasa|que mas (?:sentis|siente|sientes)|otros? sintomas?|que (?:te |lo |la )?trajo|por que vin|motivo de consulta/.test(clause)){
     answers.push(note('interview:symptoms',profile.symptoms,'native.patient-profile.symptoms').answer);
    }

@@ -42,7 +42,7 @@ export function validateDialogueSources(evidence,c,patient){
    expected=key==='intensity'?values(Number.isFinite(observed.pain)?'Ahora lo siento como '+observed.pain+' de 10.':h.intensity||'No puedo ponerle un número exacto ahora.'):values(profile[key]);
   }
   else if(source==='patient.identity')expected=['Tengo '+patient.age+' años.'];
-  else if(source==='patient.backgroundHistory')expected=values(patient.backgroundHistory?.history?.pmh);
+  else if(source==='patient.backgroundHistory')expected=Object.values(patient.backgroundHistory?.history||{}).flatMap(values);
   else if(source==='patient.allergies'){
    const disclosed=[...new Set((patient.allergyHistory??[]).map(a=>a.historyDisclosure).filter(Boolean))];
    expected=[disclosed.join(' '),patient.allergyHistoryAnswer,
@@ -66,13 +66,24 @@ export function validateDialogueSources(evidence,c,patient){
    expected=[observed.neuro.verbal==null?'(No puede dar una respuesta verbal evaluable en este momento.)':
     observed.neuro.verbal===3?'(Pronuncia palabras sueltas, sin poder precisar lo que siente.)':observed.neuro.verbal===2?'Mmm…':'(No responde.)'];
   }
+  else if(source==='native.history-detail-unavailable'){
+   expected=['No recuerdo qué medicamentos tomo.','No recuerdo el nombre del medicamento.',
+    'No lo recuerdo con más detalle.','No puedo precisar esa cantidad.','No puedo precisar la dosis que tomo.',
+    'No recuerdo bien cuándo empezó.','No recuerdo cuándo tomé la última dosis.',
+    'No puedo precisar qué pasaba antes.','No puedo precisar cómo siguió.','No sé precisar el motivo.'];
+  }
   else if(source==='native.symptom-unknown'){
    if(!/^No (?:puedo precisar bien|recuerdo exactamente cuándo empezó) [^.\d]+\.$/.test(fact.canonical))failures.push('invented-unknown-symptom:'+fact.id);
    else verified++;
    continue;
   }
   else expected=values(lookup(c,source.replace(/^case\./,'')));
-  if(!expected.length||!expected.some(text=>clinicalMeaning(layAuthored(text))===clinicalMeaning(fact.canonical)))
+  const matching=expected.some(text=>{
+   if(clinicalMeaning(layAuthored(text))===clinicalMeaning(fact.canonical))return true;
+   return fact.id.startsWith('interview:response:')&&fact.canonical.split(/(?<=[.!?;])\s+/)
+    .every(detail=>layAuthored(text).split(/(?<=[.!?;])\s+/).includes(detail));
+  });
+  if(!matching)
    failures.push('non-authored-clinical-fact:'+fact.id+':'+fact.source);
   else verified++;
  }
