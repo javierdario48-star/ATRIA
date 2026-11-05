@@ -380,7 +380,8 @@ export async function createApplication({document,window,content,signal}){
     if(count>lastReceivedPatientCount&&lastReceivedPatientCount>0)
      toast('Recepción: ingresó un paciente nuevo. Consultá el tablero.');
     lastReceivedPatientCount=count;
-    const revision=patientUid+':'+value.clinical.room.revision;
+    const reward=value.clinical.caseReward;
+    const revision=JSON.stringify([patientUid,value.clinical.room.revision,reward?.eventId,reward?.creditStatus,reward?.xp]);
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
     else if(value.acknowledgements?.length)renderGuardCommunication();
     for(const receipt of value.acknowledgements||[])notifyClinicalRejection(receipt);
@@ -651,6 +652,10 @@ export async function createApplication({document,window,content,signal}){
    catch{toast('Progreso confirmado en esta sesión; no se pudo guardar en este dispositivo.');}
   }
   updateHud();
+  if(closure?.closed&&announcedClosure===closure.eventId&&dialog.dataset.panel==='outcome'){
+   const outcome=dialog.querySelector('#caseResult'),html=caseDebriefHTML(closure);
+   if(outcome&&outcome.innerHTML!==html)outcome.innerHTML=html;
+  }
   if(closure?.closed&&announcedClosure!==closure.eventId){announcedClosure=closure.eventId;
     hospitalAudio.cue(closure.quality?.score>=90?'level':'ok');
    const canNext=!!localAdmissions&&localAdmissions.records().some(r=>{
@@ -711,7 +716,7 @@ export async function createApplication({document,window,content,signal}){
    scoreHost.hidden=!guard;
    if(guard){
     const score=guardScoreboardHTML(guardScoreModelV5({
-     mode:s.mode,patient:clinical?.patient,
+     mode:s.mode,patient:clinical?.caseReward?{...clinical.patient,closure:clinical.caseReward}:clinical?.patient,
      players:s.mode==='competitive'?(social.state().room?.members||[]).map(p=>({id:p.userId,name:p.name})):[],
      ownerId:clinical?.competition?.ownerId||null,
      outcomes:clinical?.shift?.outcomes||localShift.outcomes()}));

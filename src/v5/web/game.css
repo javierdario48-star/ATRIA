@@ -224,6 +224,7 @@ dialog[data-panel="monitor"] #modalClose{position:relative;z-index:2;margin:0 0 
 .case-scorecard{max-width:580px;margin:0 auto;color:#e7f3f2}
 .case-scorecard>h3{margin:0 0 3px;font-size:18px;letter-spacing:.1px}
 .case-scorecard>p{margin:0 0 12px;color:#b1d7d2;font-weight:700}
+.case-experience{margin-bottom:8px}
 .case-score-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .case-score-section{background:rgba(10,42,49,.75);border:1px solid rgba(127,193,183,.18);padding:9px;border-radius:12px;min-width:0}
 .case-score-section>h4{font-size:11px;text-transform:uppercase;letter-spacing:.7px;margin:0 0 6px;color:#a8d8ca}

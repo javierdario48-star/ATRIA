@@ -94,6 +94,31 @@ async function interact(p,uid,mode){
  await p.screenshot({path:output+'/'+mode+'-guard.png'});
  results.push({mode,patientVisible:true,realAccount:true,patientReplied:true,contextualHint:true,individualHintFee:true,medicationFollowUp:true,musicControls:true});
 }
+const accountXP=p=>p.evaluate(async()=>(await (await fetch('/api/account/session')).json()).account.xp);
+async function confirmHintAward(p,mode,peer=null){
+ const before=await accountXP(p),peerBefore=peer?await accountXP(peer):null;
+ await send(p,'/diagnostico cirrosis descompensada');await send(p,'/cierre-parcial observacion');
+ await p.waitForFunction(()=>atriaV5.snapshot().clinical.caseReward?.creditStatus==='credited');
+ const closed=await p.evaluate(()=>atriaV5.snapshot().clinical),expected=Math.floor(closed.patient.closure.xp*95/100);
+ assert(expected>0);assert.equal(closed.caseReward.hintCount,1);assert.equal(closed.caseReward.xp,expected);
+ const receipt=await p.locator('#caseResult .case-experience').innerText();
+ assert.match(receipt,/Penalización por pistas\s+−5%/);
+ assert.match(receipt,new RegExp('XP final obtenida\\s+'+expected+' XP'));
+ const after=await accountXP(p);assert.equal(after-before,expected);
+ const evidence={mode,rewardVerified:true,creditedXP:expected,accountDelta:after-before};
+ if(peer){
+  await peer.waitForFunction(status=>atriaV5.snapshot().clinical.caseReward?.creditStatus===status,
+   mode==='competitive'?'ineligible':'credited');
+  const reward=await peer.evaluate(()=>atriaV5.snapshot().clinical.caseReward),expectedPeer=mode==='competitive'?0:closed.patient.closure.xp;
+  assert.equal(reward.hintCount,0);assert.equal(reward.xp,expectedPeer);
+  assert.equal((await accountXP(peer))-peerBefore,expectedPeer);
+  evidence.peerXP=expectedPeer;
+  if(await peer.locator('#modalClose').isVisible())await peer.locator('#modalClose').click();
+ }
+ results.push(evidence);
+ await p.screenshot({path:output+'/'+mode+'-xp.png'});
+ await p.locator('#modalClose').click();
+}
 async function release(p){
  if(await p.evaluate(()=>atriaV5.snapshot().phase==='guard'))await p.locator('#guardButton').click();
  await p.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');
@@ -125,6 +150,7 @@ try{
    assert.equal(await host.evaluate(()=>atriaV5.snapshot().clinical.hintCount),1,'recovery retains the revealed hint');
    results.push({retainedGuard:true,reminderDismissed:true,samePatient:true});
   }
+  stage='credit hint discount in '+mode;await confirmHintAward(host,mode);
   await release(host);
  }
  const guest=await boot(true);stage='register guest';await register(guest,'B');
@@ -135,7 +161,9 @@ try{
   await host.locator('[data-action="start-guard"]').click();await guest.locator('#coopInviteNotice').waitFor({state:'visible'});
   await guest.locator('#coopInviteAccept').click();
   stage='enter '+mode;const uids=await Promise.all([host,guest].map(p=>entered(p,mode)));
-  stage='interact '+mode;await interact(host,uids[0],mode);await release(host);await release(guest);
+  stage='interact '+mode;await interact(host,uids[0],mode);
+  stage='credit hint discount in '+mode;await confirmHintAward(host,mode,guest);
+  await release(host);await release(guest);
  }
  assert.deepEqual(errors,[]);await fs.writeFile(output+'/results.json',JSON.stringify({passed:true,origin,applicationHash,verifiedFiles,physicalDevices:false,results,traffic,errors},null,2));
  console.log('ATRIA LIVE GUARD ENTRY PASS '+JSON.stringify({origin,applicationHash,results,errors}));

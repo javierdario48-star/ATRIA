@@ -124,3 +124,23 @@ test('movement sequences are monotonic while old HTTP requests are delayed',asyn
  assert.equal(client.motion([1,2],4),false);
  client.dispose();
 });
+
+test('a delayed receipt lookup cannot replace confirmed XP for this encounter',async()=>{
+ const closed={actorId:'doctor',eventId:'close-1',patientUid:'p',xp:140,creditStatus:'credited'};
+ const settled={patientUid:'p',closed:true,xp:140,creditStatus:'credited'};
+ const frames=[
+  {caseReward:closed,shift:{outcomes:[settled]}},
+  {caseReward:{...closed,xp:93,creditStatus:'pending'},shift:{outcomes:[{...settled,xp:0,creditStatus:'pending'}]}},
+  {caseReward:{...closed,eventId:'new',patientUid:'q',xp:45,creditStatus:'pending'},shift:{outcomes:[settled]}}
+ ];
+ let epoch=0;
+ const replica=createDurableCooperativeReplica({roomId,clientKey,window:{fetch:async()=>({ok:true,json:async()=>({
+  epoch:epoch+1,clinical:{room:{roomId,revision:6},...frames[epoch++]}
+ })})}});
+ try{
+  await replica.sync();await replica.sync();
+  assert.deepEqual(replica.read().caseReward,closed);
+  assert.deepEqual(replica.read().shift.outcomes,[settled]);
+  await replica.sync();assert.equal(replica.read().caseReward.creditStatus,'pending');
+ }finally{replica.dispose();}
+});

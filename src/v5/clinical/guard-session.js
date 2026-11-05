@@ -1,4 +1,4 @@
-import {createClinicalHintLedger,hintAdjustedXP} from './clinical-hint-ledger.js';
+import {createClinicalHintLedger,hintAdjustedXP,hintPenaltyPercent} from './clinical-hint-ledger.js';
 import {clinicalChecklist,clinicalHintRequirements,hintDestination} from './clinical-hint-requirements.js';
 import {selectClinicalHint} from './clinical-hints.js';
 import {createRoomAuthority} from '../core/room-authority.js';
@@ -77,8 +77,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  function rewardFor(receipt,doctorId){
   if(!receipt)return receipt;
   const baseXP=receipt.baseXP??receipt.xp,count=hintLedger.count(doctorId);
-  return {...copy(receipt),actorId:doctorId,...(count||receipt.baseXP!==undefined?
-   {baseXP,hintCount:count,xp:hintAdjustedXP(baseXP,count)}:{})};
+  return {...copy(receipt),actorId:doctorId,baseXP,hintCount:count,
+   hintPenaltyPercent:hintPenaltyPercent(count),xp:hintAdjustedXP(baseXP,count)};
  }
  const options={mode,defaultDoses:content.defaultDoses,
   progress:{...progress,award:receipt=>progress.award(rewardFor(receipt,receipt.actorId))},
@@ -257,7 +257,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     surgicalConsultDone:!!nativePatient.consults?.some(x=>x.id==='cirugia'&&x.status==='done'&&x.accepted),
     consultServices:[...new Set(Object.values(caseData.clinicalPolicy?.closure?.consult||{}).flat())],
    validateClinicalBatch}),
-  respondNpc:({patientUid,text,mode})=>vegaGuidance(patientUid===nativePatient.uid?nativePatient:null,caseData,text,{mode}),
+  respondNpc:({patientUid,text})=>vegaGuidance(patientUid===nativePatient.uid?nativePatient:null,caseData,text),
   time:()=>clock.clinicalMinute,emit:(event,snapshot)=>onChange(copy(event),copy(snapshot))});
  function closureReadiness(destination){
   const out=care?.readiness(destination);if(!out)return null;
@@ -313,6 +313,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(event.type==='chat.posted'){
     const message={...event.message,id:(mode==='coop'?event.message.actorId+':':'')+event.message.id},selected=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(message.text);
     // The physical exam is the doctor's recorded observation. Keep the full
+  const closureText=item=>item.kind==='case.close'?item.receipt?.message?.replace(/ · \+\d+ XP\.$/,'.'):item.receipt?.message;
     // room event for authority/replay, but present its findings in the exam
     // panel rather than turn each maneuver into doctor and nurse chat rows.
     const examination=isExaminationCommand(message.text),examOnly=event.clinical.length>0&&
@@ -331,7 +332,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     for(let i=0;i<event.clinical.length;i++){
      const item=event.clinical[i],label=labels.get(item.id)||item.id;
      if(isExaminationKind(item.kind)&&item.status==='executed'||isPhysicianExamStudy(item.id))continue;
-     const nativeText=item.receipt?.message;
+     const nativeText=closureText(item);
      const feedback=resultText(item,label)||
       (nativeText|| (item.status==='pending'?
        item.kind==='case.close'?'Traslado solicitado. Enfermería verificó los signos; esperamos la respuesta del servicio receptor.':
@@ -360,7 +361,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      const source=item.receipt?.sourceEventId||event.eventId;if(announcedResults.has(source))continue;
      announcedResults.add(source);rows.push({id:'completion:'+source,name:'Enfermera',role:'nurse',actorId:event.actorId,
       text:resultText(item,labels.get(item.id)||item.id)||
-       (item.receipt?.message||(labels.get(item.id)||item.id)+': resultado disponible.')});
+       (closureText(item)||(labels.get(item.id)||item.id)+': resultado disponible.')});
     }
    }
   }
@@ -568,7 +569,6 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    // existing eligibleDestinations still reports destinations accepted now.
    const activeReaction=checklist&&unrescuedTransferReactions(nativePatient,caseData,clock.nativeMinute).length>0;
    const canRequest=checklist&&!!checklist.assessment&&checklist.requirements.every(r=>r.type==='closure')&&!activeReaction;
-   if(caseReward?.hintCount)for(const row of displayMessages)row.text=row.text.replace(/\+\d+ XP\./g,'+'+caseReward.xp+' XP.');
    return {hintBinding:{roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId},hintCount:hintLedger.count(doctorId),
    caseReward,room,patient:subject,exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:displayMessages,progress:progress.read(),
    eligibleDestinations:options,

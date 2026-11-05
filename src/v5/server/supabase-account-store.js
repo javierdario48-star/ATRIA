@@ -43,7 +43,12 @@ export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.f
   logout:tokens=>request('/auth/v1/logout?scope=local',{method:'POST',accessToken:tokens.access_token}),
   async insertAccount(row){return (await request('/rest/v1/atria_v5_accounts',{method:'POST',body:row,prefer:'return=representation'}))[0];},
   async updateAccount(id,body){return (await request('/rest/v1/atria_v5_accounts?auth_user_id=eq.'+encodeURIComponent(id),{method:'PATCH',body,prefer:'return=representation'}))[0];},
-  award:(actorId,roomId=null)=>rpc('atria_v5_award_verified',{p_actor_id:actorId,p_room_id:roomId})
+  award:(actorId,roomId=null)=>rpc('atria_v5_award_verified',{p_actor_id:actorId,p_room_id:roomId}),
+  creditedGuardRewards(actorId,roomId){
+   const query=new URLSearchParams({actor_id:'eq.'+actorId,room_id:'eq.'+roomId,
+    kind:'eq.clinical.closure',select:'patient_uid,event_id,xp_delta,base_xp,reward_scope,reward_multiplier'});
+   return request('/rest/v1/atria_v5_progress_receipts?'+query);
+  }
  });
 }
 const durableKey=/^qa-v1:(user|friends|requests|outgoing|invites):qa_[0-9a-f]{30}$/;

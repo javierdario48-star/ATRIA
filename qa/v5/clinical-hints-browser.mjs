@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {browserHarness} from './browser-harness.mjs';
-import {walk} from './cooperative-ui.mjs';
+import {send,walk} from './cooperative-ui.mjs';
 import {clickHudAction} from './hud-actions.mjs';
 
 const h=await browserHarness(),results=[],errors=[];
@@ -43,7 +43,20 @@ try{
    await p.locator('#vegaClinicalHint button').click();await tap();await button.click();
    await p.locator('#vegaClinicalHint').waitFor({state:'visible'});
    assert.equal((await p.evaluate(()=>atriaV5.snapshot().clinical)).hintCount,1,'same action must not charge again');
-   results.push({device:name,mode,patientUid:uid,contextMenu:true,individualFee:true,repeatFree:true,noClinicalExecution:true});
+   await p.locator('#vegaClinicalHint button').click();
+   await send(p,'/diagnostico cirrosis descompensada');
+   await send(p,'/cierre-parcial observacion');
+   await p.locator('#caseResult .case-experience').waitFor({state:'visible'});
+   const closed=await p.evaluate(()=>atriaV5.snapshot().clinical);
+   const award=Math.floor(closed.patient.closure.xp*95/100);
+   assert(award>0);assert.equal(closed.progress.xp,award);
+   const experience=await p.locator('#caseResult .case-experience').innerText();
+   assert.match(experience,/Pistas nuevas utilizadas\s+1/);
+   assert.match(experience,/Penalización por pistas\s+−5%/);
+   assert.match(experience,new RegExp('XP final obtenida\\s+'+award+' XP'));
+   await p.screenshot({path:'qa/v5-hint-browser-results/'+name+'-xp.png'});
+   results.push({device:name,mode,patientUid:uid,contextMenu:true,individualFee:true,repeatFree:true,noClinicalExecution:true,
+    creditedXP:award,visibleDiscount:5});
   }finally{await context.close();}
  }
  assert.deepEqual(errors,[]);await writeFile('qa/v5-hint-browser-results/results.json',JSON.stringify(results,null,2)+'\n');

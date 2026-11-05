@@ -56,3 +56,56 @@ test('hint acknowledgement is committed by the existing durable CAS before deliv
   assert.equal((await store.read('durable-hints')).value.runtime.session.hints.history.length,1);
  }finally{store.close();}
 });
+
+for(const mode of ['coop','competitive'])test(mode+' credits only the actor’s own revealed hints when a recovered case closes',async()=>{
+ let r=await fixture(mode);
+ try{
+  if(mode==='coop')assert(r.claim('b','hint-runtime:patient'));
+  const offer=await r.hint('a',req(r,'a','prepare'));
+  for(const op of ['revalidate','displayed'])await r.hint('a',req(r,'a',op,{offerId:offer.offerId}));
+  const checkpoint=JSON.parse(JSON.stringify(await r.checkpoint()));r.dispose();
+  r=await createGuardRuntime({roomId:'hint-runtime',content,checkpoint,nowMs:20000});
+  for(const [id,text] of [['dx','/diagnostico cirrosis descompensada'],['end','/cierre-parcial observacion']])
+   await r.post('a',{id,text,targetPatientUid:'hint-runtime:patient'});
+  const a=r.view('a'),b=r.view('b'),native=a.clinical.patient.closure.xp;
+  assert(native>0);assert.equal(a.clinical.caseReward.xp,Math.floor(native*.95));
+  assert.equal(a.clinical.caseReward.hintCount,1);
+  assert.deepEqual(a.claims.find(([id])=>id==='a')[1],a.clinical.caseReward);
+  assert.equal(a.clinical.caseReward.quality.score,b.clinical.caseReward.quality.score);
+  if(mode==='coop'){
+   assert.equal(b.clinical.caseReward.xp,native);assert.equal(b.clinical.caseReward.hintCount,0);
+   assert.deepEqual(b.claims.find(([id])=>id==='b')[1],b.clinical.caseReward);
+  }else{
+   assert.equal(b.clinical.caseReward.creditStatus,'ineligible');assert.equal(b.clinical.caseReward.xp,0);
+   assert(!b.claims.some(([id])=>id==='b'));
+  }
+  await r.post('a',{id:'end',text:'/cierre-parcial observacion',targetPatientUid:'hint-runtime:patient'});
+  assert.deepEqual(r.view('a').claims,a.claims);
+ }finally{r.dispose();}
+});
+
+test('a painted hint acknowledgement in the same sync as closure is settled first',async()=>{
+ const store=createSqliteGuardStore(':memory:');let now=0;
+ const server=createDurableGuardAuthority({store,content,now:()=>now}),roomId='settled-hint-on-close',actorId='a';
+ const call=extra=>server.transact({roomId,actorId,...extra});
+ try{
+  await server.bootstrap({roomId,actorId,caseId:'CIRR-001',members:roster,hostId:actorId});
+  const world=createWorld(content,{id:actorId,name:'A'}),pt=world.navigation.center(...content.beds[0].approach);
+  await call({motion:[pt.x,pt.y]});now=20000;
+  const patientUid=roomId+':patient',claimed=await call({claim:patientUid});
+  const binding=claimed.clinical.hintBinding;
+  const prepared=await call({hintRequest:{...binding,op:'prepare',requestId:'prepare'}});
+  const offerId=prepared.hintAcknowledgement.offerId;
+  const verified=await call({hintRequest:{...binding,op:'revalidate',requestId:'revalidate',offerId}});
+  assert.equal(verified.hintAcknowledgement.status,'verified');
+  const packet={hintRequest:{...binding,op:'displayed',requestId:'displayed',offerId},commands:[
+   {id:'diagnosis',text:'/diagnostico cirrosis descompensada',targetPatientUid:patientUid},
+   {id:'closure',text:'/cierre-parcial observacion',targetPatientUid:patientUid}
+  ]};
+  const closed=await call(packet);
+  assert.equal(closed.hintAcknowledgement.status,'displayed');
+  assert.equal(closed.clinical.caseReward.hintCount,1);
+  assert.equal(closed.clinical.caseReward.xp,Math.floor(closed.clinical.patient.closure.xp*.95));
+  assert.deepEqual((await call(packet)).claims,closed.claims);
+ }finally{store.close();}
+});

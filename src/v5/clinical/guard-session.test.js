@@ -101,7 +101,7 @@ test('C09 Vega response belongs to the unique global utterance, with no clinical
   assert.deepEqual(ack.clinical,[]);
   assert.equal(s.read().messages.length,2);
   assert.equal(s.read().messages.at(-1).name,'Dr. Vega');
-  assert.match(s.read().messages.at(-1).text,/signos vitales/);
+  assert.match(s.read().messages.at(-1).text,/¿Qué hago ahora\?/);
   assert.deepEqual(s.read().patient,before);
   const retry=await s.post({id:'vega-1',text:'Vega, dame una pista'});
   assert.deepEqual(retry,ack);

@@ -131,8 +131,12 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    // The default first patient is not necessarily physically claimed.
    // This UID exists only after this actor's server-side proximity validation.
    confirmedFocusPatientUid:focused.get(actorId)||null,patients:items,outcomes};
-  if(mode==='competitive')state.competition={mode,ownerId:items.find(r=>r.uid===state.patient.uid)?.ownerId||null,
-   patientUid:state.patient.uid,outcomes};
+  if(mode==='competitive'){
+   const ownerId=items.find(r=>r.uid===state.patient.uid)?.ownerId||null;
+   state.competition={mode,ownerId,patientUid:state.patient.uid,outcomes};
+   if(state.caseReward&&ownerId!==actorId)
+    state.caseReward={...state.caseReward,xp:0,creditStatus:'ineligible'};
+  }
   return state;
  }
  return Object.freeze({

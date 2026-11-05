@@ -4,6 +4,7 @@ import {createPrivateBlobGuardStore} from '../src/v5/server/private-blob-guard-s
 import {createPostgresGuardStore} from '../src/v5/server/postgres-guard-store.js';
 import {createDurableGuardAuthority} from '../src/v5/server/durable-guard-authority.js';
 import {createClinicalHttp,clinicalActorId} from '../src/v5/server/clinical-http.js';
+import {attachCreditedCaseReward} from '../src/v5/server/clinical-reward.js';
 import {publicAccount} from '../src/v5/server/account-gateway.js';
 import {createClinicalStoreProbe} from '../src/v5/server/clinical-store-probe.js';
 import {clinicalContent} from '../src/v5/server/content.js';
@@ -34,10 +35,14 @@ function routeFor(identity){
   if(identity?.account.active_guard_id&&identity.account.active_guard_id!==roomId)
    throw Object.assign(Error('Tu cuenta ya tiene una guardia activa.'),{code:'busy'});
  },
- async afterTransact({roomId}){
+ async afterTransact({roomId,result}){
   if(!identity)return null;
   await accountBackend.award(identity.actorId,roomId);
-  return publicAccount(await accountBackend.byAuth(identity.account.auth_user_id));
+  const [account]=await Promise.all([
+   accountBackend.byAuth(identity.account.auth_user_id),
+   attachCreditedCaseReward(result.clinical,accountBackend,identity.actorId,roomId)
+  ]);
+  return publicAccount(account);
  },
  // C5.b.3: activation requires an explicit Preview-only server variable.
  // Production is always disabled, even if the variable is accidentally set.

@@ -12,3 +12,13 @@ test('Auth outages remain retryable and name collisions remain conflicts',async(
  await assert.rejects(()=>store.validateSession({access_token:token,refresh_token:'refresh-a'}),{status:503});
  status=409;body={code:'23505'};await assert.rejects(()=>store.insertAccount({name:'Darío'}),{status:409});
 });
+
+test('reads only the authenticated doctor’s credited closures for this guard, including a zero award',async()=>{
+ const result={patient_uid:'patient-a',event_id:'closure-a',xp_delta:0,base_xp:133,reward_multiplier:1.2,reward_scope:'specialty'};
+ const store=createSupabaseAccountStore({...config,fetchImpl:async(url)=>{
+  assert.equal(url.pathname,'/rest/v1/atria_v5_progress_receipts');
+  for(const [k,v] of Object.entries({actor_id:'eq.actor-a',room_id:'eq.guard-a',kind:'eq.clinical.closure'}))assert.equal(url.searchParams.get(k),v,k);
+  return {ok:true,text:async()=>JSON.stringify([result])};
+ }});
+ assert.deepEqual(await store.creditedGuardRewards('actor-a','guard-a'),[result]);
+});

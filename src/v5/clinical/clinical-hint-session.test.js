@@ -46,3 +46,35 @@ test('both doctors see the same canonical clinical closure with separate XP proj
  assert.equal(late.reason,'patient-not-active');assert.equal(s.hintCount('a'),1);
  s.dispose();
 });
+
+test('a written request for a Vega hint explains how to use the contextual button without revealing a second free hint',async()=>{
+ const s=createGuardSession(options);
+ try{
+  for(const [index,text] of ['Dr. Vega, dame una pista','Vega, ¿por dónde empiezo?'].entries()){
+   await s.post({id:'chat-hint-'+index,text},'a');
+   const last=s.read('a').messages.findLast(x=>x.role==='mentor');
+   assert.match(last.text,/¿Qué hago ahora\?/);
+   assert.match(last.text,/5%/);
+   assert.doesNotMatch(last.text,/obtené signos|exploración dirigida/);
+  }
+  assert.equal(s.hintCount('a'),0);
+ }finally{s.dispose();}
+});
+
+for(const n of [0,1,5,10,20,21])test('solo closing credits exactly the reward projected to the player after '+n+' new hints',async()=>{
+ const solo={...options,mode:'solo',members:members.slice(0,1)};let s=createGuardSession(solo);
+ try{
+  const saved=await s.checkpoint();s.dispose();
+  saved.hints.history=Array.from({length:n},(_,i)=>({actorId:'a',key:'action:'+i,offerId:'offer:'+i,requestId:'displayed:'+i}));
+  s=createGuardSession({...solo,checkpoint:saved});
+  await s.post({id:'dx',text:'/diagnostico cirrosis descompensada'},'a');
+  await s.post({id:'close',text:'/cierre-parcial observacion'},'a');
+  const {caseReward,patient,progress}=s.read();
+  assert.equal(caseReward.baseXP,patient.closure.xp);
+  assert.equal(caseReward.hintCount,n);
+  assert.equal(caseReward.hintPenaltyPercent,Math.min(100,n*5));
+  assert.equal(caseReward.xp,Math.floor(patient.closure.xp*Math.max(0,20-n)/20));
+  assert.equal(progress.xp,caseReward.xp);
+  assert.deepEqual(progress.receipts[0],caseReward);
+ }finally{s.dispose();}
+});

@@ -32,7 +32,7 @@ test('V4-native scoring exposes four truthful scorecard divisions without synthe
  assert(report.unnecessary.some(x=>x.includes('estudios')));
  const markup=caseDebriefHTML({destination:'sala',xp:122,quality:quality(1,1),debrief:report});
  for(const phrase of ['Sumaste puntos','Te descontaron','Te faltó','No debías hacer',
-  'Estudios innecesarios','Sobrecarga IV','+122 XP'])
+  'Estudios innecesarios','Sobrecarga IV','XP final obtenida</span><b class="score-gain">122 XP'])
   assert(markup.includes(phrase),phrase);
  assert(!/script>/.test(markup));
 });

@@ -1,4 +1,18 @@
 export const CLINICAL_REQUEST_TIMEOUT_MS=12000;
+
+function retainConfirmedRewards(next,previous){
+ const reward=next.caseReward,prior=previous?.caseReward;
+ if(reward?.creditStatus==='pending'&&prior?.creditStatus==='credited'&&
+  ['actorId','patientUid','eventId'].every(key=>prior[key]===reward[key]))next.caseReward=prior;
+ const known=new Map((previous?.shift?.outcomes||[]).filter(row=>row.creditStatus==='credited')
+  .map(row=>[row.patientUid,row]));
+ for(const row of [...(next.shift?.outcomes||[]),...(next.competition?.outcomes||[])]){
+  const verified=known.get(row.patientUid);
+  if(verified&&row.creditStatus==='pending'){
+   row.xp=verified.xp;row.creditStatus='credited';
+  }
+ }
+}
 /**
  * C5.b.3 client transport. It does not create a GuardSession, progress clock,
  * dispense a drug, or make a second clinical authority in the browser.
@@ -30,7 +44,9 @@ export function createDurableCooperativeReplica({
    throw Error('invalid clinical response');
   if(response.epoch<epoch)return false;
   epoch=response.epoch;
+  const previous=current?.clinical;
   current=clone(response);
+  retainConfirmedRewards(current.clinical,previous);
   for(const ack of response.acknowledgements||[]){
    if(!ack||typeof ack.commandId!=='string')continue;
    const waiting=pending.get(ack.commandId);

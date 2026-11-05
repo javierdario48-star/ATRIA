@@ -35,12 +35,15 @@ export function createDurableGuardAuthority({store,content,now=()=>Date.now(),uu
    if(!recovery.recovering){
     if(actorProfile&&Number.isSafeInteger(actorProfile.level)&&actorProfile.level>0)
      runtime.updateDoctorLevel(actorId,actorProfile.level);
+    // A display acknowledgement refers to an instruction already painted
+    // for the old focus. Settle it before commands that can end that encounter.
+    if(hintRequest?.op==='displayed')hintAcknowledgement=await runtime.hint(actorId,hintRequest);
     if(motion)runtime.motion(actorId,motion,motionSequence);
     if(claim)runtime.claim(actorId,claim);
     if(typeof typing==='boolean')runtime.typing(actorId,typing,at);
     if(confirmation)confirmationAccepted=runtime.confirm(actorId,confirmation.revision,confirmation.outcomeId);
     for(const command of commands)acknowledgements.push(await runtime.post(actorId,command));
-    if(hintRequest)hintAcknowledgement=await runtime.hint(actorId,hintRequest);
+    if(hintRequest&&hintRequest.op!=='displayed')hintAcknowledgement=await runtime.hint(actorId,hintRequest);
    }
    const next={schemaVersion:1,roomId,epoch,lease:null,runtime:await runtime.checkpoint()};
    // Every external effect is clinical data in this aggregate. A stale worker

@@ -1,8 +1,10 @@
 // Persistent reveal accounting only. This ledger cannot touch physiology,
 // case quality, clinical commands, another encounter or another physician.
+const XP_PERCENT_PER_HINT=5;
+export const hintPenaltyPercent=count=>Math.min(100,count*XP_PERCENT_PER_HINT);
 export function hintAdjustedXP(xp,count){
  if(!Number.isSafeInteger(xp)||xp<0||!Number.isSafeInteger(count)||count<0)throw Error('invalid hint reward inputs');
- return Math.floor(xp*Math.max(0,20-count)/20);
+ return Math.floor(xp*(100-hintPenaltyPercent(count))/100);
 }
 const copy=x=>structuredClone(x);
 const validText=s=>typeof s==='string'&&s.length>0&&s.length<=240;
@@ -11,7 +13,7 @@ export function createClinicalHintLedger(binding,saved={}){
  if(![roomId,encounterId,patientUid].every(validText))throw Error('invalid hint encounter binding');
  if(saved.roomId&&[roomId,encounterId,patientUid].some((value,i)=>value!==saved[['roomId','encounterId','patientUid'][i]]))throw Error('wrong hint checkpoint encounter');
  const offers=new Map(copy(saved.offers||[])),requests=new Map(copy(saved.requests||[])),history=copy(saved.history||[]);
- const count=actorId=>history.filter(r=>r.actorId===actorId).length;
+ const count=actorId=>new Set(history.filter(r=>r.actorId===actorId&&typeof r.key==='string'&&r.key).map(r=>r.key)).size;
  const reject=(reason='invalid-hint-request')=>({status:'rejected',reason});
  return Object.freeze({
   count,

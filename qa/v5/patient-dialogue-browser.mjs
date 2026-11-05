@@ -43,7 +43,7 @@ try{
  const prior=await state();reply=await send('Vega, dame una pista');
  assert.equal((await state()).room.transcript.at(-1).recipient,'vega','explicit Vega overrides nurse focus');
  assert.equal(reply.role,'mentor','Vega must answer through the same global transcript');
- assert.match(reply.text,/signos vitales|exploración|anamnesis|estudios/);
+ assert.match(reply.text,/¿Qué hago ahora\?/);
  assert.deepEqual((await state()).patient.treatments,prior.patient.treatments,
   'Vega reasoning may not administer therapies');
  await send('Enfermera, hemograma');assert.equal((await state()).room.transcript.at(-1).recipient,'nurse');
