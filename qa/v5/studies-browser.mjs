@@ -93,7 +93,8 @@ try{
  assert.equal(cardiac.patient.orders.length,1);
  const [troponin]=cardiac.patient.orders;
  assert.equal(troponin.id,'g_card01_troponin');assert.equal(troponin.resultSource,'native');
- assert.equal(troponin.readyAtMinute-troponin.requestedAtMinute,10);assert.match(troponin.result,/Troponina I ultrasensible 420 ng\/L/);
+ assert(Math.abs(troponin.readyAtMinute-troponin.requestedAtMinute-10)<1e-9,'the native turnaround remains ten clinical minutes');
+ assert.match(troponin.result,/Troponina I ultrasensible 420 ng\/L/);
  assert.equal(cardiac.room.events.find(event=>event.message?.text==='Enfermera, troponina seriada')?.routeError,'study-series-unavailable');
  await page.locator('#guardButton').click();assert.equal((await page.evaluate(()=>atriaV5.snapshot())).clinical,null);
  assert.deepEqual(errors,[]);

@@ -63,10 +63,16 @@ try{
  const cirr=await state();assert.notEqual(cirr.patient.uid,appUid);assert.equal(cirr.patient.lastVitalsKnown,null);assert.deepEqual(cirr.patient.treatments,[]);
  assert.equal(new Set(cirr.messages.map(m=>m.id)).size,cirr.messages.length);
  await page.locator('#historyButton').click();await page.screenshot({path:out+'/contextual-global-dialogue.png'});
+ await page.locator('#guardButton').click();assert.equal(await state(),null);await guard('CARD-01');
+ reply=await send('¿Alguna medicación?');
+ assert.match(reply.text,/Tomo losartán y metformina/i);
+ assert.match(reply.text,/no tomo anticoagulantes ni antiagregantes/i);
+ assert.match(reply.text,/no tomé sildenafil, vardenafil, tadalafil ni avanafil recientemente/i);
+ reply=await send('¿Cuáles?');assert.match(reply.text,/Tomo losartán y metformina/i);
  await page.locator('#guardButton').click();assert.equal(await state(),null);assert.deepEqual(errors,[]);
  const report={test:'contextual-patient-dialogue',realBrowser:true,androidEmulated:true,physicalAndroid:false,
   compoundQuestions:true,shortFollowUps:true,symptomBoundDuration:true,caseScopedContext:true,acquiredHistory:true,
-  greetingQuestionPreserved:true,painKeywordCollisionCovered:true,medicationFollowUps:true,
+  greetingQuestionPreserved:true,painKeywordCollisionCovered:true,medicationFollowUps:true,medicationFirstPerson:true,
   oneGlobalTranscript:true,explicitNpcOverridesFocus:true,noFakeAssessmentOrMedication:true,cleanLobbyReturn:true,errors};
  await fs.writeFile(out+'/patient-dialogue-summary.json',JSON.stringify(report,null,2));console.log('PATIENT DIALOGUE REAL UI PASS',JSON.stringify(report));await context.close();
 }catch(error){if(page){await page.screenshot({path:out+'/patient-dialogue-failure.png'}).catch(()=>{});
