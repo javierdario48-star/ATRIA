@@ -37,3 +37,13 @@ test('previously settled patients retain the same amount after selecting another
  ]},'a','room');
  assert.deepEqual(clinical.shift.outcomes.map(x=>x.xp),[140,60]);
 });
+
+test('competitive scores show the credited amount for each owner without exposing private hint details',async()=>{
+ const outcomes=[{closed:true,ownerId:'a',patientUid:'p',xp:128},{closed:true,ownerId:'b',patientUid:'q',xp:90}];
+ const clinical={competition:{outcomes},shift:{outcomes}};
+ const backend={creditedGuardRewards:async()=>[],creditedRoomScores:async room=>{
+  assert.equal(room,'room');return [{actor_id:'a',patient_uid:'p',xp_delta:192}];
+ }};
+ await attachCreditedCaseReward(clinical,backend,'b','room');
+ assert.deepEqual(outcomes.map(({xp,creditStatus})=>[xp,creditStatus]),[[192,'credited'],[0,'pending']]);
+});

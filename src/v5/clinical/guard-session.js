@@ -308,12 +308,12 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   return label+': no ejecutado ('+(item.reason||'sin autorización')+').';
  }
  function messages(room){
+  const closureText=item=>item.kind==='case.close'?item.receipt?.message?.replace(/ · \+\d+ XP\.$/,'.'):item.receipt?.message;
   const rows=[],announcedResults=new Set();
   for(const event of room.events){
    if(event.type==='chat.posted'){
     const message={...event.message,id:(mode==='coop'?event.message.actorId+':':'')+event.message.id},selected=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(message.text);
     // The physical exam is the doctor's recorded observation. Keep the full
-  const closureText=item=>item.kind==='case.close'?item.receipt?.message?.replace(/ · \+\d+ XP\.$/,'.'):item.receipt?.message;
     // room event for authority/replay, but present its findings in the exam
     // panel rather than turn each maneuver into doctor and nurse chat rows.
     const examination=isExaminationCommand(message.text),examOnly=event.clinical.length>0&&

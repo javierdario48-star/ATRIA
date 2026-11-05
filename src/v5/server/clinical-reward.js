@@ -3,15 +3,18 @@
 export async function attachCreditedCaseReward(clinical,backend,actorId,roomId){
  const reward=clinical.caseReward;
  const ownCase=reward?.closed&&reward.actorId===actorId&&reward.creditStatus!=='ineligible';
- const mine=outcome=>outcome.closed&&(!clinical.competition||outcome.ownerId===actorId);
- const outcomes=(clinical.shift?.outcomes||[]).filter(mine);
+ const outcomes=(clinical.shift?.outcomes||[]).filter(row=>row.closed);
  if(!ownCase&&!outcomes.length)return;
  if(ownCase)clinical.caseReward={...reward,creditStatus:'pending'};
  // A lookup can be retried on the next sync without hiding a committed closure.
- const rows=await backend.creditedGuardRewards(actorId,roomId).catch(()=>[]);
+ const [rows,scores]=await Promise.all([
+  backend.creditedGuardRewards(actorId,roomId).catch(()=>[]),
+  clinical.competition?backend.creditedRoomScores(roomId).catch(()=>[]):[]
+ ]);
  const credits=new Map(rows.map(row=>[row.patient_uid,row]));
- for(const outcome of [...outcomes,...(clinical.competition?.outcomes||[]).filter(mine)]){
-  const row=credits.get(outcome.patientUid);
+ const roomScores=new Map(scores.map(row=>[JSON.stringify([row.actor_id,row.patient_uid]),row]));
+ for(const outcome of [...outcomes,...(clinical.competition?.outcomes||[]).filter(row=>row.closed)]){
+  const row=clinical.competition?roomScores.get(JSON.stringify([outcome.ownerId,outcome.patientUid])):credits.get(outcome.patientUid);
   outcome.xp=row?.xp_delta??0;
   outcome.creditStatus=row?'credited':'pending';
  }

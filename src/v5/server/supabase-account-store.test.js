@@ -22,3 +22,13 @@ test('reads only the authenticated doctor’s credited closures for this guard, 
  }});
  assert.deepEqual(await store.creditedGuardRewards('actor-a','guard-a'),[result]);
 });
+
+test('competitive score projection reads only public match score fields in the verified room',async()=>{
+ const store=createSupabaseAccountStore({...config,fetchImpl:async url=>{
+  assert.equal(url.searchParams.get('room_id'),'eq.room');
+  assert.equal(url.searchParams.get('kind'),'eq.clinical.closure');
+  assert.equal(url.searchParams.get('select'),'actor_id,patient_uid,xp_delta');
+  return {ok:true,text:async()=>'[]'};
+ }});
+ assert.deepEqual(await store.creditedRoomScores('room'),[]);
+});

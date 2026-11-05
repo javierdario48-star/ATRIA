@@ -44,6 +44,11 @@ export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.f
   async insertAccount(row){return (await request('/rest/v1/atria_v5_accounts',{method:'POST',body:row,prefer:'return=representation'}))[0];},
   async updateAccount(id,body){return (await request('/rest/v1/atria_v5_accounts?auth_user_id=eq.'+encodeURIComponent(id),{method:'PATCH',body,prefer:'return=representation'}))[0];},
   award:(actorId,roomId=null)=>rpc('atria_v5_award_verified',{p_actor_id:actorId,p_room_id:roomId}),
+  creditedRoomScores(roomId){
+   const query=new URLSearchParams({room_id:'eq.'+roomId,kind:'eq.clinical.closure',
+    select:'actor_id,patient_uid,xp_delta'});
+   return request('/rest/v1/atria_v5_progress_receipts?'+query);
+  },
   creditedGuardRewards(actorId,roomId){
    const query=new URLSearchParams({actor_id:'eq.'+actorId,room_id:'eq.'+roomId,
     kind:'eq.clinical.closure',select:'patient_uid,event_id,xp_delta,base_xp,reward_scope,reward_multiplier'});

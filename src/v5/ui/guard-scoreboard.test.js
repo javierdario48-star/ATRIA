@@ -43,3 +43,10 @@ test('sequential patients within one guard aggregate only distinct receipts and 
  assert.deepEqual(guardScoreModelV5({mode:'solo',patient:next,outcomes:replay}),
   {mode:'solo',resolved:2,xp:191});
 });
+
+test('pending account credit is visibly pending instead of showing a provisional amount as earned',()=>{
+ const model=guardScoreModelV5({mode:'competitive',players:[{id:'a',name:'A'}],
+  outcomes:[{closed:true,survived:true,score:86,ownerId:'a',xp:0,creditStatus:'pending'}]});
+ assert.match(guardScoreboardHTML(model),/EXP pendiente/);
+ assert.doesNotMatch(guardScoreboardHTML(model),/EXP 0/);
+});

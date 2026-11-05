@@ -11,6 +11,7 @@ export function guardScoreModelV5({mode='solo',patient=null,players=[],outcomes=
    return {id:p.id,name:String(p.name||'Médico').slice(0,32),
     resolved:mine.filter(o=>o.survived&&o.score>0).length,
     xp:mine.reduce((n,o)=>n+Math.max(0,Number(o.xp)||0),0),
+    ...(mine.some(o=>o.creditStatus==='pending')?{xpPending:true}:{}),
     points:mine.reduce((n,o)=>n+(Number(o.points)||0),0),index};
   });
   const sorted=[...entries].sort((a,b)=>b.points-a.points||b.resolved-a.resolved||a.index-b.index);
@@ -31,7 +32,8 @@ export function guardScoreModelV5({mode='solo',patient=null,players=[],outcomes=
  const done=[...settled.values()];
  return {mode:mode==='apprentice'?'solo':mode,
   resolved:done.filter(x=>x.survived&&Number(x.score)>0).length,
-  xp:done.reduce((n,x)=>n+Math.max(0,Number(x.xp)||0),0)};
+  xp:done.reduce((n,x)=>n+Math.max(0,Number(x.xp)||0),0),
+  ...(done.some(x=>x.creditStatus==='pending')?{xpPending:true}:{})};
 }
 export function guardScoreboardHTML(model){
  if(!model)return '';
@@ -39,8 +41,8 @@ export function guardScoreboardHTML(model){
   '<div class="guard-score-owner">'+(model.ownerId?'Paciente a cargo de '+esc(model.players.find(p=>p.owner)?.name||'médico conectado'):'Paciente disponible · primer contacto')+'</div>'+
   '<div class="guard-score-players">'+model.players.map(p=>
    '<div class="guard-score-player'+(p.leader?' leader':'')+'"><b>'+
-    (p.leader?'✦ ':'')+esc(p.name)+'</b><span>Casos '+p.resolved+' · EXP '+p.xp+'</span></div>').join('')+'</div>';
+    (p.leader?'✦ ':'')+esc(p.name)+'</b><span>Casos '+p.resolved+' · EXP '+(p.xpPending?'pendiente':p.xp)+'</span></div>').join('')+'</div>';
  return '<div class="guard-score-title">'+(model.mode==='coop'?'EQUIPO · GUARDIA ACTUAL':'GUARDIA ACTUAL')+'</div>'+
   '<div class="guard-score-metrics"><div>Casos resueltos <b>'+model.resolved+'</b></div>'+
-  '<i aria-hidden="true"></i><div>EXP en esta guardia <b>+'+model.xp+'</b></div></div>';
+  '<i aria-hidden="true"></i><div>EXP en esta guardia <b>'+(model.xpPending?'pendiente':'+'+model.xp)+'</b></div></div>';
 }
