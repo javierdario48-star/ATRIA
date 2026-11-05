@@ -37,8 +37,8 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   t.patientUid===p.uid&&t.sourceEventId&&t.action!=='stop')done.add(t.id);
  if(p.venousAccessCount>0)done.add('iv');
  if(p.procedures?.monitor?.connected)done.add('monitor');
- const studies=new Set(patientStudyOrders(p,'done').map(x=>studyEvidenceId(c,x.id))),
-  requested=new Set(patientStudyOrders(p,'pending').map(x=>studyEvidenceId(c,x.id)));
+ const studies=new Set(patientStudyOrders(p,'done',c).map(x=>studyEvidenceId(c,x.id))),
+  requested=new Set(patientStudyOrders(p,'pending',c).map(x=>studyEvidenceId(c,x.id)));
  const blocking=clinicalTransferContinuation(p,c,destination,minute).pendingBlockers.length||p.hintPendingActions?.length||p.pendingConsults?.length;
  const severity=clinicalAcuity(p.liveVitals,{rhythm:p.ecg?.rhythm}),v=p.liveVitals||{},
   shock=v.sys<90||(v.sys+2*v.dia)/3<65,hypoxemia=v.spo2<90;

@@ -886,10 +886,7 @@ export async function createApplication({document,window,content,signal}){
   const nurseContext=!!guardSession&&!!patient&&(focusedNpc==='nurse'||/^\s*enfermer(?:a|o|ia)\b/i.test(input.value));
   const medical=nurseContext?clinicalCompletions(input.value,{
    caseId:patient,cases:content.cases,therapies:content.therapies,
-   // Include the complete catalog for discovery; the clinical router remains
-   // authoritative about which studies can actually be ordered in this case.
-   studies:[...(content.cases.find(c=>c.id===patient)?.studies||[]),
-    ...content.cases.flatMap(c=>c.studies||[])]
+   studies:guardSession.catalog()
   }):[];
   const suggestions=medical.length?medical:spellingSuggestions(input.value);
   const fragment=document.createDocumentFragment();

@@ -3,6 +3,8 @@ import {EXAM_REGIONS,examinationRegionCommands} from './exam-contract.js';
 import {nativeTreatmentDefinition,isNativeMedicine,preflightNativeMedicine} from './native-medications.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {routeWardSpeech} from '../core/speech-router.js';
+import {requiredStudySeries} from './study-evidence.js';
+import {studyOrderLabel} from './study-order-vocabulary.js';
 
 export function clinicalActionDescriptor(kind,id,{caseData,content,patient,clock}={}){
  const base={kind,id,section:kind,label:'',command:null};
@@ -29,8 +31,9 @@ export function clinicalActionDescriptor(kind,id,{caseData,content,patient,clock
  }
  if(kind==='study'){
   const study=caseData.studies.find(s=>s.id===id);if(!study)return null;
-  return {...base,section:'studies',label:study.label,command:'/estudio '+id,
-   text:'Desde «'+CLINICAL_CONTROLS.studies+'», solicita «'+study.label+'».'};
+  const series=!!requiredStudySeries(caseData,id),label=studyOrderLabel(study,{series});
+  return {...base,section:'studies',label,command:'/estudio '+id+(series?' seriada':''),
+   text:'Desde «'+CLINICAL_CONTROLS.studies+'», solicita «'+label+'».'};
  }
  if(kind==='closure'){
   const label=DESTINATION_LABELS[id];if(!label)return null;

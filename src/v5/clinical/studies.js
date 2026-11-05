@@ -4,6 +4,7 @@ import {isPhysicianExamStudy} from './exam-contract.js';
 import {confirmedClinicalTreatment} from './receipts.js';
 import {readRespiratoryObservation,readNeurologicalState} from './patient-observations.js';
 import {studyEvidenceId} from './study-evidence.js';
+import {authoredTroponinSeries,isTroponinStudy,studyOrderLabel} from './study-order-vocabulary.js';
 
 const identity=x=>typeof x==='string'&&x.trim().length>0;
 const minute=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
@@ -80,74 +81,116 @@ export function createStudyService(cases,checkpoint=null){
  const catalog=buildStudyCatalog(definitions).filter(s=>!isPhysicianExamStudy(s.id)),events=new Map(copy(checkpoint?.events??[]));
  const patientValid=p=>identity(p?.uid)&&byCase.has(p.caseId)&&Array.isArray(p.orders);
  const rejected=(p,eventId,reason)=>({status:'rejected',patientUid:p?.uid??null,eventId:eventId??null,reason});
+ const turnaround=definition=>localTiming.get(definition.id)??studyTurnaroundMinutes(definition);
+ const sourceOf=(order,eventId)=>order.sourceEventId===eventId||order.series?.sourceEventId===eventId;
  function acknowledged(p,eventId,order){
-  if(order.status!=='done')return {status:'pending',patientUid:p.uid,eventId,sourceEventId:order.sourceEventId};
+  const event=events.get(eventId),series=event?.series===true,
+   source=series?order.series:order;
+  if(source.status!=='done')return {status:'pending',patientUid:p.uid,eventId,sourceEventId:source.sourceEventId,...(series?{series:true}:{})};
   return {status:'executed',patientUid:p.uid,eventId,receipt:{
-   patientUid:p.uid,eventId,studyId:events.get(eventId)?.studyId??order.id,sourceEventId:order.sourceEventId,
-   actorId:order.actorId,result:order.result,resultSource:order.resultSource,
-   requestedAtMinute:order.requestedAtMinute,readyAtMinute:order.readyAtMinute
+   patientUid:p.uid,eventId,studyId:event?.studyId??order.id,sourceEventId:source.sourceEventId,
+   actorId:source.actorId,result:order.result,resultSource:order.resultSource,
+   requestedAtMinute:source.requestedAtMinute,readyAtMinute:source.readyAtMinute,
+   ...(event?.series?{samples:copy(order.samples)}:{})
   }};
+ }
+ function startSeries(order,native,{eventId,actorId,atMinute}){
+  order.series={sourceEventId:eventId,actorId,requestedAtMinute:atMinute,status:'pending',readyAtMinute:null};
+  order.samples=[{afterNativeMinutes:0,sampledAtNativeMinute:order.sampledAtNativeMinute,readyAtMinute:order.readyAtMinute,
+   result:order.result,status:order.status},...native.seriesSamples.map(sample=>({afterNativeMinutes:sample.afterNativeMinutes,status:'scheduled'}))];
+ }
+ function advanceSeries(order,native,atMinute,atNativeMinute){
+  const next=order.samples.findIndex(sample=>sample.status==='scheduled');
+  // A late order or clock tick never backdates a collection or collects
+  // multiple timed samples together. Keep the authored spacing.
+  if(next>0&&authoredTroponinSeries(native)){
+   const sample=order.samples[next],previous=order.samples[next-1],target=previous.sampledAtNativeMinute+
+    (sample.afterNativeMinutes-previous.afterNativeMinutes);
+   if(atNativeMinute>=target){
+    sample.sampledAtNativeMinute=atNativeMinute;
+    sample.readyAtMinute=atMinute+turnaround(native);
+    sample.result=native.seriesSamples[next-1].result;sample.status='pending';
+    if(next===order.samples.length-1)order.series.readyAtMinute=sample.readyAtMinute;
+   }
+  }
+  for(const sample of order.samples)if(sample.status==='pending'&&sample.readyAtMinute<=atMinute)sample.status='done';
+  if(order.samples.every(sample=>sample.status==='done'))order.series.status='done';
  }
  return Object.freeze({
   acknowledged,
   checkpoint:()=>copy({events:[...events]}),
   catalog:()=>copy(catalog.map(s=>localTiming.has(s.id)?{...s,gameHours:localTiming.get(s.id)/60}:s)),
   request(patient,command={}){
-   const {id,eventId,actorId,atMinute,atNativeMinute}=command||{};
+   const {id,eventId,actorId,atMinute,atNativeMinute,series=false}=command||{};
    if(!patientValid(patient))return rejected(patient,eventId,'invalid-patient');
-   if(!identity(id)||!identity(eventId)||!identity(actorId)||!minute(atMinute)||
+   if(!identity(id)||!identity(eventId)||!identity(actorId)||!minute(atMinute)||typeof series!=='boolean'||
     atNativeMinute!==undefined&&!minute(atNativeMinute))
     return rejected(patient,eventId,'invalid-study-request');
    if(isPhysicianExamStudy(id))return rejected(patient,eventId,'physician-exam-required');
-   const fingerprint=JSON.stringify([patient.uid,patient.caseId,id,actorId]);
+   const fingerprint=JSON.stringify([patient.uid,patient.caseId,id,actorId,...(series?[true]:[])]);
    const prior=events.get(eventId);
    if(prior&&prior.fingerprint!==fingerprint)
     return rejected(patient,eventId,'study-event-identity-collision');
    // The original binding survives a restored patient snapshot/new service.
-   const source=patient.orders.find(o=>o.sourceEventId===eventId);
-   if(source&&(source.id!==id||source.actorId!==actorId||
+   const source=patient.orders.find(o=>sourceOf(o,eventId)),sourceSeries=source?.series?.sourceEventId===eventId;
+   if(source&&(source.id!==id||(sourceSeries?source.series:source).actorId!==actorId||sourceSeries!==series||
       source.patientUid!==patient.uid))return rejected(patient,eventId,'study-event-identity-collision');
    const caseDef=byCase.get(patient.caseId),evidenceId=studyEvidenceId(caseDef,id),native=caseDef.studies.find(s=>s.id===evidenceId),
-    repeatable=!!caseDef.clinicalPolicy&&!!native&&(native.repeatable===true||!!native.dynamic),
-    bound=source||prior?.sourceEventId&&patient.orders.find(o=>o.sourceEventId===prior.sourceEventId),
-    existing=bound||patient.orders.find(o=>studyEvidenceId(caseDef,o.id)===evidenceId&&(!repeatable||o.status==='pending'));
+    nativeTroponin=!!native&&isTroponinStudy(native),
+    repeatable=!!caseDef.clinicalPolicy&&!!native&&!nativeTroponin&&(native.repeatable===true||!!native.dynamic),
+    bound=source||prior?.sourceEventId&&patient.orders.find(o=>sourceOf(o,prior.sourceEventId)),
+    existing=bound||patient.orders.find(o=>studyEvidenceId(caseDef,o.id)===evidenceId&&(!repeatable||o.status==='pending')),
+    sampleMinute=atNativeMinute??(minute(patient.policyState?.nativeMinute)?patient.policyState.nativeMinute:atMinute);
+   if(series&&(!caseDef.clinicalPolicy||!authoredTroponinSeries(native)))return rejected(patient,eventId,'study-series-unavailable');
    // A stale snapshot must not rebind an old event to a newer sample.
    if(prior?.sourceEventId&&!bound)return rejected(patient,eventId,'study-order-missing');
    if(existing){
     if(existing.patientUid!==patient.uid)return rejected(patient,eventId,'study-patient-mismatch');
-    events.set(eventId,{fingerprint,sourceEventId:existing.sourceEventId,studyId:id});
+    if(series&&!existing.series){
+     if(!minute(existing.sampledAtNativeMinute))return rejected(patient,eventId,'study-series-initial-time-unavailable');
+     startSeries(existing,native,{eventId,actorId,atMinute});
+     advanceSeries(existing,native,atMinute,sampleMinute);
+    }
+    events.set(eventId,{fingerprint,sourceEventId:series?existing.series.sourceEventId:existing.sourceEventId,
+     studyId:id,...(series?{series:true}:{})});
     return acknowledged(patient,eventId,existing);
    }
-   const sampleMinute=atNativeMinute??
-    (minute(patient.policyState?.nativeMinute)?patient.policyState.nativeMinute:atMinute);
    if(native?.requiresCompletedTreatments?.some(id=>!confirmedClinicalTreatment(patient,id,sampleMinute)))
     return rejected(patient,eventId,'study-requires-completed-treatment');
    events.set(eventId,{fingerprint});
    const study=resolveStudyById(id,caseDef,catalog);
-   if(!study)return rejected(patient,eventId,'unknown-study');
+   if(!study||!native&&id!=='troponina'&&isTroponinStudy(study))return rejected(patient,eventId,'unknown-study');
    const definition=materializeStudy(native||study,caseDef);
-   const order={id,label:definition.label,type:definition.type,
+   const label=studyOrderLabel(definition);
+   const order={id,label,type:definition.type,
     patientUid:patient.uid,result:native&&caseDef.clinicalPolicy?
      currentStudyResult(definition,caseDef,patient,sampleMinute):definition.result,
-    ...(native&&(native.dynamic||native.requiresCompletedTreatments?.length)&&caseDef.clinicalPolicy?
+    ...(native&&(nativeTroponin||native.dynamic||native.requiresCompletedTreatments?.length)&&caseDef.clinicalPolicy?
      {sampledAtNativeMinute:sampleMinute}:{}),
     resultSource:definition.nativeResult?'native':'universal-fallback',
     nativeResult:definition.nativeResult,universalFallback:definition.universalFallback,
     status:'pending',requestedAtMinute:atMinute,
-    readyAtMinute:atMinute+(localTiming.get(definition.id)??studyTurnaroundMinutes(definition)),sourceEventId:eventId,actorId};
+    readyAtMinute:atMinute+turnaround(definition),sourceEventId:eventId,actorId};
+   if(series)startSeries(order,native,{eventId,actorId,atMinute});
    patient.orders.push(order);
-   events.set(eventId,{fingerprint,sourceEventId:eventId,studyId:id});
+   events.set(eventId,{fingerprint,sourceEventId:eventId,studyId:id,...(series?{series:true}:{})});
    return acknowledged(patient,eventId,order);
   },
-  advance(patient,atMinute){
-   if(!minute(atMinute))throw Error('valid study minute required');
+  advance(patient,atMinute,atNativeMinute=atMinute){
+   if(!minute(atMinute)||!minute(atNativeMinute))throw Error('valid study minute required');
    if(!patientValid(patient))throw Error('valid study patient required');
    const ready=[];
    for(const order of patient.orders){
-    if(order.status!=='pending'||order.patientUid!==patient.uid||
-       !minute(order.readyAtMinute)||order.readyAtMinute>atMinute)continue;
-    order.status='done';
-    ready.push(copy(order));
+    if(order.patientUid!==patient.uid)continue;
+    if(order.status==='pending'&&minute(order.readyAtMinute)&&order.readyAtMinute<=atMinute){
+     order.status='done';
+     ready.push(copy(order));
+    }
+    if(order.series?.status==='pending'&&!patient.caseEnded){
+     const caseDef=byCase.get(patient.caseId),id=studyEvidenceId(caseDef,order.id),native=caseDef.studies.find(s=>s.id===id);
+     advanceSeries(order,native,atMinute,atNativeMinute);
+     if(order.series.status==='done')ready.push({...copy(order),completionSourceEventId:order.series.sourceEventId});
+    }
    }
    return ready;
   }

@@ -1,5 +1,6 @@
 import {monitorOrderExamples,normalizeOrderQuery} from './monitor-order-suggestions.js';
 import {isPhysicianExamStudy} from '../clinical/exam-contract.js';
+import {normalizeStudyOrder,studyOrderLabel,studyOrderVocabulary} from '../clinical/study-order-vocabulary.js';
 import {spanishWordSuggestions,spanishAutoReplace,spanishCorrectCase,
  spanishKnownWord,spanishAccentSuggestions} from './spanish-spellcheck.js';
 
@@ -112,9 +113,9 @@ function option(id,kind,label,command,aliases=[]){
  const values=[label,command,...aliases].filter(Boolean).map(normalizeClinicalQuery);
  return {id,kind,label,command,terms:[...new Set(values)]};
 }
-export function clinicalVocabulary({caseId,cases=[],therapies=[],studies=[]}={}){
+export function clinicalVocabulary({caseId,cases=[],therapies=[],studies=[],studyOrdering}={}){
  const current=cases.find(c=>c.id===caseId);
- const studyList=studies.length?studies:current?.studies||[];
+ const studyList=(studyOrdering||studyOrderVocabulary(studies,current?.studies)).catalog;
  const items=[],seen=new Set();
  const add=item=>{if(!seen.has(item.kind+':'+item.id)){seen.add(item.kind+':'+item.id);items.push(item);}};
  // Reuse the established dose-specific monitor vocabulary when available.
@@ -155,9 +156,13 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
  const clause=mode==='monitor'?String(text||'').replace(prefix,'').trim():activeClinicalClause(text).query;
  const query=normalizeClinicalQuery(clause);
  if(query.length<2)return [];
- const vocabulary=clinicalVocabulary({caseId,cases,therapies,studies});
- const rows=vocabulary.map(item=>({
-  ...item,score:Math.max(0,...item.terms.map(x=>rank(query,x)))
+ const studyOrdering=studyOrderVocabulary(studies,cases?.find(c=>c.id===caseId)?.studies),
+  matchedStudy=studyOrdering.search(clause),
+  vocabulary=clinicalVocabulary({caseId,cases,therapies,studyOrdering});
+ if(matchedStudy?.study)vocabulary.unshift({...option('study:'+matchedStudy.study.id,'study',
+  studyOrderLabel(matchedStudy.study,{series:matchedStudy.series}),matchedStudy.command),studyMatch:true});
+ const rows=vocabulary.filter(item=>item.kind!=='study'||!matchedStudy||item.studyMatch).map(item=>({
+  ...item,score:item.studyMatch?120:Math.max(0,...item.terms.map(x=>rank(query,x)))
  })).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||a.label.localeCompare(b.label,'es'));
  // A spoken prescription must have ONE selectable command even if the
  // shared dose catalog and a case-specific therapy register the same phrase.
@@ -171,6 +176,19 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
   id:x.id,kind:x.kind,label:x.label,command:x.command,
   replacement:replaceClinicalClause(text,x.command,{mode}),score:x.score
  }));
+}
+
+export function studySearchChoices(query,{caseId,cases=[],studies=[]}={}){
+ const ordering=studyOrderVocabulary(studies,cases.find(c=>c.id===caseId)?.studies),
+  exact=ordering.search(query),term=normalizeStudyOrder(query);
+ const row=(study,series=false)=>({id:study.id,label:studyOrderLabel(study,{series}),series});
+ if(exact)return exact.study?[row(exact.study,exact.series)]:[];
+ return ordering.catalog.flatMap(study=>{
+  const options=[];
+  if(!term||[study.id,study.label,...study.aliases].some(value=>normalizeStudyOrder(value).includes(term)))options.push(row(study));
+  if(ordering.supportsSeries(study.id)&&(!term||normalizeStudyOrder(study.label+' seriada').includes(term)))options.push(row(study,true));
+  return options;
+ });
 }
 export function spellingSuggestions(text,{limit=3}={}){
  const full=String(text||''),found=/([a-záéíóúñü]+)$/i.exec(full);

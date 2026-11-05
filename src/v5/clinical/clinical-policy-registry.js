@@ -5,6 +5,7 @@ import {clinicalCaseExecutableReferences} from '../content/compile-clinical-case
 import {createAdditionalCaseCare} from './additional-case-care.js';
 import {evaluateClinicalPolicyDisposition} from './clinical-policy-closure.js';
 import {createStudyService} from './studies.js';
+import {authoredTroponinSeries} from './study-order-vocabulary.js';
 import {executePhysicalExam} from './physical-exam.js';
 import {EXAM_REGIONS} from './exam-contract.js';
 import {IV_MEDICINES} from './native-medications.js';
@@ -44,6 +45,8 @@ function validateStudies(c) {
   if (!text(study?.id) || !text(study?.result) || !['lab', 'imaging', 'procedure'].includes(study?.type) ||
    !Number.isFinite(study?.delay) || study.delay < 5 || study.delay > 1440) errors.push('invalid executable study ' + study?.id);
   if(study?.requiresCompletedTreatments!==undefined)actionList(study.requiresCompletedTreatments,'study.'+study.id+'.requiresCompletedTreatments',errors);
+  if((study?.seriesSamples!==undefined||study?.seriesRequired===true)&&!authoredTroponinSeries(study)||
+   study?.seriesRequired!==undefined&&typeof study.seriesRequired!=='boolean')errors.push('invalid authored study series '+study?.id);
  }
  const policy = c.clinicalPolicy || {};
  for (const [id, eligibility] of Object.entries(policy.eligibility || {}))

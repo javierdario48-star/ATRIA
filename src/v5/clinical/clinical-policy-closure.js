@@ -1,4 +1,4 @@
-import {studyEvidenceId} from './study-evidence.js';
+import {studyEvidenceId,patientStudyOrders,requiredStudySeries} from './study-evidence.js';
 // Policy-based cases use the existing disposition/quality contract. This is a
 // read-only adapter over native receipts; it owns neither closure nor XP.
 import {csClosureQuality487} from '../../clinical/case-completion-487.js';
@@ -33,15 +33,15 @@ function acceptedConsultations(patient) {
  return (patient.consults || []).filter(row => row.patientUid === patient.uid && row.status === 'done' &&
   row.accepted === true && text(row.sourceEventId)).map(row => row.id);
 }
-function completedStudies(patient, minute) {
+function completedStudies(patient, caseData, minute) {
  const realSecond = patient.policyState?.realSecond;
- return (patient.orders || []).filter(row => row.patientUid === patient.uid && row.status === 'done' &&
+ return patientStudyOrders(patient,'done',caseData).filter(row =>
   text(row.id) && text(row.sourceEventId) && text(row.result) && finiteMinute(row.requestedAtMinute) &&
   finiteMinute(row.readyAtMinute) && row.readyAtMinute >= row.requestedAtMinute &&
   // Study service deadlines use its clinical-second clock. Native observation
   // and medication latency use the separate native-minute clock.
   (finiteMinute(row.readyAtNativeMinute) ? row.readyAtNativeMinute <= minute :
-   !finiteMinute(realSecond) || row.readyAtMinute <= realSecond));
+   !finiteMinute(realSecond) || (requiredStudySeries(caseData,row.id)?row.series.readyAtMinute:row.readyAtMinute) <= realSecond));
 }
 
 export function evaluateClinicalPolicyDisposition(patient, caseData, destination) {
@@ -52,7 +52,7 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  if (!patient || patient.patientDied || patient.caseEnded)
   return {caseId, ready: false, missing: ['Atención finalizada.'], action: null};
  const minute = nativeMinute(patient), examined = actualExaminations(patient), requiredExams = rule.requiredExams || [];
- const rows = completedStudies(patient, minute), studies = new Set(rows.map(row => studyEvidenceId(caseData,row.id)));
+ const rows = completedStudies(patient, caseData, minute), studies = new Set(rows.map(row => studyEvidenceId(caseData,row.id)));
  const treatmentIds = [...new Set((patient.treatments || []).map(row => row.id))];
  const confirmed = treatmentIds.map(id => currentClinicalTreatment(patient, id, minute))
   .filter(row => row && !matchesMedicationAllergy487(patient, row.id));
@@ -77,10 +77,13 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  const initialSys = Number(String(caseData.vitals?.bp || '').split('/')[0]);
  if (!relevant.length && !(initialSys < 90 || vitals.sys < 90)) need('history',{},'Obtener al menos un dato relevante de anamnesis.');
  const orientedStudy = (rule.study || []).some(group => group.some(id => studies.has(id)));
- const evidence = orientedStudy || (rule.requiredStudies || []).some(id => studies.has(id)) ||
+ const requiredSeries=(caseData.studies||[]).filter(study=>requiredStudySeries(caseData,study.id)).map(study=>study.id),
+  requiredStudies=[...new Set([...(rule.requiredStudies||[]),...requiredSeries])],
+  keyStudies=[...new Set([...(caseData.keyStudies||[]),...requiredSeries])];
+ const evidence = orientedStudy || requiredStudies.some(id => studies.has(id)) ||
   requiredExams.length > 0 && requiredExams.every(id => examined.has(id));
  if (rule.study?.length && !orientedStudy && !rule.urgentStudyBypass) need('study',{anyOf:rule.study.flat().map(id=>[id])},'Completar un estudio orientador.');
- for (const id of (rule.requiredStudies || []).filter(id=>!continuation.deferredStudyIds.includes(id)))
+ for (const id of requiredStudies.filter(id=>!continuation.deferredStudyIds.includes(id)))
   if (!studies.has(id)) need('study',{anyOf:[[id]]},'Revisar estudio imprescindible ' + id + ' antes de cerrar el caso.');
  const requiredTreatmentGroups = rule.treatmentByDestination?.[target] || rule.treatment;
  if (!requiredTreatmentGroups?.some(group => group.length > 0 && group.every(id => transferred.has(id))))
@@ -125,8 +128,8 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  const qualityInput = {caseId, diagnosis: patient.diagnosis, acceptedDiagnoses: caseData.dx,
   historyAnswered, historyRelevant: caseData.requiredHistory || [], vitalsKnown: !!vitalsKnown, examDone: !!examDone,
   reassessments: reassessed ? patient.reassessments : 0, disposition: target,
-  keyStudies: [...(caseData.keyStudies || []), ...examinationEvidence], keyInterventions: qualityInterventions,
-  extraStudies: rows.filter(row => !(caseData.keyStudies || []).includes(row.id)).map(row => row.id),
+  keyStudies: [...keyStudies, ...examinationEvidence], keyInterventions: qualityInterventions,
+  extraStudies: rows.filter(row => !keyStudies.includes(row.id)&&!requiredSeries.includes(studyEvidenceId(caseData,row.id))).map(row => row.id),
   consultsDone, adverseCount};
  const qualityEvidence = new Set([...studies, ...requiredExams.filter(id => examined.has(id)).map(id => 'exam:' + id)]);
  const definitiveIds = rule.definitiveTreatmentIds || caseData.clinicalPolicy.definitiveInterventions ||

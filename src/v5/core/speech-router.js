@@ -3,6 +3,7 @@ import {EXAM_TECHNIQUES,GLASGOW_COMPONENTS,validExamSelection,isPhysicianExamStu
 import {planNursingIVAccess} from '../clinical/nursing-access-plan.js';
 import {nursingFormulationVocabulary487} from '../clinical/iv-dose-contracts-487.js';
 import {nativeMedicineDefinition} from '../clinical/native-medications.js';
+import {studyOrderVocabulary} from '../clinical/study-order-vocabulary.js';
 
 const nurseAddress=/^(?:enfermera|enfermero|enfermeria)\b|(?:\b(?:enfermera|enfermero|enfermeria))\s*[,!.]?\s*$/i;
 const vegaAddress=/^(?:(?:dr|doctor)\.?\s*)?vega\b/i;
@@ -91,12 +92,17 @@ export function routeWardSpeech(text,context={}){
    intents:patientUid?[{kind:'case.close',id:destination||'quirofano',sourceText:original}]:[],
    ...(!patientUid?{error:'no-patient-target'}:{})};
  }
- const explicitStudy=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(original);
+ const explicitStudy=/^\/estudio\s+(.+)$/i.exec(original);
  if(explicitStudy){
-  const patientUid=context.patientUid??null,study=(context.studies||[]).find(s=>s.id===explicitStudy[1]);
-  const error=isPhysicianExamStudy(explicitStudy[1])?'physician-exam-required':!study?'unknown-study':!patientUid?'no-patient-target':null;
+  const patientUid=context.patientUid??null,query=explicitStudy[1].trim().toLowerCase(),
+   ordered=context.studyOrdering||studyOrderVocabulary(context.studies,context.caseData?.studies),
+   seriesId=/^([a-z0-9_-]+) seriada$/.exec(query)?.[1],selected=ordered.resolve(query),
+   direct=ordered.catalog.find(s=>s.id===(seriesId??query)),study=selected?.study||direct,
+   series=!!(selected?.series||seriesId);
+  const error=isPhysicianExamStudy(query)?'physician-exam-required':selected?.error||
+   (!study?'unknown-study':series&&!ordered.supportsSeries(study.id)?'study-series-unavailable':!patientUid?'no-patient-target':null);
   return {recipient:'nurse',patientUid,original,intents:error?[]:[{kind:'study.request',id:study.id,
-   sourceText:original,clause:original,count:1}],...(error?{error}:{})};
+   sourceText:original,clause:original,count:1,...(series?{series:true}:{})}],...(error?{error}:{})};
  }
  const focus=context.focusedNpc;
  const recipient=nurseAddress.test(normalized)?'nurse':vegaAddress.test(normalized)?'vega':
@@ -106,9 +112,12 @@ export function routeWardSpeech(text,context={}){
   [{kind:'history.ask',id:'dialogue',sourceText:original}]:[],original,
   ...(context.clinicalEvaluation&&recipient==='patient'&&!patientUid?{error:'no-patient-target'}:{})};
  if(/\btacto rectal\b/.test(normalized))return {recipient,patientUid,intents:[],original,error:'physician-exam-required'};
- const vocabulary=nursingFormulationVocabulary487(original,context);
+ const ordered=context.studyOrdering||studyOrderVocabulary(context.studies,context.caseData?.studies);
+ const vocabulary=nursingFormulationVocabulary487(original,{...context,studies:ordered.lexicon});
  const parsed=csNurseScan487(vocabulary.text,vocabulary.studies,vocabulary.therapies,context.interventions||[]);
  if(!parsed.active)return {recipient,patientUid,intents:[],original,error:'question-or-negation'};
+ const studyError=ordered.studyIssue(original);
+ if(studyError)return {recipient,patientUid,intents:[],original,error:studyError};
  if(parsed.unknown.length)return {recipient,patientUid,intents:[],original,error:'unknown-clause',unknown:parsed.unknown};
  if(!patientUid)return {recipient,patientUid,intents:[],original,error:'no-patient-target'};
  const intents=[];
@@ -123,7 +132,11 @@ export function routeWardSpeech(text,context={}){
   else if(item.kind==='therapy')kind=nativeStop||item.action==='stop'?'therapy.stop':'therapy.request';
   else if(['monitor','iv','vitals','surgery'].includes(item.kind))kind='procedure.request';
   else continue;
-  intents.push({kind,id:item.id,sourceText:original,clause:item.text,count:item.count||1});
+  const identity=kind==='study.request'?ordered.lexicalIntent(item.id):{id:item.id},
+   intent={kind,...identity,sourceText:original,clause:item.text,count:item.count||1},
+   duplicate=kind==='study.request'?intents.findIndex(x=>x.kind===kind&&x.id===identity.id):-1;
+  if(duplicate<0)intents.push(intent);
+  else if(identity.series)intents[duplicate]=intent;
  }
  const planned=planNursingIVAccess(intents,context);
  // A compound command is one clinical intention. Never start its monitor,

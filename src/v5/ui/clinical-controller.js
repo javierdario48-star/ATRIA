@@ -8,7 +8,7 @@ import {ecgPresentation} from '../clinical/ecg-morphology.js';
 import {caseDebriefHTML} from './case-debrief.js';
 import {createEcgSweep} from './ecg-sweep.js';
 import {monitorOrderExamples,distinctOrderSuggestions} from './monitor-order-suggestions.js';
-import {clinicalCompletions,spellingSuggestions} from './clinical-autocomplete.js';
+import {clinicalCompletions,spellingSuggestions,studySearchChoices} from './clinical-autocomplete.js';
 import {monitorOrderLedger,administeredTreatmentHistory,latestMonitorOrderState} from './monitor-order-ledger.js';
 import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} from './diagnostic-impression.js';
 
@@ -135,6 +135,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(hint)hint.setAttribute('aria-pressed',String(showOrderHints));
  }
  function onInput(target){if(target?.id==='diagnosisInput'){renderDiagnosisSuggestions();return true;}
+  if(target?.id==='studySearch'){renderStudyChoices();return true;}
   if(target?.id!=='monitorOrderInput')return false;
   showOrderHints=false;lastMonitorOrderId=null;
   const feedback=ui('monitorOrderFeedback');if(feedback)feedback.hidden=true;
@@ -169,11 +170,26 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   path.setAttribute('d',ecgSweep.update(now,ecgPresentation(monitor)));
  }
 
+ const studyChoiceValue=({id,series})=>id+(series?' seriada':'');
+ function availableStudyChoices(){
+  const active=state();
+  return active?studySearchChoices(ui('studySearch')?.value,{caseId:active.patient.caseId,cases,studies:session().catalog()}):[];
+ }
+ function renderStudyChoices(){
+  const select=ui('studyChoice');if(!select)return;
+  const choices=availableStudyChoices(),previous=select.value;
+  setHTML(select,choices.length?choices.map(study=>'<option value="'+esc(studyChoiceValue(study))+'">'+esc(study.label)+'</option>').join(''):
+   '<option value="">No hay estudios con ese nombre</option>');
+  if(choices.some(study=>studyChoiceValue(study)===previous))select.value=previous;
+  const button=document.querySelector('[data-action="request-study"]');if(button)button.disabled=!choices.length||state()?.patient.caseEnded;
+ }
  function showStudies(){
   const s=state();if(!s)return;
   open('<h2>Estudios solicitados</h2><p>Los resultados aparecen al completar el tiempo del estudio.</p><div id="studyOrders" class="data-list"></div>'+
-   '<label class="field">Estudio<select id="studyChoice">'+session().catalog().map(s=>'<option value="'+esc(s.id)+'">'+esc(s.label)+'</option>').join('')+'</select></label>'+
-   '<div class="actions"><button data-action="request-study" class="primary">Pedir a Enfermera</button><button data-action="patient-chart">Volver</button></div>');render();
+   '<label class="field">Buscar estudio<input id="studySearch" type="search" maxlength="100" placeholder="Nombre o sigla"></label>'+
+   '<label class="field">Estudio<select id="studyChoice"></select></label>'+
+   '<div class="actions"><button data-action="request-study" class="primary">Pedir a Enfermera</button><button data-action="patient-chart">Volver</button></div>');
+  renderStudyChoices();render();
  }
  function showTreatment(){
   const p=state()?.patient;if(!p)return;
@@ -230,9 +246,13 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
     lastClosureMarkup=markup;setHTML(content,markup);content.dataset.patientUid=patientUid;
    }
   }
-  setHTML(ui('studyOrders'),p.orders.length?p.orders.map(order=>'<div data-study="'+esc(order.id)+'" data-status="'+order.status+'"><b>'+esc(order.label)+'</b><small>'+
-   (order.status==='done'?'Resultado disponible':'Pendiente · '+Math.max(0,Math.ceil(order.readyAtMinute-s.clock.clinicalMinute))+' min clínicos')+'</small>'+
-   (order.status==='done'?'<p>'+esc(order.result)+'</p>':'')+'</div>').join(''):'<p>Todavía no solicitaste estudios.</p>');
+  setHTML(ui('studyOrders'),p.orders.length?p.orders.map(order=>'<div data-study="'+esc(order.id)+'" data-status="'+(order.series?.status??order.status)+'"><b>'+esc(order.label)+'</b><small>'+
+   (order.samples?order.samples.filter(sample=>sample.status==='done').length+' de '+order.samples.length+' resultados disponibles':
+    order.status==='done'?'Resultado disponible':'Pendiente · '+Math.max(0,Math.ceil(order.readyAtMinute-s.clock.clinicalMinute))+' min clínicos')+'</small>'+
+   (order.samples?order.samples.map((sample,index)=>'<p>Muestra '+(index+1)+' · '+(sample.status==='scheduled'?'Pendiente de toma':
+    'Tomada al minuto '+esc(sample.sampledAtNativeMinute.toLocaleString('es',{maximumFractionDigits:2}))+
+    (sample.status==='done'?': '+esc(sample.result):' · pendiente de resultado'))+'</p>').join(''):
+    order.status==='done'?'<p>'+esc(order.result)+'</p>':'')+'</div>').join(''):'<p>Todavía no solicitaste estudios.</p>');
   if(!p.liveVitals)return;
   setHTML(ui('clinicalVitals'),vitalsHTML(p));
   const ecg=ecgPresentation(p);
@@ -352,7 +372,13 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    case 'request-surgery':close();await post('/consulta cirugia');break;
    case 'request-icu':close();await post('/consulta uti');break;
    case 'order-therapy':{const text=ui('therapyOrder').value.trim();if(text){close();await post(/^enfermer[ao]/i.test(text)?text:'Enfermera, '+text);}break;}
-   case 'request-study':{const study=session()?.catalog().find(s=>s.id===ui('studyChoice').value);if(study){close();await post('/estudio '+study.id);}break;}
+   case 'request-study':{
+    const choice=ui('studyChoice')?.value;
+    if(choice&&!state()?.patient.caseEnded&&availableStudyChoices().some(study=>studyChoiceValue(study)===choice)){
+     close();await post('/estudio '+choice);
+    }
+    break;
+   }
    default:return false;
   }
   render();return true;

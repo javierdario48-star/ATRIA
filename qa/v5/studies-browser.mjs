@@ -18,7 +18,7 @@ try{
  };
  await send('Hola antes de hablar con enfermería');
  assert.equal((await page.evaluate(()=>atriaV5.snapshot().clinical)).room.transcript.length,1);
- await send('Enfermera hemograma');
+ await send('Enfermera biometría hemática');
  assert.equal((await page.evaluate(()=>atriaV5.snapshot().clinical)).patient.orders.length,0,'patient range is authoritative');
  await page.locator('#dieInput').blur();
  await page.locator('#keyboardToggleButton').click();
@@ -76,11 +76,31 @@ try{
  assert.match(selected.result,/Apéndice engrosado/);
  assert.match(await page.locator('#chatHistory').innerText(),/Enfermera, TC abdominopélvica/);
  await page.locator('#guardButton').click();assert.equal((await page.evaluate(()=>atriaV5.snapshot())).clinical,null);
+ // Search and nursing share the native assay in the real application.
+ await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CARD-01');
+ await page.locator('[data-action="start-guard"]').click();await approachPatient();
+ await clickHudAction(page,'peopleButton');await page.locator('[data-action="studies"]').click();
+ await page.locator('#studySearch').fill('troponina T');
+ assert.equal(await page.locator('[data-action="request-study"]').isDisabled(),true);
+ await page.locator('#studySearch').fill('hs-cTn');
+ assert.deepEqual(await page.locator('#studyChoice option').evaluateAll(options=>options.map(option=>option.value)),['g_card01_troponin']);
+ await page.locator('[data-action="request-study"]').click();
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders.length===1);
+ await send('Enfermera, troponinas');
+ await send('Enfermera, troponina seriada');
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders[0].status==='done');
+ const cardiac=await page.evaluate(()=>atriaV5.snapshot().clinical);
+ assert.equal(cardiac.patient.orders.length,1);
+ const [troponin]=cardiac.patient.orders;
+ assert.equal(troponin.id,'g_card01_troponin');assert.equal(troponin.resultSource,'native');
+ assert.equal(troponin.readyAtMinute-troponin.requestedAtMinute,10);assert.match(troponin.result,/Troponina I ultrasensible 420 ng\/L/);
+ assert.equal(cardiac.room.events.find(event=>event.message?.text==='Enfermera, troponina seriada')?.routeError,'study-series-unavailable');
+ await page.locator('#guardButton').click();assert.equal((await page.evaluate(()=>atriaV5.snapshot())).clinical,null);
  assert.deepEqual(errors,[]);
  const report={realBrowser:true,androidEmulated:true,physicalAndroid:false,realElapsedStudyClock:true,
   caseId:'CIRR-001',nativeHemogramResult:true,rangeValidation:true,medicationsAdministered:0,
   originalCompletionCommandId:completions[0].commandId,pendingDuplicateAcknowledgements:2,
-  selectedStudyPreservesNativeCase:true,exactlyOnceResult:true,cleanReturnToLobby:true};
+  selectedStudyPreservesNativeCase:true,nativeTroponinSearchAndNurse:true,unsupportedTroponinRejected:true,exactlyOnceResult:true,cleanReturnToLobby:true};
  await fs.writeFile(out+'/studies-summary.json',JSON.stringify(report,null,2));console.log('V5 REAL STUDY UI PASS',JSON.stringify(report));
  await context.close();
 }finally{await h.close();}

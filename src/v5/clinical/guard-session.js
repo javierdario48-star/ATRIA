@@ -7,6 +7,7 @@ import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js'
 import {materializeGuardPatient} from '../content/guard-patient-variation.js';
 import {createNativeClinicalPort} from '../adapters/native-clinical-port.js';
 import {createStudyService} from './studies.js';
+import {isTroponinStudy,studyOrderVocabulary} from './study-order-vocabulary.js';
 import {createCirrCare} from './cirr-care.js';
 import {createAppCare} from './app-care.js';
 import {createPeritonitisCare} from './peritonitis-care.js';
@@ -35,12 +36,23 @@ import {consultationEvidenceReview} from './consultation-evidence.js';
 import {unrescuedTransferReactions} from './transfer-continuation.js';
 
 const copy=value=>structuredClone(value);
+const pendingStudyKey=(source,series)=>series?JSON.stringify(['series',source]):source;
+function hideUnreportedTroponin(orders){
+ for(const order of orders){
+  if(order.status!=='done'&&(order.samples||isTroponinStudy(order)))delete order.result;
+  for(const sample of order.samples||[])if(sample.status!=='done')delete sample.result;
+ }
+ return orders;
+}
 const survivalSensitiveIV=new Set(['anticoagulation','morphine','albumin','transfusion','vasopressor','ppi']);
 const routeReason={
  'no-patient-target':'Acercate al paciente y volvé a enviar el mensaje.',
  'physician-exam-required':'El tacto rectal lo realizás desde Examen físico → Periné.',
  'question-or-negation':'Pregunta o indicación negada: no ejecuté ninguna acción.',
  'unknown-clause':'La indicación necesita una aclaración; no ejecuté acciones.',
+ 'study-assay-unavailable':'Este caso no documenta ese ensayo de troponina I o T. No solicité el estudio.',
+ 'study-method-unavailable':'Este caso no documenta ese método de medición. No solicité el estudio.',
+ 'study-series-unavailable':'No hay una serie de troponina disponible con esa indicación. No solicité muestras.',
  'unsafe-compound-order':'Orden combinada no ejecutada: al menos una dosis, vía o intervención no está validada. Corregí la indicación completa.'
 };
 
@@ -98,8 +110,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   for(const k of Object.keys(nativePatient))delete nativePatient[k];Object.assign(nativePatient,copy(checkpoint.patient));
   nativePatient.behavior??=copy(resolvedPatient.behavior);
  }
- const studies=createStudyService(content.cases,checkpoint?.studies),catalog=studies.catalog(),nativeIds=new Set(caseData.studies.map(s=>s.id));
- const orderedStudies=[...caseData.studies,...catalog.filter(s=>!nativeIds.has(s.id))].filter(s=>!isPhysicianExamStudy(s.id));
+ const studies=createStudyService(content.cases,checkpoint?.studies),studyOrdering=studyOrderVocabulary(studies.catalog(),caseData.studies);
+ const orderedStudies=studyOrdering.catalog;
  const labels=new Map(orderedStudies.map(s=>[s.id,s.label])),pendingStudyRequests=new Map(),pendingNurseJobs=new Map(),waitingForAccess=new Map();
  if(checkpoint){
   for(const [k,v] of checkpoint.pendingStudyRequests)pendingStudyRequests.set(k,new Set(v));
@@ -237,11 +249,13 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     return {status:'rejected',patientUid,eventId,reason:'nurse-'+travel.status};
    }
    if(intent.kind==='study.request'){
-    const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute,atNativeMinute:clock.nativeMinute});
+    const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute,
+     atNativeMinute:clock.nativeMinute,series:intent.series});
     if(result.status==='pending'){
      const source=result.sourceEventId;
-     if(!pendingStudyRequests.has(source))pendingStudyRequests.set(source,new Set());
-     pendingStudyRequests.get(source).add(eventId);
+     const key=pendingStudyKey(source,result.series);
+     if(!pendingStudyRequests.has(key))pendingStudyRequests.set(key,new Set());
+     pendingStudyRequests.get(key).add(eventId);
     }
     return result;
    }
@@ -252,8 +266,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   checkpoint:checkpoint?.authority,
   authenticate:token=>token===credentials?{id:actorId,roomId}:authenticate?.(token)??null,clinicalPort:port,
   resolveSpeechContext:({envelope,actorId:requestActor})=>({...resolveContext({actorId:requestActor,targetPatientUid:envelope.targetPatientUid}),clinicalEvaluation:!!care,
-   ...(care&&nursing?{venousAccessCount:nativePatient.venousAccessCount??0,pendingIV:[...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv'),defaultDoses:content.defaultDoses,caseData}:{}),
-   studies:orderedStudies,therapies:content.therapies,interventions:caseData.interventions,
+   ...(care&&nursing?{venousAccessCount:nativePatient.venousAccessCount??0,pendingIV:[...pendingNurseJobs.values()].some(j=>j.intent.kind==='procedure.request'&&j.intent.id==='iv'),defaultDoses:content.defaultDoses}:{}),
+   studies:orderedStudies,studyOrdering,caseData,therapies:content.therapies,interventions:caseData.interventions,
     surgicalConsultDone:!!nativePatient.consults?.some(x=>x.id==='cirugia'&&x.status==='done'&&x.accepted),
     consultServices:[...new Set(Object.values(caseData.clinicalPolicy?.closure?.consult||{}).flat())],
    validateClinicalBatch}),
@@ -312,7 +326,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   const rows=[],announcedResults=new Set();
   for(const event of room.events){
    if(event.type==='chat.posted'){
-    const message={...event.message,id:(mode==='coop'?event.message.actorId+':':'')+event.message.id},selected=/^\/estudio\s+([a-z0-9_-]+)$/i.exec(message.text);
+    const message={...event.message,id:(mode==='coop'?event.message.actorId+':':'')+event.message.id},selected=/^\/estudio\s+([a-z0-9_-]+)( seriada)?$/i.exec(message.text);
     // The physical exam is the doctor's recorded observation. Keep the full
     // room event for authority/replay, but present its findings in the exam
     // panel rather than turn each maneuver into doctor and nurse chat rows.
@@ -320,7 +334,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      event.clinical.every(item=>isExaminationKind(item.kind)&&item.status==='executed');
     // A menu selection retains its exact protocol ID; the shared presentation
     // uses the familiar clinical label rather than exposing that internal ID.
-    const text=selected&&labels.has(selected[1])?'Enfermera, '+labels.get(selected[1]):message.text;
+    const text=selected&&labels.has(selected[1])?'Enfermera, '+labels.get(selected[1])+(selected[2]||''):message.text;
     if(!examOnly&&!examination)rows.push({id:'player:'+message.id,name:memberNames.get(message.actorId)||actorName,
      actorId:message.actorId,patientUid:message.patientUid,text,role:'player'});
     const systemGuidance=examination||event.routeError==='physician-exam-required'||
@@ -358,7 +372,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }else if(event.type==='clinical.completed'){
     for(const item of event.clinical){
      if(isExaminationKind(item.kind)&&item.status==='executed'||isPhysicianExamStudy(item.id))continue;
-     const source=item.receipt?.sourceEventId||event.eventId;if(announcedResults.has(source))continue;
+     const source=(item.receipt?.sourceEventId||event.eventId)+(item.receipt?.samples?':series':'');
+     if(announcedResults.has(source))continue;
      announcedResults.add(source);rows.push({id:'completion:'+source,name:'Enfermera',role:'nurse',actorId:event.actorId,
       text:resultText(item,labels.get(item.id)||item.id)||
        (closureText(item)||(labels.get(item.id)||item.id)+': resultado disponible.')});
@@ -485,13 +500,16 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    refreshMonitoring(nativePatient,clock);
    if(deathPublished)return [];
-   const ready=studies.advance(nativePatient,clock.clinicalMinute);
+   const ready=studies.advance(nativePatient,clock.clinicalMinute,clock.nativeMinute);
    for(const order of ready){
-    for(const eventId of pendingStudyRequests.get(order.sourceEventId)||[order.sourceEventId])
+    const source=order.completionSourceEventId??order.sourceEventId,
+     key=pendingStudyKey(source,!!order.completionSourceEventId),
+     fallback=!order.completionSourceEventId&&order.series?.sourceEventId===source?[]:[source];
+    for(const eventId of pendingStudyRequests.get(key)||fallback)
      port.complete(studies.acknowledged(nativePatient,eventId,order));
-    pendingStudyRequests.delete(order.sourceEventId);
+    pendingStudyRequests.delete(key);
    }
-   publishReadiness();return copy(ready);
+   publishReadiness();return hideUnreportedTroponin(copy(ready));
   },
   flush:()=>authority.flush(),
   /** Drain ONLY arrivals issued by the existing spatial world. The UI cannot
@@ -562,6 +580,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   pharmacologyRead:()=>pharmacology.evaluate(caseData.id,nativePatient,clock.nativeMinute),
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
   read(doctorId=actorId,{includeChecklist=true}={}){const room=authority.snapshot(),subject=copy(nativePatient);
+   hideUnreportedTroponin(subject.orders);
    const caseReward=subject.closure?rewardFor(subject.closure,doctorId):null;
    const displayMessages=messages(room),options=eligibleDestinations();
    const checklist=includeChecklist&&currentChecklist();
