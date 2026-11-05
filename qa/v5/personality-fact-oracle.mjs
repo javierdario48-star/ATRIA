@@ -20,7 +20,7 @@ function layAuthored(text){
 }
 const values=x=>(Array.isArray(x)?x:[x]).filter(x=>typeof x==='string');
 const lookup=(object,path)=>path.split('.').reduce((o,k)=>o?.[k],object);
-export function validateDialogueSources(evidence,c,patient){
+export function validateDialogueSources(evidence,c,patient,answer){
  const h=c.history??{},profile=PATIENT_PROFILES[c.id]??{
   symptoms:c.opening||h.symptoms||c.chief,onset:h.onset,
   place:h.location||h.pain||'No puedo precisar bien dónde lo siento.',
@@ -28,11 +28,12 @@ export function validateDialogueSources(evidence,c,patient){
   character:h.character||h.pain||'No puedo describirlo con más precisión ahora.',
   worse:h.worse||'No tengo claro qué lo empeora.',relief:h.relief||'No tengo claro qué lo alivia.'};
  const observed=readPatientObservations(patient,c.id,0),failures=[];
- let verified=0,dynamic=0;
+ let verified=0,dynamic=0,unavailable=0;
  const allowedPrefixes=['Hola, doctor. ',...(c.clinicalPolicy?.historySource?.label?
   [c.clinicalPolicy.historySource.label+' (anamnesis indirecta): ']:[])];
  if(evidence?.prefix&&!allowedPrefixes.includes(evidence.prefix))failures.push('non-authored-speaker-prefix');
  for(const fact of evidence?.facts??[]){
+  if(answer!==undefined&&(!fact.spoken||!String(answer).includes(fact.spoken))){failures.push('not-delivered-clinical-fact:'+fact.id);continue;}
   const source=String(fact.source??'').replace(/^indirect-history:/,'');
   let expected=[];
   if(/^(?:case\.)?intents\./.test(source))expected=values(c.intents.find(i=>i.id===source.split('.').at(-1))?.answers);
@@ -68,24 +69,28 @@ export function validateDialogueSources(evidence,c,patient){
   }
   else if(source==='native.history-detail-unavailable'){
    expected=['No recuerdo qué medicamentos tomo.','No recuerdo el nombre del medicamento.',
+    'No recuerdo qué medicamentos tomo habitualmente.','No recuerdo qué medicamentos tomé recientemente.',
+    'No recuerdo si suspendí algún medicamento.','No recuerdo si tomé algo por mi cuenta.',
+    'No puedo precisar si tomé todas las dosis como me indicaron.','No puedo precisar si tomé medicamentos en exceso.',
     'No lo recuerdo con más detalle.','No puedo precisar esa cantidad.','No puedo precisar la dosis que tomo.',
     'No recuerdo bien cuándo empezó.','No recuerdo cuándo tomé la última dosis.',
     'No puedo precisar qué pasaba antes.','No puedo precisar cómo siguió.','No sé precisar el motivo.'];
   }
   else if(source==='native.symptom-unknown'){
    if(!/^No (?:puedo precisar bien|recuerdo exactamente cuándo empezó) [^.\d]+\.$/.test(fact.canonical))failures.push('invented-unknown-symptom:'+fact.id);
-   else verified++;
+   else unavailable++;
    continue;
   }
   else expected=values(lookup(c,source.replace(/^case\./,'')));
   const matching=expected.some(text=>{
    if(clinicalMeaning(layAuthored(text))===clinicalMeaning(fact.canonical))return true;
-   return fact.id.startsWith('interview:response:')&&fact.canonical.split(/(?<=[.!?;])\s+/)
+   return (fact.id.startsWith('interview:response:')||/^anamnesis:meds:(?:recent|stopped|selfMedication|adherence|overdose)$/.test(fact.id))&&fact.canonical.split(/(?<=[.!?;])\s+/)
     .every(detail=>layAuthored(text).split(/(?<=[.!?;])\s+/).includes(detail));
   });
   if(!matching)
    failures.push('non-authored-clinical-fact:'+fact.id+':'+fact.source);
+  else if(source==='native.history-detail-unavailable')unavailable++;
   else verified++;
  }
- return {failures,verified,dynamic};
+ return {failures,verified,dynamic,unavailable};
 }

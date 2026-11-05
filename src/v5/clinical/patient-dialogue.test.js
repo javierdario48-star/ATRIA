@@ -117,7 +117,7 @@ test('verbal confusion does not change the speaker of a disclosed last dose or a
  try{
   assert.equal(s.read().patient.neurology.verbal,4);
   const reply=await s.post({id:'voice-dose-recall',text:'¿Qué medicamentos toma?'});
-  assert.match(answer(reply),/^La última dosis de warfarina la tomé anoche; tomo losartán de forma irregular\. No tomo antiagregantes\.$/i);
+  assert.match(answer(reply),/^Tomo losartán de forma irregular\. La última dosis de warfarina la tomé anoche\. No tomo antiagregantes\.$/i);
   assert.equal(reply.clinical[0].receipt.dialogue.styleApplied,false);
   const last=await s.post({id:'voice-last-dose',text:'¿Cuándo fue la última dosis?'});
   assert.match(answer(last),/^La última dosis de warfarina la tomé anoche\.$/i);
@@ -166,7 +166,7 @@ test('authored specialty patients answer real history through the public session
   const questions=[['Hola, ¿qué le pasó?',/Tengo fiebre.*costado/],
    ['¿Desde cuándo?',/tres días/],['¿Alergias?',/alergias.*medicamentos/],
    ['¿Antecedentes?',/enfermedad cardíaca, pulmonar, renal ni diabetes/],
-   ['¿Support?',/Vivo con mi familia/],['¿Medicamentos?',/paracetamol/]];
+   ['¿Support?',/Vivo con mi familia/],['¿Tomaste alguna medicación recientemente?',/paracetamol/]];
   for(const [i,[text,want]] of questions.entries()){
    const result=await s.post({id:'specialty-history-'+i,text});
    assert.equal(result.clinical[0].status,'executed',text);
@@ -531,11 +531,11 @@ test('asking how the patient was before acquires authored baseline rather than c
  assert.equal(p.interview.subjective,null);
 });
 
-test('medication paraphrases resolve to the case fact and preserve its clinical history ID',async()=>{
+test('explicit exposure questions resolve to the HEPAT fact and preserve its clinical history ID',async()=>{
  const f=setup('HEPAT-001');
  try{
-  for(const text of ['¿Toma alguna medicación?','¿Qué medicamentos tomas?','¿Qué remedios usás?',
-   '¿Qué medcamentos tomás?','¿Qué tomaste para el dolor?','¿Qué medicamento?','¿Cuáles tomás?','¿Cuáles recordás?']){
+  for(const text of ['¿Tomaste mucho paracetamol?','¿Tomaste medicamentos en exceso?',
+   '¿Qué medicamentos nuevos tomaste?','¿Qué medicamento?','¿Cuáles tomás?','¿Cuáles recordás?']){
    const result=await f.send(text);
    assert.equal(result.clinical[0].status,'executed',text);
    assert.match(answer(result),/No tomé paracetamol en exceso ni otros fármacos nuevos/,text);
@@ -555,9 +555,9 @@ test('medication details stay within the authored record and unknown answers ear
   assert.match(answer(await known.send('¿Y qué dosis de esa pastilla?')),/no.*dosis/i);
   assert.match(answer(await known.send('¿Desde cuándo toma esa pastilla?')),/no.*cuándo/i);
   assert.match(answer(await known.send('¿Cuánto toma esa pastilla?')),/no.*dosis/i);
-  assert.match(answer(await known.send('¿Toma medicación para la fiebre?')),/presión/i);
+  assert.match(answer(await known.send('¿Toma medicación para la fiebre?')),/no recuerdo si tomé algo por mi cuenta/i);
   assert(!known.s.read().patient.intentHistory.some(x=>x.id==='fever'));
-
+  assert.match(answer(await known.send('¿Qué remedios usás?')),/presión/);
   assert.match(answer(await known.send('¿Desde cuándo?')),/no.*cuándo/i);
   assert.match(answer(await known.send('¿Y antes?')),/no.*antes/i);
   assert.match(answer(await known.send('¿Por qué?')),/presión/i);

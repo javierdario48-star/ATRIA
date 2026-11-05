@@ -5,7 +5,7 @@ import {clinicalCertificationContent,deriveClinicalCertificationPlan} from './ce
 import {createGuardSession} from '../../src/v5/clinical/guard-session.js';
 import {materializeGuardPatient} from '../../src/v5/content/guard-patient-variation.js';
 import {buildBehaviorProfile,TRAIT_KEYS} from '../../src/v5/content/patient-behavior.js';
-import {PATIENT_PERSONALITIES} from '../../src/v5/content/patient-variation.js';
+import {PATIENT_PERSONALITIES,DEFAULT_PATIENT_VARIATION,normalizePatientPersonality} from '../../src/v5/content/patient-variation.js';
 import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
 import {neurologyPack} from '../../src/v5/content/packs/neurology-pack.js';
@@ -18,6 +18,29 @@ export const digest=x=>createHash('sha256').update(JSON.stringify(x)??'undefined
 export const behaviorSignature=b=>b?TRAIT_KEYS.map(k=>b[k]).join(','):'missing';
 const unique=xs=>[...new Set(xs.filter(Boolean))];
 const question=x=>'¿'+String(x).replace(/^[¿?\s]+|[¿?\s]+$/g,'')+'?';
+
+// Unlike interviewFixture, this audit never forces an archetype or trait.
+// It measures what ordinary owned-patient generation actually reaches.
+export function auditArchetypeReachability(content,{seedsPerCase=128}={}){
+ if(!Number.isSafeInteger(seedsPerCase)||seedsPerCase<1)throw Error('invalid reachability sample');
+ const profiles=new Set(),counts={},cases=[];let generatedPatients=0;
+ for(const c of content.cases){
+  const variation=c.variation===true?DEFAULT_PATIENT_VARIATION:c.variation;
+  const configured=unique((variation?.personalities??[]).map(normalizePatientPersonality)),caseCounts={};
+  for(let index=0;index<seedsPerCase;index++){
+   const p=materializeGuardPatient({uid:'native-personality:'+c.id+':'+index,caseId:c.id,
+    variation:{seed:'native-personality:'+c.id+':'+index}},c);
+   generatedPatients++;
+   if(!p.behavior)continue;
+   const archetype=p.behavior.archetype;
+   counts[archetype]=(counts[archetype]??0)+1;caseCounts[archetype]=(caseCounts[archetype]??0)+1;
+   profiles.add(behaviorSignature(p.behavior));
+  }
+  cases.push({caseId:c.id,configured,counts:caseCounts,unreachable:configured.filter(a=>!caseCounts[a])});
+ }
+ return {authoredArchetypes:[...PATIENT_PERSONALITIES],seedsPerCase,generatedPatients,
+  counts,distinctBehaviorProfiles:profiles.size,cases,unreachableArchetypes:PATIENT_PERSONALITIES.filter(a=>!counts[a])};
+}
 
 export function anamnesisQuestions(c,content,doctor='expert'){
  if(!INTERVIEW_DOCTORS.includes(doctor))throw Error('unknown interview doctor');
@@ -72,7 +95,7 @@ export async function runAnamnesis(c,content,{index=0,profileIndex=index,doctor=
  const {options,session:initial}=interviewFixture(c,content,{seed,archetype,mode,roomId:'npc-'+c.id+'-'+index});
  let session=initial;
  const before=clinicalInvariant(session),initialPatient=session.read().patient,initialBehavior=initialPatient.behavior;
- let verifiedClinicalFacts=0,dynamicObservationFacts=0;
+ let verifiedClinicalFacts=0,dynamicObservationFacts=0,unavailableAnswers=0;
  const rows=[],failures=[],questions=anamnesisQuestions(c,content,doctor);
  try{
   for(const [i,text] of questions.entries()){
@@ -83,8 +106,9 @@ export async function runAnamnesis(c,content,{index=0,profileIndex=index,doctor=
    const reply=await session.post({id:'anamnesis-'+i,text});
    const executed=reply.clinical?.find(x=>x.kind==='history.ask');
    const receipt=executed?.receipt;
-   const sourceCheck=validateDialogueSources(receipt?.dialogue,c,initialPatient);
+   const sourceCheck=validateDialogueSources(receipt?.dialogue,c,initialPatient,receipt?.answer);
    verifiedClinicalFacts+=sourceCheck.verified;dynamicObservationFacts+=sourceCheck.dynamic;
+   unavailableAnswers+=sourceCheck.unavailable;
    failures.push(...sourceCheck.failures.map(x=>x+':turn:'+i));
    if(!executed||executed.status!=='executed'||!receipt?.answer)failures.push('unanswered:'+i+':'+text);
    if(digest(clinicalInvariant(session))!==digest(before))failures.push('clinical-state-changed:'+i);
@@ -97,6 +121,6 @@ export async function runAnamnesis(c,content,{index=0,profileIndex=index,doctor=
   return {caseId:c.id,index,profileIndex,seed,archetype,doctor,mode,
    behavior:initialBehavior,signature:behaviorSignature(initialBehavior),
    physiologicalSpeech:p.neurology??null,relationship:p.interview?.relationships?.doctor??null,
-   clinicalInvariant:digest(before),verifiedClinicalFacts,dynamicObservationFacts,history:p.intentHistory,rows,failures:unique(failures)};
+   clinicalInvariant:digest(before),verifiedClinicalFacts,dynamicObservationFacts,unavailableAnswers,history:p.intentHistory,rows,failures:unique(failures)};
  }finally{session.dispose();}
 }

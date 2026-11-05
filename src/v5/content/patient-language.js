@@ -50,6 +50,7 @@ function patientClause(text,domain,history){
    .replace(/^Suspendió diurético(?=\s|$)/i,()=>say('suspendí el diurético'))
    .replace(/^((?:Aún |Nunca |No |Aún no )?)(toma|tomó|usa|recibió|suspendió)(?=\s)/i,(_,lead,verb)=>
     lead?lead+medicationVerb[verb.toLowerCase()]:say(medicationVerb[verb.toLowerCase()]))
+   .replace(/^(Tomé [^.!?;]+) por su cuenta$/i,(_,taken)=>taken+' por mi cuenta')
    .replace(/^Niega ((?:sildenafil, vardenafil, tadalafil o avanafil)) recientes$/i,(_,drugs)=>say('no tomé '+drugs.replace(/ o /i,' ni ')+' recientemente'))
    .replace(/^Niega (inhibidores PDE5)$/i,(_,drugs)=>say('no usé '+drugs))
    .replace(/^Fue llamado por (hemocultivos externos positivos obtenidos hace .+)$/i,(_,context)=>say('me llamaron por '+context));
@@ -62,6 +63,14 @@ function patientClause(text,domain,history){
  }
  if(domain==='pmh'){
   if(conditionList.test(text))return say('tengo '+lowerInitial(text));
+  // A complete, typed history construction keeps the valve, native status,
+  // severity, procedure and interval together. No case ID or free-text
+  // replacement can turn a different clinical statement into this fact.
+  const valve=/^Valvulopatía (aórtica|mitral|tricuspídea|pulmonar) nativa (leve|moderada|grave)(?: y procedimiento urinario hace (\d+ (?:días?|semanas?|meses?)))?$/i.exec(text);
+  if(valve)return say('tengo un problema '+valve[2].toLowerCase().replace(/a$/,'o')+' en mi propia válvula '+valve[1].toLowerCase()+
+   (valve[3]?' y me hicieron un procedimiento en las vías urinarias hace '+valve[3]:''));
+  if(/^(?:Sin|No) prótesis valvular ni dispositivo intracardíaco$/i.test(text))
+   return say('no tengo una válvula artificial ni ningún dispositivo dentro del corazón');
   const absent=/^(?:Sin|No) ((?:ACV|insuficiencia cardíaca|insuficiencia renal|enfermedad neuromuscular|epilepsia|fibrilación auricular)\b.*)$/i.exec(text);
   if(absent)return say('no tengo antecedentes de '+absent[1]);
  }
@@ -86,7 +95,7 @@ function patientClause(text,domain,history){
  return text;
 }
 
-export function speakPatientHistory(canonical,{domain,source,history=canonical}={}){
+export function speakPatientHistory(canonical,{domain,source,history=canonical,firstClauses}={}){
  // Typed reaction disclosures, indirect reports, and native observations
  // already carry their own voice and do not belong to this chart adapter.
  if(!/^(?:case\.(?:history|intents|anamnesis|common)\.|common\.|anamnesis\.|patient\.backgroundHistory$|native\.patient-profile\.)/.test(source??'')||
@@ -97,6 +106,19 @@ export function speakPatientHistory(canonical,{domain,source,history=canonical}=
   if(!match||!match[1].trim())return part;
   return patientClause(match[1],domain,history)+(match[2]??'');
  }).join('');
+ // The question supplies priority, never new words or propositions. Only
+ // complete authored medication clauses may move; linked temporal accounts
+ // retain their sequence. The canonical chart fact stays in its original order.
+ if(domain==='meds'&&firstClauses?.length&&!/despu[eé]s|por eso|esa |ese |esto|pero/i.test(canonical)){
+  const original=canonical.split(/(?<=[.!?;])\s+/),realized=spoken.split(/(?<=[.!?;])\s+/);
+  if(original.length===realized.length&&firstClauses.every(clause=>original.includes(clause))){
+   const first=original.findIndex(clause=>firstClauses.includes(clause));
+   const order=[first,...original.flatMap((_,i)=>i===first?[]:[i])];
+   if(order.some((position,i)=>position!==i))spoken=order.map(i=>{
+    const clause=realized[i].replace(/;$/,'.');return clause[0].toUpperCase()+clause.slice(1);
+   }).join(' ');
+  }
+ }
  if(spoken!==canonical&&history!==canonical)spoken=spoken.replace(/;$/,'.');
  return {spoken,rules:spoken===canonical?[]:['patient-voice']};
 }
@@ -122,8 +144,8 @@ const lexicalRules=[
  ['much-tiredness',/\bestoy muy cansad[oa]\b/gi,['estoy muy cansado','siento mucho cansancio']],
  ['tiredness',/\bestoy cansad[oa]\b/gi,['estoy cansado','siento cansancio']]
 ];
-export function realizeClinicalFact(canonical,{behavior,seed='',topic='',repeat=0,sensitive=false,domain,source,history}={}){
- let {spoken,rules}=speakPatientHistory(canonical,{domain,source,history});
+export function realizeClinicalFact(canonical,{behavior,seed='',topic='',repeat=0,sensitive=false,domain,source,history,firstClauses}={}){
+ let {spoken,rules}=speakPatientHistory(canonical,{domain,source,history,firstClauses});
  if(!behavior||sensitive)return {spoken,rules};
  for(const [id,pattern,variants] of lexicalRules){
   const register=behavior.formality>=3?1:behavior.formality<=1?2:0;

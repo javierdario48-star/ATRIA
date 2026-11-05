@@ -7,7 +7,7 @@ import {finished} from 'node:stream/promises';
 import {resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {execFileSync} from 'node:child_process';
-import {personalityContent,runAnamnesis,INTERVIEW_DOCTORS,behaviorSignature,digest} from './personality-anamnesis-bots.mjs';
+import {personalityContent,runAnamnesis,INTERVIEW_DOCTORS,behaviorSignature,digest,auditArchetypeReachability} from './personality-anamnesis-bots.mjs';
 import {compareConversations,substantiveBody,interviewQuality,expressiveInterview} from './personality-conversation-metrics.mjs';
 
 export async function certifyPatientPersonalities({count=1100,output='qa/v5-personality-results',strict=true}={}){
@@ -15,8 +15,8 @@ export async function certifyPatientPersonalities({count=1100,output='qa/v5-pers
  const content=await personalityContent();await mkdir(output,{recursive:true});
  const archive=createWriteStream(resolve(output,'anamneses.jsonl.gz')),gzip=createGzip();gzip.pipe(archive);
  const profiles=new Set(),bodies=new Set(),comparisons=[],examples=[],failures=[],caseCounts={},doctorCounts={};
- const totals={facts:0,spontaneous:0,realizations:0,emotionalRemarks:0,repeatedRemarks:0};
- let verifiedClinicalFacts=0,dynamicObservationFacts=0;
+ const totals={facts:0,unavailable:0,spontaneous:0,realizations:0,emotionalRemarks:0,repeatedRemarks:0};
+ let verifiedClinicalFacts=0,dynamicObservationFacts=0,unavailableAnswers=0;
  const lengths={},fingerprints=[];let completed=0;
  try{
   for(let index=0;index<count;index++){
@@ -25,6 +25,7 @@ export async function certifyPatientPersonalities({count=1100,output='qa/v5-pers
     doctor:c.id==='APP-001'&&round<10?'expert':INTERVIEW_DOCTORS[round%INTERVIEW_DOCTORS.length],recover:round%10===9});
    const q=interviewQuality(row);
    verifiedClinicalFacts+=row.verifiedClinicalFacts;dynamicObservationFacts+=row.dynamicObservationFacts;
+   unavailableAnswers+=row.unavailableAnswers;
    for(const key of Object.keys(totals))totals[key]+=q[key];
    if(row.rows.length===15&&row.rows.every(t=>t.status==='executed'&&t.answer))completed++;
    caseCounts[c.id]=(caseCounts[c.id]||0)+1;doctorCounts[row.doctor]=(doctorCounts[row.doctor]||0)+1;
@@ -49,7 +50,8 @@ export async function certifyPatientPersonalities({count=1100,output='qa/v5-pers
   dialogueTurns:count*15,distinctBehaviorProfiles:profiles.size,distinctSubstantiveConversations:bodies.size,
   caseCounts,doctorCounts,comparisonSample:comparison,expressiveComparison:expressive,primaryFactComparison:primary,
   intentionallyRestrictedInterviewsInComparison:comparisons.filter(r=>!expressiveInterview(r)).length,quality:totals,
-  sourceVerification:{verifiedClinicalFacts,dynamicObservationFacts},
+  sourceVerification:{verifiedClinicalFacts,dynamicObservationFacts,unavailableAnswers},
+  nativeArchetypeReachability:auditArchetypeReachability(content),
   meanWordsByArchetype:Object.fromEntries(Object.entries(lengths).map(([k,v])=>[k,v.reduce((a,n)=>a+n,0)/v.length])),
   failedAnamneses:failures.length,failures:failures.slice(0,100),corpusDigest:digest(fingerprints),
   criteria:{complete:completed===count,clinicalAndBehavioral:failures.length===0,

@@ -4,6 +4,7 @@ export const normalizePatientQuestion=x=>String(x||'').normalize('NFD').replace(
 
 const medicineWords=['medicacion','medicamento','medicamentos','farmaco','farmacos','remedio','remedios','pastilla','pastillas'];
 const taking=/\b(?:toma[sn]?|tomaste|tomaba[sn]?|usa[sn]?|usaba[sn]?)\b/;
+const namedMedicines=/\b(?:paracetamol|acetaminofen|aspirina|losartan|metformina|atorvastatina|enalapril|carvedilol|furosemida|amlodipin[ao]|warfarina|heparina|prednisona|piridostigmina|anticoagulantes?|antibioticos?)\b/;
 function nearWord(word,reference){
  if(word.length<5||Math.abs(word.length-reference.length)>1)return false;
  if(word.length!==reference.length){
@@ -16,9 +17,60 @@ function nearWord(word,reference){
  return differing.length<=1||differing.length===2&&b===a+1&&word[a]===reference[b]&&word[b]===reference[a];
 }
 
+export function medicationIntent(text,topic){
+ text=normalizePatientQuestion(text);
+ // Reactions and recreational substances have their own history domains.
+ if(/\balerg|\breaccion(?:es)?\b|\b(?:drogas?|cocaina|cannabis|marihuana|sustancias recreativas)\b/.test(text))return null;
+ const medication=medicationQuestion(text)||namedMedicines.test(text)||
+  /^(?:que|cuales) (?:toma[sn]?|usa[sn]?)$/.test(text)||topic==='meds'&&/\b(?:tomarla|tomarlo|tomarlas|tomarlos|dejarla|dejarlo)\b/.test(text);
+ if(!medication)return null;
+ if(/\b(?:exceso|sobredosis|mucho|demasiad[oa]|mas de lo|mas (?:pastillas|comprimidos))\b/.test(text))return 'overdose';
+ if(/\b(?:suspend|dejaste|dejo|dejado|dej[ao]s? de tomar|interrump|abandon)/.test(text))return 'stopped';
+ if(/\b(?:por (?:tu|su|mi) cuenta|automedic|sin receta|sin indicacion|para (?:el |la )?(?:dolor|fiebre|nauseas|diarrea|molestia))\b/.test(text))return 'selfMedication';
+ if(/\b(?:irregular|olvid|omit|cumpl|como (?:te|le) (?:indicaron|recetaron)|todas las dosis|sin faltar|adherencia)/.test(text))return 'adherence';
+ if(/\b(?:tomaste|tomo|usaste|recibiste|recibio|reciente\w*|nuev[oa]s?|ayer|hoy|anoche|ultima dosis|antes de venir)\b/.test(text))return 'recent';
+ return 'routine';
+}
+
 export function medicationQuestion(text){
  return taking.test(text)&&/\b(?:para|alg(?:o|un[oa]s?))\b/.test(text)||
   text.split(' ').some(word=>medicineWords.some(reference=>nearWord(word,reference)));
+}
+
+export const unknownMedicationHistory=Object.freeze({
+ routine:'No recuerdo qué medicamentos tomo habitualmente.',
+ recent:'No recuerdo qué medicamentos tomé recientemente.',
+ stopped:'No recuerdo si suspendí algún medicamento.',
+ selfMedication:'No recuerdo si tomé algo por mi cuenta.',
+ adherence:'No puedo precisar si tomé todas las dosis como me indicaron.',
+ overdose:'No puedo precisar si tomé medicamentos en exceso.'
+});
+
+// These tags describe only the statements actually authored in medication
+// history. A hepatotoxic-exposure denial says nothing about habitual drugs.
+function medicationStatementKinds(statement){
+ const n=normalizePatientQuestion(statement),kinds=new Set();
+ if(/\b(?:exceso|sobredosis|demasiad|supraterapeut)/.test(n))kinds.add('overdose');
+ if(/\b(?:suspend|deje|dejado|interrump|abandon)/.test(n))kinds.add('stopped');
+ if(/\b(?:irregular|olvid|omit|no (?:tomo|tome) .*hoy|suspend|interrump|abandon)/.test(n))kinds.add('adherence');
+ if(/\b(?:por (?:su|mi) cuenta|automedic|sin receta|sin indicacion)/.test(n))kinds.add('selfMedication');
+ if(/\b(?:tomó|tomé|usó|usé|recibió|recibí)(?=\s|$)/i.test(statement)||
+  /\b(?:reciente\w*|nuev[oa]s?|ayer|hoy|anoche|ultima dosis|antes|recibio|recibi|tomo .*(?:en exceso|por su cuenta))\b/.test(n)||kinds.has('stopped')||kinds.has('overdose'))kinds.add('recent');
+ if(/\b(?:habitual\w*|domiciliari\w*|cronica|diarios?|por dia|al dia|ocasional|irregular\w*)\b/.test(n)||!kinds.size)kinds.add('routine');
+ return kinds;
+}
+
+export function selectMedicationHistory(canonical,kind='routine',question=''){
+ const parts=String(canonical).split(/(?<=[.!?;])\s+/).map(text=>({text,kinds:medicationStatementKinds(text)}));
+ if(kind==='routine'){
+  const primary=parts.filter(p=>p.kinds.has('routine'));
+  return primary.length?{answer:canonical,complete:true,firstClauses:primary.map(p=>p.text)}:null;
+ }
+ const drug=normalizePatientQuestion(question).match(namedMedicines)?.[0];
+ const chosen=parts.filter(p=>p.kinds.has(kind)&&(!drug||normalizePatientQuestion(p.text).includes(drug)));
+ if(!chosen.length)return null;
+ const answer=chosen.map(p=>p.text).join(' ');
+ return {answer,complete:answer===canonical};
 }
 
 export function followUpQuestion(text,topic){

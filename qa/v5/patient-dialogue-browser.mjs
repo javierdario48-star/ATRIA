@@ -69,10 +69,35 @@ try{
  assert.match(reply.text,/no tomo anticoagulantes ni antiagregantes/i);
  assert.match(reply.text,/no tomé sildenafil, vardenafil, tadalafil ni avanafil recientemente/i);
  reply=await send('¿Cuáles?');assert.match(reply.text,/Tomo losartán y metformina/i);
+ await page.locator('#guardButton').click();assert.equal(await state(),null);await guard('CARD-09');
+ const cardiacBefore=(await state()).patient;
+ reply=await send('¿Qué antecedentes personales tenés?');
+ assert.match(reply.text,/problema leve en mi propia válvula aórtica/i);
+ assert.match(reply.text,/me hicieron un procedimiento en las vías urinarias hace 3 semanas/i);
+ assert.match(reply.text,/no tengo una válvula artificial ni ningún dispositivo dentro del corazón/i);
+ const naturalValveReply=reply.text,cardiac=(await state()).patient;
+ assert.equal(cardiac.intentHistory.find(x=>x.id==='pmh'||x.id==='anamnesis:pmh').answer,cardiacBefore.backgroundHistory.history.pmh);
+ assert.deepEqual(cardiac.administrationLog,[]);
+ await page.locator('#guardButton').click();assert.equal(await state(),null);await guard('HEPAT-001');
+ const exposureUid=(await state()).patient.uid;
+ assert.notEqual(exposureUid,cardiac.uid);
+ for(const text of ['¿Tomás alguna medicación?','¿Qué tomás?','¿Alguna medicación?',
+  '¿Tomás algo todos los días?','¿Qué remedios usás?']){
+  reply=await send(text);assert.match(reply.text,/no recuerdo qué medicamentos tomo(?: habitualmente)?/i);
+  assert.doesNotMatch(reply.text,/paracetamol en exceso|fármacos nuevos/i);
+ }
+ assert(!(await state()).patient.intentHistory.some(x=>x.id==='meds'));
+ reply=await send('¿Cuáles?');assert.match(reply.text,/no recuerdo qué medicamentos tomo/i);
+ reply=await send('¿Tomaste mucho paracetamol?');
+ assert.match(reply.text,/^No tomé paracetamol en exceso ni otros fármacos nuevos\.$/);
+ assert((await state()).patient.intentHistory.some(x=>x.id==='meds'));
+ assert.deepEqual((await state()).patient.administrationLog,[]);
+ await page.screenshot({path:out+'/natural-medication-history.png'});
  await page.locator('#guardButton').click();assert.equal(await state(),null);assert.deepEqual(errors,[]);
  const report={test:'contextual-patient-dialogue',realBrowser:true,androidEmulated:true,physicalAndroid:false,
   compoundQuestions:true,shortFollowUps:true,symptomBoundDuration:true,caseScopedContext:true,acquiredHistory:true,
   greetingQuestionPreserved:true,painKeywordCollisionCovered:true,medicationFollowUps:true,medicationFirstPerson:true,
+  naturalValveHistory:true,nativeValveAndBothImplantDenials:true,routineVersusExposureMedication:true,naturalValveReply,
   oneGlobalTranscript:true,explicitNpcOverridesFocus:true,noFakeAssessmentOrMedication:true,cleanLobbyReturn:true,errors};
  await fs.writeFile(out+'/patient-dialogue-summary.json',JSON.stringify(report,null,2));console.log('PATIENT DIALOGUE REAL UI PASS',JSON.stringify(report));await context.close();
 }catch(error){if(page){await page.screenshot({path:out+'/patient-dialogue-failure.png'}).catch(()=>{});

@@ -4,10 +4,12 @@ import {readPatientObservations} from './patient-observations.js';
 import {discloseAllergies,normalizePatientPersonality} from '../content/patient-variation.js';
 import {speakPatientHistory} from '../content/patient-language.js';
 import {patientRelationship,spontaneousHistory,composePatientConversation} from './patient-conversation.js';
-import {normalizePatientQuestion as normalize,medicationQuestion,followUpQuestion,followUpDetail} from './patient-question-context.js';
+import {normalizePatientQuestion as normalize,medicationIntent,selectMedicationHistory,unknownMedicationHistory,
+ followUpQuestion,followUpDetail} from './patient-question-context.js';
 
 const sensitiveTopics=new Set(['allergies','meds','drugs','anticoagulants','anticoagulation','medications']);
-const unavailable=text=>!text||/^(?:no recuerdo todos los medicamentos puedo explicar|puedo comentarle mis antecedentes si me pregunta|no se documentaron otros antecedentes|no (?:puedo (?:precisar|ponerle un numero|describirlo con mas precision)|tengo claro))\b/.test(normalize(text));
+const unavailable=text=>!text||/^(?:no recuerdo todos los medicamentos puedo explicar|puedo comentarle mis antecedentes si me pregunta|no se documentaron otros antecedentes|no (?:puedo (?:precisar|ponerle un numero|describirlo con mas precision)|tengo claro))\b/.test(normalize(text))||
+ /^no (?:recuerdo|me acuerdo de) (?:que|cuales)(?: son)?(?: los)? medicamentos(?: tomo(?: habitualmente)?)?$/.test(normalize(text));
 // Open-ended bedside questions are a distinct HISTORY intent, not a guessed
 // organ finding. Matching only broad question shapes prevents stealing
 // specific history, pain, orientation or treatment inquiries.
@@ -100,15 +102,15 @@ export function executePatientDialogue(p,c,cmd,clock){
  function remember(topic,entry=null){
   speaker.topic=topic;speaker.entry=entry;context.lastSymptom=topic;
  }
- function note(id,answer,source,domain=id?.replace(/^anamnesis:/,''),history){
+ function note(id,answer,source,domain=id?.replace(/^anamnesis:/,''),history,firstClauses){
   const entry={id,answer:lay(answer),source,eventId:cmd.eventId,patientUid:p.uid,nativeMinute:clock.nativeMinute};
   disclosures.push(entry);
-  speechContext.set(entry,{domain,history});
+  speechContext.set(entry,{domain,history,firstClauses});
   if(id&&!p.intentHistory.some(x=>x.id===id))p.intentHistory.push(entry);
   return entry;
  }
- function disclose(topic,id,text,source){
-  const entry=note(id,text,source,topic);
+ function disclose(topic,id,text,source,history,firstClauses){
+  const entry=note(id,text,source,topic,history,firstClauses);
   remember(topic,entry);answers.push(entry.answer);
  }
  function follow(kind,topic,entry=speaker.entry){
@@ -171,7 +173,7 @@ export function executePatientDialogue(p,c,cmd,clock){
    const topic=speaker.topic,shorthand=followUpQuestion(clause,topic);
    let fact=csAnamnesisFact(c,historyQuestion);
    const medicine=(!fact||fact.intent==='meds'||/ para /.test(clause)&&
-    !['allergies','drugs','alcohol','surgeries'].includes(fact.intent))&&medicationQuestion(clause);
+    !['allergies','drugs','alcohol','surgeries'].includes(fact.intent))&&medicationIntent(clause,topic);
    if(medicine&&fact?.intent!=='meds')fact=csAnamnesisFact(c,'medicación');
    const explicitPain=!medicine&&/\b(dolor|duele|molesta|hinchazon|hinchando)\b/.test(clause);
    const named=medicine?[]:symptomQuestions.filter(([,re])=>re.test(clause));
@@ -206,7 +208,7 @@ export function executePatientDialogue(p,c,cmd,clock){
    const defaultFact=fact?.text;
    const authoredAnswer=c.history?.[historyIntent]||authoredFact?.answers?.find(answer=>!unavailable(answer));
    if(!named.length&&fact&&!['onset','radiation','location','features','intensity','otherSymptoms','reason'].includes(historyIntent)&&
-     (defaultFact||identityAge||backgroundAnswer||authoredAnswer||historyIntent==='meds')){
+     (defaultFact||identityAge||backgroundAnswer||authoredAnswer||['meds','drugs','alcohol'].includes(historyIntent))){
     const id=exact?.id===historyIntent||historyIntent==='meds'&&authoredFact?historyIntent:'anamnesis:'+historyIntent;
     const allergyAnswer=historyIntent==='allergies'?knownAllergyAnswer(p):null;
     const selected=[
@@ -215,7 +217,13 @@ export function executePatientDialogue(p,c,cmd,clock){
      [!unavailable(defaultFact)&&defaultFact,fact?.source],
      [authoredAnswer,c.history?.[historyIntent]?'case.history.'+historyIntent:'case.intents.'+historyIntent]
     ].find(([text])=>!unavailable(text)&&typeof text==='string'&&text.trim());
-    if(selected)disclose(historyIntent,id,...selected);
+    if(historyIntent==='meds'){
+     const kind=medicine||'routine',known=selected&&selectMedicationHistory(selected[0],kind,clause);
+     speaker.medicationIntent=kind;
+     if(known)disclose('meds',known.complete?id:'anamnesis:meds:'+kind,known.answer,selected[1],selected[0],known.firstClauses);
+     else disclose('meds',null,unknownMedicationHistory[kind],'native.history-detail-unavailable');
+    }
+    else if(selected)disclose(historyIntent,id,...selected);
     else{
      const answer=historyIntent==='meds'?'No recuerdo qué medicamentos tomo.':'No lo recuerdo con más detalle.';
      disclose(historyIntent,null,answer,'native.history-detail-unavailable');
@@ -293,7 +301,7 @@ export function executePatientDialogue(p,c,cmd,clock){
   answer=composed.answer;dialogue=composed.evidence;
  }
  if(answer&&!dialogue){
-  const realized=facts.map(({domain,history,...fact})=>({...fact,...(directSpeech?speakPatientHistory(fact.canonical,{domain,history,source:fact.source}):
+  const realized=facts.map(({domain,history,firstClauses,...fact})=>({...fact,...(directSpeech?speakPatientHistory(fact.canonical,{domain,history,firstClauses,source:fact.source}):
    {spoken:fact.canonical,rules:[]})}));
   const lead=proxyHistory?informant.label+' (anamnesis indirecta): ':
    (canStyle&&!p.behavior&&prefix?prefix:'')+(greeting&&verbal>=4?'Hola, doctor. ':'');

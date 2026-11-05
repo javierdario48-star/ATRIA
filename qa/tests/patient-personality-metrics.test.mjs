@@ -30,6 +30,44 @@ test('the dialogue oracle allows a change of speaker without accepting a change 
   natural.replace('No uso','Uso'),natural.replace('anticoagulantes','warfarina')])
   assert(failures(changed).some(x=>x.startsWith('changed-clinical-content')),changed);
 });
+test('natural native-valve history preserves severity, anatomy, interval and both implant denials',()=>{
+ const canonical='Valvulopatía aórtica nativa leve y procedimiento urinario hace 3 semanas; sin prótesis valvular ni dispositivo intracardíaco.';
+ const spoken='Tengo un problema leve en mi propia válvula aórtica y me hicieron un procedimiento en las vías urinarias hace 3 semanas; no tengo una válvula artificial ni ningún dispositivo dentro del corazón.';
+ const failures=text=>interviewQuality({rows:[{answer:text,evidence:{facts:[{id:'pmh',canonical,spoken:text,rules:['patient-voice']}]}}]}).failures;
+ assert.deepEqual(failures(spoken),[]);
+ for(const changed of [spoken.replace('leve','grave'),spoken.replace('aórtica','mitral'),
+  spoken.replace('3 semanas','3 días'),spoken.replace('mi propia','una artificial'),
+  spoken.replace(' ni ningún dispositivo dentro del corazón',''),spoken.replace('no tengo','tengo')])
+  assert(failures(changed).some(x=>x.startsWith('changed-clinical-content')),changed);
+});
+test('partial medication evidence must be an actual authored clause rather than an invented related medicine',()=>{
+ const c={id:'TEST',common:{meds:['Losartán 50 mg diarios. Suspendió aspirina hace 3 días.']},intents:[]};
+ const p={liveVitals:{hr:70,sys:120,dia:80,rr:16,spo2:98,temp:37},treatments:[]};
+ const validate=canonical=>validateDialogueSources({facts:[{id:'anamnesis:meds:stopped',source:'common.meds',canonical,spoken:canonical}]},c,p);
+ assert.deepEqual(validate('Suspendió aspirina hace 3 días.').failures,[]);
+ assert.equal(validate('Suspendió warfarina hace 3 días.').failures.length,1);
+ assert.equal(validate('No recuerdo si suspendí algún medicamento.').failures.length,1);
+});
+test('an honest unavailable medication answer cannot inflate verified clinical disclosure totals',()=>{
+ const canonical='No recuerdo qué medicamentos tomo habitualmente.';
+ const evidence={facts:[{id:'interview:response:0',source:'native.history-detail-unavailable',canonical,spoken:canonical}]};
+ const c={id:'TEST',common:{},intents:[]},p={liveVitals:{hr:70,sys:120,dia:80,rr:16,spo2:98,temp:37},treatments:[]};
+ const checked=validateDialogueSources(evidence,c,p),quality=interviewQuality({rows:[{answer:canonical,evidence}]});
+ assert.deepEqual(checked.failures,[]);assert.equal(checked.verified,0);assert.equal(checked.unavailable,1);
+ assert.equal(quality.facts,0);assert.equal(quality.unavailable,1);
+});
+test('undelivered evidence and unknown-answer variants earn neither clinical facts nor substantive diversity',()=>{
+ const canonical='Tomo warfarina 5 mg.';
+ const evidence={facts:[{id:'meds',source:'common.meds',canonical,spoken:canonical}]};
+ const c={id:'TEST',common:{meds:[canonical]},intents:[]},p={liveVitals:{hr:70,sys:120,dia:80,rr:16,spo2:98,temp:37},treatments:[]};
+ const checked=validateDialogueSources(evidence,c,p,'No lo recuerdo con más detalle.');
+ assert.equal(checked.verified,0);assert(checked.failures.includes('not-delivered-clinical-fact:meds'));
+ const quality=interviewQuality({rows:[{answer:'No lo recuerdo con más detalle.',evidence}]});
+ assert.equal(quality.facts,0);assert(quality.failures.includes('lost-spoken-fact:0:meds'));
+ const rows=['No recuerdo qué medicamentos tomo habitualmente.','No me acuerdo de qué medicamentos tomo habitualmente.'].map(answer=>({
+  caseId:'same',clinicalInvariant:'same',rows:[{answer,evidence:{facts:[{id:'interview:response:0',source:'native.history-detail-unavailable',canonical:answer,spoken:answer}]}}]}));
+ assert.equal(compareConversations(rows).uniqueSubstantiveBodies,1);
+});
 test('canonical/source metadata cannot certify a fabricated bank fact',()=>{
  const c={id:'APP-001',intents:[{id:'fever',answers:['No tuve fiebre.']}]};
  const p={caseId:c.id,liveVitals:{hr:70,sys:120,dia:80,rr:16,spo2:98,temp:37},treatments:[]};

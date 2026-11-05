@@ -52,8 +52,8 @@ export function composePatientConversation(facts,{behavior,seed,relationship:r,t
  // Bound checkpoint growth without changing personality or physiology.
  if(Object.keys(r.asked).length>=64&&!Object.hasOwn(r.asked,signature))delete r.asked[Object.keys(r.asked)[0]];
  r.asked[signature]=repeat+1;
- const realized=facts.map(({domain,history,...f})=>({...f,...realizeClinicalFact(f.canonical,{behavior,seed,topic:f.id,repeat,
-  sensitive:sensitive||limited,domain,history,source:f.source})}));
+ const realized=facts.map(({domain,history,firstClauses,...f})=>({...f,...realizeClinicalFact(f.canonical,{behavior,seed,topic:f.id,repeat,
+  sensitive:sensitive||limited,domain,history,firstClauses,source:f.source})}));
  let remark=null;
  if(!sensitive&&!limited&&r.turn-r.lastRemarkTurn>=4){
   let candidates=[];

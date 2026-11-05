@@ -17,7 +17,9 @@ export function stripSurface(text){
   .replace(/\s*(?:¿Me explica qué puede ser\?|Estoy un poco preocupado\.|Gracias por escucharme\.)\s*$/i,'');
 }
 export function substantiveBody(row,{primaryOnly=false}={}){
- return normalizeText(row.rows.map(t=>t.evidence?.facts?.filter(f=>!primaryOnly||!f.spontaneous).map(f=>f.spoken).join(' ')||stripSurface(t.answer)).join(' '));
+ return normalizeText(row.rows.map(t=>t.evidence?t.evidence.facts?.filter(f=>
+  !['native.history-detail-unavailable','native.symptom-unknown'].includes(f.source)&&
+  String(t.answer??'').includes(f.spoken)&&(!primaryOnly||!f.spontaneous)).map(f=>f.spoken).join(' ')||'':stripSurface(t.answer)).join(' '));
 }
 export const expressiveInterview=row=>row.rows.some(t=>t.evidence&&t.evidence.styleApplied!==false&&!t.evidence.limited);
 const shingles=text=>{const words=normalizeText(text).split(' '),set=new Set();for(let i=0;i<words.length-2;i++)set.add(words.slice(i,i+3).join(' '));return set;};
@@ -70,7 +72,7 @@ function patientHistoryMeaning(text){
   .replace(/^(no )(?:usa|uso|toma|tomo) /,'$1')
   .replace(/^no (.+) y no tomé antibióticos antes$/,'no $1 ni antibióticos previos')
   .replace(/^no past use antibióticos antes$/,'no antibióticos previos')
-  .replace(/^(?:tomo |mi medicación habitual es )/,'')
+  .replace(/^(?:(?:toma|tomo|usa|uso) |mi medicación habitual es )/,'')
   .replace(/^([^,]+), última dosis (.+)$/,'last dose of $1 at $2')
   .replace(/^la última dosis de (.+?) la tomé (.+)$/,'last dose of $1 at $2')
   .replace(/^(.+) y ([^, ]+) (?:de forma irregular|irregular)$/,'$1, y tomo $2 irregular')
@@ -80,6 +82,7 @@ function patientHistoryMeaning(text){
   .replace(/^(?:niega (sildenafil, vardenafil, tadalafil) o (avanafil) recientes|no past use (sildenafil, vardenafil, tadalafil) ni (avanafil) recientemente)$/,
    (_,a,b,c,d)=>'no recent use '+(a??c)+' ni '+(b??d))
   .replace(/^(?:fue llamado|me llamaron) por /,'called because ')
+  .replace(/^(past use .+) por (?:su|mi) cuenta$/,'$1 por cuenta propia')
   .replace(/ (?:de forma irregular|tomad[oa] irregularmente|irregular)$/,' irregular')
   .replace(/ (?:de vez en cuando|ocasional)$/,' ocasional')
   .replace(/^(?:niega|no (?:reconoce|conoce|conozco|refiere|se conocen)) (alergias?\b.*)$/,'no known $1')
@@ -88,6 +91,9 @@ function patientHistoryMeaning(text){
   .replace(/^(?:sin antecedentes?|no tengo antecedentes) de (?=trombocitopenia)/,'no antecedente de ')
   .replace(/^no tengo antecedentes de /,'no ')
   .replace(/^(?:tengo|siento) (?=hipertensión|diabetes|dislipidemia|miocardiopatía|fibrilación|inmunosupresión|sudor|náuseas|sensación de falta de aire|falta de aire|fatiga|escalofríos|mareo|ortopnea|fotofobia|dolor de cuello)/,'')
+  .replace(/^tengo un problema (leve|moderad[oa]|grave) en mi propia válvula (aórtica|mitral|tricuspídea|pulmonar)(?: y me hicieron un procedimiento en las vías urinarias hace (\d+ (?:días?|semanas?|meses?)))?$/,
+   (_,severity,valve,interval)=>'valvulopatía '+valve+' nativa '+severity.replace(/o$/,'a')+(interval?' y procedimiento urinario hace '+interval:''))
+  .replace(/^no tengo una válvula artificial ni ningún dispositivo dentro del corazón$/,'no prótesis valvular ni dispositivo intracardíaco')
   .replace(/\bme hicieron varias cirugías recientes\b/,'múltiples cirugías recientes')
   .replace(/, y ya había recibido (antibióticos .+)$/,', con exposición previa a $1')
   .replace(/^no tuve (dolor máximo instantáneo hacia espalda, síncope) ni (déficit focal)$/,'niega $1 o $2')
@@ -99,18 +105,19 @@ function patientHistoryMeaning(text){
  return clinicalMeaning(clauses.join('. '));
 }
 export function interviewQuality(row){
- const failures=[],remarks=new Map();let spontaneous=0,facts=0,realizations=0;
+ const failures=[],remarks=new Map();let spontaneous=0,facts=0,realizations=0,unavailable=0;
  for(const [i,t] of row.rows.entries()){
   const e=t.evidence;
   for(const f of e?.facts??[]){
-   facts++;if(f.spontaneous)spontaneous++;
-   if(!t.answer.includes(f.spoken))failures.push('lost-spoken-fact:'+i+':'+f.id);
+   const delivered=!!f.spoken&&String(t.answer??'').includes(f.spoken),unknown=['native.history-detail-unavailable','native.symptom-unknown'].includes(f.source);
+   if(delivered){if(unknown)unavailable++;else facts++;if(f.spontaneous&&!unknown)spontaneous++;}
+   else failures.push('lost-spoken-fact:'+i+':'+f.id);
    // Numeric, dose and named entities must survive the bounded language rules.
    const nums=x=>(x.match(/\d+(?:[.,]\d+)?/g)||[]).sort().join('|');
    if(nums(f.canonical)!==nums(f.spoken))failures.push('changed-number:'+i+':'+f.id);
    const meaning=f.rules?.includes('patient-voice')?patientHistoryMeaning:clinicalMeaning;
    if(meaning(f.canonical)!==meaning(f.spoken))failures.push('changed-clinical-content:'+i+':'+f.id);
-   if(normalizeText(f.canonical)!==normalizeText(f.spoken))realizations++;
+   if(delivered&&!unknown&&normalizeText(f.canonical)!==normalizeText(f.spoken))realizations++;
   }
   if(e?.remark){
    if(!conversationalRemarks.has(e.remark))failures.push('non-conversational-remark:'+i);
@@ -128,5 +135,5 @@ export function interviewQuality(row){
  }
  const repeatedRemarks=[...remarks.values()].filter(n=>n>1).reduce((a,n)=>a+n-1,0);
  if(repeatedRemarks)failures.push('repeated-emotional-phrase');
- return {failures,facts,spontaneous,realizations,emotionalRemarks:[...remarks.values()].reduce((a,n)=>a+n,0),repeatedRemarks};
+ return {failures,facts,unavailable,spontaneous,realizations,emotionalRemarks:[...remarks.values()].reduce((a,n)=>a+n,0),repeatedRemarks};
 }
