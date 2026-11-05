@@ -113,6 +113,7 @@ export function advancePeritonitisVitals(p,c,dt,atNativeMinute){
    albuminDose:view.monitorTherapies.get('albumin')?.dose?.amount||0});
   const progression=legacySepsisVitalsOffsets487(p.phys,p.physBaseline,c),base=initialPeritonitisVitals(c);
   const target=Object.fromEntries(axes.map(axis=>[axis,base[axis]+progression[axis]]));
+  p.nativeDiseaseTarget={nativeMinute:at,vitals:{...target}};
   if(view.monitorTherapies.has('oxygen')){target.spo2+=6;target.rr-=2;}
   applyConfirmedNativeSupportTargets487(target,p,c,at);
   applyConfirmedMorphineTargetOffsets487(target,p,c,at);

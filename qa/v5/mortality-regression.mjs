@@ -133,7 +133,7 @@ export async function runLocalMortalityScenario(spec,{mode='solo',horizon=1440}=
    // from the repeated VALID doses that follow. Neither can count as exposure.
    if(spec.drug){
     const before=session.read().patient.administrationLog.length;
-    const invalid=await send('Enfermera morfina 99 mg');
+    const invalid=await send('Enfermera morfina 0 mg');
     assert(invalid.ack.clinical.every(x=>x.status==='rejected'));
     assert.equal(session.read().patient.administrationLog.length,before);
    }

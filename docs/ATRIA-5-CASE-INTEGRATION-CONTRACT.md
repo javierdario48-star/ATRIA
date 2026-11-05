@@ -7,6 +7,22 @@ Un caso nuevo **no está terminado** por mostrar síntomas, un diagnóstico y un
 
 ## Cinco capas obligatorias y verificables
 
+### Libertad clínica permanente
+
+La capacidad técnica de ejecutar, la pertinencia clínica y el cumplimiento del
+checklist son contratos distintos. La autoridad ejecuta una decisión interpretable
+y técnicamente posible aunque sea innecesaria, precoz, repetida, excesiva o
+contraindicada. Dosis, autor, paciente, vía y tiempos reales quedan en sus recibos.
+Las reglas de pertinencia alimentan consejo y evaluación; nunca autorizan una
+administración. Los límites físicos reales (vía no disponible, dispositivo o
+formulación no implementados) deben explicarse. Las consecuencias se calculan en
+el propietario fisiológico existente; no se inventa toxicidad para castigar una
+orden. Una mala decisión sin daño puede reducir calidad y recompensa. Una muerte
+requiere evidencia causal nativa vinculada a administraciones confirmadas antes
+de descontar carrera al médico responsable; la enfermedad por sí sola y las
+decisiones de un compañero no justifican ese descuento. Los reintentos de red no
+son nuevas dosis ni nuevos descuentos. Dr. Vega recomienda; no concede permisos.
+
 1. **Fisiología causal y temporal.** Definir estado basal y variables fisiológicas pertinentes; evolución con el tiempo, tratamiento adecuado, tratamiento tardío, omisión e iatrogenia. Los signos vitales, observaciones, complicaciones y recuperación deben derivar de la autoridad clínica existente. No conceder mejoría por una orden aún no ejecutada; respetar dosis, tiempos y dependencias. Comprobar también escenarios de deterioro y muerte cuando sean clínicamente plausibles.
 2. **Contenido clínico y decisiones.** Definir motivo de consulta, anamnesis dirigida, antecedentes, examen físico por sistemas, estudios pertinentes, resultados interpretables, diagnósticos diferenciales, conducta y reevaluación. Evitar resultados contradictorios. Verificar que la enfermería, medicamentos, estudios y el docente utilicen los contratos existentes. La disposición final (alta, observación, UTI/derivación, cirugía u otro destino admitido) **cierra** el caso conforme a la autoridad clínica; no exigir evolución posterior al cierre.
 3. **Variabilidad clínica reproducible.** Integrar el generador común de variaciones: identidad, edad y antecedentes cuando proceda, severidad, manifestaciones, evolución, comorbilidades y factores de riesgo. Usar semillas deterministas y persistencia en reconexión; las variantes deben seguir siendo clínicamente plausibles y no modificar hechos fijos incompatibles.

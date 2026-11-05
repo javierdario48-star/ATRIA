@@ -118,7 +118,12 @@ export function routeWardSpeech(text,context={}){
  if(!parsed.active)return {recipient,patientUid,intents:[],original,error:'question-or-negation'};
  const studyError=ordered.studyIssue(original);
  if(studyError)return {recipient,patientUid,intents:[],original,error:studyError};
- if(parsed.unknown.length)return {recipient,patientUid,intents:[],original,error:'unknown-clause',unknown:parsed.unknown};
+ // The retained scanner predates the native inhaled/SC/IM formulary. Accept
+ // only its known formulation qualifiers as neutral words; the native route
+ // parser still sees the complete clause and rejects incompatible routes.
+ const nativeQualifiers=/^(?:(?:inhaled|inhalad[oa]s?|inhalatori[oa]s?|nebulizad[oa]s?|nebulizacion|subcutane[oa]|subcutaneous|intramuscular|im|sc|ui|iu|h|hora|horas|minuto|minutos)\s*)+$/;
+ const unknown=parsed.unknown.filter(piece=>!parsed.items.some(item=>item.kind==='therapy'&&nativeMedicineDefinition(item.id,context.caseData))||!nativeQualifiers.test(clean(piece)));
+ if(unknown.length)return {recipient,patientUid,intents:[],original,error:'unknown-clause',unknown};
  if(!patientUid)return {recipient,patientUid,intents:[],original,error:'no-patient-target'};
  const intents=[];
  for(const item of parsed.items.slice(0,12)){

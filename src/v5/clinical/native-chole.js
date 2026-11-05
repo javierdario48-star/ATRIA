@@ -60,6 +60,7 @@ export function advanceCholeVitals(p,c,dt,minute=0){
  if(p.caseEnded||dt===0)return;
  const target=initialCholeVitals(c),disease=choleDiseaseTargetOffsets(p,c,minute);
  for(const axis of axes)target[axis]+=disease[axis];
+ p.nativeDiseaseTarget={nativeMinute:minute,vitals:{...target}};
  // No automatic crystalloid pressure bonus in initially stable cholecystitis.
  // Real overload, toxic exposures and confirmed supportive doses still matter.
  const overload=crystalloidOverloadOffsets(p,c);

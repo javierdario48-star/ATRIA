@@ -9,6 +9,7 @@ import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 import {clinicalTransferContinuation} from './transfer-continuation.js';
+import {nativeMedicationDoseFraction} from './native-medications.js';
 
 const text = value => typeof value === 'string' && value.trim().length > 0;
 const norm = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -55,7 +56,7 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  const rows = completedStudies(patient, caseData, minute), studies = new Set(rows.map(row => studyEvidenceId(caseData,row.id)));
  const treatmentIds = [...new Set((patient.treatments || []).map(row => row.id))];
  const confirmed = treatmentIds.map(id => currentClinicalTreatment(patient, id, minute))
-  .filter(row => row && !matchesMedicationAllergy487(patient, row.id));
+  .filter(row => row && !matchesMedicationAllergy487(patient, row.id)&&nativeMedicationDoseFraction(row,caseData)>=1);
  const done = new Set(confirmed.map(row => row.id));
  const continuation=clinicalTransferContinuation(patient,caseData,target,minute);
  const access = patient.procedures?.iv;

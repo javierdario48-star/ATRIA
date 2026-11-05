@@ -69,12 +69,12 @@ test('non-treatment APP eventually deteriorates; stable CIRR not killed merely b
   }finally{f.s.dispose();}
  }
 });
-test('wrong and extreme IV prescriptions: reject invalid medication dose, document extreme real crystalloid harm',async()=>{
+test('wrong and extreme IV prescriptions: reject malformed medication dose, document extreme real crystalloid harm',async()=>{
  const f=bot('CIRR-001');
  try{
   await f.post('Enfermera una vía');
-  for(const bad of ['Enfermera furosemida 400 mg','Enfermera ceftriaxona 4 g',
-    'Enfermera Ringer 40001 ml','Enfermera Ringer 300 ml']){
+  for(const bad of ['Enfermera furosemida 0 mg','Enfermera ceftriaxona 0 g',
+    'Enfermera Ringer 0 ml','Enfermera Ringer -300 ml']){
    const x=await f.post(bad);assert.equal(x.clinical[0]?.status,'rejected',bad);
   }
   assert.equal(f.s.read().patient.administrationLog.length,0);

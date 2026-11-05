@@ -31,6 +31,7 @@ export function advanceAppVitals(p,c,dt,atNativeMinute=0){
  if(p.treatments?.some(t=>t.id==='fluid')){
   target.sys+=14;target.dia+=7;target.hr-=12;target.rr-=1;
  }
+ p.nativeDiseaseTarget={nativeMinute:atNativeMinute,vitals:{...target}};
  const overload=crystalloidOverloadOffsets(p,c);
  target.rr+=overload.rr;target.spo2+=overload.spo2;
  target.spo2+=oxygenationTargetOffset(p,c,atNativeMinute);

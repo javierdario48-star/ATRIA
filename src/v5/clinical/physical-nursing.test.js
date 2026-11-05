@@ -257,7 +257,7 @@ test('C08b2 CIRR spironolactone and paracentesis require a nurse, not just elaps
 test('C08b malformed dose while IV travels is rejected immediately with no pending fake administration',async()=>{
  const f=fixture('APP-001');
  await f.session.post({id:'iv',text:'Enfermera una vía'});
- const invalid=await f.session.post({id:'bad-dose',text:'Enfermera ceftriaxona 2 g'});
+ const invalid=await f.session.post({id:'bad-dose',text:'Enfermera ceftriaxona 0 g'});
  assert.equal(invalid.clinical[0].status,'rejected');
  assert.equal(invalid.clinical[0].reason,'unsupported-dose');
  assert.equal(f.session.read().patient.administrationLog.length,0);
@@ -341,8 +341,8 @@ test('C11 shared IV formulary validates route and dose in CIRR before any nurse 
  const previous=f.world.nurseJourneySnapshot().length;
  for(const [id,text] of [
   ['bad-route','enfermera ceftriaxona oral 1 g'],
-  ['bad-dose','enfermera ceftriaxona 2 g'],
-  ['bad-fluid','enfermera ringer 300 ml']]){
+  ['bad-dose','enfermera ceftriaxona 0 g'],
+  ['bad-fluid','enfermera ringer 0 ml']]){
   const cmd=await f.session.post({id,text});
   assert.equal(cmd.clinical[0].status,'rejected',text);
   assert.equal(f.world.nurseJourneySnapshot().length,previous);
@@ -424,7 +424,7 @@ test('C07d medication-only request creates a visible automatic IV and waits for 
 test('C07d invalid IV route/dose never summons a nurse or creates automatic access',async()=>{
  const f=fixture('APP-001');
  for(const [id,text] of [['invalid','Enfermera ceftriaxona oral 1 g'],
-  ['wrong-dose','Enfermera ceftriaxona 2 g'],['bad-volume','Enfermera Ringer 300 ml']]){
+  ['wrong-dose','Enfermera ceftriaxona 0 g'],['bad-volume','Enfermera Ringer 0 ml']]){
   const a=await f.session.post({id,text});
   assert.deepEqual(a.clinical.map(x=>[x.status,x.id]),[['rejected',text.includes('Ringer')?'fluid':'ceftriaxone']]);
  }
@@ -639,7 +639,7 @@ test('C11b invalid compound IV dose does not start a valid monitor or IV trip',a
  for(const caseId of ['APP-001','CIRR-001']){
   const f=fixture(caseId);
   const bad=await f.session.post({id:'invalid-compound',
-   text:'Enfermera monitor y ceftriaxona 2 g'});
+   text:'Enfermera monitor y ceftriaxona 0 g'});
   assert.equal(bad.routeError,'unsafe-compound-order');
   assert.deepEqual(bad.clinical,[]);
   assert.equal(f.world.nurseJourneySnapshot().length,0);
@@ -648,7 +648,7 @@ test('C11b invalid compound IV dose does not start a valid monitor or IV trip',a
   assert.deepEqual(f.session.read().patient.pendingTreatments,[]);
   assert.deepEqual(f.session.read().patient.administrationLog,[]);
   assert(f.session.read().messages.some(x=>x.role==='nurse'&&/orden combinada no ejecutada/i.test(x.text)));
-  const retry=await f.session.post({id:'invalid-compound',text:'Enfermera monitor y ceftriaxona 2 g'});
+  const retry=await f.session.post({id:'invalid-compound',text:'Enfermera monitor y ceftriaxona 0 g'});
   assert.deepEqual(retry,bad);
   f.session.dispose();f.world.enterLobby();
  }
@@ -657,8 +657,8 @@ test('C11b invalid compound IV dose does not start a valid monitor or IV trip',a
 test('C11b valid first drug or IV cannot execute before a later invalid compound drug',async()=>{
  const f=fixture('APP-001');
  for(const [id,text] of [
-  ['fluid-dose','Enfermera Ringer 500 ml y ceftriaxona 2 g'],
-  ['other-dose','Enfermera dos vias, Ringer 300 ml y monitor'],
+  ['fluid-dose','Enfermera Ringer 500 ml y ceftriaxona 0 g'],
+  ['other-dose','Enfermera dos vias, Ringer 0 ml y monitor'],
   ['unsupported','Enfermera monitor y vasopresor'],
   ['opioid-route','Enfermera monitor y morfina 4 mg oral'],
   ['oxygen-device','Enfermera monitor y oxigeno mascara 4 L/min']
@@ -711,7 +711,7 @@ test('C2b monitor plus morphine retains automatic IV, real nurse travel and exac
 
 test('C11b single invalid medication keeps its precise native rejection',async()=>{
  const f=fixture('APP-001');
- const ack=await f.session.post({id:'single-bad',text:'Enfermera ceftriaxona 2 g'});
+ const ack=await f.session.post({id:'single-bad',text:'Enfermera ceftriaxona 0 g'});
  assert.equal(ack.routeError,null);
  assert.equal(ack.clinical[0].status,'rejected');
  assert.equal(ack.clinical[0].reason,'unsupported-dose');

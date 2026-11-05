@@ -195,7 +195,7 @@ test('morphine retains the original route, unit and interpretation limits, inclu
  const invalid=['morfina 4 mg oral','morfina 4 mg VO','morfina 4 mcg IV','morfina 4 g IV',
   'morfina 4 ml IV','morfina 4','morfina -4 mg IV','morfina 4 mg IM','morfina 4 mg I.M.',
   'morfina 4 mg intranasal','morfina 4 mg vía desconocida','morfina 0 mg IV',
-  'morfina 40 mg IV','morfina 4 mg y 8 mg'];
+  'morfina 4 mg y 8 mg'];
  try{
   await post('Enfermera una vía');
   for(const q of invalid){

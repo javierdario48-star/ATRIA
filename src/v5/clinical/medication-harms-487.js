@@ -82,9 +82,8 @@ function newAntithromboticBleeding(p,c,rows,atNativeMinute){
   const definition=CLINICAL_TREATMENTS[id],regimen=c?.clinicalPolicy?.regimens?.[id];
   const reference=regimen?.dose??definition.dose,route=regimen?.route??definition.route;
   for(const row of doses)if(row.route!==route||(row.prescribedDose??row.dose).unit!==reference.unit||
-   (row.prescribedDose??row.dose).amount<(regimen?.min??regimen?.dose?.amount??definition.min)||
-   (row.prescribedDose??row.dose).amount>(regimen?.max??regimen?.dose?.amount??definition.max))
-   throw Error('adverse reaction requires validated antithrombotic dose and route');
+   !Number.isFinite((row.prescribedDose??row.dose).amount)||(row.prescribedDose??row.dose).amount<=0)
+   throw Error('adverse reaction requires confirmed antithrombotic formulation and route');
   const first=doses.reduce((a,b)=>a.administeredAtNativeMinute<=b.administeredAtNativeMinute?a:b);
   const harm=csHeparinHarm487(caseForRisk,{patientInstance:{uid:p.uid},clinicalFlags:flags,
    phys:p.phys,gameMinute:atNativeMinute,therapyExposure:new Map([['anticoagulation',{count:doses.length}]]),

@@ -7,6 +7,10 @@ import {csCriticalRescueEvidence487,csCriticalRescueWindow487}
 import {summarizeIVExposures} from './medication-exposure.js';
 import {IV_MEDICINES} from './native-medications.js';
 import {isDeliveredClinicalAdministration} from './receipts.js';
+import {confirmedMedicationHarms487} from './medication-harms-487.js';
+import {confirmedMorphineResponse487} from './morphine-487.js';
+import {confirmedNativeSupportEffects487} from './native-support-487.js';
+import {crystalloidOverloadOffsets} from './crystalloid-overload.js';
 
 // Both constants come from the effective V4 irreversible transition and the
 // validated 65s rescue policy. Gameplay units, NOT clinical prognosis.
@@ -61,6 +65,41 @@ function danger(v){
   cause:v.spo2<80?'critical-hypoxemia':map<45||v.sys<=58&&v.hr>=150?
    'circulatory-collapse':null,map};
 }
+/** Attribution reads the SAME already-applied native adverse components. It
+ * does not simulate another patient, change physiology or decide mortality.
+ * A mistake alone is not a cause. Require a delivered source, a matching fatal
+ * axis, and removal of that native adverse component to remove criticality.
+ * If the native disease target is independently critical, causation remains
+ * mixed/uncertain and cannot justify a physician-caused death debit. */
+export function nativeDeathAttribution(p,c,minute){
+ const harm=confirmedMedicationHarms487(p,c,minute),opioid=confirmedMorphineResponse487(p,c,minute),
+  support=confirmedNativeSupportEffects487(p,c,minute),fluid=crystalloidOverloadOffsets(p,c);
+ const adverse={sys:Math.min(0,harm.offsets.sys),dia:Math.min(0,harm.offsets.dia),
+  spo2:Math.min(0,harm.offsets.spo2),hr:Math.max(0,harm.offsets.hr)},sources=new Set();
+ for(const reaction of harm.reactions)if(reaction.severity>.18&&
+  ['severe-drug-allergy','anticoagulant-bleeding','antithrombotic-bleeding'].includes(reaction.kind))sources.add(reaction.sourceEventId);
+ if(opioid?.respiratoryRisk){
+  adverse.sys+=Math.min(0,opioid.offsets.sys);adverse.dia+=Math.min(0,opioid.offsets.dia);adverse.spo2+=Math.min(0,opioid.offsets.spo2);
+  sources.add(opioid.sourceEventId);
+ }
+ for(const drug of Object.values(support.drugs))if(drug.active&&drug.toxicity.spo2<0){
+  adverse.spo2+=drug.toxicity.spo2;sources.add(drug.sourceEventId);
+ }
+ if(fluid.spo2<0){
+  adverse.spo2+=fluid.spo2;
+  for(const row of p.administrationLog||[])if(row.id==='fluid'&&isDeliveredClinicalAdministration(p,row,minute))sources.add(row.sourceEventId);
+ }
+ const fatal=danger(p.liveVitals),corrected=Object.fromEntries(VITAL_AXES.map(axis=>[axis,p.liveVitals[axis]-adverse[axis]]));
+ const disease=p.nativeDiseaseTarget,independentlyCritical=disease?.nativeMinute===minute&&danger(disease.vitals).critical;
+ const actualSources=[...sources].filter(id=>(p.administrationLog||[]).some(row=>row.sourceEventId===id&&isDeliveredClinicalAdministration(p,row,minute)));
+ const attributable=actualSources.length>0&&!independentlyCritical&&!danger(corrected).critical;
+ const actorIds=[...new Set((p.administrationLog||[]).filter(row=>actualSources.includes(row.sourceEventId))
+  .map(row=>row.actorId).filter(id=>typeof id==='string'&&id))];
+ return {classification:attributable?'treatment-contributed':actualSources.length?'undetermined':'disease',
+  actorIds:attributable?actorIds:[],
+  sourceEventIds:attributable?actualSources:[],cause:fatal.cause,
+  evidence:attributable?'confirmed-native-adverse-component':actualSources.length?'independent-disease-or-insufficient-causal-evidence':'native-disease-progression'};
+}
 const overlap=(a,b,start,end)=>Math.max(0,Math.min(b,end)-Math.max(a,start));
 /** One call after the native care advance, never from UI or monitor paint.
  * Reuse legacy pure gate and rescue policies. Time is the existing real-second
@@ -105,6 +144,7 @@ export function advanceNativeSurvival(p,c,mode,before,after){
   dead,atNativeMinute:to,atRealSecond:end};
  if(dead){
   p.patientDied=true;p.deathReason=v.cause;
+  p.deathAttribution=nativeDeathAttribution(p,c,to);
   p.caseEnded=true; // no further treatment, disposition or XP after death
  }
  return p.survival;

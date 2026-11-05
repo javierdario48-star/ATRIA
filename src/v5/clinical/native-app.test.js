@@ -12,8 +12,8 @@ test('APP default and explicit doses match original reference, reject wrong dose
   assert.deepEqual(parseAppDose(text,doses[entry.id]),entry.dose,entry.id);
   const def=parseAppDose(entry.id,doses[entry.id]);assert.equal(def.amount,entry.dose.amount);assert.equal(def.defaultApplied,true);
  }
- for(const text of ['ceftriaxona 500 mg','ceftriaxona 1 g 2 ml','ceftriaxona 0 g','ceftriaxona 1 g oral',
-  'ceftriaxona -1 g','ceftriaxona 1 g 250 ml','metronidazol 1 g']){
+ for(const text of ['ceftriaxona 0 mg','ceftriaxona 1 g 2 ml','ceftriaxona 0 g','ceftriaxona 1 g oral',
+  'ceftriaxona -1 g','ceftriaxona 1 g 250 ml','metronidazol 0 g']){
   assert.throws(()=>parseAppDose(text,doses[text.startsWith('metro')?'metronidazole':'ceftriaxone']),/dose|route/i,text);
  }
  assert.equal(APP_NATIVE_PREPARATION_SECONDS.ceftriaxone,1.5);

@@ -231,7 +231,7 @@ export function applyConfirmedIVTargetOffsets(target,patient,caseDef,atNativeMin
    const treatment=(patient.treatments||[]).filter(t=>t.id===id&&t.sourceEventId===row.sourceEventId);
    if(row.patientUid!==patient.uid||typeof row.sourceEventId!=='string'||!row.sourceEventId||
       seen.has(row.sourceEventId)||row.dose?.unit!=='mg'||
-      row.dose?.amount!==REFERENCE_DOSES_487[id]||
+      !Number.isFinite(row.dose?.amount)||row.dose.amount<=0||
       !Number.isFinite(row.administeredAtNativeMinute)||
       row.administeredAtNativeMinute<0||row.administeredAtNativeMinute>atNativeMinute+1e-9||
       treatment.length!==1||treatment[0].patientUid!==patient.uid||
@@ -247,7 +247,8 @@ export function applyConfirmedIVTargetOffsets(target,patient,caseDef,atNativeMin
    Math.max(0,atNativeMinute-first),patient.liveVitals);
   if(!response.known)throw Error('missing native IV pharmacology '+id);
   const scale=caseDrugResponseScale(caseDef,id);
-  const offsets=Object.fromEntries(VITALS.map(axis=>[axis,response.offsets[axis]*scale]));
+  const fraction=Math.min(1,doses.reduce((sum,row)=>sum+row.dose.amount,0)/REFERENCE_DOSES_487[id]);
+  const offsets=Object.fromEntries(VITALS.map(axis=>[axis,response.offsets[axis]*scale*fraction]));
   // No free improvement in an already normal SpO2/respiratory rate.
   if(patient.liveVitals.spo2>=97&&offsets.spo2>0)offsets.spo2=0;
   if(patient.liveVitals.rr<=14&&offsets.rr<0)offsets.rr=0;

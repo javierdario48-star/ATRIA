@@ -77,7 +77,7 @@ test('real Ringer action changes APP physiology only after native 800ms delay',a
 });
 test('invalid dose, invented surgery and hemogram cannot administer medication',async()=>{
  const f=fixture();await f.send('Enfermera una vía');
- for(const text of ['Enfermera ceftriaxona 2 g','Enfermera metronidazol 100 mg','Enfermera ceftriaxona 1 g oral','Enfermera no ceftriaxona'])
+ for(const text of ['Enfermera ceftriaxona 0 g','Enfermera metronidazol 0 mg','Enfermera ceftriaxona 1 g oral','Enfermera no ceftriaxona'])
   await f.send(text);
  await f.send('Enfermera hemograma');
  f.s.advance(45);await f.s.flush();
@@ -140,7 +140,7 @@ test('C07 invalid repeat doses and routes cannot attach to an APP nursing job al
  const initial=await f.send('Enfermera ceftriaxona 1 g','correct');
  assert.equal(initial.clinical[0].status,'pending');
  for(const [text,reason] of [
-  ['Enfermera ceftriaxona 2 g','unsupported-dose'],
+  ['Enfermera ceftriaxona 0 g','unsupported-dose'],
   ['Enfermera ceftriaxona 1 g oral','unsupported-dose-route']
  ]){
   const r=await f.send(text);
@@ -158,14 +158,14 @@ test('C07 invalid repeat doses and routes cannot attach to an APP nursing job al
   'exactly one successful nursing completion');
  f.s.dispose();
 });
-test('C07 post-administration wrong-dose repeat never claims the existing APP receipt',async()=>{
+test('C07 post-administration malformed-dose repeat never claims the existing APP receipt',async()=>{
  const f=fixture();
  await f.send('Enfermera una vía');
  await f.send('Enfermera ceftriaxona 1 g','correct');
  f.s.advance(1.6);await f.s.flush();
  const p=f.s.read().patient;
  assert.equal(p.administrationLog.length,1);
- for(const text of ['Enfermera ceftriaxona 2 g','Enfermera ceftriaxona 1 g oral']){
+ for(const text of ['Enfermera ceftriaxona 0 g','Enfermera ceftriaxona 1 g oral']){
   const r=await f.send(text);
   assert.equal(r.clinical.length,1);
   assert.equal(r.clinical[0].status,'rejected',text);

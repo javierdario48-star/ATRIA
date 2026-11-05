@@ -37,7 +37,7 @@ function deliver(f,key='dose-a',start=0){
 test('C12.e2 IV furosemide valid for both native cases; invalid doses/routes never queue',()=>{
  for(const id of ['APP-001','CIRR-001']){
   const f=fixture(id);
-  for(const clause of ['furosemida 20 mg','furosemida oral 40 mg','furosemida 40 ml',
+  for(const clause of ['furosemida 0 mg','furosemida oral 40 mg','furosemida 40 ml',
    'furosemida 40 mg y 80 mg','furosemida -40 mg'])
    assert.equal(f.care.execute(cmd(f.p,'bad-'+clause,clause),at(0)).status,'rejected');
   assert.equal(f.p.pendingTreatments.length,0);

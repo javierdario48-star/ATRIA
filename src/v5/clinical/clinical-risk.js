@@ -4,6 +4,7 @@
 import {summarizeIVExposures} from './medication-exposure.js';
 import {crystalloidOverloadOffsets} from './crystalloid-overload.js';
 import {PHARMA_RULES_487,BASE_CASE_PHARMACOLOGY_487} from '../../clinical/pharmacology-registry-487.js';
+import {isDeliveredClinicalAdministration} from './receipts.js';
 export function confirmedRespiratoryAdverse(patient,caseDef){
  if(!patient?.administrationLog?.some(x=>x.id==='fluid'))
   return {adverseCount:0,flags:[],confirmedFluidMl:0};
@@ -32,6 +33,21 @@ export function confirmedClinicalMissteps(patient,caseDef){
  if(!patient?.administrationLog?.length)return lung;
  const exposures=summarizeIVExposures(patient).byDrug;
  const notes=[];
+ // Only an actually delivered, uniquely bound exposure can affect quality.
+ // These describe decisions, not invented organ damage. Replaying a command
+ // or writing a pending prescription cannot earn or deduct treatment credit.
+ const decisionNotes=new Map();
+ for(const row of patient.administrationLog){
+  if(!row.clinicalAdvisories?.length||row.action==='stop')continue;
+  const minute=Math.max(row.completedAtNativeMinute??row.administeredAtNativeMinute,patient.policyState?.nativeMinute??patient.phys?.lastNativeMinute??0);
+  if(!isDeliveredClinicalAdministration(patient,row,minute))continue;
+  for(const advisory of row.clinicalAdvisories){
+   if(['clinical-evidence-required','clinical-treatment-required','clinical-post-treatment-study-required'].includes(advisory.code))continue;
+   const key=row.id+':'+advisory.code;
+   if(advisory.message&&!decisionNotes.has(key))decisionNotes.set(key,(row.label||row.id)+': '+advisory.message);
+  }
+ }
+ notes.push(...decisionNotes.values());
  for(const event of patient.adverseEvents||[])
   if(['severe-drug-allergy','anticoagulant-bleeding','opioid-respiratory-depression','albumin-respiratory-overload','vasopressor-excess-response'].includes(event.kind)&&event.patientUid===patient.uid&&
     (patient.administrationLog||[]).some(x=>x.sourceEventId===event.sourceEventId&&x.id===event.drugId))

@@ -75,6 +75,7 @@ export function advanceAdditionalCaseVitals(p,c,delta,minute=0){
   const complication=advanceClinicalComplications(p,c,minute);
   for(const axis of axes)base[axis]+=complication[axis];
  }
+ p.nativeDiseaseTarget={nativeMinute:minute,vitals:{...base}};
  const overload=crystalloidOverloadOffsets(p,c);
  base.rr+=overload.rr;base.spo2+=overload.spo2;
  const oxygen=oxygenationTargetOffset(p,c,minute);

@@ -28,21 +28,22 @@ test('native formulary extends IV identities with exact non-IV formulations and 
   ['esmolol','esmolol 50 mcg/kg/min IV',50,'mcg/kg/min'],['epi_im','adrenalina 0,5 mg IM',.5,'mg']]){
   const dose=parseNativeMedicineDose(id,text);assert.equal(dose.amount,amount);assert.equal(dose.unit,unit);
  }
- for(const [id,text] of [['aspirin','aspirina 300 mg IV'],['salbutamol','salbutamol 50 mg nebulizado'],
+ assert.equal(parseNativeMedicineDose('salbutamol','salbutamol 50 mg nebulizado').amount,50);
+ for(const [id,text] of [['aspirin','aspirina 300 mg IV'],
   ['enoxaparin','enoxaparina 1 mg IV'],['nitroglycerin','nitroglicerina 10 mg IV'],
   ['salbutamol','salbutamol 5 mg y 2 mg nebulizados'],['aspirin','aspirina -300 mg'],
   ['nimodipine','nimodipino 60 mg intravenoso'],['epi_im','adrenalina 0,5 mg IV']])assert.throws(()=>parseNativeMedicineDose(id,text),undefined,text);
  assert.equal(parseNativeMedicineDose('anticoagulation_reversal','4F-PCC').amount,25);
  assert.equal(NATIVE_MEDICINES.salbutamol.requiresAccess,false);
  assert.equal(parseNativeMedicineDose('azithromycin','azitromicina 500 mg IV en 60 min cada 24 horas').amount,500);
- assert.throws(()=>parseNativeMedicineDose('azithromycin','azitromicina 500 mg IV en 1 min'),/unsupported-administration-timing/);
+ assert.equal(parseNativeMedicineDose('azithromycin','azitromicina 500 mg IV en 1 min').administrationMinutes,1);
 });
 
 test('case regimen supplies real default and explicit dose contract instead of legacy GI dose',()=>{
  const c=find('NEUR-07');
  assert.equal(parseNativeMedicineDose('ceftriaxone','ceftriaxona',undefined,undefined,c).amount,2000);
  assert.equal(parseNativeMedicineDose('ceftriaxone','ceftriaxona 2 g IV',undefined,undefined,c).amount,2000);
- assert.throws(()=>parseNativeMedicineDose('ceftriaxone','ceftriaxona 1 g IV',undefined,undefined,c));
+ assert.equal(parseNativeMedicineDose('ceftriaxone','ceftriaxona 1 g IV',undefined,undefined,c).amount,1000);
  assert.equal(parseNativeMedicineDose('clopidogrel','clopidogrel',undefined,undefined,find('NEUR-03')).amount,300);
 });
 
@@ -55,30 +56,30 @@ test('native route/access preflight and executor share the same rejection',()=>{
  assert.equal(o.request(command('azithromycin','azitromicina'),clock(2)).reason,'venous-access-required');
 });
 
-test('fixed-interval native medicines cannot repeat before the authored administration interval',()=>{
+test('fixed-interval native medicines can repeat early with a recorded clinical advisory',()=>{
  const p=patient(),c=find('RESP-01'),o=owner(p,c);
  const first=command('enoxaparin','enoxaparina 1 mg/kg SC','first');
  assert.equal(o.request(first,clock(0)).status,'pending');
- assert.equal(o.request(command('enoxaparin','enoxaparina 1 mg/kg SC','queued-repeat'),clock(0)).reason,
-  'administration-interval-required');
+ assert.equal(o.request(command('enoxaparin','enoxaparina 1 mg/kg SC','queued-repeat'),clock(0)).status,'pending');
  finishDue(o,clock(0),clock(2));
  const started=p.administrationLog[0].administeredAtNativeMinute;
  assert.equal(o.request(first,clock(2)).receipt.reused,true);
- assert.equal(o.request(command('enoxaparin','enoxaparina 1 mg/kg SC','early-repeat'),clock(4,started+719)).reason,
-  'administration-interval-required');
+ assert(p.administrationLog[1].clinicalAdvisories.some(x=>x.code==='administration-interval-required'));
+ assert.equal(o.request(command('enoxaparin','enoxaparina 1 mg/kg SC','early-repeat'),clock(4,started+719)).status,'pending');
  assert.equal(o.request(command('enoxaparin','enoxaparina 1 mg/kg SC','due-repeat'),clock(5,started+720)).status,'pending');
 });
 
-test('an infusion reserves its prescribed amount against the cumulative limit while delivery is partial',()=>{
+test('an infusion includes its prescribed amount in cumulative clinical review while delivery is partial',()=>{
  const p=patient();p.venousAccessCount=1;
  const c={clinicalPolicy:{regimens:{metoprolol:{repeatIntervalMinutes:0,maxCumulative:{amount:5,unit:'mg'}}}}};
  const o=owner(p,c);
  assert.equal(o.request(command('metoprolol','metoprolol 5 mg IV','first'),clock(0)).status,'pending');
  finishDue(o,clock(0),clock(3));
  assert.equal(p.administrationLog[0].status,'administering');assert.equal(p.administrationLog[0].dose.amount,0);
- assert.equal(o.request(command('metoprolol','metoprolol 5 mg IV','second'),clock(3)).reason,
-  'maximum-cumulative-dose-exceeded');
- assert.equal(p.pendingTreatments.length,1);
+ assert.equal(o.request(command('metoprolol','metoprolol 5 mg IV','second'),clock(3)).status,'pending');
+ assert.equal(p.pendingTreatments.length,2);
+ assert(preflightNativeMedicine('metoprolol','metoprolol 5 mg IV',{patient:p,caseData:c,clock:clock(3),eventId:'second'})
+  .clinicalAdvisories.some(x=>x.code==='maximum-cumulative-dose-exceeded'));
 });
 
 test('oral, inhaled, SC and IM doses produce real route-specific receipts after their own preparations without IV access',()=>{
@@ -144,19 +145,22 @@ test('PCC preflight uses the documented INR band and repeat limits share the dos
  p.orders=c.studies.filter(s=>['g_neur04_ct','g_neur04_inr'].includes(s.id)).map(s=>({...s,status:'done',patientUid:p.uid}));
  p.intentHistory=[{id:'meds'}];
  assert.equal(preflightNativeMedicine('anticoagulation_reversal','PCC 25 UI/kg IV',{patient:p,caseData:c,clock:clock(0)}).dose.amount,25);
- assert.throws(()=>preflightNativeMedicine('anticoagulation_reversal','PCC 50 UI/kg IV',{patient:p,caseData:c,clock:clock(0)}),/unsupported-INR-dose-band/);
+ assert(preflightNativeMedicine('anticoagulation_reversal','PCC 50 UI/kg IV',{patient:p,caseData:c,clock:clock(0)})
+  .clinicalAdvisories.some(x=>x.code==='unsupported-INR-dose-band'));
  const o=owner(p,c);o.request(command('anticoagulation_reversal','PCC 25 UI/kg IV','pcc'),clock(0));
- assert.throws(()=>preflightNativeMedicine('anticoagulation_reversal','PCC 25 UI/kg IV',{patient:p,caseData:c,clock:clock(0)}),/maximum-administrations-exceeded/);
+ assert(preflightNativeMedicine('anticoagulation_reversal','PCC 25 UI/kg IV',{patient:p,caseData:c,clock:clock(0)})
+  .clinicalAdvisories.some(x=>x.code==='maximum-administrations-exceeded'));
  assert.doesNotThrow(()=>preflightNativeMedicine('anticoagulation_reversal','PCC 25 UI/kg IV',{patient:p,caseData:c,clock:clock(0),eventId:'pcc'}));
 });
 
-test('acute executor enforces clinical eligibility on direct medication calls before any preparation',()=>{
+test('acute executor records clinical ineligibility without blocking technically supported medication',()=>{
  const p=patient(),c={...find('NEUR-01'),interventions:[{id:'alteplase_stroke',label:'Alteplasa'}]};
  const policy={initialVitals:()=>({...p.liveVitals}),advanceVitals(){},conducts:[],evaluate:()=>({ready:false,missing:[]})};
  const care=createAcuteCare(p,c,{mode:'solo',defaultDoses:{},progress:{award(){}},cases:[c]},policy);p.venousAccessCount=1;
- assert.equal(care.execute(command('alteplase_stroke','alteplasa 0,9 mg/kg IV'),clock(0)).reason,'clinical-evidence-required');
+ assert.equal(care.execute(command('alteplase_stroke','alteplasa 0,9 mg/kg IV'),clock(0)).status,'pending');
  care.advance(clock(0),clock(2000),2000);
- assert.equal(p.pendingTreatments.length,0);assert.equal(p.administrationLog.length,0);assert.equal(p.treatments.length,0);care.dispose();
+ assert.equal(p.pendingTreatments.length,0);assert.equal(p.administrationLog.length,1);assert.equal(p.treatments.length,1);
+ assert(p.administrationLog[0].clinicalAdvisories.some(x=>x.code==='clinical-evidence-required'));care.dispose();
 });
 
 test('one long native advance preserves both preparation and timed administration boundaries',()=>{
@@ -171,17 +175,18 @@ test('one long native advance preserves both preparation and timed administratio
  assert.equal(row.dose.amount,2000);care.dispose();
 });
 
-test('swallow screening is pending until bedside execution completes and only authored safe outcomes enable oral treatment',()=>{
+test('swallow screening completes at the bedside and oral treatment before it retains a clinical warning',()=>{
  const p=patient(),c={...find('NEUR-05'),interventions:[{id:'swallow_screen',label:'Deglución'},{id:'nimodipine',label:'Nimodipino'}]};
  const policy={initialVitals:()=>({...p.liveVitals}),advanceVitals(){},conducts:['swallow_screen'],evaluate:()=>({ready:false,missing:[]})};
  const care=createAcuteCare(p,c,{mode:'solo',defaultDoses:{},progress:{award(){}},cases:[c]},policy);
  p.orders=c.studies.filter(s=>s.id==='g_neur05_ct').map(s=>({...s,patientUid:'P',status:'done'}));
- assert.equal(care.execute(command('nimodipine','nimodipino'),clock(0)).reason,'clinical-swallow-assessment-required');
+ assert.equal(care.execute(command('nimodipine','nimodipino','before-screen'),clock(0)).status,'pending');
  care.execute(command('swallow_screen','evaluar deglucion'),clock(0));
  care.advance(clock(0),clock(1),1);assert.equal(p.swallowScreen,undefined);assert.equal(p.treatments.length,0);
  care.advance(clock(1),clock(50),49);assert.equal(p.swallowScreen.safe,true);
- assert.equal(p.treatments[0].resultSafe,true);assert.equal(p.administrationLog.length,0);
- assert.equal(care.execute(command('nimodipine','nimodipino 60 mg oral'),clock(50)).status,'pending');
+ assert.equal(p.treatments.find(x=>x.id==='swallow_screen').resultSafe,true);assert.equal(p.administrationLog.length,1);
+ assert(p.administrationLog[0].clinicalAdvisories.some(x=>x.code==='clinical-swallow-assessment-required'));
+ assert.equal(care.execute(command('nimodipine','nimodipino 60 mg oral','after-screen'),clock(50)).status,'pending');
  care.advance(clock(50),clock(80),30);assert.equal(p.administrationLog[0].route,'oral');
  assert.equal(p.administrationLog[0].dose.amount,60);care.dispose();
 });

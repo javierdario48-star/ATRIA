@@ -22,11 +22,11 @@ test('Spanish single-order Ringer 4 litros, 4 l or 4000 ml is a single validated
   assert.equal(dose.defaultApplied,false);
  }
  assert.equal(parseStandardIVDose('Ringer',r).amount,500);
- for(const text of ['Ringer 4 litros y 500 ml','Ringer 0 ml','Ringer 40001 ml',
+ for(const text of ['Ringer 4 litros y 500 ml','Ringer 0 ml','Ringer -40001 ml',
    'Ringer -500 ml','Ringer 40 litros y 20 ml','Ringer 4 litros oral']){
   assert.throws(()=>parseStandardIVDose(text,r),/dose|route/);
  }
- assert.throws(()=>parseStandardIVDose('furosemida 400 mg',content.defaultDoses.furosemide),/unsupported-dose/);
+ assert.equal(parseStandardIVDose('furosemida 400 mg',content.defaultDoses.furosemide).amount,400);
 });
 test('4 litres truly administered once, with 8x500 ml equivalent respiratory targets; none before actual receipt',async()=>{
  for(const caseId of ['APP-001','CIRR-001']){
@@ -71,12 +71,12 @@ test('4L order without verified venous access is rejected and produces no physio
   assert.deepEqual(f.s.read().patient.liveVitals,initial);
  }finally{f.s.dispose();}
 });
-test('malformed and wrong-dose medications never create IV receipts or clinical harm',async()=>{
+test('malformed medications and unsupported routes never create IV receipts or clinical harm',async()=>{
  const f=create('APP-001');
  try{
   await f.post('Enfermera una vía');
-  for(const phrase of ['Enfermera ceftriaxona 2 g','Enfermera metronidazol 2 g',
-    'Enfermera furosemida 400 mg','Enfermera Ringer 4 litros oral']){
+  for(const phrase of ['Enfermera ceftriaxona 0 g','Enfermera metronidazol 0 g',
+    'Enfermera furosemida 0 mg','Enfermera Ringer 4 litros oral']){
    const response=await f.post(phrase);
    assert.equal(response.clinical[0]?.status,'rejected',phrase);
   }

@@ -85,7 +85,7 @@ for(const scenario of ['withheld-beta','prior-rescue','prepared-beta'])test('CAR
   assert(rescue.clinical.some(x=>['pending','executed'].includes(x.status)),JSON.stringify(rescue));
   await f.advance(1);
   for(const id of ['esmolol','metoprolol'])
-   assert.equal((await f.post('/tratamiento '+id)).clinical[0].reason,'clinical-blood-pressure-limit');
+   assert.equal((await f.post('/tratamiento '+id)).clinical[0].status,'pending','hypotension advises against the drug but does not block delivery');
   await f.post('/reevaluar');
   const request=await f.post('/disposicion quirofano');
   assert.equal(request.clinical[0].status,'pending',JSON.stringify(request.clinical));

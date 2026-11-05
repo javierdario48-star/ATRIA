@@ -6,7 +6,7 @@ import {clinicalInterventionEligibility} from './native-medication-eligibility.j
 import {currentClinicalTreatment} from './receipts.js';
 import {clinicalAcuity} from './acuity.js';
 import {medicationSafety487,matchesMedicationAllergy487,hasMedicationSafetyMetadata487} from './medication-safety-487.js';
-import {nativeTreatmentDefinition,preflightNativeMedicine} from './native-medications.js';
+import {nativeTreatmentDefinition,preflightNativeMedicine,nativeMedicationDoseFraction} from './native-medications.js';
 import {physicianExaminationsPerformed} from './diagnostic-evidence.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 import {clinicalTransferContinuation,unrescuedTransferReactions} from './transfer-continuation.js';
@@ -33,8 +33,8 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
  const done=new Set(fulfilledTreatmentIds),pending=new Set([
   ...(p.pendingTreatments||[]).map(x=>x.id),...(p.hintPendingActions||[]).map(x=>x.id),
   ...(p.administrationLog||[]).filter(x=>x.status==='administering').map(x=>x.id)]);
- for(const t of p.treatments||[])if(c.clinicalPolicy?currentClinicalTreatment(p,t.id,minute):
-  t.patientUid===p.uid&&t.sourceEventId&&t.action!=='stop')done.add(t.id);
+ for(const t of p.treatments||[])if(nativeMedicationDoseFraction(t,c)>=1&&(c.clinicalPolicy?currentClinicalTreatment(p,t.id,minute):
+  t.patientUid===p.uid&&t.sourceEventId&&t.action!=='stop'))done.add(t.id);
  if(p.venousAccessCount>0)done.add('iv');
  if(p.procedures?.monitor?.connected)done.add('monitor');
  const studies=new Set(patientStudyOrders(p,'done',c).map(x=>studyEvidenceId(c,x.id))),

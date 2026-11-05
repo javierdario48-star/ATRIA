@@ -8,7 +8,7 @@ import {nativeCaseXP} from './progression.js';
 import {createClosureDebrief} from './closure-debrief.js';
 import {partialDisposition} from './partial-closure.js';
 import {createIVAdministration,nativeTreatmentDefinition,parseNativeProcedureDose} from './native-medications.js';
-import {clinicalInterventionEligibility} from './native-medication-eligibility.js';
+import {clinicalInterventionCapability} from './native-medication-eligibility.js';
 import {createSurgicalConsultation} from './surgical-consultation.js';
 import {GASTRO_CASE_CONDUCTS} from './gastro-expansion-policies.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
@@ -98,7 +98,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
    const access=executeVenousAccess(p,cmd);if(access)return access;
    const oxygen=executeOxygenSupport(p,cmd,clock);if(oxygen)return oxygen;
    if(['therapy.request','procedure.request'].includes(intent.kind)){
-    const issue=clinicalInterventionEligibility(p,c,intent.id,clock);
+    const issue=clinicalInterventionCapability(p,c,intent.id,clock);
     if(issue)return rejected(cmd,issue.reason,issue.message);
    }
    prepareDispositionReassessment(p,clock,cmd);
@@ -205,7 +205,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
      pendingConducts.delete(task.sourceEventId);
      p.pendingTreatments=p.pendingTreatments.filter(x=>x.sourceEventId!==task.sourceEventId);
      if(task.phase){
-      const issue=clinicalInterventionEligibility(p,c,task.id,{clinicalMinute:at,nativeMinute});
+      const issue=clinicalInterventionCapability(p,c,task.id,{clinicalMinute:at,nativeMinute});
       if(issue){for(const command of task.commands)results.push(rejected(command,issue.reason,issue.message));continue;}
       const done={id:task.id,label:task.label,dose:copy(task.dose),route:'procedure',regimen:copy(task.regimen),
        sourceEventId:task.sourceEventId,patientUid:p.uid,actorId:task.actorId,kind:'procedure.performed',

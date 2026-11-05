@@ -51,9 +51,9 @@ async function scenario(bot,caseId,mode,skill){
   assert.equal((await bot.post('/disposicion alta')).clinical[0].status,'rejected');
   await bot.post('Enfermera ceftriaxona 99 g');
   await bot.post('Enfermera transfusion 99 unidades');
-  assert.equal(s.read().patient.administrationLog.length,0,'rejected doses cannot treat or poison');
+  assert.equal(s.read().patient.administrationLog.length,0,'orders without venous access cannot treat or poison');
   await bot.post('Enfermera una vía');
-  const forbidden=await bot.post('Enfermera Ringer 500000 ml');
+  const forbidden=await bot.post('Enfermera Ringer 0 ml');
   assert.equal(forbidden.clinical[0]?.status,'rejected');
   assert.equal(s.read().exposure.confirmedCrystalloidMl,0);
   for(let i=0;i<8;i++){

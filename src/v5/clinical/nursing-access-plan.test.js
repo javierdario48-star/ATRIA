@@ -27,7 +27,7 @@ test('existing/pending IV does not create another catheterization',()=>{
  }
 });
 test('invalid dose, route, negation and unknown context never cause automatic cannulation',()=>{
- const invalid=[iv('ceftriaxone','ceftriaxona 2 g'),iv('ceftriaxone','ceftriaxona oral 1 g'),iv('fluid','Ringer 300 ml')];
+ const invalid=[iv('ceftriaxone','ceftriaxona 0 g'),iv('ceftriaxone','ceftriaxona oral 1 g'),iv('fluid','Ringer 0 ml')];
  for(const item of invalid)assert.deepEqual(planNursingIVAccess([item],{venousAccessCount:0,pendingIV:false,defaultDoses:doses}),[item]);
  assert.deepEqual(planNursingIVAccess([iv('fluid','Ringer')],{}),[iv('fluid','Ringer')]);
  assert.deepEqual(planNursingIVAccess([{kind:'history.ask',id:'dialogue'}],{venousAccessCount:0,defaultDoses:doses}),[{kind:'history.ask',id:'dialogue'}]);

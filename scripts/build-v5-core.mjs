@@ -13,6 +13,7 @@ const files=[
  'src/v5/clinical/study-evidence.js',
  'src/v5/clinical/study-order-vocabulary.js',
  'src/v5/clinical/gastro-expansion-policies.js',
+ 'src/v5/clinical/gastro-medication-rules.js',
  'src/v5/clinical/receipts.js',
  'src/v5/content/clinical-treatment-definitions.js',
  'src/v5/content/packs/respiratory-treatments.js',

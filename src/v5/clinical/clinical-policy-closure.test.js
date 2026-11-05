@@ -5,6 +5,7 @@ import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
 import {csClosureQuality487} from '../../clinical/case-completion-487.js';
 import {evaluateClinicalPolicyDisposition as evaluate} from './clinical-policy-closure.js';
+import {nativeMedicineDefinition} from './native-medications.js';
 const clone = value => structuredClone(value);
 const caseById = id => clone([...respiratoryPack.cases, ...cardiologyPack.cases, ...neurologyPack.cases].find(c => c.id === id));
 
@@ -21,7 +22,8 @@ function evidencePatient(c) {
   venousAccessCount: 0, reassessments: 1, lastReassessment: {eventId: 'reassessment', nativeMinute: 60, interventionEvents: [], administrationEvents: []}};
 }
 function administered(p, id, route = 'oral') {
- const t = {id, patientUid: p.uid, sourceEventId: 'admin-' + id, route, dose: {amount: 1, unit: 'mg'},
+ const definition=nativeMedicineDefinition(id,caseById(p.caseId));
+ const t = {id, patientUid: p.uid, sourceEventId: 'admin-' + id, route:definition?.route??route, dose: clone(definition?.dose??{amount:1,unit:'mg'}),
   administeredAtNativeMinute: 1, administeredAtRealSecond: 1};
  if(id==='oxygen'){
   t.action='start';t.dose={amount:4,unit:'L/min',device:'nasal-cannula'};

@@ -5,6 +5,7 @@ import {currentClinicalTreatment,isDeliveredClinicalAdministration} from './rece
 import {summarizeIVExposures} from './medication-exposure.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {evaluateComplicationCandidate} from './complication-eligibility.js';
+import {nativeMedicationDoseFraction} from './native-medications.js';
 
 export const CLINICAL_AXES=Object.freeze(['temp','hr','rr','sys','dia','spo2']);
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
@@ -39,7 +40,7 @@ export function clinicalPolicyTargets(patient,caseData,minute){
   const evidence=[...all,...(any.length?[any.reduce((a,b)=>a.administeredAtNativeMinute<b.administeredAtNativeMinute?a:b)]:[])];
   if(!evidence.length)continue;
   const at=Math.max(...evidence.map(x=>x.administeredAtNativeMinute));
-  const doseFraction=Math.min(...evidence.map(x=>x.deliveryFraction??1));
+  const doseFraction=Math.min(...evidence.map(x=>(x.deliveryFraction??1)*nativeMedicationDoseFraction(x,caseData)));
   add(out,vector(response.offsets,ramp(minute-at,response.delay,response.peak)*doseFraction));
  }
  if(trajectory.fluidResponse){

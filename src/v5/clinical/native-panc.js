@@ -42,6 +42,7 @@ export function advancePancVitals(p,c,delta,minute=0){
  const normalized=clamp(ml/1200,0,1.35);
  base.sys+=16*normalized;base.dia+=8*normalized;
  base.hr-=12*normalized;base.rr-=1.5*normalized;
+ p.nativeDiseaseTarget={nativeMinute:minute,vitals:{...base}};
  const overload=crystalloidOverloadOffsets(p,c);
  base.rr+=overload.rr;base.spo2+=overload.spo2;
  base.spo2+=oxygenationTargetOffset(p,c,minute);

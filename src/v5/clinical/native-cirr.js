@@ -25,9 +25,9 @@ export function parseCirrDose(text,reference={amount:100,unit:'mg',display:'100 
  const remaining=raw.slice(0,matches[0].index)+raw.slice(matches[0].index+matches[0][0].length);
  if(/\d|\b(?:ml|cc|mcg|ug|mg|g|litros?|microgramos?|miligramos?)\b/.test(remaining))throw Error('ambiguous-dose-qualifier');
  const amount=Number(matches[0][1])*(matches[0][2]==='g'?1000:1);
- // C2 only certifies the original reference regimen. Other explicit regimens
- // await C3 validation; they must never silently become the default dose.
- if(!Number.isFinite(amount)||amount<=0||amount!==reference.amount)throw Error('unsupported-dose');
+ // Interpretation is dimensional. Appropriateness belongs to clinical review;
+ // a positive explicit dose must never silently become the reference dose.
+ if(!Number.isFinite(amount)||amount<=0)throw Error('unsupported-dose');
  return {defaultApplied:false,amount,unit:'mg',display:amount>=1000?amount/1000+' g':amount+' mg'};
 }
 export function advanceCirrVitals(p,c,dt,atNativeMinute=0){
@@ -37,6 +37,7 @@ export function advanceCirrVitals(p,c,dt,atNativeMinute=0){
  // Native spironolactone/sodium restriction effects are empty. CIRR has no
  // peritonitis engine, shock progression or modeled ascites/diuresis kinetics.
  if(active.has('paracentesis_ter')){target.hr-=3;target.rr-=2;}
+ p.nativeDiseaseTarget={nativeMinute:atNativeMinute,vitals:{...target}};
  // No unsupported positive Ringer blood-pressure response in stable CIRR.
  // Respiratory fluid overload is independently evidenced by repeated dosing.
  const overload=crystalloidOverloadOffsets(p,c);

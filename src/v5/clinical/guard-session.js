@@ -20,7 +20,7 @@ import {createGuardClock} from './guard-clock.js';
 import {refreshMonitoring,parseNasalOxygenFlow} from './observations.js';
 import {vegaGuidance} from './vega-guidance.js';
 import {NATIVE_MEDICINES,isNativeMedicine,nativeMedicineDefinition,preflightNativeMedicine} from './native-medications.js';
-import {clinicalInterventionEligibility} from './native-medication-eligibility.js';
+import {clinicalInterventionCapability} from './native-medication-eligibility.js';
 import {parseCirrDose} from './native-cirr.js';
 import {summarizeIVExposures} from './medication-exposure.js';
 import {createCasePharmacology} from './pharmacology-catalog.js';
@@ -200,7 +200,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
       preflightNativeMedicine(intent.id,intent.clause||intent.sourceText,{caseData,patient:nativePatient,clock,requireAccess:false,eventId,
        reference:content.defaultDoses?.[intent.id]??NATIVE_MEDICINES[intent.id]?.dose,unfiltered:intent.sourceText});
      }
-     const eligibility=intent.kind!=='therapy.stop'&&clinicalInterventionEligibility(nativePatient,caseData,intent.id,clock);
+     const eligibility=intent.kind!=='therapy.stop'&&clinicalInterventionCapability(nativePatient,caseData,intent.id,clock);
      if(eligibility)throw Error(eligibility.reason);
      if(oxygenAction&&intent.kind==='therapy.request')parseNasalOxygenFlow(intent.clause||intent.sourceText,undefined,intent.sourceText);
      if(cirrBedside&&intent.id==='espironolactona')
@@ -482,8 +482,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    if(nativePatient.patientDied&&!deathPublished){
     deathPublished=true;
-    progress.penalizeDeath({patientUid:nativePatient.uid,
-     actorId,eventId:roomId+':death:'+nativePatient.uid});
+    if(nativePatient.deathAttribution?.classification==='treatment-contributed')
+     progress.penalizeDeath({patientUid:nativePatient.uid,
+      actorId:nativePatient.deathAttribution.actorIds?.[0]||actorId,eventId:roomId+':death:'+nativePatient.uid});
     care.dispose(); // cancel native medication and consultation preparations
     const reject=eventId=>port.complete({eventId,patientUid:nativePatient.uid,
      status:'rejected',reason:'patient-not-active'});

@@ -4,7 +4,8 @@ import {HEPARIN_SIM_DOSE_487,csHeparinIssue487} from '../../clinical/urgent-care
 import {parseMorphineIVDose487} from './morphine-487.js';
 import {parseSpecialIVDose487} from './iv-dose-contracts-487.js';
 import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
-import {clinicalInterventionEligibility} from './native-medication-eligibility.js';
+import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
+import {clinicalInterventionEligibility,clinicalInterventionCapability} from './native-medication-eligibility.js';
 export const IV_MEDICINES=Object.freeze({
  fluid:Object.freeze({id:'fluid',label:'Cristaloides / reposición de volumen',seconds:.8}),
  terlipressin:Object.freeze({id:'terlipressin',label:'Terlipresina IV',seconds:1.5}),
@@ -32,16 +33,21 @@ export const IV_MEDICINES=Object.freeze({
 export const isStandardIVMedicine=id=>Object.hasOwn(IV_MEDICINES,id);
 // Compatibility: the historical IV catalogue and strict parsers remain intact.
 // All new route formulations use this same administration owner.
-export const NATIVE_MEDICINES=Object.freeze({...IV_MEDICINES,
+const ORAL_MEDICINES=Object.freeze(Object.fromEntries(Object.entries({
+ ...GASTRO_CONDUCT_DOSES,espironolactona:{amount:100,unit:'mg',route:'oral',label:'Espironolactona oral'}
+}).map(([id,recipe])=>[id,Object.freeze({id,label:recipe.label,kind:'medication',route:recipe.route,
+ dose:{amount:recipe.amount,unit:recipe.unit,display:recipe.amount+' '+recipe.unit},
+ min:recipe.amount,max:recipe.amount,requiresAccess:false,seconds:id==='espironolactona'?.55:1.1})])));
+export const NATIVE_MEDICINES=Object.freeze({...IV_MEDICINES,...ORAL_MEDICINES,
  ...Object.fromEntries(Object.entries(CLINICAL_TREATMENTS).filter(([,v])=>v.kind==='medication'))});
 export const isNativeMedicine=id=>Object.hasOwn(NATIVE_MEDICINES,id);
 export function nativeTreatmentDefinition(id,caseData){
- const base=CLINICAL_TREATMENTS[id]||IV_MEDICINES[id];if(!base)return null;
+ const base=CLINICAL_TREATMENTS[id]||IV_MEDICINES[id]||ORAL_MEDICINES[id];if(!base)return null;
  const override=caseData?.clinicalPolicy?.regimens?.[id];
  const regimen={...(base.regimen||{}),...(override||{})};
  const dose=override?.dose||base.dose;
  const route=override?.route||base.route||'iv';
- return {...base,...override,id,route,regimen,dose,
+ return {...base,...override,id,kind:base.kind||'medication',route,regimen,dose,
   requiresAccess:override?.requiresAccess??base.requiresAccess??(route==='iv'),
   seconds:override?.preparationSeconds??base.preparationSeconds??base.seconds,
   ...(override?.dose?{min:override.min??override.dose.amount,max:override.max??override.dose.amount}:{}),
@@ -49,6 +55,17 @@ export function nativeTreatmentDefinition(id,caseData){
    regimen.mode==='infusion'&&!Number.isFinite(regimen.administrationMinutes)};
 }
 export const nativeMedicineDefinition=(id,caseData)=>isNativeMedicine(id)?nativeTreatmentDefinition(id,caseData):null;
+/** Therapeutic credit is separate from the historical fact of delivery. A
+ * subreference dose has at most its actual fraction of the authored benefit;
+ * excess cannot multiply benefit or create another treatment/XP award. */
+export function nativeMedicationDoseFraction(row,caseData){
+ const medicine=nativeMedicineDefinition(row?.id,caseData);if(!medicine)return 1;
+ const reference=medicine.regimen.infusion?.unit===row.dose?.unit?medicine.regimen.infusion:medicine.dose;
+ if(!reference)return 1; // legacy reference doses are supplied by the owner
+ const prescribed=row.prescribedDose??row.dose;
+ if(prescribed?.unit!==reference.unit||!Number.isFinite(prescribed.amount)||prescribed.amount<=0)return 0;
+ return Math.max(0,Math.min(1,prescribed.amount/(medicine.min??reference.amount)));
+}
 const normalizeDose=text=>String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
  .toLowerCase().replace(/[µμ]/g,'u').replace(/,/g,'.').replace(/[−–—]/g,'-')
  .replace(/\b([iveps])\.\s*([vomcl])\.?/g,'$1$2');
@@ -69,12 +86,16 @@ const units='(?:mcg|ug|mg|g|ml|cc|litros?|l|iu|ui|u|j|lpm|procedimientos?|proced
 const dosePattern=new RegExp('(?:^|\\s)([+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+))\\s*('+units+'(?:\\s*\\/\\s*(?:kg|h|min|hora|minuto)(?:\\s*\\/\\s*(?:min|h|hora|minuto|pbw))?)*(?:\\s+pbw)?)\\b','g');
 function parseDefinedDose(def,text,reference){
  if(!Number.isFinite(reference?.amount)||reference.amount<=0||!reference.unit)throw Error('native formulation missing');
- let raw=normalizeDose(text);validateNativeRoute(raw,def.route);
+ let raw=normalizeDose(text).replace(/\b(mcg|ug|mg|g|iu|ui|u)\s+(kg|h|min|hora|minuto)\b/g,'$1/$2')
+  .replace(/\/(kg)\s+(min|h|hora|minuto)\b/g,'/$1/$2');validateNativeRoute(raw,def.route);
+ const medication=def.kind==='medication';
+ const prescribedTiming={};
  const timing=[...raw.matchAll(/\b(en|durante|cada)\s*(\d+(?:\.\d+)?)\s*(min(?:utos?)?|h(?:oras?)?)\b/g)];
  for(const [whole,mode,number,unit] of timing){
   const actual=Number(number)*(unit.startsWith('h')?60:1),r=def.regimen||{};
   const expected=mode==='cada'?r.intervalMinutes:r.administrationMinutes??r.infusionMinutes??r.executionMinutes;
-  if(!Number.isFinite(expected)||actual!==expected)throw Error('unsupported-administration-timing');
+  if(!Number.isFinite(actual)||actual<=0||!medication&&(!Number.isFinite(expected)||actual!==expected))throw Error('unsupported-administration-timing');
+  if(medication)prescribedTiming[mode==='cada'?'intervalMinutes':'administrationMinutes']=actual;
   raw=raw.replace(whole,' ');
  }
  const matches=[...raw.matchAll(dosePattern)];
@@ -82,7 +103,7 @@ function parseDefinedDose(def,text,reference){
  if(!matches.length){
   // Digits inside a molecule alias (MgSO4, 4F-PCC) are not a prescribed dose.
   if(hasNumber(raw)||/\b(?:mg|g|mcg|ug|kg|ml|iu|ui)\b/.test(raw))throw Error('invalid-dose');
-  return {...reference,display:reference.display||reference.amount+' '+reference.unit,defaultApplied:true};
+  return {...reference,...prescribedTiming,display:reference.display||reference.amount+' '+reference.unit,defaultApplied:true};
  }
  const match=matches[0],rest=raw.slice(0,match.index)+raw.slice(match.index+match[0].length);
  if(hasNumber(rest)||/\b(?:mcg|ug|mg|ml|iu|ui|kg)\b/.test(rest))throw Error('ambiguous-dose-qualifier');
@@ -95,8 +116,8 @@ function parseDefinedDose(def,text,reference){
   else throw Error('unsupported-dose-unit');
  }
  const amount=Number(match[1])*factor,min=def.min??reference.amount,max=def.max??reference.amount;
- if(!Number.isFinite(amount)||amount<=0||amount<min-1e-9||amount>max+1e-9)throw Error('unsupported-dose');
- return {...reference,amount,display:Math.abs(amount-reference.amount)<1e-9&&reference.display?reference.display:amount+' '+reference.unit,defaultApplied:false};
+ if(!Number.isFinite(amount)||amount<=0||!medication&&(amount<min-1e-9||amount>max+1e-9))throw Error('unsupported-dose');
+ return {...reference,...prescribedTiming,amount,display:Math.abs(amount-reference.amount)<1e-9&&reference.display?reference.display:amount+' '+reference.unit,defaultApplied:false};
 }
 /** One pure formulation contract for single orders, batch preflight and bedside execution. */
 export function parseNativeMedicineDose(id,text,reference,unfiltered=text,caseData){
@@ -144,15 +165,36 @@ function exposureIssue(p,c,medicine,dose,clock,eventId){
  }
  return null;
 }
+const exposureMessages={
+ 'maximum-administrations-exceeded':'La repetición supera el número de administraciones de la pauta.',
+ 'administration-interval-required':'Esta dosis se repite antes del intervalo indicado; reevaluar la exposición acumulada.',
+ 'maximum-cumulative-dose-exceeded':'La dosis acumulada supera la pauta de este medicamento.',
+ 'unsupported-INR-dose-band':'La dosis de reversión no corresponde al INR documentado.'
+};
+function medicationAdvisories(patient,caseData,id,medicine,dose,reference,clock,eventId){
+ const out=[],issue=patient&&clinicalInterventionEligibility(patient,caseData,id,clock);
+ if(issue)out.push({code:issue.reason,message:issue.message});
+ const ref=medicine.regimen.infusion?.unit===dose.unit?medicine.regimen.infusion:reference??medicine.dose;
+ const min=medicine.min??ref?.amount,max=medicine.max??ref?.amount;
+ // Crystalloid bolus volume is reviewed by the existing perfusion/overload
+ // owner, not against the convenient 500ml default as a universal safe dose.
+ if(id!=='fluid'&&Number.isFinite(ref?.amount)&&dose.unit===ref.unit&&
+  (dose.amount<(min??ref.amount)-1e-9||dose.amount>(max??ref.amount)+1e-9))
+  out.push({code:'dose-outside-regimen',message:'La dosis indicada está fuera de la pauta de referencia; reevaluar dosis, indicación y vigilancia.'});
+ const exposure=patient&&exposureIssue(patient,caseData,medicine,dose,clock,eventId);
+ if(exposure)out.push({code:exposure,message:exposureMessages[exposure]});
+ for(const key of ['administrationMinutes','intervalMinutes'])if(Number.isFinite(dose[key])&&dose[key]!==medicine.regimen[key])
+  out.push({code:'administration-timing-outside-regimen',message:'El tiempo o intervalo indicado difiere de la pauta de referencia; reevaluar su seguridad.'});
+ return out;
+}
 export function preflightNativeMedicine(id,text,{caseData,reference,unfiltered=text,patient,clock,requireAccess=true,eventId}={}){
  const medicine=nativeMedicineDefinition(id,caseData);if(!medicine)throw Error('unknown-native-medicine');
  const dose=parseNativeMedicineDose(id,text,reference,unfiltered,caseData);
- const issue=patient?clinicalInterventionEligibility(patient,caseData,id,clock):null;
+ const issue=patient?clinicalInterventionCapability(patient,caseData,id,clock):null;
  if(issue){const error=Error(issue.reason);error.clinicalMessage=issue.message;throw error;}
  if(patient&&requireAccess&&medicine.requiresAccess&&(patient.venousAccessCount??0)<1)throw Error('venous-access-required');
- const exposure=patient&&exposureIssue(patient,caseData,medicine,dose,clock,eventId);
- if(exposure)throw Error(exposure);
- return {medicine,dose};
+ const clinicalAdvisories=medicationAdvisories(patient,caseData,id,medicine,dose,reference,clock,eventId);
+ return {medicine,dose,clinicalAdvisories};
 }
 // One dose dispatcher for compound preflight, physical nursing and execution.
 // Morphine has a validated range in the original final wrapper, rather than a
@@ -184,12 +226,10 @@ export function parseStandardIVDose(text,reference){
  const unit=chosen[2],actual=Number(chosen[1])*(unit==='g'?1000:unit==='l'||unit.startsWith('litro')?1000:1);
  if((reference.unit==='mg'&&!['mg','g'].includes(unit))||
   (reference.unit==='ml'&&!['ml','cc','l','litro','litros'].includes(unit))||
-  !Number.isFinite(actual)||
-  (reference.unit==='mg'?actual!==reference.amount:
-   !(actual>=500&&actual<=40000&&Number.isInteger(actual/500))))
+  !Number.isFinite(actual)||actual<=0)
   throw Error('unsupported-dose');
  return {...reference,amount:actual,display:reference.unit==='ml'?
-  (actual%1000===0?actual/1000+' l':actual+' ml'):reference.display,
+  (actual%1000===0?actual/1000+' l':actual+' ml'):actual===reference.amount?reference.display:actual+' mg',
   defaultApplied:false};
 }
 
@@ -207,8 +247,8 @@ export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected,c
   const id=cmd.intent.id;
   const medicine=nativeMedicineDefinition(id,caseData),stop=cmd.intent.kind==='therapy.stop';
   if(!medicine||cmd.intent.kind!=='therapy.request'&&!(stop&&medicine.continuous))return null;
-  let dose;
-  try{if(!stop)({dose}=preflightNativeMedicine(id,cmd.intent.clause||cmd.intent.sourceText,
+  let dose,clinicalAdvisories=[];
+  try{if(!stop)({dose,clinicalAdvisories}=preflightNativeMedicine(id,cmd.intent.clause||cmd.intent.sourceText,
    {caseData,reference:doses?.[id]??medicine.dose,unfiltered:cmd.intent.sourceText,patient:p,clock,eventId:cmd.eventId}));}
   catch(error){return rejected(cmd,error.message,error.clinicalMessage||'Dosis, vía o acceso no validado. No administrado.');}
   // A fresh clinical order is another exposure, even to the same drug.
@@ -231,9 +271,12 @@ export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected,c
   if(!stop&&medicine.requiresAccess&&(p.venousAccessCount??0)<1)
    return rejected(cmd,'venous-access-required','Primero confirmar al menos una vía venosa periférica. No administrado.');
   const legacy=isStandardIVMedicine(id)&&!caseData?.clinicalPolicy?.regimens?.[id];
+  const regimen={...medicine.regimen,...(Number.isFinite(dose?.administrationMinutes)?{administrationMinutes:dose.administrationMinutes}:{}),
+   ...(Number.isFinite(dose?.intervalMinutes)?{intervalMinutes:dose.intervalMinutes}:{})};
   const task={id,label:stop?(id==='vasopressor'?'Noradrenalina suspendida':medicine.label+' suspendida'):labels(id)||medicine.label,dose,sourceEventId:cmd.eventId,
+   ...(clinicalAdvisories.length?{clinicalAdvisories:copy(clinicalAdvisories)}:{}),
    actorId:cmd.actorId,patientUid:p.uid,
-   ...(!legacy?{route:medicine.route,regimen:copy(medicine.regimen),phase:'preparing',administrationMinutes:duration(medicine)}:{}),
+   ...(!legacy?{route:medicine.route,regimen:copy(regimen),phase:'preparing',administrationMinutes:duration({...medicine,regimen})}:{}),
    ...(medicine.continuous?{action:stop?'stop':active?.active?'setRate':'start',
     previousSourceEventId:active?.sourceEventId??null,...(stop?{previousDose:copy(active.dose)}:{})}:{}),
    readyAtRealSecond:clock.clinicalMinute+(stop?medicine.stopSeconds??1.8:medicine.seconds??1.5),commands:[copy(cmd)]};
@@ -282,11 +325,12 @@ export function createIVAdministration(p,{doses,labels=()=>null,proof,rejected,c
    p.treatments.push(copy(row));remove(task);
    return task.commands.map(cmd=>proof(cmd,row,cmd.eventId!==task.sourceEventId));
   }
-  const issue=task.action!=='stop'&&clinicalInterventionEligibility(p,caseData,task.id,{clinicalMinute:at,nativeMinute});
+  const issue=task.action!=='stop'&&clinicalInterventionCapability(p,caseData,task.id,{clinicalMinute:at,nativeMinute});
   if(issue){remove(task);return task.commands.map(cmd=>rejected(cmd,issue.reason,issue.message));}
   const infusionDose=medicine.regimen.infusion&&
    (task.action==='stop'?task.previousDose:task.dose?.unit===medicine.regimen.infusion.unit?task.dose:medicine.regimen.infusion);
   const t={id:task.id,label:task.label,dose:copy(task.dose),sourceEventId:task.sourceEventId,
+   ...(task.clinicalAdvisories?.length?{clinicalAdvisories:copy(task.clinicalAdvisories)}:{}),
    actorId:task.actorId,patientUid:p.uid,route:medicine.route,administeredAtRealSecond:at,
    ...(task.action?{action:task.action,moleculeId:molecule(task.id),...(task.action==='stop'?{previousDose:copy(task.previousDose)}:{}),
     ...(infusionDose?{infusionDose:copy(infusionDose)}:{})}:{}),

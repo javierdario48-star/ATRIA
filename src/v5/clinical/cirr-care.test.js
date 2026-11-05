@@ -18,23 +18,25 @@ test('CIRR evaluation records authentic answers, actual directed exam and measur
  assert.match(f.s.read().messages.map(m=>m.text).join('\n'),/muchos años|durante años/);
  assert.match(JSON.stringify(p.exam),/Esplenomegalia/);f.s.dispose();
 });
-test('real oral administration is pending for 550ms; retry, second request and later text cannot duplicate or steal its receipt',async()=>{
+test('real oral administration is pending for 550ms; replay deduplicates while a new order is a new exposure',async()=>{
  const f=setup();const first=await f.send('Enfermera espironolactona','spiro');
  assert.equal(first.clinical[0].status,'pending');assert.equal(f.s.read().patient.treatments.length,0);
  await f.send('Enfermera espironolactona','spiro');await f.send('Enfermera espironolactona','again');
  await f.send('Hola este mensaje no indicó nada','later');f.s.advance(.549);await f.s.flush();
  assert.equal(f.s.read().patient.treatments.length,0);f.s.advance(.001);await f.s.flush();
- const p=f.s.read().patient;assert.equal(p.treatments.length,1);assert.equal(p.administrationLog.length,1);
+ const p=f.s.read().patient;assert.equal(p.treatments.length,2);assert.equal(p.administrationLog.length,2);
  assert.equal(p.treatments[0].dose.amount,100);assert.equal(p.treatments[0].patientUid,'P1');
  const done=await f.send('Enfermera espironolactona','spiro');assert.equal(done.clinical[0].status,'executed');
  assert.equal(done.clinical[0].receipt.therapyId,'espironolactona');assert.equal(done.clinical[0].receipt.eventId,'C2:doctor:spiro:0');
  assert.equal(done.clinical[0].receipt.sourceEventId,'C2:doctor:spiro:0');
  assert(f.s.read().room.events.filter(e=>e.type==='clinical.completed').every(e=>e.commandId!=='later'));
- await f.send('Enfermera espironolactona','after');assert.equal(f.s.read().patient.treatments.length,1);f.s.dispose();
+ assert.equal((await f.send('Enfermera espironolactona','after')).clinical[0].status,'pending');
+ assert.equal(f.s.read().patient.treatments.length,2);f.s.advance(.55);await f.s.flush();
+ assert.equal(f.s.read().patient.treatments.length,3);f.s.dispose();
 });
 test('hemogram, negation, unsupported dose/drugs and foreign or distant patient cannot administer medicine',async()=>{
  const f=setup();await f.send('Enfermera hemograma');await f.send('Enfermera no administres espironolactona');
- for(const text of ['Enfermera espironolactona 0 mg','Enfermera espironolactona 50 mg','Enfermera ceftriaxona'])await f.send(text);
+ for(const text of ['Enfermera espironolactona 0 mg','Enfermera espironolactona -50 mg','Enfermera ceftriaxona'])await f.send(text);
  f.near('other');await f.send('Enfermera espironolactona','foreign');f.near(null);
  await f.send('Enfermera espironolactona','forged',{patientUid:'P1'});f.s.advance(40);await f.s.flush();
  assert.deepEqual(f.s.read().patient.treatments,[]);assert.equal(f.s.read().patient.orders.length,1);

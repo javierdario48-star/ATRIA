@@ -15,8 +15,8 @@ export function morphineOrderIssue487(raw) {
  if(numbers.length){
   const tail=text.slice(name.index+name[0].length);
   const dose=tail.match(/^\s*(\d+(?:\.\d+)?)\s*mg\b/);
-  if(!dose||!Number.isFinite(Number(dose[1]))||Number(dose[1])<=0||Number(dose[1])>30)
-   return 'Morfina: indicá después del nombre una dosis positiva en mg IV, dentro del límite educativo del simulador.';
+  if(!dose||!Number.isFinite(Number(dose[1]))||Number(dose[1])<=0)
+   return 'Morfina: indicá después del nombre una dosis positiva en mg IV.';
  }
  if(/\b(?:mcg|ug|ml|cc|g|l)\b/.test(text))return 'Morfina: unidad incompatible; la dosis debe expresarse en mg IV.';
  return null;
@@ -45,7 +45,7 @@ export function confirmedMorphineResponse487(p,c,atNativeMinute){
   const matching=(p.treatments||[]).filter(t=>t.id===row.id&&t.sourceEventId===row.sourceEventId);
   if(row.patientUid!==p.uid||typeof row.sourceEventId!=='string'||!row.sourceEventId||
    seen.has(row.sourceEventId)||row.action==='stop'||row.dose?.unit!=='mg'||
-   !Number.isFinite(row.dose.amount)||row.dose.amount<=0||row.dose.amount>30||
+   !Number.isFinite(row.dose.amount)||row.dose.amount<=0||
    !Number.isFinite(row.administeredAtNativeMinute)||row.administeredAtNativeMinute<0||
    row.administeredAtNativeMinute>atNativeMinute+1e-9||matching.length!==1||
    matching[0].patientUid!==p.uid||matching[0].dose?.unit!==row.dose.unit||

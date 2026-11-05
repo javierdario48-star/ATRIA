@@ -1,5 +1,5 @@
-// Pure clinical preflight shared by nursing and the native bedside executor.
-// This reads documented evidence; it never orders a study or changes a patient.
+// Pure clinical appropriateness review for advice, checklist and quality.
+// This reads documented evidence; it does not authorize or block a medicine.
 import {confirmedClinicalTreatment} from './receipts.js';
 import {patientStudyOrders,studyEvidenceId} from './study-evidence.js';
 const norm=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -20,7 +20,7 @@ export function clinicalInterventionEligibility(p,c,id,clock={}){
  const v=p.liveVitals||{},unstable=v.sys<90||v.spo2<90||v.hr>=150||v.rr>=35;
  const excluded=[...(rule.excludeTraits||[])];
  if(noBleedingDrugs.has(id))excluded.push('activeBleeding','intracranialBleed','intracranialBleeding','aorticDissection');
- if(excluded.some(t=>traits.has(t)))return fail('clinical-contraindication','La indicación tiene una contraindicación clínica documentada; no ejecutada.');
+ if(excluded.some(t=>traits.has(t)))return fail('clinical-contraindication','La indicación tiene una contraindicación clínica documentada.');
  if((rule.requiredStudies||[]).some(s=>!done.has(s))&&!(rule.unlessUnstable&&unstable)||
   (rule.requiresHistory||[]).some(h=>!history.has(h)))
   return fail('clinical-evidence-required','Completar los estudios y antecedentes requeridos antes de esta intervención.');
@@ -100,9 +100,19 @@ export function clinicalInterventionEligibility(p,c,id,clock={}){
    return fail('clinical-evidence-required','Documentar riesgo hemorrágico, medicación y evidencia de TEP de alto riesgo antes de reperfundir.',
     {history:missingHistory,studyAlternatives});
  }
- if(id==='lung_protective_ventilation'&&!complete(p,'intubation',minute))
-  return fail('clinical-airway-required','Confirmar intubación antes de ajustar ventilación invasiva protectora.');
+ const capability=clinicalInterventionCapability(p,c,id,clock);if(capability)return capability;
  if(id==='niv'&&(traits.has('unprotectedAirway')||traits.has('undrainedPneumothorax')||traits.has('neuromuscularWeakness')))
   return fail('clinical-contraindication','La presentación requiere protección de vía aérea o drenaje; VNI no validada.');
+ return null;
+}
+
+/** Technical dependency only. Missing evidence, an unsafe indication, pressure,
+ * a treatment window or an unassessed swallow are clinical decisions, not
+ * device failures. Invasive ventilation physically requires an actual airway.
+ * Formulation/route/access are checked by the existing native executor. */
+export function clinicalInterventionCapability(p,c,id,clock={}){
+ const minute=Number.isFinite(clock.nativeMinute)?clock.nativeMinute:0;
+ if(id==='lung_protective_ventilation'&&!complete(p,'intubation',minute))
+  return fail('clinical-airway-required','Confirmar intubación antes de ajustar ventilación invasiva protectora.');
  return null;
 }
