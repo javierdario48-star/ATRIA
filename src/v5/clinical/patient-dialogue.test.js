@@ -9,9 +9,9 @@ import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
 const read=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const content={cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')};
-function setup(caseId='APP-001',uid='P1'){
+function setup(caseId='APP-001',uid='P1',clinicalContent=content){
  let n=0,near=uid,focus=null;
- const s=createGuardSession({roomId:uid,mode:'solo',actorId:'doctor',actorName:'Javier',patient:{uid,caseId},content,
+ const s=createGuardSession({roomId:uid,mode:'solo',actorId:'doctor',actorName:'Javier',patient:{uid,caseId},content:clinicalContent,
   resolveContext:()=>({patientUid:near,focusedNpc:focus})});
  return {s,send:text=>s.post({id:'d'+(++n),text}),near:x=>near=x,focus:x=>focus=x};
 }
@@ -36,7 +36,124 @@ test('an unconscious patient retains impaired speech while an authored companion
   assert.equal(s.read().patient.neurology.verbal,1);
   const fact=s.read().patient.intentHistory.find(x=>x.id==='onset');
   assert.equal(fact.historySource.kind,'companion');assert.equal(fact.patientUid,uid);
+  const meds=await s.post({id:'witness-meds',text:'¿Medicación?'});
+  assert.match(answer(meds),/^Familiar acompañante \(anamnesis indirecta\): Levetiracetam domiciliario suspendido por tres días por falta de medicación\. No benzodiacepinas administradas antes de llegar\.$/);
+  assert.equal(s.read().patient.intentHistory.find(x=>x.id==='meds').historySource.kind,'companion');
  }finally{s.dispose();}
+});
+function voiceSession(c,checkpoint=null){
+ const uid='voice-'+c.id;
+ return createGuardSession({roomId:uid,mode:'solo',actorId:'doctor',actorName:'Doctor',
+  patient:{uid,caseId:c.id},content:createClinicalContent(content,{additionalCases:[c]}),
+  resolveContext:()=>({patientUid:uid}),checkpoint});
+}
+test('medication history speaks in first person through the guard and after checkpoint recovery',async()=>{
+ const c=cardiologyPack.cases.find(c=>c.id==='CARD-01'),s=voiceSession(c);
+ const clinicalNote='Losartán y metformina. No toma anticoagulantes ni antiagregantes. Niega sildenafil, vardenafil, tadalafil o avanafil recientes.';
+ const spoken=/^Tomo losartán y metformina\. No tomo anticoagulantes ni antiagregantes\. No tomé sildenafil, vardenafil, tadalafil ni avanafil recientemente\.$/i;
+ let restored;
+ try{
+  const initial=await s.post({id:'voice-meds',text:'¿Qué medicamentos toma?'});
+  assert.match(answer(initial),spoken);
+  assert.equal(s.read().messages.at(-1).text,answer(initial));
+  assert.equal(initial.clinical[0].receipt.dialogue.facts[0].canonical,clinicalNote);
+  assert.equal(s.read().patient.intentHistory.find(x=>x.id==='meds').answer,clinicalNote);
+  restored=voiceSession(c,JSON.parse(JSON.stringify(await s.checkpoint())));
+  assert.deepEqual(restored.read().patient.behavior,s.read().patient.behavior);
+  assert.match(answer(await restored.post({id:'voice-which',text:'¿Cuáles?'})),spoken);
+  assert.match(answer(await restored.post({id:'voice-unknown-dose',text:'¿Qué dosis?'})),/No puedo precisar la dosis que tomo/);
+  assert.equal(restored.read().patient.intentHistory.filter(x=>x.id==='meds').length,1);
+  assert.deepEqual(restored.read().patient.administrationLog,[]);
+ }finally{s.dispose();restored?.dispose();}
+});
+test('a second medication history and its dose follow-up keep the drug, amount and omitted dose distinct',async()=>{
+ const s=voiceSession(cardiologyPack.cases.find(c=>c.id==='CARD-02'));
+ try{
+  const initial=await s.post({id:'voice-meds',text:'¿Qué medicamentos toma?'});
+  assert.match(answer(initial),/^Tomo aspirina 100 mg diarios, atorvastatina y losartán; no tomé la aspirina hoy\. No uso anticoagulantes ni inhibidores PDE5\.$/i);
+  const detail=await s.post({id:'voice-dose',text:'¿Qué dosis?'});
+  assert.match(answer(detail),/^Tomo aspirina 100 mg diarios, atorvastatina y losartán[.;]$/i);
+  assert.equal(s.read().patient.intentHistory.filter(x=>x.id==='meds').length,1);
+ }finally{s.dispose();}
+});
+test('first-person medication history does not present a suspended drug as currently taken',async()=>{
+ const s=voiceSession(cardiologyPack.cases.find(c=>c.id==='CARD-03'));
+ try{
+  const reply=await s.post({id:'voice-suspended-med',text:'¿Qué medicamentos toma?'});
+  assert.match(answer(reply),/Mi medicación habitual es furosemida oral 20 mg\/día, enalapril y carvedilol; suspendí el diurético hace 3 días\./i);
+  assert.doesNotMatch(answer(reply),/Tomo furosemida/i);
+  const detail=await s.post({id:'voice-suspended-dose',text:'¿Qué dosis?'});
+  assert.match(answer(detail),/^Mi medicación habitual es furosemida oral 20 mg\/día, enalapril y carvedilol\.$/i);
+ }finally{s.dispose();}
+});
+test('neurology medication denials share direct speech while a named informant keeps their own attribution',async()=>{
+ const c=neurologyPack.cases.find(c=>c.id==='NEUR-03'),s=voiceSession(c);
+ const external='Familiar: toma warfarina. No toma aspirina.';
+ const reported=voiceSession({...c,common:{...c.common,meds:[external]}});
+ try{
+  assert.match(answer(await s.post({id:'voice-meds',text:'¿Qué medicamentos toma?'})),
+   /^Tomo losartán y metformina\. No tomo antiagregantes ni anticoagulantes\.$/i);
+  const attribution=await reported.post({id:'voice-reported-meds',text:'¿Qué medicamentos toma?'});
+  assert.equal(answer(attribution),external);
+ }finally{s.dispose();reported.dispose();}
+});
+test('medication list modifiers remain attached to the right drug',async()=>{
+ const s=voiceSession(cardiologyPack.cases.find(c=>c.id==='CARD-10'));
+ try{
+  const reply=await s.post({id:'voice-irregular-meds',text:'¿Qué medicamentos toma?'});
+  assert.match(answer(reply),/Tomo metformina y losartán, y tomo aspirina de forma irregular;/i);
+  assert.match(answer(reply),/hoy no tomé anticoagulantes, inhibidores PDE5 o betabloqueantes\./i);
+ }finally{s.dispose();}
+});
+test('a mixed medication denial keeps present anticoagulants separate from earlier antibiotics',async()=>{
+ const s=voiceSession(neurologyPack.cases.find(c=>c.id==='NEUR-08'));
+ try{
+  const reply=await s.post({id:'voice-mixed-negatives',text:'¿Qué medicamentos toma?'});
+  assert.match(answer(reply),/Tomo paracetamol de vez en cuando\. No tomo anticoagulantes y no tomé antibióticos antes\./i);
+ }finally{s.dispose();}
+});
+test('verbal confusion does not change the speaker of a disclosed last dose or add personality styling',async()=>{
+ const s=voiceSession(neurologyPack.cases.find(c=>c.id==='NEUR-04'));
+ try{
+  assert.equal(s.read().patient.neurology.verbal,4);
+  const reply=await s.post({id:'voice-dose-recall',text:'¿Qué medicamentos toma?'});
+  assert.match(answer(reply),/^La última dosis de warfarina la tomé anoche; tomo losartán de forma irregular\. No tomo antiagregantes\.$/i);
+  assert.equal(reply.clinical[0].receipt.dialogue.styleApplied,false);
+  const last=await s.post({id:'voice-last-dose',text:'¿Cuándo fue la última dosis?'});
+  assert.match(answer(last),/^La última dosis de warfarina la tomé anoche\.$/i);
+  assert.match(answer(await s.post({id:'voice-no-allergies',text:'¿Alergias?'})),
+   /^No tengo alergias conocidas; no tengo antecedentes de trombocitopenia inducida por heparina\.$/i);
+  assert.equal(s.read().patient.neurology.verbal,4);
+ }finally{s.dispose();}
+});
+test('direct patient history speaks symptoms and denials while retaining authored background',async()=>{
+ const s=voiceSession(cardiologyPack.cases.find(c=>c.id==='CARD-01'));
+ try{
+  const initial=s.read().patient;
+  const personal=answer(await s.post({id:'voice-personal',text:'¿Antecedentes personales?'}));
+  assert.match(personal,/Tengo hipertensión, dislipidemia y diabetes tipo 2; no tengo antecedentes de ACV, hemorragia digestiva ni enfermedad renal conocida\./i);
+  assert(personal.includes(initial.backgroundHistory.history.pmh.split('. ').slice(1).join('. ')));
+  const symptoms=answer(await s.post({id:'voice-symptoms',text:'¿Otros síntomas?'}));
+  assert.match(symptoms,/Tengo sudor frío, náuseas y sensación de falta de aire\. No tuve dolor máximo instantáneo hacia espalda, síncope ni déficit focal\./i);
+  assert.match(answer(await s.post({id:'voice-bleeding',text:'¿Tiene sangrado?'})),/No tengo sangrado activo, no me operaron recientemente ni tengo antecedentes de hemorragia intracraneal\./i);
+  assert.deepEqual(s.read().patient.liveVitals,initial.liveVitals);
+ }finally{s.dispose();}
+});
+test('allergies and prior treatment are spoken as the patient’s history, without adding clinical care',async()=>{
+ const allergy=voiceSession(cardiologyPack.cases.find(c=>c.id==='CARD-01'));
+ const treatment=voiceSession(cardiologyPack.cases.find(c=>c.id==='CARD-09'));
+ const surgery=setup('PERI-TER-001','voice-peri-ter',createClinicalContent(content));
+ try{
+  assert.match(answer(await allergy.post({id:'voice-allergy',text:'¿Alergias?'})),/^No conozco alergias a medicamentos, aspirina ni contraste\.$/i);
+  assert.match(answer(await treatment.post({id:'voice-prior-treatment',text:'¿Qué medicamentos toma?'})),
+   /Tomo losartán y paracetamol\. Aún no recibí antibióticos; me llamaron por hemocultivos externos positivos obtenidos hace 48 horas\./i);
+  assert.match(answer(await surgery.send('¿Antecedentes personales?')),
+   /Tengo inmunosupresión crónica y me hicieron varias cirugías recientes por peritonitis secundaria, y ya había recibido antibióticos de amplio espectro\./i);
+  assert.match(answer(await surgery.send('¿Cuántas veces te operaron?')),/Me operaron.*en estos días por la infección abdominal/);
+  assert.match(answer(await surgery.send('¿Y qué pasó después?')),/Nunca terminé de mejorar: sigo con fiebre/);
+  assert.deepEqual(treatment.read().patient.administrationLog,[]);
+  assert.deepEqual(surgery.s.read().patient.administrationLog,[]);
+ }finally{allergy.dispose();treatment.dispose();surgery.s.dispose();}
 });
 test('authored specialty patients answer real history through the public session without executing care',async()=>{
  const caseData=respiratoryPack.cases.find(c=>c.id==='RESP-01');
@@ -478,7 +595,7 @@ test('follow-ups disclose an authored dose, surgical course or known negative al
  try{
   await s.post({id:'dose-1',text:'¿Qué medicamentos tomás?'});
   const dose=await s.post({id:'dose-2',text:'¿Cuánto tomás?'});
-  assert.match(answer(dose),/Aspirina 100 mg diarios/);
+  assert.match(answer(dose),/aspirina 100 mg diarios/i);
   assert.equal(s.read().patient.intentHistory.filter(x=>x.id==='meds').length,1);
   assert.match(answer(await cardio.send('¿Tuvo alguna reacción a medicamentos?')),/no tengo alergias/i);
   assert.match(answer(await cardio.send('¿Cuáles?')),/no tengo alergias/i);

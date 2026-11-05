@@ -59,6 +59,45 @@ export function clinicalMeaning(text){
  // their original propositions. A global word bag would miss reassignment.
  return clauses.sort().join(' | ');
 }
+// Only the documented direct-speech forms can count as equivalent. In
+// particular, compare medication tense before folding accents (tomó ≠ tomo).
+function patientHistoryMeaning(text){
+ const clauses=text.split(/(?<=[.!?;])\s+/).map(clause=>clause.toLowerCase().replace(/[.!?;]$/,'')
+  .replace(/^hoy no tomé (.+)$/,'no $1 hoy')
+  .replace(/^((?:aún )?(?:no |nunca )?)(?:tomó|tomé) /,'$1past use ')
+  .replace(/^((?:aún )?(?:no |nunca )?)(?:recibió|recibí) /,'$1received ')
+  .replace(/^((?:no |nunca )?)(?:suspendió|suspendí) (?:el )?/,'$1held ')
+  .replace(/^(no )(?:usa|uso|toma|tomo) /,'$1')
+  .replace(/^no (.+) y no tomé antibióticos antes$/,'no $1 ni antibióticos previos')
+  .replace(/^no past use antibióticos antes$/,'no antibióticos previos')
+  .replace(/^(?:tomo |mi medicación habitual es )/,'')
+  .replace(/^([^,]+), última dosis (.+)$/,'last dose of $1 at $2')
+  .replace(/^la última dosis de (.+?) la tomé (.+)$/,'last dose of $1 at $2')
+  .replace(/^(.+) y ([^, ]+) (?:de forma irregular|irregular)$/,'$1, y tomo $2 irregular')
+  .replace(/^(.+?) y ([^, ]+), y tomo ([^, ]+) de forma irregular$/,'$1, $2, y tomo $3 irregular')
+  .replace(/^no past use (antibióticos previos\b.*)$/,'no $1')
+  .replace(/^niega (inhibidores pde5)$/,'no usé $1')
+  .replace(/^(?:niega (sildenafil, vardenafil, tadalafil) o (avanafil) recientes|no past use (sildenafil, vardenafil, tadalafil) ni (avanafil) recientemente)$/,
+   (_,a,b,c,d)=>'no recent use '+(a??c)+' ni '+(b??d))
+  .replace(/^(?:fue llamado|me llamaron) por /,'called because ')
+  .replace(/ (?:de forma irregular|tomad[oa] irregularmente|irregular)$/,' irregular')
+  .replace(/ (?:de vez en cuando|ocasional)$/,' ocasional')
+  .replace(/^(?:niega|no (?:reconoce|conoce|conozco|refiere|se conocen)) (alergias?\b.*)$/,'no known $1')
+  .replace(/^(?:niega|no tuve) (reacción alérgica\b.*)$/,'no reaction $1')
+  .replace(/^(?:no tengo|sin) (alergias?\b.*)$/,'no $1')
+  .replace(/^(?:sin antecedentes?|no tengo antecedentes) de (?=trombocitopenia)/,'no antecedente de ')
+  .replace(/^no tengo antecedentes de /,'no ')
+  .replace(/^(?:tengo|siento) (?=hipertensión|diabetes|dislipidemia|miocardiopatía|fibrilación|inmunosupresión|sudor|náuseas|sensación de falta de aire|falta de aire|fatiga|escalofríos|mareo|ortopnea|fotofobia|dolor de cuello)/,'')
+  .replace(/\bme hicieron varias cirugías recientes\b/,'múltiples cirugías recientes')
+  .replace(/, y ya había recibido (antibióticos .+)$/,', con exposición previa a $1')
+  .replace(/^no tuve (dolor máximo instantáneo hacia espalda, síncope) ni (déficit focal)$/,'niega $1 o $2')
+  .replace(/^(?:no he tenido|no tuve|no tengo) ((?:fiebre|síncope|cefalea|convulsión|dolor)\b.*)$/,'no $1')
+  .replace(/^no me operaron recientemente$/,'no cirugía reciente')
+  .replace(/^no tengo (sangrado activo|hemorragia activa), no me operaron recientemente ni (?:tengo|tuve) (.+)$/,
+   (_,bleeding,prior)=>'no '+bleeding+', cirugía reciente '+(prior.endsWith(' previa')?'o':'ni')+' '+prior)
+  .replace(/^sin /,'no '));
+ return clinicalMeaning(clauses.join('. '));
+}
 export function interviewQuality(row){
  const failures=[],remarks=new Map();let spontaneous=0,facts=0,realizations=0;
  for(const [i,t] of row.rows.entries()){
@@ -69,7 +108,8 @@ export function interviewQuality(row){
    // Numeric, dose and named entities must survive the bounded language rules.
    const nums=x=>(x.match(/\d+(?:[.,]\d+)?/g)||[]).sort().join('|');
    if(nums(f.canonical)!==nums(f.spoken))failures.push('changed-number:'+i+':'+f.id);
-   if(clinicalMeaning(f.canonical)!==clinicalMeaning(f.spoken))failures.push('changed-clinical-content:'+i+':'+f.id);
+   const meaning=f.rules?.includes('patient-voice')?patientHistoryMeaning:clinicalMeaning;
+   if(meaning(f.canonical)!==meaning(f.spoken))failures.push('changed-clinical-content:'+i+':'+f.id);
    if(normalizeText(f.canonical)!==normalizeText(f.spoken))realizations++;
   }
   if(e?.remark){

@@ -2,6 +2,7 @@ import {csAnamnesisFact} from '../../clinical/anamnesis-intents.js';
 import {PATIENT_PROFILES} from './patient-profiles.js';
 import {readPatientObservations} from './patient-observations.js';
 import {discloseAllergies,normalizePatientPersonality} from '../content/patient-variation.js';
+import {speakPatientHistory} from '../content/patient-language.js';
 import {patientRelationship,spontaneousHistory,composePatientConversation} from './patient-conversation.js';
 import {normalizePatientQuestion as normalize,medicationQuestion,followUpQuestion,followUpDetail} from './patient-question-context.js';
 
@@ -88,6 +89,7 @@ export function executePatientDialogue(p,c,cmd,clock){
  const profile=PATIENT_PROFILES[c.id]??authoredProfile(c);if(!profile)return null;
  p.interview??={lastSymptom:null,dimensions:{},symptoms:{},subjective:null};
  const context=p.interview,observed=readPatientObservations(p,c.id,clock.nativeMinute),answers=[],disclosures=[];
+ const speechContext=new Map();
  let sensitiveHistory=false;
  // A case's acquired history is shared. The conversational reference belongs
  // to the authenticated speaker and lives in the existing patient checkpoint.
@@ -98,21 +100,22 @@ export function executePatientDialogue(p,c,cmd,clock){
  function remember(topic,entry=null){
   speaker.topic=topic;speaker.entry=entry;context.lastSymptom=topic;
  }
- function note(id,answer,source){
+ function note(id,answer,source,domain=id?.replace(/^anamnesis:/,''),history){
   const entry={id,answer:lay(answer),source,eventId:cmd.eventId,patientUid:p.uid,nativeMinute:clock.nativeMinute};
   disclosures.push(entry);
+  speechContext.set(entry,{domain,history});
   if(id&&!p.intentHistory.some(x=>x.id===id))p.intentHistory.push(entry);
   return entry;
  }
  function disclose(topic,id,text,source){
-  const entry=note(id,text,source);
+  const entry=note(id,text,source,topic);
   remember(topic,entry);answers.push(entry.answer);
  }
  function follow(kind,topic,entry=speaker.entry){
   if(sensitiveTopics.has(topic))sensitiveHistory=true;
   const detail=followUpDetail(entry?.id?entry:null,kind,topic);
   // Rephrasing or narrowing a previously acquired fact cannot award a new one.
-  answers.push(note(null,detail.answer,detail.source||'native.history-detail-unavailable').answer);
+  answers.push(note(null,detail.answer,detail.source||'native.history-detail-unavailable',topic,entry?.answer).answer);
  }
  function symptom(id,duration){
   const def=symptomQuestions.find(s=>s[0]===id),fact=c.intents.find(i=>i.id===id||id==='diarrhea'&&i.id==='bowel');
@@ -255,10 +258,11 @@ export function executePatientDialogue(p,c,cmd,clock){
    answers[0]='Hola, doctor. '+answers[0];
   }
  }
- // Only style the outward utterance; recorded clinical facts stay literal.
- // Never change impaired speech, allergies, drug names or other case facts.
+ // Register and personality apply only to the outward utterance. Indirect
+ // reports and impaired speech retain their own speaker and wording.
  const rawAnswer=lay([...new Set(answers)].join(' '));
  const personality=normalizePatientPersonality(p.personality);
+ const directSpeech=verbal>=4;
  const fluent=verbal>=5&&rawAnswer;
  const protectedAnswer=sensitiveHistory||/alergia|urticaria|anafilaxia/i.test(rawAnswer);
  const canStyle=fluent&&!protectedAnswer;
@@ -267,33 +271,34 @@ export function executePatientDialogue(p,c,cmd,clock){
  if(proxyHistory)for(const entry of p.intentHistory)if(entry.eventId===cmd.eventId){
   entry.historySource={kind:informant.kind,label:informant.label};entry.source='indirect-history:'+entry.source;
  }
+ const facts=[...new Set(answers)].map((text,i)=>{
+  const canonical=lay(text.replace(/^Hola, doctor\. /,'')),entry=disclosures.find(e=>e.answer===canonical);
+  return {id:entry?.id??'interview:response:'+i,canonical,
+   source:entry?.source??(verbal<4||verbal==null?'native.impaired-speech':'native.patient-observation'),
+   ...speechContext.get(entry)};
+ });
  let dialogue=null;
- let answer=proxyHistory&&rawAnswer?informant.label+' (anamnesis indirecta): '+rawAnswer:
-  canStyle&&!p.behavior&&prefix?prefix+rawAnswer:rawAnswer;
+ let answer=rawAnswer;
  if(fluent&&p.behavior){
   const interaction=patientRelationship(context,cmd.actorId,p.behavior,raw),r=interaction.relationship;
-  const facts=[...new Set(answers)].map((text,i)=>{
-   const canonical=lay(text.replace(/^Hola, doctor\. /,'')),entry=disclosures.find(e=>e.answer===canonical);
-   return {id:entry?.id??'interview:response:'+i,canonical,source:entry?.source??'native.patient-observation'};
-  });
   const topic=disclosures.some(e=>e.id==='interview:symptoms')?'reason':
    disclosures.some(e=>e.id==='onset')?'onset':disclosures[0]?.id??'observation';
   const limited=p.liveVitals.spo2<90||p.liveVitals.sys<80||p.liveVitals.rr>=32;
   if(!protectedAnswer&&!limited&&!p.treatments.length&&observed.trend==='unchanged')for(const extra of spontaneousHistory(c,p.behavior,r,topic,facts)){
-   const entry=note(extra.id,extra.canonical,extra.source);facts.push({...extra,canonical:entry.answer});
+   const domain=extra.id==='interview:associated'?'associated':null;
+   const entry=note(extra.id,extra.canonical,extra.source,domain);facts.push({...extra,canonical:entry.answer,domain});
   }
   const composed=composePatientConversation(facts,{behavior:p.behavior,seed:p.variation?.seed??p.uid,
    relationship:r,topic,question:raw,interaction,sensitive:protectedAnswer,greeting,limited});
   answer=composed.answer;dialogue=composed.evidence;
  }
  if(answer&&!dialogue){
-  const facts=[...new Set(answers)].map((text,i)=>{
-   const canonical=lay(text.replace(/^Hola, doctor\. /,'')),entry=disclosures.find(e=>e.answer===canonical);
-   return {id:entry?.id??'interview:response:'+i,canonical,spoken:canonical,
-    source:entry?.source??(verbal<4||verbal==null?'native.impaired-speech':'native.patient-observation'),rules:[]};
-  });
-  dialogue={facts,remark:null,limited:true,styleApplied:false,
-   prefix:proxyHistory?informant.label+' (anamnesis indirecta): ':greeting?'Hola, doctor. ':''};
+  const realized=facts.map(({domain,history,...fact})=>({...fact,...(directSpeech?speakPatientHistory(fact.canonical,{domain,history,source:fact.source}):
+   {spoken:fact.canonical,rules:[]})}));
+  const lead=proxyHistory?informant.label+' (anamnesis indirecta): ':
+   (canStyle&&!p.behavior&&prefix?prefix:'')+(greeting&&verbal>=4?'Hola, doctor. ':'');
+  answer=lead+realized.map(f=>f.spoken).join(' ');
+  dialogue={facts:realized,remark:null,limited:true,styleApplied:false,prefix:lead};
  }
  const receipt={patientUid:p.uid,eventId:cmd.eventId,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,
   source:'native.patient-dialogue',...(answer?{answer}:{}),...(dialogue?{dialogue}:{}),message:answer||'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'};

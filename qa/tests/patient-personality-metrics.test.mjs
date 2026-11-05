@@ -21,6 +21,15 @@ test('negations and quantities cannot be reassigned between clinical proposition
   ['Tomo warfarina 5 mg. Tomo aspirina 100 mg.','Tomo warfarina 100 mg. Tomo aspirina 5 mg.']
  ])assert.notEqual(clinicalMeaning(canonical),clinicalMeaning(spoken));
 });
+test('the dialogue oracle allows a change of speaker without accepting a change in dose, timing or denial',()=>{
+ const canonical='Aspirina 100 mg diarios, atorvastatina y losartán; no tomó la aspirina hoy. No usa anticoagulantes ni inhibidores PDE5.';
+ const natural='Tomo aspirina 100 mg diarios, atorvastatina y losartán; no tomé la aspirina hoy. No uso anticoagulantes ni inhibidores PDE5.';
+ const failures=spoken=>interviewQuality({rows:[{answer:spoken,evidence:{facts:[{id:'meds',canonical,spoken,rules:['patient-voice']}]}}]}).failures;
+ assert.deepEqual(failures(natural),[]);
+ for(const changed of [natural.replace('100 mg','200 mg'),natural.replace('hoy','ayer'),natural.replace('no tomé','no tomo'),
+  natural.replace('No uso','Uso'),natural.replace('anticoagulantes','warfarina')])
+  assert(failures(changed).some(x=>x.startsWith('changed-clinical-content')),changed);
+});
 test('canonical/source metadata cannot certify a fabricated bank fact',()=>{
  const c={id:'APP-001',intents:[{id:'fever',answers:['No tuve fiebre.']}]};
  const p={caseId:c.id,liveVitals:{hr:70,sys:120,dia:80,rr:16,spo2:98,temp:37},treatments:[]};
