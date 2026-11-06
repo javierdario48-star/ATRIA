@@ -23,8 +23,7 @@ export function createPostgresGuardStore({url,secretKey,fetchImpl=globalThis.fet
   if(!response.ok)throw failure(response,parsed);
   return parsed;
  }
- return Object.freeze({
-  async read(roomId){validRoom(roomId);
+ async function read(roomId){validRoom(roomId);
    const params=new URLSearchParams({room_id:'eq.'+roomId,select:'revision,state',limit:'1'});
    const rows=await request('GET','/rest/v1/atria_clinical_guards?'+params.toString());
    if(!Array.isArray(rows)||rows.length>1)throw Error('invalid clinical guard query result');
@@ -32,6 +31,17 @@ export function createPostgresGuardStore({url,secretKey,fetchImpl=globalThis.fet
    const {revision,state}=rows[0];if(!Number.isSafeInteger(revision)||revision<1||!state||typeof state!=='object')
     throw Error('invalid clinical guard database record');
    return {etag:String(revision),value:structuredClone(state)};
+ }
+ return Object.freeze({read,
+  get requiresAdmission(){return !!accountSession&&(!accountSession.account?.active_guard_id||
+   accountSession.account.controller_session_id!==accountSession.sessionId);},
+  async observe(roomId){validRoom(roomId);
+   if(accountSession){
+    const allowed=await request('POST','/rest/v1/rpc/atria_v5_can_control_guard',{
+     p_actor_id:accountSession.actorId,p_room_id:roomId,p_session_id:accountSession.sessionId});
+    if(allowed!==true)throw Object.assign(Error('No se pudo verificar el acceso a esta guardia.'),{status:403,code:'forbidden'});
+   }
+   return read(roomId);
   },
   async compareAndSwap(roomId,etag,value){validRoom(roomId);
    if(etag!==null&&(!/^[1-9][0-9]*$/.test(String(etag))||!Number.isSafeInteger(Number(etag))))

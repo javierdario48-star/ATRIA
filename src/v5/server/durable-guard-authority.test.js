@@ -53,6 +53,22 @@ test('concurrent orders serialize through one durable lease, reject stale owners
   await assert.rejects(f.call('intruder'),e=>e.code==='forbidden');
  }finally{f.dispose();}
 });
+test('saving and leaving preserves the clinical orders queued before the departure in the same request',async()=>{
+ const f=await fixture();try{
+  await nearBed(f);
+  const view=await f.call('b'),request={op:'leave',turnId:view.clinical.shift.turn.id,requestId:'save-b'};
+  const envelope={id:'study-before-save',text:'/estudio pbe_paracentesis',targetPatientUid:view.clinical.patient.uid};
+  const result=await f.call('b',{commands:[envelope],shiftRequest:request});
+  assert.notEqual(result.acknowledgements[0].status,'rejected');
+  assert.equal(result.clinical.patient.orders.length,1);assert.equal(result.shiftAcknowledgement.status,'accepted');
+  assert.equal(result.clinical.shift.turn.canResume,true);
+  f.tick(45000);const colleague=await f.call('a');
+  assert.equal(colleague.clinical.patient.orders[0].status,'done');
+  const retry=await f.call('b',{commands:[envelope],shiftRequest:request});
+  assert.deepEqual(retry.shiftAcknowledgement,result.shiftAcknowledgement);
+  assert.equal(retry.clinical.patient.orders.length,1);
+ }finally{f.dispose();}
+});
 test('expired worker cannot publish or ACK after a new generation recovers; crash lease survives reopening',async()=>{
  const f=await fixture();try{
   let release,entered;const paused=new Promise(r=>release=r),started=new Promise(r=>entered=r);let writes=0;

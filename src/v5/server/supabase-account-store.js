@@ -53,6 +53,11 @@ export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.f
    const query=new URLSearchParams({actor_id:'eq.'+actorId,room_id:'eq.'+roomId,
     kind:'eq.clinical.closure',select:'patient_uid,event_id,xp_delta,base_xp,reward_scope,reward_multiplier'});
    return request('/rest/v1/atria_v5_progress_receipts?'+query);
+  },
+  creditedGuardReceipts(actorId,roomId){
+   const query=new URLSearchParams({actor_id:'eq.'+actorId,room_id:'eq.'+roomId,
+    select:'patient_uid,event_id,kind,xp_delta,base_xp,reward_scope,reward_multiplier'});
+   return request('/rest/v1/atria_v5_progress_receipts?'+query);
   }
  });
 }

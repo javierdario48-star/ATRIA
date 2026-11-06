@@ -47,3 +47,21 @@ test('remote failures fail closed, without fallback to memory or Blob',async()=>
  await assert.rejects(store.read('room'),e=>e.status===503&&e.code==='database-unavailable');
  await assert.rejects(store.compareAndSwap('room',null,{x:1}),e=>e.status===503&&e.code==='database-unavailable');
 });
+
+test('read-only observation verifies the current account controller without acquiring a CAS lease',async()=>{
+ const paths=[];let authorized=true;
+ const store=createPostgresGuardStore({url:'https://atria-example.supabase.co/',secretKey:'sb_secret_qa_only',
+  accountSession:{actorId:'a',sessionId:'session-a'},fetchImpl:async(url,options)=>{
+   paths.push(url.pathname);
+   const value=url.pathname.endsWith('atria_v5_can_control_guard')?authorized:[{revision:4,state:{roomId:'room',epoch:2}}];
+   if(url.pathname.endsWith('atria_v5_can_control_guard'))assert.deepEqual(JSON.parse(options.body),
+    {p_actor_id:'a',p_room_id:'room',p_session_id:'session-a'});
+   return {ok:true,status:200,text:async()=>JSON.stringify(value)};
+  }});
+ assert.equal(typeof store.observe,'function');
+ assert.deepEqual(await store.observe('room'),{etag:'4',value:{roomId:'room',epoch:2}});
+ assert.deepEqual(paths,['/rest/v1/rpc/atria_v5_can_control_guard','/rest/v1/atria_clinical_guards']);
+ authorized=false;paths.length=0;
+ await assert.rejects(store.observe('room'),error=>error.code==='forbidden');
+ assert.deepEqual(paths,['/rest/v1/rpc/atria_v5_can_control_guard']);
+});

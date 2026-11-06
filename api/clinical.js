@@ -4,7 +4,7 @@ import {createPrivateBlobGuardStore} from '../src/v5/server/private-blob-guard-s
 import {createPostgresGuardStore} from '../src/v5/server/postgres-guard-store.js';
 import {createDurableGuardAuthority} from '../src/v5/server/durable-guard-authority.js';
 import {createClinicalHttp,clinicalActorId} from '../src/v5/server/clinical-http.js';
-import {attachCreditedCaseReward} from '../src/v5/server/clinical-reward.js';
+import {settleClinicalAccount} from '../src/v5/server/clinical-reward.js';
 import {publicAccount} from '../src/v5/server/account-gateway.js';
 import {createClinicalStoreProbe} from '../src/v5/server/clinical-store-probe.js';
 import {clinicalContent} from '../src/v5/server/content.js';
@@ -27,7 +27,7 @@ function routeFor(identity){
   return null;
  }:null,
  async memberProfile(member){
-  const a=accountBackend?await accountBackend.byActor(member.id):null;
+  const a=member.id===identity?.actorId?identity.account:accountBackend?await accountBackend.byActor(member.id):null;
   if(identity&&!a)throw Object.assign(Error('Todos los médicos deben vincular su cuenta antes de esta guardia.'),{code:'invalid'});
   return a?{...member,name:a.name,sex:a.sex,scrubColor:a.scrub_color,level:publicAccount(a).level}:member;
  },
@@ -37,11 +37,7 @@ function routeFor(identity){
  },
  async afterTransact({roomId,result}){
   if(!identity)return null;
-  await accountBackend.award(identity.actorId,roomId);
-  const [account]=await Promise.all([
-   accountBackend.byAuth(identity.account.auth_user_id),
-   attachCreditedCaseReward(result.clinical,accountBackend,identity.actorId,roomId)
-  ]);
+  const account=await settleClinicalAccount(result,accountBackend,identity,roomId);
   return publicAccount(account);
  },
  // C5.b.3: activation requires an explicit Preview-only server variable.
