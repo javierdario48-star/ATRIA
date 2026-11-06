@@ -74,9 +74,10 @@ try{
   x.id==='vitals'&&x.status==='executed'&&x.receipt?.patientUid===currentSpot.patient.uid&&
   x.receipt?.eventId===currentSpot.patient.lastVitalsKnown.eventId)));
  assert.equal(currentSpot.patient.procedures.monitor?.connected??false,false);
- // C11b: never partially execute a valid monitor before rejecting an invalid dose.
+ // C11b: never partially connect a monitor before rejecting an unsupported
+ // formulation route. A positive 2 g IV dose is executable clinical freedom.
  const beforeUnsafe=(await state()).room.transcript.length;
- await send('Enfermera monitor y ceftriaxona 2 g');
+ await send('Enfermera monitor y ceftriaxona 2 g oral');
  const afterUnsafe=await state();
  assert.equal(afterUnsafe.room.transcript.length,beforeUnsafe+1);
  const unsafe=afterUnsafe.room.events.filter(e=>e.type==='chat.posted').at(-1);

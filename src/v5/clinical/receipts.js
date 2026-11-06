@@ -62,7 +62,8 @@ function confirmedClinicalTreatments(p,id,minute){
  return (p.treatments||[]).filter(t=>isConfirmedTreatment(p,t,id,minute));
 }
 export function confirmedClinicalTreatment(p,id,minute,accept=()=>true){
- return confirmedClinicalTreatments(p,id,minute).find(accept);
+ if(!Number.isFinite(minute)||minute<0)return undefined;
+ return p.treatments?.find(t=>isConfirmedTreatment(p,t,id,minute)&&accept(t));
 }
 /** Current support is distinct from the historical fact that a dose was given.
  * Continuous effects must follow the unique active device/rate receipt. */
@@ -79,6 +80,10 @@ export function currentClinicalTreatments(p,id,minute){
  return [t];
 }
 export function currentClinicalTreatment(p,id,minute,accept=()=>true){
+ // Most observation/closure callers need one qualifying dose. Preserve the
+ // original short-circuit read; only the response envelope needs all doses.
+ if(id==='oxygen'||!(p.treatments||[]).some(t=>t.id===id&&t.action))
+  return confirmedClinicalTreatment(p,id,minute,accept);
  return currentClinicalTreatments(p,id,minute).find(accept);
 }
 

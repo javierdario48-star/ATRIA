@@ -231,7 +231,9 @@ jobs:
 
   durable-guard-recovery:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # Includes the finite 25-case competitive physician-profile campaign as
+    # well as recovery/transport tests; keep all scenarios on hosted runners.
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
