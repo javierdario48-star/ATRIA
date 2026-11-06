@@ -36,7 +36,7 @@
 - [x] Cover missing, released, nonmember, valid, paused, end-of-turn, two-device and changing-room cases; preserve all clinical records and XP.
 - [x] Implement a private, session-verified RPC with account locking, reconciliation and expected-room validation; use existing control/release functions.
 - [x] Run gateway/store and transactional SQL tests; apply the reviewed migration and verify installed behavior.
-- [ ] Commit the server checkpoint.
+- [x] Commit the server checkpoint.
 
 ### Task 2: Visible, bounded recovery controls
 
@@ -44,10 +44,10 @@
 
 **Interfaces:** The controller consumes verified account restoration and existing recovery/resume/leave operations; it renders checking, available, resuming, releasing and error states in the current modal.
 
-- [ ] Write failing tests for stalled account requests and modal operations with a valid/stale guard.
-- [ ] Add bounded account calls, room-bound actions and visible loading/retry errors, ignoring obsolete UI responses.
-- [ ] Propagate recovery failure instead of swallowing it; maintain the existing clinical client until native resume/leave confirms.
-- [ ] Verify delayed responses, duplicate taps, closure while loading, reconnect, changed accounts/devices and preserved room identity.
+- [x] Write failing tests for stalled account requests and modal operations with a valid/stale guard.
+- [x] Add bounded account calls, room-bound actions and visible loading/retry errors, ignoring obsolete UI responses.
+- [x] Propagate recovery failure instead of swallowing it; maintain the existing clinical client until native resume/leave confirms.
+- [x] Verify delayed responses, duplicate taps, closure while loading, reconnect, changed accounts/devices and preserved room identity.
 - [ ] Commit the UI checkpoint.
 
 ### Task 3: Gameplay regression and publication

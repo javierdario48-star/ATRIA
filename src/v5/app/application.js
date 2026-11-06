@@ -14,6 +14,8 @@ import {playableClinicalCaseIds} from '../content/clinical-cases.js';
 import {eligibleGuardCases,GUARD_SCOPES,guardCaseSpecialty,guardCaseSequence} from '../clinical/guard-selection-policy.js';
 import {createCooperativeLink} from '../social/cooperative-link.js';
 import {createAccountClient} from '../social/account-client.js';
+import {awaitAbortable} from '../core/abortable-operation.js';
+import {createGuardRecovery,guardRecoveryHTML} from '../ui/guard-recovery.js';
 import {createCooperativeReplica} from '../social/cooperative-replica.js';
 import {createDurableCooperativeReplica,CLINICAL_REQUEST_TIMEOUT_MS} from '../social/durable-cooperative-replica.js';
 import {createClinicalConnectionNotice} from '../social/clinical-connection-notice.js';
@@ -77,7 +79,7 @@ export async function createApplication({document,window,content,signal}){
  let savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;
  const career=()=>account.read()||progress.read();
  let accountTransition=Promise.resolve();
- let accountControlClient=null,accountControlPending=false;
+ let accountControlClient=null,guardRecovery=null;
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
@@ -213,7 +215,13 @@ export async function createApplication({document,window,content,signal}){
   world.stop();drag=null;patientWheel.hide();dialog.dataset.panel=kind;
   ui('modalContent').innerHTML=html;if(!dialog.open)dialog.showModal();
  }
- function close(){if(dialog.open)dialog.close();delete dialog.dataset.panel;}
+ function close({preserveRecovery=false}={}){
+  if(dialog.dataset.panel==='account-recover'&&!preserveRecovery){
+   if(!guardRecovery?.canDismiss())return;
+   guardRecovery.cancel();
+  }
+  if(dialog.open)dialog.close();delete dialog.dataset.panel;ui('modalClose').disabled=false;
+ }
  const clinicalUI=createClinicalInterface({document,session:()=>guardSession,open,close,send:(text,options)=>submitText(text,{...options,clinical:true}),notify:toast,cases:content.cases,
   onTalk:uid=>selectRecipient('patient',uid),therapies:content.therapies,
    onMonitorOpen:()=>hospitalAudio.cue('monitorOpen')});
@@ -312,6 +320,9 @@ export async function createApplication({document,window,content,signal}){
  }
  function maybeBeginCooperativeRoom(now=window.performance.now()){
   if(now<nextCooperativeAdmission||coopRoomId||durableStarting||durableJoining)return;
+  // An account-owned saved guard requires the explicit, room-bound recovery
+  // choice. Social reattachment must not race that transfer of control.
+  if(world.snapshot().phase==='lobby'&&account.read()?.activeGuardId)return;
   const state=social.state(),room=state.room,role=social.isHost()?'host':'guest';
   if(room&&role==='host'&&!coopCaseId&&room.guardSelection){
    const p=room.guardSelection,eligible=eligibleGuardCases(content.cases,[...playableIds],p.scope,p.selection);
@@ -482,7 +493,7 @@ export async function createApplication({document,window,content,signal}){
   durableClient=client;replica=client;guardSession=client;lastRemoteRevision=-1;
   if(initialResponse?.account)account.accept(initialResponse.account);
   if(spatial)world.applySharedSpatial(spatial,window.performance.now(),client.lastAcknowledgedMotion(social.state().user?.id));
-  lastClinicalFrame=window.performance.now();clinicalUI.reset();close();
+  lastClinicalFrame=window.performance.now();clinicalUI.reset();close({preserveRecovery:true});
   seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;lastNurseCueAt=-Infinity;lastPatientSpeechAt=-Infinity;
   for(const row of current.messages||[])(row.role==='player'?seenGuardMessages:seenNpcMessages).add(row.id);
   guardSpeech.seed(current,room.id,social.state().user?.id);
@@ -493,7 +504,7 @@ export async function createApplication({document,window,content,signal}){
  }
  async function maybeRecoverStoredRoom(){
   if(!restoreRoomId||durableJoining||durableStarting||coopRoomId||guardSession||
-   world.snapshot().phase!=='lobby'||!social.state().user?.id)return;
+   world.snapshot().phase!=='lobby'||!social.state().user?.id||account.read()?.activeGuardId)return;
   const id=restoreRoomId;durableJoining=true;let client;
   try{
    client=makeDurableClient({id});const initialResponse=await client.sync();
@@ -942,13 +953,16 @@ export async function createApplication({document,window,content,signal}){
   guardSession=localSessions.get(next.uid);clinicalUI.reset();patientWheel.hide();announcedClosure=null;
   close();renderGuardCommunication();updateHud();return true;
  }
- function showGuardRecovery(){
-  if(!account.read()?.activeGuardId)return false;
-  open('<h2>Tu guardia está guardada</h2><p>Podés retomar tus pacientes, conversaciones y tratamientos. El control pasará a este dispositivo.</p><div class="actions"><button data-action="account-recover">Retomar guardia</button><button data-action="account-release">Finalizar participación</button><button data-action="close">Después</button></div>','account-recover');
-  return true;
- }
- function guardSetup(){
-  if(showGuardRecovery())return;
+ guardRecovery=createGuardRecovery({account,notify:toast,hide:()=>{if(dialog.dataset.panel==='account-recover')close();},
+  render:state=>{
+   open(guardRecoveryHTML(state),'account-recover');
+   ui('modalClose').disabled=state.busy&&state.phase!=='checking';
+  },
+  resume:target=>recoverAccountGuard(target,'resume'),
+  release:target=>recoverAccountGuard(target,'release')});
+ async function guardSetup({inspect=true}={}){
+  if(inspect&&await guardRecovery.show())return;
+  if(world.snapshot().phase==='guard')return;
   if(['coop','competitive'].includes(draftMode))socialEnabled=true;
   open(`<h2>Hacer guardia</h2><p>Elegí la modalidad y el caso de práctica.</p><div class="modes">
    <button class="mode ${draftMode==='apprentice'?'active':''}" data-mode="apprentice"><b>Aprendiz</b><small>Con Dr. Vega. Navegación disponible; tutor clínico en migración.</small></button>
@@ -1161,28 +1175,54 @@ export async function createApplication({document,window,content,signal}){
   if(!restore||!social.state().recovering)restoreRoomId=null;
   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
  }
- async function startPersonalAccountGuard(caseId,mode=draftMode,recover=false,guardSelection=null){
+ async function startPersonalAccountGuard(caseId,mode=draftMode,guardSelection=null){
   if(durableStarting||coopRoomId)return;
   durableStarting=true;let client;
   try{
    await accountTransition;
    await social.connect();
-   const a=account.read(),id=recover?a.activeGuardId:'personal-'+window.crypto.randomUUID();
-   if(!id)throw Error('No hay una guardia para recuperar.');
+   const a=account.read(),id='personal-'+window.crypto.randomUUID();
    const room={id,mode,members:[{userId:a.actorId,name:a.name}]};client=makeDurableClient(room);
-   const initialResponse=recover?await client.sync():await client.start(caseId,mode,guardSelection);
-   if(recover&&['coop','competitive'].includes(client.read().shift?.mode)){
-    // Reattach the existing wakeup channel; the clinical roster is durable.
-    try{await social.join(id);}catch{/* authorized observation still recovers missed events */}
-   }
-   if(recover){
-    const spatial=client.snapshotSpatial();
-    room.members=client.read().room.members.map(userId=>({userId,name:spatial?.doctors.find(d=>d.id===userId)?.name||'Médico'}));
-   }
+   const initialResponse=await client.start(caseId,mode,guardSelection);
    attachDurableRoom(room,client,initialResponse);
-   if(recover&&client.read().shift?.turn?.canResume)await controlGuardTurn('resume');
   }catch(error){client?.dispose();toast(error.message);}
   finally{durableStarting=false;}
+ }
+ async function recoverAccountGuard({actorId,roomId,signal},operation){
+  if(durableStarting||durableJoining||coopRoomId)throw Error('Otra entrada a guardia sigue en curso. Volvé a intentarlo.');
+  durableStarting=true;let client,attached=false;
+  const abort=()=>client?.dispose();signal.addEventListener('abort',abort,{once:true});
+  try{
+   await awaitAbortable(accountTransition,signal);
+   await account.call('take-control',{roomId},{signal});
+   if(account.read()?.actorId!==actorId||account.read()?.activeGuardId!==roomId)
+    throw Error('La cuenta o la guardia cambió. Comprobá nuevamente antes de continuar.');
+   await awaitAbortable(social.connect(),signal);
+   client=makeDurableClient({id:roomId});accountControlClient=client;
+   const initialResponse=await awaitAbortable(client.sync(),signal),turn=client.read()?.shift?.turn;
+   if(!turn)throw Error('No se pudo comprobar el estado del turno. Tu progreso se conserva.');
+   const op=operation==='release'?(turn.canLeave?'leave':null):(turn.canResume?'resume':null);
+   if(op){
+    const receipt=await awaitAbortable(client.shift({op,turnId:turn.id,requestId:window.crypto.randomUUID()}),signal);
+    if(receipt.status!=='accepted')throw Error('No se confirmó tu decisión de guardia. Volvé a intentarlo.');
+   }
+   if(operation==='release'){
+    await account.call('release-guard',{roomId},{signal});
+    await awaitAbortable(social.leave({preserveRoom:true}),signal);
+    cooperativeFlow.cancel();restoreRoomId=null;
+   }else{
+    const clinical=client.read(),spatial=client.snapshotSpatial();
+    if(['coop','competitive'].includes(clinical.shift?.mode))await awaitAbortable(social.join(roomId),signal);
+    const room={id:roomId,mode:clinical.shift?.mode,members:clinical.room.members.map(userId=>
+     ({userId,name:spatial?.doctors.find(d=>d.id===userId)?.name||'Médico'}))};
+    signal.throwIfAborted();restoreRoomId=null;attachDurableRoom(room,client,initialResponse);attached=true;
+   }
+   return true;
+  }finally{
+   signal.removeEventListener('abort',abort);
+   if(accountControlClient===client)accountControlClient=null;
+   if(!attached)client?.dispose();durableStarting=false;
+  }
  }
  ui('playerName').value=profile.name;
  const avatarCreator=createAvatarCreator({document,window,assetUrls:content.assetUrls,profile,listen,signal});
@@ -1200,7 +1240,7 @@ export async function createApplication({document,window,content,signal}){
    await social.flush();if(social.state().room)await social.leave();
    applyAccount(verified);restoreRoomId=null;world.enterLobby();drawWorld();loadingProgress(65);
    await social.connect();loadingProgress(100);enterLobby();
-   showGuardRecovery();
+   if(account.read()?.activeGuardId)await guardRecovery.show();
   }
  });
  ui('enterButton').textContent='Entrar al hospital →';ui('enterButton').disabled=false;
@@ -1286,7 +1326,7 @@ export async function createApplication({document,window,content,signal}){
  listen(dialog,'click',async event=>{
   if(await clinicalUI.handle(event.target))return;
   const button=event.target.closest('button');if(!button)return;
-  if(button.dataset.mode){if(!['coop','competitive'].includes(button.dataset.mode))cancelSharedIntent();draftMode=button.dataset.mode;guardSetup();}
+  if(button.dataset.mode){if(!['coop','competitive'].includes(button.dataset.mode))cancelSharedIntent();draftMode=button.dataset.mode;guardSetup({inspect:false});}
   if(button.dataset.action==='inspect-player'){showLobbyPlayerCard(button.dataset.user);return;}
   if(button.dataset.action==='add-friend'||button.dataset.action==='accept-friend'){
    try{
@@ -1319,7 +1359,7 @@ export async function createApplication({document,window,content,signal}){
    if(['coop','competitive'].includes(draftMode)){
     await inviteColleagues([...document.querySelectorAll('#coopDoctors input:checked')].map(x=>x.value),chosenCase,draftMode,guardSelection);return;
    }
-   if(account.read()){await startPersonalAccountGuard(chosenCase,draftMode,false,guardSelection);return;}
+   if(account.read()){await startPersonalAccountGuard(chosenCase,draftMode,guardSelection);return;}
    cancelSharedIntent();
    beginLocalPatient(chosenCase,{allowedCaseIds:allowedCases.map(c=>c.id)});
   }
@@ -1372,34 +1412,9 @@ export async function createApplication({document,window,content,signal}){
   if(button.dataset.action==='account-logout'){
    try{await welcome.logout();}catch(error){toast(error.message);}
   }
-  if(['account-recover','account-release'].includes(button.dataset.action)){
-   if(accountControlPending)return;
-   accountControlPending=true;
-   try{
-    // Both are explicit same-account transfers. The authenticated server RPC
-    // validates identity/membership and fences the previous device atomically.
-    await account.call('take-control',{});
-    if(button.dataset.action==='account-recover')await startPersonalAccountGuard(null,'solo',true);
-    else{
-     const id=account.read().activeGuardId;
-     if(id){
-      const client=makeDurableClient({id});
-      accountControlClient=client;
-      try{
-       await client.sync();const turn=client.read()?.shift?.turn;
-       if(turn?.canLeave){
-        const receipt=await client.shift({op:'leave',turnId:turn.id,requestId:window.crypto.randomUUID()});
-        if(receipt.status!=='accepted')throw Error('No se confirmó tu salida de la guardia. Volvé a intentarlo.');
-       }
-      }finally{accountControlClient=null;client.dispose();}
-     }
-     await account.call('release-guard',{});await social.leave({preserveRoom:true});
-     cooperativeFlow.cancel();restoreRoomId=null;await account.restore();close();
-    }
-   }
-   catch(error){toast(error.message);}
-   finally{accountControlPending=false;}
-  }
+  if(button.dataset.action==='account-check')await guardRecovery.show();
+  if(button.dataset.action==='account-recover')await guardRecovery.run('resume');
+  if(button.dataset.action==='account-release')await guardRecovery.run('release');
  });
  listen(dialog,'input',event=>{
   if(event.target?.id==='audioVolume'){
@@ -1425,6 +1440,7 @@ export async function createApplication({document,window,content,signal}){
   renderMusic();
  });
  listen(dialog,'pointerdown',event=>{if(event.target.closest('[data-action="diagnosis-suggestion"]'))event.preventDefault();});
+ listen(dialog,'cancel',event=>{event.preventDefault();close();});
  listen(dialog,'keydown',event=>{
   if(event.target?.id==='diagnosisInput'&&event.key==='Enter'&&!event.isComposing){event.preventDefault();clinicalUI.saveDiagnosis();return;}
   if(event.target?.id==='monitorOrderInput'&&event.key==='Enter'){
