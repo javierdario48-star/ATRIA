@@ -26,6 +26,12 @@ function patientClause(text,domain,history){
  const say=to=>matchCase(text,to);
  if(/\b(?:su|mi|el|la) (?:padre|madre|hermano|hermana|hijo|hija|familiar|acompañante)\b/i.test(text))return text;
  if(['meds','medications','anticoagulants','anticoagulation','response','treatment'].includes(domain)){
+  if(['anticoagulants','anticoagulation'].includes(domain)){
+   if(/^Sin hemorragia previa, caída reciente ni cirugía$/i.test(text))
+    return say('no he tenido sangrados, no me caí recientemente ni me operaron');
+   const uncertainRhythm=/^duración de FA mayor de (\d+) h o incierta$/i.exec(text);
+   if(uncertainRhythm)return say('no sé exactamente cuándo empezaron estos latidos desparejos; podrían llevar más de '+uncertainRhythm[1]+' horas');
+  }
   if(medicationList.test(text))return say((/\bsuspendi[oó](?=\s|$)/i.test(history)?'mi medicación habitual es ':'tomo ')+lowerInitial(text));
   const qualified=qualifiedMedication.exec(text);
   if(qualified&&(!qualified[1]||medicationList.test(qualified[1]))){

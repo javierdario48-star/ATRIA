@@ -170,6 +170,12 @@ export function executePatientDialogue(p,c,cmd,clock){
    const personalHistory=/\bantecedentes?\b/.test(clause)&&!/alerg|reacci|quirurg|cirugi|operaci|familiar|medic|farmac/.test(clause);
    const historyQuestion=reactionQuestion?'alergias':personalHistory?'antecedentes personales':clause;
    const exact=exactFact(c,clause),duration=dimensions[1][1].test(clause);
+   // A case may distinguish a directed anticoagulation safety history from
+   // its ordinary medication list. Preserve that authored domain before the
+   // broad medication interpreter; otherwise its valid answer is unreachable.
+   if(exact&&['anticoagulation','anticoagulants'].includes(exact.id)){
+    disclose(exact.id,exact.id,exact.answers[0],'case.intents.'+exact.id);continue;
+   }
    const topic=speaker.topic,shorthand=followUpQuestion(clause,topic);
    let fact=csAnamnesisFact(c,historyQuestion);
    const medicine=(!fact||fact.intent==='meds'||/ para /.test(clause)&&

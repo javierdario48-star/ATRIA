@@ -24,6 +24,23 @@ function fixture(c,{archetype='calm',checkpoint=null,roomId='natural-'+c.id,coop
 const receipt=x=>x.clinical.find(x=>x.kind==='history.ask')?.receipt;
 const speak=async(s,id,text,token)=>receipt(await s.post({id,text},token));
 
+test('directed anticoagulation history remains distinct from the habitual medication list',async()=>{
+ for(const question of ['¿Anticoagulantes?','¿Tomás algún anticoagulante?']){
+  const {s}=fixture(cardiologyPack.cases.find(c=>c.id==='CARD-04'));
+  try{
+   const habitual=await speak(s,'habitual','¿Qué medicamentos tomás?');
+   assert.match(habitual.answer,/losartán.*metformina/i);
+   const directed=await speak(s,'directed',question);
+   assert.match(directed.answer,/Nunca.*anticoagulaci[oó]n/i);
+   assert.match(directed.answer,/hemorragia|sangrado/i);
+   assert.doesNotMatch(directed.answer,/duración de FA|Nunca recibió/i);
+   assert.match(directed.answer,/24 horas/);
+   assert(s.read().patient.intentHistory.some(row=>row.id==='anticoagulation'));
+   assert(s.read().patient.intentHistory.some(row=>row.id==='meds'));
+  }finally{s.dispose();}
+ }
+});
+
 test('CARD-09 personal history is natural speech with all four valve/procedure facts and canonical evidence',async()=>{
  const c=cardiologyPack.cases.find(c=>c.id==='CARD-09');
  for(const archetype of archetypes){
