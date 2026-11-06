@@ -77,6 +77,7 @@ export async function createApplication({document,window,content,signal}){
  let savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;
  const career=()=>account.read()||progress.read();
  let accountTransition=Promise.resolve();
+ let accountControlClient=null,accountControlPending=false;
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
@@ -1372,6 +1373,8 @@ export async function createApplication({document,window,content,signal}){
    try{await welcome.logout();}catch(error){toast(error.message);}
   }
   if(['account-recover','account-release'].includes(button.dataset.action)){
+   if(accountControlPending)return;
+   accountControlPending=true;
    try{
     // Both are explicit same-account transfers. The authenticated server RPC
     // validates identity/membership and fences the previous device atomically.
@@ -1381,19 +1384,21 @@ export async function createApplication({document,window,content,signal}){
      const id=account.read().activeGuardId;
      if(id){
       const client=makeDurableClient({id});
+      accountControlClient=client;
       try{
        await client.sync();const turn=client.read()?.shift?.turn;
        if(turn?.canLeave){
         const receipt=await client.shift({op:'leave',turnId:turn.id,requestId:window.crypto.randomUUID()});
         if(receipt.status!=='accepted')throw Error('No se confirmó tu salida de la guardia. Volvé a intentarlo.');
        }
-      }finally{client.dispose();}
+      }finally{accountControlClient=null;client.dispose();}
      }
      await account.call('release-guard',{});await social.leave({preserveRoom:true});
      cooperativeFlow.cancel();restoreRoomId=null;await account.restore();close();
     }
    }
    catch(error){toast(error.message);}
+   finally{accountControlPending=false;}
   }
  });
  listen(dialog,'input',event=>{
@@ -1531,6 +1536,10 @@ export async function createApplication({document,window,content,signal}){
     durableClient.maintain(now,{moving:s.player.moving});
    }else if(replica){replica.maintain(now);const key=JSON.stringify(s.player.target||[s.player.x,s.player.y]);
     if(key!==lastMotion){lastMotion=key;const host=social.state().room?.hostUserId;if(host)social.send(host,{kind:'motion',target:s.player.target||[s.player.x,s.player.y]});}}
+   // Explicit account finalization creates a short-lived clinical client in
+   // the lobby. It needs the same RAF retry lane as an attached guard, so a
+   // busy/catch-up response cannot strand its persisted leave decision.
+   accountControlClient?.maintain(now);
    // The local client also confirms arrival, but only durable server claims
    // can assign a multiplayer patient.
    if(receptionAssignment.arrive(s.player,uid=>!!world.patientInRange(uid))==='missed')
@@ -1564,7 +1573,7 @@ export async function createApplication({document,window,content,signal}){
   try{hospitalAudio.pause();advanceClinicalTo(now);}catch(error){recordFrameError(error,'pause',now);}
   finally{lastClinicalFrame=null;world.stop();}
  }
- function destroy(){if(destroyed)return;clinicalHintPresenter.cancel();vegaHintCard.destroy();destroyed=true;cancelReceptionAssignment();directSelection.cancel();unassignedGlow.destroy();guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();renderer.destroy();rootLifecycle.leave();}
+ function destroy(){if(destroyed)return;clinicalHintPresenter.cancel();vegaHintCard.destroy();destroyed=true;cancelReceptionAssignment();directSelection.cancel();unassignedGlow.destroy();guardSession?.dispose();guardSession=null;accountControlClient?.dispose();accountControlClient=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();renderer.destroy();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});

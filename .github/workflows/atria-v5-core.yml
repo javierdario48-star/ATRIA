@@ -27,6 +27,11 @@ jobs:
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
           V5_QA_OUTPUT: qa/v5-authenticated-shared-results
         run: node qa/v5/shared-guard-auth-browser.mjs
+      - name: Independent authenticated device finalizes participation after a temporary clinical conflict
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-shared-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/account-release-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
