@@ -3,8 +3,9 @@ import {EXAM_REGIONS,examinationRegionCommands} from './exam-contract.js';
 import {nativeTreatmentDefinition,isNativeMedicine,preflightNativeMedicine} from './native-medications.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {routeWardSpeech} from '../core/speech-router.js';
-import {requiredStudySeries} from './study-evidence.js';
+import {requiredStudySeries,patientStudyCollectionProgress} from './study-evidence.js';
 import {studyOrderLabel} from './study-order-vocabulary.js';
+import {studyCollectionPhrase} from './study-collections.js';
 
 export function clinicalActionDescriptor(kind,id,{caseData,content,patient,clock}={}){
  const base={kind,id,section:kind,label:'',command:null};
@@ -31,8 +32,10 @@ export function clinicalActionDescriptor(kind,id,{caseData,content,patient,clock
  }
  if(kind==='study'){
   const study=caseData.studies.find(s=>s.id===id);if(!study)return null;
-  const series=!!requiredStudySeries(caseData,id),label=studyOrderLabel(study,{series});
-  return {...base,section:'studies',label,command:'/estudio '+id+(series?' seriada':''),
+  const series=!!requiredStudySeries(caseData,id),collection=patientStudyCollectionProgress(patient,caseData,id),
+   quantity=collection?.remainingCount||undefined,label=studyOrderLabel(study,{series,quantity});
+  return {...base,section:'studies',label,...(quantity?{quantity}:{}),
+   command:'/estudio '+(quantity?studyCollectionPhrase(quantity).toLowerCase():id+(series?' seriada':'')),
    text:'Desde «'+CLINICAL_CONTROLS.studies+'», solicita «'+label+'».'};
  }
  if(kind==='closure'){

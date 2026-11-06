@@ -37,9 +37,9 @@ import {unrescuedTransferReactions} from './transfer-continuation.js';
 
 const copy=value=>structuredClone(value);
 const pendingStudyKey=(source,series)=>series?JSON.stringify(['series',source]):source;
-function hideUnreportedTroponin(orders){
+function hideUnreportedStudyResults(orders){
  for(const order of orders){
-  if(order.status!=='done'&&(order.samples||isTroponinStudy(order)))delete order.result;
+  if(order.status!=='done'&&(order.collection||order.samples||isTroponinStudy(order)))delete order.result;
   for(const sample of order.samples||[])if(sample.status!=='done')delete sample.result;
  }
  return orders;
@@ -250,7 +250,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    if(intent.kind==='study.request'){
     const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute,
-     atNativeMinute:clock.nativeMinute,series:intent.series});
+     atNativeMinute:clock.nativeMinute,series:intent.series,quantity:intent.quantity,additional:intent.additional});
     if(result.status==='pending'){
      const source=result.sourceEventId;
      const key=pendingStudyKey(source,result.series);
@@ -297,6 +297,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   if(item.kind==='history.ask')return null;
   if(item.status==='unconfirmed')
    return item.receipt?.message||'ATRIA: error técnico recuperable. '+label+': ejecución no confirmada; comprobá el estado del paciente antes de repetir.';
+  if(item.kind==='study.request'&&item.receipt?.collection){
+   const collectionLabel=item.receipt.label||label;
+   if(item.status==='pending')return collectionLabel+': solicitado; toma pendiente. Microbiología pendiente.';
+   if(item.status==='executed')return collectionLabel+': toma confirmada. '+item.receipt.result;
+  }
   if(item.status!=='rejected')return null;
   if(item.receipt?.message)return 'No ejecutado: '+item.receipt.message;
   if(item.reason==='clinical-action-not-migrated'){
@@ -319,7 +324,16 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   if(item.reason==='oxygen-not-active')return label+': no hay oxígeno activo que suspender.';
   if(item.reason==='venous-access-required')
    return label+': necesitás una vía venosa confirmada antes de administrarlo.';
-  return label+': no ejecutado ('+(item.reason||'sin autorización')+').';
+  const technical={
+   'unsupported-dose-route':'esa vía no está implementada para esta presentación.',
+   'unsupported-morphine-dose-route':'esta presentación admite una sola dosis positiva en mg por vía IV.',
+   'invalid-dose':'no pude interpretar la dosis y su unidad.',
+   'unsupported-dose':'la dosis debe ser un valor positivo con su unidad.',
+   'ambiguous-dose':'hay más de una dosis en la indicación; especificá una por administración.',
+   'ambiguous-dose-qualifier':'no pude distinguir la dosis de las otras cantidades; especificá la indicación.',
+   'intubation-required':'se necesita una vía aérea intubada para conectar este ventilador.'
+  };
+  return label+': no ejecutado; '+(technical[item.reason]||'no pude confirmar esta ejecución. Revisá la presentación y el estado de la orden antes de repetirla.');
  }
  function messages(room){
   const closureText=item=>item.kind==='case.close'?item.receipt?.message?.replace(/ · \+\d+ XP\.$/,'.'):item.receipt?.message;
@@ -510,7 +524,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      port.complete(studies.acknowledged(nativePatient,eventId,order));
     pendingStudyRequests.delete(key);
    }
-   publishReadiness();return hideUnreportedTroponin(copy(ready));
+   publishReadiness();return hideUnreportedStudyResults(copy(ready));
   },
   flush:()=>authority.flush(),
   /** Drain ONLY arrivals issued by the existing spatial world. The UI cannot
@@ -581,7 +595,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   pharmacologyRead:()=>pharmacology.evaluate(caseData.id,nativePatient,clock.nativeMinute),
   pharmacologyRules:()=>pharmacology.forCase(caseData.id),
   read(doctorId=actorId,{includeChecklist=true}={}){const room=authority.snapshot(),subject=copy(nativePatient);
-   hideUnreportedTroponin(subject.orders);
+   hideUnreportedStudyResults(subject.orders);
    const caseReward=subject.closure?rewardFor(subject.closure,doctorId):null;
    const displayMessages=messages(room),options=eligibleDestinations();
    const checklist=includeChecklist&&currentChecklist();

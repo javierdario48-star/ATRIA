@@ -102,7 +102,8 @@ export function routeWardSpeech(text,context={}){
   const error=isPhysicianExamStudy(query)?'physician-exam-required':selected?.error||
    (!study?'unknown-study':series&&!ordered.supportsSeries(study.id)?'study-series-unavailable':!patientUid?'no-patient-target':null);
   return {recipient:'nurse',patientUid,original,intents:error?[]:[{kind:'study.request',id:study.id,
-   sourceText:original,clause:original,count:1,...(series?{series:true}:{})}],...(error?{error}:{})};
+   sourceText:original,clause:original,count:1,...(series?{series:true}:{}),
+   ...(selected?.quantity!==undefined?{quantity:selected.quantity,...(selected.additional?{additional:true}:{})}:{})}],...(error?{error}:{})};
  }
  const focus=context.focusedNpc;
  const recipient=nurseAddress.test(normalized)?'nurse':vegaAddress.test(normalized)?'vega':
@@ -113,7 +114,7 @@ export function routeWardSpeech(text,context={}){
   ...(context.clinicalEvaluation&&recipient==='patient'&&!patientUid?{error:'no-patient-target'}:{})};
  if(/\btacto rectal\b/.test(normalized))return {recipient,patientUid,intents:[],original,error:'physician-exam-required'};
  const ordered=context.studyOrdering||studyOrderVocabulary(context.studies,context.caseData?.studies);
- const vocabulary=nursingFormulationVocabulary487(original,{...context,studies:ordered.lexicon});
+ const vocabulary=nursingFormulationVocabulary487(ordered.scanText(original),{...context,studies:ordered.lexicon});
  const parsed=csNurseScan487(vocabulary.text,vocabulary.studies,vocabulary.therapies,context.interventions||[]);
  if(!parsed.active)return {recipient,patientUid,intents:[],original,error:'question-or-negation'};
  const studyError=ordered.studyIssue(original);
@@ -137,7 +138,7 @@ export function routeWardSpeech(text,context={}){
   else if(item.kind==='therapy')kind=nativeStop||item.action==='stop'?'therapy.stop':'therapy.request';
   else if(['monitor','iv','vitals','surgery'].includes(item.kind))kind='procedure.request';
   else continue;
-  const identity=kind==='study.request'?ordered.lexicalIntent(item.id):{id:item.id},
+  const identity=kind==='study.request'?ordered.lexicalIntent(item.id,original):{id:item.id},
    intent={kind,...identity,sourceText:original,clause:item.text,count:item.count||1},
    duplicate=kind==='study.request'?intents.findIndex(x=>x.kind===kind&&x.id===identity.id):-1;
   if(duplicate<0)intents.push(intent);

@@ -170,7 +170,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   path.setAttribute('d',ecgSweep.update(now,ecgPresentation(monitor)));
  }
 
- const studyChoiceValue=({id,series})=>id+(series?' seriada':'');
+ const studyChoiceValue=({id,series,command})=>command?.replace(/^\/estudio\s+/,'')||id+(series?' seriada':'');
  function availableStudyChoices(){
   const active=state();
   return active?studySearchChoices(ui('studySearch')?.value,{caseId:active.patient.caseId,cases,studies:session().catalog()}):[];

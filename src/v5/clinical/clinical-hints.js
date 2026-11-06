@@ -19,6 +19,7 @@ function semanticHintKey(action,p,c){
   ...(p.administrationLog||[]).filter(t=>t.status==='administering').map(t=>t.sourceEventId)
  ])].filter(Boolean).sort());
  if(action.kind==='study'){
+  if(action.quantity)return base+':quantity:'+action.quantity;
   const dependencies=[...(c.studies.find(s=>s.id===action.id)?.requiresCompletedTreatments||[]),
    ...Object.values(c.clinicalPolicy?.eligibility||{}).flatMap(rule=>rule.requiresStudiesAfterTreatments||[])
     .filter(rule=>rule.studyId===action.id).map(rule=>rule.treatmentId)];

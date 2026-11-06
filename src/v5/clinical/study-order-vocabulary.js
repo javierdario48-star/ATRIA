@@ -1,4 +1,5 @@
 import {isPhysicianExamStudy} from './exam-contract.js';
+import {studyCollectionDefinition,studyCollectionRequests,studyCollectionPhrase,studyCollectionScanText,validStudyQuantity} from './study-collections.js';
 
 export const normalizeStudyOrder=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
  .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
@@ -91,7 +92,8 @@ function studyRank(study,group,aliases){
   group==='troponina'&&isTroponinStudy(study)?1:0;
 }
 
-export function studyOrderLabel(study,{series=false}={}){
+export function studyOrderLabel(study,{series=false,quantity}={}){
+ if(quantity!==undefined&&studyCollectionDefinition(study))return studyCollectionPhrase(quantity);
  const label=isTroponinStudy(study)?study.label.replace(/\s+seriad[ao]s?\b/i,''):study.label;
  return series?label+' seriada':label;
 }
@@ -105,6 +107,8 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
  for(const study of studies)if(!byId.has(study.id)&&!isPhysicianExamStudy(study.id)&&
   (study.id==='troponina'||!isTroponinStudy(study)))byId.set(study.id,study);
  const catalog=[...byId.values()];
+ const collections=native.filter(study=>studyCollectionDefinition(study));
+ const collection=collections.length===1?collections[0]:null;
  const byFamily=new Map();
  for(const [family,aliases] of groups){
   const selected=native.map(study=>({study,rank:studyRank(study,family,aliases)})).filter(x=>x.rank)
@@ -116,7 +120,10 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   hasHighSensitivity=!!nativeTroponin&&highSensitivity.test(troponinDocumentation(nativeTroponin)),
   capillary=native.find(study=>!study.requiresCompletedTreatments?.length&&
    (terms(study).some(term=>capillaryGlucose.test(term))||measuredCapillaryGlucose.test(normalizeStudyOrder(study.result))));
- const studyIssue=word=>{
+ const studyIssue=(word,raw=word)=>{
+  const requests=studyCollectionRequests(raw);
+  if(requests.length&&(!collection||requests.length>1||requests.some(request=>!validStudyQuantity(request.quantity))))
+   return 'study-quantity-unavailable';
   if(capillaryGlucose.test(word)&&!capillary)return 'study-method-unavailable';
   if(!troponinPattern.test(word))return null;
   if(timedTroponin.test(word)||multipleTroponin.test(word)||explicitSeries.test(word)&&!hasSeries)return 'study-series-unavailable';
@@ -125,7 +132,12 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   if(highSensitivity.test(word)&&!hasHighSensitivity)return 'study-method-unavailable';
   return null;
  };
- const resolveWord=word=>{
+ const resolveWord=(word,raw=word)=>{
+  const requests=studyCollectionRequests(raw);
+  if(requests.length){
+   const issue=studyIssue(word,raw);if(issue)return {error:issue};
+   return {study:collection,command:word,quantity:requests[0].quantity,...(requests[0].additional?{additional:true}:{})};
+  }
   const name=genericOptions.get(word);
   if(!name){
    const issue=studyIssue(word);
@@ -142,9 +154,9 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   if(name.series&&!hasSeries)return {error:'study-series-unavailable'};
   return study?{study,command:word,...(name.series?{series:true}:{})}:{error:'unknown-study'};
  };
- const resolve=phrase=>resolveWord(normalizeStudyOrder(phrase));
+ const resolve=phrase=>resolveWord(normalizeStudyOrder(phrase),phrase);
  const search=phrase=>{
-  const word=normalizeStudyOrder(phrase),exact=resolveWord(word);
+  const word=normalizeStudyOrder(phrase),exact=resolveWord(word,phrase);
   if(exact||word.length<4||!(/^(?:trop|hs |hsct|ctn)/.test(word)))return exact;
   let unavailable=null;
   for(const [alias,name] of genericOptions)if(name.family==='troponina'&&alias.startsWith(word)){
@@ -175,8 +187,13 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   return [{...entry,aliases:entry.aliases.filter(alias=>!resolve(alias)?.series)},
    {id:seriesLexiconId,label:'',aliases}];
  });
- return {resolve,search,studyIssue:phrase=>studyIssue(normalizeStudyOrder(phrase)),
-  lexicalIntent:id=>id===seriesLexiconId?{id:troponin.id,series:true}:{id},
+ return {resolve,search,studyIssue:phrase=>studyIssue(normalizeStudyOrder(phrase),phrase),
+  scanText:phrase=>collection?studyCollectionScanText(phrase):phrase,
+  lexicalIntent:(id,phrase)=>{
+   if(id===seriesLexiconId)return {id:troponin.id,series:true};
+   const request=collection?.id===id?studyCollectionRequests(phrase)[0]:null;
+   return {id,...(request?{quantity:request.quantity,...(request.additional?{additional:true}:{})}:{})};
+  },
   supportsSeries:id=>hasSeries&&id===troponin.id,
   lexicon:scanLexicon,
   catalog:lexicon.filter(study=>!byFamily.has(study.id)||byFamily.get(study.id).id===study.id||nativeById.has(study.id))};

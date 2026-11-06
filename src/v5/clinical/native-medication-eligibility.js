@@ -11,7 +11,7 @@ export function clinicalInterventionEligibility(p,c,id,clock={}){
  const policy=c?.clinicalPolicy;if(!policy)return null; // The 25 GI contracts retain their exact freedom of execution.
  const rule=policy.eligibility?.[id]||{},traits=new Set([...(policy.traits||[]),...(p.clinicalTraits||[])]);
  const minute=Number.isFinite(clock.nativeMinute)?clock.nativeMinute:0;
- const studies=patientStudyOrders(p,'done').filter(o=>
+ const studies=patientStudyOrders(p,'done',c).filter(o=>
   (!Number.isFinite(o.readyAtMinute)||!Number.isFinite(clock.clinicalMinute)||o.readyAtMinute<=clock.clinicalMinute+1e-9));
  const done=new Set(studies.map(o=>studyEvidenceId(c,o.id)));
  const history=new Set((p.intentHistory||[]).filter(x=>x.patientUid===undefined||x.patientUid===p.uid)

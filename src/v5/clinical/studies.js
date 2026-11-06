@@ -5,6 +5,7 @@ import {confirmedClinicalTreatment} from './receipts.js';
 import {readRespiratoryObservation,readNeurologicalState} from './patient-observations.js';
 import {studyEvidenceId} from './study-evidence.js';
 import {authoredTroponinSeries,isTroponinStudy,studyOrderLabel} from './study-order-vocabulary.js';
+import {studyCollectionDefinition,studyCollectionResult,validStudyQuantity} from './study-collections.js';
 
 const identity=x=>typeof x==='string'&&x.trim().length>0;
 const minute=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
@@ -86,11 +87,14 @@ export function createStudyService(cases,checkpoint=null){
  function acknowledged(p,eventId,order){
   const event=events.get(eventId),series=event?.series===true,
    source=series?order.series:order;
-  if(source.status!=='done')return {status:'pending',patientUid:p.uid,eventId,sourceEventId:source.sourceEventId,...(series?{series:true}:{})};
+  if(source.status!=='done')return {status:'pending',patientUid:p.uid,eventId,sourceEventId:source.sourceEventId,...(series?{series:true}:{}),
+   ...(order.collection?{receipt:{patientUid:p.uid,eventId,studyId:event?.studyId??order.id,sourceEventId:source.sourceEventId,
+    label:order.label,collection:copy(order.collection)}}:{})};
   return {status:'executed',patientUid:p.uid,eventId,receipt:{
    patientUid:p.uid,eventId,studyId:event?.studyId??order.id,sourceEventId:source.sourceEventId,
    actorId:source.actorId,result:order.result,resultSource:order.resultSource,
    requestedAtMinute:source.requestedAtMinute,readyAtMinute:source.readyAtMinute,
+   ...(order.collection?{label:order.label,collection:copy(order.collection)}:{}),
    ...(event?.series?{samples:copy(order.samples)}:{})
   }};
  }
@@ -121,27 +125,34 @@ export function createStudyService(cases,checkpoint=null){
   checkpoint:()=>copy({events:[...events]}),
   catalog:()=>copy(catalog.map(s=>localTiming.has(s.id)?{...s,gameHours:localTiming.get(s.id)/60}:s)),
   request(patient,command={}){
-   const {id,eventId,actorId,atMinute,atNativeMinute,series=false}=command||{};
+   const {id,eventId,actorId,atMinute,atNativeMinute,series=false,quantity,additional=false}=command||{};
    if(!patientValid(patient))return rejected(patient,eventId,'invalid-patient');
    if(!identity(id)||!identity(eventId)||!identity(actorId)||!minute(atMinute)||typeof series!=='boolean'||
+    typeof additional!=='boolean'||quantity!==undefined&&!validStudyQuantity(quantity)||
     atNativeMinute!==undefined&&!minute(atNativeMinute))
     return rejected(patient,eventId,'invalid-study-request');
    if(isPhysicianExamStudy(id))return rejected(patient,eventId,'physician-exam-required');
-   const fingerprint=JSON.stringify([patient.uid,patient.caseId,id,actorId,...(series?[true]:[])]);
+   const fingerprint=JSON.stringify([patient.uid,patient.caseId,id,actorId,...(series?[true]:[]),
+    ...(quantity!==undefined?[{quantity,additional}]:additional?[{additional}]:[])]);
    const prior=events.get(eventId);
    if(prior&&prior.fingerprint!==fingerprint)
     return rejected(patient,eventId,'study-event-identity-collision');
    // The original binding survives a restored patient snapshot/new service.
    const source=patient.orders.find(o=>sourceOf(o,eventId)),sourceSeries=source?.series?.sourceEventId===eventId;
    if(source&&(source.id!==id||(sourceSeries?source.series:source).actorId!==actorId||sourceSeries!==series||
-      source.patientUid!==patient.uid))return rejected(patient,eventId,'study-event-identity-collision');
+      source.patientUid!==patient.uid||source.collection&&
+       (source.collection.explicitQuantity!==(quantity!==undefined)||source.collection.additional!==additional||
+        quantity!==undefined&&source.collection.requestedCount!==quantity)))return rejected(patient,eventId,'study-event-identity-collision');
    const caseDef=byCase.get(patient.caseId),evidenceId=studyEvidenceId(caseDef,id),native=caseDef.studies.find(s=>s.id===evidenceId),
+    collection=studyCollectionDefinition(native),
     nativeTroponin=!!native&&isTroponinStudy(native),
     repeatable=!!caseDef.clinicalPolicy&&!!native&&!nativeTroponin&&(native.repeatable===true||!!native.dynamic),
     bound=source||prior?.sourceEventId&&patient.orders.find(o=>sourceOf(o,prior.sourceEventId)),
-    existing=bound||patient.orders.find(o=>studyEvidenceId(caseDef,o.id)===evidenceId&&(!repeatable||o.status==='pending')),
+    existing=bound||(!additional&&patient.orders.find(o=>studyEvidenceId(caseDef,o.id)===evidenceId&&(!repeatable||o.status==='pending')&&
+     (!collection||quantity===undefined||(o.collection?.requestedCount??collection.requiredCount)===quantity))),
     sampleMinute=atNativeMinute??(minute(patient.policyState?.nativeMinute)?patient.policyState.nativeMinute:atMinute);
    if(series&&(!caseDef.clinicalPolicy||!authoredTroponinSeries(native)))return rejected(patient,eventId,'study-series-unavailable');
+   if((quantity!==undefined||additional)&&!collection)return rejected(patient,eventId,'study-quantity-unavailable');
    // A stale snapshot must not rebind an old event to a newer sample.
    if(prior?.sourceEventId&&!bound)return rejected(patient,eventId,'study-order-missing');
    if(existing){
@@ -161,16 +172,20 @@ export function createStudyService(cases,checkpoint=null){
    const study=resolveStudyById(id,caseDef,catalog);
    if(!study||!native&&id!=='troponina'&&isTroponinStudy(study))return rejected(patient,eventId,'unknown-study');
    const definition=materializeStudy(native||study,caseDef);
-   const label=studyOrderLabel(definition);
+   const requestedCount=quantity??collection?.requiredCount,
+    label=studyOrderLabel(definition,{...(collection?{quantity:requestedCount}:{})});
    const order={id,label,type:definition.type,
-    patientUid:patient.uid,result:native&&caseDef.clinicalPolicy?
+    patientUid:patient.uid,result:collection?studyCollectionResult(definition,requestedCount):native&&caseDef.clinicalPolicy?
      currentStudyResult(definition,caseDef,patient,sampleMinute):definition.result,
     ...(native&&(nativeTroponin||native.dynamic||native.requiresCompletedTreatments?.length)&&caseDef.clinicalPolicy?
      {sampledAtNativeMinute:sampleMinute}:{}),
     resultSource:definition.nativeResult?'native':'universal-fallback',
     nativeResult:definition.nativeResult,universalFallback:definition.universalFallback,
     status:'pending',requestedAtMinute:atMinute,
-    readyAtMinute:atMinute+turnaround(definition),sourceEventId:eventId,actorId};
+    readyAtMinute:atMinute+turnaround(definition),sourceEventId:eventId,actorId,
+    ...(collection?{collection:{unit:collection.unit,requestedCount,collectedCount:0,status:'pending',
+     microbiologyStatus:'pending',explicitQuantity:quantity!==undefined,additional,
+     collectedAtMinute:null,collectedAtNativeMinute:null}}:{})};
    if(series)startSeries(order,native,{eventId,actorId,atMinute});
    patient.orders.push(order);
    events.set(eventId,{fingerprint,sourceEventId:eventId,studyId:id,...(series?{series:true}:{})});
@@ -183,6 +198,11 @@ export function createStudyService(cases,checkpoint=null){
    for(const order of patient.orders){
     if(order.patientUid!==patient.uid)continue;
     if(order.status==='pending'&&minute(order.readyAtMinute)&&order.readyAtMinute<=atMinute){
+     if(order.collection){
+      order.collection.collectedCount=order.collection.requestedCount;
+      order.collection.status='collected';order.collection.collectedAtMinute=atMinute;
+      order.collection.collectedAtNativeMinute=atNativeMinute;
+     }
      order.status='done';
      ready.push(copy(order));
     }

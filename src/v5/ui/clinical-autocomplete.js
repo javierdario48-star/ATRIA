@@ -160,7 +160,7 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
   matchedStudy=studyOrdering.search(clause),
   vocabulary=clinicalVocabulary({caseId,cases,therapies,studyOrdering});
  if(matchedStudy?.study)vocabulary.unshift({...option('study:'+matchedStudy.study.id,'study',
-  studyOrderLabel(matchedStudy.study,{series:matchedStudy.series}),matchedStudy.command),studyMatch:true});
+  studyOrderLabel(matchedStudy.study,{series:matchedStudy.series,quantity:matchedStudy.quantity}),matchedStudy.command),studyMatch:true});
  const rows=vocabulary.filter(item=>item.kind!=='study'||!matchedStudy||item.studyMatch).map(item=>({
   ...item,score:item.studyMatch?120:Math.max(0,...item.terms.map(x=>rank(query,x)))
  })).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||a.label.localeCompare(b.label,'es'));
@@ -181,8 +181,9 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
 export function studySearchChoices(query,{caseId,cases=[],studies=[]}={}){
  const ordering=studyOrderVocabulary(studies,cases.find(c=>c.id===caseId)?.studies),
   exact=ordering.search(query),term=normalizeStudyOrder(query);
- const row=(study,series=false)=>({id:study.id,label:studyOrderLabel(study,{series}),series});
- if(exact)return exact.study?[row(exact.study,exact.series)]:[];
+ const row=(study,series=false,quantity,command)=>({id:study.id,label:studyOrderLabel(study,{series,quantity}),series,
+  ...(quantity!==undefined?{quantity,command:'/estudio '+command}:{})});
+ if(exact)return exact.study?[row(exact.study,exact.series,exact.quantity,exact.command)]:[];
  return ordering.catalog.flatMap(study=>{
   const options=[];
   if(!term||[study.id,study.label,...study.aliases].some(value=>normalizeStudyOrder(value).includes(term)))options.push(row(study));
