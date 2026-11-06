@@ -56,8 +56,9 @@
 
 - [x] Reproduce existing and stale references with authenticated accounts and an Android viewport before relying on the fix.
 - [x] Verify solo, coop and competitive recovery, permanent release, temporary saved leave, turn boundaries, native pending work and colleague continuity.
-- [ ] Run the V5 suite and relevant existing authenticated recovery/authority journeys, then build.
-- [ ] Publish only the authorized branch, verify remote HEAD and deployed source, and report actual test results and physical Android limitations.
+- [x] Run the V5 suite and relevant existing authenticated recovery/authority journeys, then build.
+
+Publication is restricted to the authorized branch. Remote HEAD, deployed-source and live-preview results are recorded in the final delivery after publication.
 
 Final source review found two additional regressions, both reproduced before fixing:
 
