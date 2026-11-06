@@ -6,6 +6,7 @@ import {respiratoryPack} from '../content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
 import {advanceClinicalComplications} from './clinical-policy-effects.js';
+import {nativeMedicineDefinition} from './native-medications.js';
 
 const allCases=[...respiratoryPack.cases,...cardiologyPack.cases,...neurologyPack.cases];
 const caseFor=id=>allCases.find(c=>c.id===id);
@@ -150,7 +151,7 @@ test('native non-respiratory complications appear in the physician exam and fade
  assert.match(rows.find(r=>r.organ==='Evolución clínica actual')?.text||'',/Crisis focal prolongada/);
  assert.match(rows.find(r=>r.organ==='Consciencia actual').text,/E2.*V2.*M4.*8/);
  for(const id of ['lorazepam','levetiracetam']){
-  const t={id,patientUid:p.uid,sourceEventId:id,route:'iv',dose:{amount:1,unit:'mg'},administeredAtNativeMinute:35};
+  const t={id,patientUid:p.uid,sourceEventId:id,route:'iv',dose:structuredClone(nativeMedicineDefinition(id,c).dose),administeredAtNativeMinute:35};
   p.treatments.push(t);p.administrationLog.push(structuredClone(t));
  }
  advanceClinicalComplications(p,c,45);

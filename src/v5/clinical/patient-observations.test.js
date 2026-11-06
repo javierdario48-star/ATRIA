@@ -5,6 +5,7 @@ import {createGuardSession} from './guard-session.js';
 import {readPatientObservations,readNeurologicalState} from './patient-observations.js';
 import {advanceClinicalComplications} from './clinical-policy-effects.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
+import {nativeMedicineDefinition} from './native-medications.js';
 const load=n=>JSON.parse(fs.readFileSync(new URL('../content/'+n+'.json',import.meta.url)));
 const content={cases:load('cases'),therapies:load('therapies'),defaultDoses:load('default-doses')};
 let serial=0;
@@ -66,7 +67,8 @@ function neurologicalPatient(){
 }
 function completedMedication(p,id,at=0,completedAt=at){
  const t={id,patientUid:p.uid,sourceEventId:id+':completed',route:'iv',
-  dose:{amount:1,unit:'mg'},administeredAtNativeMinute:at,completedAtNativeMinute:completedAt};
+  dose:structuredClone(nativeMedicineDefinition(id,neurologyPack.cases.find(c=>c.id===p.caseId))?.dose??{amount:1,unit:'mg'}),
+  administeredAtNativeMinute:at,completedAtNativeMinute:completedAt};
  p.treatments.push(t);p.administrationLog.push(structuredClone(t));return t;
 }
 

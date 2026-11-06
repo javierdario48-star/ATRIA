@@ -12,8 +12,15 @@ try{
   await page.addInitScript(()=>{
    localStorage.setItem('atria.v5.profile.v1',JSON.stringify({name:'Javier',scrubColor:'navy'}));
    const metrics={listeners:0,timers:0},add=EventTarget.prototype.addEventListener,remove=EventTarget.prototype.removeEventListener;
-   EventTarget.prototype.addEventListener=function(...args){metrics.listeners++;return add.apply(this,args);};
-   EventTarget.prototype.removeEventListener=function(...args){metrics.listeners--;return remove.apply(this,args);};
+   // Count application-lifetime handlers, including its destruction signal.
+   // A deadline-bound request may be in flight at either snapshot; transport
+   // tests separately verify that these temporary abort observers settle.
+   const deadlines=new WeakSet(),timeout=AbortSignal.timeout.bind(AbortSignal),any=AbortSignal.any.bind(AbortSignal);
+   AbortSignal.timeout=delay=>{const signal=timeout(delay);deadlines.add(signal);return signal;};
+   AbortSignal.any=signals=>{const inputs=Array.from(signals),signal=any(inputs);
+    if(inputs.some(input=>deadlines.has(input)))deadlines.add(signal);return signal;};
+   EventTarget.prototype.addEventListener=function(...args){if(!deadlines.has(this))metrics.listeners++;return add.apply(this,args);};
+   EventTarget.prototype.removeEventListener=function(...args){if(!deadlines.has(this))metrics.listeners--;return remove.apply(this,args);};
    const interval=window.setInterval,clear=window.clearInterval;
    window.setInterval=function(...args){metrics.timers++;return interval.apply(this,args);};
    window.clearInterval=function(...args){metrics.timers--;return clear.apply(this,args);};

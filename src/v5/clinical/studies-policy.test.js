@@ -5,6 +5,7 @@ import {respiratoryPack} from '../content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
 import {advanceClinicalComplications} from './clinical-policy-effects.js';
+import {nativeMedicineDefinition} from './native-medications.js';
 const cases=[...respiratoryPack.cases,...cardiologyPack.cases,...neurologyPack.cases];
 const getCase=id=>cases.find(c=>c.id===id);
 function patient(caseId){
@@ -17,7 +18,8 @@ const command=(id,eventId,atMinute=0,atNativeMinute=atMinute)=>({id,eventId,acto
 function administer(p,id,at=1,route='procedure'){
  const t={id,patientUid:p.uid,sourceEventId:id+':completed',actorId:'doctor',route,
   ...(route==='procedure'?{kind:'procedure.performed',completionStatus:'completed'}:{}),
-  dose:{amount:1,unit:route==='iv'?'mg':'procedimiento'},administeredAtNativeMinute:at};
+  dose:route==='iv'?structuredClone(nativeMedicineDefinition(id,getCase(p.caseId))?.dose??{amount:1,unit:'mg'}):
+   {amount:1,unit:'procedimiento'},administeredAtNativeMinute:at};
  p.treatments.push(t);p.administrationLog.push(structuredClone(t));return t;
 }
 const gasValue=(result,name)=>Number(result.match(new RegExp(name+'\\s*(\\d+(?:[,.]\\d+)?)','i'))?.[1].replace(',','.'));

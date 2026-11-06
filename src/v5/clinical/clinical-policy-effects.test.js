@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {clinicalPolicyTargets,advanceClinicalComplications,complicationStateEligible,deliveredClinicalTreatment} from './clinical-policy-effects.js';
 import {cardiologyPack} from '../content/packs/cardiology-pack.js';
+import {neurologyPack} from '../content/packs/neurology-pack.js';
+import {nativeMedicineDefinition} from './native-medications.js';
 const policy={trajectory:{early:[0,10,4,-10,-5,-4],late:[0,20,8,-20,-10,-8],earlyEnd:10,lateEnd:60,fluidResponse:0},responses:[{allOf:['bronchodilator'],delay:1,peak:10,offsets:[0,-8,-6,0,0,3]}],complications:[{id:'fatigue',type:'respiratory-fatigue',progressionId:'offset-ramp-v1',rescueId:'confirmed-rescue-v1',minMinute:20,riseMinutes:15,offsets:[0,12,-12,-12,-7,-12],rescueAllOf:['intubation'],recoveryMinutes:30,manifestation:'Fatiga respiratoria'}]};
 const patient=()=>({uid:'p',liveVitals:{temp:37,hr:120,rr:34,sys:132,dia:78,spo2:86},variation:{complicationCandidates:[{id:'fatigue',progressionId:'offset-ramp-v1',rescueId:'confirmed-rescue-v1'}]},treatments:[],administrationLog:[]});
 const c={id:'RESP-TEST',clinicalPolicy:policy};
@@ -59,6 +61,25 @@ test('eligibility is a clinical condition, never the random draw alone',()=>{
  assert.equal(complicationStateEligible(candidate,{nativeMinute:20,clinicalState:{spo2:92,sys:100}}),false);
  assert.equal(complicationStateEligible(candidate,{nativeMinute:20,clinicalState:{spo2:85,sys:100}}),true);
  const p=patient();p.variation.complicationCandidates=[];advanceClinicalComplications(p,c,60);assert.deepEqual(p.policyState.complications,[]);
+});
+test('an insufficient rescue does not reverse a seizure complication and its later corrected doses permit recovery',()=>{
+ const definition=neurologyPack.cases.find(c=>c.id==='NEUR-08'),p=patient(),candidate=definition.clinicalPolicy.complications[0];
+ p.variation.complicationCandidates=[{id:candidate.id}];
+ advanceClinicalComplications(p,definition,25);advanceClinicalComplications(p,definition,35);
+ const give=(id,minute,dose)=>{
+  const row={id,patientUid:p.uid,sourceEventId:id+':'+minute,route:'iv',dose,administeredAtNativeMinute:minute};
+  p.treatments.push(row);p.administrationLog.push(structuredClone(row));
+ };
+ for(const id of candidate.rescueAllOf)give(id,35,{amount:.001,unit:'mg'});
+ advanceClinicalComplications(p,definition,45);
+ assert.equal(p.policyState.complications[0].status,'active');
+ assert.equal(p.policyState.complications[0].severity,1);
+ for(const id of candidate.rescueAllOf)give(id,45,structuredClone(nativeMedicineDefinition(id,definition).dose));
+ advanceClinicalComplications(p,definition,55);
+ assert.equal(p.policyState.complications[0].status,'recovering');
+ advanceClinicalComplications(p,definition,65);
+ assert.equal(p.policyState.complications[0].status,'recovered');
+ assert.equal(p.administrationLog.length,4,'correction preserves both insufficient and adequate exposures');
 });
 test('stopping required ongoing support interrupts complication recovery and allows gradual relapse',()=>{
  const p=patient(),definition=structuredClone(c);definition.clinicalPolicy.complications[0].rescueAllOf=['vasopressor'];
