@@ -90,6 +90,14 @@ export function createAccountGateway({backend,legacy,storage}){
   if(project){await backend.award(identity.actorId);identity.account=await backend.byAuth(identity.account.auth_user_id);}
   return publicAccount(identity.account);
  }
+ async function guardRecovery(identity,operation='inspect',roomId=null){
+  const recovery=await backend.guardRecovery(identity.actorId,identity.sessionId,operation,roomId);
+  if(!recovery||!['none','available','changed','participating','unavailable'].includes(recovery.status))
+   throw fail(503,'No se pudo comprobar tu guardia. Volvé a intentarlo.');
+  identity.account=await backend.byAuth(identity.account.auth_user_id);
+  if(!identity.account)throw fail(401,'La sesión venció. Iniciá sesión nuevamente.');
+  return recovery;
+ }
  async function route(request){
   const path=pathOf(request.path),method=request.method||'GET',body=request.body||{};
   let pendingCookies=[];
@@ -130,7 +138,8 @@ export function createAccountGateway({backend,legacy,storage}){
     const tokens={...await backend.passwordSession(target.username,body.password),remember:body.remember!==false};pendingCookies=[sessionCookie(tokens)];
     const verified=await backend.validateSession(tokens),account=await backend.byAuth(verified.userId);
     if(!account)throw fail(401,'Usuario o contraseña incorrectos.');
-    const identity={...verified,account,actorId:account.actor_id};await socialHeaders(identity);
+    const identity={...verified,account,actorId:account.actor_id};
+    await guardRecovery(identity);await socialHeaders(identity);
     await publishLogin(identity);
     return reply(200,{account:await summary(identity,true)},[sessionCookie(tokens)]);
    }
@@ -139,7 +148,10 @@ export function createAccountGateway({backend,legacy,storage}){
    pendingCookies=identity?.cookies||[];
    if(path.startsWith('account/')){
     if(!identity)throw fail(401,'Iniciá sesión para acceder a tu cuenta.');
-    if(path==='account/session'&&method==='GET')return reply(200,{account:await summary(identity,true),enabled:true},identity.cookies);
+    if(path==='account/session'&&method==='GET'){
+     const recovery=await guardRecovery(identity);
+     return reply(200,{account:{...await summary(identity,true),guardRecovery:recovery},enabled:true},identity.cookies);
+    }
     if(path==='account/logout'&&method==='POST'){
      // Revoke this device, keeping the guard for explicit takeover on login.
      await backend.logout(identity.tokens);
@@ -156,11 +168,16 @@ export function createAccountGateway({backend,legacy,storage}){
     }
     if(['account/release-guard','account/take-control'].includes(path)&&method==='POST'){
      const take=path.endsWith('take-control');
-     const ok=await backend.rpc(take?'atria_v5_take_control':'atria_v5_set_active_guard',{
-      p_actor_id:identity.actorId,p_session_id:identity.sessionId,...(take?{}:{p_room_id:null})});
-     if(!ok)throw fail(409,'La guardia está controlada desde otro dispositivo.');
+     if(body.roomId!==undefined&&(typeof body.roomId!=='string'||!/^[-a-zA-Z0-9_]{1,100}$/.test(body.roomId)))
+      throw fail(400,'La referencia de guardia no es válida.');
+     const recovery=await guardRecovery(identity,take?'take-control':'release',body.roomId??null),
+      account={...await summary(identity),guardRecovery:recovery};
+     if(recovery.status==='unavailable')return reply(503,{account,error:'No se pudo comprobar tu guardia. Volvé a intentarlo.'},identity.cookies);
+     if(recovery.status==='changed')return reply(409,{account,error:'Tu guardia cambió. Volvé a comprobarla antes de continuar.'},identity.cookies);
+     if(recovery.status==='participating')return reply(409,{account,error:'Tu salida todavía no fue confirmada. Volvé a intentarlo.'},identity.cookies);
+     if(take&&recovery.status!=='available')return reply(409,{account,error:'Ya no hay una guardia pendiente para retomar.'},identity.cookies);
      if(take)await claimPublisher(identity);
-     return reply(200,{ok:true},identity.cookies);
+     return reply(200,{ok:true,account},identity.cookies);
     }
     throw fail(404,'Operación de cuenta inexistente.');
    }

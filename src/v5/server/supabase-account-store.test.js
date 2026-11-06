@@ -3,6 +3,14 @@ import assert from 'node:assert/strict';
 import {createSupabaseAccountStore} from './supabase-account-store.js';
 const config={url:'https://testproject.supabase.co',secretKey:'sb_secret_test'};
 const token='header.'+Buffer.from(JSON.stringify({exp:Date.now()/1000+3600,sub:'auth-a',session_id:'session-a'})).toString('base64url')+'.signature';
+test('guard reconciliation calls the private atomic RPC with the verified doctor, session and expected room',async()=>{
+ const store=createSupabaseAccountStore({...config,fetchImpl:async(url,options)=>{
+  assert.equal(url.pathname,'/rest/v1/rpc/atria_v5_guard_recovery');assert.equal(options.method,'POST');
+  assert.deepEqual(JSON.parse(options.body),{p_actor_id:'doctor-a',p_session_id:'session-a',p_operation:'take-control',p_room_id:'guard-a'});
+  return {ok:true,text:async()=>JSON.stringify({status:'available',roomId:'guard-a',mode:'coop'})};
+ }});
+ assert.deepEqual(await store.guardRecovery('doctor-a','session-a','take-control','guard-a'),{status:'available',roomId:'guard-a',mode:'coop'});
+});
 test('a revoked Auth user response is unauthorized so the gateway can clear the expired cookie',async()=>{
  const store=createSupabaseAccountStore({...config,fetchImpl:async()=>({ok:false,status:403,text:async()=>JSON.stringify({code:'session_not_found'})})});
  await assert.rejects(()=>store.validateSession({access_token:token,refresh_token:'refresh-a'}),{status:401});

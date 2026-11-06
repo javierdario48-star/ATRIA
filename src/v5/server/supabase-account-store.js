@@ -21,6 +21,8 @@ export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.f
   byActor:id=>one('actor_id',id),byAuth:id=>one('auth_user_id',id),byUsername:username=>one('username',username),
   nameStatus:name=>rpc('atria_v5_name_status',{p_name:name}),
   resolveLogin:name=>rpc('atria_v5_resolve_login',{p_name:name}),
+  guardRecovery:(actorId,sessionId,operation='inspect',roomId=null)=>rpc('atria_v5_guard_recovery',{
+   p_actor_id:actorId,p_session_id:sessionId,p_operation:operation,p_room_id:roomId}),
   createIdentity:async(username,password)=>request('/auth/v1/admin/users',{method:'POST',body:{email:username+'@accounts.atria.invalid',password,email_confirm:true}}),
   removeIdentity:id=>request('/auth/v1/admin/users/'+encodeURIComponent(id),{method:'DELETE'}),
   passwordSession:(username,password)=>request('/auth/v1/token?grant_type=password',{method:'POST',body:{email:username+'@accounts.atria.invalid',password}}),

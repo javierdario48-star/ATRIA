@@ -24,6 +24,29 @@ export function accountGatewayFixture(){
   // Accounting is deliberately uncredited in this local transport fixture.
   // Real reward projection is verified separately against the deployed SQL RPC.
   creditedGuardRewards:async()=>[],creditedGuardReceipts:async()=>[],creditedRoomScores:async()=>[],
+  async guardRecovery(actorId,sessionId,operation='inspect',roomId=null){
+   const account=await this.byActor(actorId);
+   if(!sessionActive(account,sessionId))throw Object.assign(Error('active account session required'),{status:401});
+   const current=account.active_guard_id;
+   if(current&&roomId&&roomId!==current)return {status:'changed',roomId:current};
+   if(!current)return {status:'none',roomId:null};
+   if(!guardStore)return {status:'unavailable',roomId:current};
+   const record=await guardStore.read(current),runtime=record?.value?.runtime;
+   const reason=!record?'missing':released.has(releaseKey(actorId,current))?'released':
+    Array.isArray(runtime?.members)&&!member(record.value,actorId)?'not-member':null;
+   if(reason){account.active_guard_id=null;account.controller_session_id=null;return {status:'none',roomId:null,reason};}
+   if(!Array.isArray(runtime?.members))return {status:'unavailable',roomId:current};
+   if(operation==='take-control')account.controller_session_id=sessionId;
+   if(operation==='release'){
+    if(!Array.isArray(runtime.turn?.participantIds)||runtime.turn.participantIds.includes(actorId))return {status:'participating',roomId:current};
+    if(account.controller_session_id!==sessionId)return {status:'changed',roomId:current};
+    released.add(releaseKey(actorId,current));account.active_guard_id=null;account.controller_session_id=null;
+    return {status:'none',roomId:null,reason:'released'};
+   }
+   return {status:'available',roomId:current,mode:runtime.mode,
+    turnEnded:runtime.shift?.elapsedSeconds>=runtime.shift?.durationSeconds,
+    participating:runtime.turn?.participantIds?.includes(actorId)??true};
+  },
   async rpc(name,{p_actor_id:actorId,p_room_id:roomId,p_session_id:sessionId}={}){
    const account=await this.byActor(actorId);
    if(!sessionActive(account,sessionId))return false;
@@ -72,5 +95,5 @@ export function accountGatewayFixture(){
    }
   };
  }
- return {data,storage,legacy,rows,sessions,backend,gate,request,bindGuardStore,scopedGuardStore};
+ return {data,storage,legacy,rows,sessions,released,backend,gate,request,bindGuardStore,scopedGuardStore};
 }
