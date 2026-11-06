@@ -75,6 +75,7 @@ for(const mode of ['coop','competitive'])for(const caseId of ['CARD-08','HDA-001
    const claims=runtime.view('doctor').claims;
    assert.equal(claims.length,mode==='coop'?2:1);
    assert.equal(new Set(claims.map(([,claim])=>claim.actorId)).size,claims.length);
-   assert.deepEqual(runtime.view('host').claims,claims);
+   if(mode==='coop')assert.deepEqual(runtime.view('host').claims,claims);
+   else assert.deepEqual(runtime.view('host').claims,[],'a rival cannot read the doctor private reward/hint receipts');
   }finally{runtime?.dispose();}
  });

@@ -71,12 +71,12 @@ for(const mode of ['coop','competitive'])test(mode+' credits only the actor’s 
   assert(native>0);assert.equal(a.clinical.caseReward.xp,Math.floor(native*.95));
   assert.equal(a.clinical.caseReward.hintCount,1);
   assert.deepEqual(a.claims.find(([id])=>id==='a')[1],a.clinical.caseReward);
-  assert.equal(a.clinical.caseReward.quality.score,b.clinical.caseReward.quality.score);
   if(mode==='coop'){
+   assert.equal(a.clinical.caseReward.quality.score,b.clinical.caseReward.quality.score);
    assert.equal(b.clinical.caseReward.xp,native);assert.equal(b.clinical.caseReward.hintCount,0);
    assert.deepEqual(b.claims.find(([id])=>id==='b')[1],b.clinical.caseReward);
   }else{
-   assert.equal(b.clinical.caseReward.creditStatus,'ineligible');assert.equal(b.clinical.caseReward.xp,0);
+   assert.equal(b.clinical.caseReward,null,'a rival receives its own patient view without private reward/hint details');
    assert(!b.claims.some(([id])=>id==='b'));
   }
   await r.post('a',{id:'end',text:'/cierre-parcial observacion',targetPatientUid:'hint-runtime:patient'});

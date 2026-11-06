@@ -5,6 +5,8 @@ import {previousClinicalContents} from '../content/clinical-content.js';
 import {createShiftFlow,receptionAcuity} from './shift-flow.js';
 import {outcomeId} from '../social/cooperative-lifecycle.js';
 import {resolveGuardSelection,guardCaseSequence,guardScopeMultiplier} from './guard-selection-policy.js';
+import {createGuardTurnControl} from './guard-turn-control.js';
+import {createGuardCommunication} from './guard-communication.js';
 
 export const CLINICAL_RUNTIME_VERSION='atria-guard-runtime-1';
 const STEP=1/60;
@@ -49,6 +51,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  if(!checkpoint)world.enterGuard({mode,caseId,patientUid:roomId+':patient',members});
  const shift=createShiftFlow({content,mode,firstCaseId:caseId,roomId,snapshot:checkpoint?.shift,
   allowedCaseIds:guardSelection?.caseIds??null,caseSequence});
+ const turn=createGuardTurnControl({roomId,members,shift,snapshot:checkpoint?.turn??null});
+ const communication=createGuardCommunication({roomId,mode,members,snapshot:checkpoint?.communication??null});
  const sessions=new Map(),focused=new Map(clone(checkpoint?.focused??[])),focusVersions=new Map(clone(checkpoint?.focusVersions??[]));
  const claims=new Map(clone(checkpoint?.claims??[])),deliveries=new Map(clone(checkpoint?.deliveries??[])),
   motionReceipts=new Map(clone(checkpoint?.motionReceipts??[]));
@@ -85,7 +89,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  }
  function claimPatient(actorId,uid){
   const r=shift.record(uid);
-  if(!members.some(m=>m.id===actorId)||!r||r.closed||shift.ended())return false;
+  if(!members.some(m=>m.id===actorId)||!turn.participating(actorId)||!r||r.closed||shift.ended())return false;
   if(!world.patientInRangeFor(actorId,uid))return false;
   // Reject a rival's occupied bed BEFORE changing the actor's clinical focus.
   // Otherwise clicking an occupied bedside silently switches the active
@@ -110,11 +114,13 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   }
  }
  async function flush(){for(const s of sessions.values())await s.flush();}
- function clinicalView(actorId){
-  const state=activeSession(actorId).read(actorId),rows=shift.records();
+ function clinicalView(actorId,session=activeSession(actorId)){
+  const state=session.read(actorId),rows=shift.records();
+  const patientStates=new Map(rows.map(record=>[record.uid,record.uid===state.patient.uid?state:
+   sessions.get(record.uid).read(actorId,{includeChecklist:false})]));
   state.hintBinding.selectionRevision=focusVersions.get(actorId)||0;
   const items=rows.map(r=>{
-   const p=sessions.get(r.uid)?.read().patient,c=content.cases.find(x=>x.id===r.caseId);
+   const p=patientStates.get(r.uid)?.patient,c=content.cases.find(x=>x.id===r.caseId);
    const triage=receptionAcuity({caseData:c,patient:p,waitingSeconds:r.ownerId?0:Math.max(0,shift.elapsed()-r.arrivalAt)});
    return {...r,triage,closed:!!p?.caseEnded,patientDied:!!p?.patientDied,ownerId:r.ownerId||null,
     score:p?.closure?.quality?.score??null};
@@ -126,11 +132,14 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     xp:caseReward?.xp??p.closure?.xp??0,points:p.closure?.quality?.score??0};
   });
   state.shift={mode,elapsedSeconds:shift.elapsed(),remainingSeconds:shift.remaining(),ended:shift.ended(),
+   turn:turn.view(actorId),
    guardSelection:guardSelection?{scope:guardSelection.scope,selection:guardSelection.selection,multiplier:guardScopeMultiplier(guardSelection.scope)}:null,
    focusPatientUid:state.patient.uid,
    // The default first patient is not necessarily physically claimed.
    // This UID exists only after this actor's server-side proximity validation.
    confirmedFocusPatientUid:focused.get(actorId)||null,patients:items,outcomes};
+  state.communication=communication.read({actorId,patients:rows.map(record=>({record,state:patientStates.get(record.uid),
+   visible:mode!=='competitive'||record.ownerId===actorId||!record.ownerId&&!!world.patientInRangeFor(actorId,record.uid)}))});
   if(mode==='competitive'){
    const ownerId=items.find(r=>r.uid===state.patient.uid)?.ownerId||null;
    state.competition={mode,ownerId,patientUid:state.patient.uid,outcomes};
@@ -149,24 +158,34 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     throw Error('invalid recovery wall clock');
    pendingQuanta+=(targetMs-lastWallMs)*60;lastWallMs=targetMs;
    if(!Number.isSafeInteger(pendingQuanta))throw Error('recovery interval outside supported clock');
+   // Decision/leave pauses have no offline clinical debt. Advancing the wall
+   // anchor here makes a later explicit resume begin at the recovered present.
+   if(!turn.running()){pendingQuanta=0;return {recovering:false,steps:0,lastWallMs};}
    let steps=0;
    while(pendingQuanta>=1000&&steps<maxSteps){
     pendingQuanta-=1000;
     const atMs=lastWallMs-pendingQuanta/60;
-    if(!shift.ended()){
+    if(turn.running()){
      world.step(STEP);
      for(const session of sessions.values()){session.finishNurseArrivals();session.advance(STEP,{typing:atMs<typingUntilMs});}
      for(const r of shift.advance(STEP))makeSession(r);
     }
     steps++;
     if(steps%60===0)await flush();
+    if(!turn.running()){pendingQuanta=0;break;}
    }
    await flush();awardMembers();return {recovering:pendingQuanta>=1000,steps,lastWallMs};
   },
   claim:claimPatient,
+  shiftControl(actorId,request){
+   const wasRunning=turn.running(),result=turn.control(actorId,request);
+   if(wasRunning!==turn.running()){pendingQuanta=0;typingUntilMs=0;}
+   return result;
+  },
   async hint(actorId,request){
    const reject=reason=>({status:'rejected',reason});
    if(!members.some(m=>m.id===actorId)||request?.actorId!==actorId)return reject('hint-forbidden');
+   if(!turn.participating(actorId))return reject('shift-member-left');
    if(shift.ended())return reject('shift-ended');
    const uid=request.patientUid,r=shift.record(uid);
    if(request.roomId!==roomId||!r||r.closed)return reject('patient-not-active');
@@ -176,11 +195,19 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   },
   async post(actorId,envelope){
    if(!members.some(m=>m.id===actorId))throw Error('not a clinical member');
+   // An explicit team envelope is consumed before speech/NPC/clinical routing.
+   // A retry cannot change channels to turn an acknowledged team line into care.
+   if(envelope?.channel==='team'||communication.hasCommand(actorId,envelope?.id)){
+    if(envelope?.channel!=='team'||[...sessions.values()].some(session=>session.hasCommand(actorId,envelope.id)))
+     return {roomId,commandId:envelope?.id??null,status:'rejected',reason:'command-id-reused-with-different-payload'};
+    return communication.post(actorId,envelope,{at:shift.elapsed(),participating:turn.participating(actorId)});
+   }
    // The existing room receipt is authoritative even after movement,
    // another selection or closure. Revalidate the original payload there.
    for(const [uid,session] of sessions)
     if(session.hasCommand(actorId,envelope.id))
      return session.post({...envelope,targetPatientUid:envelope.targetPatientUid??uid},actorId);
+   if(!turn.participating(actorId))return {roomId,commandId:envelope.id,status:'rejected',reason:'shift-member-left'};
    // An old client queue with no bedside binding may look up a committed
    // receipt, but cannot execute a fresh order after the doctor has moved.
    if(envelope.targetPatientUid===null)return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-selection-changed'};
@@ -211,22 +238,28 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     if(!record.ownerId&&!shift.owner(record.uid,actorId))
      return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-claim-conflict'};
     setFocus(actorId,record.uid);uid=record.uid;
-   }else if(envelope.targetPatientUid&&envelope.targetPatientUid!==uid)
-    return {roomId,commandId:envelope.id,status:'rejected',reason:'patient-selection-changed'};
+   }else if(envelope.targetPatientUid){
+    uid=envelope.targetPatientUid;record=shift.record(uid);
+    if(record&&!record.closed){
+     if(!world.patientInRangeFor(actorId,uid))
+      return {roomId,commandId:envelope.id,status:'rejected',reason:'approach-patient-to-claim'};
+     setFocus(actorId,uid);
+    }
+   }
    if(!record||record.closed)return {roomId,commandId:envelope.id,status:'rejected',
     reason:'patient-not-active',clinical:[{kind:'case.close',status:'rejected',reason:'patient-not-active'}]};
    const session=activeSession(actorId),ack=await session.post({...envelope,targetPatientUid:uid},actorId);
    await session.flush();awardMembers();return ack;
   },
   motion(actorId,target,sequence=null){
-   if(!members.some(m=>m.id===actorId)||!Array.isArray(target)||target.length!==2||!target.every(Number.isFinite))return false;
+   if(!members.some(m=>m.id===actorId)||!turn.participating(actorId)||!Array.isArray(target)||target.length!==2||!target.every(Number.isFinite))return false;
    if(sequence!==null&&(!Number.isSafeInteger(sequence)||sequence<1||sequence>1e9))return false;
    if(sequence!==null&&sequence<=(motionReceipts.get(actorId)??0))return true;
    const ok=actorId===hostId?world.target(...target):world.targetRemote(actorId,...target);
    if(ok&&sequence!==null)motionReceipts.set(actorId,sequence);
    return ok;
   },
-  typing(actorId,active,atMs){if(actorId===hostId)typingUntilMs=active?atMs+5000:0;},
+  typing(actorId,active,atMs){if(actorId===hostId&&turn.participating(actorId))typingUntilMs=active?atMs+5000:0;},
   confirm(actorId,revision,eventId){
    const state=activeSession(actorId).read();
    if(!members.some(m=>m.id===actorId)||!Number.isSafeInteger(revision)||revision<0||
@@ -235,17 +268,53 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    deliveries.set(actorId,{revision:Math.max(revision,prior?.revision??0),outcomeId:eventId??prior?.outcomeId??null});
    return true;
   },
-  view(actorId=hostId){
-   const scene=world.snapshot(),session=activeSession(actorId);
-   return clone({clinical:clinicalView(actorId),catalog:session.catalog(),
+  view(actorId=hostId,{patientUid=null}={}){
+   if(!members.some(member=>member.id===actorId))throw Object.assign(Error('not a clinical member'),{code:'forbidden'});
+   let session=activeSession(actorId);
+   if(mode==='competitive'&&patientUid===null){
+    const records=shift.records(),preferredRecord=shift.record(preferred(actorId))||records[0];
+    const own=preferredRecord?.ownerId===actorId?preferredRecord:records.find(record=>record.ownerId===actorId);
+    const available=!preferredRecord?.ownerId?preferredRecord:records.find(record=>!record.ownerId);
+    session=sessions.get((own||available||preferredRecord).uid);
+   }
+   if(patientUid!==null){
+    const record=shift.record(patientUid);
+    if(!record||!sessions.has(patientUid))throw Object.assign(Error('unknown clinical patient'),{code:'invalid'});
+    if(mode==='competitive'&&(record.ownerId&&record.ownerId!==actorId||
+     !record.ownerId&&!world.patientInRangeFor(actorId,patientUid)))
+     throw Object.assign(Error('clinical patient projection forbidden'),{code:'forbidden'});
+    session=sessions.get(patientUid);
+   }
+   let clinical=clinicalView(actorId,session),catalog=session.catalog();
+   if(mode==='competitive'&&clinical.competition.ownerId&&clinical.competition.ownerId!==actorId){
+    // When every bed belongs to a rival, preserve the reception/scoreboard
+    // contract without returning that rival's clinical session. Allowlist the
+    // public aggregate fields so new patient/history fields stay private.
+    clinical={canEdit:false,readOnly:true,hintBinding:clinical.hintBinding,hintCount:0,caseReward:null,
+     room:{roomId,mode:clinical.room.mode,revision:0,events:[],transcript:[]},
+     patient:{uid:clinical.patient.uid,caseId:clinical.patient.caseId},clock:clinical.clock,messages:[],
+     exposure:{patientUid:clinical.patient.uid,confirmedIvEventCount:0,confirmedCrystalloidMl:0,byDrug:{}},
+     progress:{xp:0,level:1,receipts:[],penalties:[]},eligibleDestinations:[],closure:null,
+     shift:clinical.shift,competition:clinical.competition,communication:clinical.communication};
+    catalog=[];
+   }
+   const scene=world.snapshot();
+   const deaths=[];
+   for(const record of shift.records()){
+    const state=sessions.get(record.uid).read(actorId,{includeChecklist:false}),p=state.patient;
+    if(p.patientDied&&p.deathAttribution?.classification==='treatment-contributed'&&p.deathAttribution.actorIds?.includes(actorId))
+     deaths.push({kind:'clinical.death',actorId,patientUid:record.uid,eventId:roomId+':death:'+record.uid});
+   }
+   return clone({clinical,catalog,
     spatial:{nurses:scene.nurses,doctors:[{...scene.player,id:hostId,kind:'doctor'},...scene.others],expert:scene.expert},
-    motionReceipts:[...motionReceipts],claims:[...claims],deliveries:[...deliveries]});
+    motionReceipts:[...motionReceipts],claims:[...claims].filter(([,claim])=>mode!=='competitive'||claim.actorId===actorId),
+    deaths,deliveries:[...deliveries].filter(([id])=>mode!=='competitive'||id===actorId)});
   },
   async checkpoint(){
    await flush();
    return clone({schemaVersion:1,modelVersion:CLINICAL_RUNTIME_VERSION,contentHash,roomId,caseId,members,hostId,mode,
     ...(guardSelection?{guardSelection}:{}),
-    ownerId:shift.record(firstUid)?.ownerId??null,shift:shift.checkpoint(),focused:[...focused],focusVersions:[...focusVersions],
+    ownerId:shift.record(firstUid)?.ownerId??null,shift:shift.checkpoint(),turn:turn.checkpoint(),communication:communication.checkpoint(),focused:[...focused],focusVersions:[...focusVersions],
     lastWallMs,pendingQuanta,typingUntilMs,motionReceipts:[...motionReceipts],claims:[...claims],
     deliveries:[...deliveries],world:world.checkpoint(),
     session:await sessions.get(firstUid).checkpoint(),

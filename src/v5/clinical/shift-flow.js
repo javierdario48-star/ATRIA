@@ -37,8 +37,12 @@ export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,a
  if(!Array.isArray(beds)||!beds.length||new Set(beds.map(b=>b.id)).size!==beds.length)
   throw Error('invalid shift beds');
  const records=clone(snapshot?.records??[]);
- let elapsedSeconds=snapshot?.elapsedSeconds??0,nextIndex=snapshot?.nextIndex??0;
- if(!Number.isFinite(elapsedSeconds)||elapsedSeconds<0||elapsedSeconds>SHIFT_DURATION_SECONDS||
+ let elapsedSeconds=snapshot?.elapsedSeconds??0,nextIndex=snapshot?.nextIndex??0,
+  durationSeconds=snapshot?.durationSeconds??SHIFT_DURATION_SECONDS,
+  elapsedCompensation=snapshot?.elapsedCompensation??0;
+ if(!Number.isSafeInteger(durationSeconds)||durationSeconds<SHIFT_DURATION_SECONDS||durationSeconds%SHIFT_DURATION_SECONDS!==0||
+  !Number.isFinite(elapsedSeconds)||elapsedSeconds<0||elapsedSeconds>durationSeconds||
+  !Number.isFinite(elapsedCompensation)||Math.abs(elapsedCompensation)>Number.EPSILON*Math.max(1,elapsedSeconds)||
   !Number.isSafeInteger(nextIndex)||nextIndex<0||nextIndex>SHIFT_ARRIVAL_SECONDS.length||
   !Array.isArray(records)||records.length!==nextIndex||
   records.some((r,i)=>r.uid!==roomId+(i===0?':patient':':patient-'+(i+1))||
@@ -66,8 +70,12 @@ export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,a
  return Object.freeze({
   advance(deltaSeconds){
    if(!Number.isFinite(deltaSeconds)||deltaSeconds<0)throw Error('invalid shift delta');
-   elapsedSeconds=Math.min(SHIFT_DURATION_SECONDS,elapsedSeconds+deltaSeconds);
-   if(SHIFT_DURATION_SECONDS-elapsedSeconds<CLOCK_EPSILON)elapsedSeconds=SHIFT_DURATION_SECONDS;
+   // Compensated addition keeps successive 24-minute turns exact at 60Hz.
+   // Persist the remainder so frequent durable recovery cannot reintroduce it.
+   const adjusted=deltaSeconds-elapsedCompensation,next=elapsedSeconds+adjusted;
+   elapsedCompensation=(next-elapsedSeconds)-adjusted;
+   elapsedSeconds=Math.min(durationSeconds,next);
+   if(durationSeconds-elapsedSeconds<CLOCK_EPSILON){elapsedSeconds=durationSeconds;elapsedCompensation=0;}
    const arrivals=[];
    while(nextIndex<SHIFT_ARRIVAL_SECONDS.length){
     const due=mode==='competitive'&&nextIndex>0?SHIFT_ARRIVAL_SECONDS[nextIndex-1]:SHIFT_ARRIVAL_SECONDS[nextIndex];
@@ -77,12 +85,16 @@ export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,a
    }
    return arrivals;
   },
-  elapsed:()=>elapsedSeconds,remaining:()=>SHIFT_DURATION_SECONDS-elapsedSeconds,
-  ended:()=>elapsedSeconds>=SHIFT_DURATION_SECONDS,records:()=>clone(records),
+  elapsed:()=>elapsedSeconds,remaining:()=>durationSeconds-elapsedSeconds,duration:()=>durationSeconds,
+  ended:()=>elapsedSeconds>=durationSeconds,records:()=>clone(records),
+  // A continuation keeps the original cumulative clock, admissions and UIDs.
+  // It can only add one complete turn after the current boundary is reached.
+  extend(){if(elapsedSeconds<durationSeconds||!Number.isSafeInteger(durationSeconds+SHIFT_DURATION_SECONDS))return false;
+   durationSeconds+=SHIFT_DURATION_SECONDS;return true;},
   record:uid=>clone(records.find(r=>r.uid===uid)||null),
   close(uid,ownerId,destination=null){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;
    r.closed=true;r.departed=true;r.ownerId=ownerId;r.destination=destination;return true;},
   owner(uid,id){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;if(r.ownerId)return r.ownerId===id;r.ownerId=id;return true;},
-  checkpoint:()=>clone({records,elapsedSeconds,nextIndex,...(sequence?{caseSequence:sequence}:{})})
+  checkpoint:()=>clone({records,elapsedSeconds,nextIndex,durationSeconds,elapsedCompensation,...(sequence?{caseSequence:sequence}:{})})
  });
 }

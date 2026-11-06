@@ -94,7 +94,7 @@ test('competitive PBE closes once: only bedside owner receives clinical XP; riva
   assert.equal(tally.players.find(x=>x.id==='b').resolved,1);
   const attempted=await call('a',{commands:[{id:'late-rival',text:'Enfermera otro antibiótico'}]});
   assert.equal(attempted.acknowledgements[0].status,'rejected');
-  assert.equal(attempted.claims.length,1);
+  assert.equal(attempted.claims.length,0,'a rival cannot read the owner’s private account reward receipt');
  }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
 });
 
@@ -162,9 +162,9 @@ test('two competitive doctors type beside distant beds: each message targets onl
   now+=20000;
   const other=await call('b',{claim:first.uid});
   assert.equal(other.clinical.shift.patients[0].ownerId,'b');
-  // Physician A still has the old first-patient snapshot. The unscoped
-  // typed greeting must NOT be sent to B's patient and must not be blocked.
-  assert.equal((await call('a')).clinical.patient.uid,first.uid);
+  // The default projection avoids B's private session. First contact still
+  // has to bind the greeting to A's actual bedside before it changes focus.
+  assert.equal((await call('a')).clinical.patient.uid,second.uid);
   const greeting=await call('a',{commands:[{id:'next-box-hello',text:'hola',targetPatientUid:second.uid}]});
   assert.equal(greeting.acknowledgements[0].status,'received');
   assert.equal(greeting.clinical.patient.uid,second.uid);
