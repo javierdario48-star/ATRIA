@@ -44,7 +44,8 @@ for(const {caseId,id,order} of scenarios){
  // executable. Do not force V5 to copy harmful historical mistakes.
  if(caseId==='APP-001'||caseId==='CIRR-001'){
   const c=select(caseId);
-  const v5={liveVitals:caseId==='APP-001'?initialAppVitals(c):initialCirrVitals(c),treatments:[]};
+  const v5={uid:'parity-'+caseId+'-'+id,
+   liveVitals:caseId==='APP-001'?initialAppVitals(c):initialCirrVitals(c),treatments:[],administrationLog:[]};
   assert.deepEqual(v5.liveVitals,before.vitals,'case V5 baseline must be executable parity');
   const advance=caseId==='APP-001'?advanceAppVitals:advanceCirrVitals;
   // No treatment: native smoothing must be equivalent over this short window.

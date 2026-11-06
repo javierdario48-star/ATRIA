@@ -88,7 +88,9 @@ try{
  await owner.locator('#patientWheel [data-patient-action="talk"].patient-wheel-guided').waitFor();
  await owner.waitForFunction(()=>!!atriaV5.snapshot().clinical?.competition?.ownerId,null,{timeout:65000});
  const ownerId=(await clinical(owner)).competition.ownerId;
- for(const p of pages)await p.waitForFunction(id=>atriaV5.snapshot().clinical?.competition?.ownerId===id,ownerId);
+ const ownedUid=(await clinical(owner)).patient.uid;
+ for(const p of pages)await p.waitForFunction(({id,uid})=>
+  atriaV5.snapshot().clinical?.shift.patients.find(patient=>patient.uid===uid)?.ownerId===id,{id:ownerId,uid:ownedUid});
  stage='rival clinical command cannot mutate the case';
  await host.locator('#dieInput').fill('/signos');
  await host.locator('#chatForm [type="submit"]').click();
@@ -114,8 +116,8 @@ try{
  await send(owner,'Enfermera, mi diagnóstico presuntivo es enfermedad ulcerosa peptica');
  await owner.waitForFunction(()=>atriaV5.snapshot().clinical.patient.diagnosis==='enfermedad ulcerosa peptica');
  assert.equal((await clinical(owner)).patient.diagnosis,'enfermedad ulcerosa peptica');
- await host.waitForFunction(()=>atriaV5.snapshot().clinical.room.transcript.some(x=>x.text==='¿Toma ibuprofeno?'),
-  null,{timeout:18000});
+ assert(!(await clinical(host)).room.transcript.some(x=>x.text==='¿Toma ibuprofeno?'),
+  'competitive observation must not receive another physician\'s private patient transcript');
  const hostChat=await host.locator('#chatHistory').innerText();
  assert(!hostChat.includes('¿Toma ibuprofeno?'),'doctor far away must not see the bedside dialogue');
  assert(!hostChat.includes('Paciente:'),'the patient cannot answer in a remote physician chat');

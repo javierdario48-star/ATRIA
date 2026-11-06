@@ -40,6 +40,16 @@ test('natural native-valve history preserves severity, anatomy, interval and bot
   spoken.replace(' ni ningún dispositivo dentro del corazón',''),spoken.replace('no tengo','tengo')])
   assert(failures(changed).some(x=>x.startsWith('changed-clinical-content')),changed);
 });
+test('lay anticoagulation history preserves every denial and uncertainty about rhythm duration',()=>{
+ const canonical='Nunca recibió anticoagulación. Sin hemorragia previa, caída reciente ni cirugía; duración de FA mayor de 24 h o incierta.';
+ const spoken='Nunca recibí anticoagulación. No he tenido sangrados, no me caí recientemente ni me operaron; no sé exactamente cuándo empezaron estos latidos desparejos; podrían llevar más de 24 horas.';
+ const failures=text=>interviewQuality({rows:[{answer:text,evidence:{facts:[{id:'anticoagulation',canonical,spoken:text,rules:['patient-voice']}]}}]}).failures;
+ assert.deepEqual(failures(spoken),[]);
+ for(const changed of [spoken.replace('24','48'),spoken.replace('No he tenido','He tenido'),
+  spoken.replace('no me caí','me caí'),spoken.replace('ni me operaron','y me operaron'),
+  spoken.replace('no sé exactamente cuándo empezaron estos latidos desparejos; podrían llevar','empezaron hace')])
+  assert(failures(changed).some(x=>x.startsWith('changed-clinical-content')),changed);
+});
 test('partial medication evidence must be an actual authored clause rather than an invented related medicine',()=>{
  const c={id:'TEST',common:{meds:['Losartán 50 mg diarios. Suspendió aspirina hace 3 días.']},intents:[]};
  const p={liveVitals:{hr:70,sys:120,dia:80,rr:16,spo2:98,temp:37},treatments:[]};

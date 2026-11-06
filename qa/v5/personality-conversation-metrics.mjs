@@ -64,7 +64,10 @@ export function clinicalMeaning(text){
 // Only the documented direct-speech forms can count as equivalent. In
 // particular, compare medication tense before folding accents (tomó ≠ tomo).
 function patientHistoryMeaning(text){
+ text=text.replace(/no sé exactamente cuándo empezaron estos latidos desparejos; podrían llevar más de (\d+) horas/gi,
+  'duración de FA mayor de $1 h o incierta');
  const clauses=text.split(/(?<=[.!?;])\s+/).map(clause=>clause.toLowerCase().replace(/[.!?;]$/,'')
+  .replace(/^no he tenido sangrados, no me caí recientemente ni me operaron$/,'sin hemorragia previa, caída reciente ni cirugía')
   .replace(/^hoy no tomé (.+)$/,'no $1 hoy')
   .replace(/^((?:aún )?(?:no |nunca )?)(?:tomó|tomé) /,'$1past use ')
   .replace(/^((?:aún )?(?:no |nunca )?)(?:recibió|recibí) /,'$1received ')

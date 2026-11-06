@@ -27,7 +27,7 @@ async function dismiss(page){
  await page.keyboard.press('Escape');
  if(await page.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')await page.locator('#keyboardToggleButton').click();
 }
-async function team(page,text,index){
+async function team(page,text,index,{peerPresent=true}={}){
  await page.locator('[data-guard-channel=team]').click();
  await page.locator('#dieInput').fill(text);
  const acknowledgement=page.waitForResponse(response=>{
@@ -37,6 +37,7 @@ async function team(page,text,index){
  await page.locator('#chatForm [type=submit]').click();
  const response=await acknowledgement,value=await response.json(),at=Date.now();
  assert(value.acknowledgements.some(row=>row.channel==='team'&&row.status==='received'));
+ if(!peerPresent)return null;
  const other=pages[1-index];await other.locator('[data-guard-channel=team]').click();
  await other.locator('#chatHistory .line').filter({hasText:text}).waitFor({state:'visible',timeout:15000});
  return Date.now()-at;
@@ -117,7 +118,7 @@ try{
  const beforeSave=await clinical(a);await save(a);
  assert.equal((await api(a,'account/session')).body.account.activeGuardId,roomId);
  await b.waitForFunction(actor=>!atriaV5.snapshot().clinical.shift.turn.participantIds.includes(actor),actors[0]);
- await team(b,'Sigo en la guardia mientras volvés · '+suffix,1);
+ await team(b,'Sigo en la guardia mientras volvés · '+suffix,1,{peerPresent:false});
  await recover(a);await a.locator('[data-guard-channel=team]').click();
  await a.locator('#chatHistory .line').filter({hasText:'Sigo en la guardia mientras volvés'}).waitFor({state:'visible'});
  const recovered=await clinical(a);assert.equal(recovered.room.roomId,roomId);assert.equal(recovered.patient.uid,beforeSave.patient.uid);
