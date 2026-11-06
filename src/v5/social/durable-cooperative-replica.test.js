@@ -68,6 +68,18 @@ test('invalid credentials rejected before a clinical request',()=>{
  assert.throws(()=>createDurableCooperativeReplica({window:{},roomId:'../wrong',clientKey}),/invalid/);
 });
 
+test('every authenticated replica request carries the physician captured before a cookie change',async()=>{
+ const sent=[],client=createDurableCooperativeReplica({roomId,clientKey,actorId:'doctor-a',window:{fetch:async(_url,options)=>{
+  const body=JSON.parse(options.body);sent.push(body);
+  return {ok:true,json:async()=>({epoch:1,clinical:{room:{roomId},patient:{uid:'P'}},
+   ...(body.shiftRequest?{shiftRequestId:body.shiftRequest.requestId,
+    shiftAcknowledgement:{requestId:body.shiftRequest.requestId,status:'accepted'}}:{})})};
+ }}});
+ await client.start('FECAL-001');await client.sync();await client.observe();
+ await client.shift({op:'leave',turnId:'turn',requestId:'leave-1'});client.dispose();
+ assert(sent.some(row=>row.shiftRequest));assert(sent.every(row=>row.expectedActorId==='doctor-a'));
+});
+
 for(const phase of ['headers','body'])test('a stall before the HTTP '+phase+' releases the lane and retains the original order',async()=>{
  const f=harness(), sent=[], errors=[];
  const storage={getItem:k=>f.store.get(k),setItem:(k,v)=>f.store.set(k,v)};

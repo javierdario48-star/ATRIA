@@ -5,7 +5,8 @@ import fs from 'node:fs/promises';
 // The interface can match while the deployed clinical authority is still old.
 export async function waitForPreviewBuild(origin,{timeout=120000}={}){
  const files={};
- for(const path of ['src/v5/app/application.js','src/v5/ui/music-transport.js','src/v5/ui/hospital-audio.js','src/v5/web/game.css',
+ for(const path of ['src/v5/app/application.js','src/v5/social/account-client.js','src/v5/ui/guard-recovery.js',
+  'src/v5/core/abortable-operation.js','src/v5/ui/music-transport.js','src/v5/ui/hospital-audio.js','src/v5/web/game.css',
   'src/v5/ui/clinical-hint-presenter.js','src/v5/clinical/clinical-hints.js','src/v5/clinical/clinical-hint-ledger.js',
   'src/v5/clinical/clinical-hint-requirements.js','src/v5/ui/clinical-workflow.js','src/v5/clinical/study-evidence.js',
   'src/v5/clinical/patient-dialogue.js','src/v5/clinical/patient-question-context.js','src/v5/content/patient-language.js',

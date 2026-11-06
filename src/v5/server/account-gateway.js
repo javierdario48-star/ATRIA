@@ -168,6 +168,8 @@ export function createAccountGateway({backend,legacy,storage}){
     }
     if(['account/release-guard','account/take-control'].includes(path)&&method==='POST'){
      const take=path.endsWith('take-control');
+     if(body.expectedActorId!==undefined&&body.expectedActorId!==identity.actorId)
+      throw fail(409,'La cuenta cambió. Comprobá nuevamente antes de continuar.');
      if(body.roomId!==undefined&&(typeof body.roomId!=='string'||!/^[-a-zA-Z0-9_]{1,100}$/.test(body.roomId)))
       throw fail(400,'La referencia de guardia no es válida.');
      const recovery=await guardRecovery(identity,take?'take-control':'release',body.roomId??null),

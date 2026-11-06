@@ -22,7 +22,7 @@ function retainConfirmedRewards(next,previous){
  * animation frame; no timers or new scheduling loops are added.
  */
 export function createDurableCooperativeReplica({
- window,roomId,clientKey,storage,authorization=()=>null,onSnapshot=()=>{},onError=()=>{},onCommitted=()=>{},
+ window,roomId,clientKey,storage,actorId=null,authorization=()=>null,onSnapshot=()=>{},onError=()=>{},onCommitted=()=>{},
  requestTimeoutMs=CLINICAL_REQUEST_TIMEOUT_MS
 }){
  if(!/^[A-Za-z0-9_-]{1,100}$/.test(roomId)||!/^[-a-zA-Z0-9]{32,120}$/.test(clientKey))
@@ -94,7 +94,7 @@ export function createDurableCooperativeReplica({
   const response=await bounded(window.fetch('/api/clinical',{method:'POST',cache:'no-store',
    signal,
    headers:{'Content-Type':'application/json',...(authorization()?{Authorization:authorization()}:{})},
-   body:JSON.stringify({action,clientKey,roomId,...extra})}));
+   body:JSON.stringify({action,clientKey,roomId,...extra,...(actorId?{expectedActorId:actorId}:{})})}));
   let value;
   try{value=await bounded(response.json());}
   catch(error){signal.throwIfAborted();if(response.ok)throw error;value={};}

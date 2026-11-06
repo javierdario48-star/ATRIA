@@ -48,13 +48,18 @@
 - [x] Add bounded account calls, room-bound actions and visible loading/retry errors, ignoring obsolete UI responses.
 - [x] Propagate recovery failure instead of swallowing it; maintain the existing clinical client until native resume/leave confirms.
 - [x] Verify delayed responses, duplicate taps, closure while loading, reconnect, changed accounts/devices and preserved room identity.
-- [ ] Commit the UI checkpoint.
+- [x] Commit the UI checkpoint.
 
 ### Task 3: Gameplay regression and publication
 
 **Files:** authenticated browser QA and the existing CI job.
 
-- [ ] Reproduce existing and stale references with authenticated accounts and an Android viewport before relying on the fix.
-- [ ] Verify solo, coop and competitive recovery, permanent release, temporary saved leave, turn boundaries, native pending work and colleague continuity.
+- [x] Reproduce existing and stale references with authenticated accounts and an Android viewport before relying on the fix.
+- [x] Verify solo, coop and competitive recovery, permanent release, temporary saved leave, turn boundaries, native pending work and colleague continuity.
 - [ ] Run the V5 suite and relevant existing authenticated recovery/authority journeys, then build.
 - [ ] Publish only the authorized branch, verify remote HEAD and deployed source, and report actual test results and physical Android limitations.
+
+Final source review found two additional regressions, both reproduced before fixing:
+
+- Advisory social-cache expiry must not block a verified durable guard. The browser regression removes only that cache entry in coop/competitive.
+- Recovery mutations and subsequent native requests carry an expected physician fence; the authenticated identity remains authoritative. A cookie switched to another physician is rejected before any control transfer, leave or admission.

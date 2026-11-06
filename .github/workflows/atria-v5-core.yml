@@ -32,6 +32,12 @@ jobs:
           PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-shared-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node qa/v5/account-release-browser.mjs
+      - name: Saved guard reconciliation, visible retries and device transfer in three modes
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-shared-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          V5_QA_OUTPUT: qa/v5-authenticated-shared-results/recovery
+        run: node qa/v5/guard-recovery-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

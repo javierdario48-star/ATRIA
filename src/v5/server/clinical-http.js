@@ -14,6 +14,10 @@ export function createClinicalHttp({authority,verifiedRoom,probe,onUnavailable=(
   let actorId,identity;try{identity=resolveActor?await resolveActor({headers,body}):null;actorId=identity?.id||clinicalActorId(body.clientKey);}
   catch(error){return {status:error.status||401,body:{error:'invalid or expired clinical credentials',code:'unauthenticated'}};}
   try{
+   // This is a fence, never an identity supplied by the browser. A changed
+   // HttpOnly cookie cannot execute an old device's pending turn decision.
+   if(body.expectedActorId!==undefined&&body.expectedActorId!==actorId)
+    return {status:409,body:{error:'La cuenta cambió. Volvé a ingresar con el médico que estaba atendiendo.',code:'fenced'}};
    if(body.action==='capability')return {status:200,body:{...await probe(),clinicalEnabled:enabled}};
    if(!enabled)return {status:503,body:{error:'clinical recovery client not enabled',code:'recovery-client-not-enabled'}};
    if(typeof body.roomId!=='string'||!/^[-a-zA-Z0-9_]{1,100}$/.test(body.roomId))return {status:400,body:{error:'invalid room'}};

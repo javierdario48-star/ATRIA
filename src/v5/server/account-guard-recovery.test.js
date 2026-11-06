@@ -107,3 +107,16 @@ test('logging in on another device reconciles a missing guard before offering th
  assert.equal(result.status,200);assert.equal(result.body.account.activeGuardId,null);
  assert.equal(a.row.active_guard_id,null);assert.equal(f.released.size,0);
 });
+
+test('a cookie switched to a colleague cannot transfer or release that colleague in the same shared guard',async()=>{
+ const f=accountGatewayFixture(),a=await account(f,1),b=await account(f,2),
+  value={runtime:{mode:'coop',members:[{id:a.row.actor_id},{id:b.row.actor_id}],turn:{participantIds:[]}}};
+ f.bindGuardStore({read:async()=>({etag:'1',value})});
+ for(const person of [a,b]){person.row.active_guard_id='shared';person.row.controller_session_id='previous-device';}
+ const before=structuredClone([a.row,b.row]);
+ for(const action of ['take-control','release-guard']){
+  const result=await f.request('account/'+action,{roomId:'shared',expectedActorId:a.row.actor_id},b.headers);
+  assert.equal(result.status,409);assert.deepEqual([a.row,b.row],before);assert.equal(f.released.size,0);
+ }
+ assert.equal((await f.request('account/take-control',{roomId:'shared',expectedActorId:b.row.actor_id},b.headers)).status,200);
+});

@@ -42,3 +42,18 @@ test('production cannot start a parallel clinical authority before the recovery 
  assert.equal(invoked,false);
  const capability=await route({method:'POST',body:{action:'capability',clientKey:key}});assert.equal(capability.body.clinicalEnabled,false);
 });
+
+test('a changed authenticated physician is rejected before any native observation, turn decision or admission',async()=>{
+ const calls=[],http=createClinicalHttp({enabled:true,resolveActor:async()=>({id:'doctor-b',account:{name:'B'}}),
+  probe:async()=>({durable:true}),verifiedRoom:async()=>room,
+  beforeTransact:async()=>calls.push('before'),afterTransact:async()=>calls.push('after'),
+  authority:{transact:async input=>{calls.push(input.actorId);return {epoch:1};},
+   observe:async()=>calls.push('observe'),bootstrap:async()=>calls.push('bootstrap')}});
+ for(const action of ['sync','observe','start']){
+  const result=await http({method:'POST',body:{action,clientKey:key,roomId:'room',expectedActorId:'doctor-a',
+   shiftRequest:{op:'leave',turnId:'turn',requestId:'decision'}}});
+  assert.equal(result.status,409);assert.deepEqual(calls,[]);
+ }
+ assert.equal((await http({method:'POST',body:{action:'sync',clientKey:key,roomId:'room',expectedActorId:'doctor-b'}})).status,200);
+ assert.deepEqual(calls,['before','doctor-b','after']);
+});

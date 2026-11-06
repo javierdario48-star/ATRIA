@@ -390,11 +390,11 @@ export async function createApplication({document,window,content,signal}){
    presentGuardTurn(client.read());updateHud();
   }catch{toast('Reconectando la guardia. Tu decisión sigue pendiente y tu progreso está guardado.');}
  }
- function makeDurableClient(room){
+ function makeDurableClient(room,actorId=account.read()?.actorId??null){
   const credentials=social.credentials();
   let client;
   const connectionNotice=createClinicalConnectionNotice();
-  client=createDurableCooperativeReplica({window,roomId:room.id,clientKey:credentials.clientKey,
+  client=createDurableCooperativeReplica({window,roomId:room.id,clientKey:credentials.clientKey,actorId,
    authorization:()=>social.credentials().authorization,storage:window.sessionStorage,
    onCommitted:epoch=>{
     if(durableClient===client&&coopRoomId===room.id&&!destroyed)
@@ -1194,11 +1194,11 @@ export async function createApplication({document,window,content,signal}){
   const abort=()=>client?.dispose();signal.addEventListener('abort',abort,{once:true});
   try{
    await awaitAbortable(accountTransition,signal);
-   await account.call('take-control',{roomId},{signal});
+   await account.call('take-control',{roomId,expectedActorId:actorId},{signal});
    if(account.read()?.actorId!==actorId||account.read()?.activeGuardId!==roomId)
     throw Error('La cuenta o la guardia cambió. Comprobá nuevamente antes de continuar.');
    await awaitAbortable(social.connect(),signal);
-   client=makeDurableClient({id:roomId});accountControlClient=client;
+   client=makeDurableClient({id:roomId},actorId);accountControlClient=client;
    const initialResponse=await awaitAbortable(client.sync(),signal),turn=client.read()?.shift?.turn;
    if(!turn)throw Error('No se pudo comprobar el estado del turno. Tu progreso se conserva.');
    const op=operation==='release'?(turn.canLeave?'leave':null):(turn.canResume?'resume':null);
@@ -1207,12 +1207,16 @@ export async function createApplication({document,window,content,signal}){
     if(receipt.status!=='accepted')throw Error('No se confirmó tu decisión de guardia. Volvé a intentarlo.');
    }
    if(operation==='release'){
-    await account.call('release-guard',{roomId},{signal});
+    await account.call('release-guard',{roomId,expectedActorId:actorId},{signal});
     await awaitAbortable(social.leave({preserveRoom:true}),signal);
     cooperativeFlow.cancel();restoreRoomId=null;
    }else{
     const clinical=client.read(),spatial=client.snapshotSpatial();
-    if(['coop','competitive'].includes(clinical.shift?.mode))await awaitAbortable(social.join(roomId),signal);
+    if(['coop','competitive'].includes(clinical.shift?.mode)){
+     // The native roster and saved clinical state remain authoritative when
+     // the advisory social cache expires. Cancellation still ends recovery.
+     try{await awaitAbortable(social.join(roomId),signal);}catch{signal.throwIfAborted();}
+    }
     const room={id:roomId,mode:clinical.shift?.mode,members:clinical.room.members.map(userId=>
      ({userId,name:spatial?.doctors.find(d=>d.id===userId)?.name||'Médico'}))};
     signal.throwIfAborted();restoreRoomId=null;attachDurableRoom(room,client,initialResponse);attached=true;
