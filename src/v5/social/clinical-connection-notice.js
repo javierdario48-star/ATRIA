@@ -3,8 +3,8 @@
 // This module never changes the clinical queue or its request cadence.
 export function createClinicalConnectionNotice({failuresBeforeWarning=4,cooldownMs=12000,maxGapMs=10000}={}){
  let consecutive=0,lastFailure=-Infinity,lastNotice=-Infinity;
- const warning='Esperando la conexión clínica persistente. Las órdenes pendientes se conservan.';
- const accessWarning='No se pudo verificar el acceso a la guardia. Las órdenes pendientes se conservan.';
+ const warning='Reconectando la guardia. Tus órdenes están guardadas y se confirmarán al recuperar la conexión.';
+ const accessWarning='Tu sesión necesita volver a verificarse. Tus órdenes están guardadas.';
  return Object.freeze({
   failed(error,now){
    if(!Number.isFinite(now))return null;

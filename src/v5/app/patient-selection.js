@@ -11,8 +11,9 @@ export function directPatientIntent(state,uid,actorId){
   if(record.ownerId&&record.ownerId!==actorId)return 'occupied';
   return state.patient?.uid===uid&&record.ownerId===actorId?'selected':'claim';
  }
- return state.patient?.uid===uid&&
-  state.shift.confirmedFocusPatientUid===uid?'selected':'claim';
+ // Cooperative projections are authorized reads, not exclusive ownership.
+ // Every later command still carries its UID and verifies actual proximity.
+ return state.patient?.uid===uid?'selected':'claim';
 }
 
 /**

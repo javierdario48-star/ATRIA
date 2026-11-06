@@ -100,6 +100,11 @@
   </div>
  </section>
  <section id="chatDock" hidden aria-label="Consola compartida">
+  <nav id="guardChatTabs" class="guard-chat-tabs" aria-label="Comunicación de guardia" hidden>
+   <button type="button" data-guard-channel="clinical" aria-pressed="true">Atención</button>
+   <button type="button" data-guard-channel="team" aria-pressed="false">Equipo <span data-channel-unread="team" hidden></span></button>
+   <button type="button" data-guard-channel="activity" aria-pressed="false">Actividad <span data-channel-unread="activity" hidden></span></button>
+  </nav>
   <div id="chatHistory" role="log" aria-live="polite"></div>
   <div id="chatSuggestions" class="chat-suggestions" role="listbox" aria-label="Sugerencias de escritura" hidden></div>
   <form id="chatForm"><button type="button" id="historyButton" aria-label="Abrir historial" aria-expanded="false">···</button><button type="button" id="recipientButton">Lobby · público</button><button type="button" id="nurseQuickButton" aria-label="Escribir Enfermera" title="Escribir Enfermera" hidden>Enf.</button><input id="dieInput" aria-label="Mensaje" placeholder="Hablar en el lobby…" maxlength="500" autocomplete="off" autocorrect="on" spellcheck="true" autocapitalize="sentences" enterkeyhint="send"><button type="button" id="keyboardToggleButton" aria-label="Mostrar teclado ATRIA" aria-pressed="false" title="Teclado ATRIA">⌨</button><button type="button" id="voiceButton" aria-label="Entrada de voz" disabled>♩</button><button type="submit" aria-label="Enviar mensaje">↵</button></form>

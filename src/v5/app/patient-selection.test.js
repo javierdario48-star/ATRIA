@@ -91,10 +91,12 @@ test('the first competitive bedside message binds to the one reachable unassigne
  assert.equal(bind([]),null);
 });
 
-test('cooperative default patient snapshot cannot bypass physical claim confirmation',()=>{
+test('authorized cooperative patient projection opens immediately without an ownership round trip',()=>{
  const s=state('B1',null,null,'coop');
  s.shift.confirmedFocusPatientUid=null;
- assert.equal(directPatientIntent(s,'B1','doctorA'),'claim');
+ assert.equal(directPatientIntent(s,'B1','doctorA'),'selected');
+ s.shift.confirmedFocusPatientUid='B2';
+ assert.equal(directPatientIntent(s,'B1','doctorA'),'selected');
  s.shift.confirmedFocusPatientUid='B1';
  assert.equal(directPatientIntent(s,'B1','doctorA'),'selected');
 });

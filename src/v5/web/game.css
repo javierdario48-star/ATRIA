@@ -726,5 +726,10 @@ body[data-phase="guard"] .guard-scoreboard{top:calc(74px + env(safe-area-inset-t
 .vega-clinical-hint small{display:block;font-size:10px;color:#b5cdcb;margin-top:2px}
 .vega-clinical-hint p{margin:6px 0 0}
 .vega-hint-portrait{width:36px;height:54px;object-fit:contain;flex-shrink:0}
+.guard-chat-tabs{display:flex;gap:5px;margin-bottom:4px;align-items:center}
+.guard-chat-tabs[hidden]{display:none}
+.guard-chat-tabs button{min-height:34px;padding:5px 12px;font-size:12px;flex:1;border-radius:9px;color:#bcd3d3;background:#102a32;border:1px solid #36555d}
+.guard-chat-tabs button[aria-pressed="true"]{background:#20534f;border-color:#72b7a7;color:#f0fffb}
+.guard-chat-tabs [data-channel-unread]{margin-left:3px;padding:1px 4px;border-radius:8px;background:#a4ddc3;color:#102f2d;font-size:10px}
 .vega-clinical-hint button{align-self:flex-start;min-width:34px;min-height:34px;padding:0;background:transparent;border:0;color:inherit;font-size:23px}
 @media(max-height:500px){.vega-clinical-hint{top:58px;right:8px;width:min(340px,calc(100vw - 16px));padding:9px}.vega-hint-portrait{height:40px}}

@@ -14,9 +14,9 @@ test('an isolated clinical CAS contention is silent, preserving genuine reconcil
 test('a persistent failure warns after four unsuccessful attempts, rate-limited thereafter',()=>{
  const p=createClinicalConnectionNotice();
  for(const now of [0,900,1800])assert.equal(p.failed(busy,now),null);
- assert.match(p.failed(busy,2700),/Las órdenes pendientes se conservan/);
+ assert.match(p.failed(busy,2700),/Tus órdenes están guardadas/);
  for(const now of [3600,6500,9500,12500])assert.equal(p.failed(offline,now),null);
- assert.match(p.failed(offline,15300),/Esperando la conexión clínica/);
+ assert.match(p.failed(offline,15300),/Reconectando la guardia/);
 });
 test('a successful server snapshot clears failure history and a new failure must repeat',()=>{
  const p=createClinicalConnectionNotice();
@@ -27,7 +27,7 @@ test('a successful server snapshot clears failure history and a new failure must
 });
 test('authorization failures are shown without waiting for repeated attempts',()=>{
  const p=createClinicalConnectionNotice();
- assert.match(p.failed({status:403},1100),/verificar el acceso/);
+ assert.match(p.failed({status:403},1100),/volver a verificarse/);
  assert.equal(p.failed({status:403},1500),null);
 });
 test('failures separated by a long idle period cannot accumulate into a false warning',()=>{
@@ -38,5 +38,5 @@ test('failures separated by a long idle period cannot accumulate into a false wa
 });
 test('a timed-out transport alerts the physician while the same order stays queued',()=>{
  const p=createClinicalConnectionNotice();
- assert.match(p.failed(new DOMException('expired','TimeoutError'),12000),/Las órdenes pendientes se conservan/);
+ assert.match(p.failed(new DOMException('expired','TimeoutError'),12000),/Tus órdenes están guardadas/);
 });

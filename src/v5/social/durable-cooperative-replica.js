@@ -1,9 +1,11 @@
 export const CLINICAL_REQUEST_TIMEOUT_MS=12000;
 
 function retainConfirmedRewards(next,previous){
- const reward=next.caseReward,prior=previous?.caseReward;
- if(reward?.creditStatus==='pending'&&prior?.creditStatus==='credited'&&
-  ['actorId','patientUid','eventId'].every(key=>prior[key]===reward[key]))next.caseReward=prior;
+ for(const field of ['caseReward','deathReward']){
+  const reward=next[field],prior=previous?.[field];
+  if(reward?.creditStatus==='pending'&&prior?.creditStatus==='credited'&&
+   ['actorId','patientUid','eventId'].every(key=>prior[key]===reward[key]))next[field]=prior;
+ }
  const known=new Map((previous?.shift?.outcomes||[]).filter(row=>row.creditStatus==='credited')
   .map(row=>[row.patientUid,row]));
  for(const row of [...(next.shift?.outcomes||[]),...(next.competition?.outcomes||[])]){
@@ -20,14 +22,18 @@ function retainConfirmedRewards(next,previous){
  * animation frame; no timers or new scheduling loops are added.
  */
 export function createDurableCooperativeReplica({
- window,roomId,clientKey,storage,authorization=()=>null,onSnapshot=()=>{},onError=()=>{},
+ window,roomId,clientKey,storage,authorization=()=>null,onSnapshot=()=>{},onError=()=>{},onCommitted=()=>{},
  requestTimeoutMs=CLINICAL_REQUEST_TIMEOUT_MS
 }){
  if(!/^[A-Za-z0-9_-]{1,100}$/.test(roomId)||!/^[-a-zA-Z0-9]{32,120}$/.test(clientKey))
   throw Error('invalid durable cooperative credentials');
  const key='atria.v5.durable.pending:'+roomId;
- let disposed=false,current=null,epoch=-1,lastPoll=-Infinity,inflight=null,queuedMotion=null,queuedClaim=null,queuedMotionSequence=null,latestMotionSequence=0,typing=null,confirmation=null;
- const pending=new Map(),pendingHints=new Map();
+ let disposed=false,current=null,epoch=-1,lastPoll=-Infinity,inflight=null,queuedMotion=null,queuedClaim=null,queuedMotionSequence=null,latestMotionSequence=0,typing=null,lastTyping=null,confirmation=null,confirmationKey=null;
+ let observing=null,observationVersion=0,observeAgain=false,desiredFocus=null;
+ const patientViews=new Map(),controllers=new Set(),pending=new Map(),pendingHints=new Map(),pendingShifts=new Map();
+ const shiftStorageKey=key+':shift-controls';
+ const saveShifts=()=>{try{storage?.setItem(shiftStorageKey,JSON.stringify([...pendingShifts.values()].map(x=>x.request)));}catch{}};
+ try{for(const request of JSON.parse(storage?.getItem(shiftStorageKey)||'[]'))if(typeof request?.requestId==='string')pendingShifts.set(request.requestId,{request,resolve:null});}catch{}
  const hintStorageKey=key+':displayed-hints';
  function saveHints(){try{storage?.setItem(hintStorageKey,JSON.stringify([...pendingHints.values()].map(x=>x.request).filter(r=>r.op==='displayed')));}catch{}}
  try{for(const request of JSON.parse(storage?.getItem(hintStorageKey)||'[]'))if(request?.op==='displayed'&&typeof request.requestId==='string')pendingHints.set(request.requestId,{request,resolve:null});}catch{}
@@ -39,14 +45,23 @@ export function createDurableCooperativeReplica({
    if(typeof envelope?.id==='string'&&typeof envelope?.text==='string'&&!pending.has(envelope.id))
     pending.set(envelope.id,{envelope:clone({...envelope,targetPatientUid:envelope.targetPatientUid??null}),resolve:null});
  }catch{}
+ function presented(){
+  if(!current)return null;
+  const stored=desiredFocus&&patientViews.get(desiredFocus),state=clone(stored?.clinical||current.clinical);
+  if(stored&&current.clinical.shift){
+   state.shift={...clone(current.clinical.shift),focusPatientUid:state.patient.uid};
+   state.communication=clone(current.clinical.communication);
+   if(state.hintBinding)state.hintBinding.selectionRevision=current.clinical.hintBinding?.selectionRevision??state.hintBinding.selectionRevision;
+  }
+  return state;
+ }
+ const presentedCatalog=()=>clone((desiredFocus&&patientViews.get(desiredFocus)?.catalog)||current?.catalog||[]);
+ const emit=()=>{if(current&&!disposed)onSnapshot({...clone(current),clinical:presented(),catalog:presentedCatalog()});};
  function accept(response){
   if(!response?.clinical||response.clinical.room?.roomId!==roomId||!Number.isSafeInteger(response.epoch))
    throw Error('invalid clinical response');
-  if(response.epoch<epoch)return false;
-  epoch=response.epoch;
-  const previous=current?.clinical;
-  current=clone(response);
-  retainConfirmedRewards(current.clinical,previous);
+  // Even a delayed older view can carry the final receipt for our exact
+  // pending command. Settle receipts independently from view replacement.
   for(const ack of response.acknowledgements||[]){
    if(!ack||typeof ack.commandId!=='string')continue;
    const waiting=pending.get(ack.commandId);
@@ -54,17 +69,34 @@ export function createDurableCooperativeReplica({
   }
   const requested=response.hintRequestId,ack=response.hintAcknowledgement,waitingHint=pendingHints.get(requested);
   if(ack&&waitingHint){pendingHints.delete(requested);waitingHint.resolve?.(clone(ack));saveHints();}
-  save();onSnapshot(clone(current));
+  const shiftId=response.shiftRequestId??response.shiftAcknowledgement?.requestId,waitingShift=pendingShifts.get(shiftId);
+  if(response.shiftAcknowledgement&&waitingShift){pendingShifts.delete(shiftId);waitingShift.resolve?.(clone(response.shiftAcknowledgement));saveShifts();}
+  save();
+  if(response.readOnly!==true&&response.commitNotice===true)try{onCommitted(response.epoch);}catch{/* a notification cannot undo a confirmed receipt */}
+  if(response.epoch<epoch)return false;
+  epoch=response.epoch;
+  const previous=current?.clinical;
+  current=clone(response);retainConfirmedRewards(current.clinical,previous);
+  if(current.clinical.patient?.uid)patientViews.set(current.clinical.patient.uid,{clinical:clone(current.clinical),catalog:clone(current.catalog||[])});
+  emit();
   return true;
  }
- async function request(action,extra={}){
-  const signal=AbortSignal.timeout(requestTimeoutMs);
-  const response=await window.fetch('/api/clinical',{method:'POST',cache:'no-store',
+ async function request(action,extra={},controller=new AbortController()){
+  controllers.add(controller);
+  const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(requestTimeoutMs)]);
+  const bounded=async promise=>{
+   signal.throwIfAborted();let rejectAbort;
+   const aborted=new Promise((_,reject)=>rejectAbort=()=>reject(signal.reason));
+   signal.addEventListener('abort',rejectAbort,{once:true});
+   try{return await Promise.race([promise,aborted]);}finally{signal.removeEventListener('abort',rejectAbort);}
+  };
+  try{
+  const response=await bounded(window.fetch('/api/clinical',{method:'POST',cache:'no-store',
    signal,
    headers:{'Content-Type':'application/json',...(authorization()?{Authorization:authorization()}:{})},
-   body:JSON.stringify({action,clientKey,roomId,...extra})});
+   body:JSON.stringify({action,clientKey,roomId,...extra})}));
   let value;
-  try{value=await response.json();}
+  try{value=await bounded(response.json());}
   catch(error){signal.throwIfAborted();if(response.ok)throw error;value={};}
   if(!response.ok){
    const error=Error(value.error||'clinical-'+response.status);
@@ -72,6 +104,37 @@ export function createDurableCooperativeReplica({
    throw error;
   }
   return value;
+  }finally{controllers.delete(controller);}
+ }
+ function observe(patientUid=desiredFocus){
+  if(disposed)return Promise.reject(Error('replica-disposed'));
+  const target=current?.clinical.shift?.mode==='competitive'?null:patientUid;
+  if(observing&&observing.target===target)return observing.promise;
+  if(observing)observing.controller.abort(new DOMException('Selection changed','AbortError'));
+  const slot={target,controller:new AbortController(),version:++observationVersion,promise:null};
+  observing=slot;
+  slot.promise=request('observe',target?{targetPatientUid:target}:{},slot.controller).then(response=>{
+   if(disposed||slot.version!==observationVersion)return null;
+   accept(response);return response;
+  }).catch(error=>{
+   if(error?.name==='AbortError'||disposed)return null;
+   onError(error);throw error;
+  }).finally(()=>{
+   if(observing!==slot)return;
+   observing=null;
+   if(observeAgain&&!disposed){observeAgain=false;observe().catch(()=>{});}
+  });
+  return slot.promise;
+ }
+ function invalidate(advisoryEpoch){
+  if(!Number.isSafeInteger(advisoryEpoch)||advisoryEpoch<0||advisoryEpoch<=epoch||disposed)return Promise.resolve(null);
+  if(observing){observeAgain=true;return observing.promise;}
+  return observe();
+ }
+ function flushPending(hasPending){
+  const busy=inflight;
+  if(busy)busy.then(()=>{if(!disposed&&hasPending())synchronize().catch(()=>{});},()=>{});
+  else synchronize().catch(()=>{});
  }
  // At most one in-flight mutation per browser. Server-side CAS serializes
  // actors across browsers; retained event IDs make retransmission idempotent.
@@ -80,18 +143,22 @@ export function createDurableCooperativeReplica({
   if(inflight)return inflight;
   const batch=[...pending.values()].slice(0,16).map(x=>clone(x.envelope));
   const motion=queuedMotion,motionSequence=queuedMotionSequence,claim=queuedClaim,typingState=typing,receipt=confirmation,
-   hint=[...pendingHints.values()][0]?.request;
+   hint=[...pendingHints.values()][0]?.request,nextShift=[...pendingShifts.values()][0]?.request;
+  // A leave settles after this batch at the authority. Keep it queued while
+  // any earlier command or displayed hint cannot fit in the current batch.
+  const shift=nextShift?.op==='leave'&&(pending.size>batch.length||pendingHints.size>(hint?1:0))?null:nextShift;
   inflight=request('sync',{commands:batch,...(hint?{hintRequest:clone(hint)}:{}),...(motion?{motion,...(motionSequence!==null?{motionSequence}:{})}:{}),
-   ...(claim?{claim}:{}),...(typingState!==null?{typing:typingState}:{}),...(receipt?{confirmation:receipt}:{})})
+   ...(claim?{claim}:{}),...(shift?{shiftRequest:clone(shift)}:{}),...(typingState!==null?{typing:typingState}:{}),...(receipt?{confirmation:receipt}:{})})
    .then(response=>{
     if(disposed)return null;
-    if(!accept(response))return null;
+    accept(response);
     // Do not discard motion on a recovering response: the server did not
     // admit new commands, movement or confirmations during catch-up.
     if(!response.recovering){
      if(queuedMotion===motion){queuedMotion=null;queuedMotionSequence=null;}
       if(queuedClaim===claim&&response.clinical?.shift?.confirmedFocusPatientUid===claim)queuedClaim=null;
      if(confirmation===receipt)confirmation=null;
+     if(typing===typingState)typing=null;
     }
     return response;
    }).catch(error=>{if(!disposed)onError(error);throw error;})
@@ -110,6 +177,7 @@ export function createDurableCooperativeReplica({
    }
   },
   sync:synchronize,
+  observe,invalidate,
   pendingCommands:()=>[...pending.values()].map(x=>clone(x.envelope)),
   maintain(now){
    // Physiological advancement and CAS writes are NOT a sprite transport.
@@ -122,6 +190,8 @@ export function createDurableCooperativeReplica({
    if(disposed)return Promise.reject(Error('replica-disposed'));
    if(typeof envelope?.id!=='string'||!envelope.id||typeof envelope.text!=='string')
     return Promise.reject(Error('invalid clinical command'));
+   if(envelope.targetPatientUid===undefined&&envelope.channel!=='team'&&desiredFocus)
+    envelope={...envelope,targetPatientUid:desiredFocus};
    const old=pending.get(envelope.id);
    if(old)return new Promise(resolve=>{
     if(!old.resolve)old.resolve=resolve;
@@ -141,6 +211,17 @@ export function createDurableCooperativeReplica({
     }else synchronize().catch(()=>{/* on next RAF retry same id */});
    });
   },
+  shift(request){
+   if(disposed)return Promise.reject(Error('replica-disposed'));
+   if(typeof request?.requestId!=='string')return Promise.reject(Error('invalid shift control'));
+   return new Promise(resolve=>{
+    const old=pendingShifts.get(request.requestId);
+    if(old&&JSON.stringify(old.request)!==JSON.stringify(request)){resolve({status:'rejected',reason:'shift-request-conflict'});return;}
+    if(old){const prior=old.resolve;old.resolve=ack=>{prior?.(ack);resolve(ack);};}
+    else pendingShifts.set(request.requestId,{request:clone(request),resolve});
+    saveShifts();flushPending(()=>pendingShifts.has(request.requestId));
+   });
+  },
   hintBinding(){return current?clone(current.clinical.hintBinding):null;},
   hint(request){
    if(disposed)return Promise.reject(Error('replica-disposed'));
@@ -157,9 +238,11 @@ export function createDurableCooperativeReplica({
   claim(patientUid){
    if(typeof patientUid!=='string'||!patientUid||disposed)return false;
    queuedClaim=patientUid;
+   if(current?.clinical.shift?.mode!=='competitive'){desiredFocus=patientUid;emit();}
    const busy=inflight;
    if(busy)busy.then(()=>{if(!disposed&&queuedClaim===patientUid)synchronize().catch(()=>{});},()=>{});
    else synchronize().catch(()=>{});
+   observe().catch(()=>{});
    return true;
   },
   cancelClaim(uid){
@@ -172,9 +255,9 @@ export function createDurableCooperativeReplica({
    if(sequence!==null)latestMotionSequence=Math.max(latestMotionSequence,sequence);
    queuedMotion=clone(target);queuedMotionSequence=sequence;return true;
   },
-  setTyping(value){typing=!!value;},
-  confirm(revision,outcomeId){confirmation={revision,outcomeId};},
-  read:()=>current?clone(current.clinical):null,
+  setTyping(value){if(lastTyping!==!!value){typing=!!value;lastTyping=!!value;}},
+  confirm(revision,outcomeId){const key=JSON.stringify([revision,outcomeId]);if(key!==confirmationKey){confirmationKey=key;confirmation={revision,outcomeId};}},
+  read:presented,
   snapshotSpatial:()=>current?clone(current.spatial):null,
   lastAcknowledgedMotion(actorId){
    const receipts=current?.motionReceipts;
@@ -182,19 +265,24 @@ export function createDurableCooperativeReplica({
    const ack=receipts.find(pair=>Array.isArray(pair)&&pair[0]===actorId)?.[1];
    return Number.isSafeInteger(ack)&&ack>0?ack:null;
   },
-  catalog:()=>clone(current?.catalog||[]),
-  monitorRead(uid){const p=current?.clinical?.patient;
+  catalog:presentedCatalog,
+  monitorRead(uid){const p=presented()?.patient;
    return p?.uid===uid?{uid,caseEnded:p.caseEnded,ecg:clone(p.ecg),
     procedures:clone(p.procedures),lastVitalsKnown:clone(p.lastVitalsKnown)}:null;},
-  advance(){},finishNurseArrivals(){return [];},flush:()=>inflight||Promise.resolve(),
+  advance(){},finishNurseArrivals(){return [];},async flush(){
+   while(inflight||observing){const tasks=[inflight,observing?.promise].filter(Boolean);await Promise.all(tasks);}
+  },
   hasSnapshot:()=>!!current,
   isRecovering:()=>!!current?.recovering,
   dispose(){
    disposed=true;
+   for(const controller of controllers)controller.abort(new DOMException('Replica disposed','AbortError'));
    for(const item of pending.values())item.resolve?.({status:'rejected',reason:'replica-disposed'});
    pending.clear();
    for(const h of pendingHints.values())h.resolve?.({status:'rejected',reason:'replica-disposed'});
    pendingHints.clear();
+   for(const item of pendingShifts.values())item.resolve?.({status:'rejected',reason:'replica-disposed'});
+   pendingShifts.clear();patientViews.clear();
   },
  });
 }

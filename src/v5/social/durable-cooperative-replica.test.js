@@ -144,3 +144,171 @@ test('a delayed receipt lookup cannot replace confirmed XP for this encounter',a
   await replica.sync();assert.equal(replica.read().caseReward.creditStatus,'pending');
  }finally{replica.dispose();}
 });
+
+test('a confirmed death debit survives a later failed lookup only for its exact account receipt',async()=>{
+ const credited={actorId:'doctor',patientUid:'p',eventId:'death-p',creditStatus:'credited',loss:15};
+ for(const change of [{},{actorId:'another-doctor'},{patientUid:'q'},{eventId:'another-death'}]){
+  const pending={...credited,...change,creditStatus:'pending',loss:null},frames=[credited,pending];let epoch=0;
+  const replica=createDurableCooperativeReplica({roomId,clientKey,window:{fetch:async()=>({ok:true,json:async()=>({
+   epoch:++epoch,clinical:{room:{roomId,revision:7},patient:{uid:frames[epoch-1].patientUid,patientDied:true},deathReward:frames[epoch-1]}
+  })})}});
+  try{
+   await replica.sync();await replica.sync();
+   assert.deepEqual(replica.read().deathReward,Object.keys(change).length?pending:credited);
+  }finally{replica.dispose();}
+ }
+});
+
+const settle=()=>new Promise(resolve=>setImmediate(resolve));
+function patientFrame(epoch,uid='A',confirmed='A',mode='coop',extra={}){
+ return {epoch,clinical:{room:{roomId,revision:epoch},patient:{uid,caseId:'PERI-PBE-001',procedures:{},ecg:{},lastVitalsKnown:{},label:uid+'-'+epoch},
+  hintBinding:{roomId,patientUid:uid,selectionRevision:epoch},
+  shift:{mode,confirmedFocusPatientUid:confirmed,focusPatientUid:uid,patients:[{uid:'A',ownerId:null},{uid:'B',ownerId:null}],outcomes:[]},
+  ...(mode==='competitive'?{competition:{mode,ownerId:confirmed?'doctor':null}}:{})},catalog:[uid+'-catalog'],
+  spatial:{doctors:[],nurses:[]},...extra};
+}
+function observationHarness(options={}){
+ const requests=[],data=new Map(),snapshots=[],commits=[],errors=[],storage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};
+ const window={fetch:async(_url,options)=>new Promise(resolve=>requests.push({body:JSON.parse(options.body),signal:options.signal,
+  reply(body,status=200){resolve({ok:status<400,status,json:async()=>body});}}))};
+ const make=()=>createDurableCooperativeReplica({window,roomId,clientKey,storage,
+  onSnapshot:x=>snapshots.push(x),onCommitted:x=>commits.push(x),onError:x=>errors.push(x),...options});
+ const seed=async(client,mode='coop')=>{const started=client.start('PERI-PBE-001');requests.at(-1).reply(patientFrame(0,'A','A',mode));await started;};
+ return {requests,data,snapshots,commits,errors,make,seed};
+}
+
+test('a commit event observes fresh authoritative activity while an older mutation response is held',async()=>{
+ const f=observationHarness(),client=f.make();await f.seed(client);
+ try{
+  const posted=client.post({id:'held-order',text:'Hola',targetPatientUid:'A'}),mutation=f.requests.at(-1);
+  assert.equal(typeof client.invalidate,'function','a committed event needs an independent read-only observation lane');
+  const observed=client.invalidate(2),read=f.requests.at(-1);
+  assert.equal(read.body.action,'observe');assert.notEqual(read,mutation);
+  assert(!('commands' in read.body)&&!('claim' in read.body)&&!('hintRequest' in read.body));
+  read.reply(patientFrame(2,'A','A','coop',{readOnly:true}));await observed;
+  assert.equal(client.read().patient.label,'A-2');
+  mutation.reply(patientFrame(1,'A','A','coop',{commitNotice:true,acknowledgements:[{commandId:'held-order',status:'received'}]}));
+  assert.equal((await posted).status,'received');await client.flush();
+  assert.equal(client.read().patient.label,'A-2','the older mutation settles its receipt without replacing the newer view');
+  assert.deepEqual(client.pendingCommands(),[]);assert.deepEqual(f.commits,[1]);
+ }finally{client.dispose();}
+});
+
+test('advisory epoch spam coalesces and cannot poison the next real commit wakeup',async()=>{
+ const f=observationHarness(),client=f.make();await f.seed(client);
+ try{
+  assert.equal(typeof client.invalidate,'function');
+  const first=client.invalidate(Number.MAX_SAFE_INTEGER);
+  for(let i=0;i<25;i++)client.invalidate(Number.MAX_SAFE_INTEGER-i).catch(()=>{});
+  assert.equal(f.requests.filter(x=>x.body.action==='observe').length,1);
+  f.requests.at(-1).reply(patientFrame(1,'A','A','coop',{readOnly:true}));await first;await settle();
+  const followup=f.requests.filter(x=>x.body.action==='observe').at(-1);
+  if(followup!==f.requests[1])followup.reply(patientFrame(1,'A','A','coop',{readOnly:true}));
+  await client.flush();assert.equal(client.read().patient.label,'A-1');
+  assert(f.requests.filter(x=>x.body.action==='observe').length<=2,'a burst causes at most one coalesced follow-up read');
+  const actual=client.invalidate(2);assert.equal(f.requests.at(-1).body.action,'observe');
+  f.requests.at(-1).reply(patientFrame(2,'A','A','coop',{readOnly:true}));await actual;
+  const count=f.requests.length;await client.invalidate(1);await client.invalidate(-1);await client.invalidate(Infinity);
+  assert.equal(f.requests.length,count);assert.equal(client.read().patient.label,'A-2');
+ }finally{client.dispose();}
+});
+
+test('quick cooperative A/B selection keeps the exact desired patient through cached and late views',async()=>{
+ const f=observationHarness(),client=f.make();await f.seed(client);
+ try{
+  client.claim('B');
+  const firstRead=f.requests.find(x=>x.body.action==='observe'),mutation=f.requests.find(x=>x.body.action==='sync');
+  assert(firstRead,'selection must observe independently of its pending clinical claim');
+  assert.equal(firstRead.body.targetPatientUid,'B');
+  firstRead.reply(patientFrame(0,'B','A','coop',{readOnly:true}));await settle();
+  assert.equal(client.read().patient.uid,'B');assert.equal(client.read().shift.confirmedFocusPatientUid,'A');
+  client.claim('A');const stale=f.requests.at(-1);assert.equal(client.read().patient.uid,'A','a prior confirmed patient is immediately available from its cache');
+  client.claim('B');const latest=f.requests.at(-1);
+  assert.equal(client.read().patient.uid,'B');assert.deepEqual(client.catalog(),['B-catalog']);
+  assert.equal(stale.signal.aborted,true,'a stale projection cannot hold the newly selected patient');
+  const posted=client.post({id:'bound-to-b',text:'¿Desde cuándo?'});
+  assert.equal(client.pendingCommands()[0].targetPatientUid,'B');
+  latest.reply(patientFrame(2,'B','B','coop',{readOnly:true}));await settle();
+  stale.reply(patientFrame(3,'A','A','coop',{readOnly:true}));await settle();
+  assert.equal(client.read().patient.uid,'B');
+  mutation.reply(patientFrame(1,'B','B'));await settle();
+  const command=f.requests.filter(x=>x.body.action==='sync').at(-1);
+  assert.equal(command.body.commands[0].targetPatientUid,'B');
+  command.reply(patientFrame(3,'B','B','coop',{acknowledgements:[{commandId:'bound-to-b',status:'received'}]}));
+  await posted;assert.equal(client.read().patient.uid,'B');
+ }finally{client.dispose();}
+});
+
+test('competitive selection waits for the authoritative claim instead of projecting a cached patient',async()=>{
+ const f=observationHarness(),client=f.make();await f.seed(client,'competitive');
+ try{
+  client.claim('B');assert.equal(client.read().patient.uid,'A');
+  const read=f.requests.find(x=>x.body.action==='observe');assert(read);
+  read.reply(patientFrame(0,'A','A','competitive',{readOnly:true}));await settle();
+  assert.equal(client.read().patient.uid,'A');
+  f.requests.find(x=>x.body.action==='sync').reply(patientFrame(1,'A','A','competitive'));await client.flush();
+  assert.equal(client.read().patient.uid,'A');
+ }finally{client.dispose();}
+});
+
+test('shift controls survive reconnect with the original idempotent request and resolve only from its receipt',async()=>{
+ const f=observationHarness(),first=f.make(),control={op:'continue',requestId:'continue-turn-1',turnId:roomId+':turn-1'};
+ assert.equal(typeof first.shift,'function','continuation decisions need the durable serialized command lane');
+ const pending=first.shift(control);assert.deepEqual(f.requests.at(-1).body.shiftRequest,control);
+ first.dispose();assert.equal((await pending).reason,'replica-disposed');
+ const second=f.make();
+ try{
+  const sync=second.sync(),request=f.requests.at(-1);assert.deepEqual(request.body.shiftRequest,control);
+  request.reply(patientFrame(1,'A','A','coop',{shiftRequestId:control.requestId,
+   shiftAcknowledgement:{...control,status:'accepted',nextTurnId:roomId+':turn-2'}}));await sync;
+  const again=second.sync();assert(!('shiftRequest' in f.requests.at(-1).body));
+  f.requests.at(-1).reply(patientFrame(2));await again;
+  assert.deepEqual(JSON.parse(f.data.get('atria.v5.durable.pending:'+roomId+':shift-controls')),[]);
+ }finally{second.dispose();}
+});
+
+test('leaving waits until every previously queued command fits a confirmed batch',async()=>{
+ const f=observationHarness(),client=f.make();await f.seed(client);
+ const first=client.sync(),held=f.requests.at(-1),posts=[];
+ try{
+  for(let n=0;n<18;n++)posts.push(client.post({id:'save-order-'+n,text:'Hola',targetPatientUid:'A'}));
+  const control={op:'leave',turnId:roomId+':turn-1',requestId:'save-after-orders'},leaving=client.shift(control);
+  held.reply(patientFrame(1));await first;await settle();
+  const batch=f.requests.at(-1);
+  assert.equal(batch.body.commands.length,16);assert(!batch.body.shiftRequest,'cannot leave with unsent prior commands');
+  batch.reply(patientFrame(2,'A','A','coop',{acknowledgements:batch.body.commands.map(c=>({commandId:c.id,status:'received'}))}));
+  await client.flush();
+  const lastSync=client.sync(),last=f.requests.at(-1);
+  assert.equal(last.body.commands.length,2);assert.deepEqual(last.body.shiftRequest,control);
+  last.reply(patientFrame(3,'A','A','coop',{acknowledgements:last.body.commands.map(c=>({commandId:c.id,status:'received'})),
+   shiftRequestId:control.requestId,shiftAcknowledgement:{...control,status:'accepted'}}));
+  await lastSync;await Promise.all(posts);assert.equal((await leaving).status,'accepted');
+  assert.deepEqual(client.pendingCommands(),[]);
+ }finally{client.dispose();}
+});
+
+test('unchanged typing and a repeated closure confirmation do not become new idle effects',async()=>{
+ const f=observationHarness(),client=f.make();await f.seed(client);
+ const sync=async()=>{const promise=client.sync(),request=f.requests.at(-1);request.reply(patientFrame(f.requests.length,'A','A','coop',{confirmationAccepted:true}));await promise;return request.body;};
+ try{
+  client.setTyping(false);assert.equal((await sync()).typing,false);
+  client.setTyping(false);client.confirm(4,'closure-one');const confirmed=await sync();
+  assert(!('typing' in confirmed));assert.deepEqual(confirmed.confirmation,{revision:4,outcomeId:'closure-one'});
+  client.setTyping(false);client.confirm(4,'closure-one');const idle=await sync();
+  assert(!('typing' in idle));assert(!('confirmation' in idle));
+  client.setTyping(true);assert.equal((await sync()).typing,true);
+ }finally{client.dispose();}
+});
+
+test('only an explicit committed mutation notice publishes a wakeup',async()=>{
+ const f=observationHarness(),client=f.make();await f.seed(client);
+ try{
+  const idle=client.sync();f.requests.at(-1).reply(patientFrame(1));await idle;
+  assert.deepEqual(f.commits,[]);
+  assert.equal(typeof client.invalidate,'function');
+  const observed=client.invalidate(2);f.requests.at(-1).reply(patientFrame(2,'A','A','coop',{readOnly:true,commitNotice:true}));await observed;
+  assert.deepEqual(f.commits,[],'an observation cannot rebroadcast itself');
+  const changed=client.sync();f.requests.at(-1).reply(patientFrame(3,'A','A','coop',{commitNotice:true}));await changed;
+  assert.deepEqual(f.commits,[3]);
+ }finally{client.dispose();}
+});

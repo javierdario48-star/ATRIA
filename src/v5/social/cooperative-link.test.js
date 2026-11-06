@@ -15,7 +15,7 @@ function fixture(){
   if(failed===url.pathname){failed=null;return {ok:false,status:503,json:async()=>({error:'temporarily-unavailable'})};}
   return {ok:result.status<400,status:result.status,json:async()=>result.body};
  }};
- const make=()=>createCooperativeLink({window:win,profile:{name:'Ana',scrubColor:'navy'},onClose:()=>closed++});
+ const make=(options={})=>createCooperativeLink({window:win,profile:{name:'Ana',scrubColor:'navy'},onClose:()=>closed++,...options});
  return {win,backend,requests,make,delay:path=>delayed=path,held:()=>!!release,release:()=>release?.(),fail:path=>failed=path,closed:()=>closed,delayBefore:path=>beforePath=path,beforeHeld:()=>!!beforeRelease,releaseBefore:()=>beforeRelease?.()};
 }
 test('reloaded social identity renews authenticated presence without replaying a stale motion sequence',async()=>{
@@ -50,6 +50,18 @@ test('a delayed room poll cannot recreate a guard after an explicit departure',a
  // controlled HTTP response is held. No clinical timers or state are mocked.
  while(!f.held())await Promise.resolve();await a.leave();f.release();await a.flush();
  assert.equal(a.state().room,null);assert.equal(f.win.localStorage.getItem('atria.v5.coop.room'),null);a.dispose();
+});
+test('saving a durable guard detaches the host without cancelling its colleagues room or recovery access',async()=>{
+ const f=fixture(),a=f.make();await a.connect();
+ const other=await f.backend.route({method:'POST',path:'register',body:{clientKey:crypto.randomUUID(),name:'Bruno'}});
+ const room=await a.invite([other.body.user.id]);
+ await f.backend.route({method:'POST',path:'rooms/join',headers:{authorization:'Bearer '+other.body.token},body:{roomId:room.id,peerId:'bruno'}});
+ await a.leave({preserveRoom:true});
+ assert.equal(a.state().room,null);assert.equal(f.win.localStorage.getItem('atria.v5.coop.room'),null);
+ assert(!f.requests.includes('/api/rooms/'+room.id+'/cancel'));
+ const colleague=await f.backend.route({method:'GET',path:'rooms/'+room.id+'/messages',headers:{authorization:'Bearer '+other.body.token},query:{after:0}});
+ assert.equal(colleague.status,200);assert.equal(colleague.body.room.members.length,2);
+ await a.join(room.id);assert.equal(a.state().room.id,room.id);a.dispose();
 });
 test('a transient signaling-service failure cannot close the native cooperative guard',async()=>{
  const f=fixture(),a=f.make();await a.connect();const other=await f.backend.route({method:'POST',path:'register',body:{clientKey:crypto.randomUUID(),name:'Bruno'}});
@@ -293,4 +305,188 @@ test('slow lobby directory reads cannot hold back subsequent authenticated movem
  f.releaseBefore();
  await a.flush();
  a.dispose();
+});
+
+const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const boundedFlush=async client=>Promise.race([client.flush().then(()=>true),pause(120).then(()=>false)]);
+
+test('a stalled speech response expires so the next frame can deliver a new room message',async()=>{
+ const f=fixture(),heard=[],a=f.make({requestTimeoutMs:25,onRoomSpeech:x=>heard.push(x)}),host=await invited(f,a);
+ await a.join(host.id);f.delay('/api/rooms/'+host.id+'/messages');
+ try{
+  a.maintain(1000,{x:40,y:40,phase:'guard',roomId:host.id});
+  while(!f.held())await Promise.resolve();
+  await f.backend.route({method:'POST',path:'rooms/'+host.id+'/messages',headers:host.headers,
+   body:{message:{kind:'physician.speech',id:'while-reading',text:'Mensaje en vivo'}}});
+  assert.equal(await boundedFlush(a),true,'a response that ignores abort cannot retain the speech lane');
+  a.maintain(1400,{x:40,y:40,phase:'guard',roomId:host.id});await a.flush();
+  assert.deepEqual(heard.map(x=>x.id),['while-reading']);
+  f.release();await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(heard.map(x=>x.id),['while-reading'],'a late stale response cannot repeat live speech');
+ }finally{f.release();a.dispose();}
+});
+
+test('a stalled response body also expires without allowing its late room snapshot to publish',async()=>{
+ const f=fixture(),a=f.make({requestTimeoutMs:25}),host=await invited(f,a);await a.join(host.id);
+ const fetch=f.win.fetch;let held=false,release,hold=true;
+ f.win.fetch=async(uri,options)=>{
+  const response=await fetch(uri,options);
+  if(hold&&String(uri).includes('/messages')){
+   hold=false;return {...response,json:async()=>{held=true;await new Promise(resolve=>release=resolve);return response.json();}};
+  }
+  return response;
+ };
+ try{
+  a.maintain(1000,{x:40,y:40,phase:'guard',roomId:host.id});
+  while(!held)await Promise.resolve();
+  assert.equal(await boundedFlush(a),true,'JSON body consumption shares the bounded request deadline');
+  await a.leave();release();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(a.state().room,null);
+ }finally{release?.();a.dispose();}
+});
+
+test('leaving a room retires its held read before a new room needs the speech lane',async()=>{
+ const f=fixture(),heard=[],a=f.make({onRoomSpeech:x=>heard.push(x)}),first=await invited(f,a);
+ await a.join(first.id);f.delay('/api/rooms/'+first.id+'/messages');
+ try{
+  a.maintain(1000,{x:40,y:40,phase:'guard',roomId:first.id});
+  while(!f.held())await Promise.resolve();
+  await a.leave();const next=await invited(f,a);await a.join(next.id);
+  await f.backend.route({method:'POST',path:'rooms/'+next.id+'/messages',headers:next.headers,
+   body:{message:{kind:'physician.speech',id:'new-room-message',text:'Nueva guardia'}}});
+  a.maintain(1001,{x:40,y:40,phase:'guard',roomId:next.id});
+  assert.equal(await boundedFlush(a),true,'new room reads must not wait for an obsolete response');
+  assert.deepEqual(heard.map(x=>x.id),['new-room-message']);
+  f.release();await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(a.state().room.id,next.id);
+  assert.deepEqual(heard.map(x=>x.roomId),[next.id]);
+ }finally{f.release();a.dispose();}
+});
+
+test('changing identity retires an old roster read and ignores its eventual response',async()=>{
+ const f=fixture(),a=f.make();await a.connect();f.delay('/api/lobby');
+ try{
+  a.maintain(1000,{x:40,y:40,phase:'lobby'});
+  while(!f.held())await Promise.resolve();
+  const other=await f.backend.route({method:'POST',path:'register',body:{clientKey:crypto.randomUUID(),name:'Bruno'}});
+  await f.backend.route({method:'POST',path:'lobby/chat',headers:{authorization:'Bearer '+other.body.token},
+   body:{text:'Después del cambio'}});
+  a.useAccount(null);a.maintain(1001,{x:40,y:40,phase:'lobby'});
+  assert.equal(await boundedFlush(a),true,'the replacement identity gets an independent roster lane');
+  assert(a.state().lobbyMessages.some(x=>x.text==='Después del cambio'));
+  f.release();await new Promise(resolve=>setImmediate(resolve));
+  assert(a.state().lobbyMessages.some(x=>x.text==='Después del cambio'),'the old snapshot cannot overwrite the new directory');
+ }finally{f.release();a.dispose();}
+});
+
+function commitClients(){
+ const records=new Map(),backend=createQaSocialServer({get:async k=>records.get(k),
+  set:async(k,v)=>records.set(k,structuredClone(v)),delete:async k=>records.delete(k)}),pcs=new Map(),writes=[];
+ let serial=0;
+ const channel=()=>({readyState:'connecting',bufferedAmount:0,send(data){this.remote?.onmessage?.({data});},close(){this.readyState='closed';}});
+ class Peer{
+  constructor(){this.id=String(++serial);pcs.set(this.id,this);this.connectionState='new';}
+  createDataChannel(){return this.channel=channel();}
+  async createOffer(){return {type:'offer',sdp:'a=ice-ufrag:'+this.id};}
+  async createAnswer(){return {type:'answer',sdp:'a=ice-ufrag:'+this.id};}
+  async setRemoteDescription(value){this.remoteDescription=value;this.remote=pcs.get(value.sdp.split(':').at(-1));}
+  async setLocalDescription(value){
+   this.localDescription=value;
+   if(value.type!=='answer')return;
+   const remote=this.remote.channel,local=channel();local.remote=remote;remote.remote=local;
+   this.ondatachannel({channel:local});local.readyState=remote.readyState='open';
+   this.connectionState=this.remote.connectionState='connected';local.onopen?.();remote.onopen?.();
+  }
+  close(){this.connectionState='closed';}
+ }
+ const make=(name,onPacket=()=>{})=>createCooperativeLink({profile:{name,scrubColor:'navy'},onPacket,
+  window:{crypto,localStorage:storage(),performance:{now:()=>1000},RTCPeerConnection:Peer,
+   fetch:async(uri,options)=>{
+    const url=new URL(uri,'http://test'),input={method:options.method,path:url.pathname,
+     headers:options.headers,query:Object.fromEntries(url.searchParams),body:options.body?JSON.parse(options.body):{}};
+    if(input.body.message)writes.push(input);
+    const result=await(url.pathname==='/api/lobby-sync'?backend.signalRoute(input):backend.route(input));
+    return {ok:result.status<400,status:result.status,json:async()=>result.body};
+   }}});
+ return {make,backend,writes};
+}
+
+test('clinical commit wakeups reach both guests immediately through the host and HTTP copies deduplicate',async()=>{
+ const f=commitClients(),received=[[],[],[]],clients=['Ana','Bruno','Celia'].map((name,i)=>f.make(name,
+  (sender,packet)=>received[i].push({sender,packet})));
+ const [host,first,second]=clients;
+ try{
+  await Promise.all(clients.map(x=>x.connect()));
+  for(const client of clients){client.maintain(1000,{x:40,y:40,phase:'lobby'});await client.flush();}
+  const room=await host.invite([first.state().user.id,second.state().user.id]);
+  await first.join(room.id);await second.join(room.id);
+  for(const now of [2200,3500,4800])for(const client of clients){
+   client.maintain(now,{x:40,y:40,phase:'guard',roomId:room.id});await client.flush();
+  }
+  assert.equal(typeof host.publishClinicalCommit,'function','committed clinical writes need an event wakeup');
+  assert.equal(await host.publishClinicalCommit(7),true);
+  assert.deepEqual(received.map(rows=>rows.map(x=>x.packet.epoch)),[[],[7],[7]]);
+  assert.equal(await first.publishClinicalCommit(8),true);
+  assert.deepEqual(received.map(rows=>rows.map(x=>x.packet.epoch)),[[8],[7],[7,8]],
+   'one guest reaches the other guest without awaiting a room poll');
+  assert.equal(await second.publishClinicalCommit(9),true);
+  assert.deepEqual(received.map(rows=>rows.map(x=>x.packet.epoch)),[[8,9],[7,9],[7,8]]);
+  for(const client of clients){client.maintain(6100,{x:40,y:40,phase:'guard',roomId:room.id});await client.flush();}
+  assert.deepEqual(received.map(rows=>rows.map(x=>x.packet.epoch)),[[8,9],[7,9],[7,8]],
+   'HTTP fallback and RTC forwarding cannot repeat a wakeup');
+  assert.equal(await second.publishClinicalCommit(9),false);
+  assert.equal(await second.publishClinicalCommit(-1),false);
+  assert.equal(await second.publishClinicalCommit(Number.MAX_SAFE_INTEGER+1),false);
+  assert.deepEqual(f.writes.map(x=>x.body.message),[7,8,9].map(epoch=>({kind:'clinical.committed',
+   id:'clinical-commit-'+epoch,roomId:room.id,epoch})),
+   'the event path carries only room and commit metadata, never clinical commands or snapshots');
+ }finally{clients.forEach(x=>x.dispose());}
+});
+
+test('HTTP commit wakeups are member bound, validated and reset for the next room',async()=>{
+ const f=fixture(),received=[],a=f.make({onPacket:(sender,packet)=>received.push({sender,packet})}),first=await invited(f,a);
+ await a.join(first.id);
+ const post=(room,epoch,extra={})=>f.backend.route({method:'POST',path:'rooms/'+room.id+'/messages',headers:room.headers,
+  body:{message:{kind:'clinical.committed',id:'clinical-commit-'+epoch,roomId:room.id,epoch,...extra}}});
+ try{
+  await post(first,4);await post(first,4);await post(first,3);await post(first,5,{roomId:'wrong'});
+  await post(first,6,{id:'wrong'});await post(first,-1);await post(first,7,{clinical:{forged:true}});
+  a.maintain(1000,{x:40,y:40,phase:'guard',roomId:first.id});await a.flush();
+  assert.deepEqual(received.map(x=>x.packet.epoch),[4,3,7]);
+  assert.deepEqual(Object.keys(received[2].packet).sort(),['epoch','id','kind','roomId']);
+  assert.equal(received[0].sender,(await f.backend.route({path:'me',headers:first.headers})).body.user.id);
+  await a.leave();const next=await invited(f,a);await a.join(next.id);await post(next,0);
+  a.maintain(1001,{x:40,y:40,phase:'guard',roomId:next.id});await a.flush();
+  assert.deepEqual(received.map(x=>x.packet.epoch),[4,3,7,0]);
+  assert.equal(received.at(-1).packet.roomId,next.id);
+ }finally{a.dispose();}
+});
+
+test('a peer advisory epoch cannot suppress later real commit wakeups',async()=>{
+ const f=fixture(),received=[],a=f.make({onPacket:(sender,packet)=>received.push(packet.epoch)}),room=await invited(f,a);
+ await a.join(room.id);
+ const post=epoch=>f.backend.route({method:'POST',path:'rooms/'+room.id+'/messages',headers:room.headers,
+  body:{message:{kind:'clinical.committed',id:'clinical-commit-'+epoch,roomId:room.id,epoch}}});
+ try{
+  await post(Number.MAX_SAFE_INTEGER);
+  a.maintain(1000,{x:40,y:40,phase:'guard',roomId:room.id});await a.flush();
+  await post(2);await post(Number.MAX_SAFE_INTEGER);await post(3);
+  a.maintain(2000,{x:40,y:40,phase:'guard',roomId:room.id});await a.flush();
+  assert.deepEqual(received,[Number.MAX_SAFE_INTEGER,2,3]);
+ }finally{a.dispose();}
+});
+
+test('commit fallback coalesces a burst while the prior authenticated append is pending',async()=>{
+ const f=fixture(),a=f.make();await a.connect();
+ const other=await f.backend.route({method:'POST',path:'register',body:{clientKey:crypto.randomUUID(),name:'Bruno'}});
+ const room=await a.invite([other.body.user.id]),path='rooms/'+room.id+'/messages';f.delay('/api/'+path);
+ try{
+  assert.equal(typeof a.publishClinicalCommit,'function');
+  const first=a.publishClinicalCommit(1);while(!f.held())await Promise.resolve();
+  const middle=a.publishClinicalCommit(2),last=a.publishClinicalCommit(3);
+  f.release();assert.deepEqual(await Promise.all([first,middle,last]),[true,true,true]);
+  const messages=await f.backend.route({path,headers:{authorization:a.credentials().authorization},query:{after:0}});
+  assert.deepEqual(messages.body.messages.map(x=>x.data.epoch),[1,3],
+   'a stalled append retains only the latest queued wakeup');
+ }finally{f.release();a.dispose();}
 });
