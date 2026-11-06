@@ -6,6 +6,8 @@ import {appDiseaseTargetOffsets} from './app-disease-progression.js';
 import {applyMedicationHarmTargets487} from './medication-harms-487.js';
 import {applyConfirmedMorphineTargetOffsets487} from './morphine-487.js';
 import {applyConfirmedNativeSupportTargets487} from './native-support-487.js';
+import {summarizeIVExposures} from './medication-exposure.js';
+import {REFERENCE_DOSES_487} from '../../clinical/pharmacology-registry-487.js';
 // Case-specific original APP-001 vitals/doses, characterized from the effective
 // 4.8.7 VM in qa/v5/fixtures/app-native-reference.json. Pure simulation only.
 const keys=['temp','hr','rr','sys','dia','spo2'];
@@ -28,8 +30,9 @@ export function advanceAppVitals(p,c,dt,atNativeMinute=0){
  // offset, not a second physiology loop or a cloned legacy sepsis engine.
  const natural=appDiseaseTargetOffsets(p,c,atNativeMinute);
  for(const key of keys)target[key]+=natural[key]??0;
- if(p.treatments?.some(t=>t.id==='fluid')){
-  target.sys+=14;target.dia+=7;target.hr-=12;target.rr-=1;
+ const volumeFraction=Math.min(1,summarizeIVExposures(p).confirmedCrystalloidMl/REFERENCE_DOSES_487.fluid);
+ if(volumeFraction>0){
+  target.sys+=14*volumeFraction;target.dia+=7*volumeFraction;target.hr-=12*volumeFraction;target.rr-=volumeFraction;
  }
  p.nativeDiseaseTarget={nativeMinute:atNativeMinute,vitals:{...target}};
  const overload=crystalloidOverloadOffsets(p,c);

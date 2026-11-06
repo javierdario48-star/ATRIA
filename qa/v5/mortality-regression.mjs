@@ -56,7 +56,7 @@ function snapshot(state){
   vitals:Object.fromEntries(vitalKeys.map(k=>[k,round(p.liveVitals[k])])),
   critical:!!p.survival?.observedCritical,exposureNativeMinutes:round(p.survival?.exposureNativeMinutes??0),
   graceReleaseAt:p.survival?.releaseAtRealSecond??180,rescueStartedAt:p.survival?.rescueStartedAtSec??null,
-  died:!!p.patientDied,caseEnded:!!p.caseEnded,deathReason:p.deathReason??null,
+  died:!!p.patientDied,caseEnded:!!p.caseEnded,deathReason:p.deathReason??null,deathAttribution:copy(p.deathAttribution??null),
   deathAtRealSecond:p.patientDied?p.survival.atRealSecond:null,
   closed:!!p.closure?.closed,destination:p.closure?.destination??null,
   xp:state.progress.xp,administrations:p.administrationLog.length,pending:p.pendingTreatments.length,
@@ -306,9 +306,12 @@ export async function runDurableMortalityScenario(spec,{mode='competitive',horiz
   if(terminal.patient.patientDied){
    const frozen=administrationRows(terminal.patient),vitals=copy(terminal.patient.liveVitals),claims=copy(latest.claims);
    const observer=await call('a');
-   assert.equal(observer.clinical.patient.uid,uid);
-   assert(observer.clinical.patient.patientDied,'members disagree about the death');
-   assert.equal(observer.clinical.patient.survival.atRealSecond,terminal.patient.survival.atRealSecond);
+   assert(observer.clinical.shift.patients.find(record=>record.uid===uid)?.patientDied,'members disagree about the public death status');
+   if(mode==='coop'){
+    assert.equal(observer.clinical.patient.uid,uid);
+    assert(observer.clinical.patient.patientDied,'cooperative members share the real patient');
+    assert.equal(observer.clinical.patient.survival.atRealSecond,terminal.patient.survival.atRealSecond);
+   }
    let rejected=0;
    for(const text of ['Enfermera Ringer 500 ml','Enfermera morfina 30 mg','Enfermera oxigeno 4 L/min','/disposicion '+plans[spec.caseId].dest]){
     const response=await post(text);const ack=response.acknowledgements[0];
@@ -320,7 +323,7 @@ export async function runDurableMortalityScenario(spec,{mode='competitive',horiz
    assert.deepEqual(administrationRows(restored.patient),frozen);assert.deepEqual(latest.claims,claims);
    assert.equal(latest.claims.filter(([,r])=>r.patientUid===uid).length,0);
    assert.equal(restored.room.events.filter(x=>x.type==='clinical.patient-died').length,1);
-   const other=await call('a');assert(other.clinical.patient.patientDied);
+   const other=await call('a');assert(other.clinical.shift.patients.find(record=>record.uid===uid)?.patientDied);
    row.terminalIntegrity={postmortemRejected:rejected,sharedDeath:true,databaseReopened:true,
     checkpointRestored:true,unchangedVitals:true,unchangedAdministrations:true,noResurrection:true,xpUnchanged:true};
   }

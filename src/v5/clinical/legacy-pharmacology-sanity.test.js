@@ -94,8 +94,8 @@ test('Legacy: delayed therapy and native APP baseline do not fake an early antib
  const baseline=evalDrug('furosemide','CIRR-001',{sys:120,dia:78,spo2:92},0);
  const late=evalDrug('furosemide','CIRR-001',{sys:120,dia:78,spo2:92},240);
  assert.equal(baseline.phase,0);assert(late.phase>0);
- const c=choose('APP-001'),plain={liveVitals:initialAppVitals(c),treatments:[]};
- const antibiotics={liveVitals:initialAppVitals(c),treatments:[{id:'ceftriaxone'},{id:'metronidazole'}]};
+ const c=choose('APP-001'),plain={uid:'plain',liveVitals:initialAppVitals(c),treatments:[],administrationLog:[]};
+ const antibiotics={uid:'antibiotics',liveVitals:initialAppVitals(c),treatments:[{id:'ceftriaxone'},{id:'metronidazole'}],administrationLog:[]};
  advanceAppVitals(plain,c,6);advanceAppVitals(antibiotics,c,6);
  assert.deepEqual(antibiotics.liveVitals,plain.liveVitals,
   'antibiotics are meaningful case-compliance and later infection signals, not an instant BP improvement');

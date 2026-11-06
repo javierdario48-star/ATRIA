@@ -8,6 +8,7 @@ import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {applyMedicationHarmTargets487} from './medication-harms-487.js';
 import {applyConfirmedMorphineTargetOffsets487} from './morphine-487.js';
 import {applyConfirmedNativeSupportTargets487} from './native-support-487.js';
+import {nativeMedicationDoseFraction} from './native-medications.js';
 const axes=['temp','hr','rr','sys','dia','spo2'];
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
@@ -54,7 +55,8 @@ export function sepsisCoverage487(view,c,atNativeMinute){
   const present=set.filter(id=>view.monitorTherapies.has(id));
   const score=present.reduce((sum,id)=>{
    const dose=view.monitorTherapies.get(id).dose,rule=c.physiology.doseRules?.[id];
-   return sum+(rule&&dose?.amount?clamp(dose.amount/(rule.amount||1),.15,1):1);
+   return sum+(rule&&dose?.amount?clamp(dose.amount/(rule.amount||1),0,1):
+    nativeMedicationDoseFraction(view.monitorTherapies.get(id),c));
   },0)/set.length;
   if(score<best.score)continue;
   const latest=present.length?Math.max(...present.map(id=>view.monitorTherapies.get(id).startedAt)):atNativeMinute;
@@ -69,20 +71,21 @@ export function sepsisCoverage487(view,c,atNativeMinute){
 export function applyConfirmedSepsisAdministration487(p,c,row){
  const view=confirmedSepsisView487(p,row.administeredAtNativeMinute);
  if(!p.administrationLog.includes(row)||row.action==='stop')return;
- const next={...p.phys},dose=row.dose,amount=Number(dose?.amount||0),count=view.counts.get(row.id)||0;
+ const next={...p.phys},dose=row.dose,amount=Number(dose?.amount||0),count=view.counts.get(row.id)||0,
+  doseFraction=nativeMedicationDoseFraction(row,c);
  if(row.id==='fluid')next.effectiveVolume=Math.min(1.12,next.effectiveVolume+.065*clamp(amount/500,0,3)*Number(c.physiology.fluidResponsiveness??.75));
  if(row.id==='albumin'){
-  const factor=clamp(amount/1.5,.5,1.5);
+  const factor=clamp(amount/1.5,0,1.5);
   next.effectiveVolume=Math.min(1.08,next.effectiveVolume+.055*factor);
   next.renalReserve=Math.min(1,next.renalReserve+.045*factor);
  }
  if(row.id==='furosemide'){
-  next.effectiveVolume=Math.max(.25,next.effectiveVolume-.07);next.renalStress=Math.min(1.5,next.renalStress+.10);
-  if(count>1){next.effectiveVolume=Math.max(.22,next.effectiveVolume-.045*(count-1));next.renalStress=Math.min(1.5,next.renalStress+.06*(count-1));}
+  next.effectiveVolume=Math.max(.25,next.effectiveVolume-.07*doseFraction);next.renalStress=Math.min(1.5,next.renalStress+.10*doseFraction);
+  if(count>1){next.effectiveVolume=Math.max(.22,next.effectiveVolume-.045*(count-1)*doseFraction);next.renalStress=Math.min(1.5,next.renalStress+.06*(count-1)*doseFraction);}
  }
  if(['amikacin','gentamicin'].includes(row.id)){
-  if(c.physiology.avoid?.includes(row.id))next.renalStress=Math.min(1.5,next.renalStress+.18);
-  if(count>1){next.renalStress=Math.min(1.5,next.renalStress+.10*(count-1));next.renalReserve=Math.max(.10,next.renalReserve-.025*(count-1));}
+  if(c.physiology.avoid?.includes(row.id))next.renalStress=Math.min(1.5,next.renalStress+.18*doseFraction);
+  if(count>1){next.renalStress=Math.min(1.5,next.renalStress+.10*(count-1)*doseFraction);next.renalReserve=Math.max(.10,next.renalReserve-.025*(count-1)*doseFraction);}
  }
  // Source control is intentionally absent: no migrated bedside order performs
  // an operation. A handoff also never changes sourceControlled.

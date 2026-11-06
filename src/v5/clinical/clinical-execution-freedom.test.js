@@ -6,6 +6,9 @@ import {clinicalInterventionEligibility} from './native-medication-eligibility.j
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {clinicalPolicyTargets} from './clinical-policy-effects.js';
 import {createProgressionLedger} from './progression.js';
+import {appDiseaseTargetOffsets} from './app-disease-progression.js';
+import {choleDiseaseTargetOffsets} from './native-chole.js';
+import {confirmedSepsisView487,sepsisCoverage487} from './native-peritonitis.js';
 
 function fixture(caseId,uid='freedom-'+caseId,options={}){
  let sequence=0;
@@ -17,6 +20,52 @@ function fixture(caseId,uid='freedom-'+caseId,options={}){
  return {c,s,post,advance};
 }
 const pending=ack=>assert(ack.clinical.some(row=>row.status==='pending'),JSON.stringify(ack));
+
+test('hypotension advises against metoprolol but does not prevent the physician administering it',async()=>{
+ const f=fixture('CARD-10','hypotensive-beta-freedom');
+ try{
+  assert(f.s.read().patient.liveVitals.sys<90);
+  assert(clinicalInterventionEligibility(f.s.read().patient,f.c,'metoprolol',f.s.read().clock));
+  await f.post('Enfermera una vía');pending(await f.post('/tratamiento metoprolol'));
+  await f.advance(3);
+  const started=f.s.read().patient.administrationLog.find(row=>row.id==='metoprolol');
+  assert(started?.clinicalAdvisories?.length);assert.equal(started.status,'administering');
+  await f.advance(25);
+  const p=f.s.read().patient,row=p.administrationLog.find(row=>row.id==='metoprolol');
+  assert.equal(row.status,'completed');
+  assert(confirmedClinicalMissteps(p,f.c).adverseCount>0);
+ }finally{f.s.dispose();}
+});
+
+test('APP volume benefit follows actual delivered millilitres, preserving its 500 ml reference response',async()=>{
+ const values=[];
+ for(const amount of [0,1,500]){
+  const f=fixture('APP-001','fluid-dose-'+amount);
+  try{
+   if(amount){await f.post('Enfermera una vía');pending(await f.post('Enfermera Ringer '+amount+' ml'));}
+   await f.advance(20);values.push(f.s.read().patient.liveVitals);
+  }finally{f.s.dispose();}
+ }
+ const tiny=values[1].sys-values[0].sys,reference=values[2].sys-values[0].sys;
+ assert(reference>13);assert(Math.abs(tiny/reference-1/500)<1e-8);
+});
+
+test('tiny legacy antibiotic doses cannot provide a complete regimen response in APP, CHOLE or sepsis',async()=>{
+ for(const caseId of ['APP-001','CHOLE-001','PERI-PBE-001']){
+  const f=fixture(caseId,'tiny-native-'+caseId);
+  try{
+   await f.post('Enfermera una vía');await f.post('Enfermera ceftriaxona 1 mg');
+   if(caseId!=='PERI-PBE-001')await f.post('Enfermera metronidazol 1 mg');
+   await f.advance(3);const p=f.s.read().patient,none={...p,administrationLog:[],treatments:[]};
+   if(caseId==='APP-001')assert.deepEqual(appDiseaseTargetOffsets(p,f.c,360),appDiseaseTargetOffsets(none,f.c,360));
+   if(caseId==='CHOLE-001')assert.deepEqual(choleDiseaseTargetOffsets(p,f.c,360),choleDiseaseTargetOffsets(none,f.c,360));
+   if(caseId==='PERI-PBE-001'){
+    const coverage=sepsisCoverage487(confirmedSepsisView487(p,360),f.c,360);
+    assert(coverage.score<=.001,'a thousandth dose must not gain the old 15% minimum response');
+   }
+  }finally{f.s.dispose();}
+ }
+});
 
 test('CARD-09 can start directed medicine while current cultures/report/history remain incomplete',async()=>{
  const f=fixture('CARD-09');
@@ -225,4 +274,46 @@ test('native fatal fluid overload records contributing delivered sources and one
    patient:{uid:'attributable-death-freedom',caseId:'CIRR-001'},content,checkpoint,resolveContext:()=>({patientUid:'attributable-death-freedom'})});
   try{restored.advance(30);assert.equal(restored.read().progress.penalties.length,1);}finally{restored.dispose();}
  }finally{f.s.dispose();}
+});
+
+async function cooperativeFluidDeath(amounts){
+ const uid='cooperative-fluid-causality-'+amounts.join('-');
+ const members=amounts.map((_,index)=>({id:String.fromCharCode(97+index),name:'Doctor '+index}));
+ const s=createGuardSession({roomId:uid,mode:'coop',actorId:'a',actorName:'Doctor 0',members,
+  authenticate:id=>({id,roomId:uid}),patient:{uid,caseId:'CIRR-001'},content,
+  resolveContext:()=>({patientUid:uid}),progress:previousCareer()});
+ try{
+  await s.post({id:'access',text:'Enfermera una vía'},'a');
+  for(let index=0;index<amounts.length;index++)
+   pending(await s.post({id:'fluid-'+index,text:'Enfermera Ringer '+amounts[index]+' ml'},members[index].id));
+  s.advance(720);await s.flush();s.advance(20);await s.flush();
+  const state=s.read();assert(state.patient.patientDied);
+  return state;
+ }finally{s.dispose();}
+}
+
+test('an innocuous fluid dose from a teammate is not a causal death source or career debit',async()=>{
+ const state=await cooperativeFluidDeath([1,10000]);
+ assert.deepEqual(state.patient.deathAttribution.actorIds,['b']);
+ assert.deepEqual(state.patient.deathAttribution.sourceEventIds,
+  [state.patient.administrationLog.find(row=>row.actorId==='b').sourceEventId]);
+ assert.equal(state.progress.penalties[0].actorId,'b');
+});
+
+test('jointly lethal fluid doses retain both responsible doctors',async()=>{
+ const state=await cooperativeFluidDeath([5000,5000]);
+ assert.deepEqual(state.patient.deathAttribution.actorIds,['a','b']);
+ assert.equal(state.patient.deathAttribution.sourceEventIds.length,2);
+});
+
+test('independently lethal fluid doses do not let either responsible doctor hide behind the other dose',async()=>{
+ const state=await cooperativeFluidDeath([10000,10000]);
+ assert.deepEqual(state.patient.deathAttribution.actorIds,['a','b']);
+ assert.equal(state.patient.deathAttribution.sourceEventIds.length,2);
+});
+
+test('alternative jointly lethal fluid groups retain every causal doctor',async()=>{
+ const state=await cooperativeFluidDeath([2000,2000,6000]);
+ assert.deepEqual(state.patient.deathAttribution.actorIds,['a','b','c']);
+ assert.equal(state.patient.deathAttribution.sourceEventIds.length,3);
 });

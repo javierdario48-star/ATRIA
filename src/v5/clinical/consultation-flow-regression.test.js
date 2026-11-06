@@ -6,6 +6,7 @@ import {createClinicalInterface} from '../ui/clinical-controller.js';
 import {closureDecisionHTML} from '../ui/clinical-closure-panel.js';
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 import {generatePatientVariation} from '../content/patient-variation.js';
+import {clinicalInterventionEligibility} from './native-medication-eligibility.js';
 
 function fixture(caseId,patientUid,nursing) {
  let sequence=0;
@@ -85,7 +86,8 @@ for(const scenario of ['withheld-beta','prior-rescue','prepared-beta'])test('CAR
   assert(rescue.clinical.some(x=>['pending','executed'].includes(x.status)),JSON.stringify(rescue));
   await f.advance(1);
   for(const id of ['esmolol','metoprolol'])
-   assert.equal((await f.post('/tratamiento '+id)).clinical[0].status,'pending','hypotension advises against the drug but does not block delivery');
+   assert(clinicalInterventionEligibility(f.s.read().patient,c,id,f.s.read().clock),
+    'the doctor deliberately withholds an unsafe preparation while arranging urgent transfer');
   await f.post('/reevaluar');
   const request=await f.post('/disposicion quirofano');
   assert.equal(request.clinical[0].status,'pending',JSON.stringify(request.clinical));

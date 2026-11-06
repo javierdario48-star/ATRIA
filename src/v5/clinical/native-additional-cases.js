@@ -10,6 +10,7 @@ import {applyConfirmedMorphineTargetOffsets487} from './morphine-487.js';
 import {applyConfirmedNativeSupportTargets487} from './native-support-487.js';
 import {GASTRO_DYNAMICS} from './gastro-expansion-policies.js';
 import {confirmedClinicalTreatment} from './receipts.js';
+import {nativeMedicationDoseFraction} from './native-medications.js';
 import {clinicalPolicyTargets,advanceClinicalComplications} from './clinical-policy-effects.js';
 const axes=['temp','hr','rr','sys','dia','spo2'];
 const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
@@ -52,7 +53,7 @@ export function additionalCaseTargets(p,c,minute){
  if(!rule||!Number.isFinite(minute)||minute<0)throw Error('invalid disease target');
  const therapyIds=Array.isArray(rule.therapy)?rule.therapy:rule.therapy?[rule.therapy]:[];
  const confirmed=therapyIds.map(id=>confirmedClinicalTreatment(p,id,minute)).find(Boolean);
- const protective=confirmed?rule.protection*ramp(
+ const protective=confirmed?rule.protection*nativeMedicationDoseFraction(confirmed,c)*ramp(
   minute-confirmed.administeredAtNativeMinute,rule.onset??10,rule.peak??130):0;
  const first=ramp(minute,20,rule.earlyEnd),second=ramp(minute,rule.earlyEnd,rule.lateEnd);
  const out=Object.fromEntries(axes.map((axis,i)=>[axis,

@@ -65,40 +65,69 @@ function danger(v){
   cause:v.spo2<80?'critical-hypoxemia':map<45||v.sys<=58&&v.hr>=150?
    'circulatory-collapse':null,map};
 }
-/** Attribution reads the SAME already-applied native adverse components. It
- * does not simulate another patient, change physiology or decide mortality.
- * A mistake alone is not a cause. Require a delivered source, a matching fatal
- * axis, and removal of that native adverse component to remove criticality.
- * If the native disease target is independently critical, causation remains
- * mixed/uncertain and cannot justify a physician-caused death debit. */
-export function nativeDeathAttribution(p,c,minute){
+function nativeAdverseContributions(p,c,minute){
  const harm=confirmedMedicationHarms487(p,c,minute),opioid=confirmedMorphineResponse487(p,c,minute),
   support=confirmedNativeSupportEffects487(p,c,minute),fluid=crystalloidOverloadOffsets(p,c);
  const adverse={sys:Math.min(0,harm.offsets.sys),dia:Math.min(0,harm.offsets.dia),
   spo2:Math.min(0,harm.offsets.spo2),hr:Math.max(0,harm.offsets.hr)},sources=new Set();
  for(const reaction of harm.reactions)if(reaction.severity>.18&&
-  ['severe-drug-allergy','anticoagulant-bleeding','antithrombotic-bleeding'].includes(reaction.kind))sources.add(reaction.sourceEventId);
+  ['severe-drug-allergy','anticoagulant-bleeding','antithrombotic-bleeding'].includes(reaction.kind)){
+  if(reaction.kind==='severe-drug-allergy')sources.add(reaction.sourceEventId);
+  else for(const row of p.administrationLog||[])if(row.id===reaction.drugId)sources.add(row.sourceEventId);
+ }
  if(opioid?.respiratoryRisk){
   adverse.sys+=Math.min(0,opioid.offsets.sys);adverse.dia+=Math.min(0,opioid.offsets.dia);adverse.spo2+=Math.min(0,opioid.offsets.spo2);
-  sources.add(opioid.sourceEventId);
+  for(const row of (p.administrationLog||[]).filter(row=>row.id==='morphine'&&minute-row.administeredAtNativeMinute<40).slice(-24))
+   sources.add(row.sourceEventId);
  }
- for(const drug of Object.values(support.drugs))if(drug.active&&drug.toxicity.spo2<0){
-  adverse.spo2+=drug.toxicity.spo2;sources.add(drug.sourceEventId);
+ for(const [id,drug] of Object.entries(support.drugs))if(drug.active&&drug.toxicity.spo2<0){
+  adverse.spo2+=drug.toxicity.spo2;
+  for(const row of p.administrationLog||[])if(row.id===id)sources.add(row.sourceEventId);
  }
  if(fluid.spo2<0){
   adverse.spo2+=fluid.spo2;
   for(const row of p.administrationLog||[])if(row.id==='fluid'&&isDeliveredClinicalAdministration(p,row,minute))sources.add(row.sourceEventId);
  }
- const fatal=danger(p.liveVitals),corrected=Object.fromEntries(VITAL_AXES.map(axis=>[axis,p.liveVitals[axis]-adverse[axis]]));
+ return {adverse,sources};
+}
+/** Attribution reads the SAME pure native adverse reducers at the death time;
+ * it never advances another patient or writes physiology. A doctor's delivered
+ * sources must belong to a minimal group whose native adverse offsets cross
+ * the existing fatal threshold. This excludes innocuous teammate doses while
+ * retaining both joint and independently sufficient lethal contributors.
+ * Native disease that is independently critical remains uncertain. */
+export function nativeDeathAttribution(p,c,minute){
+ const {adverse,sources}=nativeAdverseContributions(p,c,minute),fatal=danger(p.liveVitals),
+  corrected=Object.fromEntries(VITAL_AXES.map(axis=>[axis,p.liveVitals[axis]-adverse[axis]]));
  const disease=p.nativeDiseaseTarget,independentlyCritical=disease?.nativeMinute===minute&&danger(disease.vitals).critical;
- const actualSources=[...sources].filter(id=>(p.administrationLog||[]).some(row=>row.sourceEventId===id&&isDeliveredClinicalAdministration(p,row,minute)));
- const attributable=actualSources.length>0&&!independentlyCritical&&!danger(corrected).critical;
- const actorIds=[...new Set((p.administrationLog||[]).filter(row=>actualSources.includes(row.sourceEventId))
+ const delivered=(p.administrationLog||[]).filter(row=>sources.has(row.sourceEventId)&&isDeliveredClinicalAdministration(p,row,minute)),
+  candidates=new Set(delivered.map(row=>row.sourceEventId)),groups=[...new Set(delivered.map(row=>row.actorId||null))],causalGroups=new Set();
+ // The authoritative roster has at most four doctors (plus an unknown author
+ // in an old receipt). Enumerate those groups, never the unbounded dose log.
+ if(fatal.critical&&!independentlyCritical&&groups.length>0&&groups.length<=5){
+  const lethal=[],limit=2**groups.length;
+  for(let mask=0;mask<limit;mask++){
+   const retained=new Set(delivered.filter(row=>mask&(1<<groups.indexOf(row.actorId||null))).map(row=>row.sourceEventId));
+   const keep=row=>!candidates.has(row.sourceEventId)||retained.has(row.sourceEventId),projection={...p,
+    administrationLog:p.administrationLog.filter(keep),treatments:(p.treatments||[]).filter(keep)};
+   const offsets=mask===limit-1?adverse:nativeAdverseContributions(projection,c,minute).adverse;
+   lethal[mask]=danger(Object.fromEntries(VITAL_AXES.map(axis=>[axis,corrected[axis]+offsets[axis]]))).critical;
+  }
+  if(!lethal[0])for(let mask=1;mask<limit;mask++){
+   if(!lethal[mask])continue;
+   let minimal=true;
+   for(let subset=(mask-1)&mask;subset;subset=(subset-1)&mask)if(lethal[subset]){minimal=false;break;}
+   if(minimal)groups.forEach((id,index)=>{if(mask&(1<<index))causalGroups.add(id);});
+  }
+ }
+ const actualSources=[...sources].filter(id=>delivered.some(row=>row.sourceEventId===id&&causalGroups.has(row.actorId||null)));
+ const actorIds=[...new Set(delivered.filter(row=>actualSources.includes(row.sourceEventId))
   .map(row=>row.actorId).filter(id=>typeof id==='string'&&id))];
- return {classification:attributable?'treatment-contributed':actualSources.length?'undetermined':'disease',
+ const attributable=actualSources.length>0&&actorIds.length>0;
+ return {classification:attributable?'treatment-contributed':candidates.size?'undetermined':'disease',
   actorIds:attributable?actorIds:[],
   sourceEventIds:attributable?actualSources:[],cause:fatal.cause,
-  evidence:attributable?'confirmed-native-adverse-component':actualSources.length?'independent-disease-or-insufficient-causal-evidence':'native-disease-progression'};
+  evidence:attributable?'confirmed-native-adverse-component':candidates.size?'independent-disease-or-insufficient-causal-evidence':'native-disease-progression'};
 }
 const overlap=(a,b,start,end)=>Math.max(0,Math.min(b,end)-Math.max(a,start));
 /** One call after the native care advance, never from UI or monitor paint.

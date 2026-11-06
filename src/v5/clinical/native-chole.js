@@ -9,6 +9,7 @@ import {applyMedicationHarmTargets487} from './medication-harms-487.js';
 import {applyConfirmedMorphineTargetOffsets487} from './morphine-487.js';
 import {applyConfirmedNativeSupportTargets487} from './native-support-487.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
+import {nativeMedicationDoseFraction} from './native-medications.js';
 
 const axes=['temp','hr','rr','sys','dia','spo2'];
 const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo2:[72,100]};
@@ -23,12 +24,12 @@ export function initialCholeVitals(c){
  if(axes.some(k=>!Number.isFinite(vitals[k])))throw Error('invalid CHOLE baseline');
  return vitals;
 }
-function confirmedAntimicrobialTime(p,minute){
+function confirmedAntimicrobialTime(p,c,minute){
  for(const regimen of regimens){
   const starts=[];
   for(const id of regimen){
    if(matchesMedicationAllergy487(p,id))break;
-   const row=(p.administrationLog||[]).find(x=>x.id===id&&x.patientUid===p.uid&&
+   const row=(p.administrationLog||[]).find(x=>x.id===id&&x.patientUid===p.uid&&nativeMedicationDoseFraction(x,c)>=1&&
     Number.isFinite(x.administeredAtNativeMinute)&&x.administeredAtNativeMinute<=minute&&
     (p.treatments||[]).some(t=>t.id===x.id&&t.sourceEventId===x.sourceEventId&&
       t.patientUid===p.uid&&t.administeredAtNativeMinute===x.administeredAtNativeMinute));
@@ -46,7 +47,7 @@ function confirmedAntimicrobialTime(p,minute){
 export function choleDiseaseTargetOffsets(p,c,minute){
  if(c?.id!=='CHOLE-001'||!Number.isFinite(minute)||minute<0)
   throw Error('invalid CHOLE natural history clock');
- const treatedAt=confirmedAntimicrobialTime(p,minute);
+ const treatedAt=confirmedAntimicrobialTime(p,c,minute);
  const protectedFraction=treatedAt===null?0:.55*ramp(minute-treatedAt,5,120);
  const growth=1-protectedFraction;
  const early=ramp(minute,20,180)*growth,late=ramp(minute,180,600)*growth;

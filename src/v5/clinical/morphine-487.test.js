@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {confirmedMorphineResponse487,morphineOrderIssue487,parseMorphineIVDose487} from './morphine-487.js';
-import {morphineOrderIssue487 as originalIssue} from '../../integration/morphine-487.js';
 import {createLiveNativeJourney487,advanceLiveNativeJourney487 as advanceLegacy}
  from '../../../qa/physiology-live/native-journey-487.mjs';
 // V4 reference runtime was certified only against these original 13 cases.
@@ -25,14 +24,14 @@ function compareReport(actual,expected,label){
  for(const [axis,n] of Object.entries(expected.offsets))
   assert(Math.abs(actual.offsets[axis]-n)<1e-11,label+' '+axis);
 }
-test('morphine interpretation is the original final validator, with its reference and allowed dose range',()=>{
- assert.equal(morphineOrderIssue487.toString(),originalIssue.toString());
+test('morphine validates one positive IV dose while allowing an excessive clinical decision',()=>{
  for(const q of ['morfina','morfina IV','morfina 4 mg IV','morfina 12 mg EV','morfina 30 mg vía endovenosa',
-  'morfina 0,5 mg IV','morfina 4 mg VO','morfina 4 mg sublingual','morfina 4 mcg',
-  'morfina 4 g IV','morfina -4 mg','morfina 4 mg y 8 mg','morfina 31 mg IV']){
-  assert.equal(morphineOrderIssue487(q),originalIssue(q),q);
-  if(originalIssue(q))assert.throws(()=>parseMorphineIVDose487(q));
-  else assert(parseMorphineIVDose487(q).amount>0);
+  'morfina 0,5 mg IV','morfina 31 mg IV','morfina 40 mg IV']){
+  assert.equal(morphineOrderIssue487(q),null,q);assert(parseMorphineIVDose487(q).amount>0);
+ }
+ for(const q of ['morfina 4 mg VO','morfina 4 mg sublingual','morfina 4 mcg',
+  'morfina 4 g IV','morfina -4 mg','morfina 0 mg','morfina 4 mg y 8 mg']){
+  assert(morphineOrderIssue487(q),q);assert.throws(()=>parseMorphineIVDose487(q));
  }
  assert.deepEqual(parseMorphineIVDose487('morfina'),{amount:4,unit:'mg',display:'4 mg',defaultApplied:true});
  assert.equal(parseMorphineIVDose487('morfina 12 mg IV').amount,12);

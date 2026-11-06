@@ -23,7 +23,7 @@ test('APP default and explicit doses match original reference, reject wrong dose
 
 test('APP physiology exactly matches all frozen original 60Hz treatment trajectories',()=>{
  for(const scenario of ref.scenarios){
-  const p={liveVitals:initialAppVitals(c),treatments:[]};
+  const p={uid:'characterized-app',liveVitals:initialAppVitals(c),treatments:[],administrationLog:[]};
   const administrations=scenario.log.map(x=>({id:x.id,at:x.m/.12}));
   let real=0,done=0;
   for(const point of scenario.points){
@@ -32,8 +32,14 @@ test('APP physiology exactly matches all frozen original 60Hz treatment trajecto
     const dt=Math.min(1/60,point.realSeconds-real,next>real+1e-10?next-real:Infinity);
     assert(dt>0,'positive simulated step');
     advanceAppVitals(p,c,dt);real+=dt;
-    while(done<administrations.length&&real>=administrations[done].at-1e-10)
-     p.treatments.push({id:administrations[done++].id});
+    while(done<administrations.length&&real>=administrations[done].at-1e-10){
+     const captured=administrations[done],dose=scenario.doses.find(row=>row.id===captured.id).dose;
+     const row={id:captured.id,patientUid:p.uid,sourceEventId:'captured-'+done,dose,
+      administeredAtNativeMinute:captured.at*.12};
+     // Replay the actual frozen reference administrations, including dose,
+     // instead of granting a full volume response from an unquantified flag.
+     p.administrationLog.push(row);p.treatments.push({...row});done++;
+    }
    }
    for(const key of Object.keys(point.vitals))
     assert(Math.abs(p.liveVitals[key]-point.vitals[key])<1e-7,scenario.id+' '+point.realSeconds+' '+key);

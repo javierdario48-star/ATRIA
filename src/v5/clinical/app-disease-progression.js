@@ -6,6 +6,7 @@
 // Returns TARGET offsets only. advanceAppVitals remains the only vital writer.
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
+import {nativeMedicationDoseFraction} from './native-medications.js';
 const ZERO=Object.freeze({temp:0,hr:0,rr:0,sys:0,dia:0,spo2:0});
 const ramp=(v,from,to)=>Math.max(0,Math.min(1,(v-from)/(to-from)));
 function coverageNativeMinute(p,c){
@@ -16,7 +17,7 @@ function coverageNativeMinute(p,c){
   for(const drugId of regimen){
    if(matchesMedicationAllergy487(p,drugId))break;
    const administrations=(p?.administrationLog||[]).filter(a=>
-    a.id===drugId&&a.patientUid===p.uid&&
+    a.id===drugId&&a.patientUid===p.uid&&nativeMedicationDoseFraction(a,c)>=1&&
     Number.isFinite(a.administeredAtNativeMinute)&&
     (p.treatments||[]).some(t=>t.id===drugId&&t.patientUid===p.uid&&
      t.sourceEventId===a.sourceEventId&&t.administeredAtNativeMinute===a.administeredAtNativeMinute));

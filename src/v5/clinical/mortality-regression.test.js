@@ -38,7 +38,8 @@ for(const id of ['diuretic-hypovolemia','opioid-overdose','anticoagulant-hda','a
   assert(row.firstCriticalAt<row.final.deathAtRealSecond,'a severe reading alone cannot set death');
   assert.equal(row.final.xp,0);
   assert.equal(row.progress.receipts.length,0);
-  assert.equal(row.progress.penalties.length,1);
+  assert.equal(row.progress.penalties.length,row.final.deathAttribution?.classification==='treatment-contributed'?1:0,
+   'uncertain or independently lethal native disease cannot become an attributed career debit');
   assert(row.terminalIntegrity.unchangedAdministrations&&row.terminalIntegrity.unchangedVitals);
   if(id.startsWith('fluid-')){
    assert.equal(doses.length,20);assert.equal(doses.reduce((sum,x)=>sum+x.dose.amount,0),10000);

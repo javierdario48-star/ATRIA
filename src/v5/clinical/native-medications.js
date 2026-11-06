@@ -6,6 +6,7 @@ import {parseSpecialIVDose487} from './iv-dose-contracts-487.js';
 import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {clinicalInterventionEligibility,clinicalInterventionCapability} from './native-medication-eligibility.js';
+import {REFERENCE_DOSES_487} from '../../clinical/pharmacology-registry-487.js';
 export const IV_MEDICINES=Object.freeze({
  fluid:Object.freeze({id:'fluid',label:'Cristaloides / reposición de volumen',seconds:.8}),
  terlipressin:Object.freeze({id:'terlipressin',label:'Terlipresina IV',seconds:1.5}),
@@ -60,8 +61,9 @@ export const nativeMedicineDefinition=(id,caseData)=>isNativeMedicine(id)?native
  * excess cannot multiply benefit or create another treatment/XP award. */
 export function nativeMedicationDoseFraction(row,caseData){
  const medicine=nativeMedicineDefinition(row?.id,caseData);if(!medicine)return 1;
- const reference=medicine.regimen.infusion?.unit===row.dose?.unit?medicine.regimen.infusion:medicine.dose;
- if(!reference)return 1; // legacy reference doses are supplied by the owner
+ const reference=(medicine.regimen.infusion?.unit===row.dose?.unit?medicine.regimen.infusion:medicine.dose)||
+  (Number.isFinite(REFERENCE_DOSES_487[row.id])?{amount:REFERENCE_DOSES_487[row.id],unit:medicine.unit||(row.id==='fluid'?'ml':'mg')}:null);
+ if(!reference||row.dose===undefined)return 1; // historical unquantified compatibility records
  const prescribed=row.prescribedDose??row.dose;
  if(prescribed?.unit!==reference.unit||!Number.isFinite(prescribed.amount)||prescribed.amount<=0)return 0;
  return Math.max(0,Math.min(1,prescribed.amount/(medicine.min??reference.amount)));
