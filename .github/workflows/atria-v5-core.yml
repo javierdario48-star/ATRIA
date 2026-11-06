@@ -9,6 +9,32 @@ permissions:
   contents: read
 
 jobs:
+  authenticated-shared-guard-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-shared-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Build the independent clinical game
+        run: npm run build:v5
+      - name: Two authenticated processes, immediate team chat, shared care, lost response, recovery and turn consensus
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-shared-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          V5_QA_OUTPUT: qa/v5-authenticated-shared-results
+        run: node qa/v5/shared-guard-auth-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-authenticated-shared-guard
+          path: qa/v5-authenticated-shared-results/
+          if-no-files-found: error
+          retention-days: 30
+
   npc-personality-certification:
     runs-on: ubuntu-latest
     timeout-minutes: 12

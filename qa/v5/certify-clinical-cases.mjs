@@ -209,16 +209,24 @@ export function assessClinicalCertificationEvidence(row){
  const closure=row.closureReceipt,views=row.sharedViews||[],members=row.memberIds||[];
  const expectedRecipients=closure?.closed?(row.mode==='competitive'?[row.careActorId]:members):[];
  const expectedAdministrations=administrations.map(a=>a.sourceEventId);
- const validClaims=claims=>Array.isArray(claims)&&claims.length===expectedRecipients.length&&
+ const validClaims=(claims,actorId)=>Array.isArray(claims)&&claims.length===
+  expectedRecipients.filter(id=>row.mode!=='competitive'||id===actorId).length&&
   new Set(claims.map(([,claim])=>claim.actorId)).size===claims.length&&claims.every(([,claim])=>
    expectedRecipients.includes(claim.actorId)&&claim.patientUid===row.patientUid&&
    claim.eventId===closure?.eventId&&claim.xp===closure?.xp);
  const sync=members.length>0&&views.length===members.length&&
-  new Set(views.map(view=>view.actorId)).size===members.length&&views.every(view=>
-   members.includes(view.actorId)&&view.patientUid===row.patientUid&&view.patientDigest===row.patientDigest&&
+  new Set(views.map(view=>view.actorId)).size===members.length&&views.every(view=>{
+   if(!members.includes(view.actorId)||!validClaims(view.claims,view.actorId))return false;
+   if(row.mode==='competitive'&&view.actorId!==row.careActorId)
+    return view.privateCaseHidden===true&&view.publicPatientDigest===row.publicPatientDigest&&
+     view.progressXP===0&&view.closureEventId===null&&view.administrationEventIds.length===0&&
+     view.deathEvents.every(event=>event.patientUid!==row.patientUid);
+   return view.patientUid===row.patientUid&&view.patientDigest===row.patientDigest&&
    hash(view.administrationEventIds)===hash(expectedAdministrations)&&
    view.progressXP===row.progress?.xp&&view.closureEventId===(closure?.eventId??null)&&
-   hash(view.deathEvents)===hash(views[0].deathEvents)&&validClaims(view.claims));
+   hash(view.deathEvents)===hash((row.deathEvents||[]).map(event=>({roomId:event.roomId,patientUid:event.patientUid,
+    revision:event.revision,atNativeMinute:event.atNativeMinute,cause:event.cause})));
+  });
  const score=closure?.quality?.score;
  const expectedXP=Number.isFinite(score)?score===0?0:Math.max(4,Math.round((16+score*.95)*(row.mode==='solo'?1.2:1))):null;
  const performanceXP=closure?.closed?Number.isFinite(score)&&score>=0&&score<=100&&
@@ -268,6 +276,7 @@ function finalEvidence(row,view,checkpoint,c,plan){
  row.readiness=copy(s.closure);row.eligibleDestinations=copy(s.eligibleDestinations);
  row.pendingTreatments=copy(p.pendingTreatments||[]);row.policyState=copy(p.policyState??null);
  row.patientDigest=hash(p);row.complicationDefinitions=copy(c.clinicalPolicy?.complications||[]);
+ row.publicPatientDigest=hash(s.shift.patients.find(record=>record.uid===p.uid));
  row.receiverOwnedDefinitiveProcedures=(c.clinicalPolicy?.definitiveInterventions||[])
   .filter(id=>nativeTreatmentDefinition(id,c)?.kind==='procedure');
  row.safetyHistory={allergyQuestionAsked:row.history.some(x=>x.id==='allergies'||x.id==='anamnesis:allergies'),
@@ -574,7 +583,10 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   row.sharedViews=members.map(m=>{
    const shared=runtime.view(m.id),p=shared.clinical.patient;
    return {actorId:m.id,patientUid:p.uid,patientDigest:hash(p),progressXP:shared.clinical.progress.xp,
-    closureEventId:p.closure?.eventId??null,administrationEventIds:p.administrationLog.map(x=>x.sourceEventId),
+    publicPatientDigest:hash(shared.clinical.shift.patients.find(record=>record.uid===uid)),
+    privateCaseHidden:p.uid!==uid||shared.clinical.readOnly===true&&shared.catalog.length===0&&
+     shared.clinical.messages.length===0&&shared.clinical.room.events.length===0&&shared.clinical.room.transcript.length===0,
+    closureEventId:p.closure?.eventId??null,administrationEventIds:(p.administrationLog||[]).map(x=>x.sourceEventId),
     deathEvents:shared.clinical.room.events.filter(x=>x.type==='clinical.patient-died')
      .map(x=>({roomId:x.roomId,patientUid:x.patientUid,revision:x.revision,atNativeMinute:x.atNativeMinute,cause:x.cause})),
     claims:copy(shared.claims.filter(([,x])=>x.patientUid===uid))};

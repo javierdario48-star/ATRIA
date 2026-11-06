@@ -54,12 +54,14 @@ test('C05.d native APP crystalloid response changes measured rate and the displa
  const {initialAppVitals,advanceAppVitals}=await import('../clinical/native-app.js');
  const {ecgPresentation,ecgPath}=await import('../clinical/ecg-morphology.js');
  const c={id:'APP-001',vitals:{bp:'118/72',temp:38.1,hr:108,rr:20,spo2:98}};
- const p={liveVitals:initialAppVitals(c),treatments:[],procedures:{monitor:{connected:true}},caseEnded:false};
+ const p={uid:'P1',liveVitals:initialAppVitals(c),treatments:[],administrationLog:[],procedures:{monitor:{connected:true}},caseEnded:false};
  p.lastVitalsKnown={vitals:{...p.liveVitals}};
  const first=ecgPresentation(p);
  assert.equal(first.hr,108);
  const before=ecgPath({seconds:5,hr:first.hr,rhythm:first.rhythm});
- p.treatments.push({id:'fluid',patientUid:'P1',administeredAtRealSecond:0});
+ const fluid={id:'fluid',patientUid:'P1',sourceEventId:'given-fluid',dose:{amount:500,unit:'ml'},
+  administeredAtRealSecond:0,administeredAtNativeMinute:0};
+ p.treatments.push(fluid);p.administrationLog.push({...fluid});
  advanceAppVitals(p,c,20);
  // refreshMonitoring is the sole producer of actual monitored measurements;
  // only once it refreshes may the UI display the new rate.

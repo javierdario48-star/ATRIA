@@ -7,13 +7,15 @@ import {isSignalingEndpoint} from '../../src/v5/social/social-route-policy.js';
 import {createSqliteGuardStore} from './sqlite-guard-store.mjs';
 import {createDurableGuardAuthority} from '../../src/v5/server/durable-guard-authority.js';
 import {clinicalContent} from '../../src/v5/server/content.js';
-import {createClinicalHttp} from '../../src/v5/server/clinical-http.js';
+import {createClinicalHttp,clinicalActorId} from '../../src/v5/server/clinical-http.js';
+import {publicAccount} from '../../src/v5/server/account-gateway.js';
+import {settleClinicalAccount} from '../../src/v5/server/clinical-reward.js';
 import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {observeRtcBrowser} from './rtc-diagnostics.mjs';
 import {COLLIDING_BROWSER_CLIENTS} from './presence-collision-fixture.mjs';
 
-export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFallback=false,accounts=null,browserArgs=[]}={}){
+export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFallback=false,accounts=null,browserArgs=[],now=()=>Date.now()}={}){
  const rtcDiagnostics=process.env.V5_QA_RTC_TRACE==='1',signalTrace=new Map();
  const collisionKeys=process.env.V5_QA_COLLIDING_CLIENTS==='1'?COLLIDING_BROWSER_CLIENTS:null;
  let contextIndex=0;
@@ -26,19 +28,50 @@ export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFa
  const store=durable?createSqliteGuardStore(path.join(durableDir,'guards.sqlite')):null;
  const readContent=name=>JSON.parse(readFileSync(new URL('../../src/v5/content/'+name+'.json',import.meta.url),'utf8'));
  const content=durable?clinicalContent:null;
- const authority=durable?createDurableGuardAuthority({store,content}):null;
- const clinicalRoute=durable?createClinicalHttp({authority,enabled:true,probe:async()=>({durable:true,kind:'qa-sqlite-cas',schemaVersion:1}),
+ if(durable&&accounts)accounts.bindGuardStore(store);
+ function clinicalRouteFor(identity){return createClinicalHttp({
+  authority:createDurableGuardAuthority({store:identity?accounts.scopedGuardStore(identity):store,content,now}),
+  enabled:true,probe:async()=>({durable:true,kind:'qa-sqlite-cas',schemaVersion:1}),
+  resolveActor:accounts?async({body})=>{
+   if(identity)return {...identity,id:identity.actorId};
+   if(await accounts.backend.byActor(clinicalActorId(body.clientKey)))
+    throw Object.assign(Error('account login required'),{status:401});
+   return null;
+  }:null,
+  async memberProfile(member){
+   const account=member.id===identity?.actorId?identity.account:accounts?await accounts.backend.byActor(member.id):null;
+   if(identity&&!account)throw Object.assign(Error('Todos los médicos deben vincular su cuenta antes de esta guardia.'),{code:'invalid'});
+   return account?{...member,name:account.name,sex:account.sex,scrubColor:account.scrub_color,level:publicAccount(account).level}:member;
+  },
+  async beforeTransact({roomId}){
+   if(identity?.account.active_guard_id&&identity.account.active_guard_id!==roomId)
+    throw Object.assign(Error('Tu cuenta ya tiene una guardia activa.'),{code:'busy'});
+  },
+  async afterTransact({roomId,result}){
+   if(!identity)return null;
+   return publicAccount(await settleClinicalAccount(result,accounts.backend,identity,roomId));
+  },
   async verifiedRoom(headers,roomId,actorId){
-   const me=await social.route({method:'GET',path:'/api/me',headers});
+   const gateway=accounts?.gate||social;
+   const me=await gateway.route({method:'GET',path:'/api/me',headers});
    if(me.status!==200||me.body.user.id!==actorId)return null;
-   const result=await social.route({method:'GET',path:'/api/rooms/'+roomId+'/messages',headers,query:{after:0}});
+   const result=await gateway.route({method:'GET',path:'/api/rooms/'+roomId+'/messages',headers,query:{after:0}});
    return result.status===200?result.body.room:null;
-  }}):null;
+  }});}
+ async function clinicalRoute(input){
+  let identity=null;
+  try{
+   identity=accounts?await accounts.gate.authenticate(input.headers):null;
+   const result=await clinicalRouteFor(identity)(input);
+   return {...result,cookies:identity?.cookies||result.cookies};
+  }catch(error){return {status:error.status||400,body:{error:error.status===401?'Sesión vencida. Iniciá sesión.':'invalid clinical request'},cookies:error.cookies||identity?.cookies||[]};}
+ }
  const types={'.js':'text/javascript','.json':'application/json','.html':'text/html','.css':'text/css','.webp':'image/webp','.png':'image/png','.avif':'image/avif','.m4a':'audio/mp4','.wav':'audio/wav'};
  const server=createServer(async(req,res)=>{
   try{
    const url=new URL(req.url,'http://localhost'),pathname=decodeURIComponent(url.pathname);
    if(pathname.startsWith('/api/')){
+    const startedAt=Date.now();
     let raw='';for await(const chunk of req)raw+=chunk;if(apiLatency)await new Promise(r=>setTimeout(r,apiLatency));
     const fallback=vercelRewriteFallback&&pathname==='/api/lobby-sync';
     const input={method:req.method,path:fallback?'/api/social':pathname,
@@ -53,7 +86,8 @@ export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFa
      pathname.startsWith('/api/account/')&&accounts?await accounts.gate.route(input):
      pathname==='/api/account/session'?{status:200,body:{account:null,enabled:false}}:
      (isSignalingEndpoint({path:input.path,route:input.query.route})?await (accounts?.gate||social).signalRoute(input):await (accounts?.gate||social).route(input));
-    requests.push({path:pathname,status:response.status});
+    requests.push({path:pathname,status:response.status,startedAt,finishedAt:Date.now(),
+     ...(pathname==='/api/clinical'?{action:input.body.action,epoch:response.body?.epoch}: {})});
     if(rtcDiagnostics&&(input.body.signal||input.query.signal)){
      const value=input.body.signal||response.body.signal,description=value?.description,
       trace={method:input.method,status:response.status,type:value?.type||input.query.signal,
@@ -83,5 +117,8 @@ export async function browserHarness({apiLatency=0,durable=false,vercelRewriteFa
   return rtcDiagnostics?observeRtcBrowser(browser):browser;};
  const browser=await launch();
  return {browser,devices,requests,newBrowser:launch,url:'http://127.0.0.1:'+server.address().port,
+  // Read-only QA evidence and an injected server clock never write a clinical
+  // checkpoint or move a doctor. The real runtime alone advances its state.
+  readGuard:async roomId=>(await store?.read(roomId))?.value??null,
   close:async()=>{await browser.close();await new Promise(r=>server.close(r));store?.close();if(durableDir)rmSync(durableDir,{recursive:true,force:true});}};
 }

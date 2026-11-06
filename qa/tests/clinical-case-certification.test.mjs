@@ -12,6 +12,18 @@ const load=name=>JSON.parse(fs.readFileSync(new URL('../../src/v5/content/'+name
 const content={map:load('hospital'),beds:load('beds'),cases:load('cases'),therapies:load('therapies'),defaultDoses:load('default-doses')};
 const app=content.cases.find(c=>c.id==='APP-001');
 const peri=content.cases.find(c=>c.id==='PERI-SEC-001');
+test('competitive certification verifies public convergence and rejects leaking a rival private encounter',async()=>{
+ const row=await runClinicalCaseScenario(app,{content,mode:'competitive',profile:'competent',recovery:true,horizon:1440});
+ assert.equal(row.integrityChecks.sync,true,JSON.stringify(row.failures));
+ const rival=row.sharedViews.find(view=>view.actorId!==row.careActorId);
+ assert(rival.privateCaseHidden);assert.deepEqual(rival.claims,[]);
+ const exposed=structuredClone(row);
+ exposed.sharedViews.find(view=>view.actorId===rival.actorId).privateCaseHidden=false;
+ assert.equal(certification.assessClinicalCertificationEvidence(exposed).integrityChecks.sync,false);
+ const wrongCredit=structuredClone(row);
+ wrongCredit.sharedViews.find(view=>view.actorId===rival.actorId).claims=structuredClone(row.sharedViews.find(view=>view.actorId===row.careActorId).claims);
+ assert.equal(certification.assessClinicalCertificationEvidence(wrongCredit).integrityChecks.sync,false);
+});
 test('a declared definitive surgical pathway selects the receiving operating team before a routine ward',()=>{
  const c=cardiologyPack.cases.find(x=>x.id==='CARD-09');
  const plan=deriveClinicalCertificationPlan(c,content);

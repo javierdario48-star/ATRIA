@@ -109,7 +109,9 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
   if(!c.clinicalPolicy){
    for(const text of plan.legacyMedicationCommands||[])await send(text);
   }else await send('Enfermera una vía');
+  let clinicalSteps=0;
   while(read().clock.clinicalMinute<1440&&!read().patient.caseEnded){
+   if(++clinicalSteps>1000)throw Error('Clinical trajectory exceeded its bounded 1440-second observation: '+JSON.stringify(read().clock));
    const state=read(),p=state.patient,at=state.clock.clinicalMinute;
    for(const id of plan.studyIds)if(!studies.has(id)&&!(c.studies.find(x=>x.id===id)?.requiresCompletedTreatments||[])
     .some(t=>!confirmedClinicalTreatment(p,t,state.clock.nativeMinute))){
@@ -129,6 +131,8 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
    }
    if(read().patient.caseEnded)break;
    await advance(2);
+   if(!read().patient.caseEnded&&read().clock.clinicalMinute<=at)
+    throw Error('Clinical clock stopped before the encounter ended: '+JSON.stringify({clock:read().clock,died:read().patient.patientDied}));
   }
   let final=read(),p=final.patient;
   checks.noDuplicateXP=final.progress.receipts.length<=1;

@@ -15,7 +15,11 @@ export async function waitForPreviewBuild(origin,{timeout=120000}={}){
   'src/v5/clinical/transfer-continuation.js','src/v5/clinical/diagnostic-assessment.js',
   'src/v5/clinical/consultation-evidence.js','src/v5/engine/nurse-dispatcher.js','src/v5/ui/clinical-controller.js',
   'src/v5/clinical/observations.js','src/v5/core/speech-router.js','src/v5/ui/guard-chat-view.js',
-  'src/v5/ui/chat-transcript.js','src/v5/social/durable-cooperative-replica.js'])
+  'src/v5/ui/chat-transcript.js','src/v5/social/durable-cooperative-replica.js',
+  'src/v5/social/cooperative-link.js','src/v5/ui/guard-communication-view.js','src/v5/ui/guard-speech-memory.js',
+  'src/v5/clinical/guard-runtime.js','src/v5/clinical/guard-turn-control.js','src/v5/clinical/guard-communication.js',
+  'src/v5/clinical/native-medications.js','src/v5/clinical/survival-487-bridge.js','src/v5/clinical/study-collections.js',
+  'src/v5/clinical/native-app.js','src/v5/clinical/native-peritonitis.js'])
   files[path]=createHash('sha256').update(await fs.readFile(new URL('../../'+path,import.meta.url))).digest('hex');
  const deadline=Date.now()+timeout;
  while(true){

@@ -107,10 +107,17 @@ async function confirmHintAward(p,mode,peer=null){
  const after=await accountXP(p);assert.equal(after-before,expected);
  const evidence={mode,rewardVerified:true,creditedXP:expected,accountDelta:after-before};
  if(peer){
-  await peer.waitForFunction(status=>atriaV5.snapshot().clinical.caseReward?.creditStatus===status,
-   mode==='competitive'?'ineligible':'credited');
-  const reward=await peer.evaluate(()=>atriaV5.snapshot().clinical.caseReward),expectedPeer=mode==='competitive'?0:closed.patient.closure.xp;
-  assert.equal(reward.hintCount,0);assert.equal(reward.xp,expectedPeer);
+  const expectedPeer=mode==='competitive'?0:closed.patient.closure.xp;
+  if(mode==='competitive'){
+   await peer.waitForFunction(uid=>atriaV5.snapshot().clinical.shift.outcomes.some(row=>row.patientUid===uid&&row.closed),closed.patient.uid);
+   const other=await peer.evaluate(()=>atriaV5.snapshot().clinical);
+   assert(other.patient.uid!==closed.patient.uid||other.readOnly);
+   assert.equal(other.caseReward,null,'a rival cannot inspect the owner private hint/reward receipt');
+  }else{
+   await peer.waitForFunction(()=>atriaV5.snapshot().clinical.caseReward?.creditStatus==='credited');
+   const reward=await peer.evaluate(()=>atriaV5.snapshot().clinical.caseReward);
+   assert.equal(reward.hintCount,0);assert.equal(reward.xp,expectedPeer);
+  }
   assert.equal((await accountXP(peer))-peerBefore,expectedPeer);
   evidence.peerXP=expectedPeer;
   if(await peer.locator('#modalClose').isVisible())await peer.locator('#modalClose').click();
