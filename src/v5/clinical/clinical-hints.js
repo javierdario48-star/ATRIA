@@ -34,7 +34,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
  const done=new Set(fulfilledTreatmentIds),pending=new Set([
   ...(p.pendingTreatments||[]).map(x=>x.id),...(p.hintPendingActions||[]).map(x=>x.id),
   ...(p.administrationLog||[]).filter(x=>x.status==='administering').map(x=>x.id)]);
- for(const t of p.treatments||[])if(nativeMedicationDoseFraction(t,c)>=1&&(c.clinicalPolicy?currentClinicalTreatment(p,t.id,minute):
+ for(const t of p.treatments||[])if(nativeMedicationDoseFraction(t,c)>=1&&(c.clinicalPolicy?currentClinicalTreatment(p,t.id,minute,row=>nativeMedicationDoseFraction(row,c)>=1):
   t.patientUid===p.uid&&t.sourceEventId&&t.action!=='stop'))done.add(t.id);
  if(p.venousAccessCount>0)done.add('iv');
  if(p.procedures?.monitor?.connected)done.add('monitor');

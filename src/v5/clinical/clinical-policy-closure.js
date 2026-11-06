@@ -55,8 +55,9 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  const minute = nativeMinute(patient), examined = actualExaminations(patient), requiredExams = rule.requiredExams || [];
  const rows = completedStudies(patient, caseData, minute), studies = new Set(rows.map(row => studyEvidenceId(caseData,row.id)));
  const treatmentIds = [...new Set((patient.treatments || []).map(row => row.id))];
- const confirmed = treatmentIds.map(id => currentClinicalTreatment(patient, id, minute))
-  .filter(row => row && !matchesMedicationAllergy487(patient, row.id)&&nativeMedicationDoseFraction(row,caseData)>=1);
+ const confirmed = treatmentIds.map(id => currentClinicalTreatment(patient, id, minute,
+  row=>nativeMedicationDoseFraction(row,caseData)>=1))
+  .filter(row => row && !matchesMedicationAllergy487(patient, row.id));
  const done = new Set(confirmed.map(row => row.id));
  const continuation=clinicalTransferContinuation(patient,caseData,target,minute);
  const access = patient.procedures?.iv;

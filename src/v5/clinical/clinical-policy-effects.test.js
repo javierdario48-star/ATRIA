@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {clinicalPolicyTargets,advanceClinicalComplications,complicationStateEligible} from './clinical-policy-effects.js';
+import {clinicalPolicyTargets,advanceClinicalComplications,complicationStateEligible,deliveredClinicalTreatment} from './clinical-policy-effects.js';
+import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 const policy={trajectory:{early:[0,10,4,-10,-5,-4],late:[0,20,8,-20,-10,-8],earlyEnd:10,lateEnd:60,fluidResponse:0},responses:[{allOf:['bronchodilator'],delay:1,peak:10,offsets:[0,-8,-6,0,0,3]}],complications:[{id:'fatigue',type:'respiratory-fatigue',progressionId:'offset-ramp-v1',rescueId:'confirmed-rescue-v1',minMinute:20,riseMinutes:15,offsets:[0,12,-12,-12,-7,-12],rescueAllOf:['intubation'],recoveryMinutes:30,manifestation:'Fatiga respiratoria'}]};
 const patient=()=>({uid:'p',liveVitals:{temp:37,hr:120,rr:34,sys:132,dia:78,spo2:86},variation:{complicationCandidates:[{id:'fatigue',progressionId:'offset-ramp-v1',rescueId:'confirmed-rescue-v1'}]},treatments:[],administrationLog:[]});
 const c={id:'RESP-TEST',clinicalPolicy:policy};
@@ -15,6 +16,30 @@ test('native targets require true administration and delayed response',()=>{
  administered(p,'bronchodilator',10);assert.deepEqual(clinicalPolicyTargets(p,c,10),untreated);
  assert.ok(clinicalPolicyTargets(p,c,20).rr<clinicalPolicyTargets(patient(),c,20).rr);
  assert.equal(p.liveVitals.spo2,86,'pure targets do not write vitals');
+});
+test('a corrected infusion supersedes a tiny dose using actual delivery, while adequate repeats do not restart or multiply benefit',()=>{
+ const p=patient(),definition=cardiologyPack.cases.find(c=>c.id==='CARD-09');
+ const tiny={id:'ampicillin',patientUid:p.uid,sourceEventId:'tiny',administeredAtNativeMinute:1,
+  route:'iv',dose:{amount:2,unit:'mg'}};
+ p.treatments.push(tiny);p.administrationLog.push(structuredClone(tiny));
+ const paired={...tiny,id:'ceftriaxone',sourceEventId:'paired',dose:{amount:2000,unit:'mg'}};
+ p.treatments.push(paired);p.administrationLog.push(structuredClone(paired));
+ const correcting={...tiny,sourceEventId:'correcting',administeredAtNativeMinute:2,
+  dose:{amount:1000,unit:'mg'},prescribedDose:{amount:2000,unit:'mg'},deliveryFraction:.5,
+  status:'administering',completionStatus:'pending'};
+ p.administrationLog.push(correcting);
+ assert.equal(deliveredClinicalTreatment(p,'ampicillin',3,definition).sourceEventId,'correcting');
+ const baseline=clinicalPolicyTargets({...p,treatments:[],administrationLog:[]},definition,100),
+  partial=clinicalPolicyTargets(p,definition,100);
+ Object.assign(correcting,{dose:{amount:2000,unit:'mg'},deliveryFraction:1,status:'completed',
+  completionStatus:'completed',completedAtNativeMinute:3});
+ p.treatments.push(structuredClone(correcting));
+ const full=clinicalPolicyTargets(p,definition,100);
+ assert(Math.abs((partial.temp-baseline.temp)/(full.temp-baseline.temp)-.5)<1e-9);
+ const repeated={...correcting,sourceEventId:'repeat',administeredAtNativeMinute:99,completedAtNativeMinute:100};
+ p.treatments.push(repeated);p.administrationLog.push(structuredClone(repeated));
+ assert.equal(deliveredClinicalTreatment(p,'ampicillin',100,definition).sourceEventId,'correcting');
+ assert.deepEqual(clinicalPolicyTargets(p,definition,100),full);
 });
 test('seeded complication persists, progresses despite initial treatment, and recovers gradually after actual rescue',()=>{
  const p=patient();administered(p,'bronchodilator',1);

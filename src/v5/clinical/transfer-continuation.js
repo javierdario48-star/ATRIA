@@ -1,7 +1,7 @@
 import {isDeliveredClinicalAdministration,confirmedClinicalTreatment} from './receipts.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {clinicalInterventionEligibility} from './native-medication-eligibility.js';
-import {nativeTreatmentDefinition} from './native-medications.js';
+import {nativeTreatmentDefinition,nativeMedicationDoseFraction} from './native-medications.js';
 import {confirmedMedicationHarms487} from './medication-harms-487.js';
 
 export function unrescuedTransferReactions(p,c,minute){
@@ -19,7 +19,7 @@ function withheldTransferPreparations(p,c,destination,minute,ongoing){
  if(!['quirofano','procedimiento'].includes(destination)||!rule?.consult?.[destination]?.length||
   !(c.clinicalPolicy?.definitiveInterventions||[]).some(id=>nativeTreatmentDefinition(id,c)?.kind==='procedure')||
   !p.procedures?.monitor?.connected||!confirmedAccess||!groups?.length)return [];
- const delivered=id=>id==='iv'?confirmedAccess:ongoing.has(id)||!!confirmedClinicalTreatment(p,id,minute);
+ const delivered=id=>id==='iv'?confirmedAccess:ongoing.has(id)||!!confirmedClinicalTreatment(p,id,minute,row=>nativeMedicationDoseFraction(row,c)>=1);
  if(groups.some(group=>group.length&&group.every(delivered)))return [];
  // Withholding an unsafe preparation never substitutes for rescue of an
  // actual severe drug reaction before transport.
@@ -45,7 +45,7 @@ export function clinicalTransferContinuation(p,c,destination,minute=p.policyStat
  const permitted=['sala','uti','quirofano','procedimiento'].includes(destination)&&
   c.clinicalPolicy?.closure?.consult?.[destination]?.length&&p.venousAccessCount>0&&p.procedures?.monitor?.connected;
  const continuingAdministrations=permitted?(p.administrationLog||[]).filter(row=>row.status==='administering'&&
-  row.route==='iv'&&isDeliveredClinicalAdministration(p,row,minute)&&!matchesMedicationAllergy487(p,row.id))
+  row.route==='iv'&&isDeliveredClinicalAdministration(p,row,minute)&&nativeMedicationDoseFraction(row,c)>=1&&!matchesMedicationAllergy487(p,row.id))
   .map(row=>({id:row.id,sourceEventId:row.sourceEventId,deliveredFraction:row.deliveryFraction,
    deliveredDose:structuredClone(row.dose),prescribedDose:structuredClone(row.prescribedDose)})):[];
  const ongoing=new Set(continuingAdministrations.map(row=>row.id));

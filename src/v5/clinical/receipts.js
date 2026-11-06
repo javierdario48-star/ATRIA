@@ -57,23 +57,29 @@ function isConfirmedTreatment(p,t,id,minute){
    rows[0].dose?.amount===t.dose.amount&&rows[0].dose?.unit===t.dose.unit&&
    rows[0].administeredAtNativeMinute===t.administeredAtNativeMinute;
 }
-export function confirmedClinicalTreatment(p,id,minute){
- if(!Number.isFinite(minute)||minute<0)return undefined;
- return p.treatments?.find(t=>isConfirmedTreatment(p,t,id,minute));
+function confirmedClinicalTreatments(p,id,minute){
+ if(!Number.isFinite(minute)||minute<0)return [];
+ return (p.treatments||[]).filter(t=>isConfirmedTreatment(p,t,id,minute));
+}
+export function confirmedClinicalTreatment(p,id,minute,accept=()=>true){
+ return confirmedClinicalTreatments(p,id,minute).find(accept);
 }
 /** Current support is distinct from the historical fact that a dose was given.
  * Continuous effects must follow the unique active device/rate receipt. */
-export function currentClinicalTreatment(p,id,minute){
- if(!Number.isFinite(minute)||minute<0)return undefined;
- if(id==='oxygen')return confirmedClinicalTreatment(p,id,minute);
+export function currentClinicalTreatments(p,id,minute){
+ const confirmed=confirmedClinicalTreatments(p,id,minute);
+ if(id==='oxygen')return confirmed;
  const rows=(p.treatments||[]).filter(t=>t.id===id&&t.action);
- if(!rows.length)return confirmedClinicalTreatment(p,id,minute);
+ if(!rows.length)return confirmed;
  const device=p.procedures?.[id];
- if(!device?.active||device.patientUid!==p.uid)return undefined;
+ if(!device?.active||device.patientUid!==p.uid)return [];
  const t=rows.find(t=>t.sourceEventId===device.sourceEventId),dose=t?.infusionDose??t?.dose;
- if(!t||!['start','setRate'].includes(t.action)||!isConfirmedTreatment(p,t,id,minute)||
-  device.dose?.amount!==dose?.amount||device.dose?.unit!==dose?.unit)return undefined;
- return t;
+ if(!t||!['start','setRate'].includes(t.action)||!confirmed.includes(t)||
+  device.dose?.amount!==dose?.amount||device.dose?.unit!==dose?.unit)return [];
+ return [t];
+}
+export function currentClinicalTreatment(p,id,minute,accept=()=>true){
+ return currentClinicalTreatments(p,id,minute).find(accept);
 }
 
 /** Validate delivered exposure independently from completed-treatment credit.

@@ -1,7 +1,7 @@
 // Declarative targets consumed by the EXISTING acute-case vital writer.
 // These game-scale response envelopes are not patient PK/prognostic estimates.
 // This module never writes liveVitals, death, the clock, closure or rewards.
-import {currentClinicalTreatment,isDeliveredClinicalAdministration} from './receipts.js';
+import {currentClinicalTreatment,currentClinicalTreatments,isDeliveredClinicalAdministration} from './receipts.js';
 import {summarizeIVExposures} from './medication-exposure.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {evaluateComplicationCandidate} from './complication-eligibility.js';
@@ -18,12 +18,16 @@ function checkMinute(minute){if(!Number.isFinite(minute)||minute<0)throw Error('
 /** A dose may exert a partial effect during a real timed infusion, but cannot
  * satisfy closure before completion. It must be an owned, unique delivery row;
  * an order, a consultation or a preparation has no physiological effect. */
-export function deliveredClinicalTreatment(patient,id,minute){
- const complete=currentClinicalTreatment(patient,id,minute);
- if(complete)return {...complete,deliveryFraction:1};
- const rows=(patient.administrationLog||[]).filter(row=>row.id===id&&row.status==='administering'&&
+export function deliveredClinicalTreatment(patient,id,minute,caseData){
+ const complete=currentClinicalTreatments(patient,id,minute).map(row=>({...row,deliveryFraction:1}));
+ const partial=(patient.administrationLog||[]).filter(row=>row.id===id&&row.status==='administering'&&
   isDeliveredClinicalAdministration(patient,row,minute));
- return rows[0];
+ // A corrected dose may follow an insufficient one. Use the strongest actual
+ // delivered evidence, without adding doses or restarting a reference response
+ // for repeats. Ongoing devices still follow their unique current receipt.
+ const fraction=row=>(row.deliveryFraction??1)*nativeMedicationDoseFraction(row,caseData);
+ return [...complete,...partial].reduce((best,row)=>!best||fraction(row)>fraction(best)||
+  fraction(row)===fraction(best)&&row.administeredAtNativeMinute<best.administeredAtNativeMinute?row:best,undefined);
 }
 
 export function clinicalPolicyTargets(patient,caseData,minute){
@@ -34,8 +38,8 @@ export function clinicalPolicyTargets(patient,caseData,minute){
  const out=zero();
  for(const [i,axis] of CLINICAL_AXES.entries())out[axis]=trajectory.early[i]*first+trajectory.late[i]*second;
  for(const response of policy.responses||[]){
-  const all=(response.allOf||[]).map(id=>!matchesMedicationAllergy487(patient,id)&&deliveredClinicalTreatment(patient,id,minute));
-  const any=(response.anyOf||[]).map(id=>!matchesMedicationAllergy487(patient,id)&&deliveredClinicalTreatment(patient,id,minute)).filter(Boolean);
+  const all=(response.allOf||[]).map(id=>!matchesMedicationAllergy487(patient,id)&&deliveredClinicalTreatment(patient,id,minute,caseData));
+  const any=(response.anyOf||[]).map(id=>!matchesMedicationAllergy487(patient,id)&&deliveredClinicalTreatment(patient,id,minute,caseData)).filter(Boolean);
   if(all.some(x=>!x)||response.anyOf?.length&&!any.length)continue;
   const evidence=[...all,...(any.length?[any.reduce((a,b)=>a.administeredAtNativeMinute<b.administeredAtNativeMinute?a:b)]:[])];
   if(!evidence.length)continue;
@@ -98,8 +102,9 @@ export function advanceClinicalComplications(patient,caseData,minute){
     onsetAt:minute,status:'active',severity:0,lastEvaluatedAt:minute,recoveryRemaining:1};state.complications.push(episode);
   }
   if(episode.status==='recovered')continue;
-  const all=(candidate.rescueAllOf||[]).map(id=>currentClinicalTreatment(patient,id,minute));
-  const any=(candidate.rescueAnyOf||[]).map(id=>currentClinicalTreatment(patient,id,minute)).filter(Boolean);
+  const adequate=row=>nativeMedicationDoseFraction(row,caseData)>=1;
+  const all=(candidate.rescueAllOf||[]).map(id=>currentClinicalTreatment(patient,id,minute,adequate));
+  const any=(candidate.rescueAnyOf||[]).map(id=>currentClinicalTreatment(patient,id,minute,adequate)).filter(Boolean);
   const rescued=(all.length||candidate.rescueAnyOf?.length)&&all.every(Boolean)&&(!candidate.rescueAnyOf?.length||any.length);
   const previousAt=episode.lastEvaluatedAt??Math.max(episode.onsetAt,previousNativeMinute);
   let remaining=episode.recoveryRemaining??(episode.rescueAt===undefined?1:

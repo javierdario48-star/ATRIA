@@ -89,6 +89,17 @@ test('delivered administration accepts each completed repeat only with its own m
  for(const row of p.administrationLog)assert.equal(receipts.isDeliveredClinicalAdministration(p,row,13),true);
  p.treatments.pop();assert.equal(receipts.isDeliveredClinicalAdministration(p,p.administrationLog[1],13),false);
 });
+test('selecting adequate evidence examines all confirmed doses without trusting future or cross-patient corrections',()=>{
+ const tiny={id:'drug',patientUid:'p',sourceEventId:'tiny',route:'oral',dose:{amount:1,unit:'mg'},administeredAtNativeMinute:1},
+  corrected={...tiny,sourceEventId:'corrected',dose:{amount:100,unit:'mg'},administeredAtNativeMinute:2};
+ const p={uid:'p',treatments:[tiny,corrected],administrationLog:[tiny,corrected].map(row=>structuredClone(row))};
+ const adequate=row=>row.dose.amount>=100;
+ assert.equal(receipts.currentClinicalTreatment(p,'drug',2,adequate),corrected);
+ assert.equal(receipts.currentClinicalTreatment(p,'drug',1,adequate),undefined);
+ p.administrationLog[1].patientUid='other';
+ assert.equal(receipts.currentClinicalTreatment(p,'drug',2,adequate),undefined);
+ assert.equal(receipts.currentClinicalTreatment(p,'drug',2),tiny);
+});
 
 test('the final delivered fraction remains exposure while native completion is being committed',()=>{
  const row={id:'drug',patientUid:'p',sourceEventId:'e',administeredAtNativeMinute:2,route:'iv',

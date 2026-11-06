@@ -124,6 +124,25 @@ test('positive excessive native doses are executed in their supported route with
  }finally{f.s.dispose();}
 });
 
+test('an initially insufficient dose does not conceal a subsequent adequate administration from response or checklist',async()=>{
+ const f=fixture('RESP-03','corrected-dose-resp-freedom');
+ try{
+  pending(await f.post('/tratamiento salbutamol 0.001 mg nebulizados'));
+  pending(await f.post('/tratamiento ipratropium 0.5 mg nebulizados'));
+  await f.advance(3);
+  assert(!f.s.read().closure.fulfilledTreatmentIds.includes('salbutamol'));
+  pending(await f.post('/tratamiento salbutamol 5 mg nebulizados'));
+  await f.advance(3);
+  const p=f.s.read().patient,rows=p.administrationLog.filter(row=>row.id==='salbutamol');
+  assert.deepEqual(rows.map(row=>row.dose.amount),[0.001,5],'both real doses remain in the clinical record');
+  assert(f.s.read().closure.fulfilledTreatmentIds.includes('salbutamol'),'the real corrected dose satisfies treatment evidence');
+  const minute=40,corrected=clinicalPolicyTargets(p,f.c,minute),
+   tinyOnly={...p,treatments:p.treatments.filter(row=>row.sourceEventId!==rows[1].sourceEventId),
+    administrationLog:p.administrationLog.filter(row=>row.sourceEventId!==rows[1].sourceEventId)};
+  assert(corrected.rr<clinicalPolicyTargets(tinyOnly,f.c,minute).rr-1,'the corrected dose supplies its native response');
+ }finally{f.s.dispose();}
+});
+
 test('new early repeat orders execute as separate doses and an identical transport retry remains one exposure',async()=>{
  const f=fixture('RESP-01');
  try{
