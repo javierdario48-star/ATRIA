@@ -118,6 +118,17 @@ export function routeWardSpeech(text,context={}){
  if(asksAllergies.test(nurseQuestion))return {recipient,patientUid,original,intents:patientUid?
   [{kind:'nurse.inquire',id:'allergies',sourceText:original}]:[],
   ...(!patientUid?{error:'no-patient-target'}:{})};
+ // A discharge safety plan is a clinical meaning, not an exact password.
+ // Require BOTH follow-up and a concrete return precaution; generic 'alta'
+ // or 'control' alone must never earn documented follow-up credit.
+ const followup=/(?:\bcontrol(?:ar)?\b|\bseguimiento\b|\brevision\b|\breevaluacion\b)/.test(normalized);
+ const returnAdvice=/(?:\bvolver\b|\bregresar\b|\bconsultar\b|\bacudir\b|\bretornar\b)/.test(normalized);
+ const warning=/(?:\bfiebre\b|\bempeor\w*|\bsangrado\b|\bdolor\b|\bdisnea\b|\bvomitos?\b)/.test(normalized);
+ if(context.clinicalEvaluation&&followup&&returnAdvice&&warning&&
+  (context.therapies||[]).some(t=>t.id==='followup'))
+  return {recipient,patientUid,original,intents:patientUid?
+   [{kind:'therapy.request',id:'followup',sourceText:original,clause:original,count:1}]:[],
+   ...(!patientUid?{error:'no-patient-target'}:{})};
  if(/\btacto rectal\b/.test(normalized))return {recipient,patientUid,intents:[],original,error:'physician-exam-required'};
  const ordered=context.studyOrdering||studyOrderVocabulary(context.studies,context.caseData?.studies);
  const vocabulary=nursingFormulationVocabulary487(ordered.scanText(original),{...context,studies:ordered.lexicon});
