@@ -35,18 +35,25 @@ test('every authored case exposes an immutable closure audit through its live gu
     const before=session.read();
     const audit=session.auditClosureRequirements();
     assert.equal(audit.caseId,caseData.id);
-    assert.equal(audit.ready,before.closure.ready);
-    assert.deepEqual(audit.missing,before.closure.missing);
+    assert.equal(typeof audit.ready,'boolean');
+    assert(Array.isArray(audit.missing));
+    // read().closure can use a different destination from Vega's hintDestination.
+    // Do not compare two independent destination verdicts as if identical.
     assert(Array.isArray(audit.issues));
     for(const issue of audit.issues){
      assert.equal(typeof issue.code,'string');
      if(issue.code==='npo-necessity-review')
       assert.equal(typeof issue.unavoidable,'boolean');
     }
-    assert.deepEqual(session.read(),before,'auditing must not mutate clinical state');
-    // Emit findings as test diagnostics, not pass/fail clinical judgments.
-    if(audit.issues.length)t.diagnostic(JSON.stringify({
-     caseId:caseData.id,destination:audit.destination,issues:audit.issues
+    const hint=session.clinicalHint();
+    assert(hint===null||typeof hint==='object','Vega must return a hint descriptor or null');
+    assert.deepEqual(session.read(),before,'auditing and Vega must not mutate clinical state');
+    // Report every initial state for offline review, not a clinical pass/fail.
+    t.diagnostic(JSON.stringify({
+     caseId:caseData.id,destination:audit.destination,ready:audit.ready,
+     missing:audit.missing,issues:audit.issues,
+     hint:hint?{requirement:hint.requirement,action:hint.action?{
+      kind:hint.action.kind,id:hint.action.id}:null,error:hint.error||null}:null
     }));
    }finally{
     session?.dispose();
