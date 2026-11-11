@@ -1,8 +1,69 @@
-# ATRIA 5.0 — CONTINUIDAD EXACTA PARA NUEVO CHAT
+# ATRIA 5.0 — CONTINUIDAD EXACTA PARA CHATGPT
 
-Fecha: 2026-11-11. Repositorio: `javierdario48-star/ATRIA`. **Rama exclusiva**: `atria-5.0-core-rebuild-experimental`.
+## Punto de partida
 
-## Punto de partida y commits de esta sesión
+Continúa el repositorio `javierdario48-star/ATRIA` en la única rama autorizada, `atria-5.0-core-rebuild-experimental`. Consulta el HEAD remoto con GitHub antes de editar. El HEAD de código verificado es `4e9212d98bcb127cd684c4651a68c1b1c6fc18e6` y el commit siguiente contiene esta entrega y el inventario. Si la rama avanzó, compara los commits nuevos y conserva sus cambios. El SHA remoto completo de la entrega acompaña al prompt en el mensaje de entrega.
+
+Lee el [inventario maestro vigente](ATRIA-5-REMAINING-TASKS.md), `ATRIA-5-CHATGPT-HANDOFF.md`, `ATRIA-5-GUARD-RECOVERY.md`, `AGENTS.md` y `ATRIA-5-CASE-INTEGRATION-CONTRACT.md`. El inventario conserva la correspondencia de los 60 números y las solicitudes recuperadas de mensajes previos. La fuente literal completa por número sigue pendiente de recuperación. Usa el registro maestro actual para los estados. Los checkpoints históricos acreditan su SHA.
+
+## Correcciones publicadas y archivos
+
+HEAD inicial `0edbb8b6faae16eb31bd295c766a8a0eeccfa45b`. Se verificó la ascendencia de los 26 commits desde `7ff71dc0a95e17c8b8b9eaf39eaed11d95e29c9f`.
+
+| Commit de GitHub | Resultado | Archivos |
+| --- | --- | --- |
+| `69a27ec8abc30a7a3ff7046a75414f3e1b5dc9ed` | DIALOG-AUTO-01. Un envío entrega la respuesta. El chat atribuye la anamnesis indirecta al acompañante y muestra la ausencia de habla como observación clínica. Hay compatibilidad con recibos guardados. | `src/v5/clinical/patient-dialogue.js`, `patient-dialogue.test.js`, `guard-session.js`, `qa/v5/patient-dialogue-browser.mjs` |
+| `58099a74711dd95ad22ad8d0a962b5d5a66dd0e2` | CLOSE-01. PANC-001 cierra con soporte confirmado y recepción UTI aunque falte la orden de ayuno. La auditoría usa el catálogo activo completo. | En `src/v5/clinical/`: `panc-care.js`, `gastro-closure-v5.js`, `gastro-expansion-policies.js`, `clinical-hint-requirements.js`, `guard-session.js`, `partial-closure.js`, `surgical-consultation.js`, `accepted-transfer.test.js`, `closure-catalog-audit.test.js` |
+| `8cacfdd8d265569eea627cb5ddd0ede40e759424` | VEGA-AUTO-01 y VEGA-COHERENCE-01. La oferta caducada se renueva una vez con la misma pulsación y el mismo paciente. Se probó la secuencia pendiente → resultado → pista nueva para HEPAT-001 y CARD-08. | `src/v5/ui/clinical-hint-presenter.js`, `src/v5/clinical/clinical-hints.test.js` |
+| `e6f9781b655caf0eca43033886294022cbce8e2a` | DX-01. La ficha podía quedarse con la impresión vieja y el campo deshabilitado tras recibir el borrado. La confirmación ahora limpia y desbloquea el campo original, con identidad de sesión y paciente. | `src/v5/ui/clinical-controller.js`, `src/v5/ui/diagnostic-impression.test.js` |
+| `4e9212d98bcb127cd684c4651a68c1b1c6fc18e6` | NUR-01. «Enfermera, dejalo en ayuno» fallaba con `unknown-clause`. Usa la intervención y el recibo que ya aceptaban «en ayunas». | `src/v5/core/speech-router.js`, `src/v5/core/nurse-diagnosis-speech.test.js`, `src/v5/clinical/physical-nursing.test.js` |
+
+## Evidencia ejecutada el 11 de noviembre de 2026
+
+| Verificación | Resultado |
+| --- | --- |
+| Checkout inicial | 157/157 pruebas dirigidas, 2.977/2.977 de la suite V5 y build aprobado. |
+| Árbol de código publicado | 276/276 dirigidas y 3.012/3.012 de `npm run test:v5`. |
+| Build y arquitectura | `npm run build:v5` aprobó y produjo 216 archivos. `npm run build:v5-core` aprobó con 27 módulos. `node scripts/audit-v5-boundary.mjs` aprobó con 189 módulos de producción. El test de cierre y XP histórico de 4.8.7 también aprobó. |
+| Cierre y pistas | 55 casos iniciales, 91 destinos declarados y tres peritonitis con destino dinámico. `qa/v5/clinical-hint-bots.mjs` cerró 55/55 en el recorrido del bot. Cuatro destinos de CHOLE-001/ILEO-001 requieren revisión de NPO. |
+| Navegador local sobre `e6f9781` | Diálogo, Vega y diagnóstico aprobaron. Chromium de escritorio y Pixel 5 emulado según el escenario. La prueba compartida aprobó 11 comprobaciones con dos cuentas y procesos independientes. Recuperación aprobó siete comprobaciones en Solitario, Cooperativo y Competitivo, con dos cuentas y tres procesos. Autoridad local SQLite/CAS y reloj acelerado para el límite de turno. |
+| Preview sobre `e6f9781` | El manifiesto coincidió con 42 fuentes verificadas y con los 10 archivos productivos modificados hasta ese SHA. Solitario y Aprendiz aprobaron respuesta del paciente, pista, audio y crédito de XP. Vega se mostró en 1.352 ms y 1.861 ms, respectivamente, con `prepare` y `displayed`. Se recuperó la guardia de Solitario con el mismo paciente. |
+| Cooperativo en preview | Dos reproducciones con cuentas QA separadas. Se confirmó la entrada del anfitrión. El invitado quedó en lobby y agotó 30 s en «Esperando la autoridad clínica del anfitrión». La traza del segundo intento vio `rooms/join` con ambos integrantes, luego un 403 al invitado en `rooms/:id/messages`. El cliente descartó la sala y el invitado quedó sin proyección clínica. Competitivo en preview quedó pendiente. |
+| GitHub Actions | Consultar el estado por SHA. Las corridas de `e6f9781` seguían en cola al registrarlas. [Vega](https://github.com/javierdario48-star/ATRIA/actions/runs/43102974026) · [V5](https://github.com/javierdario48-star/ATRIA/actions/runs/43102974038) · [Preview](https://github.com/javierdario48-star/ATRIA/actions/runs/43102974019) |
+
+Para reproducir en un checkout:
+
+```sh
+npm ci
+node --test src/v5/clinical/{closure-catalog-audit,closure-requirements-audit,physical-nursing,study-orders,accepted-transfer,patient-dialogue,clinical-hints,clinical-hint-ledger,clinical-policy-closure}.test.js src/v5/core/{nurse-diagnosis-speech,nursing-formulation-routing,room-authority}.test.js src/v5/ui/{diagnostic-impression,guard-chat-view,clinical-autocomplete,clinical-hint-presenter}.test.js src/v5/server/{clinical-hints-durable,durable-guard-authority}.test.js qa/tests/v5-nurse-study-autocomplete.test.mjs
+npm run test:v5
+npm run build:v5
+node qa/v5/clinical-hint-bots.mjs
+```
+
+La CI usa Node 22 y Playwright con Chrome. Las pruebas locales usaron Node 24.22.1 y Chromium 153 en procesos independientes con el ejecutable de prueba en scratch. El repositorio conserva sus dependencias declaradas. Las verificaciones de navegador son `qa/v5/patient-dialogue-browser.mjs`, `clinical-hints-browser.mjs`, `diagnosis-browser.mjs`, `shared-guard-auth-browser.mjs` y `guard-recovery-browser.mjs`. La aceptación con el Android físico y las cuentas del usuario sigue pendiente.
+
+## Trabajo para continuar en ChatGPT
+
+1. **CLOSE-01 y VEGA-COHERENCE-01.** En CHOLE-001 e ILEO-001 ya se observó que la orden de ayuno quita el bloqueo terapéutico tras ejecutar el resto de la preparación. Evalúa su necesidad por destino y gravedad. Usa `guard-session.js:closureReadiness/currentChecklist/auditClosureRequirements`, `clinical-hint-requirements.js` y `clinical-hints.js`. Antes de cambiar un criterio, identifica la indicación clínica y la evidencia que bloquea. Añade la secuencia pista → ejecución → recibo → pista nueva en alternativas y en controles que sí deban repetirse por evolución. Estudia la separación entre impresión diagnóstica, gravedad, preparación y aceptación de UTI en `consultation-evidence.js` y `surgical-consultation.js`. Revisa seguimiento y signos de alarma como posible mejora de calidad de alta.
+2. **LAB-01.** Inspecciona `studies.js`, `study-evidence.js`, `patient-observations.js` y `src/clinical/study-registry.js`. Reproduce TC por técnica/contraste, gasometría antes y después de soporte, y hemograma/PCR por muestra. Adjunta UID, ID canónico, evento, minuto, soporte confirmado y resultado. Usa `studies.test.js`, `studies-policy.test.js`, `study-orders.test.js` y `study-collections.test.js`.
+3. **NUR-01, ANAM-01 y FAM-01.** Reutiliza `core/speech-router.js`, `engine/nurse-dispatcher.js`, `clinical/patient-dialogue.js` y `patient-question-context.js`. Continúa con la pregunta contextual sobre alimentación, precisión de intención y el acompañante interactivo donde el caso declare fuente. Mantén una sola ejecución, respuesta y fuente por evento. Prueba la recuperación del contexto por médico.
+4. **MP-01.** Reproduce el 403 posterior a un `rooms/join` aceptado. Contrasta `src/v5/social/cooperative-link.js:pollRoom` con `room-membership-store.js` y `src/v5/server/supabase-account-store.js:createPersistentSocialStorage`. Las claves de sala y pertenencia pasan por la caché en el adaptador actual. Comprueba si la escritura y la lectura ven la misma pertenencia y registra el cuerpo del 403 y el rol de la petición sin credenciales. Conserva la revocación válida y el control de acceso. Añade regresión de invitación, rechazo auténtico y recuperación antes de volver a probar en preview.
+5. **XP-COOP y DX-REVEAL.** Usa los recibos y el ledger existentes para diseñar crédito/débito compartido y revelación única del diagnóstico con −50%. La revelación permite continuar y se registra aparte de la impresión del médico. Mantén XP competitiva individual. Consulta el inventario para archivos, riesgos y criterios.
+6. **Validación externa.** Comprueba el mismo SHA en preview antes de medir. Usa los bots existentes con dos cuentas independientes para entrada, guardia, chat, cambio de paciente, recuperación y XP. Mide por separado cola/CAS, render, atención de Enfermería y tiempos de estudios. La prueba física en Android sigue pendiente. Prioriza código y pruebas que puedan resolverse con GitHub y reserva navegador/dispositivo para los recorridos que lo requieren.
+
+## Reglas de aceptación
+
+- **DIALOG-AUTO-01.** Una pregunta enviada produce la respuesta contextual automáticamente. Los antecedentes, la personalidad y la fuente se mantienen tras reconectar. Un paciente sin respuesta verbal recibe una observación o un relato indirecto atribuido al informante declarado.
+- **VEGA-AUTO-01.** Un toque obtiene y muestra una oferta verificada para ese encuentro. La confirmación posterior al pintado conserva idempotencia, 5% para una pista nueva y repetición gratuita. El cambio de paciente descarta la oferta.
+- **VEGA-COHERENCE-01.** Cada pista consulta el estado confirmado de la autoridad. Distingue solicitud pendiente, ejecución, resultado y control temporalmente justificado. Excluye acciones ya cumplidas y señala el requisito clínico pendiente.
+- **CLOSE-01.** El cierre admite alternativas válidas y excluye frases exactas, trámites ocultos y medidas prescindibles como condiciones bloqueantes. Todo requisito indispensable debe tener fundamento clínico y una pista ejecutable.
+- Reutiliza una sola autoridad clínica, un evaluador por ruta, el servicio de estudios, la deduplicación por recibo y los ejecutores existentes. Mantén la selección directa y la recuperación. Trabaja en la rama indicada y publica correcciones pequeñas tras reproducir y validar.
+
+## Checkpoints anteriores
+
+### Auditoría inicial en ChatGPT
+
 HEAD inicial remoto confirmado: `7ff71dc0a95e17c8b8b9eaf39eaed11d95e29c9f` (`identical`, 0 commits de diferencia). Commits publicados:
 - `e801e1c37bdba1d1efdb7e46f53b1d89cb01069c`: `clinical-hint-requirements.js`; clasifica si NPO aparece en todas las alternativas válidas de un requisito terapéutico.
 - `bf21b8cd0b4a13470e27c158fbc590022f6a964b`: `closure-requirements-audit.test.js`; dos escenarios adicionales de NPO inevitable/evitable y alternativas malformadas.
