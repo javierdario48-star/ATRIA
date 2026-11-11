@@ -129,11 +129,13 @@ export function auditClosureRequirements(assessment,requirements){
  // NPO is not presumed indispensable: its necessity needs a case-level
  // clinical review before it can be accepted as a blocking treatment.
  for(const [index,gate] of gates.entries()){
-  const alternatives=gate?.type==='treatment'&&Array.isArray(gate.anyOf)?
-   gate.anyOf.filter(group=>Array.isArray(group)&&group.length):[];
-  if(alternatives.some(group=>group.includes('npo')))
+  const groups=gate?.type==='treatment'&&Array.isArray(gate.anyOf)?gate.anyOf:[];
+  const valid=groups.length>0&&groups.every(group=>Array.isArray(group)&&group.length&&
+   group.every(id=>typeof id==='string'&&id.trim().length));
+  if(groups.some(group=>Array.isArray(group)&&group.includes('npo')))
    issues.push({code:'npo-necessity-review',index,
-    unavoidable:alternatives.every(group=>group.includes('npo'))});
+    // Malformed alternatives cannot establish that NPO is unavoidable.
+    unavoidable:valid&&groups.every(group=>group.includes('npo'))});
  }
  return {ready:assessment?.ready===true,missing:[...missing],issues};
 }
