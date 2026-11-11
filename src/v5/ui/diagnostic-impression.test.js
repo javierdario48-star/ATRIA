@@ -112,6 +112,31 @@ test('late diagnosis response does not close a reopened editor for the same pati
  assert.equal(nodes.diagnosisInput.value,'peritonitis','old response cannot overwrite a newer draft');
 });
 
+test('the patient chart unlocks its diagnosis field after a confirmed clear',async()=>{
+ const nodes={modal:{dataset:{}},modalContent:{dataset:{}},diagnosisSuggestions:{innerHTML:''}};
+ const patient={uid:'P1',bedId:'A',diagnosis:'peritonitis',liveVitals:{},orders:[],intentHistory:[]};
+ let acknowledge;
+ const controller=createClinicalInterface({
+  document:{getElementById:id=>nodes[id]||null,querySelector:()=>null},
+  session:()=>({read:()=>({patient,canEdit:true})}),
+  open:(_html,panel='clinical')=>{
+   nodes.modal.dataset.panel=panel;
+   nodes.diagnosisInput={value:patient.diagnosis,readOnly:false,disabled:false};
+  },
+  close:()=>assert.fail('the chart stays open while editing its impression'),
+  send:()=>new Promise(resolve=>acknowledge=resolve),notify:()=>{},cases:[]
+ });
+ controller.showPatient(patient);
+ const clearing=controller.saveDiagnosis(true),field=nodes.diagnosisInput;
+ assert.equal(field.disabled,true);
+ await Promise.resolve();
+ patient.diagnosis='';
+ acknowledge({status:'received',clinical:[{status:'executed'}]});
+ await clearing;
+ assert.equal(field.disabled,false);
+ assert.equal(field.value,'');
+});
+
 test('a diagnosis rejected after session reset cannot restore stale patient drafts',async()=>{
  const nodes={modal:{dataset:{}},modalContent:{dataset:{}},diagnosisInput:{value:'',readOnly:false,focus(){}},
   diagnosisSuggestions:{innerHTML:''}};

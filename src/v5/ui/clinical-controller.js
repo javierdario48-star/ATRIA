@@ -61,6 +61,8 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   if(!s||s.canEdit===false||s.patient.caseEnded||!field||field.readOnly)return;
   const text=field.value.trim();if(!clear&&!text)return;
   const uid=s.patient.uid,version=diagnosisEditorVersion,sessionVersion=diagnosisSessionVersion;
+  const isOriginalField=()=>diagnosisSessionVersion===sessionVersion&&
+   ui('diagnosisInput')===field&&ui('modalContent')?.dataset.patientUid===uid;
   // A second tap must not enqueue a duplicate clinical command.
   if(pendingDiagnoses.has(uid))return pendingDiagnoses.get(uid);
   const command=clear?'/diagnostico-borrar':'/diagnostico '+text;
@@ -82,11 +84,10 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    if(rejected)throw Error('diagnosis-not-confirmed');
    if(diagnosisSessionVersion!==sessionVersion)return receipt;
    failedDiagnosisDrafts.delete(uid);
-   if(diagnosisEditorVersion===version&&state()?.patient.uid===uid){
-    const current=ui('diagnosisInput');
-    if(current&&ui('modal')?.dataset.panel==='diagnosis'){
-     current.disabled=false;
-     if(clear)current.value=state().patient.diagnosis||'';
+   const patient=state()?.patient;
+   if(diagnosisEditorVersion===version&&patient?.uid===uid){
+    if(isOriginalField()){
+     if(clear)field.value=patient.diagnosis||'';
      renderDiagnosisSuggestions();
     }
     render();
@@ -101,10 +102,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    notify('No se confirmó la impresión diagnóstica. Abrí el editor para reintentar; conservamos el texto.');
   }finally{
    if(pendingDiagnoses.get(uid)===request)pendingDiagnoses.delete(uid);
-   if(diagnosisEditorVersion===version){
-    const current=ui('diagnosisInput');
-    if(current&&ui('modal')?.dataset.panel==='diagnosis')current.disabled=false;
-   }
+   if(isOriginalField())field.disabled=false;
   }
  }
  async function chooseDestination(patient,id){
