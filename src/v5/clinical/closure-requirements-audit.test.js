@@ -48,6 +48,15 @@ test('malformed NPO alternatives do not crash the audit',()=>{
   {type:'treatment',anyOf:[null,['npo']]},
   {type:'treatment',anyOf:'npo'}]);
  assert.deepEqual(result.issues,[
-  {code:'npo-necessity-review',index:0,unavoidable:true},
-  {code:'missing-action-alternatives',index:1,type:'treatment'}]);
+  {code:'missing-action-alternatives',index:0,type:'treatment'},
+  {code:'missing-action-alternatives',index:1,type:'treatment'},
+  {code:'npo-necessity-review',index:0,unavoidable:true}]);
+});
+
+test('one valid group cannot conceal an invalid alternative',()=>{
+ const result=auditClosureRequirements({ready:false,missing:['Study required']},[
+  {type:'study',anyOf:[['ct'],['']]},
+  {type:'treatment',anyOf:[['fluid'],null]}]);
+ assert.deepEqual(result.issues.map(issue=>issue.code),[
+  'missing-action-alternatives','missing-action-alternatives']);
 });
