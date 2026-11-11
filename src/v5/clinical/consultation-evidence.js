@@ -27,7 +27,8 @@ export function consultationPreparationReview(assessment,{transfer=false,pending
  if(!assessment||!Array.isArray(assessment.missing))throw Error('clinical readiness unavailable');
  if(pendingTreatments)return refusal('insufficient-stabilization','stabilization-insufficient',
   'Faltan intervenciones esenciales por ejecutar o confirmar. Mantener la preparación y reintentar tras su administración.');
- const missing=(assessment?.missing||[]).filter(message=>
+ const missing=assessment.missing.filter((message,index)=>
+  (transfer||assessment.requirements?.[index]?.reason!=='destination-not-indicated')&&
   !/aceptaci[oó]n.*(?:servicio|receptor)|respuesta.*(?:interconsulta|receptor|quir[uú]rgica)|respuestas.*(?:receptor|consultas)|intervenciones y consultas pendientes/i.test(message)&&
   !/Esperar las administraciones y las respuestas/i.test(message)&&
   (transfer||!/anamnesis|reevaluar|observaci[oó]n cl[ií]nica/i.test(message)));

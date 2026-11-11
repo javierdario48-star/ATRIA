@@ -3,6 +3,7 @@
 // The shared shift/actor authority still owns final receipts exactly once.
 import {csClosureQuality487} from '../../clinical/case-completion-487.js';
 import {gastroClosureRule} from './gastro-expansion-policies.js';
+import {hasAcuteInstability} from './clinical-risk.js';
 const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 export function evaluateGastroDisposition(a={}){
  const rule=gastroClosureRule(a.caseId);if(!rule)return null;
@@ -15,7 +16,8 @@ export function evaluateGastroDisposition(a={}){
  if(!a.vitalsKnown)need('vitals',{},'Registrar signos vitales.');
  if(!a.examDone&&Number(a.examRegionsCount||0)<2)need('examination',{ids:rule.requiredExams||[]},'Completar examen físico dirigido.');
  if(!matched)need('diagnosis',{},'Registrar un diagnóstico presuntivo compatible.');
- const contextual=['anamnesis:reason','anamnesis:pmh','anamnesis:allergies','anamnesis:meds'];
+ const contextual=['anamnesis:reason','anamnesis:pmh','anamnesis:allergies','anamnesis:meds',
+  'anamnesis:surgeries','anamnesis:familyHistory'];
  const history=(a.historyAnswered||[]).filter(x=>(a.historyRelevant||[]).includes(x)||contextual.includes(x));
  if(!history.length&&!critical)need('history',{},'Obtener al menos un dato relevante de anamnesis.');
  const examined=new Set(a.examPerformed||[]),requiredExams=rule.requiredExams||[];
@@ -25,8 +27,9 @@ export function evaluateGastroDisposition(a={}){
  if(rule.study?.length&&!evidence&&!rule.urgentStudyBypass)need('study',{anyOf:rule.study.flat().map(id=>[id])},'Completar un estudio orientador.');
  for(const id of rule.requiredStudies||[])
   if(!studies.has(id))need('study',{anyOf:[[id]]},'Revisar estudio imprescindible '+id+' antes de cerrar el caso.');
- if(rule.treatment?.length&&!rule.treatment.some(group=>group.every(id=>done.has(id))))
-  need('treatment',{anyOf:rule.treatment},'Confirmar las intervenciones imprescindibles y su ejecución real.');
+ const treatment=rule.treatmentByDestination?.[target]??rule.treatment;
+ if(treatment?.length&&!treatment.some(group=>group.every(id=>done.has(id))))
+  need('treatment',{anyOf:treatment},'Confirmar las intervenciones imprescindibles y su ejecución real.');
  if(target==='alta'&&(rule.dischargeTreatments||[]).some(id=>!done.has(id)))
   need('treatment',{anyOf:[rule.dischargeTreatments]},'Documentar un plan de seguimiento y signos de alarma antes del alta.');
  if(critical&&!['fluid','vasopressor','transfusion'].some(id=>done.has(id)))
@@ -34,6 +37,8 @@ export function evaluateGastroDisposition(a={}){
  if(Number(a.spo2??98)<90&&!done.has('oxygen'))need('treatment',{anyOf:[['oxygen']],urgent:true},'Tratar la hipoxemia.');
  if(!a.reassessments)need('reassess',{},'Reevaluar tras la intervención.');
  if(!rule.destinations.includes(target))missing.push('Destino no autorizado para este paciente.');
+ if(rule.unstableTransferDestinations?.includes(target)&&!hasAcuteInstability(a))
+  need('stability',{reason:'destination-not-indicated'},'Con la evolución actual no hay indicación de traslado a este destino.');
  const receiver=rule.consult?.[target]||[];
  if(receiver.length&&!receiver.some(id=>(a.consultsDone||[]).includes(id)))
   need('closure',{destination:target},'Esperar aceptación documentada del servicio receptor.');

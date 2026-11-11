@@ -5,6 +5,10 @@ import {summarizeIVExposures} from './medication-exposure.js';
 import {crystalloidOverloadOffsets} from './crystalloid-overload.js';
 import {PHARMA_RULES_487,BASE_CASE_PHARMACOLOGY_487} from '../../clinical/pharmacology-registry-487.js';
 import {isDeliveredClinicalAdministration} from './receipts.js';
+export function hasAcuteInstability({sys,dia,spo2,hr,rr}){
+ const map=Math.round((sys+2*dia)/3);
+ return sys<95||map<65||spo2<93||hr>=130||rr>=30;
+}
 export function confirmedRespiratoryAdverse(patient,caseDef){
  if(!patient?.administrationLog?.some(x=>x.id==='fluid'))
   return {adverseCount:0,flags:[],confirmedFluidMl:0};

@@ -1,7 +1,7 @@
 // CHOLE-001: case-specific closure & dynamics, shared acute-care executor.
 // A confirmed surgical handoff is NOT a completed cholecystectomy.
 import {createAcuteCare} from './acute-care.js';
-import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
+import {evaluateGastroDisposition} from './gastro-closure-v5.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {initialCholeVitals,advanceCholeVitals} from './native-chole.js';
@@ -25,7 +25,7 @@ export function createCholeCare(p,c,options){
  if(c.id!=='CHOLE-001')throw Error('CHOLE native policy requires CHOLE-001');
  return createAcuteCare(p,c,options,{
   initialVitals:initialCholeVitals,advanceVitals:advanceCholeVitals,
-  evaluate:(patient,caseData,destination)=>csEvaluateClosure487(choleClosureSnapshot(patient,caseData,destination)),
+  evaluate:(patient,caseData,destination)=>evaluateGastroDisposition(choleClosureSnapshot(patient,caseData,destination)),
   conducts:['npo'],
   reassessmentMessage:patient=>'Reevaluación: FC '+Math.round(patient.liveVitals.hr)+
    ', PA '+Math.round(patient.liveVitals.sys)+'/'+Math.round(patient.liveVitals.dia)+

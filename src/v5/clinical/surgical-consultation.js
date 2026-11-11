@@ -3,6 +3,7 @@ import {GASTRO_CASE_RULES,gastroClosureRule} from './gastro-expansion-policies.j
 import {CASE_CLOSURE_RULES_487} from '../../clinical/case-completion-487.js';
 import {consultationEvidenceReview,consultationPreparationReview} from './consultation-evidence.js';
 import {clinicalTransferContinuation} from './transfer-continuation.js';
+import {hasAcuteInstability} from './clinical-risk.js';
 const serviceLabels={uti:'UTI',cirugia:'Cirugía',gastro:'Gastroenterología',clinica:'Clínica médica',
  cardiologia:'Cardiología',cardiovascular:'Cirugía cardiovascular',neurology:'Neurología',neurosurgery:'Neurocirugía'};
 export const CLINICAL_CONSULT_SERVICES=Object.freeze(Object.keys(serviceLabels));
@@ -12,13 +13,11 @@ export const CLINICAL_CONSULT_SERVICES=Object.freeze(Object.keys(serviceLabels))
  * otherwise. No diagnosis, treatment, operation or vital write is inferred.
  */
 export function criticalCareReview487(v,{recentShock=false,criticalIllness=false}={}){
- const map=Math.round((v.sys+2*v.dia)/3);
- const unstable=v.sys<95||map<65||v.spo2<93||v.hr>=130||v.rr>=30;
- const critical=v.sys<80||map<55||v.spo2<90||v.hr>=155||v.rr>=36;
- const accepted=unstable||critical||recentShock||criticalIllness;
- if(criticalIllness&&!unstable&&!critical)return {accepted:true,status:'accepted',reason:
+ const unstable=hasAcuteInstability(v);
+ const accepted=unstable||recentShock||criticalIllness;
+ if(criticalIllness&&!unstable)return {accepted:true,status:'accepted',reason:
   'UTI acepta el cuadro crítico con soporte y vigilancia continuos; la estabilidad bajo soporte no elimina la necesidad de ingreso crítico.'};
- if(recentShock&&!unstable&&!critical)return {accepted:true,status:'accepted',reason:
+ if(recentShock&&!unstable)return {accepted:true,status:'accepted',reason:
   'UTI evalúa: antecedente reciente de shock pese a la respuesta al soporte. Aceptamos el ingreso crítico; mantener reanimación y vigilancia durante el traslado.'};
  return {accepted,status:accepted?'accepted':'stable',reason:accepted?
   'UTI evalúa: cuadro con criterios de alta complejidad; mantener reanimación y preparar ingreso crítico.':
@@ -66,10 +65,13 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,pre
    const critical=criticalCareReview487(p.liveVitals,{recentShock:Number(String(c.vitals.bp).split('/')[0])<90,criticalIllness});
    if(!critical.accepted)return {...critical,reasonCode:'destination-not-indicated',decision:'REJECTED_NO_INDICATION'};
   }
-  const preparation=consultationPreparationReview(readiness(destinationFor(id)),{transfer,
-   pendingTreatments:clinicalTransferContinuation(p,c,destinationFor(id)).pendingBlockers.length});
+  const destination=destinationFor(id),assessment=readiness(destination);
+  if(transfer&&assessment?.requirements?.some(requirement=>requirement.reason==='destination-not-indicated'))
+   return noIndication(id);
+  const continuation=clinicalTransferContinuation(p,c,destination);
+  const preparation=consultationPreparationReview(assessment,{transfer,pendingTreatments:continuation.pendingBlockers.length});
   if(preparation)return preparation;
-  const withheld=clinicalTransferContinuation(p,c,destinationFor(id)).withheldPreparations||[];
+  const withheld=continuation.withheldPreparations||[];
   return {accepted:true,status:'accepted',decision:'ACCEPTED',reasonCode:null,reason:(serviceLabels[id]||id)+
    ' acepta la recepción del paciente. Mantener soporte y vigilancia durante el traslado; la aceptación no acredita un procedimiento realizado.'+
    (withheld.length?' No retrasar el tratamiento definitivo para administrar una preparación actualmente contraindicada; esa omisión queda documentada en el traslado.':'')};

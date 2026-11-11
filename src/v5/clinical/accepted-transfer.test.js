@@ -11,11 +11,14 @@ function fixture(caseId,roomId){
   patient:{uid:'P',caseId},content,resolveContext:()=>({patientUid:'P'})});
  return {s,caseId,post:text=>s.post({id:'t'+(++seq),text}),async advance(seconds){s.advance(seconds);await s.flush();}};
 }
-async function basicWorkup(f,diagnosis){
+async function bedsideWorkup(f,diagnosis){
  await f.post('/diagnostico '+diagnosis);await f.post('/signos');
  for(const technique of ['general','inspection','auscultation','percussion','palpation'])
   await f.post('/examen '+technique);
  await f.post('¿Qué antecedentes tiene?');await f.post('Enfermera una vía');
+}
+async function basicWorkup(f,diagnosis){
+ await bedsideWorkup(f,diagnosis);
  await f.post('/estudio '+({'APP-001':'app_us','CHOLE-001':'chole_us','CHOLANG-001':'cholang_liver'}[f.caseId]));
  if(f.caseId==='CHOLE-001')await f.post('Enfermera nada por boca');
  if(f.caseId!=='APP-001')await f.post('Enfermera Ringer 500 ml');
@@ -164,6 +167,83 @@ test('pancreatitis transfers to UTI with confirmed resuscitation and without a f
   assert.equal(f.s.clinicalHint(),null);
  }finally{f.s.dispose();}
 });
+test('CHOLE moves from a pending ultrasound to an accepted surgical handoff with confirmed antibiotics',async()=>{
+ const f=fixture('CHOLE-001','transfer-chole-fasting');
+ try{
+  await bedsideWorkup(f,'colecistitis aguda');
+  await f.post('Enfermera ecografía');
+  await f.post('Enfermera Ringer 500 ml');
+  await f.post('Enfermera ceftriaxona 1 g y metronidazol 500 mg');
+  assert.equal(f.s.read().patient.orders[0].status,'pending');
+  assert.notEqual(f.s.clinicalHint()?.action?.id,'chole_us','pending ultrasound must not be ordered again');
+  await f.advance(95);await f.post('/reevaluar');
+  const p=f.s.read().patient;
+  assert.deepEqual(p.orders.map(row=>[row.id,row.status]),[['chole_us','done']]);
+  assert(!p.treatments.some(row=>row.id==='npo'));
+  assert.equal(f.s.clinicalHint().action?.id,'quirofano');
+  assert.equal((await f.post('/disposicion quirofano')).clinical[0].status,'pending');
+  assert.equal(f.s.clinicalHint().action?.id,'receiver');
+  await f.advance(3.5);
+  const closed=f.s.read();
+  assert.equal(closed.patient.closure?.destination,'quirofano');
+  assert(closed.patient.consults.some(row=>row.id==='cirugia'&&row.accepted));
+  assert(!closed.patient.treatments.some(row=>row.id==='source_control'));
+  assert.equal(closed.progress.receipts.length,1);
+ }finally{f.s.dispose();}
+});
+async function obstructionWorkup(f,volume,wait){
+ await bedsideWorkup(f,'obstrucción intestinal');
+ await f.post('Enfermera TC abdomen');
+ await f.post('Enfermera Ringer '+volume+' ml');
+ await f.post('Enfermera sonda nasogástrica');
+ assert.notEqual(f.s.clinicalHint()?.action?.id,'ileo_ct','pending CT must not be ordered again');
+ await f.advance(wait);await f.post('/reevaluar');
+ const p=f.s.read().patient;
+ assert.deepEqual(p.orders.map(row=>[row.id,row.status]),[['ileo_ct','done']]);
+ assert.match(p.orders[0].result,/sin signos de perforación ni isquemia/i);
+ assert(p.treatments.some(row=>row.id==='fluid')&&p.treatments.some(row=>row.id==='ngt'));
+}
+test('ILEO with documented improvement and uncomplicated CT requires the conservative preparation and rejects emergency destinations',async()=>{
+ const f=fixture('ILEO-001','transfer-ileo-stable');
+ try{
+  await obstructionWorkup(f,1000,115);
+  assert.equal((await f.post('/disposicion sala')).clinical[0].status,'rejected');
+  assert.equal(f.s.clinicalHint().action?.id,'npo');
+  const npo=await f.post('Enfermera dejar en ayuno');
+  assert.equal(npo.clinical[0].status,'executed');
+  await f.post('/reevaluar');
+  assert.equal((await f.post('/consulta cirugia')).clinical[0].status,'pending');
+  await f.advance(3.5);
+  assert(f.s.read().patient.consults.some(row=>row.id==='cirugia'&&row.accepted));
+  for(const destination of ['quirofano','uti']){
+   const refusal=(await f.post('/disposicion '+destination)).clinical[0];
+   assert.equal(refusal.status,'rejected');
+   assert.equal(refusal.receipt.reasonCode,'destination-not-indicated');
+  }
+  assert.equal(f.s.clinicalHint().action?.id,'sala');
+  assert.equal((await f.post('/disposicion sala')).clinical[0].status,'executed');
+  assert.equal(f.s.read().patient.closure?.destination,'sala');
+  assert.equal(f.s.read().progress.receipts.length,1);
+ }finally{f.s.dispose();}
+});
+for(const destination of ['uti','quirofano']){
+ test('ILEO with evolving instability can transfer to '+destination+' after confirmed support without a separate fasting order',async()=>{
+  const f=fixture('ILEO-001','transfer-ileo-'+destination);
+  try{
+   await obstructionWorkup(f,500,600);
+   const p=f.s.read().patient;
+   assert(p.liveVitals.sys<95,'physiology must deteriorate despite the initial treatment');
+   assert(!p.treatments.some(row=>row.id==='npo'));
+   assert.equal((await f.post('/disposicion '+destination)).clinical[0].status,'pending');
+   await f.advance(3.5);
+   const closed=f.s.read();
+   assert.equal(closed.patient.closure?.destination,destination);
+   assert(closed.patient.consults.some(row=>row.id===(destination==='uti'?'uti':'cirugia')&&row.accepted));
+   assert(!closed.patient.treatments.some(row=>row.id==='surgery'));
+   assert.equal(closed.progress.receipts.length,1);
+  }finally{f.s.dispose();}
+ });
+}
 test('no synchronous authorization without consultation; partial route stays explicit',async()=>{
  const f=fixture('CHOLE-001','transfer-partial');
  try{

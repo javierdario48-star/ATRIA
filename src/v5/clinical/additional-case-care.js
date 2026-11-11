@@ -6,7 +6,7 @@ import {evaluateGastroDisposition} from './gastro-closure-v5.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {createPancCare} from './panc-care.js';
-import {GASTRO_CASE_RULES,GASTRO_CASE_CONDUCTS,GASTRO_CLOSURE_TEXT} from './gastro-expansion-policies.js';
+import {GASTRO_CASE_RULES,GASTRO_CASE_CONDUCTS,GASTRO_CLOSURE_TEXT,gastroClosureRule} from './gastro-expansion-policies.js';
 import {additionalCaseInitialVitals,advanceAdditionalCaseVitals,ADDITIONAL_CASE_TRAJECTORIES} from './native-additional-cases.js';
 import {physicianExaminationsPerformed,diagnosticRequirements} from './diagnostic-evidence.js';
 import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
@@ -27,7 +27,7 @@ export function additionalCaseClosureSnapshot(p,c,destination){
   delivered:[...new Set([...p.treatments.filter(x=>!matchesMedicationAllergy487(p,x.id)).map(x=>x.id),
    ...(p.venousAccessCount>0?['iv']:[])])],
   consultsDone:p.consults.filter(x=>x.status==='done'&&x.accepted).map(x=>x.id),
-  disposition:destination,sys:p.liveVitals.sys,hr:p.liveVitals.hr,
+  disposition:destination,sys:p.liveVitals.sys,dia:p.liveVitals.dia,hr:p.liveVitals.hr,
   spo2:p.liveVitals.spo2,rr:p.liveVitals.rr,
   initialSys:additionalCaseInitialVitals(c).sys,
   dead:!!p.patientDied,ended:!!p.caseEnded,
@@ -61,7 +61,7 @@ export function createAdditionalCaseCare(p,c,options){
    if(c.clinicalPolicy.neurologyBaseline)patient.neurology=structuredClone(c.clinicalPolicy.neurologyBaseline);
    if(c.clinicalPolicy.observationResponses)patient.observationResponses=structuredClone(c.clinicalPolicy.observationResponses);
   }},
-  evaluate:(patient,caseData,destination)=>caseData.clinicalPolicy?evaluateClinicalPolicyDisposition(patient,caseData,destination):GASTRO_CASE_RULES[caseData.id]?
+  evaluate:(patient,caseData,destination)=>caseData.clinicalPolicy?evaluateClinicalPolicyDisposition(patient,caseData,destination):gastroClosureRule(caseData.id)?
    evaluateGastroDisposition(additionalCaseClosureSnapshot(patient,caseData,destination)):
    csEvaluateClosure487(additionalCaseClosureSnapshot(patient,caseData,destination)),
   conducts:policy.conducts,

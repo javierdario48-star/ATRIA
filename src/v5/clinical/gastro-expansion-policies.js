@@ -17,8 +17,16 @@ const rules={
 };
 export const GASTRO_CASE_RULES=Object.freeze(Object.fromEntries(Object.entries(rules).map(([id,rule])=>[id,Object.freeze({...rule})])));
 const revisedHandoffRules=Object.freeze({
- // Fasting can be documented at bedside. It is not a prerequisite for ICU reception.
- 'PANC-001':Object.freeze({destinations:['uti'],study:[['lipasa']],treatment:[['fluid']],consult:{uti:['uti']}})
+ // Periprocedural fasting remains part of preparation and quality. The
+ // receiving team can manage it after accepting the transfer.
+ 'PANC-001':Object.freeze({destinations:['uti'],study:[['lipasa']],treatment:[['fluid']],consult:{uti:['uti']}}),
+ 'CHOLE-001':Object.freeze({destinations:['quirofano'],study:[['chole_us']],
+  treatment:[['ceftriaxone','metronidazole'],['piptazo'],['imipenem']],consult:{quirofano:['cirugia']}}),
+ // This seed starts without ischemia/perforation. Deterioration despite
+ // initial treatment warrants escalation; stable ward care needs bowel rest.
+ 'ILEO-001':Object.freeze({destinations:['sala','quirofano','uti'],study:[['ileo_xray','ileo_ct']],
+  treatment:[['fluid','ngt']],treatmentByDestination:{sala:[['fluid','ngt','npo']]},
+  unstableTransferDestinations:['quirofano','uti'],consult:{quirofano:['cirugia'],uti:['uti']}})
 });
 export const gastroClosureRule=caseId=>revisedHandoffRules[caseId]||GASTRO_CASE_RULES[caseId];
 export const GASTRO_CASE_CONDUCTS=Object.freeze({
