@@ -28,7 +28,8 @@ test('ordinary questions, nursing doses and missing patient never become diagnos
 
 test('nurse allergy questions are information requests, never medication orders',()=>{
  for(const text of ['Enfermera, alergias','Enfermera, ¿qué alergias tiene?',
-  'Enfermera, ¿tiene alergias?','Enfermera, antecedentes de alergias',
+  'Enfermera, ¿tiene alergias?','Enfermera, ¿tiene alguna alergia?',
+  'Enfermera, ¿el paciente presenta algunas alergias?','Enfermera, antecedentes de alergias',
   '¿Qué alergias presenta?']){
   const x=routeWardSpeech(text,text.startsWith('¿')?{...opts,focusedNpc:'nurse'}:opts);
   assert.equal(x.error,undefined,text);
