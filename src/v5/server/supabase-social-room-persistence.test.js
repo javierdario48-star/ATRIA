@@ -7,14 +7,21 @@ const roomId='01234567-89ab-4cde-8012-123456789abc';
 const host='qa_'+'a'.repeat(30),guest='qa_'+'b'.repeat(30),outsider='qa_'+'c'.repeat(30);
 const roomKey='qa-v1:room:'+roomId,memberKey='atria-v5:room-member:'+roomId+':'+guest;
 
-function fixture(){
+function fixture({beforeWrite=async()=>{}}={}){
  const rows=new Map(),caches=[new Map(),new Map()],requests=[];
- const backend={async request(path,{method='GET',body}={}){
+ const backend={async request(path,{method='GET',body,prefer}={}){
   requests.push({path,method});
   const url=new URL(path,'https://testproject.supabase.co');
   assert.equal(url.pathname,'/rest/v1/atria_v5_social');
   const key=url.searchParams.get('key')?.slice(3);
-  if(method==='POST'){rows.set(body.key,structuredClone(body.value));return null;}
+  if(method==='POST'){
+   await beforeWrite(body);
+   const insertOnly=prefer?.includes('resolution=ignore-duplicates');
+   const returning=prefer?.includes('return=representation');
+   if(insertOnly&&rows.has(body.key))return returning?[]:null;
+   rows.set(body.key,structuredClone(body.value));
+   return returning?[{value:structuredClone(body.value)}]:null;
+  }
   if(method==='DELETE'){rows.delete(key);return null;}
   return rows.has(key)?[{value:structuredClone(rows.get(key))}]:[];
  }};
@@ -63,4 +70,18 @@ test('declined or departed guest cannot be resurrected by a stale room snapshot'
  await slots[1].set(roomKey,{hostUserId:host,closed:false,members:[{userId:host},{userId:guest}],pending:[]});
  const recovered=await slots[1].get(roomKey);
  assert(!recovered.members.some(x=>x.userId===guest));
+});
+test('an acceptance already in flight cannot overwrite a concurrent revocation',async()=>{
+ const entered=Promise.withResolvers(),release=Promise.withResolvers();
+ const {slots,rows}=fixture({beforeWrite:async({key,value})=>{
+  if(key===memberKey&&value.state==='accepted'){entered.resolve();await release.promise;}
+ }});
+ const initial={id:roomId,hostUserId:host,closed:false,members:[{userId:host}],pending:[guest]};
+ await slots[0].set(roomKey,initial);
+ const accepting=slots[1].set(roomKey,{...initial,members:[...initial.members,{userId:guest}],pending:[]});
+ await entered.promise;
+ try{await slots[0].mark(roomId,guest,'removed');}
+ finally{release.resolve();await accepting;}
+ assert.equal(rows.get(memberKey).state,'removed');
+ assert.deepEqual((await slots[1].get(roomKey)).members,initial.members);
 });

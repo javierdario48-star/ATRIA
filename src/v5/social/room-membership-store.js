@@ -32,9 +32,9 @@ export function createConflictFreeRoomStorage(store){
   // Mutation type is independent: member writes never rewrite room metadata.
   for(const member of value.members||[]){
    if(member.userId===original.hostUserId)continue;
-   const k=memberKey(id,member.userId),previous=await store.get(k);
-   if(previous?.state==='left'||previous?.state==='declined'||previous?.state==='removed')continue;
-   await store.set(k,{state:'accepted',member},options);
+   const k=memberKey(id,member.userId),acceptance={state:'accepted',member};
+   if(store.setIfAbsent)await store.setIfAbsent(k,acceptance);
+   else if(!await store.get(k))await store.set(k,acceptance,options);
   }
   const newlyInvited=(value.pending||[]).filter(uid=>!original._invited.includes(uid));
   if(value.closed!==original.closed||value.hostUserId!==original.hostUserId||newlyInvited.length){

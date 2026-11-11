@@ -66,19 +66,32 @@ export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.f
 // Room metadata and guest acceptance slots must share the same durable
 // backing store across serverless instances. Authorization remains in the
 // existing social server: this private adapter never exposes raw room keys.
-const durableKey=/^(?:qa-v1:(?:user|friends|requests|outgoing|invites):qa_[0-9a-f]{30}|qa-v1:room:[a-f0-9-]{36}|atria-v5:room-member:[a-f0-9-]{36}:qa_[0-9a-f]{30})$/;
+const roomIdPattern='[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}';
+const durableKey=new RegExp('^(?:qa-v1:(?:user|friends|requests|outgoing|invites):qa_[0-9a-f]{30}|qa-v1:room:'+roomIdPattern+
+ '|atria-v5:room-member:'+roomIdPattern+':qa_[0-9a-f]{30})$');
 export function createPersistentSocialStorage({backend,cache}){
+ const table='/rest/v1/atria_v5_social';
+ const read=async key=>(await backend.request(table+'?'+new URLSearchParams({key:'eq.'+key,select:'value',limit:'1'})))[0];
+ const put=(key,value,prefer)=>backend.request(table,{method:'POST',body:{key,value,updated_at:new Date().toISOString()},prefer});
+ async function setIfAbsent(key,value){
+  if(!durableKey.test(key))throw TypeError('invalid durable social key');
+  const inserted=await put(key,value,'resolution=ignore-duplicates,return=representation');
+  return inserted.length>0;
+ }
  return Object.freeze({
   async get(key){if(!durableKey.test(key))return cache.get(key);
-   const rows=await backend.request('/rest/v1/atria_v5_social?'+new URLSearchParams({key:'eq.'+key,select:'value',limit:'1'}));
-   if(rows.length)return rows[0].value;
-   const old=await cache.get(key);if(old!==undefined&&old!==null)await this.set(key,old);return old;
+   const row=await read(key);
+   if(row)return row.value;
+   const old=await cache.get(key);
+   if(old==null||await setIfAbsent(key,old))return old;
+   return (await read(key))?.value;
   },
   async set(key,value,options){if(!durableKey.test(key))return cache.set(key,value,options);
-   await backend.request('/rest/v1/atria_v5_social',{method:'POST',body:{key,value,updated_at:new Date().toISOString()},prefer:'resolution=merge-duplicates'});
+   await put(key,value,'resolution=merge-duplicates');
   },
+  setIfAbsent,
   async delete(key){if(!durableKey.test(key))return cache.delete(key);
-   await backend.request('/rest/v1/atria_v5_social?key=eq.'+encodeURIComponent(key),{method:'DELETE'});
+   await backend.request(table+'?key=eq.'+encodeURIComponent(key),{method:'DELETE'});
   }
  });
 }
