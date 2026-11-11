@@ -101,11 +101,20 @@ try{
  assert.match(troponin.result,/Troponina I ultrasensible 420 ng\/L/);
  assert.equal(cardiac.room.events.find(event=>event.message?.text==='Enfermera, troponina seriada')?.routeError,'study-series-unavailable');
  await page.locator('#guardButton').click();assert.equal((await page.evaluate(()=>atriaV5.snapshot())).clinical,null);
+ await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CARD-09');
+ await page.locator('[data-action="start-guard"]').click();await approachPatient();
+ await send('Enfermera, hemograma y PCR');
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders[0]?.status==='done');
+ const inflammatory=await page.evaluate(()=>atriaV5.snapshot().clinical.patient.orders);
+ assert.deepEqual(inflammatory.map(order=>order.id),['g_card09_labs']);
+ assert.match(inflammatory[0].result,/PCR elevada/);
+ await page.locator('#guardButton').click();assert.equal((await page.evaluate(()=>atriaV5.snapshot())).clinical,null);
  assert.deepEqual(errors,[]);
  const report={realBrowser:true,androidEmulated:true,physicalAndroid:false,realElapsedStudyClock:true,
   caseId:'CIRR-001',nativeHemogramResult:true,rangeValidation:true,medicationsAdministered:0,
   originalCompletionCommandId:completions[0].commandId,pendingDuplicateAcknowledgements:2,
-  selectedStudyPreservesNativeCase:true,nativeTroponinSearchAndNurse:true,unsupportedTroponinRejected:true,exactlyOnceResult:true,cleanReturnToLobby:true};
+  selectedStudyPreservesNativeCase:true,nativeTroponinSearchAndNurse:true,unsupportedTroponinRejected:true,
+  certifiedHemogramAndCRPShareAcquisition:true,exactlyOnceResult:true,cleanReturnToLobby:true};
  await fs.writeFile(out+'/studies-summary.json',JSON.stringify(report,null,2));console.log('V5 REAL STUDY UI PASS',JSON.stringify(report));
  await context.close();
 }finally{await h.close();}

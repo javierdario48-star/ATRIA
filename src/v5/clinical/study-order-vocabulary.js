@@ -79,6 +79,7 @@ export function authoredTroponinSeries(study){
 
 const terms=study=>[study.label,...(study.aliases||[])].map(normalizeStudyOrder);
 const containsTerm=(text,word)=>(' '+text+' ').includes(' '+word+' ');
+const documentedCRP=/\b(?:proteina c reactiva|pcr (?:(?:moderadamente|marcadamente|discretamente) )?(?:elevada|normal|\d+(?: \d+)? mg))\b/;
 export function isTroponinStudy(study){
  return terms(study).some(term=>troponinPattern.test(term))||measuredTroponin(study).length>0;
 }
@@ -106,6 +107,8 @@ function studyRank(study,group,aliases){
  if(aliases.includes(label))return 4;
  if(authored.some(term=>aliases.includes(term)))return 3;
  if(aliases.some(term=>containsTerm(label,term)))return 2;
+ // An authored panel can report the assay without listing a redundant alias.
+ if(group==='pcr'&&documentedCRP.test(normalizeStudyOrder(study.result)))return 1;
  return authored.some(name=>aliases.some(term=>containsTerm(name,term)))||
   group==='troponina'&&isTroponinStudy(study)?1:0;
 }

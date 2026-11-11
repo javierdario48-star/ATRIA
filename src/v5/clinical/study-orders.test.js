@@ -11,6 +11,7 @@ import {clinicalCompletions,studySearchChoices} from '../ui/clinical-autocomplet
 import {routeWardSpeech} from '../core/speech-router.js';
 import {selectClinicalHint} from './clinical-hints.js';
 import {studyOrderVocabulary} from './study-order-vocabulary.js';
+import {clinicalContent as certifiedContent} from '../server/content.js';
 
 const read=name=>JSON.parse(readFileSync(new URL('../content/'+name+'.json',import.meta.url)));
 const content=createClinicalContent({cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')},
@@ -97,6 +98,19 @@ test('hemogram, leukocytes and C-reactive protein follow the documented local pa
    assert.equal(replay.clinical[0].receipt.sampledAtNativeMinute,0);
   }finally{session.dispose();}
  }
+});
+test('the deployed catalog distinguishes measured C-reactive protein from molecular PCR',async()=>{
+ const cardiac=setup('CARD-09',certifiedContent),neurological=setup('NEUR-08',certifiedContent);
+ try{
+  const panel=await cardiac.post({id:'crp',text:'Enfermera, hemograma y PCR'});
+  assert.deepEqual(panel.clinical.map(row=>row.id),['g_card09_labs']);
+  cardiac.advance(10);await cardiac.flush();
+  assert.match(cardiac.read().patient.orders[0].result,/PCR elevada/);
+  const crp=await neurological.post({id:'crp',text:'Enfermera, PCR'});
+  assert.equal(crp.clinical[0]?.id,'pcr');
+  const molecular=await neurological.post({id:'hsv',text:'Enfermera, PCR HSV'});
+  assert.equal(molecular.clinical[0]?.id,'g_neur08_hsv');
+ }finally{cardiac.dispose();neurological.dispose();}
 });
 test('native CT technique is shared by clinical search, voice and direct requests',async()=>{
  for(const [caseId,id,plain,authored,unsupported] of [
