@@ -9,6 +9,7 @@ const troponinLongNames=['','s'].flatMap(s=>['',' cardiaca'+s].flatMap(cardiac=>
 const groups=[
  ['troponina',[...troponinLongNames,'hs ctn','hsctn','ctn']],
  ['hemograma',['hemograma','hemograma completo','biometria','biometria hematica','cuadro hematico','recuento sanguineo','cbc']],
+ ['colonoscopia',['colonoscopia','colonoscopia con biopsia','videocolonoscopia','video colonoscopia','videoendoscopia digestiva baja','endoscopia digestiva baja','vedb','vcc']],
  ['electrocardiograma',['electrocardiograma','ecg','ekg','electrocardiograma de 12 derivaciones','ecg de 12 derivaciones','ekg de 12 derivaciones']],
  ['glucemia',['glucemia','glicemia','glucosa','glucemia capilar','glicemia capilar','glucosa capilar','glucosa en sangre']],
  ['hepatograma',['hepatograma','perfil hepatico','funcion hepatica','pruebas hepaticas','enzimas hepaticas']],
