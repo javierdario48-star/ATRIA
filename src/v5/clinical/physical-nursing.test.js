@@ -906,3 +906,18 @@ test('nurse reads documented allergies without prescribing or mutating clinical 
   assert.equal(f.session.read().patient.orders.length,0);
  }finally{f.session.dispose();f.world.enterLobby();}
 });
+
+test('equivalent NPO instructions do not create duplicate confirmed interventions',async()=>{
+ const f=fixture('APP-001');
+ try{
+  const first=await f.session.post({id:'npo-natural-1',text:'Enfermera, dejalo en ayunas'});
+  assert(first.clinical.some(x=>x.id==='npo'&&x.status==='executed'),
+   'natural fasting order must reach the existing native executor');
+  const second=await f.session.post({id:'npo-natural-2',text:'Enfermera, no le des agua'});
+  assert(second.clinical.some(x=>x.id==='npo'&&x.status==='executed'),
+   'equivalent instruction should acknowledge the existing intervention');
+  const p=f.session.read().patient;
+  assert.equal(p.treatments.filter(x=>x.id==='npo').length,1,
+   'same patient must have one confirmed NPO conduct, not two administrations');
+ }finally{f.session.dispose();f.world.enterLobby();}
+});
