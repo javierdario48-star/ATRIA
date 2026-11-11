@@ -441,16 +441,15 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   auditClosureRequirements(destinationOverride){
    // An explicit destination is diagnostic only; it cannot alter the
    // current hint destination or the clinical authority's closure decision.
-   const allowed=clinicalClosureRule(caseData)?.destinations;
+   const allowed=(caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||
+    CASE_CLOSURE_RULES_487[caseData.id])?.destinations;
    if(destinationOverride!==undefined&&(!Array.isArray(allowed)||
     !allowed.includes(destinationOverride)))throw Error('unsupported audit destination');
-   const {destination,assessment,requirements}=destinationOverride===undefined?
-    currentChecklist():{
-     destination:destinationOverride,
-     assessment:closureReadiness(destinationOverride),
-     requirements:clinicalHintRequirements(nativePatient,caseData,
-      closureReadiness(destinationOverride),destinationOverride)
-    };
+   const selected=destinationOverride===undefined?currentChecklist():null;
+   const destination=selected?.destination||destinationOverride;
+   const assessment=selected?.assessment||closureReadiness(destination);
+   const requirements=selected?.requirements||clinicalHintRequirements(
+    nativePatient,caseData,assessment,destination);
    return copy({caseId:caseData.id,destination,
     ...auditClosureRequirements(assessment,requirements)});
   },
