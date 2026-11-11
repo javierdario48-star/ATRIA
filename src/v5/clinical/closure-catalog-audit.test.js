@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {createWorld} from '../app/world.js';
 import {createGuardSession} from './guard-session.js';
 import {clinicalHintCoverage} from './clinical-hints.js';
+import {clinicalClosureRule} from './clinical-hint-requirements.js';
 
 const load=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name+'.json',import.meta.url)));
 const content={map:load('hospital'),beds:load('beds'),cases:load('cases'),
@@ -48,6 +49,22 @@ test('every authored case exposes an immutable closure audit through its live gu
     }
     const hint=session.clinicalHint();
     assert(hint===null||typeof hint==='object','Vega must return a hint descriptor or null');
+    const destinations=clinicalClosureRule(caseData)?.destinations||[];
+    for(const destination of destinations){
+     const byDestination=session.auditClosureRequirements(destination);
+     assert.equal(byDestination.caseId,caseData.id);
+     assert.equal(byDestination.destination,destination);
+     assert.equal(typeof byDestination.ready,'boolean');
+     assert(Array.isArray(byDestination.missing));
+     assert(Array.isArray(byDestination.issues));
+     t.diagnostic(JSON.stringify({kind:'destination-audit',caseId:caseData.id,
+      destination,ready:byDestination.ready,missing:byDestination.missing,
+      issues:byDestination.issues}));
+    }
+    if(destinations.length){
+     assert.throws(()=>session.auditClosureRequirements('__invalid__'),
+      /unsupported audit destination/);
+    }
     assert.deepEqual(session.read(),before,'auditing and Vega must not mutate clinical state');
     // Report every initial state for offline review, not a clinical pass/fail.
     t.diagnostic(JSON.stringify({
