@@ -50,7 +50,7 @@ test('malformed NPO alternatives do not crash the audit',()=>{
  assert.deepEqual(result.issues,[
   {code:'missing-action-alternatives',index:0,type:'treatment'},
   {code:'missing-action-alternatives',index:1,type:'treatment'},
-  {code:'npo-necessity-review',index:0,unavoidable:true}]);
+  {code:'npo-necessity-review',index:0,unavoidable:false}]);
 });
 
 test('one valid group cannot conceal an invalid alternative',()=>{
@@ -59,4 +59,18 @@ test('one valid group cannot conceal an invalid alternative',()=>{
   {type:'treatment',anyOf:[['fluid'],null]}]);
  assert.deepEqual(result.issues.map(issue=>issue.code),[
   'missing-action-alternatives','missing-action-alternatives']);
+});
+
+test('invalid non-NPO alternative prevents structural NPO indispensability',()=>{
+ const result=auditClosureRequirements({ready:false,missing:['Treat']},[
+  {type:'treatment',anyOf:[['npo'],['']]},
+  {type:'treatment',anyOf:[['npo'],null]},
+  {type:'treatment',anyOf:[['npo'],['fluid']]}]);
+ assert.deepEqual(result.issues,[
+  {code:'missing-action-alternatives',index:0,type:'treatment'},
+  {code:'missing-action-alternatives',index:1,type:'treatment'},
+  {code:'npo-necessity-review',index:0,unavoidable:false},
+  {code:'npo-necessity-review',index:1,unavoidable:false},
+  {code:'npo-necessity-review',index:2,unavoidable:false}
+ ]);
 });
