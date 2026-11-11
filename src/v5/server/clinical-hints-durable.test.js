@@ -94,10 +94,10 @@ test('a painted hint acknowledgement in the same sync as closure is settled firs
   await call({motion:[pt.x,pt.y]});now=20000;
   const patientUid=roomId+':patient',claimed=await call({claim:patientUid});
   const binding=claimed.clinical.hintBinding;
-  const prepared=await call({hintRequest:{...binding,op:'prepare',requestId:'prepare'}});
-  const offerId=prepared.hintAcknowledgement.offerId;
-  const verified=await call({hintRequest:{...binding,op:'revalidate',requestId:'revalidate',offerId}});
+  const verified=await call({hintRequest:{...binding,op:'prepare',verify:true,requestId:'prepare'}});
   assert.equal(verified.hintAcknowledgement.status,'verified');
+  assert(verified.hintAcknowledgement.text);assert.equal(verified.clinical.hintCount,0);
+  const offerId=verified.hintAcknowledgement.offerId;
   const packet={hintRequest:{...binding,op:'displayed',requestId:'displayed',offerId},commands:[
    {id:'diagnosis',text:'/diagnostico cirrosis descompensada',targetPatientUid:patientUid},
    {id:'closure',text:'/cierre-parcial observacion',targetPatientUid:patientUid}

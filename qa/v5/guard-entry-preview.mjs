@@ -27,8 +27,8 @@ async function boot(mobile=false){
  p.on('pageerror',error=>errors.push(error.message));
  p.on('response',async response=>{
   if(new URL(response.url()).pathname!=='/api/clinical')return;
-  const request=response.request();let action;try{action=request.postDataJSON()?.action;}catch{}
-  const record={action,status:response.status()};
+  const request=response.request();let body;try{body=request.postDataJSON();}catch{}
+  const record={action:body?.action,status:response.status(),hintOp:body?.hintRequest?.op};
   if(response.status()!==200)try{const value=await response.json();record.error=value.error;record.code=value.code;}catch{}
   traffic.push(record);
  });
@@ -71,10 +71,14 @@ async function interact(p,uid,mode){
  await p.locator('#patientWheel').waitFor({state:'visible',timeout:60000});
  const before=await p.evaluate(()=>atriaV5.snapshot().clinical);
  const hint=p.locator('#patientWheel [data-patient-action="hint"]');
+ const firstRequest=traffic.length,pressedAt=Date.now();
  await hint.click();
  await p.locator('#vegaClinicalHint').waitFor({state:'visible'});
+ const hintVisibleMs=Date.now()-pressedAt;
  assert.equal(await p.locator('#vegaClinicalHint').getAttribute('data-patient-uid'),uid);
  await p.waitForFunction(n=>atriaV5.snapshot().clinical.hintCount===n,before.hintCount+1);
+ const hintOperations=traffic.slice(firstRequest).filter(row=>row.status===200&&row.hintOp).map(row=>row.hintOp);
+ assert.deepEqual(hintOperations,['prepare','displayed'],'a verified offer is painted without a revalidate round trip');
  const after=await p.evaluate(()=>atriaV5.snapshot().clinical);
  assert.equal(after.patient.treatments.length,before.patient.treatments.length);
  assert.equal(after.patient.orders.length,before.patient.orders.length);
@@ -92,7 +96,8 @@ async function interact(p,uid,mode){
  await p.waitForFunction(()=>atriaV5.snapshot().clinical.messages.some(x=>x.role==='patient'&&/no recuerdo el nombre/i.test(x.text)));
  assert.equal(await p.evaluate(()=>atriaV5.snapshot().phase),'guard');
  await p.screenshot({path:output+'/'+mode+'-guard.png'});
- results.push({mode,patientVisible:true,realAccount:true,patientReplied:true,contextualHint:true,individualHintFee:true,medicationFollowUp:true,musicControls:true});
+ results.push({mode,patientVisible:true,realAccount:true,patientReplied:true,contextualHint:true,individualHintFee:true,
+  hintOperations,hintVisibleMs,medicationFollowUp:true,musicControls:true});
 }
 const accountXP=p=>p.evaluate(async()=>(await (await fetch('/api/account/session')).json()).account.xp);
 async function confirmHintAward(p,mode,peer=null){
@@ -145,14 +150,8 @@ try{
    await host.reload();await host.waitForFunction(()=>document.body.dataset.boot==='ready');
    await host.locator('#welcomeContinue').click();await host.locator('[data-action="account-recover"]').waitFor({state:'visible'});
    await host.locator('[data-action="close"]').click();await host.locator('#guardButton').click();
-   if(await host.locator('[data-action="account-recover"]').isVisible()){
-    await host.locator('[data-action="account-recover"]').click();
-   }else{
-    // Reproduce the player's ordinary selection flow when the entry point
-    // forgets the retained guard. The real server then rejects a second one.
-    await host.locator('input[name="guardScope"][value="specific"]').check();await host.locator('#caseChoice').selectOption('CIRR-001');
-    await host.locator('[data-action="start-guard"]').click();
-   }
+   // The recovery offer is revealed after the authenticated account check.
+   await host.locator('[data-action="account-recover"]').click();
    assert.equal(await entered(host,'solo'),uid,'re-entry must retain the existing patient');
    assert.equal(await host.evaluate(()=>atriaV5.snapshot().clinical.hintCount),1,'recovery retains the revealed hint');
    results.push({retainedGuard:true,reminderDismissed:true,samePatient:true});

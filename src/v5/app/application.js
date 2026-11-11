@@ -151,6 +151,11 @@ export async function createApplication({document,window,content,signal}){
   context:clinicalHintContext,request:request=>guardSession?.hint(request)??Promise.resolve({status:'rejected'}),
   show:hint=>vegaHintCard.show(hint,world.snapshot().patients.find(p=>p.uid===hint.patientUid)?.bedId),
   hide:()=>vegaHintCard.hide(),notify:toast,
+  pending:waiting=>{
+   const message='Dr. Vega está buscando la próxima acción…';
+   if(waiting)toast(message);
+   else if(ui('toast').textContent===message)ui('toast').hidden=true;
+  },
   paint:()=>new Promise(resolve=>window.requestAnimationFrame(resolve)),
   visible:()=>document.visibilityState!=='hidden',
   id:()=>window.crypto.randomUUID(),onCount:()=>updateHud()

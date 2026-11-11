@@ -43,3 +43,18 @@ test('pending, invalid and technical replies can never become a fee',()=>{
  const l=createClinicalHintLedger(binding);reveal(l,binding,{...hint,chargeable:false});assert.equal(l.count('a'),0);
  const p=l.request(request('prepare'),{...hint,action:null});assert.equal(p.status,'unavailable');assert.equal(l.count('a'),0);
 });
+test('a combined verified offer remains free until display and preserves idempotency',()=>{
+ let l=createClinicalHintLedger(binding);
+ const prepare=request('prepare',{verify:true,selectionRevision:3}),offered=l.request(prepare,hint);
+ assert.equal(offered.status,'verified');assert.equal(offered.text,hint.text);assert.equal(offered.selectionRevision,3);
+ assert.equal(l.count('a'),0);assert.deepEqual(l.request(prepare,hint),offered);
+ const display=request('displayed',{offerId:offered.offerId,selectionRevision:3});
+ l=createClinicalHintLedger(binding,l.checkpoint());
+ assert.equal(l.request(display,hint).hintCount,1);
+ assert.equal(l.request(display,hint).hintCount,1);
+ const repeat=l.request(request('prepare',{verify:true}),hint);
+ assert.equal(l.request(request('displayed',{offerId:repeat.offerId}),hint).newHint,false);
+ const stale=l.request(request('prepare',{verify:true}),hint);
+ assert.equal(l.request(request('displayed',{offerId:stale.offerId}),{...hint,key:'different'}).status,'stale');
+ assert.equal(l.count('a'),1);assert.equal(l.count('b'),0);
+});

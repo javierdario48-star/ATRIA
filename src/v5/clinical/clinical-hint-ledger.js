@@ -15,6 +15,8 @@ export function createClinicalHintLedger(binding,saved={}){
  const offers=new Map(copy(saved.offers||[])),requests=new Map(copy(saved.requests||[])),history=copy(saved.history||[]);
  const count=actorId=>new Set(history.filter(r=>r.actorId===actorId&&typeof r.key==='string'&&r.key).map(r=>r.key)).size;
  const reject=(reason='invalid-hint-request')=>({status:'rejected',reason});
+ const verified=offer=>({status:'verified',offerId:offer.offerId,roomId,encounterId,patientUid,
+  actorId:offer.actorId,selectionRevision:offer.selectionRevision,...copy(offer.hint)});
  return Object.freeze({
   count,
   history:actorId=>copy(history.filter(r=>r.actorId===actorId)),
@@ -25,7 +27,8 @@ export function createClinicalHintLedger(binding,saved={}){
    const requestKey=r.actorId+':'+r.requestId,signature=JSON.stringify(r),previous=requests.get(requestKey);
    if(previous){
     if(previous.signature!==signature)return reject('hint-request-id-conflict');
-    if(['prepare','revalidate'].includes(r.op)&&previous.result.key!==hint?.key)return {status:'stale',reason:'clinical-state-changed'};
+    if(['prepare','revalidate'].includes(r.op)&&(previous.result.key!==hint?.key||
+     previous.result.text!==undefined&&previous.result.text!==hint?.text))return {status:'stale',reason:'clinical-state-changed'};
     return copy(previous.result);
    }
    const remember=result=>{requests.set(requestKey,{signature,result:copy(result)});return copy(result);};
@@ -33,7 +36,13 @@ export function createClinicalHintLedger(binding,saved={}){
     if(!hint?.key||!hint.action||!hint.text)return remember({status:'unavailable',reason:hint?.error||'no-executable-hint'});
     for(const offer of offers.values())if(offer.actorId===r.actorId&&offer.stage!=='displayed')offer.stage='cancelled';
     const offerId=r.actorId+':'+r.requestId;
-    offers.set(offerId,{offerId,actorId:r.actorId,selectionRevision:r.selectionRevision??0,stage:'prepared',hint:copy(hint)});
+    // The caller already checked the authenticated selection and evaluated the
+    // current native state in this transaction. A new client can use that offer
+    // immediately. Charging still requires its separate display acknowledgement.
+    const offer={offerId,actorId:r.actorId,selectionRevision:r.selectionRevision??0,
+     stage:r.verify===true?'verified':'prepared',hint:copy(hint)};
+    offers.set(offerId,offer);
+    if(r.verify===true)return remember(verified(offer));
     return remember({status:'prepared',offerId,key:hint.key,chargeable:hint.chargeable,roomId,encounterId,patientUid,actorId:r.actorId});
    }
    const offer=offers.get(r.offerId);
@@ -43,8 +52,7 @@ export function createClinicalHintLedger(binding,saved={}){
     (r.selectionRevision??0)!==offer.selectionRevision){offer.stage='cancelled';return remember({status:'stale',reason:'clinical-state-changed'});}
    if(r.op==='revalidate'){
     offer.stage=offer.stage==='displayed'?'displayed':'verified';
-    return remember({status:'verified',offerId:offer.offerId,roomId,encounterId,patientUid,
-     actorId:r.actorId,selectionRevision:offer.selectionRevision,...copy(offer.hint)});
+    return remember(verified(offer));
    }
    if(!['verified','displayed'].includes(offer.stage))return remember(reject('hint-not-verified'));
    const isNew=offer.hint.chargeable&&!history.some(row=>row.actorId===r.actorId&&row.key===offer.hint.key);
