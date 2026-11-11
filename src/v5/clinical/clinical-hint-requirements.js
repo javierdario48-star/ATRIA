@@ -104,3 +104,31 @@ export function clinicalChecklist(patient,requirements,ready,activeReaction=fals
   destination:closed?'done':ready?'ready':'pending'
  };
 }
+
+/**
+ * Read-only audit of the closure verdict shared with Vega. This does not
+ * classify clinical necessity or change eligibility: unresolved descriptors
+ * are reported for review instead of being silently treated as optional.
+ */
+export function auditClosureRequirements(assessment,requirements){
+ const missing=assessment?.missing||[];
+ const gates=requirements||[];
+ const issues=[];
+ for(const [index,gate] of gates.entries()){
+  if(!gate||typeof gate.type!=='string'||!gate.type.trim())
+   issues.push({code:'untyped-gate',index});
+  else if(['study','treatment'].includes(gate.type)&&
+   (!Array.isArray(gate.anyOf)||!gate.anyOf.some(group=>Array.isArray(group)&&group.length&&group.every(id=>typeof id==='string'&&id.length))))
+   issues.push({code:'missing-action-alternatives',index,type:gate.type});
+  else if(gate.type==='closure'&&!gate.destination)
+   issues.push({code:'missing-destination',index});
+ }
+ if(assessment?.ready===false&&missing.length&&!gates.length)
+  issues.push({code:'unrepresented-blockers',count:missing.length});
+ // NPO is not presumed indispensable: its necessity needs a case-level
+ // clinical review before it can be accepted as a blocking treatment.
+ for(const [index,gate] of gates.entries())
+  if(gate?.type==='treatment'&&gate.anyOf?.some(group=>group?.includes('npo')))
+   issues.push({code:'npo-necessity-review',index});
+ return {ready:assessment?.ready===true,missing:[...missing],issues};
+}
