@@ -2,6 +2,63 @@
 
 ## Punto de partida
 
+Continúa en `javierdario48-star/ATRIA`, rama exclusiva `atria-5.0-core-rebuild-experimental`. Verifica primero su HEAD remoto. Work partió de `20be3574bace0a2dd3ca6cb6487e08bf958871d4`. El último commit técnico publicado es `27d4ede757f615fd91e6f89fdffc880b5a94ad8f`. El commit que contiene este bloque cierra la entrega. Su SHA se obtiene del HEAD remoto o de `git log -1 --format=%H -- docs/ATRIA-5-EXACT-CONTINUATION.md`. Integra cualquier avance posterior mediante fast-forward.
+
+Lee [el inventario maestro](ATRIA-5-REMAINING-TASKS.md), [el traspaso](ATRIA-5-CHATGPT-HANDOFF.md), `AGENTS.md`, [la arquitectura](ARCHITECTURE.md) y [el contrato clínico](ATRIA-5-CASE-INTEGRATION-CONTRACT.md). El registro conserva 20 áreas, los números 1–60 y sus cruces. Los checkpoints debajo del registro vigente acreditan sus respectivos SHA.
+
+**Primera acción ejecutable.** En DIVERT-001, Work reprodujo una alta con TC, diagnóstico, examen y reevaluación en la que `followup` era el único requisito pendiente. Vega lo identificó. La orden natural produjo un recibo y habilitó el alta. En `gastro-expansion-policies.js` y `gastro-closure-v5.js`, contrasta si esa trayectoria requiere que el consejo sea indispensable. Si corresponde tratarlo como calidad, conserva su recibo y ajusta el criterio del destino. Agrega el recorrido y un control de alta insegura a `closure-requirements-audit.test.js` o `accepted-transfer.test.js`.
+
+## Entrega de Work del 11 de noviembre de 2026
+
+| Commit publicado | Resultado | Archivos |
+| --- | --- | --- |
+| `a8fe551460da53d66f93d1cec5b634efacf54633` | La restricción SQL rechazaba las claves que el adaptador ya intentaba persistir. El SQL previo reprodujo `23514`. La migración autoriza exactamente los formatos de sala y miembro. La aceptación usa inserción condicional por clave primaria, incluida la importación de caché. | `src/v5/server/supabase-account-store.js`, `supabase-social-room-persistence.test.js`, `src/v5/social/room-membership-store.js`, `supabase/migrations/20261111220000_atria_v5_social_room_keys.sql` |
+| `ceaa90075547cc19015dd66b76c4ae7a3ab9e2e5` | La sala social caduca a las seis horas y elimina claves al consultarse. Cerrar es terminal. Si el anfitrión sale explícitamente, el miembro promovido ocupa su lugar y el antiguo pierde acceso. La guardia clínica duradera conserva su propia recuperación. | `src/v5/social/room-membership-store.js`, `room-membership.test.js`, `src/v5/server/supabase-account-store.js`, `supabase-social-room-persistence.test.js`, `qa/v5/shared-guard-preview.mjs` |
+| `4a5e67c13ddffe1a1b43f800fe87b1a51de67e53` | CHOLE conserva ecografía, cobertura, reevaluación y recepción quirúrgica. Ayuno cuenta como preparación y calidad. ILEO estable mantiene descompresión, soporte y ayuno para sala. La recepción urgente usa la inestabilidad simulada y la preparación ejecutada de esta semilla. La TC describe ausencia de isquemia/perforación y una consulta de valoración sola no acredita cirugía ni autoriza quirófano estable. | En `src/v5/clinical/`: `accepted-transfer.test.js`, `additional-case-care.js`, `chole-care.js`, `clinical-risk.js`, `consultation-evidence.js`, `gastro-closure-v5.js`, `gastro-expansion-policies.js`, `surgical-consultation.js` |
+| `c1e25c0bd5de34bffc1bf5d0c55c37e0fd03a786` | LAB-01 resuelve primero el panel local, conserva PCR molecular separada y reconoce región y contraste explícitos de TC. Cada adquisición registra minuto nativo. La proyección publica el informe al completarse. Una gasometría de control tras VNI conserva la muestra anterior y su evento tras restauración. | `src/v5/clinical/guard-session.js`, `guard-session.test.js`, `studies.js`, `study-order-vocabulary.js`, `study-orders.test.js`, `src/v5/content/packs/cardiology-pack.js`, `qa/v5/studies-browser.mjs` |
+| `dd5490bf77a78b442a3d318b421100c5c123dec7` | La prueba de aislamiento de preview usa un visitante con credencial social propia, manteniendo las dos cuentas Supabase de la guardia. | `qa/v5/shared-guard-preview.mjs` |
+| `27d4ede757f615fd91e6f89fdffc880b5a94ad8f` | CARD-09 resuelve la PCR documentada en el informe del panel certificado que consumen servidor y navegador. NEUR-08 conserva su PCR molecular por separado. | `src/v5/clinical/study-order-vocabulary.js`, `study-orders.test.js`, `qa/v5/studies-browser.mjs`, `src/v5/content/packs/cardiology-pack.js` (se retiró el alias redundante del archivo de autoría) |
+
+El criterio de handoff modela la transferencia de responsabilidad. La preparación, la recepción y el procedimiento conservan recibos distintos. Las guías consultadas sustentan la cirugía temprana en colecistitis y el manejo conservador de la obstrucción adhesiva sin datos de isquemia o deterioro. [WSES colecistitis](https://doi.org/10.1186/s13017-020-00336-x) · [WSES obstrucción](https://doi.org/10.1186/s13017-018-0185-2)
+
+## Evidencia ejecutada
+
+Entorno de verificación con Node 24, dependencias del lockfile y Chromium con Playwright. El preview autenticado requiere la bandera experimental y las credenciales Supabase de servidor ya configuradas. La migración de claves debe preceder a la activación del adaptador de salas en cada entorno.
+
+- `npm run test:v5` pasó 3.027 pruebas sobre el commit técnico final, con cero fallos y cero omitidas. También pasaron las 238 pruebas del lote dirigido, las 622 sociales y de servidor, los cinco archivos de regresión V4 y las 40 de `npm run test:v5-core`. La prueba Supabase solicitada pasó 6/6 en el checkout final.
+- `npm run build:v5` compiló 216 archivos. `npm run build:v5-core` validó 27 módulos. `node scripts/audit-v5-boundary.mjs` validó 189 módulos. El catálogo ejecutó 55 casos y 91 destinos declarados. El bot de Vega cerró los 55 casos.
+- Chromium local aprobó diálogo, pista de una pulsación y repetición gratuita, diagnóstico y estudios con reloj real, incluido el panel certificado de CARD-09. Dos procesos autenticados aprobaron 11 comprobaciones, incluidas selección A→B, recibo perdido, dosis única y la extensión con reloj acelerado.
+- En el preview `20be357` el guion agotó la espera de invitación antes de aplicar la migración. Con el mismo despliegue y el esquema corregido entraron dos cuentas Supabase y compartieron chat, examen y órdenes. En el preview `ceaa900` ambos recargaron y recuperaron la misma sala y paciente. El intento de registrar una tercera cuenta recibió 429. Una prueba HTTP independiente con identidades QA autenticadas pasó 401/403/404, mensajes, salida, bloqueo del reingreso revocado y cancelación. Un visitante externo recibió 403 al observar la guardia clínica existente.
+- La migración se aplicó a `atria-clinical`, usado por Preview. PostgreSQL aceptó ambos formatos nuevos y rechazó claves mal formadas. RLS sigue activa. `anon` y `authenticated` carecen de lectura y escritura directa en la tabla. El preview técnico `27d4ede` quedó READY y 48 archivos desplegados coincidieron por SHA-256 con el build, incluido el catálogo certificado. [Preview de código](https://night-shift-clinical-rbzabax26-javierdario4878-7324.vercel.app/)
+
+## A. Tareas para ChatGPT normal
+
+1. **CLOSE-01 y SAFE-01.** Ejecuta primero la acción de DIVERT-001 indicada arriba. Sigue con PUD y CELIAC. Usa evidencia, diagnóstico, estabilidad y destino del evaluador existente. La regresión mínima contrasta alta válida, alta insegura y pista accionable.
+2. **LAB-01.** En `study-order-vocabulary.js`, `studies.js` y los packs, revisa solicitudes ambiguas de angio-TC aórtica versus pulmonar. Cubre CARD-08 y RESP-05 con dos IDs y evidencia separada. Si falta técnica o control documentado, pide aclaración o indica la limitación. Agrega a `study-orders.test.js` una prueba de alias y de dos muestras distintas con evento y minuto.
+3. **NUR-01 y ANAM-01.** En `core/speech-router.js`, `clinical/guard-session.js` y `patient-dialogue.js`, reproduce el silencio reportado y agrega la pregunta proactiva sobre alimentación como comunicación del flujo existente. Regresión mínima con un recibo, alergias y decisión de ayuno, seguida de restauración. FAM-01 conserva fuente acompañante y necesita una interacción visible cuando el caso declare informante.
+4. **MP-01 y XP-COOP.** Contrasta estado ocupado en `ui/lobby-directory.js`, `server/account-gateway.js` y `social/cooperative-link.js`. La prueba mínima simula entrada, presencia atrasada y regreso al lobby. Conserva créditos cooperativos existentes, dueño en Competitivo y recibos de `server/clinical-reward.js`. Define elegibilidad de débitos al abandonar una guardia y animación por recibo con casos de dos médicos y reintento.
+5. **DX-REVEAL.** Reutiliza `clinical-hint-ledger.js`, `guard-session.js:rewardFor` y `ui/case-debrief.js`. Prueba revelación, recarga, repetición gratuita y penalización única de 50% combinada con pistas. La impresión escrita por el médico sigue siendo evidencia independiente.
+
+Los cambios de esta sección se pueden preparar y publicar por GitHub. Indica qué pruebas se ejecutaron y cuáles quedaron escritas para CI o Work. Conserva el resto del inventario y su trazabilidad.
+
+## B. Tareas que requieren Work o validación externa
+
+- Correr el guion completo `qa/v5/shared-guard-preview.mjs` con dos cuentas tras recuperar cuota de registro. Ejecutar Competitivo y la extensión a 24 minutos reales. Comprobar que ambos médicos puedan guardar, recargar y finalizar, que los recibos sigan únicos y que el tercero quede fuera.
+- Probar Android físico con dos cuentas. Confirmar primera respuesta, pista única, búsqueda VEDB, persistencia del editor, controles de Enfermería, recepción, música, marcador y regreso al lobby.
+- Medir tiempos con varias repeticiones de mensaje, pista, selección y guardado. Separar entrega de red, transacción y pintado de los tiempos clínicos. La caducidad social y limpieza por consulta se aceleraron en Node. Las salas caducadas sin reconsulta quedan pendientes de limpieza física. La recuperación clínica tiene su propio contrato.
+
+## Reglas permanentes de aceptación
+
+DIALOG-AUTO-01 requiere una respuesta visible tras un envío con historia, personalidad y conciencia coherentes. Atribuye el relato indirecto al acompañante. VEGA-AUTO-01 requiere una pulsación con verificación, confirmación de visualización, descuento único del 5% para una pista nueva y repetición gratuita. VEGA-COHERENCE-01 exige leer el estado solicitado, pendiente, ejecutado o informado y el motivo clínico de cualquier repetición.
+
+Cada bloqueo de cierre debe expresar una necesidad clínica comprobable y ser orientable por Vega. Trata las medidas recomendables como calidad cuando corresponda. La clínica, estudios, pistas, Enfermería y multijugador consumen la misma autoridad y sus recibos. Conserva el motor V4, la selección directa, el aislamiento de salas, el orden de las migraciones y el acceso de servidor a los datos. Haz cambios pequeños, reproduce primero y verifica el HEAD remoto al terminar.
+
+## Historial de ejecuciones anteriores
+
+Las referencias y las instrucciones que siguen registran los SHA de sus sesiones.
+
+## Punto de partida
+
 Continúa el repositorio `javierdario48-star/ATRIA` en la única rama autorizada, `atria-5.0-core-rebuild-experimental`. Consulta el HEAD remoto con GitHub antes de editar. El HEAD de código verificado es `4e9212d98bcb127cd684c4651a68c1b1c6fc18e6` y el commit siguiente contiene esta entrega y el inventario. Si la rama avanzó, compara los commits nuevos y conserva sus cambios. El SHA remoto completo de la entrega acompaña al prompt en el mensaje de entrega.
 
 Lee el [inventario maestro vigente](ATRIA-5-REMAINING-TASKS.md), `ATRIA-5-CHATGPT-HANDOFF.md`, `ATRIA-5-GUARD-RECOVERY.md`, `AGENTS.md` y `ATRIA-5-CASE-INTEGRATION-CONTRACT.md`. El inventario conserva la correspondencia de los 60 números y las solicitudes recuperadas de mensajes previos. La fuente literal completa por número sigue pendiente de recuperación. Usa el registro maestro actual para los estados. Los checkpoints históricos acreditan su SHA.

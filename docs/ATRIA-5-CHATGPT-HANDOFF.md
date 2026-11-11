@@ -1,5 +1,27 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
+## Vigente al 11 de noviembre de 2026
+
+Rama exclusiva `atria-5.0-core-rebuild-experimental` de `javierdario48-star/ATRIA`. Verifica el HEAD remoto antes de trabajar. Work partió de `20be3574bace0a2dd3ca6cb6487e08bf958871d4`, publicó código hasta `27d4ede757f615fd91e6f89fdffc880b5a94ad8f` y cerró la entrega en el commit que contiene este bloque. [Continuidad exacta, commits, archivos y evidencia](ATRIA-5-EXACT-CONTINUATION.md) · [Inventario de 20 áreas y 60 números](ATRIA-5-REMAINING-TASKS.md).
+
+**Resultado.** MP-01 admite y recupera al invitado en el preview real. La migración de la tabla social, el aislamiento, la revocación y las respuestas 401/403/404 se comprobaron con el proveedor real. CHOLE e ILEO cierran con progresiones clínicas y aceptación del receptor. LAB-01 conservó el identificador, la técnica, el minuto y el informe de cada adquisición. Pasaron la suite, los builds y las pruebas de diálogo, Vega, diagnóstico, estudios y dos cuentas.
+
+### A. Tareas para ChatGPT normal
+
+1. **P1, cierre.** Work verificó que `followup` era el único requisito pendiente para el alta de DIVERT-001 y que Vega lo explicó. Revisa su necesidad en `gastro-expansion-policies.js` y `gastro-closure-v5.js`. Prueba alta válida, alta insegura y pista al requisito real. Continúa con PUD y CELIAC cuando la indicación esté justificada.
+2. **P1, LAB/NUR.** Revisa protocolos de angio-TC CARD-08/RESP-05 en `study-order-vocabulary.js` y agrega la regresión de IDs separados en `study-orders.test.js`. En `speech-router.js` y `guard-session.js` reproduce silencio y proactividad de Enfermería con un único recibo recuperable.
+3. **P2, XP/DX/FAM.** Usa `guard-session.js`, `clinical-reward.js` y `case-debrief.js` para penalización única de revelación y composición con pistas. En `patient-dialogue.js` conserva información del acompañante. Mantén las regresiones de crédito cooperativo, puntuación individual y paciente correcto.
+4. **P2, presencia.** En `ui/lobby-directory.js`, `server/account-gateway.js` y `social/cooperative-link.js`, contrasta ocupado/disponible con presencia tardía. Repite entrada, reconexión y vuelta al lobby.
+
+### B. Tareas que requieren Work o validación externa
+
+1. Completa la misma prueba automatizada de preview con dos cuentas cuando haya cuota de registro. El 429 fue del registro de la tercera cuenta. Las recargas pasaron con los dos médicos y la comprobación HTTP posterior cubrió acceso del tercero, salida y repetición revocada. Prueba Competitivo y la extensión real de 24 minutos.
+2. Aceptación en Android físico con dos cuentas. Medir tiempo de primera respuesta, pista, selección y guardado. Verificar teclado, volumen, recepción, marcador y persistencia tras recarga.
+
+DIALOG-AUTO-01, VEGA-AUTO-01 y VEGA-COHERENCE-01 son criterios permanentes. Usa los recibos de la autoridad clínica para estados y XP. Cada bloqueo de cierre requiere justificación clínica y una pista útil. Los hallazgos de la sección histórica corresponden a su SHA.
+
+## Historial anterior
+
 Actualizado el 11 de noviembre de 2026. Continuar por DX-01 y LAB-02, con cambios pequeños y pruebas dirigidas. La [cola técnica](ATRIA-5-REMAINING-TASKS.md) asigna los 60 requisitos y señala dónde hace falta una comprobación externa.
 
 ## Punto de partida
