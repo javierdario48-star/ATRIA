@@ -113,7 +113,7 @@ export function routeWardSpeech(text,context={}){
   [{kind:'history.ask',id:'dialogue',sourceText:original}]:[],original,
   ...(context.clinicalEvaluation&&recipient==='patient'&&!patientUid?{error:'no-patient-target'}:{})};
  // A nurse can answer a question from the chart without executing a treatment.
- const nurseQuestion=normalized.replace(/^enfermer(?:a|o|ia)\\s*[,.:]?\\s*/,'').replace(/[¿?!.]/g,'').trim();
+ const nurseQuestion=normalized.replace(/^enfermer(?:a|o|ia)\s*[,.:]?\s*/,'').replace(/[¿?!.]/g,'').trim();
  const asksAllergies=/^(?:alergias?|antecedentes de alergias?|alergias? (?:del paciente|medicamentosas?)|(?:que|cuales) alergias? (?:tiene|presenta|refiere)(?: el paciente)?|(?:tiene|presenta|refiere) (?:el paciente )?alergias?|(?:es|es el paciente) alergico a algo)$/;
  if(asksAllergies.test(nurseQuestion))return {recipient,patientUid,original,intents:patientUid?
   [{kind:'nurse.inquire',id:'allergies',sourceText:original}]:[],
