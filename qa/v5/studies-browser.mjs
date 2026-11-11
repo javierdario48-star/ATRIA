@@ -73,8 +73,12 @@ try{
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders.length===1);
  const selected=await page.evaluate(()=>atriaV5.snapshot().clinical.patient.orders[0]);
  assert.equal(selected.id,'app_ct');assert.equal(selected.resultSource,'native');
- assert.match(selected.result,/Apéndice engrosado/);
+ assert.equal(selected.status,'pending');assert.equal(selected.result,undefined);
  assert.match(await page.locator('#chatHistory').innerText(),/Enfermera, TC abdominopélvica/);
+ await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.orders[0].status==='done',null,{timeout:130000});
+ const reported=await page.evaluate(()=>atriaV5.snapshot().clinical.patient.orders[0]);
+ assert.equal(reported.sourceEventId,selected.sourceEventId);
+ assert.match(reported.result,/Apéndice engrosado/);
  await page.locator('#guardButton').click();assert.equal((await page.evaluate(()=>atriaV5.snapshot())).clinical,null);
  // Search and nursing share the native assay in the real application.
  await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CARD-01');

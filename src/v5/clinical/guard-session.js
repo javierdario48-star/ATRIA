@@ -7,7 +7,7 @@ import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js'
 import {materializeGuardPatient} from '../content/guard-patient-variation.js';
 import {createNativeClinicalPort} from '../adapters/native-clinical-port.js';
 import {createStudyService} from './studies.js';
-import {isTroponinStudy,studyOrderVocabulary} from './study-order-vocabulary.js';
+import {studyOrderVocabulary} from './study-order-vocabulary.js';
 import {createCirrCare} from './cirr-care.js';
 import {createAppCare} from './app-care.js';
 import {createPeritonitisCare} from './peritonitis-care.js';
@@ -38,7 +38,7 @@ const copy=value=>structuredClone(value);
 const pendingStudyKey=(source,series)=>series?JSON.stringify(['series',source]):source;
 function hideUnreportedStudyResults(orders){
  for(const order of orders){
-  if(order.status!=='done'&&(order.collection||order.samples||isTroponinStudy(order)))delete order.result;
+  if(order.status!=='done')delete order.result;
   for(const sample of order.samples||[])if(sample.status!=='done')delete sample.result;
  }
  return orders;

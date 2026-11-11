@@ -16,8 +16,8 @@ const read=name=>JSON.parse(readFileSync(new URL('../content/'+name+'.json',impo
 const content=createClinicalContent({cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')},
  {additionalCases:[...cardiologyPack.cases,...respiratoryPack.cases,...neurologyPack.cases]});
 const {cases}=content;
-const setup=(caseId,config=content)=>createGuardSession({roomId:'study-order:'+caseId,mode:'solo',
- actorId:'doctor',actorName:'Médica',patient:{uid:'patient',caseId},content:config,resolveContext:()=>({patientUid:'patient'})});
+const setup=(caseId,config=content,checkpoint)=>createGuardSession({roomId:'study-order:'+caseId,mode:'solo',
+ actorId:'doctor',actorName:'Médica',patient:{uid:'patient',caseId},content:config,checkpoint,resolveContext:()=>({patientUid:'patient'})});
 
 test('ward study search and nursing phrases request one native result with its original turnaround',async()=>{
  const matrix=[
@@ -74,6 +74,95 @@ test('VEDB and lower endoscopy names resolve to one native colonoscopy, never up
   assert.notEqual(vocabulary.resolve('endoscopia digestiva alta')?.study?.id,'colonoscopia');
   assert.equal(vocabulary.catalog.filter(study=>study.id==='colonoscopia').length,1);
  }
+});
+test('hemogram, leukocytes and C-reactive protein follow the documented local panel',async()=>{
+ for(const [caseId,cbc,ids] of [['APP-001','app_cbc',['app_cbc']],['CHOLE-001','chole_cbc',['chole_cbc','pcr']],
+  ['ILEO-001','ileo_lab',['ileo_lab','pcr']],['DIVERT-001','g_divert_labs',['g_divert_labs']]]){
+  const session=setup(caseId);
+  try{
+   const ordered=await session.post({id:'panel',text:'Enfermera, hemograma y PCR'});
+   assert.deepEqual(ordered.clinical.map(row=>row.id),ids,caseId);
+   const cells=await session.post({id:'cells',text:'Enfermera, leucocitos'});
+   assert.equal(cells.clinical[0]?.id,cbc);
+   session.advance(70);await session.flush();
+   const orders=session.read().patient.orders;
+   assert.deepEqual(orders.map(row=>row.id),ids);
+   const native=cases.find(c=>c.id===caseId).studies.find(row=>row.id===cbc);
+   assert.equal(orders[0].result,native.result);
+   assert.equal(orders[0].patientUid,'patient');
+   assert.equal(orders[0].sampledAtNativeMinute,0);
+   if(ids.includes('pcr'))assert.match(orders[1].result,/sin valor individual cuantificado/i);
+   const replay=await session.post({id:'hemogram-replay',text:'/estudio hemograma'});
+   assert.equal(replay.clinical[0].receipt.sourceEventId,orders[0].sourceEventId);
+   assert.equal(replay.clinical[0].receipt.sampledAtNativeMinute,0);
+  }finally{session.dispose();}
+ }
+});
+test('native CT technique is shared by clinical search, voice and direct requests',async()=>{
+ for(const [caseId,id,plain,authored,unsupported] of [
+  ['NEUR-02','g_neur02_ct','TC de cráneo','TC de cráneo sin contraste','TC de cráneo con contraste'],
+  ['PANC-001','tc','TC abdomen','TC abdomen con contraste','TC abdomen sin contraste']
+ ]){
+  const session=setup(caseId);
+  try{
+   const choices=text=>studySearchChoices(text,{caseId,cases,studies:session.catalog()}).map(row=>row.id);
+   assert.deepEqual(choices(plain),[id]);
+   assert.deepEqual(choices(authored),[id]);
+   assert.deepEqual(choices(unsupported),[]);
+   const simple=await session.post({id:'plain',text:'Enfermera, '+plain});
+   assert.equal(simple.clinical[0]?.id,id);
+   const same=await session.post({id:'protocol',text:'Enfermera, '+authored});
+   assert.equal(same.clinical[0]?.id,id);
+   const different=await session.post({id:'different',text:'/estudio '+unsupported});
+   assert.equal(different.routeError,'study-method-unavailable');
+   await session.post({id:'other-region',text:'Enfermera, TC de tórax'});
+   const pending=session.read().patient.orders;
+   assert.deepEqual(pending.map(row=>row.id),[id,'tc_torax']);
+   assert(pending.every(row=>row.status==='pending'&&row.result===undefined));
+   session.advance(121);await session.flush();
+   const [scan]=session.read().patient.orders;
+   assert.equal(scan.status,'done');
+   assert.equal(scan.result,cases.find(c=>c.id===caseId).studies.find(row=>row.id===id).result);
+   assert.equal(scan.patientUid,'patient');
+   assert.equal(scan.sampledAtNativeMinute,0);
+  }finally{session.dispose();}
+ }
+});
+test('RESP-03 captures a new blood gas after nurse-confirmed ventilation and restores both acquisitions',async()=>{
+ const session=setup('RESP-03'),firstOrder={id:'gas-initial',text:'Enfermera gasometría'};
+ let restored;
+ try{
+  await session.post(firstOrder);
+  assert.equal(session.read().patient.orders[0].result,undefined);
+  session.advance(5);await session.flush();
+  const [initial]=session.read().patient.orders;
+  assert.match(initial.result,/PaCO2 64 mmHg/);
+  assert.doesNotMatch(initial.result,/Ventilación no invasiva confirmada/);
+
+  await session.post({id:'monitor',text:'Enfermera monitor'});
+  await session.post({id:'niv',text:'Enfermera VNI'});
+  session.advance(65);await session.flush();
+  const ventilation=session.read().patient.treatments.find(row=>row.id==='niv');
+  assert.equal(ventilation?.kind,'procedure.performed');
+  await session.post({id:'gas-control',text:'Enfermera gases arteriales'});
+  session.advance(5);await session.flush();
+  const orders=session.read().patient.orders;
+  assert.equal(orders.length,2);
+  assert.deepEqual(orders[0],initial);
+  assert.equal(orders[1].id,initial.id);
+  assert.equal(orders[1].patientUid,initial.patientUid);
+  assert.notEqual(orders[1].sourceEventId,initial.sourceEventId);
+  assert(orders[1].sampledAtNativeMinute>ventilation.administeredAtNativeMinute);
+  assert.match(orders[1].result,/Ventilación no invasiva confirmada/);
+  assert.notEqual(orders[1].result,initial.result);
+
+  restored=setup('RESP-03',content,await session.checkpoint());
+  assert.deepEqual(restored.read().patient.orders,orders);
+  const replay=await restored.post(firstOrder);
+  assert.equal(replay.clinical[0].receipt.sourceEventId,initial.sourceEventId);
+  assert.equal(replay.clinical[0].receipt.result,initial.result);
+  assert.equal(restored.read().patient.orders.length,2);
+ }finally{session.dispose();restored?.dispose();}
 });
 
 test('a troponin with an unavailable assay or unmodeled series never falls back to a single or foreign test',async()=>{

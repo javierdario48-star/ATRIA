@@ -56,7 +56,8 @@ test('every native study label routes to its own current-case finding',async()=>
    session.dispose();continue;
   }
   assert.deepEqual(ack.clinical.map(x=>[x.kind,x.id,x.status]),[['study.request',study.id,'pending']],c.id+': '+study.label);
-  assert.equal(session.read().patient.orders[0].result,study.result,c.id+': native result');
+  assert.equal(session.read().patient.orders[0].result,undefined,c.id+': pending report stays private');
+  assert.equal((await session.checkpoint()).patient.orders[0].result,study.result,c.id+': acquired native result');
   session.dispose();
  }
 });

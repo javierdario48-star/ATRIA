@@ -94,6 +94,7 @@ export function createStudyService(cases,checkpoint=null){
    patientUid:p.uid,eventId,studyId:event?.studyId??order.id,sourceEventId:source.sourceEventId,
    actorId:source.actorId,result:order.result,resultSource:order.resultSource,
    requestedAtMinute:source.requestedAtMinute,readyAtMinute:source.readyAtMinute,
+   ...(minute(order.sampledAtNativeMinute)?{sampledAtNativeMinute:order.sampledAtNativeMinute}:{}),
    ...(order.collection?{label:order.label,collection:copy(order.collection)}:{}),
    ...(event?.series?{samples:copy(order.samples)}:{})
   }};
@@ -177,8 +178,7 @@ export function createStudyService(cases,checkpoint=null){
    const order={id,label,type:definition.type,
     patientUid:patient.uid,result:collection?studyCollectionResult(definition,requestedCount):native&&caseDef.clinicalPolicy?
      currentStudyResult(definition,caseDef,patient,sampleMinute):definition.result,
-    ...(native&&(nativeTroponin||native.dynamic||native.requiresCompletedTreatments?.length)&&caseDef.clinicalPolicy?
-     {sampledAtNativeMinute:sampleMinute}:{}),
+    sampledAtNativeMinute:sampleMinute,
     resultSource:definition.nativeResult?'native':'universal-fallback',
     nativeResult:definition.nativeResult,universalFallback:definition.universalFallback,
     status:'pending',requestedAtMinute:atMinute,

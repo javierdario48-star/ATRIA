@@ -6,14 +6,25 @@ export const normalizeStudyOrder=value=>String(value??'').normalize('NFD').repla
 
 const troponinLongNames=['','s'].flatMap(s=>['',' cardiaca'+s].flatMap(cardiac=>
  ['',' ultrasensible'+s,' de alta sensibilidad',' alta sensibilidad'].map(sensitivity=>'troponina'+s+cardiac+sensitivity)));
+const ctFamilies=new Map([
+ ['tc_cerebral',['tc cerebro','tc de cerebro','tc cerebral','tc craneo','tc de craneo','tc craneal',
+  'tac cerebro','tac craneo','tac cerebral','tomografia cerebral','tomografia de craneo','tomografia de cerebro']],
+ ['tc_torax',['tc torax','tc de torax','tc toracica','tac torax','tac de torax','tac toracica','tomografia de torax','tomografia toracica']],
+ ['tc',['tc abdomen','tc de abdomen','tc abdominal','tc abdominopelvica','tac abdomen','tac abdominal',
+  'tomografia abdominal','tomografia de abdomen','tomografia abdominopelvica']]
+]);
+const contrastMethods=['con','sin'];
 const groups=[
  ['troponina',[...troponinLongNames,'hs ctn','hsctn','ctn']],
- ['hemograma',['hemograma','hemograma completo','biometria','biometria hematica','cuadro hematico','recuento sanguineo','cbc']],
+ ['hemograma',['hemograma','hemograma completo','biometria','biometria hematica','cuadro hematico','recuento sanguineo','cbc',
+  'leucocitos','recuento leucocitario','recuento de leucocitos']],
+ ['pcr',['pcr','proteina c reactiva']],
  ['colonoscopia',['colonoscopia','colonoscopia con biopsia','videocolonoscopia','video colonoscopia','videoendoscopia digestiva baja','endoscopia digestiva baja','vedb','vcc']],
  ['electrocardiograma',['electrocardiograma','ecg','ekg','electrocardiograma de 12 derivaciones','ecg de 12 derivaciones','ekg de 12 derivaciones']],
  ['glucemia',['glucemia','glicemia','glucosa','glucemia capilar','glicemia capilar','glucosa capilar','glucosa en sangre']],
  ['hepatograma',['hepatograma','perfil hepatico','funcion hepatica','pruebas hepaticas','enzimas hepaticas']],
- ['coagulograma',['coagulograma','coagulacion','perfil de coagulacion','pruebas de coagulacion']]
+ ['coagulograma',['coagulograma','coagulacion','perfil de coagulacion','pruebas de coagulacion']],
+ ...ctFamilies
 ];
 const assayNames=Object.fromEntries(['i','t'].map(assay=>[assay,[...troponinLongNames.flatMap(name=>[
  name+' '+assay,name.replace(/^(troponinas?)/,'$1 '+assay)
@@ -77,6 +88,8 @@ function seriesNames(names){
   'serie de '+name,'repetir '+name,'repetir la '+name,'segunda muestra de '+name,'control de '+name]);
 }
 const genericOptions=new Map(groups.flatMap(([family,aliases])=>aliases.map(alias=>[alias,{family}])));
+for(const [family,aliases] of ctFamilies)for(const method of contrastMethods)
+ for(const alias of aliases)genericOptions.set(alias+' '+method+' contraste',{family,ctMethod:method});
 for(const assay of ['i','t'])for(const alias of assayNames[assay])genericOptions.set(alias,{family:'troponina',assay});
 for(const [alias,descriptor] of [...genericOptions])if(descriptor.family==='troponina'){
  for(const name of seriesNames([alias]))genericOptions.set(name,{...descriptor,series:true});
@@ -86,6 +99,10 @@ function studyRank(study,group,aliases){
  // A post-intervention control is never selected by the unqualified request.
  if(study.requiresCompletedTreatments?.length)return 0;
  const [label,...authored]=terms(study);
+ // An angio-TC, perfusion sequence or authored control is a separate study.
+ if(ctFamilies.has(group)&&(!/^(?:tc|tac|tomografia) /.test(label)||containsTerm(label,'de control')))return 0;
+ // PCR de un patógeno is molecular testing, even when the abbreviation matches.
+ if(group==='pcr'&&label.startsWith('pcr de ')&&!containsTerm(label,'proteina c reactiva'))return 0;
  if(aliases.includes(label))return 4;
  if(authored.some(term=>aliases.includes(term)))return 3;
  if(aliases.some(term=>containsTerm(label,term)))return 2;
@@ -111,10 +128,17 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
  const collections=native.filter(study=>studyCollectionDefinition(study));
  const collection=collections.length===1?collections[0]:null;
  const byFamily=new Map();
+ const preferredNative=(family,aliases,candidates=native)=>candidates
+  .map(study=>({study,rank:studyRank(study,family,aliases)})).filter(x=>x.rank)
+  .sort((a,b)=>b.rank-a.rank)[0]?.study;
  for(const [family,aliases] of groups){
-  const selected=native.map(study=>({study,rank:studyRank(study,family,aliases)})).filter(x=>x.rank)
-   .sort((a,b)=>b.rank-a.rank)[0]?.study??catalog.find(study=>study.id===family);
+  const selected=preferredNative(family,aliases)??catalog.find(study=>study.id===family);
   if(selected)byFamily.set(family,selected);
+ }
+ const ctByMethod=new Map();
+ for(const [family,aliases] of ctFamilies)for(const method of contrastMethods){
+  const candidates=native.filter(study=>terms(study).some(term=>containsTerm(term,method+' contraste')));
+  ctByMethod.set(family+':'+method,preferredNative(family,aliases,candidates));
  }
  const troponin=byFamily.get('troponina'),nativeTroponin=troponin&&nativeById.get(troponin.id),
   assay=nativeTroponin&&assayOfStudy(nativeTroponin),hasSeries=authoredTroponinSeries(nativeTroponin),
@@ -147,6 +171,10 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
     return {error:'study-series-unavailable'};
    return null;
   }
+  if(name.ctMethod){
+   const study=ctByMethod.get(name.family+':'+name.ctMethod);
+   return study?{study,command:word}:{error:'study-method-unavailable'};
+  }
   const capillaryRequested=name.family==='glucemia'&&capillaryGlucose.test(word),
    study=capillaryRequested?capillary:byFamily.get(name.family);
   if(name.assay&&name.assay!==assay)return {error:'study-assay-unavailable'};
@@ -176,7 +204,14 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
  }
  const isAliasFor=(text,id)=>{
   const result=resolve(text);
-  return result===null||result.study?.id===id;
+  if(result)return result.study?.id===id;
+  if(nativeById.has(id))return true;
+  const components=String(text).split(/[,+]|\s+(?:y|e|con)\s+/i);
+  // A foreign panel name cannot consume several locally recognized orders.
+  return components.length===1||components.every(part=>{
+   const study=resolve(part)?.study;
+   return !study||study.id===id;
+  });
  };
  const lexicon=catalog.map(study=>({ ...study,label:studyOrderLabel(study),
   aliases:[...new Set([...(study.aliases||[]).filter(alias=>isAliasFor(alias,study.id)),...(extraAliases.get(study.id)||[])])] }));
