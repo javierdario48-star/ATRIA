@@ -438,8 +438,19 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   clinicalHintRequirements(){return currentChecklist().requirements;},
   // Diagnostic-only snapshot of the same readiness and requirements as Vega.
   // Never alters clinical eligibility, patient state, receipts or XP.
-  auditClosureRequirements(){
-   const {destination,assessment,requirements}=currentChecklist();
+  auditClosureRequirements(destinationOverride){
+   // An explicit destination is diagnostic only; it cannot alter the
+   // current hint destination or the clinical authority's closure decision.
+   const allowed=clinicalClosureRule(caseData)?.destinations;
+   if(destinationOverride!==undefined&&(!Array.isArray(allowed)||
+    !allowed.includes(destinationOverride)))throw Error('unsupported audit destination');
+   const {destination,assessment,requirements}=destinationOverride===undefined?
+    currentChecklist():{
+     destination:destinationOverride,
+     assessment:closureReadiness(destinationOverride),
+     requirements:clinicalHintRequirements(nativePatient,caseData,
+      closureReadiness(destinationOverride),destinationOverride)
+    };
    return copy({caseId:caseData.id,destination,
     ...auditClosureRequirements(assessment,requirements)});
   },
