@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {diagnosisEditorHTML,diagnosisSuggestionsHTML,diagnosisBadgeLabel,destinationButtonsHTML,createPatientClinicalOverlay} from './diagnostic-impression.js';
 import {therapyHTML} from './clinical-panels.js';
+import {createClinicalInterface} from './clinical-controller.js';
 const cases=JSON.parse(fs.readFileSync(new URL('../content/cases.json',import.meta.url)));
 
 test('diagnostic vocabulary offers all original peritonitis variants without identifying a correct answer',()=>{
@@ -50,4 +51,63 @@ test('an unchanged bedside projection preserves its existing buttons despite DOM
  assert.equal(writes,1,'an existing focus or pointer target must survive an identical maintenance update');
  overlay.update(world,{...clinical,patient:{...clinical.patient,diagnosis:'apendicitis aguda'}});
  assert.equal(writes,2,'changed clinical content still renders');
+});
+
+test('diagnosis editor closes before network acknowledgement, pins patient and preserves rejected draft',async()=>{
+ const nodes={
+  modal:{dataset:{}},modalContent:{dataset:{}},
+  diagnosisInput:{value:'',readOnly:false,focus(){}},
+  diagnosisSuggestions:{innerHTML:''}
+ };
+ const document={getElementById:id=>nodes[id]||null};
+ let current={uid:'P1',bedId:'A',diagnosis:'',liveVitals:true,caseEnded:false};
+ let closes=0,resolve,requests=[],messages=[];
+ const controller=createClinicalInterface({
+  document,session:()=>({read:()=>({patient:current,canEdit:true})}),
+  open:(_html,panel)=>{nodes.modal.dataset.panel=panel;nodes.diagnosisInput={value:current.diagnosis,readOnly:false,focus(){}};},
+  close:()=>{closes++;nodes.modal.dataset.panel='';},
+  send:(command,options)=>{requests.push({command,options});return new Promise(r=>resolve=r);},
+  notify:text=>messages.push(text),cases:[]
+ });
+ controller.showDiagnosis(current);
+ nodes.diagnosisInput.value='apendicitis aguda';
+ const pending=controller.saveDiagnosis();
+ assert.equal(closes,1,'valid save dismisses the editor without awaiting network');
+ const duplicate=controller.saveDiagnosis();
+ await Promise.resolve();
+ assert.equal(requests.length,1,'rapid duplicate tap must not post twice');
+ assert.equal(requests[0].options.patientUid,'P1');
+ assert.equal(requests[0].command,'/diagnostico apendicitis aguda');
+ current={...current,uid:'P2',bedId:'B'};
+ resolve({status:'received',clinical:[{status:'rejected'}]});
+ await Promise.all([pending,duplicate]);
+ current={...current,uid:'P1',bedId:'A'};
+ controller.showDiagnosis(current);
+ assert.equal(nodes.diagnosisInput.value,'apendicitis aguda','rejected draft survives patient changes');
+ assert.ok(messages.some(message=>/no se confirm/i.test(message)));
+});
+
+test('late diagnosis response does not close a reopened editor for the same patient',async()=>{
+ const nodes={modal:{dataset:{}},modalContent:{dataset:{}},diagnosisInput:{value:'',readOnly:false,focus(){}},
+  diagnosisSuggestions:{innerHTML:''}};
+ const patient={uid:'P1',bedId:'A',diagnosis:'',liveVitals:true,caseEnded:false};
+ let closeCount=0,resolve;
+ const controller=createClinicalInterface({
+  document:{getElementById:id=>nodes[id]||null},
+  session:()=>({read:()=>({patient,canEdit:true})}),
+  open:(_html,panel)=>{nodes.modal.dataset.panel=panel;nodes.diagnosisInput={value:patient.diagnosis,readOnly:false,focus(){}};},
+  close:()=>{closeCount++;nodes.modal.dataset.panel='';},
+  send:()=>new Promise(r=>resolve=r),notify:()=>{},cases:[]
+ });
+ controller.showDiagnosis(patient);
+ nodes.diagnosisInput.value='apendicitis';
+ const pending=controller.saveDiagnosis();
+ await Promise.resolve();
+ controller.showDiagnosis(patient);
+ nodes.diagnosisInput.value='peritonitis';
+ resolve({status:'received',clinical:[{status:'executed'}]});
+ await pending;
+ assert.equal(closeCount,1);
+ assert.equal(nodes.modal.dataset.panel,'diagnosis','old response cannot dismiss a new editor');
+ assert.equal(nodes.diagnosisInput.value,'peritonitis','old response cannot overwrite a newer draft');
 });
