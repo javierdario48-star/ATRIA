@@ -887,3 +887,22 @@ test('C12b physical repeat fluid develops respiratory toxicity only after dose c
  assert.equal(f.session.read().exposure.confirmedCrystalloidMl,4000);
  f.session.dispose();f.world.enterLobby();
 });
+
+test('nurse reads documented allergies without prescribing or mutating clinical care',async()=>{
+ const f=fixture('APP-001');
+ try{
+  const before=f.session.read().patient;
+  const first=await f.session.post({id:'allergy-inquiry',text:'Enfermera, alergias'});
+  assert.equal(first.clinical.length,1);
+  assert.equal(first.clinical[0].kind,'nurse.inquire');
+  assert.equal(first.clinical[0].status,'executed');
+  assert.match(first.clinical[0].receipt.message,/alergias/i);
+  const after=f.session.read().patient;
+  assert.deepEqual(after.orders,before.orders);
+  assert.deepEqual(after.treatments,before.treatments);
+  assert.deepEqual(after.administrationLog,before.administrationLog);
+  assert.deepEqual(await f.session.post({id:'allergy-inquiry',text:'Enfermera, alergias'}),first,
+   'replayed message must reuse its existing receipt');
+  assert.equal(f.session.read().patient.orders.length,0);
+ }finally{f.session.dispose();f.world.enterLobby();}
+});
