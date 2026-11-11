@@ -921,3 +921,20 @@ test('equivalent NPO instructions do not create duplicate confirmed intervention
    'same patient must have one confirmed NPO conduct, not two administrations');
  }finally{f.session.dispose();f.world.enterLobby();}
 });
+
+test('live closure audit is read-only and uses the same current readiness as Vega',async()=>{
+ const f=fixture('APP-001');
+ try{
+  const before=f.session.read();
+  const requirements=f.session.clinicalHintRequirements();
+  const audit=f.session.auditClosureRequirements();
+  assert.equal(audit.caseId,'APP-001');
+  assert.equal(audit.ready,before.closure.ready);
+  assert.deepEqual(audit.missing,before.closure.missing);
+  assert.equal(Array.isArray(audit.issues),true);
+  assert.deepEqual(f.session.clinicalHintRequirements(),requirements);
+  assert.deepEqual(f.session.read(),before,'audit cannot change patient, receipts, XP or readiness');
+  audit.missing.push('external mutation');
+  assert.deepEqual(f.session.read(),before,'audit result cannot mutate session state');
+ }finally{f.session.dispose();f.world.enterLobby();}
+});
