@@ -118,7 +118,8 @@ export function auditClosureRequirements(assessment,requirements){
   if(!gate||typeof gate.type!=='string'||!gate.type.trim())
    issues.push({code:'untyped-gate',index});
   else if(['study','treatment'].includes(gate.type)&&
-   (!Array.isArray(gate.anyOf)||!gate.anyOf.some(group=>Array.isArray(group)&&group.length&&group.every(id=>typeof id==='string'&&id.length))))
+   (!Array.isArray(gate.anyOf)||!gate.anyOf.length||
+    !gate.anyOf.every(group=>Array.isArray(group)&&group.length&&group.every(id=>typeof id==='string'&&id.trim().length))))
    issues.push({code:'missing-action-alternatives',index,type:gate.type});
   else if(gate.type==='closure'&&!gate.destination)
    issues.push({code:'missing-destination',index});
