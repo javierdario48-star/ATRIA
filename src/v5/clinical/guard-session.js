@@ -1,5 +1,5 @@
 import {createClinicalHintLedger,hintAdjustedXP,hintPenaltyPercent} from './clinical-hint-ledger.js';
-import {clinicalChecklist,clinicalHintRequirements,hintDestination} from './clinical-hint-requirements.js';
+import {auditClosureRequirements,clinicalChecklist,clinicalHintRequirements,hintDestination} from './clinical-hint-requirements.js';
 import {selectClinicalHint} from './clinical-hints.js';
 import {createRoomAuthority} from '../core/room-authority.js';
 import {clinicalExecutorFor} from '../content/clinical-cases.js';
@@ -436,6 +436,13 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    catch{return {status:'unavailable',reason:'hint-evaluation-failed'};}
   },
   clinicalHintRequirements(){return currentChecklist().requirements;},
+  // Diagnostic-only snapshot of the same readiness and requirements as Vega.
+  // Never alters clinical eligibility, patient state, receipts or XP.
+  auditClosureRequirements(){
+   const {destination,assessment,requirements}=currentChecklist();
+   return copy({caseId:caseData.id,destination,
+    ...auditClosureRequirements(assessment,requirements)});
+  },
   clinicalHint(){
    const {destination,assessment,requirements}=currentChecklist();
    const subject={...nativePatient,hintPendingActions:[...pendingNurseJobs.values(),...waitingForAccess.values()].map(j=>({id:j.intent.id}))};
