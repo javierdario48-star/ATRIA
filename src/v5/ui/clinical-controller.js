@@ -18,6 +18,8 @@ import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} fro
 export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[],therapies=[],onMonitorOpen=()=>{}}){
  const ui=id=>document.getElementById(id);
  let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,examFeedback=null,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='';
+ let diagnosisEditorVersion=0;
+ const pendingDiagnoses=new Map(),failedDiagnosisDrafts=new Map();
  const ecgSweep=createEcgSweep();
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
  const post=text=>send(text,{patientUid});
@@ -40,10 +42,14 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  function showDiagnosis(patient){
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid||!s.patient.liveVitals)return;
   patientUid=patient.uid;
+  diagnosisEditorVersion++;
+  const draft=failedDiagnosisDrafts.get(patient.uid);
   open('<h2>'+esc(patient.bedId||'Paciente')+' · Impresión diagnóstica</h2>'+
    diagnosisEditorHTML(s.patient,{readOnly:s.canEdit===false||s.patient.caseEnded})+
    '<div class="actions"><button data-action="close">Cerrar</button></div>','diagnosis');
-  ui('modalContent').dataset.patientUid=patientUid;renderDiagnosisSuggestions();
+  ui('modalContent').dataset.patientUid=patientUid;
+  if(draft!==undefined&&!ui('diagnosisInput')?.readOnly)ui('diagnosisInput').value=draft;
+  renderDiagnosisSuggestions();
   ui('diagnosisInput')?.focus({preventScroll:true});
  }
  function renderDiagnosisSuggestions(){
@@ -54,11 +60,48 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const s=state(),field=ui('diagnosisInput');
   if(!s||s.canEdit===false||s.patient.caseEnded||!field||field.readOnly)return;
   const text=field.value.trim();if(!clear&&!text)return;
-  await post(clear?'/diagnostico-borrar':'/diagnostico '+text);
-  if(state()?.patient.uid!==s.patient.uid)return;
-  if(!clear&&ui('modal')?.dataset.panel==='diagnosis')close();
-  else{field.value=state().patient.diagnosis;renderDiagnosisSuggestions();}
-  render();
+  const uid=s.patient.uid,version=diagnosisEditorVersion;
+  // A second tap must not enqueue a duplicate clinical command.
+  if(pendingDiagnoses.has(uid))return pendingDiagnoses.get(uid);
+  const command=clear?'/diagnostico-borrar':'/diagnostico '+text;
+  // Sending begins synchronously: the existing transport owns the durable
+  // receipt. No UI change is represented as a confirmed clinical diagnosis.
+  const request=Promise.resolve().then(()=>post(command));
+  pendingDiagnoses.set(uid,request);
+  if(!clear&&ui('modal')?.dataset.panel==='diagnosis'&&
+     ui('modalContent')?.dataset.patientUid===uid){
+   close();
+   notify('Registrando impresión diagnóstica…');
+  }else{
+   field.disabled=true;
+  }
+  try{
+   const receipt=await request;
+   const rejected=!receipt||receipt.status==='rejected'||receipt.status==='unconfirmed'||
+     receipt.routeError||receipt.clinical?.some(row=>['rejected','unconfirmed'].includes(row.status));
+   if(rejected)throw Error('diagnosis-not-confirmed');
+   failedDiagnosisDrafts.delete(uid);
+   if(diagnosisEditorVersion===version&&state()?.patient.uid===uid){
+    const current=ui('diagnosisInput');
+    if(current&&ui('modal')?.dataset.panel==='diagnosis'){
+     current.disabled=false;
+     if(clear)current.value=state().patient.diagnosis||'';
+     renderDiagnosisSuggestions();
+    }
+    render();
+   }
+   return receipt;
+  }catch{
+   // Preserve the exact draft even when the panel was already dismissed.
+   failedDiagnosisDrafts.set(uid,text);
+   notify('No se confirmó la impresión diagnóstica. Abrí el editor para reintentar; conservamos el texto.');
+  }finally{
+   if(pendingDiagnoses.get(uid)===request)pendingDiagnoses.delete(uid);
+   if(diagnosisEditorVersion===version){
+    const current=ui('diagnosisInput');
+    if(current&&ui('modal')?.dataset.panel==='diagnosis')current.disabled=false;
+   }
+  }
  }
  async function chooseDestination(patient,id){
   const s=session()?.read();
