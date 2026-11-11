@@ -173,7 +173,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      display(id)+(severe.has(id)?' (reacción grave)':'')).join(', ')+'.');
     if(intolerances.length)parts.push('Intolerancias registradas: '+intolerances.map(display).join(', ')+'.');
     if(!parts.length)parts.push('No constan alergias medicamentosas en la ficha disponible; hay que confirmarlo con el paciente o un acompañante.');
-    return {status:'executed',patientUid,eventId,receipt:{patientUid,eventId,message:parts.join(' ')}};
+    return {status:'executed',patientUid,eventId,receipt:{patientUid,eventId,kind:intent.kind,id:intent.id,message:parts.join(' ')}};
    }
    if(intent.kind==='case.close'){
     const rule=caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id];
