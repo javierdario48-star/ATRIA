@@ -40,3 +40,23 @@ npm run build:v5
 Fuente autoritativa: [ATRIA-5-REMAINING-TASKS.md](ATRIA-5-REMAINING-TASKS.md), sección **Registro maestro de estado**. Incluye DX-01, LAB-02, NUR-01, CLOSE-01, VEGA-01, LAB-01, ANAM-01, LAT-01, MP-01, XP-COOP, DX-REVEAL, FAM-01, REC-01, UI-01, SAFE-01 y ARCH-01, con estados, archivos, pruebas y próximos pasos.
 
 **Instrucción permanente:** al finalizar cada sesión, actualizar el registro maestro, comprobar HEAD y publicar/entregar una nueva continuidad exacta. No usar Work, ZIP, refactorizaciones masivas ni supuestas pruebas verdes.
+
+## Continuación de sesión posterior — 2026-11-11
+
+**HEAD inicial:** `7687539afad461a66857bafe304bec11dcade54a`, confirmado idéntico a rama mediante GitHub. Este documento es acumulativo; verificar HEAD remoto actual, ya que su propio commit lo hará avanzar.
+
+**Commits publicados en esta sesión:**
+- `8db75eb5dfe2031c4173435c7ddbedf28535375b`: `src/v5/clinical/clinical-hint-requirements.js`; exige que todos los grupos alternativos estén bien formados para no ocultar un bloqueo.
+- `55dccf4d9934c98f8064d1a84352bc430945a151`: `src/v5/clinical/closure-requirements-audit.test.js`; regresión del defecto y actualización de expectativas.
+- `7af11d62d850b43b5f0b30d146e873228168542c`: `src/v5/clinical/guard-session.js`; método público de auditoría de solo lectura basado en `currentChecklist()`, que comparte el veredicto y requisitos usados por Vega.
+- `a152074251698985856d4bbfb9fbb46f37cf5818`: `src/v5/clinical/physical-nursing.test.js`; caso real APP-001 comprueba que auditoría no muta sesión ni XP.
+- `760489fa3733c57f305595627fae3e9d7dda314b`: `docs/ATRIA-5-REMAINING-TASKS.md`; checkpoint maestro actualizado.
+- El commit de esta actualización documental se debe obtener verificando HEAD remoto.
+
+**Verificaciones exactas:** lectura mediante GitHub de los cuatro documentos obligatorios, `guard-session.js`, `clinical-hint-ledger.js`, `clinical-hint-requirements.js`, pruebas de auditoría y `physical-nursing.test.js`. Cambios publicados con SHA de blob actual. **No** se ejecutaron tests Node, build, navegador ni Android; no confundir publicación de pruebas con aprobación.
+
+**Estado:** CLOSE-01 tiene ahora una ruta de inspección de sesión real, pero falta ejecutar las pruebas y recorrer todos los casos. Dr. Vega sigue intacto, usa `currentChecklist()` compartido; falta demostrar cobertura de cada bloqueo. Enfermería NUR-01 permanece publicada y pendiente de validación integrada. No se modificaron reglas de cierre, fisiología, tratamiento, recibos ni XP.
+
+**Próximo paso exacto:** ejecutar `node --test src/v5/clinical/closure-requirements-audit.test.js src/v5/clinical/physical-nursing.test.js` en checkout completo. Después diseñar un test parametrizado que recorra el catálogo real, cree una sesión por caso, consulte `auditClosureRequirements()` y registre requisitos sin acciones y NPO obligatorio estructural; contrastar resultados con pistas de Vega. Evitar cambiar reglas clínicas sin regresiones específicas.
+
+**Listado maestro autoritativo:** [ATRIA-5-REMAINING-TASKS.md](ATRIA-5-REMAINING-TASKS.md), incluyendo las 16 áreas y el checkpoint más reciente. Al terminar la siguiente sesión, volver a actualizar ambos documentos y confirmar HEAD.
