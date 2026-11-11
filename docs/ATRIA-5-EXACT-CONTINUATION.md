@@ -75,3 +75,19 @@ Commits:
 **Estado:** CLOSE-01 tiene una prueba parametrizada publicada, pero sin ejecución ni revisión clínica de anomalías. VEGA-01 sigue sin verificación de cobertura de bloqueos; pistas, descuento 5% y recibos no fueron alterados. NUR-01, DX-01 y LAB-02 siguen pendientes de suite integrada. Arquitectura: se reutiliza la autoridad clínica y `auditClosureRequirements()`, sin motor paralelo. Deuda: obtener runner, ejecutar prueba por caso, revisar posibles diferencias de fixture, verificar alternativas ejecutables y pistas.
 
 **Próxima tarea concreta:** ejecutar `node --test src/v5/clinical/closure-catalog-audit.test.js src/v5/clinical/closure-requirements-audit.test.js src/v5/clinical/physical-nursing.test.js`, luego `npm run build:v5`. Registrar cada `caseId`, `destination`, `issues` y el requisito real que causa el bloqueo. Contrastar NPO y estudios con acciones disponibles y Dr. Vega antes de modificar cualquier regla. Continuar con listado maestro en [ATRIA-5-REMAINING-TASKS.md](ATRIA-5-REMAINING-TASKS.md); actualizar ambos documentos y verificar HEAD al final de la siguiente sesión.
+
+## Continuidad exacta — revisión de auditoría y Vega (2026-11-11)
+
+**Rama exclusiva:** `atria-5.0-core-rebuild-experimental`. **HEAD inicial verificado idéntico:** `6b5de7dc7dff3af8263c4d7f930deada3e913f81`. Verificar el HEAD remoto de esta actualización documental antes de continuar.
+
+**Commits de esta ejecución:**
+- `2088bb6c28ee3c91651c48153b4f17d0e0cc98ca`: corrige en `src/v5/clinical/closure-catalog-audit.test.js` la comparación inválida entre `read().closure` y el destino potencialmente distinto de `currentChecklist()`. Añade diagnóstico de la pista inicial de Vega y del bloqueo inicial por caso.
+- `d16759b10398d72fddd75301182438bca78009c5`: usa la función preexistente `clinicalHintCoverage(content)` para informar la cobertura estática de descriptores de acciones de Vega, sin crear un motor nuevo.
+- `15cf66669605772e2c95ad0e8741efb407c07872`: checkpoint maestro.
+- El commit de este documento se obtiene mediante verificación del HEAD remoto.
+
+**Hallazgos verificados:** lectura autenticada de cuatro documentos y código; `src/v5/content/cases.json` contiene 25 casos con 25 IDs únicos. `clinicalHintCoverage` ya existía en `clinical-hints.js`; se reutilizó. El contenedor no resuelve github.com (`git ls-remote` falló), y no hay checkout. **No se ejecutaron** pruebas Node, build, navegador, Android ni auditoría dinámica; la nueva prueba publicada debe validarse en runner real. No se modificaron criterios clínicos, pistas, XP ni recibos.
+
+**Limitación clínica:** una pista en el estado inicial y un inventario de acciones no prueban cobertura de todos los bloqueos a lo largo del caso ni indispensabilidad de NPO. Se necesita recorrer progresiones y destinos con resultados reales, identificar anomalías por caso y evaluar evidencia antes de cambiar reglas.
+
+**Próxima tarea:** ejecutar `node --test src/v5/clinical/closure-catalog-audit.test.js src/v5/clinical/closure-requirements-audit.test.js src/v5/clinical/physical-nursing.test.js` y `npm run build:v5`. Resolver cualquier fallo de fixture. Analizar los diagnósticos `vega-action-coverage`, bloqueos iniciales, alternativas NPO y cobertura por destino; después extender pruebas a transiciones reales y continuar NUR-01. Actualizar [ATRIA-5-REMAINING-TASKS.md](ATRIA-5-REMAINING-TASKS.md) y este documento en cada sesión.
