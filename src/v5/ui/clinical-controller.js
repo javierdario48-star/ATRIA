@@ -18,7 +18,7 @@ import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} fro
 export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[],therapies=[],onMonitorOpen=()=>{}}){
  const ui=id=>document.getElementById(id);
  let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,examFeedback=null,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='';
- let diagnosisEditorVersion=0;
+ let diagnosisEditorVersion=0,diagnosisSessionVersion=0;
  const pendingDiagnoses=new Map(),failedDiagnosisDrafts=new Map();
  const ecgSweep=createEcgSweep();
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
@@ -60,7 +60,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const s=state(),field=ui('diagnosisInput');
   if(!s||s.canEdit===false||s.patient.caseEnded||!field||field.readOnly)return;
   const text=field.value.trim();if(!clear&&!text)return;
-  const uid=s.patient.uid,version=diagnosisEditorVersion;
+  const uid=s.patient.uid,version=diagnosisEditorVersion,sessionVersion=diagnosisSessionVersion;
   // A second tap must not enqueue a duplicate clinical command.
   if(pendingDiagnoses.has(uid))return pendingDiagnoses.get(uid);
   const command=clear?'/diagnostico-borrar':'/diagnostico '+text;
@@ -80,6 +80,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    const rejected=!receipt||receipt.status==='rejected'||receipt.status==='unconfirmed'||
      receipt.routeError||receipt.clinical?.some(row=>['rejected','unconfirmed'].includes(row.status));
    if(rejected)throw Error('diagnosis-not-confirmed');
+   if(diagnosisSessionVersion!==sessionVersion)return receipt;
    failedDiagnosisDrafts.delete(uid);
    if(diagnosisEditorVersion===version&&state()?.patient.uid===uid){
     const current=ui('diagnosisInput');
@@ -93,7 +94,10 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    return receipt;
   }catch{
    // Preserve the exact draft even when the panel was already dismissed.
-   failedDiagnosisDrafts.set(uid,text);
+   if(diagnosisSessionVersion!==sessionVersion)return;
+   const activeEditor=diagnosisEditorVersion!==version&&ui('modal')?.dataset.panel==='diagnosis'&&
+    ui('modalContent')?.dataset.patientUid===uid?ui('diagnosisInput'):null;
+   failedDiagnosisDrafts.set(uid,activeEditor?.value??text);
    notify('No se confirmó la impresión diagnóstica. Abrí el editor para reintentar; conservamos el texto.');
   }finally{
    if(pendingDiagnoses.get(uid)===request)pendingDiagnoses.delete(uid);
@@ -427,5 +431,5 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   render();return true;
  }
  return Object.freeze({showPatient,showClosure,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
-  reset(){diagnosisEditorVersion++;pendingDiagnoses.clear();failedDiagnosisDrafts.clear();patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
+  reset(){diagnosisEditorVersion++;diagnosisSessionVersion++;pendingDiagnoses.clear();failedDiagnosisDrafts.clear();patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }
