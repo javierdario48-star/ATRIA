@@ -23,7 +23,7 @@ test('NPO blocking requirement is flagged for clinical review, not silently remo
  const requirements=[{type:'treatment',anyOf:[['npo'],['fluid']]}];
  const before=structuredClone(requirements);
  const result=auditClosureRequirements({ready:false,missing:['Treatment required']},requirements);
- assert.deepEqual(result.issues,[{code:'npo-necessity-review',index:0}]);
+ assert.deepEqual(result.issues,[{code:'npo-necessity-review',index:0,unavoidable:false}]);
  assert.deepEqual(requirements,before);
 });
 
@@ -32,4 +32,22 @@ test('valid alternative actions are not reported as absent',()=>{
   {type:'treatment',anyOf:[['ceftriaxone'],['ampicillin','gentamicin']]},
   {type:'closure',destination:'uti'}]);
  assert.deepEqual(result.issues,[]);
+});
+
+test('NPO is unavoidable only when every valid treatment alternative contains it',()=>{
+ const result=auditClosureRequirements({ready:false,missing:['Treatment required']},[
+  {type:'treatment',anyOf:[['npo','fluid'],['npo','antibiotic']]},
+  {type:'treatment',anyOf:[['npo'],['antibiotic']]}]);
+ assert.deepEqual(result.issues,[
+  {code:'npo-necessity-review',index:0,unavoidable:true},
+  {code:'npo-necessity-review',index:1,unavoidable:false}]);
+});
+
+test('malformed NPO alternatives do not crash the audit',()=>{
+ const result=auditClosureRequirements({ready:false,missing:['Treatment required']},[
+  {type:'treatment',anyOf:[null,['npo']]},
+  {type:'treatment',anyOf:'npo'}]);
+ assert.deepEqual(result.issues,[
+  {code:'npo-necessity-review',index:0,unavoidable:true},
+  {code:'missing-action-alternatives',index:1,type:'treatment'}]);
 });
