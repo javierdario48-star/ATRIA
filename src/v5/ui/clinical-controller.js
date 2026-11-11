@@ -66,7 +66,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const command=clear?'/diagnostico-borrar':'/diagnostico '+text;
   // Sending begins synchronously: the existing transport owns the durable
   // receipt. No UI change is represented as a confirmed clinical diagnosis.
-  const request=Promise.resolve().then(()=>post(command));
+  const request=Promise.resolve().then(()=>send(command,{patientUid:uid}));
   pendingDiagnoses.set(uid,request);
   if(!clear&&ui('modal')?.dataset.panel==='diagnosis'&&
      ui('modalContent')?.dataset.patientUid===uid){
@@ -427,5 +427,5 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   render();return true;
  }
  return Object.freeze({showPatient,showClosure,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
-  reset(){patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
+  reset(){diagnosisEditorVersion++;pendingDiagnoses.clear();failedDiagnosisDrafts.clear();patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }
