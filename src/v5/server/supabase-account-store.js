@@ -63,7 +63,10 @@ export function createSupabaseAccountStore({url,secretKey,fetchImpl=globalThis.f
   }
  });
 }
-const durableKey=/^qa-v1:(user|friends|requests|outgoing|invites):qa_[0-9a-f]{30}$/;
+// Room metadata and guest acceptance slots must share the same durable
+// backing store across serverless instances. Authorization remains in the
+// existing social server: this private adapter never exposes raw room keys.
+const durableKey=/^(?:qa-v1:(?:user|friends|requests|outgoing|invites):qa_[0-9a-f]{30}|qa-v1:room:[a-f0-9-]{36}|atria-v5:room-member:[a-f0-9-]{36}:qa_[0-9a-f]{30})$/;
 export function createPersistentSocialStorage({backend,cache}){
  return Object.freeze({
   async get(key){if(!durableKey.test(key))return cache.get(key);
