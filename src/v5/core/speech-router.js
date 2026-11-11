@@ -118,6 +118,14 @@ export function routeWardSpeech(text,context={}){
  if(asksAllergies.test(nurseQuestion))return {recipient,patientUid,original,intents:patientUid?
   [{kind:'nurse.inquire',id:'allergies',sourceText:original}]:[],
   ...(!patientUid?{error:'no-patient-target'}:{})};
+ // Natural fasting instructions are positive NPO orders even when phrased
+ // with a prohibition. Only use the case's existing intervention and receipt.
+ const npoInstruction=/^(?:(?:dejalo|dejala|dejarlo|dejarla|mantenelo|mantenela|mantenerlo|mantenerla|mantener|dejar|deje|mantenga)(?: al paciente)? en ayunas?|no (?:le )?(?:des|den|dar|darle|ofrecer|ofrezcas) (?:agua|comida|alimentos|nada por boca)(?: ni (?:agua|comida|alimentos))?|que no (?:coma|beba)(?: ni (?:coma|beba))?)$/;
+ if(context.clinicalEvaluation&&npoInstruction.test(nurseQuestion)&&
+  (context.interventions||[]).some(item=>item.id==='npo'))
+  return {recipient,patientUid,original,intents:patientUid?
+   [{kind:'therapy.request',id:'npo',sourceText:original,clause:original,count:1}]:[],
+   ...(!patientUid?{error:'no-patient-target'}:{})};
  // A discharge safety plan is a clinical meaning, not an exact password.
  // Require BOTH follow-up and a concrete return precaution; generic 'alta'
  // or 'control' alone must never earn documented follow-up credit.
