@@ -4,8 +4,8 @@ Estado al 11 de noviembre de 2026. Los números remiten al inventario del usuari
 
 | Orden | ID y prioridad | Requisitos | Estado y responsable | Archivos principales | Dependencias y prueba mínima |
 | --- | --- | --- | --- | --- | --- |
-| 1 | DX-01 · P1 | 56, 57, 58 | C. Espera del recibo y riesgo de cierre tardío identificados. | `ui/clinical-controller.js`, `app/application.js`, `ui/diagnostic-impression.js` | Cola y recibo de diagnóstico existentes. Retardo, rechazo, reapertura y cambio de paciente en `qa/v5/diagnosis-browser.mjs`. |
-| 2 | LAB-02 · P2 | 4, 7 | A para alias ya soportados. C para cobertura VEDB y equivalentes. | `clinical/study-order-vocabulary.js`, `ui/clinical-autocomplete.js`, `core/speech-router.js` | Catálogo real. Un ID/orden por alias; excluir endoscopia alta y ensayos diferentes. |
+| 1 | DX-01 · P1 | 56, 57, 58 | C. Parche publicado (d4a6ebd): cierre inmediato, UID fijado y borrador recuperable; falta regresión navegador y Android. | `ui/clinical-controller.js`, `app/application.js`, `ui/diagnostic-impression.js` | Cola y recibo de diagnóstico existentes. Retardo, rechazo, reapertura y cambio de paciente en `qa/v5/diagnosis-browser.mjs`. |
+| 2 | LAB-02 · P2 | 4, 7 | A para alias ya soportados. C. Alias VEDB publicados (6450b1e) y prueba añadida (6c1f188); verificación aislada 14/14, falta suite integrada. | `clinical/study-order-vocabulary.js`, `ui/clinical-autocomplete.js`, `core/speech-router.js` | Catálogo real. Un ID/orden por alias; excluir endoscopia alta y ensayos diferentes. |
 | 3 | NUR-01 · P1 | 18–19, 21–24 | C. Reproducir frases problemáticas. A para «nada por boca» y órdenes ya verificadas. | `core/speech-router.js`, `src/clinical/nurse-scanner-487.js`, `clinical/guard-session.js`, `engine/nurse-dispatcher.js` | Intentos y recibos existentes. Consulta de alergia, alias NPO, plan de alta y evento repetido. |
 | 4 | LAB-01 · P1 | 1–3, 5–6, 9 | C. Faltan reproducciones con muestra y estudio identificados. | `clinical/studies.js`, `clinical/study-evidence.js`, `clinical/patient-observations.js`, `src/clinical/study-registry.js` | Adquisición canónica y reloj nativo. Una muestra inmutable, gasometría de control, hemograma y panel con PCR. |
 | 5 | ANAM-01 · P2 | 10–13, 16–17 | C para precisión de intención y variantes. A para saludos y persistencia ya implementados. | `clinical/patient-dialogue.js`, `clinical/patient-question-context.js`, `clinical/patient-observations.js`, `content/patient-variation.js` | Hechos y personalidad del checkpoint. Preguntas equivalentes, habla limitada y reconexión. |
@@ -22,3 +22,9 @@ Estado al 11 de noviembre de 2026. Los números remiten al inventario del usuari
 Las rutas abreviadas apuntan a `src/v5/`, salvo las que empiezan con `src/`, `qa/` o se refieren a la migración de Supabase.
 
 Empezar con DX-01. LAB-02 y NUR-01 pueden avanzar con pruebas locales. LAT-01 necesita una traza corta antes de cambiar el transporte. Coordinar DX-REVEAL y XP-COOP porque ambos modifican la política de recompensa. La aceptación física de REC-01 se hace en paralelo cuando haya acceso al dispositivo.
+
+## Checkpoint ChatGPT — 2026-11-11
+
+- DX-01: `3b0db36`, `d4a6ebd` modifican `clinical-controller.js` para cierre no bloqueante, UID explícito, bloqueo de duplicados y borrador recuperable. Comprobadas sintaxis y pruebas aisladas de cierre inmediato y rechazo; **no** se ejecutó aún el navegador/Android ni la suite Node completa.
+- LAB-02: `6450b1e` añade alias VEDB al vocabulario canónico y `6c1f188` incorpora regresión en `study-orders.test.js`. Resolución aislada 14/14 en CROHN-001 y COLON-001; **no** se ejecutó aún la suite Node completa.
+- Siguiente: ejecutar las pruebas dirigidas del traspaso, corregir cualquier regresión y continuar con NUR-01. Verificar HEAD antes de nuevos cambios.
