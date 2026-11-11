@@ -18,10 +18,12 @@ const report={passed:false,preview:origin,browserProcesses:2,authenticated:true,
 let stage='matching published source';
 const suffix=Date.now().toString(36),password=randomBytes(24).toString('base64url');
 const clinical=page=>page.evaluate(()=>atriaV5.snapshot().clinical);
-const api=(page,path,body)=>page.evaluate(async({path,body})=>{
- const response=await fetch('/api/'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},...(body?{body:JSON.stringify(body)}:{})});
+const api=(page,path,body,token)=>page.evaluate(async({path,body,token})=>{
+ const response=await fetch('/api/'+path,{method:body?'POST':'GET',
+  headers:{...(body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:'Bearer '+token}:{})},
+  ...(body?{body:JSON.stringify(body)}:{})});
  return {status:response.status,body:await response.json()};
-},{path,body});
+},{path,body,token});
 const check=(name,evidence={})=>{report.checks.push({name,...evidence});console.log('LIVE SHARED CHECK',name);};
 async function dismiss(page){
  await page.keyboard.press('Escape');
@@ -170,13 +172,17 @@ try{
  await picture('continued');await save(a);await save(b);
  stage='room isolation, revocation and cleanup';
  const external=await (await newContext({viewport:{width:1100,height:800}})).newPage();
- await register(external,2);
+ await external.goto(origin);
+ // A separate unclaimed social identity exercises the public member fence
+ // without spending another persistent-account registration from this IP.
+ const clientKey=randomUUID(),visitor=await api(external,'register',{clientKey,name:'QA Visitante '+suffix});
+ assert.equal(visitor.status,200);const token=visitor.body.token;
  const path='rooms/'+roomId;
- assert.equal(await external.evaluate(async p=>(await fetch('/api/'+p,{credentials:'omit'})).status,path+'/messages'),401);
- assert.equal((await api(external,path+'/messages')).status,403);
- assert.equal((await api(external,'rooms/join',{roomId})).status,403);
- assert.equal((await api(external,'clinical',{action:'observe',roomId})).status,403);
- assert.equal((await api(external,'rooms/'+randomUUID()+'/messages')).status,404);
+ assert.equal((await api(external,path+'/messages')).status,401);
+ assert.equal((await api(external,path+'/messages',undefined,token)).status,403);
+ assert.equal((await api(external,'rooms/join',{roomId},token)).status,403);
+ assert.equal((await api(external,'clinical',{action:'observe',roomId,clientKey},token)).status,403);
+ assert.equal((await api(external,'rooms/'+randomUUID()+'/messages',undefined,token)).status,404);
  assert.equal((await api(b,path+'/leave',{})).status,200);
  assert.equal((await api(b,path+'/messages')).status,403);
  assert.equal((await api(b,'rooms/join',{roomId})).status,403);
@@ -184,7 +190,7 @@ try{
  assert.equal((await api(a,path+'/cancel',{})).status,200);
  assert.equal((await api(a,path+'/messages')).status,404);
  for(const page of pages)assert.equal((await api(page,'account/release-guard',{roomId})).status,200);
- for(const page of [...pages,external])assert.equal((await api(page,'account/logout',{})).status,200);
+ for(const page of pages)assert.equal((await api(page,'account/logout',{})).status,200);
  assert.deepEqual(errors,[]);
  check('authenticated outsider, revoked guest and closed room retain 401/403/404 boundaries');
  report.passed=true;report.errors=errors;
