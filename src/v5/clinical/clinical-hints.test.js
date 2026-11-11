@@ -7,6 +7,7 @@ import {hintDestination} from './clinical-hint-requirements.js';
 import {additionalCaseClosureSnapshot} from './additional-case-care.js';
 import {evaluateGastroDisposition} from './gastro-closure-v5.js';
 import {clinicalWorkflow} from '../ui/clinical-workflow.js';
+import {createClinicalHintPresenter} from '../ui/clinical-hint-presenter.js';
 
 function fixture(caseId='CIRR-001',supplied=content){
  const patient={uid:'hint-patient',caseId};
@@ -25,16 +26,39 @@ test('real closure gates advance the hint when an action is completed',async()=>
  const f=fixture();await f.post('/signos');
  assert.notEqual(f.next().action.kind,'vitals');f.session.dispose();
 });
+test('one Vega tap refreshes the offer when a confirmed action changes it during display',async()=>{
+ const f=fixture('HEPAT-001'),shown=[],responses=[],notifications=[],charged=[];
+ const presenter=createClinicalHintPresenter({
+  context:()=>f.session.hintBinding(),
+  async request(request){
+   const response=await f.session.hint(request);
+   responses.push([request.op,response.status]);return response;
+  },
+  show:offer=>{shown.push(offer);return true;},hide:()=>{},notify:text=>notifications.push(text),
+  onCount:count=>charged.push(count),
+  async paint(){if(shown.length===1)await f.post('/signos');}
+ });
+ try{
+  await presenter.reveal();
+  assert.deepEqual(responses,[['prepare','verified'],['displayed','stale'],['prepare','verified'],['displayed','displayed']]);
+  assert.deepEqual(shown.map(offer=>offer.key),['vitals:vitals','history:allergies']);
+  assert.deepEqual(charged,[1]);
+  assert.equal(f.session.hintCount('doctor'),1);
+  assert.deepEqual(notifications,[]);
+ }finally{f.session.dispose();}
+});
 test('HEPAT accepts an equivalent INR and glucose panel and shares its status with Ruta clínica',async()=>{
  const f=fixture('HEPAT-001');
  try{
   for(const text of ['/signos','¿Tiene alergias?', '/examen general','/examen inspection','/examen palpation','/diagnostico hepatitis aguda'])
    await f.post(text);
+  assert.equal(f.next().action?.id,'g_hepat_inr');
   const requested=await f.post('/estudio g_encef_liver');
   const repeated=await f.post('/estudio g_hepat_inr');
   assert.equal(requested.clinical[0].status,'pending');
   assert.equal(repeated.clinical[0].status,'pending');
   assert.equal(f.session.read().patient.orders.length,1,'equivalent orders share one specimen');
+  assert.notEqual(f.next().action?.id,'g_hepat_inr','the same panel is already pending under its equivalent ID');
   const stage=()=>clinicalWorkflow(f.session.read()).steps.find(s=>s.id==='studies').status;
   assert.equal(stage(),'partial');
   f.session.advance(180);await f.session.flush();
@@ -53,6 +77,25 @@ test('HEPAT accepts an equivalent INR and glucose panel and shares its status wi
   assert.equal(before.patient.reassessments,0,'checklist reads must never record a reassessment');
   await f.post('/disposicion alta');
   assert.equal(f.session.read().patient.caseEnded,true);
+ }finally{f.session.dispose();}
+});
+test('the aortic dissection CTA hint moves on once the ordered study is pending or reported',async()=>{
+ const f=fixture('CARD-08');
+ try{
+  for(const text of ['/signos','¿Tiene alergias a medicamentos?','/examen thorax auscultation'])await f.post(text);
+  const initial=f.next();assert.equal(initial.action?.id,'g_card08_cta');
+  const order=(await f.post(initial.action.command)).clinical[0];
+  assert.equal(order.status,'pending');
+  assert.notEqual(f.next().action?.id,'g_card08_cta');
+  const pending=f.session.read();
+  f.session.advance(pending.patient.orders[0].readyAtMinute-pending.clock.clinicalMinute);
+  await f.session.flush();
+  const state=f.session.read();
+  assert.equal(state.patient.orders.length,1);
+  assert.equal(state.patient.orders[0].status,'done');
+  assert.match(state.patient.orders[0].result,/Stanford A/);
+  assert(state.messages.some(row=>row.id==='completion:'+state.patient.orders[0].sourceEventId&&/resultado disponible/i.test(row.text)));
+  assert.notEqual(f.next().action?.id,'g_card08_cta');
  }finally{f.session.dispose();}
 });
 test('history instructions use an authored question that satisfies the actual closure gate',async()=>{
