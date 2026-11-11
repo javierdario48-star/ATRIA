@@ -10,6 +10,7 @@ import {neurologyPack} from '../content/packs/neurology-pack.js';
 import {clinicalCompletions,studySearchChoices} from '../ui/clinical-autocomplete.js';
 import {routeWardSpeech} from '../core/speech-router.js';
 import {selectClinicalHint} from './clinical-hints.js';
+import {studyOrderVocabulary} from './study-order-vocabulary.js';
 
 const read=name=>JSON.parse(readFileSync(new URL('../content/'+name+'.json',import.meta.url)));
 const content=createClinicalContent({cases:read('cases'),therapies:read('therapies'),defaultDoses:read('default-doses')},
@@ -58,6 +59,20 @@ test('ward study search and nursing phrases request one native result with its o
     assert.equal(after.clinical[0]?.receipt?.sourceEventId,order.sourceEventId);
    }
   }finally{session.dispose();}
+ }
+});
+
+
+test('VEDB and lower endoscopy names resolve to one native colonoscopy, never upper endoscopy',()=>{
+ for(const caseId of ['CROHN-001','COLON-001']){
+  const c=cases.find(item=>item.id===caseId);
+  const vocabulary=studyOrderVocabulary(c.studies,c.studies);
+  for(const phrase of ['VEDB','videoendoscopia digestiva baja','endoscopia digestiva baja',
+   'videocolonoscopia','video colonoscopia','colonoscopia','VCC']){
+   assert.equal(vocabulary.resolve(phrase)?.study?.id,'colonoscopia',caseId+': '+phrase);
+  }
+  assert.notEqual(vocabulary.resolve('endoscopia digestiva alta')?.study?.id,'colonoscopia');
+  assert.equal(vocabulary.catalog.filter(study=>study.id==='colonoscopia').length,1);
  }
 });
 
