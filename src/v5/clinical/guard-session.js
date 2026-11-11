@@ -349,6 +349,17 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   };
   return label+': no ejecutado; '+(technical[item.reason]||'no pude confirmar esta ejecución. Revisá la presentación y el estado de la orden antes de repetirla.');
  }
+ function historySpeaker(receipt){
+  const source=receipt?.responseSource,dialogue=receipt?.dialogue;
+  if(source?.kind==='companion'||source?.kind==='clinical-record')return {name:source.label,role:'system'};
+  // Saved transcripts from earlier builds have dialogue evidence without a source field.
+  const informant=caseData.clinicalPolicy?.historySource;
+  if(!source&&informant?.label&&dialogue?.prefix===informant.label+' (anamnesis indirecta): ')
+   return {name:informant.label,role:'system'};
+  if(source?.kind==='observation'||!source&&dialogue?.facts?.some(fact=>fact.source==='native.impaired-speech'))
+   return {name:'ATRIA',role:'system'};
+  return {name:'Paciente',role:'patient'};
+ }
  function messages(room){
   const closureText=item=>item.kind==='case.close'?item.receipt?.message?.replace(/ · \+\d+ XP\.$/,'.'):item.receipt?.message;
   const rows=[],announcedResults=new Set();
@@ -381,9 +392,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
        item.kind==='study.request'?label+': solicitado; pendiente de resultado.':
         label+': orden recibida; pendiente de enfermería o preparación, todavía no ejecutada.':
        label+': resultado disponible.'));
-     rows.push({id:'ack:'+message.id+':'+i,
-      name:isExaminationKind(item.kind)?'ATRIA':item.kind==='history.ask'?'Paciente':'Enfermera',
-      role:isExaminationKind(item.kind)?'system':item.kind==='history.ask'?'patient':'nurse',actorId:message.actorId,text:feedback});
+     const speaker=item.kind==='history.ask'?historySpeaker(item.receipt):
+      isExaminationKind(item.kind)?{name:'ATRIA',role:'system'}:{name:'Enfermera',role:'nurse'};
+     rows.push({id:'ack:'+message.id+':'+i,...speaker,actorId:message.actorId,text:feedback});
     }
     if(event.npcReply?.role==='mentor')
      rows.push({id:'npc:'+message.id,name:event.npcReply.name,role:'mentor',actorId:message.actorId,text:event.npcReply.text});

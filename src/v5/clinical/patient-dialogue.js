@@ -314,7 +314,9 @@ export function executePatientDialogue(p,c,cmd,clock){
   answer=lead+realized.map(f=>f.spoken).join(' ');
   dialogue={facts:realized,remark:null,limited:true,styleApplied:false,prefix:lead};
  }
- const receipt={patientUid:p.uid,eventId:cmd.eventId,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,
+ const responseSource=proxyHistory?{kind:informant.kind,label:informant.label}:
+  {kind:directSpeech?'patient':'observation'};
+ const receipt={patientUid:p.uid,eventId:cmd.eventId,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,responseSource,
   source:'native.patient-dialogue',...(answer?{answer}:{}),...(dialogue?{dialogue}:{}),message:answer||'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'};
  return {status:answer?'executed':'rejected',patientUid:p.uid,eventId:cmd.eventId,
   ...(!answer?{reason:'unknown-question'}:{}),receipt};

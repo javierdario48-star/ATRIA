@@ -33,6 +33,11 @@ test('an unconscious patient retains impaired speech while an authored companion
  try{
   const reply=await s.post({id:'witness-onset',text:'¿Desde cuándo?'});
   assert.match(answer(reply),/Familiar acompañante/);assert.match(answer(reply),/12 minutos/);
+  const row=s.read().messages.at(-1);
+  assert.equal(row.name,'Familiar acompañante');
+  assert.equal(row.role,'system');
+  assert.equal(row.actorId,'doctor');
+  assert.match(row.text,/12 minutos/);
   assert.equal(s.read().patient.neurology.verbal,1);
   const fact=s.read().patient.intentHistory.find(x=>x.id==='onset');
   assert.equal(fact.historySource.kind,'companion');assert.equal(fact.patientUid,uid);
@@ -40,6 +45,27 @@ test('an unconscious patient retains impaired speech while an authored companion
   assert.match(answer(meds),/^Familiar acompañante \(anamnesis indirecta\): Levetiracetam domiciliario suspendido por tres días por falta de medicación\. No benzodiacepinas administradas antes de llegar\.$/);
   assert.equal(s.read().patient.intentHistory.find(x=>x.id==='meds').historySource.kind,'companion');
  }finally{s.dispose();}
+});
+test('a patient without a verbal response or a witness produces one automatic clinical observation in chat',async()=>{
+ const c=neurologyPack.cases.find(x=>x.id==='NEUR-06'),clinicalPolicy={...c.clinicalPolicy};
+ delete clinicalPolicy.historySource;
+ const caseData={...c,clinicalPolicy},s=voiceSession(caseData);
+ let restored;
+ try{
+  const question={id:'without-witness',text:'¿Desde cuándo?'};
+  const reply=await s.post(question);
+  assert.equal(answer(reply),'(No responde.)');
+  await s.post(question);
+  const rows=s.read().messages;
+  assert.deepEqual(rows.map(({role})=>role),['player','system']);
+  assert.equal(rows[1].text,answer(reply));
+  assert.deepEqual(s.read().patient.intentHistory,[]);
+
+  const checkpoint=await s.checkpoint();
+  delete checkpoint.authority.events[0].clinical[0].receipt.responseSource;
+  restored=voiceSession(caseData,checkpoint);
+  assert.deepEqual(restored.read().messages,rows);
+ }finally{s.dispose();restored?.dispose();}
 });
 function voiceSession(c,checkpoint=null){
  const uid='voice-'+c.id;

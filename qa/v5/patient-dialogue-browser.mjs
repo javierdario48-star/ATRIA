@@ -31,6 +31,10 @@ try{
  }
  let reply=await send('¿Dónde te duele y desde cuándo empezó?');
  assert.equal(reply.role,'patient');assert.match(reply.text,/derecha.*ocho horas/);
+ const chatReply=page.locator('#chatHistory [data-message-id="'+reply.id+'"]');
+ await chatReply.waitFor({state:'visible'});
+ assert.equal(await chatReply.getAttribute('data-role'),'patient');
+ assert.match(await chatReply.innerText(),/derecha.*ocho horas/);
  await send('¿Y cómo es?');reply=await send('¿Y qué tan fuerte?');assert.match(reply.text,/7 de 10/);
  let app=(await state()).patient;assert(app.intentHistory.some(x=>x.id==='onset'));assert(app.intentHistory.some(x=>x.id==='migration'));
  assert.equal(app.lastVitalsKnown,null);assert.equal(app.examDone,false);assert.equal(app.reassessments,0);assert.deepEqual(app.treatments,[]);
