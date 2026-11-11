@@ -11,7 +11,10 @@ const origin=new URL(process.env.V5_BROWSER_URL).origin;
 assert(origin.startsWith('https://night-shift-clinical-')&&origin.endsWith('.vercel.app'));
 const output=process.env.V5_QA_OUTPUT||'/tmp/atria-recovery-preview';await fs.mkdir(output,{recursive:true});
 const require=createRequire(import.meta.url),{chromium,devices}=require(process.env.PLAYWRIGHT_MODULE_PATH||process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright');
-const browsers=[],contexts=[],pages=[],errors=[],checks=[],guards=[];
+const browsers=[],contexts=[],pages=[],errors=[],checks=[],guards=[],requests=[];
+const modes=(process.env.V5_QA_RECOVERY_MODES||'solo,coop,competitive').split(',');
+assert(modes.every(mode=>['solo','coop','competitive'].includes(mode)));
+const shared=modes.some(mode=>mode!=='solo');
 const suffix=Date.now().toString(36),names=['QA Recovery A '+suffix,'QA Recovery B '+suffix],password=randomBytes(24).toString('base64url');
 let stage='verify deployed source';
 const api=(page,path,body)=>page.evaluate(async({path,body})=>{
@@ -30,11 +33,14 @@ async function finalize(page){
 }
 try{
  const files=await waitForPreviewBuild(origin);
- for(let i=0;i<3;i++){
+ for(const i of shared?[0,1,2]:[0,2]){
   const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,
    args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-timer-throttling']});browsers.push(browser);
   const context=await browser.newContext(i?devices['Pixel 5']:{viewport:{width:1280,height:960}});contexts.push(context);
-  const page=await context.newPage();pages.push(page);page.setDefaultTimeout(45000);page.on('pageerror',e=>errors.push(e.message));
+  const page=await context.newPage();pages[i]=page;page.setDefaultTimeout(45000);page.on('pageerror',e=>errors.push(e.message));
+  page.on('response',r=>{const path=new URL(r.url()).pathname;if(path.startsWith('/api/')){
+   requests.push({page:i,path,status:r.status()});if(requests.length>100)requests.shift();
+  }});
   await page.goto(origin);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   if(i<2){
    stage='register account '+i;await page.locator('#doctorName').fill(names[i]);await page.locator('#welcomeNameForm button').click();
@@ -45,8 +51,9 @@ try{
   }
  }
  const [a,b,device]=pages;
- assert.notEqual((await api(a,'account/session')).body.account.actorId,(await api(b,'account/session')).body.account.actorId);
- for(const mode of ['solo','coop','competitive']){
+ if(shared)assert.notEqual((await api(a,'account/session')).body.account.actorId,(await api(b,'account/session')).body.account.actorId);
+ let signedIn=false;
+ for(const mode of modes){
   stage=mode+' admission';await a.locator('#guardButton').click();await a.locator('[data-mode='+mode+']').click();
   await a.locator('input[name=guardScope][value=specific]').check();await a.locator('#caseChoice').selectOption('FECAL-001');
   if(mode!=='solo')await a.locator('#coopDoctors label').filter({hasText:names[1]}).locator('input').check();
@@ -56,9 +63,9 @@ try{
   const initial=(await api(a,'account/session')).body.account,id=initial.activeGuardId,
    uid=await a.evaluate(()=>atriaV5.snapshot().clinical.patient.uid);
   assert(id);if(mode!=='solo')await guard(b,id);
-  if(mode==='solo'){
+  if(!signedIn){
    stage='independent device login';await device.locator('#accountLoginButton').click();await device.locator('#loginDoctorName').fill(names[0]);
-   await device.locator('#loginDoctorPassword').fill(password);await device.locator('#welcomeLoginForm button').click();await lobby(device);
+   await device.locator('#loginDoctorPassword').fill(password);await device.locator('#welcomeLoginForm button').click();await lobby(device);signedIn=true;
   }else await reopen(device);
   stage=mode+' recovery offer';await recoverOffer(device);
   const inspected=(await api(device,'account/session')).body.account;
@@ -89,8 +96,19 @@ try{
  }
  assert.deepEqual(errors,[]);
  const report={passed:true,preview:origin,checks,guards,verifiedFiles:Object.keys(files).length,
-  browserProcesses:3,authenticatedAccounts:2,liveSupabase:true,androidEmulation:'Pixel 5',physicalAndroid:false};
+  browserProcesses:browsers.length,authenticatedAccounts:shared?2:1,liveSupabase:true,androidEmulation:'Pixel 5',physicalAndroid:false};
  await fs.writeFile(output+'/report.json',JSON.stringify(report,null,2));console.log('GUARD RECOVERY PREVIEW PASS',JSON.stringify(report));
- for(const page of pages)await api(page,'account/logout',{});
-}catch(error){await fs.writeFile(output+'/failure.json',JSON.stringify({stage,error:error.message,errors,guards},null,2));throw error;}
+ for(const page of pages.filter(Boolean))await api(page,'account/logout',{});
+}catch(error){
+ const screens=[];
+ for(const [index,page] of pages.entries()){
+  if(!page)continue;
+  screens.push(await page.evaluate(()=>({phase:window.atriaV5?.snapshot().phase,
+   welcome:document.getElementById('splash')?.dataset.step,
+   welcomeError:document.getElementById('welcomeError')?.textContent,
+   modal:document.getElementById('modal')?.open?document.getElementById('modalContent')?.textContent:null})).catch(()=>null));
+  await page.screenshot({path:output+'/failure-'+index+'.png'}).catch(()=>{});
+ }
+ await fs.writeFile(output+'/failure.json',JSON.stringify({stage,error:error.message,errors,guards,screens,requests},null,2));throw error;
+}
 finally{for(const context of contexts)await context.close().catch(()=>{});for(const browser of browsers)await browser.close().catch(()=>{});}
