@@ -25,3 +25,18 @@ test('ordinary questions, nursing doses and missing patient never become diagnos
  }
  assert.equal(routeWardSpeech('Enfermera, creo que tiene colecistitis',{...opts,patientUid:null}).error,'no-patient-target');
 });
+
+test('nurse allergy questions are information requests, never medication orders',()=>{
+ for(const text of ['Enfermera, alergias','Enfermera, ¿qué alergias tiene?',
+  'Enfermera, ¿tiene alergias?','Enfermera, antecedentes de alergias',
+  '¿Qué alergias presenta?']){
+  const x=routeWardSpeech(text,text.startsWith('¿')?{...opts,focusedNpc:'nurse'}:opts);
+  assert.equal(x.error,undefined,text);
+  assert.deepEqual(x.intents.map(i=>[i.kind,i.id]),[['nurse.inquire','allergies']],text);
+ }
+ const missing=routeWardSpeech('Enfermera, alergias',{...opts,patientUid:null});
+ assert.equal(missing.error,'no-patient-target');
+ assert.deepEqual(missing.intents,[]);
+ const negated=routeWardSpeech('Enfermera, no alergias',opts);
+ assert(!negated.intents.some(i=>i.kind==='nurse.inquire'));
+});
