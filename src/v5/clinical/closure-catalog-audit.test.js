@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createWorld} from '../app/world.js';
 import {createGuardSession} from './guard-session.js';
+import {clinicalHintCoverage} from './clinical-hints.js';
 
 const load=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name+'.json',import.meta.url)));
 const content={map:load('hospital'),beds:load('beds'),cases:load('cases'),
@@ -62,4 +63,13 @@ test('every authored case exposes an immutable closure audit through its live gu
   });
  }
  assert.equal(seen.size,content.cases.length);
+});
+
+test('catalog action descriptors use existing Vega coverage registry',t=>{
+ const coverage=clinicalHintCoverage(content);
+ assert.equal(coverage.cases.length,content.cases.length);
+ assert(Array.isArray(coverage.errors));
+ for(const error of coverage.errors)assert.equal(typeof error,'string');
+ t.diagnostic(JSON.stringify({kind:'vega-action-coverage',
+  caseCount:coverage.cases.length,missingActionDescriptors:coverage.errors}));
 });
