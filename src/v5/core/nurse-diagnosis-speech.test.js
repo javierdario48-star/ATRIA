@@ -46,7 +46,8 @@ test('natural follow-up and red flags register one existing conduct without secr
  const positive=routeWardSpeech('Enfermera, alta con control en 48 horas y regresar si aparece fiebre',withFollowup);
  assert.deepEqual(positive.intents.map(x=>[x.kind,x.id]),[['therapy.request','followup']]);
  for(const text of ['Enfermera, alta','Enfermera, control en 48 horas',
-  'Enfermera, volver si aparece fiebre']){
+  'Enfermera, volver si aparece fiebre',
+  'Enfermera, control en 48 horas, no regresar si aparece fiebre']){
   const x=routeWardSpeech(text,withFollowup);
   assert(!x.intents.some(i=>i.id==='followup'),text);
  }
