@@ -111,3 +111,27 @@ test('late diagnosis response does not close a reopened editor for the same pati
  assert.equal(nodes.modal.dataset.panel,'diagnosis','old response cannot dismiss a new editor');
  assert.equal(nodes.diagnosisInput.value,'peritonitis','old response cannot overwrite a newer draft');
 });
+
+test('a diagnosis rejected after session reset cannot restore stale patient drafts',async()=>{
+ const nodes={modal:{dataset:{}},modalContent:{dataset:{}},diagnosisInput:{value:'',readOnly:false,focus(){}},
+  diagnosisSuggestions:{innerHTML:''}};
+ const patient={uid:'P1',bedId:'A',diagnosis:'',liveVitals:true,caseEnded:false};
+ let reject,notifications=[];
+ const controller=createClinicalInterface({
+  document:{getElementById:id=>nodes[id]||null},
+  session:()=>({read:()=>({patient,canEdit:true})}),
+  open:(_html,panel)=>{nodes.modal.dataset.panel=panel;nodes.diagnosisInput={value:patient.diagnosis,readOnly:false,focus(){}};},
+  close:()=>{nodes.modal.dataset.panel='';},
+  send:()=>new Promise((_resolve,r)=>reject=r),notify:message=>notifications.push(message),cases:[]
+ });
+ controller.showDiagnosis(patient);
+ nodes.diagnosisInput.value='old diagnosis';
+ const pending=controller.saveDiagnosis();
+ await Promise.resolve();
+ controller.reset();
+ reject(new Error('network lost'));
+ await pending;
+ controller.showDiagnosis(patient);
+ assert.equal(nodes.diagnosisInput.value,'','an old session cannot repopulate a new clinical editor');
+ assert(!notifications.some(message=>/no se confirmó/i.test(message)));
+});
