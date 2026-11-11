@@ -56,7 +56,7 @@ test('natural follow-up and red flags register one existing conduct without secr
 
 test('natural NPO orders reuse the existing case intervention',()=>{
  const withNpo={...opts,interventions:[{id:'npo',label:'Nada por boca',aliases:['nada por boca','npo','ayuno']}]};
- for(const text of ['Enfermera nada por boca','Enfermera dejalo en ayunas',
+ for(const text of ['Enfermera nada por boca','Enfermera dejalo en ayunas','Enfermera, dejalo en ayuno',
   'Enfermera NPO','Enfermera no le des agua','Enfermera no dar nada por boca',
   'Enfermera no le des agua ni comida']){
   const x=routeWardSpeech(text,withNpo);

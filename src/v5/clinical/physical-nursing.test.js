@@ -910,7 +910,7 @@ test('nurse reads documented allergies without prescribing or mutating clinical 
 test('equivalent NPO instructions do not create duplicate confirmed interventions',async()=>{
  const f=fixture('APP-001');
  try{
-  const first=await f.session.post({id:'npo-natural-1',text:'Enfermera, dejalo en ayunas'});
+  const first=await f.session.post({id:'npo-natural-1',text:'Enfermera, dejalo en ayuno'});
   assert(first.clinical.some(x=>x.id==='npo'&&x.status==='executed'),
    'natural fasting order must reach the existing native executor');
   const second=await f.session.post({id:'npo-natural-2',text:'Enfermera, no le des agua'});

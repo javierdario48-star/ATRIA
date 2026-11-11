@@ -120,7 +120,7 @@ export function routeWardSpeech(text,context={}){
   ...(!patientUid?{error:'no-patient-target'}:{})};
  // Natural fasting instructions are positive NPO orders even when phrased
  // with a prohibition. Only use the case's existing intervention and receipt.
- const npoInstruction=/^(?:(?:dejalo|dejala|dejarlo|dejarla|mantenelo|mantenela|mantenerlo|mantenerla|mantener|dejar|deje|mantenga)(?: al paciente)? en ayunas?|no (?:le )?(?:des|den|dar|darle|ofrecer|ofrezcas) (?:agua|comida|alimentos|nada por boca)(?: ni (?:agua|comida|alimentos))?|que no (?:coma|beba)(?: ni (?:coma|beba))?)$/;
+ const npoInstruction=/^(?:(?:dejalo|dejala|dejarlo|dejarla|mantenelo|mantenela|mantenerlo|mantenerla|mantener|dejar|deje|mantenga)(?: al paciente)? en ayun(?:o|as?)|no (?:le )?(?:des|den|dar|darle|ofrecer|ofrezcas) (?:agua|comida|alimentos|nada por boca)(?: ni (?:agua|comida|alimentos))?|que no (?:coma|beba)(?: ni (?:coma|beba))?)$/;
  if(context.clinicalEvaluation&&npoInstruction.test(nurseQuestion)&&
   (context.interventions||[]).some(item=>item.id==='npo'))
   return {recipient,patientUid,original,intents:patientUid?
