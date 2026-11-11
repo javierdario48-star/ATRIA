@@ -40,3 +40,14 @@ test('nurse allergy questions are information requests, never medication orders'
  const negated=routeWardSpeech('Enfermera, no alergias',opts);
  assert(!negated.intents.some(i=>i.kind==='nurse.inquire'));
 });
+
+test('natural follow-up and red flags register one existing conduct without secret phrases',()=>{
+ const withFollowup={...opts,therapies:[{id:'followup',label:'Plan escrito de seguimiento y signos de alarma'}]};
+ const positive=routeWardSpeech('Enfermera, alta con control en 48 horas y regresar si aparece fiebre',withFollowup);
+ assert.deepEqual(positive.intents.map(x=>[x.kind,x.id]),[['therapy.request','followup']]);
+ for(const text of ['Enfermera, alta','Enfermera, control en 48 horas',
+  'Enfermera, volver si aparece fiebre']){
+  const x=routeWardSpeech(text,withFollowup);
+  assert(!x.intents.some(i=>i.id==='followup'),text);
+ }
+});
