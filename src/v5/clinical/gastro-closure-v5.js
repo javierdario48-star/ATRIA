@@ -2,10 +2,10 @@
 // handoff evaluator. XP quality is the ORIGINAL csClosureQuality487 calculator.
 // The shared shift/actor authority still owns final receipts exactly once.
 import {csClosureQuality487} from '../../clinical/case-completion-487.js';
-import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
+import {gastroClosureRule} from './gastro-expansion-policies.js';
 const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 export function evaluateGastroDisposition(a={}){
- const rule=GASTRO_CASE_RULES[a.caseId];if(!rule)return null;
+ const rule=gastroClosureRule(a.caseId);if(!rule)return null;
  const done=new Set(a.delivered||[]),studies=new Set(a.studiesDone||[]),missing=[],requirements=[];
  const need=(type,details,message)=>{missing.push(message);requirements.push({type,...details});};
  const target=a.disposition||rule.destinations[0];

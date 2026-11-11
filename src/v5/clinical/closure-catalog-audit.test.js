@@ -1,22 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import {createWorld} from '../app/world.js';
+import {clinicalContent as content} from '../server/content.js';
 import {createGuardSession} from './guard-session.js';
 import {clinicalHintCoverage} from './clinical-hints.js';
 import {clinicalClosureRule} from './clinical-hint-requirements.js';
-
-const load=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name+'.json',import.meta.url)));
-const content={map:load('hospital'),beds:load('beds'),cases:load('cases'),
- therapies:load('therapies'),defaultDoses:load('default-doses')};
 
 /**
  * Read-only baseline for the authored catalog. Every case must be inspectable
  * through the SAME session readiness path used by Vega. Findings are diagnostic:
  * a flagged NPO gate does not establish clinical necessity.
  */
-test('every authored case exposes an immutable closure audit through its live guard',async t=>{
- assert(content.cases.length>0,'clinical catalog must not be empty');
+test('all 55 playable cases expose an immutable closure audit through their live guards',async t=>{
+ assert.equal(content.cases.length,55,'include both the historical catalog and the certified specialty packs');
  const seen=new Set();
  for(const caseData of content.cases){
   await t.test(caseData.id,()=>{
@@ -85,8 +81,7 @@ test('every authored case exposes an immutable closure audit through its live gu
 test('catalog action descriptors use existing Vega coverage registry',t=>{
  const coverage=clinicalHintCoverage(content);
  assert.equal(coverage.cases.length,content.cases.length);
- assert(Array.isArray(coverage.errors));
- for(const error of coverage.errors)assert.equal(typeof error,'string');
+ assert.deepEqual(coverage.errors,[]);
  t.diagnostic(JSON.stringify({kind:'vega-action-coverage',
   caseCount:coverage.cases.length,missingActionDescriptors:coverage.errors}));
 });

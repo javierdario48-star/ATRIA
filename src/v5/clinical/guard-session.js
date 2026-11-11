@@ -1,5 +1,5 @@
 import {createClinicalHintLedger,hintAdjustedXP,hintPenaltyPercent} from './clinical-hint-ledger.js';
-import {auditClosureRequirements,clinicalChecklist,clinicalHintRequirements,hintDestination} from './clinical-hint-requirements.js';
+import {auditClosureRequirements,clinicalChecklist,clinicalClosureRule,clinicalHintRequirements,hintDestination} from './clinical-hint-requirements.js';
 import {selectClinicalHint} from './clinical-hints.js';
 import {createRoomAuthority} from '../core/room-authority.js';
 import {clinicalExecutorFor} from '../content/clinical-cases.js';
@@ -28,8 +28,7 @@ import {advanceNativeSurvival} from './survival-487-bridge.js';
 import {confirmedFluidFeedback,fluidFeedbackLabel} from './fluid-feedback.js';
 import {patientAllergyFacts487} from './medication-safety-487.js';
 import {documentMedicationComplications487} from './medication-harms-487.js';
-import {CASE_CLOSURE_RULES_487,CLOSURE_DEST_LABELS_487} from '../../clinical/case-completion-487.js';
-import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
+import {CLOSURE_DEST_LABELS_487} from '../../clinical/case-completion-487.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {isExaminationCommand,isExaminationKind,isPhysicianExamStudy} from './exam-contract.js';
 import {consultationEvidenceReview} from './consultation-evidence.js';
@@ -176,7 +175,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     return {status:'executed',patientUid,eventId,receipt:{patientUid,eventId,kind:intent.kind,id:intent.id,message:parts.join(' ')}};
    }
    if(intent.kind==='case.close'){
-    const rule=caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id];
+    const rule=clinicalClosureRule(caseData);
     if(rule&&!rule.destinations.includes(intent.id))return {status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
      receipt:{patientUid,eventId,decision:'REJECTED_NO_INDICATION',reasonCode:'destination-not-indicated',
       message:'El destino solicitado no está indicado con la situación clínica actual. Revisá la necesidad de vigilancia, tratamiento y nivel de cuidado.'}};
@@ -188,7 +187,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(nursing&&intent.kind==='case.close'&&nursingWorkPending())
     return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
    if(intent.kind==='case.close'&&!intent.partial){
-    const rule=caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id];
+    const rule=clinicalClosureRule(caseData);
     const issue=consultationEvidenceReview(nativePatient,caseData,rule);
     if(issue)return {status:'rejected',patientUid,eventId,reason:rule?.consult?.[intent.id]?.length?'transfer-not-accepted':'closure-not-ready',
      receipt:{eventId,patientUid,decision:issue.decision,reasonCode:issue.reasonCode,message:issue.reason}};
@@ -300,7 +299,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  }
  function eligibleDestinations(){
   if(!care||nativePatient.caseEnded)return [];
-  const destinations=(caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations;
+  const destinations=clinicalClosureRule(caseData)?.destinations;
   if(destinations)return destinations.filter(id=>closureReadiness(id)?.ready);
   const out=closureReadiness();return out?.ready?[out.action]:[];
  }
@@ -452,8 +451,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   auditClosureRequirements(destinationOverride){
    // An explicit destination is diagnostic only; it cannot alter the
    // current hint destination or the clinical authority's closure decision.
-   const allowed=(caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||
-    CASE_CLOSURE_RULES_487[caseData.id])?.destinations;
+   const allowed=clinicalClosureRule(caseData)?.destinations;
    if(destinationOverride!==undefined&&(!Array.isArray(allowed)||
     !allowed.includes(destinationOverride)))throw Error('unsupported audit destination');
    const selected=destinationOverride===undefined?currentChecklist():null;
@@ -651,7 +649,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    ...(checklist?{clinicalChecklist:clinicalChecklist(nativePatient,checklist.requirements,options.length>0||
     canRequest,activeReaction)}:{}),
    closure:copy(closureReadiness(executor==='peritonitis'?undefined:
-    (caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id])?.destinations?.[0]||'sala'))};},
+    clinicalClosureRule(caseData)?.destinations?.[0]||'sala'))};},
   dispose(){if(disposed)return;disposed=true;pendingNurseJobs.clear();waitingForAccess.clear();pendingStudyRequests.clear();care?.dispose();authority.dispose();}
  });
 }

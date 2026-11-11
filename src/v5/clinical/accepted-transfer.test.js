@@ -132,6 +132,38 @@ test('accepted UTI transfer closes a critical CHOLANG with one receipt',async()=
   assert.equal(state.progress.receipts.length,1);
  }finally{f.s.dispose();}
 });
+test('pancreatitis transfers to UTI with confirmed resuscitation and without a fasting order',async()=>{
+ const f=fixture('PANC-001','transfer-panc');
+ try{
+  await f.post('/diagnostico pancreatitis aguda');
+  await f.post('/signos');
+  for(const technique of ['general','inspection','auscultation','percussion','palpation'])
+   await f.post('/examen '+technique);
+  await f.post('/estudio lipasa');
+  await f.advance(80);
+  const premature=await f.post('/disposicion uti');
+  assert.equal(premature.clinical[0].status,'rejected');
+  assert.equal(premature.clinical[0].receipt.reasonCode,'stabilization-insufficient');
+
+  await f.post('Enfermera una vía');
+  await f.post('Enfermera Ringer 1000 ml');
+  await f.advance(80);
+  const prepared=f.s.read();
+  assert(prepared.patient.treatments.some(row=>row.id==='fluid'));
+  assert(prepared.patient.orders.some(row=>row.id==='lipasa'&&row.status==='done'));
+  assert(!prepared.patient.treatments.some(row=>row.id==='npo'));
+  assert.equal(f.s.clinicalHint().action?.id,'uti');
+  const transfer=await f.post('/disposicion uti');
+  assert.equal(transfer.clinical[0].status,'pending');
+  assert.equal(f.s.clinicalHint().action?.id,'receiver');
+  await f.advance(3.5);
+  const closed=f.s.read();
+  assert.equal(closed.patient.closure?.destination,'uti');
+  assert.equal(closed.patient.consults[0].accepted,true);
+  assert.equal(closed.progress.receipts.length,1);
+  assert.equal(f.s.clinicalHint(),null);
+ }finally{f.s.dispose();}
+});
 test('no synchronous authorization without consultation; partial route stays explicit',async()=>{
  const f=fixture('CHOLE-001','transfer-partial');
  try{

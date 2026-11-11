@@ -2,7 +2,7 @@
 // ICU acceptance is a destination, NOT cure, drainage or a fictitious
 // pancreatitis procedure. Reuses the ONLY acute-care authority.
 import {createAcuteCare} from './acute-care.js';
-import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
+import {evaluateGastroDisposition} from './gastro-closure-v5.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {initialPancVitals,advancePancVitals} from './native-panc.js';
@@ -29,7 +29,7 @@ export function createPancCare(p,c,options){
  if(c.id!=='PANC-001')throw Error('PANC care requires native PANC-001');
  return createAcuteCare(p,c,options,{
   initialVitals:initialPancVitals,advanceVitals:advancePancVitals,
-  evaluate:(patient,caseData,destination)=>csEvaluateClosure487(pancClosureSnapshot(patient,caseData,destination)),
+  evaluate:(patient,caseData,destination)=>evaluateGastroDisposition(pancClosureSnapshot(patient,caseData,destination)),
   conducts:['npo'],
   reassessmentMessage:patient=>'Reevaluación: PA '+Math.round(patient.liveVitals.sys)+'/'+
    Math.round(patient.liveVitals.dia)+', FC '+Math.round(patient.liveVitals.hr)+

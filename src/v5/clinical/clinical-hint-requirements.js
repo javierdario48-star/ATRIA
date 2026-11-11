@@ -11,12 +11,12 @@ import {additionalCaseClosureSnapshot} from './additional-case-care.js';
 import {appClosureSnapshot} from './app-care.js';
 import {closureSnapshot} from './cirr-care.js';
 import {peritonitisClosureSnapshot} from './peritonitis-care.js';
-import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
+import {gastroClosureRule} from './gastro-expansion-policies.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 import {isNativeMedicine} from './native-medications.js';
 import {hasRecordedVitals} from './observations.js';
 
-export const clinicalClosureRule=c=>c.clinicalPolicy?.closure||GASTRO_CASE_RULES[c.id]||CASE_CLOSURE_RULES_487[c.id];
+export const clinicalClosureRule=c=>c.clinicalPolicy?.closure||gastroClosureRule(c.id)||CASE_CLOSURE_RULES_487[c.id];
 const unique=items=>[...new Set(items)];
 function legacyProjection(p,c){
  const peritonitis=PERITONITIS_IDS_V487.includes(c.id),rule=clinicalClosureRule(c);

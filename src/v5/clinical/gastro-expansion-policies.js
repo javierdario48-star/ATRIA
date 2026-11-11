@@ -16,6 +16,11 @@ const rules={
  'ACAL-001':{destinations:['alta','observacion'],study:[['g_achal_manometry'],['g_achal_egd']],requiredStudies:['g_achal_manometry','g_achal_egd'],treatment:[['followup']]}
 };
 export const GASTRO_CASE_RULES=Object.freeze(Object.fromEntries(Object.entries(rules).map(([id,rule])=>[id,Object.freeze({...rule})])));
+const revisedHandoffRules=Object.freeze({
+ // Fasting can be documented at bedside. It is not a prerequisite for ICU reception.
+ 'PANC-001':Object.freeze({destinations:['uti'],study:[['lipasa']],treatment:[['fluid']],consult:{uti:['uti']}})
+});
+export const gastroClosureRule=caseId=>revisedHandoffRules[caseId]||GASTRO_CASE_RULES[caseId];
 export const GASTRO_CASE_CONDUCTS=Object.freeze({
  'VARIX-001':[],
  'ENCEF-001':['lactulose','rifaximin'],

@@ -1,5 +1,5 @@
 import {csDxMatchesCase487} from '../../clinical/diagnostic-impression-487.js';
-import {GASTRO_CASE_RULES} from './gastro-expansion-policies.js';
+import {GASTRO_CASE_RULES,gastroClosureRule} from './gastro-expansion-policies.js';
 import {CASE_CLOSURE_RULES_487} from '../../clinical/case-completion-487.js';
 import {consultationEvidenceReview,consultationPreparationReview} from './consultation-evidence.js';
 import {clinicalTransferContinuation} from './transfer-continuation.js';
@@ -42,7 +42,7 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,pre
  // no direct transfer finalizer and must retain their existing behavior.
  const pending=new Set(structuredClone(checkpoint?.pending??[]));
  const transferCommand=task=>task.commands.find(cmd=>cmd.intent.kind==='case.close'&&!cmd.intent.partial);
- const rule=c.clinicalPolicy?.closure||GASTRO_CASE_RULES[c.id]||CASE_CLOSURE_RULES_487[c.id];
+ const rule=c.clinicalPolicy?.closure||gastroClosureRule(c.id)||CASE_CLOSURE_RULES_487[c.id];
  const declared=rule?.consult;
  const declaredServices=new Set(Object.values(declared||{}).flat());
  const resolveService=id=>id==='cirugia'&&!declaredServices.has(id)?
