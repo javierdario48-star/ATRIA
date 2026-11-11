@@ -133,6 +133,7 @@ export function routeWardSpeech(text,context={}){
  const returnAdvice=/(?:\bvolver\b|\bregresar\b|\bconsultar\b|\bacudir\b|\bretornar\b)/.test(normalized);
  const warning=/(?:\bfiebre\b|\bempeor\w*|\bsangrado\b|\bdolor\b|\bdisnea\b|\bvomitos?\b)/.test(normalized);
  if(context.clinicalEvaluation&&followup&&returnAdvice&&warning&&
+  !/\b(?:no|nunca)\s+(?:volver|regresar|consultar|acudir|retornar)\b/.test(normalized)&&
   (context.therapies||[]).some(t=>t.id==='followup'))
   return {recipient,patientUid,original,intents:patientUid?
    [{kind:'therapy.request',id:'followup',sourceText:original,clause:original,count:1}]:[],
