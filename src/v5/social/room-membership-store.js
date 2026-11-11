@@ -8,13 +8,22 @@ import {scopedPresenceStorage,publishPresenceSerially} from './presence-storage.
 // Storage composition only: the characterized V4 backend remains byte-identical.
 // A room has one host-owned metadata record and a distinct acceptance key per
 // guest. Joining doctors cannot overwrite each other's room membership.
-const ROOM='qa-v1:room:',MEMBER='atria-v5:room-member:';
-export function createConflictFreeRoomStorage(store){
+const ROOM='qa-v1:room:',MEMBER='atria-v5:room-member:',ROOM_TTL_SECONDS=21600;
+export function createConflictFreeRoomStorage(store,{now=Date.now}={}){
  const memberKey=(id,userId)=>MEMBER+id+':'+userId;
+ const expired=room=>Number.isFinite(room?.createdAt)&&now()-room.createdAt>=ROOM_TTL_SECONDS*1000;
  const get=async key=>{
   const value=await store.get(key);
-  if(!key.startsWith(ROOM)||!value?._memberSlotsV5)return value;
-  const roomId=key.slice(ROOM.length),invited=value._invited||[];
+  if(!key.startsWith(ROOM)||!value)return value;
+  const roomId=key.slice(ROOM.length);
+  if(expired(value)){
+   // The durable clinical guard has its own lifetime and recovery contract.
+   await Promise.all((value._invited||[]).map(userId=>store.delete(memberKey(roomId,userId))));
+   await store.delete(key);
+   return null;
+  }
+  if(!value._memberSlotsV5)return value;
+  const invited=(value._invited||[]).filter(userId=>userId!==value.hostUserId);
   const records=await Promise.all(invited.map(userId=>store.get(memberKey(roomId,userId))));
   return {...value,members:[...value.members.slice(0,1),
    ...records.filter(x=>x?.state==='accepted').map(x=>x.member)],
@@ -23,11 +32,13 @@ export function createConflictFreeRoomStorage(store){
  const set=async(key,value,options)=>{
   if(!key.startsWith(ROOM))return store.set(key,value,options);
   const original=await store.get(key);
+  if(expired(original??value))return;
   if(!original){
    return store.set(key,{...value,_memberSlotsV5:true,
     _invited:[...(value.pending||[])],members:value.members.slice(0,1)},options);
   }
   if(!original._memberSlotsV5)return store.set(key,value,options);
+  if(original.closed)return;
   const id=key.slice(ROOM.length);
   // Mutation type is independent: member writes never rewrite room metadata.
   for(const member of value.members||[]){
@@ -37,20 +48,26 @@ export function createConflictFreeRoomStorage(store){
    else if(!await store.get(k))await store.set(k,acceptance,options);
   }
   const newlyInvited=(value.pending||[]).filter(uid=>!original._invited.includes(uid));
-  if(value.closed!==original.closed||value.hostUserId!==original.hostUserId||newlyInvited.length){
-   return store.set(key,{...original,closed:value.closed,hostUserId:value.hostUserId,
+  const successor=value.hostUserId!==original.hostUserId&&original._invited.includes(value.hostUserId)&&
+   await store.get(memberKey(id,value.hostUserId));
+  const hostChanged=successor?.state==='accepted';
+  if(value.closed||hostChanged||newlyInvited.length){
+   return store.set(key,{...original,closed:value.closed,
+    hostUserId:hostChanged?successor.member.userId:original.hostUserId,
+    members:hostChanged?[successor.member]:original.members,
     _invited:[...original._invited,...newlyInvited]},options);
   }
  };
  const mark=async(id,userId,state)=>{
   if(!id||!userId)return;
   const room=await store.get(ROOM+id);
-  if(room?._memberSlotsV5)await store.set(memberKey(id,userId),{state},{ttl:21600});
+  if(!expired(room)&&room?._invited?.includes(userId))
+   await store.set(memberKey(id,userId),{state},{ttl:ROOM_TTL_SECONDS});
  };
  return {get,set,delete:key=>store.delete(key),mark};
 }
 export function createV5QaSocialServer(storage,options){
- const slots=createConflictFreeRoomStorage(storage);
+ const slots=createConflictFreeRoomStorage(storage,options);
  const legacy=createQaSocialServer(slots,options);
  async function readPlayerProfile(id,viewer){
   if(!/^qa_[0-9a-f]{30}$/.test(id))return null;
@@ -83,7 +100,7 @@ export function createV5QaSocialServer(storage,options){
    const room=response.body.room,raw=await storage.get(ROOM+room.id);
    // Host metadata uses the existing room record. Guest acceptances retain
    // their independent slots, including if one arrives during this write.
-   await storage.set(ROOM+room.id,{...raw,guardSelection},{ttl:21600});
+   await storage.set(ROOM+room.id,{...raw,guardSelection},{ttl:ROOM_TTL_SECONDS});
    response.body.room={...room,guardSelection};
   }
   const method=request.method||'GET';

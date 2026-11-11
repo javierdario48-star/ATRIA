@@ -92,6 +92,7 @@ export function createPersistentSocialStorage({backend,cache}){
   setIfAbsent,
   async delete(key){if(!durableKey.test(key))return cache.delete(key);
    await backend.request(table+'?key=eq.'+encodeURIComponent(key),{method:'DELETE'});
+   await cache.delete(key);
   }
  });
 }

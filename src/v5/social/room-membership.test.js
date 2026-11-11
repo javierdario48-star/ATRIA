@@ -48,3 +48,18 @@ test('one guest leaving cannot remove another guest from the roster',async()=>{
  assert(result.body.room.members.some(m=>m.userId===b.user.id));
  assert(!result.body.room.members.some(m=>m.userId===a.user.id));
 });
+test('an explicit host departure promotes an accepted member and fences the former host',async()=>{
+ const api=fixture(),[host,guest]=await Promise.all(['Host','Guest'].map(name=>register(api,name)));
+ const room=(await api.route({method:'POST',path:'rooms',headers:host.headers,
+  body:{mode:'coop',invitees:[guest.user.id]}})).body.room;
+ const path='rooms/'+room.id;
+ const join={method:'POST',path:'rooms/join',headers:guest.headers,body:{roomId:room.id}};
+ assert.equal((await api.route(join)).status,200);
+ assert.equal((await api.route({method:'POST',path:path+'/leave',headers:host.headers})).status,200);
+ const response=await api.route({path:path+'/messages',headers:guest.headers});
+ assert.equal(response.status,200);
+ assert.equal(response.body.room.hostUserId,guest.user.id);
+ assert.deepEqual(response.body.room.members.map(m=>m.userId),[guest.user.id]);
+ assert.equal((await api.route({path:path+'/messages',headers:host.headers})).status,403);
+ assert.equal((await api.route({...join,headers:host.headers})).status,403);
+});

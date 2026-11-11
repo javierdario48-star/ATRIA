@@ -2,7 +2,7 @@
 // public controls only. No injected clocks, checkpoints, cookies or treatments.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {randomBytes} from 'node:crypto';
+import {randomBytes,randomUUID} from 'node:crypto';
 import fs from 'node:fs/promises';
 import {waitForPreviewBuild} from './preview-build.mjs';
 import {clickHudAction} from './hud-actions.mjs';
@@ -12,7 +12,7 @@ const origin=new URL(process.env.V5_BROWSER_URL).origin;
 assert(/^https:\/\/night-shift-clinical-[\w-]+\.vercel\.app$/.test(origin));
 const output=process.env.V5_QA_OUTPUT||'qa/v5-live-shared-results';await fs.mkdir(output,{recursive:true});
 const {chromium,devices}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_MODULE_PATH||process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright');
-const browsers=[],contexts=[],pages=[],actors=[],errors=[],wire=[];
+const browsers=[],contexts=[],pages=[],actors=[],errors=[],wire=[],roomDenials=[];
 const report={passed:false,preview:origin,browserProcesses:2,authenticated:true,liveSupabase:true,
  androidEmulation:'Pixel 5',physicalAndroid:false,acceleratedServerClock:false,real24MinuteRun:false,checks:[],timings:{}};
 let stage='matching published source';
@@ -52,29 +52,45 @@ async function recover(page){
  await page.waitForFunction(()=>atriaV5.snapshot().phase==='guard'&&atriaV5.diagnostics().cooperative.durable);
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.shift.turn.actor.participating);
 }
+async function reloadGuard(page,roomId){
+ await page.reload();
+ await page.waitForFunction(()=>document.body.dataset.boot==='ready');
+ await page.locator('#welcomeContinue').click();
+ await page.locator('[data-action=account-recover]').click();
+ await page.waitForFunction(id=>atriaV5.snapshot().clinical?.room.roomId===id&&
+  atriaV5.snapshot().clinical?.shift.turn.actor.participating,roomId);
+}
+async function register(page,index){
+ await page.goto(origin);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
+ await page.locator('#doctorName').fill('QA Compartida '+index+' '+suffix);await page.locator('#welcomeNameForm button').click();
+ await page.locator('#enterButton').click();await page.locator('#newDoctorPassword').fill(password);
+ const registered=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/account/register');
+ await page.locator('#welcomePasswordForm button').click();assert.equal((await registered).status(),200);
+ await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby'&&document.getElementById('splash').hidden);
+ const account=await api(page,'account/session');assert.equal(account.status,200);return account.body.account.actorId;
+}
+async function newContext(device){
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,
+  args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-timer-throttling']});browsers.push(browser);
+ const context=await browser.newContext(device);contexts.push(context);return context;
+}
 try{
  report.sourceFiles=Object.keys(await waitForPreviewBuild(origin));
  for(let index=0;index<2;index++){
-  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE_PATH,
-   args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-timer-throttling']});browsers.push(browser);
-  const context=await browser.newContext(index?devices['Pixel 5']:{viewport:{width:1280,height:960}});contexts.push(context);
+  const context=await newContext(index?devices['Pixel 5']:{viewport:{width:1280,height:960}});
   const page=await context.newPage();pages.push(page);page.setDefaultTimeout(60000);
   page.on('pageerror',error=>errors.push({doctor:index,message:error.message}));
   page.on('response',async response=>{
-   if(new URL(response.url()).pathname!=='/api/clinical')return;
+   const path=new URL(response.url()).pathname;
+   if(/^\/api\/rooms\/[^/]+\/messages$/.test(path)&&response.status()===403)roomDenials.push({doctor:index,path});
+   if(path!=='/api/clinical')return;
    try{const request=response.request().postDataJSON(),value=await response.json();
     wire.push({doctor:index,at:Date.now(),action:request.action,status:response.status(),epoch:value.epoch,
      commands:(request.commands||[]).map(row=>({id:row.id,channel:row.channel||'clinical',patientUid:row.targetPatientUid})),
      acknowledgements:(value.acknowledgements||[]).map(row=>({commandId:row.commandId,status:row.status,reason:row.reason}))});
    }catch{}
   });
-  await page.goto(origin);await page.waitForFunction(()=>document.body.dataset.boot==='ready');
-  await page.locator('#doctorName').fill('QA Compartida '+index+' '+suffix);await page.locator('#welcomeNameForm button').click();
-  await page.locator('#enterButton').click();await page.locator('#newDoctorPassword').fill(password);
-  const registered=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/account/register');
-  await page.locator('#welcomePasswordForm button').click();assert.equal((await registered).status(),200);
-  await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby'&&document.getElementById('splash').hidden);
-  const account=await api(page,'account/session');assert.equal(account.status,200);actors.push(account.body.account.actorId);
+  actors.push(await register(page,index));
  }
  const [a,b]=pages,cookies=await Promise.all(contexts.map(context=>context.cookies()));
  assert.notEqual(actors[0],actors[1]);
@@ -125,6 +141,14 @@ try{
  assert.equal(recovered.patient.orders.length,beforeSave.patient.orders.length);
  assert.equal(new Set(recovered.patient.orders.map(row=>row.sourceEventId)).size,recovered.patient.orders.length);
  check('saving keeps the active guard, colleagues channel and original order identities on recovery');
+ stage='guest and host reload';
+ for(const page of [b,a]){
+  await reloadGuard(page,roomId);
+  assert.equal((await clinical(page)).patient.uid,uid);
+  assert.equal((await api(page,'rooms/'+roomId+'/messages')).status,200);
+ }
+ assert.deepEqual(roomDenials,[],'accepted members never lose social access');
+ check('guest and host reload in independent processes and recover the same patient and room');
  if(process.env.V5_REAL_TURN==='1'){
   stage='real 24 minute boundary';
   while(!(await clinical(a)).shift.ended){
@@ -143,7 +167,26 @@ try{
   assert.equal(next.room.roomId,roomId);report.real24MinuteRun=true;
   check('real 24 minute clock pauses for explicit cooperative consent and continues the same patients without a new reward');
  }
- await picture('continued');await save(a);await save(b);assert.deepEqual(errors,[]);
+ await picture('continued');await save(a);await save(b);
+ stage='room isolation, revocation and cleanup';
+ const external=await (await newContext({viewport:{width:1100,height:800}})).newPage();
+ await register(external,2);
+ const path='rooms/'+roomId;
+ assert.equal(await external.evaluate(async p=>(await fetch('/api/'+p,{credentials:'omit'})).status,path+'/messages'),401);
+ assert.equal((await api(external,path+'/messages')).status,403);
+ assert.equal((await api(external,'rooms/join',{roomId})).status,403);
+ assert.equal((await api(external,'clinical',{action:'observe',roomId})).status,403);
+ assert.equal((await api(external,'rooms/'+randomUUID()+'/messages')).status,404);
+ assert.equal((await api(b,path+'/leave',{})).status,200);
+ assert.equal((await api(b,path+'/messages')).status,403);
+ assert.equal((await api(b,'rooms/join',{roomId})).status,403);
+ assert.equal((await api(a,path+'/messages')).status,200);
+ assert.equal((await api(a,path+'/cancel',{})).status,200);
+ assert.equal((await api(a,path+'/messages')).status,404);
+ for(const page of pages)assert.equal((await api(page,'account/release-guard',{roomId})).status,200);
+ for(const page of [...pages,external])assert.equal((await api(page,'account/logout',{})).status,200);
+ assert.deepEqual(errors,[]);
+ check('authenticated outsider, revoked guest and closed room retain 401/403/404 boundaries');
  report.passed=true;report.errors=errors;
  await fs.writeFile(output+'/summary.json',JSON.stringify(report,null,2)+'\n');
  console.log('LIVE SHARED GUARD PASS',JSON.stringify(report));
