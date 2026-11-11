@@ -51,3 +51,16 @@ test('natural follow-up and red flags register one existing conduct without secr
   assert(!x.intents.some(i=>i.id==='followup'),text);
  }
 });
+
+test('natural NPO orders reuse the existing case intervention',()=>{
+ const withNpo={...opts,interventions:[{id:'npo',label:'Nada por boca',aliases:['nada por boca','npo','ayuno']}]};
+ for(const text of ['Enfermera nada por boca','Enfermera dejalo en ayunas',
+  'Enfermera NPO','Enfermera no le des agua','Enfermera no dar nada por boca',
+  'Enfermera no le des agua ni comida']){
+  const x=routeWardSpeech(text,withNpo);
+  assert.equal(x.error,undefined,text);
+  assert.deepEqual(x.intents.map(i=>[i.kind,i.id]),[['therapy.request','npo']],text);
+ }
+ assert.equal(routeWardSpeech('Enfermera no le des agua',{...opts,interventions:[]}).intents.length,0,
+  'do not invent an intervention that the case does not provide');
+});
