@@ -162,6 +162,19 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   validateReceipt:assertMatchingClinicalReceipt,
   withPatient:async(uid,fn)=>{if(uid!==nativePatient.uid)throw Error('patient not in this room');return fn(nativePatient);},
   invoke:async({eventId,actorId,patientUid,intent})=>{
+   if(intent.kind==='nurse.inquire'&&intent.id==='allergies'){
+    // Use the medication executor's existing safety facts; never invent negatives.
+    const labels=new Map(content.therapies.map(t=>[t.id,t.label]));
+    const display=id=>labels.get(id)||id.replace(/_/g,' ');
+    const allergies=nativePatient.allergies||[],intolerances=nativePatient.intolerances||[];
+    const severe=new Set(nativePatient.severeAllergies||[]);
+    const parts=[];
+    if(allergies.length)parts.push('Alergias registradas: '+allergies.map(id=>
+     display(id)+(severe.has(id)?' (reacción grave)':'')).join(', ')+'.');
+    if(intolerances.length)parts.push('Intolerancias registradas: '+intolerances.map(display).join(', ')+'.');
+    if(!parts.length)parts.push('No constan alergias medicamentosas en la ficha disponible; hay que confirmarlo con el paciente o un acompañante.');
+    return {status:'executed',patientUid,eventId,receipt:{patientUid,eventId,message:parts.join(' ')}};
+   }
    if(intent.kind==='case.close'){
     const rule=caseData.clinicalPolicy?.closure||GASTRO_CASE_RULES[caseData.id]||CASE_CLOSURE_RULES_487[caseData.id];
     if(rule&&!rule.destinations.includes(intent.id))return {status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
@@ -293,6 +306,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  }
  const publishReadiness=()=>authority.reportCareReadiness({patientUid:nativePatient.uid,destinations:eligibleDestinations()});
  function resultText(item,label){
+  if(item.kind==='nurse.inquire'&&item.status==='executed')return item.receipt?.message||'La consulta no tiene información disponible.';
   // An unanswered history question is a patient reply, not a failed nursing procedure.
   if(item.kind==='history.ask')return null;
   if(item.status==='unconfirmed')
