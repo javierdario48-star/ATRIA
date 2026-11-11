@@ -60,3 +60,18 @@ Fuente autoritativa: [ATRIA-5-REMAINING-TASKS.md](ATRIA-5-REMAINING-TASKS.md), s
 **Próximo paso exacto:** ejecutar `node --test src/v5/clinical/closure-requirements-audit.test.js src/v5/clinical/physical-nursing.test.js` en checkout completo. Después diseñar un test parametrizado que recorra el catálogo real, cree una sesión por caso, consulte `auditClosureRequirements()` y registre requisitos sin acciones y NPO obligatorio estructural; contrastar resultados con pistas de Vega. Evitar cambiar reglas clínicas sin regresiones específicas.
 
 **Listado maestro autoritativo:** [ATRIA-5-REMAINING-TASKS.md](ATRIA-5-REMAINING-TASKS.md), incluyendo las 16 áreas y el checkpoint más reciente. Al terminar la siguiente sesión, volver a actualizar ambos documentos y confirmar HEAD.
+
+## Continuidad exacta — sesión de auditoría de catálogo (2026-11-11)
+
+Repositorio `javierdario48-star/ATRIA`; rama exclusiva `atria-5.0-core-rebuild-experimental`. HEAD inicial `a2839d12c8dc0e969197c3398cf970524a2c1b28`, verificado idéntico antes de editar. **El HEAD final es el commit que publica este documento; verificar con compare de GitHub.**
+
+Commits:
+- `cc00601c19b23079f2e59682a8e3862f0e7bbd30`: nuevo `src/v5/clinical/closure-catalog-audit.test.js`; recorre `content.cases`, crea sesiones reales y lee auditorías sin mutar estado.
+- `8cb3a07a7078f96f86ee012c4be879067a496840`: checkpoint en `docs/ATRIA-5-REMAINING-TASKS.md`.
+- Commit de este documento: obtener mediante HEAD remoto.
+
+**Verificación:** se inspeccionaron cuatro documentos, contrato de `createGuardSession`, `createWorld` usado en `physical-nursing.test.js`, selector de pistas y catálogo de casos. Se publicaron archivos mediante GitHub. **No se ejecutaron** las pruebas Node, build, navegador, Android ni un recorrido de casos; no existen resultados clínicos agregados todavía. La nueva prueba es un mecanismo de auditoría, no evidencia de ausencia de bloqueos.
+
+**Estado:** CLOSE-01 tiene una prueba parametrizada publicada, pero sin ejecución ni revisión clínica de anomalías. VEGA-01 sigue sin verificación de cobertura de bloqueos; pistas, descuento 5% y recibos no fueron alterados. NUR-01, DX-01 y LAB-02 siguen pendientes de suite integrada. Arquitectura: se reutiliza la autoridad clínica y `auditClosureRequirements()`, sin motor paralelo. Deuda: obtener runner, ejecutar prueba por caso, revisar posibles diferencias de fixture, verificar alternativas ejecutables y pistas.
+
+**Próxima tarea concreta:** ejecutar `node --test src/v5/clinical/closure-catalog-audit.test.js src/v5/clinical/closure-requirements-audit.test.js src/v5/clinical/physical-nursing.test.js`, luego `npm run build:v5`. Registrar cada `caseId`, `destination`, `issues` y el requisito real que causa el bloqueo. Contrastar NPO y estudios con acciones disponibles y Dr. Vega antes de modificar cualquier regla. Continuar con listado maestro en [ATRIA-5-REMAINING-TASKS.md](ATRIA-5-REMAINING-TASKS.md); actualizar ambos documentos y verificar HEAD al final de la siguiente sesión.
