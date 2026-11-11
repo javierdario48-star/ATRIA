@@ -91,3 +91,19 @@ Commits:
 **Limitación clínica:** una pista en el estado inicial y un inventario de acciones no prueban cobertura de todos los bloqueos a lo largo del caso ni indispensabilidad de NPO. Se necesita recorrer progresiones y destinos con resultados reales, identificar anomalías por caso y evaluar evidencia antes de cambiar reglas.
 
 **Próxima tarea:** ejecutar `node --test src/v5/clinical/closure-catalog-audit.test.js src/v5/clinical/closure-requirements-audit.test.js src/v5/clinical/physical-nursing.test.js` y `npm run build:v5`. Resolver cualquier fallo de fixture. Analizar los diagnósticos `vega-action-coverage`, bloqueos iniciales, alternativas NPO y cobertura por destino; después extender pruebas a transiciones reales y continuar NUR-01. Actualizar [ATRIA-5-REMAINING-TASKS.md](ATRIA-5-REMAINING-TASKS.md) y este documento en cada sesión.
+
+## Continuidad exacta — protocolo autónomo y corrección NPO (2026-11-11)
+
+**HEAD inicial:** `19f1388cb1beb2a2efffd6d292092e47f8b42145`, comparado con la rama: idéntico. Cuatro documentos obligatorios recuperados directamente de GitHub.
+
+**Protocolo permanente aprobado:** ejecutar varias tareas seguidas por intervención, commits pequeños, no detenerse tras cada commit, resolver obstáculos sin abandonar otras tareas, actualizar documentos solo al final y evitar prompts repetitivos. No implica trabajo en segundo plano después de terminar la respuesta. Fuente autoritativa: `docs/ATRIA-5-REMAINING-TASKS.md`, sección «Protocolo permanente de ejecución autónoma».
+
+**Cambios publicados:**
+- `df33ddd7040c518405358012ee1ceb2c94167fd0`: `clinical-hint-requirements.js`; corrige falso `unavoidable:true` cuando alternativas NPO están malformadas. Solo clasificación diagnóstica; cierre clínico y Vega no cambian.
+- `66d05be047cbf8edff9bb1ca7f88e6501ceefc9e`: `closure-requirements-audit.test.js`; ajusta expectativa y añade regresión con grupos vacíos, nulos y alternativa válida.
+- `d31a60634b785bb200bc8d041d15b1d62454bbdd`: listado maestro y protocolo.
+- Este documento: obtener commit SHA verificando HEAD remoto.
+
+**Validación:** lectura/inspección autenticada de código y docs, publicación de cambios. **No se ejecutaron pruebas Node, build, navegador ni Android**; no declarar resultados verdes. Pendientes `node --test src/v5/clinical/closure-catalog-audit.test.js src/v5/clinical/closure-requirements-audit.test.js src/v5/clinical/physical-nursing.test.js`, suite integrada y `npm run build:v5`. No se auditaron dinámicamente las progresiones clínicas ni la necesidad médica de NPO.
+
+**Continuar directamente:** primero validar fixture y ejecutar pruebas en runner real cuando sea accesible; mientras tanto, inspeccionar y corregir defectos concretos de auditoría/acciones de Vega con regresiones, luego avanzar a NUR-01/LAB-01 sin paradas artificiales. Mantener una sola autoridad clínica. Al finalizar una intervención sustancial, actualizar ambos documentos una vez y verificar HEAD.
