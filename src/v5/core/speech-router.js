@@ -112,6 +112,12 @@ export function routeWardSpeech(text,context={}){
  if(recipient!=='nurse')return {recipient,patientUid,intents:context.clinicalEvaluation&&recipient==='patient'&&patientUid?
   [{kind:'history.ask',id:'dialogue',sourceText:original}]:[],original,
   ...(context.clinicalEvaluation&&recipient==='patient'&&!patientUid?{error:'no-patient-target'}:{})};
+ // A nurse can answer a question from the chart without executing a treatment.
+ const nurseQuestion=normalized.replace(/^enfermer(?:a|o|ia)\\s*[,.:]?\\s*/,'').replace(/[¿?!.]/g,'').trim();
+ const asksAllergies=/^(?:alergias?|antecedentes de alergias?|alergias? (?:del paciente|medicamentosas?)|(?:que|cuales) alergias? (?:tiene|presenta|refiere)(?: el paciente)?|(?:tiene|presenta|refiere) (?:el paciente )?alergias?|(?:es|es el paciente) alergico a algo)$/;
+ if(asksAllergies.test(nurseQuestion))return {recipient,patientUid,original,intents:patientUid?
+  [{kind:'nurse.inquire',id:'allergies',sourceText:original}]:[],
+  ...(!patientUid?{error:'no-patient-target'}:{})};
  if(/\btacto rectal\b/.test(normalized))return {recipient,patientUid,intents:[],original,error:'physician-exam-required'};
  const ordered=context.studyOrdering||studyOrderVocabulary(context.studies,context.caseData?.studies);
  const vocabulary=nursingFormulationVocabulary487(ordered.scanText(original),{...context,studies:ordered.lexicon});
