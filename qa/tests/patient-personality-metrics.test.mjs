@@ -66,6 +66,23 @@ test('an honest unavailable medication answer cannot inflate verified clinical d
  assert.deepEqual(checked.failures,[]);assert.equal(checked.verified,0);assert.equal(checked.unavailable,1);
  assert.equal(quality.facts,0);assert.equal(quality.unavailable,1);
 });
+test('a declared companion can report uncertainty without earning evidence or hiding a fabricated fact',()=>{
+ const c={id:'TEST',intents:[],clinicalPolicy:{historySource:{label:'Familiar'}}};
+ const p={liveVitals:{hr:70,sys:120,dia:80,rr:16,spo2:98,temp:37},treatments:[]};
+ const prefix='Familiar (anamnesis indirecta): ';
+ for(const source of ['native.history-detail-unavailable','indirect-history:native.history-detail-unavailable']){
+  const canonical='No puedo precisar ese dato.';
+  const evidence={prefix,facts:[{id:'interview:response:0',source,canonical,spoken:canonical}]};
+  const valid=validateDialogueSources(evidence,c,p,prefix+canonical);
+  assert.deepEqual(valid.failures,[]);
+  assert.equal(valid.verified,0);assert.equal(valid.unavailable,1);
+  const quality=interviewQuality({rows:[{answer:prefix+canonical,evidence}]});
+  assert.equal(quality.facts,0);assert.equal(quality.unavailable,1);
+  const invented='Le administraron 500 mg de ceftriaxona.';
+  const forged={prefix,facts:[{...evidence.facts[0],canonical:invented,spoken:invented}]};
+  assert.equal(validateDialogueSources(forged,c,p,prefix+invented).failures.length,1);
+ }
+});
 test('undelivered evidence and unknown-answer variants earn neither clinical facts nor substantive diversity',()=>{
  const canonical='Tomo warfarina 5 mg.';
  const evidence={facts:[{id:'meds',source:'common.meds',canonical,spoken:canonical}]};

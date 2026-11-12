@@ -1,6 +1,8 @@
 // Reproducible comparisons. Greetings, punctuation and emotional wrappers
 // cannot earn substantive diversity. Medical content is never scored by length.
 export const normalizeText=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const unavailableSource=source=>['native.history-detail-unavailable','native.symptom-unknown']
+ .includes(String(source??'').replace(/^indirect-history:/,''));
 const conversationalRemarks=new Set([
  'Ya se lo había contado; voy a repetirlo.','¿Necesita que lo diga de otra manera?',
  '¿Hay algo que no haya quedado claro?','¿Necesita que vuelva al principio?',
@@ -18,7 +20,7 @@ export function stripSurface(text){
 }
 export function substantiveBody(row,{primaryOnly=false}={}){
  return normalizeText(row.rows.map(t=>t.evidence?t.evidence.facts?.filter(f=>
-  !['native.history-detail-unavailable','native.symptom-unknown'].includes(f.source)&&
+  !unavailableSource(f.source)&&
   String(t.answer??'').includes(f.spoken)&&(!primaryOnly||!f.spontaneous)).map(f=>f.spoken).join(' ')||'':stripSurface(t.answer)).join(' '));
 }
 export const expressiveInterview=row=>row.rows.some(t=>t.evidence&&t.evidence.styleApplied!==false&&!t.evidence.limited);
@@ -112,7 +114,7 @@ export function interviewQuality(row){
  for(const [i,t] of row.rows.entries()){
   const e=t.evidence;
   for(const f of e?.facts??[]){
-   const delivered=!!f.spoken&&String(t.answer??'').includes(f.spoken),unknown=['native.history-detail-unavailable','native.symptom-unknown'].includes(f.source);
+   const delivered=!!f.spoken&&String(t.answer??'').includes(f.spoken),unknown=unavailableSource(f.source);
    if(delivered){if(unknown)unavailable++;else facts++;if(f.spontaneous&&!unknown)spontaneous++;}
    else failures.push('lost-spoken-fact:'+i+':'+f.id);
    // Numeric, dose and named entities must survive the bounded language rules.

@@ -75,6 +75,8 @@ export function validateDialogueSources(evidence,c,patient,answer){
     'No lo recuerdo con más detalle.','No puedo precisar esa cantidad.','No puedo precisar la dosis que tomo.',
     'No recuerdo bien cuándo empezó.','No recuerdo cuándo tomé la última dosis.',
     'No puedo precisar qué pasaba antes.','No puedo precisar cómo siguió.','No sé precisar el motivo.'];
+   const witness=c.clinicalPolicy?.historySource?.label;
+   if(witness&&evidence.prefix===witness+' (anamnesis indirecta): ')expected.push('No puedo precisar ese dato.');
   }
   else if(source==='native.symptom-unknown'){
    if(!/^No (?:puedo precisar bien|recuerdo exactamente cuándo empezó) [^.\d]+\.$/.test(fact.canonical))failures.push('invented-unknown-symptom:'+fact.id);
