@@ -196,7 +196,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      const penalty=progress.penalizeUnsafeDischarge({eventId,actorId,patientUid});
      const disposition={kind:penalty.kind,eventId,patientUid,actorId,destination:'alta',
       closed:false,reason:assessment.reason,penaltyEventId:penalty.eventId};
-     const message='Alta insegura registrada. El paciente sigue disponible para atención. '+(assessment.receipt?.message||'');
+     const message='¿Cómo vas a darle el alta si el caso todavía no está resuelto? Seguí atendiendo al paciente. '+
+      (assessment.receipt?.message||'');
      return {status:'executed',eventId,patientUid,receipt:{eventId,actorId,patientUid,kind:intent.kind,id:intent.id,disposition,message}};
     }
     if(assessment)return assessment;
@@ -406,7 +407,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
        item.kind==='study.request'?label+': solicitado; pendiente de resultado.':
         label+': orden recibida; pendiente de enfermería o preparación, todavía no ejecutada.':
        label+': resultado disponible.'));
-     const speaker=item.kind==='history.ask'?historySpeaker(item.receipt):
+     const speaker=item.receipt?.disposition?.kind==='clinical.unsafe-discharge'?{name:'Dr. Vega',role:'mentor'}:
+      item.kind==='history.ask'?historySpeaker(item.receipt):
       isExaminationKind(item.kind)?{name:'ATRIA',role:'system'}:{name:'Enfermera',role:'nurse'};
      rows.push({id:'ack:'+message.id+':'+i,...speaker,actorId:message.actorId,text:feedback});
     }

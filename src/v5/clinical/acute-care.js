@@ -2,7 +2,7 @@
 // the authority, IV tasks, consultation, bedside receipts and XP remain unique.
 import {executePatientDialogue} from './patient-dialogue.js';
 import {initializeExamination,executePhysicalExam} from './physical-exam.js';
-import {executeObservation,executeVenousAccess,executeOxygenSupport,recordClinicalReassessment,prepareDispositionReassessment} from './observations.js';
+import {executeObservation,executeVenousAccess,executeOxygenSupport,recordClinicalReassessment,prepareDispositionReassessment,assessDischarge} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {nativeCaseXP} from './progression.js';
 import {createClosureDebrief} from './closure-debrief.js';
@@ -87,8 +87,8 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   if(!evaluation.ready)return rejected(cmd,'transfer-not-authorized',evaluation.missing.join(' '));
   return finalize(cmd,evaluation);
  }
- function readiness(destination){
-  const out=policy.evaluate(p,c,destination);
+ function readiness(destination,patient=p){
+  const out=policy.evaluate(patient,c,destination);
   if(!out)return null;
   if(unrescuedTransferReactions(p,c,clinicalClock?.().nativeMinute??p.policyState?.nativeMinute??p.phys?.lastNativeMinute??0).length){
    out.ready=false;out.action=null;
@@ -121,7 +121,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
     const issue=clinicalInterventionCapability(p,c,intent.id,clock);
     if(issue)return rejected(cmd,issue.reason,issue.message);
    }
-   prepareDispositionReassessment(p,clock,cmd);
+   if(intent.id!=='alta')prepareDispositionReassessment(p,clock,cmd);
    const consult=surgery.request(cmd,clock);if(consult)return consult;
    const iv=ivMedicines.request(cmd,clock);if(iv)return iv;
    if(['therapy.request','procedure.request'].includes(intent.kind)&&(policy.conducts||[]).includes(intent.id)){
@@ -188,7 +188,7 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
     // For a requested transfer surgery.request() above either returns a
     // patient-scoped pending acceptance or commits the same native closure.
     // Other destinations retain the existing clinical decision path.
-    const strict=readiness(intent.id);
+    const strict=intent.id==='alta'?assessDischarge(p,clock,cmd,readiness):readiness(intent.id);
     const evaluation=intent.partial?partialDisposition(p,c,intent.id,strict,{cases}):strict;
     if(!evaluation?.ready)return rejected(cmd,'closure-not-ready',(evaluation?.missing||['Destino no disponible.']).join(' '));
     return finalize(cmd,evaluation);

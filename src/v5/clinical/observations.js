@@ -48,6 +48,16 @@ export function prepareDispositionReassessment(p,clock,cmd){
  if(cmd.intent.kind==='case.close'&&!cmd.intent.partial&&hasRecordedVitals(p))
   recordClinicalReassessment(p,clock,cmd.eventId+':reassessment',{routine:true});
 }
+export function assessDischarge(p,clock,cmd,readiness){
+ if(!hasRecordedVitals(p)||cmd.intent.partial)return readiness('alta');
+ // A completed discharge retains the routine check. An unsafe decision
+ // cannot add a new measurement or reassessment to the patient's record.
+ const assessed={...p};
+ prepareDispositionReassessment(assessed,clock,cmd);
+ const verdict=readiness('alta',assessed);
+ if(verdict?.ready)Object.assign(p,assessed);
+ return verdict;
+}
 export function postInterventionReassessments(p){
  return p.treatments.every(t=>p.lastReassessment?.interventionEvents?.includes(t.sourceEventId))?p.reassessments:0;
 }

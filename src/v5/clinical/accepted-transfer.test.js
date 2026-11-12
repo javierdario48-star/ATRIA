@@ -13,6 +13,24 @@ function fixture(caseId,roomId,options={}){
   patient:{uid:'P',caseId},content,resolveContext:()=>({patientUid:'P'}),...options});
  return {s,caseId,post:text=>s.post({id:'t'+(++seq),text}),async advance(seconds){s.advance(seconds);await s.flush();}};
 }
+test('an unsafe discharge changes the doctor record, without changing patient state anywhere in the catalogue',async t=>{
+ for(const c of clinicalContent.cases)await t.test(c.id,async()=>{
+  const f=fixture(c.id,'unsafe-'+c.id,{content:clinicalContent});
+  try{
+   await f.post('/signos');
+   const before=f.s.read();
+   const decision=(await f.post('/disposicion alta')).clinical[0];
+   const after=f.s.read();
+   assert.equal(decision.receipt.disposition.kind,'clinical.unsafe-discharge');
+   assert.deepEqual(after.patient,before.patient);
+   assert.deepEqual(after.progress.receipts,before.progress.receipts);
+   assert.equal(after.progress.penalties.length,1);
+   assert(after.messages.some(row=>row.name==='Dr. Vega'&&row.role==='mentor'&&
+    /cómo vas a darle el alta/i.test(row.text)));
+  }finally{f.s.dispose();}
+ });
+});
+
 test('an unsafe discharge is recorded once and the same patient can later earn a valid closure',async()=>{
  const roomId='discharge-continuity',attempt={id:'unsafe',text:'/disposicion alta'};
  const progress=createProgressionLedger({receipts:[{kind:'clinical.closure',closed:true,

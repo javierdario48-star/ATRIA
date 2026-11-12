@@ -9,7 +9,7 @@ import {unrescuedTransferReactions} from './transfer-continuation.js';
 import {createIVAdministration} from './native-medications.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physical-exam.js';
-import {executeObservation,executeVenousAccess,executeOxygenSupport,recordClinicalReassessment,prepareDispositionReassessment,postInterventionReassessments} from './observations.js';
+import {executeObservation,executeVenousAccess,executeOxygenSupport,recordClinicalReassessment,prepareDispositionReassessment,postInterventionReassessments,assessDischarge} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {createSurgicalConsultation} from './surgical-consultation.js';
 
@@ -43,8 +43,8 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
   message:(reused?'Ya ejecutado por la indicación original: ':t.action==='stop'?'Suspensión confirmada: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected,checkpoint:checkpoint?.iv});
  const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,checkpoint:checkpoint?.surgery});
- function readiness(destination){
-  const out=csEvaluateClosure487(closureSnapshot(p,c,destination));
+ function readiness(destination,patient=p){
+  const out=csEvaluateClosure487(closureSnapshot(patient,c,destination));
   if(unrescuedTransferReactions(p,c,clinicalClock?.().nativeMinute??p.phys?.lastNativeMinute??0).length){
    out.ready=false;out.action=null;
    out.missing.push('Reacción alérgica grave activa: falta un rescate confirmado posterior al desencadenante antes del traslado.');
@@ -90,8 +90,8 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
     p.diagnosis=intent.value;return executed(cmd,{diagnosis:p.diagnosis,message:p.diagnosis?'Impresión diagnóstica registrada: '+p.diagnosis+'.':'Impresión diagnóstica borrada.'});
    }
    if(intent.kind==='case.close'){
-    prepareDispositionReassessment(p,clock,cmd);
-    const strict=readiness(intent.id);
+    if(intent.id!=='alta')prepareDispositionReassessment(p,clock,cmd);
+    const strict=intent.id==='alta'?assessDischarge(p,clock,cmd,readiness):readiness(intent.id);
     const evaluation=intent.partial?partialDisposition(p,c,intent.id,strict,{cases}):strict;
     if(!evaluation?.ready)return rejected(cmd,'closure-not-ready',(evaluation?.missing||['Destino no disponible.']).join(' '));
     const xp=nativeCaseXP({score:evaluation.quality.score,mode});
