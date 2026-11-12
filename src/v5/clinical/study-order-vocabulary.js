@@ -98,7 +98,7 @@ export function authoredTroponinSeries(study){
 const terms=study=>[study.label,...(study.aliases||[])].map(normalizeStudyOrder);
 const containsTerm=(text,word)=>(' '+text+' ').includes(' '+word+' ');
 const startsWithTerm=(text,term)=>text===term||text.startsWith(term+' ');
-const isAngioCt=study=>study.type==='imaging'&&terms(study).some(term=>angioCtPrefix.test(term));
+const isAngioCt=study=>terms(study).some(term=>angioCtPrefix.test(term));
 const documentedCRP=/\b(?:proteina c reactiva|pcr (?:(?:moderadamente|marcadamente|discretamente) )?(?:elevada|normal|\d+(?: \d+)? mg))\b/;
 export function isTroponinStudy(study){
  return terms(study).some(term=>troponinPattern.test(term))||measuredTroponin(study).length>0;
