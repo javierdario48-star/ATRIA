@@ -171,6 +171,42 @@ test('a completed case keeps its original XP receipt through turn changes and le
  assert.deepEqual(r.view().claims,claims);assert.equal(r.view().clinical.shift.turn.number,2);
 });
 
+test('cooperative XP belongs to the participants at each closure and cannot be earned on return',async t=>{
+ let r=await make({mode:'coop',roomId:'participation-rewards'});t.after(()=>r.dispose());
+ async function closeAdmission(index,atMs){
+  const row=r.view('a').clinical.shift.patients[index],bed=content.beds.find(b=>b.id===row.bedId);
+  const point=createWorld(content,{id:'a',name:'A'}).navigation.center(...bed.approach);
+  assert(r.motion('a',[point.x,point.y]));await r.advanceTo(atMs);
+  assert(r.claim('a',row.uid));
+  for(const [suffix,text] of [['dx','/diagnostico cirrosis descompensada'],['close','/cierre-parcial observacion']]){
+   const ack=await r.post('a',{id:suffix+index,text,targetPatientUid:row.uid});
+   assert.equal(ack.clinical[0].status,'executed');
+  }
+  assert(r.view('a').clinical.patient.caseEnded);
+  return row.uid;
+ }
+ const first=await closeAdmission(0,20000);
+ const original=r.view('b').claims.find(([,receipt])=>receipt.actorId==='b')[1];
+ assert.equal(original.patientUid,first);assert(original.xp>0);
+ assert.equal(control(r,'b','leave','save').status,'accepted');
+ await r.advanceTo(180000,{maxSteps:12000});
+ const absent=await closeAdmission(1,200000);
+ const saved=wire(await r.checkpoint());r.dispose();r=await make({roomId:saved.roomId,checkpoint:saved});
+ const absentClaims=r.view('a').claims.map(([,receipt])=>receipt);
+ assert.deepEqual(absentClaims.filter(x=>x.patientUid===absent).map(x=>x.actorId),['a']);
+ assert.deepEqual(absentClaims.find(x=>x.actorId==='b'),original);
+ assert.equal(r.view('b',{patientUid:absent}).clinical.caseReward.creditStatus,'ineligible');
+ assert.equal(r.view('b').clinical.shift.outcomes.find(x=>x.patientUid===absent).xp,0);
+
+ assert.equal(control(r,'b','resume','return').status,'accepted');
+ await r.advanceTo(420000,{maxSteps:15000});
+ const future=await closeAdmission(2,440000);
+ const finalClaims=r.view('b').claims.map(([,receipt])=>receipt);
+ assert.deepEqual(finalClaims.filter(x=>x.actorId==='b').map(x=>x.patientUid),[first,future]);
+ assert.deepEqual(finalClaims.filter(x=>x.actorId==='a').map(x=>x.patientUid),[first,absent,future]);
+ assert.equal(r.view('b',{patientUid:absent}).clinical.caseReward.xp,0);
+});
+
 test('resume at a fully abandoned boundary restores an explicit pending vote and rejected controls cannot extend',async t=>{
  let r=await make({mode:'competitive',roomId:'boundary-resume'});t.after(()=>r.dispose());r=await boundary(r);
  const id=r.view().clinical.shift.turn.id;

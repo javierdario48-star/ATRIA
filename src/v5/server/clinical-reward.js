@@ -16,7 +16,8 @@ export async function attachCreditedCaseReward(clinical,backend,actorId,roomId){
  for(const outcome of [...outcomes,...(clinical.competition?.outcomes||[]).filter(row=>row.closed)]){
   const row=clinical.competition?roomScores.get(JSON.stringify([outcome.ownerId,outcome.patientUid])):credits.get(outcome.patientUid);
   outcome.xp=row?.xp_delta??0;
-  outcome.creditStatus=row?'credited':'pending';
+  if(row)outcome.creditStatus='credited';
+  else if(outcome.creditStatus!=='ineligible')outcome.creditStatus='pending';
  }
  const credited=ownCase&&credits.get(reward.patientUid);
  if(credited&&credited.event_id===reward.eventId)clinical.caseReward={...reward,creditStatus:'credited',xp:credited.xp_delta,

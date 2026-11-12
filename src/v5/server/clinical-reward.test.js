@@ -38,6 +38,15 @@ test('previously settled patients retain the same amount after selecting another
  assert.deepEqual(clinical.shift.outcomes.map(x=>x.xp),[140,60]);
 });
 
+test('a cooperative closure during absence stays ineligible when no account receipt exists',async()=>{
+ const reward={closed:true,actorId:'b',patientUid:'p',eventId:'end',xp:0,creditStatus:'ineligible'};
+ const outcome={patientUid:'p',closed:true,xp:0,creditStatus:'ineligible'};
+ const clinical={caseReward:reward,shift:{outcomes:[outcome]}};
+ await attachCreditedCaseReward(clinical,{creditedGuardRewards:async()=>[]},'b','room');
+ assert.deepEqual(clinical.caseReward,reward);
+ assert.deepEqual(clinical.shift.outcomes,[{...outcome,creditStatus:'ineligible'}]);
+});
+
 test('competitive scores show the credited amount for each owner without exposing private hint details',async()=>{
  const outcomes=[{closed:true,ownerId:'a',patientUid:'p',xp:128},{closed:true,ownerId:'b',patientUid:'q',xp:90}];
  const clinical={competition:{outcomes},shift:{outcomes}};

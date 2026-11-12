@@ -56,6 +56,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  const sessions=new Map(),focused=new Map(clone(checkpoint?.focused??[])),focusVersions=new Map(clone(checkpoint?.focusVersions??[]));
  const claims=new Map(clone(checkpoint?.claims??[])),deliveries=new Map(clone(checkpoint?.deliveries??[])),
   motionReceipts=new Map(clone(checkpoint?.motionReceipts??[]));
+ const claimKey=(record,actorId)=>record.index===0?actorId:actorId+':'+record.index;
  let lastWallMs=checkpoint?.lastWallMs??nowMs,pendingQuanta=checkpoint?.pendingQuanta??0,
   typingUntilMs=checkpoint?.typingUntilMs??0;
  if(!Number.isSafeInteger(lastWallMs)||lastWallMs<0||!Number.isSafeInteger(pendingQuanta)||pendingQuanta<0)
@@ -102,13 +103,17 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  }
  function awardMembers(){
   for(const r of shift.records()){
+   if(r.closed)continue;
    const receipt=sessions.get(r.uid)?.closureReceipt();
    if(!receipt?.closed)continue;
    shift.close(r.uid,r.ownerId,receipt.destination);
    world.departPatient(r.uid);
+   // Closing the shift record and issuing claims share the same checkpoint.
+   // Later resumes cannot change who was eligible at this closure.
    for(const m of members){
     if(mode==='competitive'&&m.id!==r.ownerId)continue;
-    const key=r.index===0?m.id:m.id+':'+r.index;
+    if(mode==='coop'&&!turn.participating(m.id))continue;
+    const key=claimKey(r,m.id);
     if(!claims.has(key))claims.set(key,sessions.get(r.uid).rewardFor(receipt,m.id));
    }
   }
@@ -126,13 +131,16 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     score:p?.closure?.quality?.score??null};
   });
   const outcomes=items.filter(r=>r.closed||r.patientDied).map(r=>{
-   const {patient:p,caseReward}=patientStates.get(r.uid);
-   const reward=mode==='competitive'&&r.ownerId&&r.ownerId!==actorId?
-    sessions.get(r.uid).rewardFor(p.closure,r.ownerId):caseReward;
+   const {patient:p}=patientStates.get(r.uid);
+   const reward=claims.get(claimKey(r,mode==='competitive'?r.ownerId:actorId));
    return {patientUid:r.uid,ownerId:r.ownerId,closed:!!p.closure?.closed,
     survived:!p.patientDied,score:p.closure?.quality?.score??0,
-    xp:reward?.xp??p.closure?.xp??0,points:p.closure?.quality?.score??0};
+    xp:reward?.xp??0,points:p.closure?.quality?.score??0,
+    ...(p.closure?.closed&&!reward?{creditStatus:'ineligible'}:{})};
   });
+  const focusedRecord=items.find(r=>r.uid===state.patient.uid);
+  if(state.caseReward?.closed)
+   state.caseReward=claims.get(claimKey(focusedRecord,actorId))??{...state.caseReward,xp:0,creditStatus:'ineligible'};
   state.shift={mode,elapsedSeconds:shift.elapsed(),remainingSeconds:shift.remaining(),ended:shift.ended(),
    turn:turn.view(actorId),
    guardSelection:guardSelection?{scope:guardSelection.scope,selection:guardSelection.selection,multiplier:guardScopeMultiplier(guardSelection.scope)}:null,
@@ -143,10 +151,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   state.communication=communication.read({actorId,patients:rows.map(record=>({record,state:patientStates.get(record.uid),
    visible:mode!=='competitive'||record.ownerId===actorId||!record.ownerId&&!!world.patientInRangeFor(actorId,record.uid)}))});
   if(mode==='competitive'){
-   const ownerId=items.find(r=>r.uid===state.patient.uid)?.ownerId||null;
+   const ownerId=focusedRecord.ownerId||null;
    state.competition={mode,ownerId,patientUid:state.patient.uid,outcomes};
-   if(state.caseReward&&ownerId!==actorId)
-    state.caseReward={...state.caseReward,xp:0,creditStatus:'ineligible'};
   }
   return {clinical:state,patientStates};
  }
