@@ -274,10 +274,11 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   async invite(ids,mode='coop',guardSelection=null){const epoch=nextRoomEpoch();desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
    if(!['coop','competitive'].includes(mode))throw Error('Modalidad de guardia inválida');
    const result=await api('rooms',{mode,invitees:ids,peerId,...(guardSelection?{guardSelection}:{})});if(disposed||epoch!==roomEpoch){try{await api('rooms/'+result.room.id+'/cancel',{});}catch{}throw Error('Invitación cancelada.');}setRoom(result.room);return structuredClone(room);},
-  async join(id){const epoch=nextRoomEpoch();desiredRoomId=id;await connect();
-   let result;try{result=await api('rooms/join',{roomId:id,peerId});}
-   catch(error){if(epoch===roomEpoch){desiredRoomId=null;if(room?.id!==id)try{await api('rooms/'+id+'/leave',{});}catch{}}throw error;}
-   if(disposed||epoch!==roomEpoch){if(desiredRoomId!==id&&room?.id!==id)try{await api('rooms/'+id+'/leave',{});}catch{}throw Error('Entrada cancelada.');}
+  async join(id,{preserveRoom=false}={}){const epoch=nextRoomEpoch();desiredRoomId=id;await connect();
+   if(disposed||epoch!==roomEpoch)throw Error('Entrada cancelada.');
+   let result;try{result=await api('rooms/join',{roomId:id,peerId},false,{background:preserveRoom});}
+   catch(error){if(epoch===roomEpoch){desiredRoomId=null;if(!preserveRoom&&room?.id!==id)try{await api('rooms/'+id+'/leave',{});}catch{}}throw error;}
+   if(disposed||epoch!==roomEpoch){if(!preserveRoom&&desiredRoomId!==id&&room?.id!==id)try{await api('rooms/'+id+'/leave',{});}catch{}throw Error('Entrada cancelada.');}
    setRoom(result.room);return structuredClone(room);},
   async leave({preserveRoom=false}={}){
    nextRoomEpoch();resetCommitDelivery();desiredRoomId=null;const previous=room;room=null;savedRoom=null;roomSpeechCursor=0;roomSpeechRoom=null;try{storage.removeItem(ROOM_KEY);}catch{}

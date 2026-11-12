@@ -165,6 +165,18 @@ test('canceling an already committed join removes its remote membership',async()
  const result=await f.backend.route({path:'rooms/'+host.id+'/messages',headers:host.headers});
  assert(!result.body.room.members.some(x=>x.userId===a.state().user.id),'a cancelled join must not leave an accepted ghost member');assert.equal(a.state().room,null);a.dispose();
 });
+test('a late social join for a saved guard does not remove its durable participant from the social room',async()=>{
+ const f=fixture(),a=f.make(),host=await invited(f,a);
+ await a.join(host.id);await a.leave({preserveRoom:true});
+ try{
+  f.delay('/api/rooms/join');const joining=a.join(host.id,{preserveRoom:true});
+  while(!f.held())await Promise.resolve();
+  await a.leave({preserveRoom:true});f.release();await assert.rejects(joining);
+  const result=await f.backend.route({path:'rooms/'+host.id+'/messages',headers:host.headers});
+  assert(result.body.room.members.some(x=>x.userId===a.state().user.id));
+  assert.equal(a.state().room,null);
+ }finally{f.release();a.dispose();}
+});
 test('a superseded join cannot revoke a new intentional join to the same room',async()=>{
  const f=fixture(),a=f.make(),host=await invited(f,a);f.delay('/api/rooms/join');const previous=a.join(host.id);
  while(!f.held())await Promise.resolve();await a.join(host.id);f.release();await assert.rejects(previous,/cancelada/);

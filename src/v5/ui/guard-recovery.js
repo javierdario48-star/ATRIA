@@ -16,7 +16,8 @@ export function createGuardRecovery({account,render,hide,notify=()=>{},resume,re
  function failure(error,operation){
   working=false;
   present('error',error?.name==='TimeoutError'?
-   'La guardia tardó demasiado en responder. Tu progreso está guardado; volvé a intentarlo.':
+   'La guardia tardó demasiado en responder. Tu progreso se conserva. Volvé a intentarlo.':
+   error?.status===409&&error?.code==='busy'?'La guardia todavía se está actualizando. Volvé a intentarlo.':
    error?.message||'No se pudo '+operation+'. Volvé a intentarlo.');
  }
  async function show(){
@@ -36,6 +37,7 @@ export function createGuardRecovery({account,render,hide,notify=()=>{},resume,re
   const expected={...target},request=begin();present(operation==='resume'?'resuming':'releasing');
   try{
    const value=await awaitAbortable(account.restore({signal:request.signal}),request.signal);
+   if(request.id!==generation)return false;
    if(!value||value.actorId!==expected.actorId||value.activeGuardId&&value.activeGuardId!==expected.roomId){
     target=null;throw Error('La cuenta o la guardia cambió. Comprobá nuevamente antes de continuar.');
    }
@@ -47,7 +49,7 @@ export function createGuardRecovery({account,render,hide,notify=()=>{},resume,re
    working=false;target=null;hide();return true;
   }catch(error){if(request.id!==generation)return false;failure(error,'recuperar la guardia');return false;}
  }
- return Object.freeze({show,run,cancel,busy:()=>working,canDismiss:()=>!working||!target});
+ return Object.freeze({show,run,cancel,busy:()=>working});
 }
 
 export function guardRecoveryHTML({phase,error='',available=false}){
@@ -55,10 +57,10 @@ export function guardRecoveryHTML({phase,error='',available=false}){
   title=checking?'Comprobando guardia…':available?'Tu guardia está guardada':'No pudimos comprobar tu guardia',
   status=checking?'Consultando tu progreso guardado…':phase==='resuming'?'Retomando tus pacientes y tratamientos…':
    phase==='releasing'?'Guardando tu salida de la guardia…':'';
- return `<h2>${title}</h2>${available?'<p>Podés retomar tus pacientes, conversaciones y tratamientos. El control pasará a este dispositivo.</p>':''}
+ return `<h2>${title}</h2>${available?'<p>Si retomás, este dispositivo controlará tu guardia. Podés volver al lobby en cualquier momento.</p>':''}
   ${status?`<p role="status" aria-live="polite">${status}</p>`:''}
   ${error?`<p role="alert">${escape(error)}</p>`:''}
   <div class="actions">${available?`<button data-action="account-recover"${busy?' disabled':''}>Retomar guardia</button><button data-action="account-release"${busy?' disabled':''}>Finalizar participación</button>`:
    !busy?'<button data-action="account-check">Reintentar</button>':''}
-   <button data-action="close"${busy&&!checking?' disabled':''}>Después</button></div>`;
+   <button data-action="close">Después</button></div>`;
 }

@@ -179,6 +179,68 @@ function patientFrame(epoch,uid='A',confirmed='A',mode='coop',extra={}){
   ...(mode==='competitive'?{competition:{mode,ownerId:confirmed?'doctor':null}}:{})},catalog:[uid+'-catalog'],
   spatial:{doctors:[],nurses:[]},...extra};
 }
+function recoveryFrame(epoch,participating,extra={}){
+ const result=patientFrame(epoch,'A','A','coop',extra);
+ result.clinical.shift.turn={id:roomId+':turn-1',actor:{participating}};
+ return result;
+}
+
+test('recovery retries the same request after CAS contention through the final leave receipt',async()=>{
+ const sent=[],stored=new Map(),storage={getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)};
+ const replica=createDurableCooperativeReplica({roomId,clientKey,storage,actorId:'doctor-a',window:{crypto,
+  fetch:async(_url,options)=>{
+   const body=JSON.parse(options.body);sent.push(body);
+   if([1,3].includes(sent.length))return {ok:false,status:409,json:async()=>({
+    code:'busy',error:'clinical authority changed; retry the same event'})};
+   const shift=body.shiftRequest;
+   return {ok:true,json:async()=>recoveryFrame(sent.length,!shift,shift?{
+    shiftRequestId:shift.requestId,shiftAcknowledgement:{...shift,status:'accepted'}}:{})};
+  }}});
+ try{
+  const result=await replica.recoverTurn('leave');
+  assert.equal(result.clinical.shift.turn.actor.participating,false);
+  assert.equal(sent.length,4);
+  assert.deepEqual(sent[0],sent[1]);assert.deepEqual(sent[2],sent[3]);
+  assert.equal(sent[2].shiftRequest.op,'leave');assert(sent[2].shiftRequest.requestId);
+  assert(sent.every(body=>body.expectedActorId==='doctor-a'));
+  assert(![...stored.values()].some(value=>value.includes(sent[2].shiftRequest.requestId)),
+   'the dismissed modal cannot replay its action on reload');
+ }finally{replica.dispose();}
+});
+
+for(const [code,attempts] of [['busy',5],['fenced',1]])test('recovery '+code+' ends after '+attempts+' attempt(s)',async()=>{
+ let sent=0;
+ const replica=createDurableCooperativeReplica({roomId,clientKey,window:{crypto,fetch:async()=>{
+  sent++;return {ok:false,status:409,json:async()=>({code,error:'test authority rejection'})};
+ }}});
+ try{
+  await assert.rejects(replica.recoverTurn('leave'),{code,status:409});
+  assert.equal(sent,attempts);
+ }finally{replica.dispose();}
+});
+
+test('cancelling recovery aborts a held leave and ignores a late receipt',async()=>{
+ let reply,leaveSignal,entered;
+ const arrived=new Promise(resolve=>entered=resolve),abort=new AbortController(),sent=[],snapshots=[];
+ const replica=createDurableCooperativeReplica({roomId,clientKey,onSnapshot:value=>snapshots.push(value),window:{crypto,
+  fetch:async(_url,options)=>{
+   const body=JSON.parse(options.body);sent.push(body);
+   if(!body.shiftRequest)return {ok:true,json:async()=>recoveryFrame(1,true)};
+   leaveSignal=options.signal;entered();
+   return new Promise(resolve=>reply=()=>resolve({ok:true,json:async()=>recoveryFrame(2,false,{
+    shiftRequestId:body.shiftRequest.requestId,shiftAcknowledgement:{...body.shiftRequest,status:'accepted'}})}));
+  }}});
+ try{
+  const recovery=replica.recoverTurn('leave',{signal:abort.signal});
+  await arrived;abort.abort();
+  await assert.rejects(recovery,{name:'AbortError'});
+  assert.equal(leaveSignal.aborted,true);
+  reply();await settle();
+  assert.equal(sent.length,2);assert.deepEqual(snapshots.map(row=>row.epoch),[1]);
+  assert.equal(replica.read().shift.turn.actor.participating,true);
+ }finally{replica.dispose();}
+});
+
 function observationHarness(options={}){
  const requests=[],data=new Map(),snapshots=[],commits=[],errors=[],storage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};
  const window={fetch:async(_url,options)=>new Promise(resolve=>requests.push({body:JSON.parse(options.body),signal:options.signal,

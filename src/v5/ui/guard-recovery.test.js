@@ -28,6 +28,17 @@ for(const op of ['resume','release'])test(op+' is bound to the checked guard, vi
  assert.equal(await f.recovery.run(op),false);assert.deepEqual(f.calls,[[op,'guard-a']]);
  finish(true);assert.equal(await action,true);assert.equal(f.hidden,1);assert.equal(f.recovery.busy(),false);
 });
+for(const op of ['resume','release'])test('Después can cancel '+op+' while the native response is pending',async()=>{
+ let reply,target;
+ const f=fixture({[op]:request=>{target=request;return new Promise(resolve=>reply=resolve);}});
+ await f.recovery.show();
+ const action=f.recovery.run(op);await new Promise(resolve=>setImmediate(resolve));
+ const pending=guardRecoveryHTML(f.renders.at(-1));
+ assert.match(pending,/<button data-action="close">Después<\/button>/);
+ f.recovery.cancel();
+ assert.equal(target.signal.aborted,true);
+ reply(true);assert.equal(await action,false);assert.equal(f.hidden,0);
+});
 test('an unavailable guard keeps a visible retry error and never offers an unverified recovery',async()=>{
  const f=fixture();f.account.restore=async()=>{throw Error('Servidor no disponible');};
  assert.equal(await f.recovery.show(),true);const html=guardRecoveryHTML(f.renders.at(-1));

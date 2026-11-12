@@ -1,4 +1,13 @@
+import {awaitAbortable} from '../core/abortable-operation.js';
+
 export const CLINICAL_REQUEST_TIMEOUT_MS=12000;
+const RECOVERY_CAS_BACKOFF_MS=[100,250,500,1000];
+
+async function waitForRetry(ms,signal){
+ let timer;
+ try{await awaitAbortable(new Promise(resolve=>timer=setTimeout(resolve,ms)),signal);}
+ finally{clearTimeout(timer);}
+}
 
 function retainConfirmedRewards(next,previous){
  for(const field of ['caseReward','deathReward']){
@@ -81,29 +90,28 @@ export function createDurableCooperativeReplica({
   emit();
   return true;
  }
- async function request(action,extra={},controller=new AbortController()){
+ async function request(action,extra={}, {controller=new AbortController(),signal:caller,retryBusy=false}={}){
   controllers.add(controller);
-  const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(requestTimeoutMs)]);
-  const bounded=async promise=>{
-   signal.throwIfAborted();let rejectAbort;
-   const aborted=new Promise((_,reject)=>rejectAbort=()=>reject(signal.reason));
-   signal.addEventListener('abort',rejectAbort,{once:true});
-   try{return await Promise.race([promise,aborted]);}finally{signal.removeEventListener('abort',rejectAbort);}
-  };
+  const signals=[controller.signal,AbortSignal.timeout(requestTimeoutMs)];
+  if(caller)signals.push(caller);
+  const signal=AbortSignal.any(signals);
   try{
-  const response=await bounded(window.fetch('/api/clinical',{method:'POST',cache:'no-store',
-   signal,
-   headers:{'Content-Type':'application/json',...(authorization()?{Authorization:authorization()}:{})},
-   body:JSON.stringify({action,clientKey,roomId,...extra,...(actorId?{expectedActorId:actorId}:{})})}));
-  let value;
-  try{value=await bounded(response.json());}
-  catch(error){signal.throwIfAborted();if(response.ok)throw error;value={};}
-  if(!response.ok){
-   const error=Error(value.error||'clinical-'+response.status);
-   error.status=response.status;error.code=value.code||'unavailable';
-   throw error;
-  }
-  return value;
+   const token=authorization(),options={method:'POST',cache:'no-store',signal,
+    headers:{'Content-Type':'application/json',...(token?{Authorization:token}:{})},
+    body:JSON.stringify({action,clientKey,roomId,...extra,...(actorId?{expectedActorId:actorId}:{})})};
+   for(let attempt=0;;attempt++){
+    signal.throwIfAborted();
+    const response=await awaitAbortable(window.fetch('/api/clinical',options),signal);
+    let value;
+    try{value=await awaitAbortable(response.json(),signal);}
+    catch(error){signal.throwIfAborted();if(response.ok)throw error;value={};}
+    if(response.ok)return value;
+    const error=Object.assign(Error(value?.error||'clinical-'+response.status),
+     {status:response.status,code:value?.code||'unavailable'});
+    const delay=RECOVERY_CAS_BACKOFF_MS[attempt];
+    if(!retryBusy||error.status!==409||error.code!=='busy'||delay===undefined)throw error;
+    await waitForRetry(delay,signal);
+   }
   }finally{controllers.delete(controller);}
  }
  function observe(patientUid=desiredFocus){
@@ -113,7 +121,7 @@ export function createDurableCooperativeReplica({
   if(observing)observing.controller.abort(new DOMException('Selection changed','AbortError'));
   const slot={target,controller:new AbortController(),version:++observationVersion,promise:null};
   observing=slot;
-  slot.promise=request('observe',target?{targetPatientUid:target}:{},slot.controller).then(response=>{
+  slot.promise=request('observe',target?{targetPatientUid:target}:{},{controller:slot.controller}).then(response=>{
    if(disposed||slot.version!==observationVersion)return null;
    accept(response);return response;
   }).catch(error=>{
@@ -138,19 +146,21 @@ export function createDurableCooperativeReplica({
  }
  // At most one in-flight mutation per browser. Server-side CAS serializes
  // actors across browsers; retained event IDs make retransmission idempotent.
- function synchronize(){
+ function synchronize({signal,retryBusy=false,recoveryShift=null}={}){
   if(disposed)return Promise.reject(Error('replica-disposed'));
+  if(signal?.aborted)return Promise.reject(signal.reason);
   if(inflight)return inflight;
   const batch=[...pending.values()].slice(0,16).map(x=>clone(x.envelope));
   const motion=queuedMotion,motionSequence=queuedMotionSequence,claim=queuedClaim,typingState=typing,receipt=confirmation,
-   hint=[...pendingHints.values()][0]?.request,nextShift=[...pendingShifts.values()][0]?.request;
+   hint=[...pendingHints.values()][0]?.request,nextShift=[...pendingShifts.values()][0]?.request??recoveryShift;
   // A leave settles after this batch at the authority. Keep it queued while
   // any earlier command or displayed hint cannot fit in the current batch.
   const shift=nextShift?.op==='leave'&&(pending.size>batch.length||pendingHints.size>(hint?1:0))?null:nextShift;
   inflight=request('sync',{commands:batch,...(hint?{hintRequest:clone(hint)}:{}),...(motion?{motion,...(motionSequence!==null?{motionSequence}:{})}:{}),
-   ...(claim?{claim}:{}),...(shift?{shiftRequest:clone(shift)}:{}),...(typingState!==null?{typing:typingState}:{}),...(receipt?{confirmation:receipt}:{})})
+   ...(claim?{claim}:{}),...(shift?{shiftRequest:clone(shift)}:{}),...(typingState!==null?{typing:typingState}:{}),...(receipt?{confirmation:receipt}:{})},{signal,retryBusy})
    .then(response=>{
     if(disposed)return null;
+    signal?.throwIfAborted();
     accept(response);
     // Do not discard motion on a recovering response: the server did not
     // admit new commands, movement or confirmations during catch-up.
@@ -165,6 +175,30 @@ export function createDurableCooperativeReplica({
    .finally(()=>{inflight=null;});
   return inflight;
  }
+ async function recoverTurn(op,{signal=AbortSignal.timeout(requestTimeoutMs)}={}){
+  if(op!=='resume'&&op!=='leave')throw Error('invalid recovery decision');
+  const participating=op==='resume';let decision=null;
+  // Only the open recovery attempt owns its decision. Existing queued orders
+  // and receipts keep their normal persistence and settle before leaving.
+  while(true){
+   const result=await synchronize({signal,retryBusy:true,recoveryShift:decision});
+   signal.throwIfAborted();
+   if(!result)throw Error('replica-disposed');
+   if(result.recovering||pending.size||pendingHints.size||pendingShifts.size){
+    await waitForRetry(100,signal);continue;
+   }
+   const turn=result.clinical.shift?.turn;
+   if(!turn?.id||typeof turn.actor?.participating!=='boolean')
+    throw Error('No se pudo comprobar el estado del turno. Tu progreso se conserva.');
+   const receipt=result.shiftAcknowledgement;
+   if(decision&&(receipt?.requestId!==decision.requestId||receipt.op!==op||receipt.turnId!==decision.turnId||
+      receipt.status!=='accepted'&&receipt.reason!=='shift-turn-changed'))
+    throw Error('No se confirmó tu decisión de guardia. Volvé a intentarlo.');
+   if(turn.actor.participating===participating)return result;
+   if(decision?.turnId===turn.id)throw Error('No se confirmó el cambio de participación. Volvé a intentarlo.');
+   decision={op,turnId:turn.id,requestId:window.crypto.randomUUID()};
+  }
+ }
  return Object.freeze({
   async start(caseId,mode=null,guardSelection=null){
    if(disposed)throw Error('replica-disposed');
@@ -177,6 +211,7 @@ export function createDurableCooperativeReplica({
    }
   },
   sync:synchronize,
+  recoverTurn,
   observe,invalidate,
   pendingCommands:()=>[...pending.values()].map(x=>clone(x.envelope)),
   maintain(now){

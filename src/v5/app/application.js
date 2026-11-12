@@ -79,7 +79,7 @@ export async function createApplication({document,window,content,signal}){
  let savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;
  const career=()=>account.read()||progress.read();
  let accountTransition=Promise.resolve();
- let accountControlClient=null,guardRecovery=null;
+ let guardRecovery=null;
  let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
@@ -216,16 +216,19 @@ export async function createApplication({document,window,content,signal}){
  }
  function toast(message){ui('toast').textContent=message;ui('toast').hidden=false;toastUntil=window.performance.now()+3200;}
  function open(html,kind='clinical'){
+  if(dialog.dataset.panel==='account-recover'&&kind!=='account-recover')guardRecovery?.cancel();
   clinicalHintPresenter.cancel();
   world.stop();drag=null;patientWheel.hide();dialog.dataset.panel=kind;
   ui('modalContent').innerHTML=html;if(!dialog.open)dialog.showModal();
  }
  function close({preserveRecovery=false}={}){
-  if(dialog.dataset.panel==='account-recover'&&!preserveRecovery){
-   if(!guardRecovery?.canDismiss())return;
-   guardRecovery.cancel();
-  }
-  if(dialog.open)dialog.close();delete dialog.dataset.panel;ui('modalClose').disabled=false;
+  if(dialog.dataset.panel==='account-recover'&&!preserveRecovery)guardRecovery?.cancel();
+  if(dialog.open)dialog.close();delete dialog.dataset.panel;
+ }
+ function dismissModal(){
+  const fromRecovery=dialog.dataset.panel==='account-recover';
+  close();
+  if(fromRecovery)returnFromGuardRecovery();
  }
  const clinicalUI=createClinicalInterface({document,session:()=>guardSession,open,close,send:(text,options)=>submitText(text,{...options,clinical:true}),notify:toast,cases:content.cases,
   onTalk:uid=>selectRecipient('patient',uid),therapies:content.therapies,
@@ -295,11 +298,11 @@ export async function createApplication({document,window,content,signal}){
   selectedLobbyPlayerId=userId;selectedLobbyCardState=friendStatus(state,userId);
   open('<p role="status">Cargando perfil…</p>','lobby-person');
   try{const p=await social.readPlayerProfile(userId);
-   if(!dialog.open||dialog.dataset.panel!=='lobby-person'||selectedLobbyPlayerId!==userId)return;
+   if(!dialog.open||dialog.dataset.panel!=='lobby-person'||selectedLobbyPlayerId!==userId||selectedLobbyCardState!==cardState)return;
    open(playerProfileCardHTML(p,{friendship:friendStatus(social.state(),userId),canInvite:world.snapshot().phase==='lobby',
     cases:content.cases.filter(c=>playableIds.has(c.id))}),'lobby-person');
    renderer.drawAvatar(ui('socialProfileAvatar'),{color:p.scrubColor,sex:p.sex});
-  }catch(error){if(dialog.open&&dialog.dataset.panel==='lobby-person'){
+  }catch(error){if(dialog.open&&dialog.dataset.panel==='lobby-person'&&selectedLobbyPlayerId===userId&&selectedLobbyCardState===cardState){
    if(person)open('<h2>'+esc(person.name)+'</h2><p>Perfil no disponible en este momento.</p><div class="actions"><button data-action="close">Cerrar</button></div>','lobby-person');
    else {close();toast(error.message);}
   }}
@@ -581,7 +584,7 @@ export async function createApplication({document,window,content,signal}){
  }
  async function receiveCooperativePacket(sender,packet){
   if(destroyed)return;
-  if(!coopRoomId&&packet.kind==='durable.hello'&&sender===social.state().room?.hostUserId&&
+  if(!coopRoomId&&packet.kind==='durable.hello'&&!account.read()?.activeGuardId&&sender===social.state().room?.hostUserId&&
    packet.roomId===social.state().room?.id&&cooperativeFlow.mayEnter('guest',
    {phase:world.snapshot().phase,hasSession:!!guardSession,recovering:social.state().recovering})){
    joinDurableRoom(social.state().room);return;
@@ -598,7 +601,7 @@ export async function createApplication({document,window,content,signal}){
    const ack=await guardSession.hint(packet.request,sender);
    social.send(sender,{kind:'hint.ack',roomId:coopRoomId,requestId:packet.request?.requestId,ack});return;
   }
-  if(!coopRoomId&&packet.kind==='state'&&sender===social.state().room?.hostUserId&&cooperativeFlow.mayEnter('guest',{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:social.state().recovering})){
+  if(!coopRoomId&&packet.kind==='state'&&!account.read()?.activeGuardId&&sender===social.state().room?.hostUserId&&cooperativeFlow.mayEnter('guest',{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:social.state().recovering})){
    const room=social.state().room;if(packet.roomId!==room.id||!playableIds.has(packet.clinical?.patient?.caseId))return;
    coopRoomId=room.id;cooperativeFlow.bind(room.id);announcedClosure=null;announcedDeathUid=null;
    lastReceivedPatientCount=1;lastSelectedPatientUid=packet.clinical.patient.uid;shiftEndedAnnounced=false;
@@ -958,13 +961,16 @@ export async function createApplication({document,window,content,signal}){
   guardSession=localSessions.get(next.uid);clinicalUI.reset();patientWheel.hide();announcedClosure=null;
   close();renderGuardCommunication();updateHud();return true;
  }
- guardRecovery=createGuardRecovery({account,notify:toast,hide:()=>{if(dialog.dataset.panel==='account-recover')close();},
-  render:state=>{
-   open(guardRecoveryHTML(state),'account-recover');
-   ui('modalClose').disabled=state.busy&&state.phase!=='checking';
-  },
+ guardRecovery=createGuardRecovery({account,notify:toast,
+  hide:()=>{if(dialog.dataset.panel==='account-recover')close({preserveRecovery:true});},
+  render:state=>open(guardRecoveryHTML(state),'account-recover'),
   resume:target=>recoverAccountGuard(target,'resume'),
   release:target=>recoverAccountGuard(target,'release')});
+ function returnFromGuardRecovery(){
+  cooperativeFlow.cancel();restoreRoomId=null;coopCaseId=null;coopGuardSelection=null;pendingCoopLeave=false;
+  void social.leave({preserveRoom:true});
+  if(world.snapshot().phase!=='lobby')enterLobby();
+ }
  async function guardSetup({inspect=true}={}){
   if(inspect&&await guardRecovery.show())return;
   if(world.snapshot().phase==='guard')return;
@@ -1196,40 +1202,36 @@ export async function createApplication({document,window,content,signal}){
  async function recoverAccountGuard({actorId,roomId,signal},operation){
   if(durableStarting||durableJoining||coopRoomId)throw Error('Otra entrada a guardia sigue en curso. Volvé a intentarlo.');
   durableStarting=true;let client,attached=false;
-  const abort=()=>client?.dispose();signal.addEventListener('abort',abort,{once:true});
   try{
    await awaitAbortable(accountTransition,signal);
    await account.call('take-control',{roomId,expectedActorId:actorId},{signal});
-   if(account.read()?.actorId!==actorId||account.read()?.activeGuardId!==roomId)
+   signal.throwIfAborted();
+   const controlled=account.read();
+   if(controlled?.actorId!==actorId||controlled.activeGuardId!==roomId)
     throw Error('La cuenta o la guardia cambió. Comprobá nuevamente antes de continuar.');
-   await awaitAbortable(social.connect(),signal);
-   client=makeDurableClient({id:roomId},actorId);accountControlClient=client;
-   const initialResponse=await awaitAbortable(client.sync(),signal),turn=client.read()?.shift?.turn;
-   if(!turn)throw Error('No se pudo comprobar el estado del turno. Tu progreso se conserva.');
-   const op=operation==='release'?(turn.canLeave?'leave':null):(turn.canResume?'resume':null);
-   if(op){
-    const receipt=await awaitAbortable(client.shift({op,turnId:turn.id,requestId:window.crypto.randomUUID()}),signal);
-    if(receipt.status!=='accepted')throw Error('No se confirmó tu decisión de guardia. Volvé a intentarlo.');
-   }
+   client=makeDurableClient({id:roomId},actorId);
+   const confirmed=await client.recoverTurn(operation==='release'?'leave':'resume',{signal});
+   signal.throwIfAborted();
    if(operation==='release'){
-    await account.call('release-guard',{roomId,expectedActorId:actorId},{signal});
-    await awaitAbortable(social.leave({preserveRoom:true}),signal);
-    cooperativeFlow.cancel();restoreRoomId=null;
+    const result=await account.call('release-guard',{roomId,expectedActorId:actorId},{signal});
+    signal.throwIfAborted();
+    if(result.ok!==true||result.account?.actorId!==actorId||result.account.activeGuardId!==null)
+     throw Error('No se confirmó tu salida de la guardia. Volvé a intentarlo.');
+    returnFromGuardRecovery();toast('Finalizaste tu participación. Tu progreso está guardado.');
    }else{
+    const current=account.read();
+    if(current?.actorId!==actorId||current.activeGuardId!==roomId)
+     throw Error('La cuenta o la guardia cambió. Comprobá nuevamente antes de continuar.');
     const clinical=client.read(),spatial=client.snapshotSpatial();
-    if(['coop','competitive'].includes(clinical.shift?.mode)){
-     // The native roster and saved clinical state remain authoritative when
-     // the advisory social cache expires. Cancellation still ends recovery.
-     try{await awaitAbortable(social.join(roomId),signal);}catch{signal.throwIfAborted();}
-    }
     const room={id:roomId,mode:clinical.shift?.mode,members:clinical.room.members.map(userId=>
      ({userId,name:spatial?.doctors.find(d=>d.id===userId)?.name||'Médico'}))};
-    signal.throwIfAborted();restoreRoomId=null;attachDurableRoom(room,client,initialResponse);attached=true;
+    restoreRoomId=null;attachDurableRoom(room,client,confirmed);attached=true;
+    // The durable roster is already confirmed. Reattach social transport in
+    // parallel so an unavailable room cache cannot hold the recovery UI.
+    if(['coop','competitive'].includes(room.mode))void social.join(roomId,{preserveRoom:true}).catch(()=>{});
    }
    return true;
   }finally{
-   signal.removeEventListener('abort',abort);
-   if(accountControlClient===client)accountControlClient=null;
    if(!attached)client?.dispose();durableStarting=false;
   }
  }
@@ -1295,7 +1297,7 @@ export async function createApplication({document,window,content,signal}){
  listen(ui('guardButton'),'click',()=>world.snapshot().phase==='guard'?requestLobby():guardSetup());
  listen(ui('peopleButton'),'click',()=>world.snapshot().phase==='guard'?clinicalUI.showPatient(world.snapshot().patients.find(p=>p.uid===world.nearby())||world.snapshot().patients[0]):
   showPeople());
- listen(ui('profileButton'),'click',showProfile);listen(ui('modalClose'),'click',close);
+ listen(ui('profileButton'),'click',showProfile);listen(ui('modalClose'),'click',dismissModal);
  listen(clinicalChecklist.root,'click',event=>{
   if(event.target.closest('[data-action="toggle-clinical-checklist"]')){
    clinicalChecklist.toggle();clinicalChecklist.update(guardSession?.read());
@@ -1349,7 +1351,7 @@ export async function createApplication({document,window,content,signal}){
   if(button.dataset.action==='invite-friend'){
    await inviteColleagues([button.dataset.user],ui('friendCase')?.value||'PERI-PBE-001');return;
   }
-  if(button.dataset.action==='close')close();
+  if(button.dataset.action==='close'){dismissModal();return;}
   if(button.dataset.action==='return-lobby'){requestLobby();return;}
   if(button.dataset.action==='save-shift'){await requestLobby();return;}
   if(button.dataset.action==='continue-shift'){await controlGuardTurn('continue');return;}
@@ -1449,7 +1451,7 @@ export async function createApplication({document,window,content,signal}){
   renderMusic();
  });
  listen(dialog,'pointerdown',event=>{if(event.target.closest('[data-action="diagnosis-suggestion"]'))event.preventDefault();});
- listen(dialog,'cancel',event=>{event.preventDefault();close();});
+ listen(dialog,'cancel',event=>{event.preventDefault();dismissModal();});
  listen(dialog,'keydown',event=>{
   if(event.target?.id==='diagnosisInput'&&event.key==='Enter'&&!event.isComposing){event.preventDefault();clinicalUI.saveDiagnosis();return;}
   if(event.target?.id==='monitorOrderInput'&&event.key==='Enter'){
@@ -1504,7 +1506,7 @@ export async function createApplication({document,window,content,signal}){
  });
  const stopDrag=()=>drag=null;listen(canvas,'pointerup',stopDrag);listen(canvas,'pointercancel',stopDrag);
  listen(window,'keydown',event=>{
-  if(event.key==='Escape'){clinicalHintPresenter.cancel();pendingPatientAction=null;patientWheel.hide();close();input.blur();world.stop();return;}
+  if(event.key==='Escape'){clinicalHintPresenter.cancel();pendingPatientAction=null;patientWheel.hide();dismissModal();input.blur();world.stop();return;}
   if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)||dialog.open)return;
   const v={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[event.key];
   if(v){event.preventDefault();cancelReceptionAssignment();
@@ -1561,10 +1563,6 @@ export async function createApplication({document,window,content,signal}){
     durableClient.maintain(now,{moving:s.player.moving});
    }else if(replica){replica.maintain(now);const key=JSON.stringify(s.player.target||[s.player.x,s.player.y]);
     if(key!==lastMotion){lastMotion=key;const host=social.state().room?.hostUserId;if(host)social.send(host,{kind:'motion',target:s.player.target||[s.player.x,s.player.y]});}}
-   // Explicit account finalization creates a short-lived clinical client in
-   // the lobby. It needs the same RAF retry lane as an attached guard, so a
-   // busy/catch-up response cannot strand its persisted leave decision.
-   accountControlClient?.maintain(now);
    // The local client also confirms arrival, but only durable server claims
    // can assign a multiplayer patient.
    if(receptionAssignment.arrive(s.player,uid=>!!world.patientInRange(uid))==='missed')
@@ -1598,7 +1596,7 @@ export async function createApplication({document,window,content,signal}){
   try{hospitalAudio.pause();advanceClinicalTo(now);}catch(error){recordFrameError(error,'pause',now);}
   finally{lastClinicalFrame=null;world.stop();}
  }
- function destroy(){if(destroyed)return;clinicalHintPresenter.cancel();vegaHintCard.destroy();destroyed=true;cancelReceptionAssignment();directSelection.cancel();unassignedGlow.destroy();guardSession?.dispose();guardSession=null;accountControlClient?.dispose();accountControlClient=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();renderer.destroy();rootLifecycle.leave();}
+ function destroy(){if(destroyed)return;clinicalHintPresenter.cancel();vegaHintCard.destroy();destroyed=true;guardRecovery?.cancel();cancelReceptionAssignment();directSelection.cancel();unassignedGlow.destroy();guardSession?.dispose();guardSession=null;social.dispose();pendingPatientAction=null;patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();pause();close();atriaKeyboard.destroy();hospitalAudio.destroy();renderer.destroy();rootLifecycle.leave();}
  listen(document,'visibilitychange',()=>document.hidden?pause():resume());
  listen(window,'pagehide',event=>event.persisted?pause():destroy());listen(window,'pageshow',resume);
  if(signal)listen(signal,'abort',destroy,{once:true});
