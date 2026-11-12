@@ -368,16 +368,19 @@ export async function createApplication({document,window,content,signal}){
    if(savingShift)return;
    savingShift=true;
    const client=durableClient,turn=client.read()?.shift?.turn;
+   let confirmed=false;
    try{
     if(turn?.canLeave){
-     const receipt=await client.shift({op:'leave',turnId:turn.id,requestId:window.crypto.randomUUID()});
-     if(receipt.status!=='accepted')throw Error('No se confirmó que tu guardia quedara guardada. Volvé a intentarlo.');
+     const signal=AbortSignal.timeout(CLINICAL_REQUEST_TIMEOUT_MS);
+     await awaitAbortable(client.recoverTurn('leave',{signal}),signal);
     }
-    if(client!==durableClient)return;
-    enterLobby(true);
-    toast('Tu guardia está guardada. Podés retomarla desde Hacer guardia.');
-   }catch(error){toast(error.message||'Reconectando la guardia. Tu progreso se conserva.');}
+    confirmed=true;
+   }catch{/* The last durable guard and its queued receipts remain recoverable. */}
    finally{savingShift=false;}
+   if(client!==durableClient||destroyed)return;
+   enterLobby(true);
+   toast(confirmed?'Tu guardia está guardada. Podés retomarla desde Hacer guardia.':
+    'Volviste al lobby. Podés recuperar la guardia y comprobar las órdenes pendientes desde Hacer guardia.');
    return;
   }
   if(coopRoomId&&social.isHost()&&outcomeId(guardSession?.read().patient)&&!outcomeDelivered()){

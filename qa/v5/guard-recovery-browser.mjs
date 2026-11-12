@@ -32,6 +32,25 @@ async function saved(page){await page.locator('[data-action=account-recover]').w
 async function enter(page,roomId){await page.waitForFunction(id=>atriaV5.snapshot().phase==='guard'&&
  atriaV5.snapshot().clinical?.room.roomId===id&&atriaV5.snapshot().clinical.shift.turn.actor.participating,roomId);}
 async function save(page){await clickHudAction(page,'guardButton');await lobby(page);}
+async function saveWithStalledLeave(page,roomId){
+ const pending=deferred(),finish=deferred(),pattern='**/api/clinical';
+ const before=(await api(page,'account/session')).body.account;
+ await page.route(pattern,async route=>{
+  const body=route.request().postDataJSON();
+  if(body?.roomId!==roomId||body.shiftRequest?.op!=='leave')return route.continue();
+  pending.resolve();await finish.promise;
+  await route.abort().catch(()=>{});
+ });
+ try{
+  await clickHudAction(page,'guardButton');
+  await waitForGate(pending,'the original leave did not reach the transport');
+  await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby',{},{timeout:14500});
+  const after=(await api(page,'account/session')).body.account;
+  assert.equal(after.activeGuardId,roomId);
+  assert.equal(after.xp,before.xp);
+  assert.equal(after.casesResolved,before.casesResolved);
+ }finally{finish.resolve();await page.unroute(pattern);}
+}
 async function dismiss(page,method){
  if(method==='Escape')await page.keyboard.press('Escape');
  else await page.locator(method).click();
@@ -200,7 +219,11 @@ try{
   }
   await device.locator('[data-action=account-recover]').click();await enter(device,roomId);
   await verifyFenced(a,roomId);
-  await save(device);assert.equal((await api(device,'account/session')).body.account.activeGuardId,roomId);
+  if(mode==='solo'){
+   await saveWithStalledLeave(device,roomId);
+   check('a stalled leave from the active guard returns to the lobby with the same saved guard and XP');
+  }else await save(device);
+  assert.equal((await api(device,'account/session')).body.account.activeGuardId,roomId);
   await clickHudAction(device,'guardButton');await saved(device);await device.locator('[data-action=account-recover]').click();await enter(device,roomId);
   check(mode+': native recovery, saved leave and reconnection on Android preserve the same guard');
   await reopen(a);await saved(a);
