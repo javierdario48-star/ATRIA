@@ -1,19 +1,16 @@
 // Extends the existing clinical bots: real speech routing, authority and native
 // dialogue through public session commands. Never edits live clinical state.
 import {createHash} from 'node:crypto';
-import {clinicalCertificationContent,deriveClinicalCertificationPlan} from './certify-clinical-cases.mjs';
+import {deriveClinicalCertificationPlan} from './certify-clinical-cases.mjs';
 import {createGuardSession} from '../../src/v5/clinical/guard-session.js';
 import {materializeGuardPatient} from '../../src/v5/content/guard-patient-variation.js';
 import {buildBehaviorProfile,TRAIT_KEYS} from '../../src/v5/content/patient-behavior.js';
 import {PATIENT_PERSONALITIES,DEFAULT_PATIENT_VARIATION,normalizePatientPersonality} from '../../src/v5/content/patient-variation.js';
-import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
-import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
-import {neurologyPack} from '../../src/v5/content/packs/neurology-pack.js';
+import {clinicalContent} from '../../src/v5/server/content.js';
 import {validateDialogueSources} from './personality-fact-oracle.mjs';
 
 export const INTERVIEW_DOCTORS=Object.freeze(['expert','beginner','empathetic','brusque','hurried','meticulous']);
-export const personalityContent=()=>clinicalCertificationContent([
- ...respiratoryPack.cases,...cardiologyPack.cases,...neurologyPack.cases]);
+export const personalityContent=async()=>clinicalContent;
 export const digest=x=>createHash('sha256').update(JSON.stringify(x)??'undefined').digest('hex');
 export const behaviorSignature=b=>b?TRAIT_KEYS.map(k=>b[k]).join(','):'missing';
 const unique=xs=>[...new Set(xs.filter(Boolean))];
