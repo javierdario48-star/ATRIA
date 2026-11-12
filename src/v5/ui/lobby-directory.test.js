@@ -60,3 +60,20 @@ test('lobby shows a connection diagnostic instead of silently reporting zero pee
  assert.doesNotMatch(element('lobbyContacts').innerHTML,/No se pudo sincronizar el lobby/);
  assert.match(element('lobbyContacts').innerHTML,/Bruno/);
 });
+
+test('busy or disconnected doctors remain identifiable while only available doctors can be selected',()=>{
+ const {view,me,element}=fixture();
+ view.render(me);element('coopDoctors').select('b');
+ const roster=[me.roster[0],{...me.roster[1],status:'en guardia'},
+  {userId:'c',name:'Celia',status:'disponible'},{userId:'d',name:'Dario',status:'desconectado'}];
+ view.render({...me,roster,friends:[{id:'e',name:'Eva',online:false}]});
+ const candidates=element('coopDoctors').innerHTML,contacts=element('lobbyContacts').innerHTML;
+ assert.match(candidates,/value="b" disabled[^>]*>Bruno · en guardia/);
+ assert.doesNotMatch(candidates,/value="b"[^>]*checked/);
+ assert.match(candidates,/value="c"[^>]*>Celia/);
+ assert.doesNotMatch(candidates,/value="[de]"/);
+ assert.match(contacts,/Bruno · en guardia/);
+ assert.match(contacts,/Dario · desconectado/);
+ assert.match(contacts,/Eva · desconectado/);
+ assert.equal(element('onlineDoctorsCount').textContent,'2');
+});

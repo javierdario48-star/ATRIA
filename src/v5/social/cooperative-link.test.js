@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import {createQaSocialServer} from '../../social/qa-social-server.js';
+import {createV5QaSocialServer} from './room-membership-store.js';
 import {createCooperativeLink} from './cooperative-link.js';
 import {privateRoomMotionPrefix} from './room-motion-scope.js';
 const storage=()=>{const data=new Map();return {getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)};};
-function fixture(){
- const data=new Map(),store={get:async k=>data.get(k),set:async(k,v)=>data.set(k,structuredClone(v)),delete:async k=>data.delete(k)},backend=createQaSocialServer(store);
+function fixture(makeServer=createQaSocialServer){
+ const data=new Map(),store={get:async k=>data.get(k),set:async(k,v)=>data.set(k,structuredClone(v)),delete:async k=>data.delete(k)},backend=makeServer(store);
  let delayed=null,release=null,failed=null,beforePath=null,beforeRelease=null;const requests=[];let closed=0;
  const win={localStorage:storage(),crypto,performance:{now:()=>10000},fetch:async(uri,options)=>{
   const url=new URL(uri,'http://test'),input={method:options.method,path:url.pathname,query:Object.fromEntries(url.searchParams),headers:options.headers,body:options.body?JSON.parse(options.body):{}};
@@ -261,6 +262,24 @@ test('private ward keeps 260ms movement even when its RTC signaling is delayed',
   'only the active private ward may render this pose');
  assert.equal(value?.motionCadence,260);
  f.release();await a.flush();a.dispose();
+});
+
+test('a V5 social client sees a ward pose only while it is in that room',async()=>{
+ const f=fixture(createV5QaSocialServer),a=f.make(),b=f.make({window:{...f.win,localStorage:storage()},profile:{name:'Bruno'}});
+ try{
+  await Promise.all([a.connect(),b.connect()]);
+  const aid=a.state().user.id,room=await a.invite([b.state().user.id]);
+  await b.join(room.id);
+  a.maintain(1000,{phase:'guard',roomId:room.id,x:452,y:720});await a.flush();
+  b.maintain(1000,{phase:'guard',roomId:room.id,x:420,y:720});await b.flush();
+  assert.equal(b.state().wardPlayers.find(x=>x.userId===aid)?.x,452);
+  const busy=b.state().roster.find(x=>x.userId===aid);
+  assert.equal(busy.status,'en guardia');assert.equal(busy.x,undefined);
+  await b.leave();
+  b.maintain(2000,{phase:'lobby',x:100,y:120});await b.flush();
+  assert.deepEqual(b.state().wardPlayers,[]);
+  await assert.rejects(b.invite([aid]),/ya no está disponible/);
+ }finally{a.dispose();b.dispose();}
 });
 
 test('private physician speech reaches the second room member without clinical sync, once only',async()=>{

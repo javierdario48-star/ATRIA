@@ -2,12 +2,12 @@ import {createHash,randomUUID} from 'node:crypto';
 import {clinicalActorId} from './clinical-http.js';
 import {scrubAppearance,socialAppearance} from '../app/avatar-appearance.js';
 import {avatarAssetSpec} from '../ui/avatar-creator.js';
-import {privateRoomMotionPrefix} from '../social/room-motion-scope.js';
+import {presencePublisherKey,presenceRevocationKey,presenceStatus,wardRoomId} from '../social/presence-storage.js';
 
 const COOKIE='__Host-atria_v5';
 const fail=(status,message)=>Object.assign(Error(message),{status});
 const reply=(status,body,cookies=[])=>({status,body,cookies});
-const pathOf=x=>String(x||'').replace(/^\/?(?:api\/)?/,'').split('?')[0];
+const pathOf=x=>String(x||'').replace(/^\/?(?:api\/)?/,'').split('?')[0].replace(/^\//,'');
 export function publicAccount(a){
  const xp=Number(a.xp)||0;
  return {actorId:a.actor_id,username:a.character_name_key?a.name:a.username,name:a.name,loginName:a.character_name_key?a.name:a.username,
@@ -42,11 +42,27 @@ function appearance(body,previous={}){
 /** Adapts verified Supabase sessions to the existing social owner. The private
  * bridge token never leaves the server or authenticates a browser. */
 export function createAccountGateway({backend,legacy,storage}){
- const publisherKey=id=>'atria-v5:presence-controller:'+id;
+ const publisherTTL=604800;
  async function claimPublisher(identity){
-  const old=await storage.get(publisherKey(identity.actorId));
-  const value={sessionId:identity.sessionId,nonce:randomUUID(),epoch:Math.max(Date.now(),(old?.epoch||0)+1),clientEpoch:0,source:null};
-  await storage.set(publisherKey(identity.actorId),value,{ttl:604800});return value;
+  const publisher={sessionId:identity.sessionId,nonce:randomUUID()};
+  await storage.set(presencePublisherKey(identity.actorId),publisher,{ttl:publisherTTL});return publisher;
+ }
+ const revoked=(actor,session)=>storage.get(presenceRevocationKey(actor,session));
+ async function publishingSession(identity,{claim=false}={}){
+  const {actorId,sessionId,account}=identity;
+  const [publisher,retired]=await Promise.all([storage.get(presencePublisherKey(actorId)),revoked(actorId,sessionId)]);
+  if(retired)return null;
+  if(account.active_guard_id&&account.controller_session_id!==sessionId)return null;
+  if(publisher?.sessionId===sessionId)return publisher;
+  if(!claim)return null;
+  if(publisher){
+   if(!account.active_guard_id&&!await revoked(actorId,publisher.sessionId))return null;
+   // Admission can change the controller while this request is in flight.
+   const current=await backend.byAuth(account.auth_user_id);
+   if(current?.active_guard_id&&current.controller_session_id!==sessionId)return null;
+   if((await storage.get(presencePublisherKey(actorId)))?.nonce!==publisher.nonce)return null;
+  }
+  return claimPublisher(identity);
  }
  async function publishLogin(identity){
   if(!identity.account.active_guard_id)await claimPublisher(identity);
@@ -99,7 +115,7 @@ export function createAccountGateway({backend,legacy,storage}){
   return recovery;
  }
  async function route(request){
-  const path=pathOf(request.path),method=request.method||'GET',body=request.body||{};
+  const path=pathOf(request.path),method=String(request.method||'GET').toUpperCase(),body=request.body||{};
   let pendingCookies=[];
   try{
    if(path==='account/session'&&method==='GET'&&!readCookie(request.headers||{}))return reply(200,{account:null,enabled:true});
@@ -143,7 +159,7 @@ export function createAccountGateway({backend,legacy,storage}){
     await publishLogin(identity);
     return reply(200,{account:await summary(identity,true)},[sessionCookie(tokens)]);
    }
-   if(path==='lobby/state'&&method==='POST')return signalRoute({...request,body:{presence:body}});
+   if(path==='lobby/state'&&method==='POST')return signalRoute({...request,method,body:{presence:body}});
    const {identity,headers}=await resolve(request);
    pendingCookies=identity?.cookies||[];
    if(path.startsWith('account/')){
@@ -155,7 +171,9 @@ export function createAccountGateway({backend,legacy,storage}){
     if(path==='account/logout'&&method==='POST'){
      // Revoke this device, keeping the guard for explicit takeover on login.
      await backend.logout(identity.tokens);
-     if((await storage.get(publisherKey(identity.actorId)))?.sessionId===identity.sessionId)await storage.delete(publisherKey(identity.actorId));
+     // A delayed heartbeat or concurrent logout from another device must
+     // leave the new publisher intact and cannot make this session live again.
+     await storage.set(presenceRevocationKey(identity.actorId,identity.sessionId),true,{ttl:publisherTTL});
      return reply(200,{ok:true},[sessionCookie(null)]);
     }
     if(path==='account/profile'&&method==='POST'){
@@ -194,13 +212,23 @@ export function createAccountGateway({backend,legacy,storage}){
     const a=await backend.byActor(id);
     if(!a){const profile=await legacy.readPlayerProfile(id,viewer);
      if(!profile)throw fail(404,'Médico no encontrado.');return reply(200,{profile},identity?.cookies);}
-    const [friends,live]=await Promise.all([storage.get('qa-v1:friends:'+id),legacy.roster()]);
-    const online=live.some(p=>p.userId===id),s=publicAccount(a);
+    const [friends,live]=await Promise.all([storage.get('qa-v1:friends:'+id),legacy.currentPresence(id,{verified:true})]);
+    const s=publicAccount(a);
     delete s.activeGuardId;delete s.legacyProgressRetained;delete s.legacyPracticeXP;
     return reply(200,{profile:{...s,verified:!!a,friendsCount:Array.isArray(friends)?friends.length:0,
-     status:online?(a?.active_guard_id?'en guardia':'disponible'):'desconectado',self:viewer===id}},identity?.cookies);
+     status:presenceStatus(live),self:viewer===id}},identity?.cookies);
    }
-   const result=await legacy.route({...request,headers});
+   if(identity&&path==='lobby/leave'&&method==='POST'){
+    const publisher=await publishingSession(identity);
+    if(!publisher)return reply(200,{ok:true,observer:true},identity.cookies);
+    const result=await legacy.route({...request,headers},{publisher});
+    return {...result,cookies:identity.cookies};
+   }
+   let query=request.query;
+   if(path==='lobby'&&identity&&query?.roomId&&
+     (identity.account.active_guard_id!==query.roomId||identity.account.controller_session_id!==identity.sessionId))
+    query={...query,roomId:undefined};
+   const result=await legacy.route({...request,headers,query});
    if(identity&&path==='me'&&result.status===200)result.body.account=await summary(identity);
    return {...result,cookies:identity?.cookies||[]};
   }catch(error){return reply(error.status||503,{error:error.status?error.message:'No se pudo acceder a la cuenta. Intentá nuevamente.'},
@@ -208,25 +236,22 @@ export function createAccountGateway({backend,legacy,storage}){
  }
  async function signalRoute(request){
   let pendingCookies=[];
-  try{const {identity,headers}=await resolve(request);pendingCookies=identity?.cookies||[];let body=request.body;
-   if(identity){
-    let publisher=await storage.get(publisherKey(identity.actorId));
-    const controller=identity.account.active_guard_id?identity.account.controller_session_id:publisher?.sessionId;
-    if(controller&&controller!==identity.sessionId)return reply(200,{ok:true,observer:true,signal:null},identity.cookies);
-    if(!publisher||publisher.sessionId!==identity.sessionId)publisher=await claimPublisher(identity);
+  try{const {identity,headers}=await resolve(request);pendingCookies=identity?.cookies||[];let body=request.body,scope;
+   if(identity&&!(request.method==='GET'&&!request.query?.signal&&String(request.query?.roster)==='1')){
+    const publisher=await publishingSession(identity,{claim:!!body?.presence});
+    if(!publisher)return reply(200,{ok:true,observer:true,signal:null},identity.cookies);
+    scope={publisher};
     if(body?.presence){
      const p=body.presence;
-     if(publisher.source!==p.motionSession){
-      if(publisher.source&&Number(p.motionEpoch)<=publisher.clientEpoch)return reply(200,{ok:true,stale:true},identity.cookies);
-      publisher={...publisher,source:p.motionSession,clientEpoch:Number(p.motionEpoch)||0,nonce:randomUUID(),epoch:Math.max(Date.now(),publisher.epoch+1)};
-      await storage.set(publisherKey(identity.actorId),publisher,{ttl:604800});
-     }
+     const phase=p.phase==='guard'||(p.phase===undefined&&identity.account.active_guard_id)?'guard':'lobby';
+     if(phase==='guard'&&p.roomId&&p.roomId!==identity.account.active_guard_id)
+      return reply(200,{ok:true,stale:true},identity.cookies);
+     scope={publisher,phase,wardId:phase==='guard'?wardRoomId(p.roomId):null};
      body={...body,presence:{...p,
-      motionSession:(p.phase==='guard'?privateRoomMotionPrefix(identity.account.active_guard_id):'')+publisher.nonce,motionEpoch:publisher.epoch,
       level:publicAccount(identity.account).level,color:socialAppearance(identity.account.scrub_color,identity.account.sex)}};
     }
    }
-   return {...await legacy.signalRoute({...request,headers,body}),cookies:identity?.cookies||[]};
+   return {...await legacy.signalRoute({...request,headers,body},scope),cookies:identity?.cookies||[]};
   }catch(error){return reply(error.status||503,{error:error.status?error.message:'Servicio social no disponible.'},error.cookies||pendingCookies);}
  }
  return Object.freeze({route,signalRoute,authenticate,socialHeaders});

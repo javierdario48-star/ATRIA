@@ -9,7 +9,7 @@ const SESSION_KEY='atria.v5.social.client',ROOM_KEY='atria.v5.coop.room',ROOM_AC
  */
 export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=()=>{},onRoom=()=>{},onPacket=()=>{},onRoomSpeech=()=>{},onClose=()=>{},requestTimeoutMs=12000}){
  if(!Number.isSafeInteger(requestTimeoutMs)||requestTimeoutMs<1)throw Error('invalid social request timeout');
- const peers=new Map(),recovery=createPeerRecoveryPolicy();let cookieIdentity=false,token=null,user=null,connecting=null,room=null,roster=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoster=null,busyRoom=null,busySpeech=null,nextPoll=0,nextRosterPoll=0,nextRoomPoll=0,nextSpeechPoll=0,roomSpeechCursor=0,roomSpeechRoom=null,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
+ const peers=new Map(),recovery=createPeerRecoveryPolicy();let cookieIdentity=false,token=null,user=null,connecting=null,room=null,roster=[],wardPlayers=[],lobbyMessages=[],friends=[],requests={incoming:[],outgoing:[]},invites=[],busy=null,busyRoster=null,busyRoom=null,busySpeech=null,nextPoll=0,nextRosterPoll=0,nextRoomPoll=0,nextSpeechPoll=0,roomSpeechCursor=0,roomSpeechRoom=null,lastContactsAt=-Infinity,disposed=false,roomEpoch=0,desiredRoomId=null;
  const backgroundRequests=new Set(),identityRequests=new Set();let identityEpoch=0;
  const receivedCommitEpochs=new Set();
  let publishedCommitEpoch=-1,persistedCommitEpoch=-1,queuedCommitEpoch=-1,commitWrite=null;
@@ -17,6 +17,7 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
  let clientKey=storage.getItem(SESSION_KEY);if(!clientKey||clientKey.length<20){clientKey=window.crypto.randomUUID()+window.crypto.randomUUID();try{storage.setItem(SESSION_KEY,clientKey);}catch{}}
  const peerId='v5-'+clientKey.slice(0,32);
  let motionSession=window.crypto.randomUUID(),motionEpoch=Math.max(Date.now(),Number(storage.getItem('atria.v5.motionEpoch')||0)+1),motionScope='';
+ const pageEpoch=motionEpoch;
  try{storage.setItem('atria.v5.motionEpoch',String(motionEpoch));}catch{}
  let savedRoom=storage.getItem(ROOM_KEY),presenceSequence=0;
  let presenceFailures=0,rosterFailures=0,connectionIssue=false;
@@ -29,6 +30,7 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
  }
  function nextRoomEpoch(){
   roomEpoch++;
+  wardPlayers=[];
   for(const controller of backgroundRequests)controller.abort();
   backgroundRequests.clear();busy=busyRoster=busyRoom=busySpeech=null;
   nextPoll=nextRosterPoll=nextRoomPoll=nextSpeechPoll=0;
@@ -84,7 +86,7 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   room=value;desiredRoomId=room.id;savedRoom=room.id;invites=invites.filter(x=>x.roomId!==room.id);
   try{storage.setItem(ROOM_KEY,room.id);storage.setItem(ROOM_ACTOR_KEY,user.id);}catch{}onRoom(structuredClone(room),user);
  }
- function remoteMotionSession(userId){return roster.find(x=>x.userId===userId)?.motionSession||null;}
+ function remoteMotionSession(userId){return (wardPlayers.find(x=>x.userId===userId)||roster.find(x=>x.userId===userId))?.motionSession||null;}
  const commitPacket=epoch=>({kind:'clinical.committed',id:'clinical-commit-'+epoch,roomId:room.id,epoch});
  function receivePacket(sender,packet){
   if(packet.kind!=='clinical.committed'){onPacket(sender,packet);return;}
@@ -111,15 +113,15 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
  async function pollPresence(now,pose){
   const epoch=roomEpoch,active=()=>!disposed&&roomEpoch===epoch;
   await connect();if(!active())return;
-  const scope=pose.phase==='guard'?privateRoomMotionPrefix(pose.roomId):'';
+  const guard=pose.phase==='guard',scope=guard?'guard:'+String(pose.roomId||''):'';
   if(scope!==motionScope){
-   motionScope=scope;motionSession=scope+window.crypto.randomUUID();
+   motionScope=scope;motionSession=(guard?privateRoomMotionPrefix(pose.roomId):'')+window.crypto.randomUUID();
    motionEpoch=Math.max(Date.now(),motionEpoch+1);presenceSequence=0;
    try{storage.setItem('atria.v5.motionEpoch',String(motionEpoch));}catch{}
   }
   // Never hold the next spatial packet behind directory reads or invitations.
   // Both lanes use the original authenticated API and existing RAF; no new timer.
-  await api('',{presence:{peerId,motionSession,motionEpoch,motionAt:window.performance.now(),sentAt:Date.now(),
+  await api('',{presence:{peerId,motionSession,motionEpoch,pageEpoch,motionAt:window.performance.now(),sentAt:Date.now(),
    motionCadence:260,x:pose.x,y:pose.y,dir:pose.dir,moving:pose.moving,
    walkPhase:pose.walkPhase,level:pose.level,color:socialAppearance(profile.scrubColor,profile.sex),
    phase:pose.phase,roomId:pose.roomId||'',seq:++presenceSequence}},true,{background:true});
@@ -127,8 +129,9 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
  async function pollRoster(now){
   const epoch=roomEpoch,active=()=>!disposed&&roomEpoch===epoch;
   await connect();if(!active())return;
-  const social=await api('lobby?after=0',undefined,false,{background:true});if(!active())return;
-  roster=social.players;lobbyMessages=social.messages||[];
+  const roomId=room?.id||savedRoom;
+  const social=await api('lobby?after=0'+(roomId?'&roomId='+encodeURIComponent(roomId):''),undefined,false,{background:true});if(!active())return;
+  roster=social.players||[];wardPlayers=social.wardPlayers||[];lobbyMessages=social.messages||[];
   if(!room&&!savedRoom&&now-lastContactsAt>=780){
    const me=await api('me',undefined,false,{background:true});if(!active())return;
    if(me.account)onAccount(me.account);
@@ -273,6 +276,8 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
    invites=invites.filter(x=>x.roomId!==roomId);onSocial();},
   async invite(ids,mode='coop',guardSelection=null){const epoch=nextRoomEpoch();desiredRoomId=null;await connect();if(ids.length<1||ids.length>3)throw Error('Elegí de uno a tres colegas.');
    if(!['coop','competitive'].includes(mode))throw Error('Modalidad de guardia inválida');
+   if(roster.some(p=>ids.includes(p.userId)&&p.status&&p.status!=='disponible'))
+    throw Error('Algún colega ya no está disponible para recibir invitaciones.');
    const result=await api('rooms',{mode,invitees:ids,peerId,...(guardSelection?{guardSelection}:{})});if(disposed||epoch!==roomEpoch){try{await api('rooms/'+result.room.id+'/cancel',{});}catch{}throw Error('Invitación cancelada.');}setRoom(result.room);return structuredClone(room);},
   async join(id,{preserveRoom=false}={}){const epoch=nextRoomEpoch();desiredRoomId=id;await connect();
    if(disposed||epoch!==roomEpoch)throw Error('Entrada cancelada.');
@@ -317,7 +322,7 @@ export function createCooperativeLink({window,profile,onAccount=()=>{},onSocial=
   isMember:id=>!!room?.members.some(x=>x.userId===id),
   isHost:()=>!!user&&room?.hostUserId===user.id,
   credentials:()=>({clientKey,authorization:token?'Bearer '+token:null}),
-  state:()=>structuredClone({user,room,roster,lobbyMessages,friends,requests,invites,connectionIssue,recovering:!!savedRoom,connections:[...peers.values()].map(p=>({id:p.id,state:p.link.state()}))}),
+  state:()=>structuredClone({user,room,roster,wardPlayers,lobbyMessages,friends,requests,invites,connectionIssue,recovering:!!savedRoom,connections:[...peers.values()].map(p=>({id:p.id,state:p.link.state()}))}),
   dispose(){disposed=true;identityEpoch++;nextRoomEpoch();for(const controller of identityRequests)controller.abort();identityRequests.clear();resetCommitDelivery();desiredRoomId=null;for(const p of peers.values())p.link.dispose();peers.clear();recovery.reset();}
  });
 }

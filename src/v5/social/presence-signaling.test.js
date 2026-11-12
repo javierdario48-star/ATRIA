@@ -32,3 +32,17 @@ test('separate workers authenticate RTC against owned presence when a shared dir
  const spoof=await f.servers[0].signalRoute({method:'GET',headers:f.headers[0],query:{signal:'offer',toPeer:'peer-client-1',fromPeer:'peer-client-0'}});
  assert.equal(spoof.status,403,'owned presence cannot authorize a different peer');
 });
+
+test('an expired heartbeat cannot keep a doctor online in the lobby or profile',async()=>{
+ let time=100000;
+ const data=new Map(),api=createV5QaSocialServer({get:async k=>data.get(k),set:async(k,v)=>data.set(k,structuredClone(v)),
+  delete:async k=>data.delete(k)},{now:()=>time});
+ const registered=await api.route({method:'POST',path:'register',body:{clientKey:collidingKeys()[0],name:'Doctor Uno'}});
+ const headers={authorization:'Bearer '+registered.body.token},id=registered.body.user.id;
+ const pulse=await api.route({method:'POST',path:'lobby/state',headers,body:{phase:'guard',peerId:'peer-expiring',x:80,y:90,seq:1}});
+ assert.equal(pulse.status,200);
+ assert.equal((await api.route({path:'lobby?after=0',headers})).body.players[0].status,'en guardia');
+ time+=35001;
+ assert.deepEqual((await api.route({path:'lobby',headers})).body.players,[]);
+ assert.equal((await api.route({path:'profiles/'+id,headers})).body.profile.status,'desconectado');
+});

@@ -4,7 +4,9 @@ import {clinicalContent} from '../server/content.js';
 import {playableClinicalCaseIds} from '../content/clinical-cases.js';
 const cases=clinicalContent.cases;
 import {resolveGuardSelection} from '../clinical/guard-selection-policy.js';
-import {scopedPresenceStorage,publishPresenceSerially} from './presence-storage.js';
+import {presenceActor,presenceStatus,publishPresenceSerially,readCurrentPresence,
+ scopedMotionSession,scopedPresenceStorage,stalePresenceWrite,wardRoomId} from './presence-storage.js';
+import {privateRoomMotionPrefix} from './room-motion-scope.js';
 // Storage composition only: the characterized V4 backend remains byte-identical.
 // A room has one host-owned metadata record and a distinct acceptance key per
 // guest. Joining doctors cannot overwrite each other's room membership.
@@ -68,27 +70,71 @@ export function createConflictFreeRoomStorage(store,{now=Date.now}={}){
 }
 export function createV5QaSocialServer(storage,options){
  const slots=createConflictFreeRoomStorage(storage,options);
- const legacy=createQaSocialServer(slots,options);
+ const legacy=createQaSocialServer(slots,options),now=options?.now??Date.now;
+ const currentPresence=(id,options)=>readCurrentPresence(storage,id,now(),options);
+ async function memberRoom(headers,roomId){
+  if(!wardRoomId(roomId))return null;
+  const actor=await presenceActor(storage,headers);
+  const room=actor&&await slots.get(ROOM+roomId);
+  return !room?.closed&&room?.members?.some(member=>member.userId===actor)?room:null;
+ }
+ function publicPose(row){
+  const {_motionRetired,_presenceV5,...pose}=row;
+  // Client motion epochs order heartbeats from one device. Server time keeps
+  // rendering monotonic after an explicit handoff to a differently set clock.
+  if(_presenceV5?.publisherNonce)pose.motionEpoch=row.lastSeen;
+  return pose;
+ }
+ async function projectPresence(body,room=null){
+  const wardPlayers=[];
+  const members=new Set(room?.members?.map(member=>member.userId));
+  const rows=await Promise.all(body.players.map(async candidate=>({candidate,
+   row:await currentPresence(candidate.userId,{candidate})})));
+  const players=rows.map(({candidate,row})=>{
+   const status=presenceStatus(row);
+   if(status==='disponible')return {...publicPose(row),status};
+   if(row?._presenceV5?.wardId===room?.id&&members.has(row?.userId))wardPlayers.push(publicPose(row));
+   const {userId,name,handle}=row??candidate;
+   return {userId,name,handle,status};
+  });
+  return {...body,players,wardPlayers};
+ }
  async function readPlayerProfile(id,viewer){
   if(!/^qa_[0-9a-f]{30}$/.test(id))return null;
-  const [user,friends,roster]=await Promise.all([slots.get('qa-v1:user:'+id),slots.get('qa-v1:friends:'+id),legacy.roster()]);
-  if(!user)return null;const live=roster.find(x=>x.userId===id),appearance=presenceAppearance(live?.color);
+  const [user,friends,live]=await Promise.all([slots.get('qa-v1:user:'+id),slots.get('qa-v1:friends:'+id),currentPresence(id)]);
+  if(!user)return null;const appearance=presenceAppearance(live?.color);
   return {actorId:id,name:user.name,username:user.handle,scrubColor:appearance.color,sex:appearance.sex,
-   verified:false,friendsCount:Array.isArray(friends)?friends.length:0,status:live?'disponible':'desconectado',self:viewer===id};
+   verified:false,friendsCount:Array.isArray(friends)?friends.length:0,status:presenceStatus(live),self:viewer===id};
  }
- return {...legacy,readPlayerProfile,
-  signalRoute(request){
-   const run=()=>createQaSocialServer(scopedPresenceStorage(slots),options).signalRoute(request);
-   return request.method==='POST'&&request.body?.presence?publishPresenceSerially(storage,request,run):run();
-  },async route(request){
-  const path=String(request.path||'').replace(/^\/?(?:api\/)?/,'');
+ async function signalRoute(request,scope={}){
+  const presence=request.method==='POST'&&request.body?.presence;
+  if(presence){
+   const phase=scope.phase??(presence.phase==='guard'||/^ward-[a-f0-9]{8}-/.test(presence.motionSession)?'guard':'lobby');
+   const wardId=scope.publisher?scope.wardId:phase==='guard'?(await memberRoom(request.headers,presence.roomId))?.id:null;
+   const pageEpoch=Number.isSafeInteger(presence.pageEpoch)&&presence.pageEpoch>0&&presence.pageEpoch<=1e15?presence.pageEpoch:0;
+   scope={...scope,phase,wardId,pageEpoch};
+   const motionSession=scopedMotionSession(presence.motionSession||presence.peerId,scope,privateRoomMotionPrefix(wardId));
+   request={...request,body:{...request.body,presence:{...presence,motionSession}}};
+  }
+  const run=()=>createQaSocialServer(scopedPresenceStorage(slots,scope),options).signalRoute(request);
+  let response;
+  try{response=await (presence?publishPresenceSerially(storage,request,run):run());}
+  catch(error){if(error===stalePresenceWrite)return {status:200,body:{ok:true,stale:true}};throw error;}
+  if(response.body.players)response.body=await projectPresence(response.body);
+  return response;
+ }
+ return {...legacy,readPlayerProfile,currentPresence,signalRoute,async route(request,scope){
+  const path=String(request.path||'').replace(/^\/?(?:api\/)?/,'').split('?')[0].replace(/^\//,''),method=String(request.method||'GET').toUpperCase();
+  if(path==='lobby/state'&&method==='POST')return signalRoute({...request,method,body:{presence:request.body}});
+  if(path==='lobby/leave'&&method==='POST')return publishPresenceSerially(storage,request,
+   ()=>createQaSocialServer(scopedPresenceStorage(slots,{...scope,leaving:true}),options).route(request));
   let guardSelection=null;
-  if(path==='rooms'&&request.method==='POST'&&request.body?.guardSelection!=null){
+  if(path==='rooms'&&method==='POST'&&request.body?.guardSelection!=null){
    try{const p=resolveGuardSelection(cases,playableClinicalCaseIds(cases),request.body.guardSelection);
     guardSelection={scope:p.scope,selection:p.selection};
    }catch{return {status:400,body:{error:'Selección de guardia no disponible.'}};}
   }
-  if(path.startsWith('profiles/')&&(request.method||'GET')==='GET'){
+  if(path.startsWith('profiles/')&&method==='GET'){
    const me=await legacy.route({method:'GET',path:'me',headers:request.headers});
    if(me.status!==200)return me;
    const profile=await readPlayerProfile(path.slice(9),me.body.user.id);
@@ -96,6 +142,7 @@ export function createV5QaSocialServer(storage,options){
   }
   const response=await legacy.route(request);
   if(response.status>=400)return response;
+  if(path==='lobby'&&response.body.players)response.body=await projectPresence(response.body,await memberRoom(request.headers,request.query?.roomId));
   if(guardSelection&&response.body.room){
    const room=response.body.room,raw=await storage.get(ROOM+room.id);
    // Host metadata uses the existing room record. Guest acceptances retain
@@ -103,7 +150,6 @@ export function createV5QaSocialServer(storage,options){
    await storage.set(ROOM+room.id,{...raw,guardSelection},{ttl:ROOM_TTL_SECONDS});
    response.body.room={...room,guardSelection};
   }
-  const method=request.method||'GET';
   const match=path.match(/rooms\/([a-f0-9-]{36})\/(leave|invite)(?:\/(decline|remove))?$/);
   if(method!=='POST'||!match)return response;
   const [,id,action,sub]=match;

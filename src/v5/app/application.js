@@ -235,14 +235,14 @@ export async function createApplication({document,window,content,signal}){
    onMonitorOpen:()=>hospitalAudio.cue('monitorOpen')});
  const social=createCooperativeLink({window,profile,onAccount:value=>account.accept(value),
   onSocial:()=>{if(destroyed)return;const s=social.state();renderNotifications(s);if(world.snapshot().phase==='lobby'){
-   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster,window.performance.now());renderLobbyMessages(s);renderSocialLists();
+   if(s.user){profile={...profile,id:s.user.id};world.setSocialIdentity(s.user.id);}world.showLobbyPlayers(s.roster.filter(p=>!p.status||p.status==='disponible'),window.performance.now());renderLobbyMessages(s);renderSocialLists();
    if(dialog.open&&dialog.dataset.panel==='lobby-person'&&selectedLobbyPlayerId){
-    const id=selectedLobbyPlayerId,status=friendStatus(s,id);
+    const id=selectedLobbyPlayerId,status=lobbyCardState(s,id);
     if(status!==selectedLobbyCardState)showLobbyPlayerCard(id);
    }
    maybeRecoverStoredRoom();
    }else if(durableClient&&coopRoomId&&s.room?.id===coopRoomId&&world.snapshot().phase==='guard'){
-    world.showGuardSocialPlayers(s.roster,coopRoomId,s.room.members.map(m=>m.userId),window.performance.now());
+    world.showGuardSocialPlayers(s.wardPlayers,coopRoomId,s.room.members.map(m=>m.userId),window.performance.now());
    }},
   onRoom:room=>{if(destroyed)return;
    renderNotifications(social.state());
@@ -293,9 +293,14 @@ export async function createApplication({document,window,content,signal}){
    s.requests?.incoming?.some(x=>x.id===id)?'incoming':
    s.requests?.outgoing?.some(x=>x.id===id)?'outgoing':'stranger';
  }
+ function lobbyCardState(s,id){
+  const doctor=s.roster.find(x=>x.userId===id);
+  return JSON.stringify([friendStatus(s,id),doctor?doctor.status||'disponible':'desconectado']);
+ }
  async function showLobbyPlayerCard(userId){
   const state=social.state(),person=state.roster.find(x=>x.userId===userId);
-  selectedLobbyPlayerId=userId;selectedLobbyCardState=friendStatus(state,userId);
+  const cardState=lobbyCardState(state,userId);
+  selectedLobbyPlayerId=userId;selectedLobbyCardState=cardState;
   open('<p role="status">Cargando perfil…</p>','lobby-person');
   try{const p=await social.readPlayerProfile(userId);
    if(!dialog.open||dialog.dataset.panel!=='lobby-person'||selectedLobbyPlayerId!==userId||selectedLobbyCardState!==cardState)return;
