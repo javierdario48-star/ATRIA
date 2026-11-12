@@ -1,5 +1,9 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
+## Vigente al 12 de noviembre de 2026
+
+Retoma la rama autorizada a partir del [checkpoint de continuidad](ATRIA-5-EXACT-CONTINUATION.md). El checkpoint contiene las comprobaciones publicadas de XP, recuperación, clínica y admisión de casos. El [inventario maestro](ATRIA-5-REMAINING-TASKS.md) conserva los 60 números y la evidencia de cada área.
+
 ## Vigente al 11 de noviembre de 2026
 
 Rama exclusiva `atria-5.0-core-rebuild-experimental` de `javierdario48-star/ATRIA`. Verifica el HEAD remoto antes de trabajar. Work partió de `20be3574bace0a2dd3ca6cb6487e08bf958871d4`, publicó código hasta `27d4ede757f615fd91e6f89fdffc880b5a94ad8f` y cerró la entrega en el commit que contiene este bloque. [Continuidad exacta, commits, archivos y evidencia](ATRIA-5-EXACT-CONTINUATION.md) · [Inventario de 20 áreas y 60 números](ATRIA-5-REMAINING-TASKS.md).

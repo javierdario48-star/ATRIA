@@ -2,6 +2,40 @@
 
 ## Checkpoint vigente · 12 de noviembre de 2026
 
+Continúa en `javierdario48-star/ATRIA`, rama exclusiva `atria-5.0-core-rebuild-experimental`. Verifica el HEAD remoto. La reanudación partió de `cf998be4f98b2026794bcbeb16347113a675a473` y verificó el código hasta `3fd2c40797aeffb182baa4cb9f9c967f8548744f`. El HEAD de entrega es el commit que contiene este checkpoint. Lee `AGENTS.md`, el [inventario maestro](ATRIA-5-REMAINING-TASKS.md) y el [contrato clínico](ATRIA-5-CASE-INTEGRATION-CONTRACT.md). [Commits y archivos técnicos](https://github.com/javierdario48-star/ATRIA/compare/cf998be4f98b2026794bcbeb16347113a675a473...3fd2c40797aeffb182baa4cb9f9c967f8548744f)
+
+| Commit | Evidencia y comportamiento |
+| --- | --- |
+| `7eed9e2` | `guard-runtime.js` crea los créditos según la participación al cerrar. Dos cuentas reales en Cooperativo cobraron 40 XP al médico activo durante la ausencia. El médico que regresó mantuvo 0 XP por ese cierre y recibió 40 XP por el siguiente. |
+| `62c57f2`, `8fb4d1f` | Alta insegura con mensaje de Vega y débito único. La reevaluación de salida se aplica al paciente cuando el alta es válida. Mantener en observación registra evaluación y deja la atención activa. Los 55 casos conservaron el estado inmediato y la misma evolución que sus controles tras 60 segundos. |
+| `adfa5e9`, `0f1c09a`, `55120c9` | Separación de antecedentes en 12 GI, restauración de los hashes históricos de 25 y 55 casos y 550 entrevistas del catálogo jugable con 8.250 turnos. La incertidumbre de un acompañante aporta cero hechos clínicos. |
+| `9a14b00` | CARD-01, CARD-08, CARD-10 y RESP-07 prueban rechazo con evidencia insuficiente y recepción urgente tras el hallazgo objetivo. La impresión incompatible tiene factor diagnóstico 0. El tratamiento definitivo queda a cargo del servicio receptor. |
+| `d260564` | `studies.js` conserva el informe inicial y avisa cuando el modelo carece de un informe de control. Cinco gasometrías con valores de referencia producen muestras nuevas. Cuatro protocolos conservan su informe basal. Se reprodujo la falsa segunda radiografía de RESP-07 al minuto nativo 3,72 tras descompresión confirmada. |
+| `33f85e3` | La matriz inicial detectó que el rival distante podía recibir el expediente de una cama liberada. El control de propiedad y proximidad protege el historial registrado. ACAL-001 repitió el recorrido competitivo negligente de 1.440 s con integridad correcta. En preview el dueño recibió 40 XP tras la salida del rival. |
+| `bc543cd`, `3fd2c40` | Rueda compacta cuando la radial invade la pantalla horizontal. Cinco vistas en Chromium, acceso por teclado y acompañante. Audio verificado en los cuatro modos, con crossfade de 2,5 s, silencio de 250 ms y preferencias persistentes. |
+| `e50db97`, `22f34f3`, `9db7037` | RESP-56 pasó por el importador, la selección, anamnesis, Vega, Enfermería, muestras, guardado, cierre y XP en los cuatro modos. El catálogo jugable alimenta la matriz, los bots de Vega y la auditoría de cierres. CI conserva las filas fallidas para diagnóstico. |
+
+### Verificación ejecutada
+
+- `npm run test:v5` 3.137/3.137, `npm run test:v5-core` 40/40. Builds V5, V5 core y 4.8.7 aprobados. La auditoría estructural verificó 190 módulos, un RAF y el límite de la autoridad clínica. El grafo de 487 importaciones internas analizadas tuvo cero ciclos.
+- 55/55 cierres guiados por Vega y auditoría de 91 destinos. Pasaron 17 pruebas del importador, 127 de estudios, cierre y Vega, y 61 de autoridad durable y recompensas. Chromium verificó 440 paneles en 110 admisiones, diálogo automático, pistas, estudios, recuperación y audio. El ensayo local de dos cuentas sobre `7eed9e2` alcanzó 1.440 s y extendió el mismo turno en 1.456 s de pared.
+- El preview Cooperativo pasó siete comprobaciones con dos cuentas reales. El guion inicial recibió 409 al liberar la cuenta después de revocar la sala. La repetición usó Finalizar participación desde la interfaz antes de probar revocación y pasó. Las comprobaciones de XP cooperativa y Competitivo se ejecutaron en el preview de `33f85e3`. En Supabase Preview se verificaron RLS y ejecución exclusiva del servidor en los RPC de recuperación y XP. [Preview de recuperación](https://night-shift-clinical-luxtlufi1-javierdario4878-7324.vercel.app) · [Preview de XP y Competitivo](https://night-shift-clinical-ji1g3ogbs-javierdario4878-7324.vercel.app)
+- Se verificó el archivo histórico de 550 recorridos y nueve perfiles contra su código. Incluye 295 destinos aceptados, 69 muertes nativas y 186 casos vivos abiertos. Su evidencia estricta suma 160 certificados. La matriz vigente se programó para 550 recorridos con el digest `40ccd89da316dd66e9420eb3b48776dc7fcfdc1c22907ec68f24934780d6ac2e`. Los ocho trabajos seguían en cola al comprobarlos. [Matriz longitudinal vigente](https://github.com/javierdario48-star/ATRIA/actions/runs/43289556288)
+
+### A. Tareas para ChatGPT normal
+
+1. **LAB-01.** Abre `src/v5/clinical/studies.js`, `src/v5/content/packs/respiratory-pack.js` y `study-orders.test.js`. La siguiente modificación es declarar un informe de control basado en evidencia fisiológica y procedimiento confirmado para RESP-07. Antes de modelarlo, revisa la información disponible para expansión y posición del tubo. Repite la secuencia muestra basal, descompresión o drenaje confirmado, control y recuperación. Conserva los UID, eventos, tiempos y el texto original. Revisa PEF, lactato y el control de coagulación con prerrequisito de trombólisis según el mismo contrato.
+2. **CLOSE-01 y SAFE-01.** Lee los artefactos de la matriz por SHA y revisa los casos que no acreditan atención competente. Reproduce cada causa con el evaluador, `consultation-evidence.js` y los recibos existentes. Usa [el contrato de admisión](ATRIA-5-CASE-INTEGRATION-CONTRACT.md) para cualquier definición nueva.
+
+### B. Tareas que requieren ejecución o dispositivo
+
+- Confirma los ocho trabajos de la matriz vigente y los 550 recorridos. Usa el digest exacto y conserva los fallos de integridad y de atención por separado. Ejecuta `node qa/v5/clinical-integral-ci-shard.mjs 0 8 --verify-only` para comprobar el manifiesto en un checkout.
+- Acepta Android físico y WebKit. Prueba teclado, volumen, rueda en pantalla corta, tres opciones de recuperación, dos sesiones y transferencia de control con red móvil. Repite el turno completo en preview si se requiere aceptación de reloj en despliegue.
+
+DIALOG-AUTO-01 requiere una pregunta y una respuesta automática con fuente coherente. VEGA-AUTO-01 requiere una pulsación, confirmación de visualización, 5% por pista nueva y repetición gratuita. VEGA-COHERENCE-01 exige leer los recibos y justificar todo control repetido. Cada bloqueo indispensable debe explicarse clínicamente y aparecer en Vega. Conserva una autoridad clínica, una ruta de recibos y un sistema de XP. La observación activa y el alta insegura dejan al paciente recuperable.
+
+## Checkpoint anterior · 12 de noviembre de 2026
+
 Rama única `atria-5.0-core-rebuild-experimental` de `javierdario48-star/ATRIA`. HEAD inicial `cf13ec52a71452b0a921d22d921a3476382f6b39`. La reanudación encontró `ebba52e99eb05188ab15e92872647f71b1c2705b` en GitHub y los checkpoints locales posteriores intactos. HEAD de código verificado `3dc13907e84b69b9367a3cc28a0be9035c7138af`. El commit documental inmediato está en la [rama remota](https://github.com/javierdario48-star/ATRIA/tree/atria-5.0-core-rebuild-experimental).
 
 Lee el [inventario maestro](ATRIA-5-REMAINING-TASKS.md), el [traspaso histórico](ATRIA-5-CHATGPT-HANDOFF.md), `AGENTS.md` y el [contrato clínico](ATRIA-5-CASE-INTEGRATION-CONTRACT.md). [Commits y archivos de esta ejecución](https://github.com/javierdario48-star/ATRIA/compare/cf13ec52a71452b0a921d22d921a3476382f6b39...3dc13907e84b69b9367a3cc28a0be9035c7138af)

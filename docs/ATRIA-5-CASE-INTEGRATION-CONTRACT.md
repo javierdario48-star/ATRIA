@@ -47,6 +47,8 @@ La prueba agrega `RESP-56` a una copia temporal del catálogo certificado de 55 
 
 La orden de observación activa (`/observacion`) mantiene al paciente en atención. El cierre deliberado con destino Observación (`/disposicion observacion`) exige los requisitos clínicos del caso y emite un recibo de cierre.
 
+Para añadir un caso, toma una definición de `src/v5/content/packs/` como referencia y prepara el pack JSON. Ejecuta `node scripts/import-clinical-case-pack.mjs --pack CASOS.json` para compilarlo sin publicar. Copia el catálogo actual a una ruta de prueba y vuelve a ejecutar con `--activate --output CATALOGO-DE-PRUEBA.json`. Comprueba el recorrido real antes de actualizar el catálogo jugable. La matriz, los cierres y las entrevistas toman sus casos del catálogo certificado.
+
 ## Puerta de calidad para cada caso nuevo
 1. Ejecutar bots sobre el caso real: entrevista completa y repreguntas; decisiones acertadas, tardías, erróneas y ausencia de intervención.
 2. Comprobar evolución fisiológica temporal, cambios tras tratamiento **confirmado**, complicaciones, contraindicaciones, alergias, deterioro y cierres.
