@@ -19,10 +19,13 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  const ui=id=>document.getElementById(id);
  let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,examFeedback=null,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='';
  let diagnosisEditorVersion=0,diagnosisSessionVersion=0;
+ let nutritionRequest=null;
  const pendingDiagnoses=new Map(),failedDiagnosisDrafts=new Map();
  const ecgSweep=createEcgSweep();
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
  const post=text=>send(text,{patientUid});
+ const canRecordNutrition=s=>!!s?.oralNutrition&&s.canEdit!==false&&!s.patient.caseEnded&&
+  !s.patient.patientDied&&!s.patient.closure?.closed;
  function showPatient(patient){
   const s=session()?.read();if(!s||s.patient.uid!==patient.uid){notify('Ese paciente no está disponible en esta guardia.');return;}
   patientUid=patient.uid;
@@ -239,10 +242,24 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  function showTreatment(){
   const p=state()?.patient;if(!p)return;
   const acute=['APP-001','PERI-SEC-001'].includes(p.caseId),placeholder=acute?'colocar una vía, ceftriaxona 1 g y metronidazol 500 mg':p.caseId==='PERI-PBE-001'?'ceftriaxona 1 g y albúmina 1.5 g/kg':p.caseId==='PERI-TER-001'?'Ringer 1000 ml y piperacilina tazobactam 4.5 g':'espironolactona 100 mg oral';
-  open('<h2>Tratamiento · Enfermería</h2><div id="therapyRecords"></div><label class="field">Orden<input id="therapyOrder" maxlength="200" placeholder="'+esc(placeholder)+'"></label>'+
+  open('<h2>Tratamiento · Enfermería</h2>'+
+   '<section id="oralNutrition" class="clinical-section" aria-label="Alimentación por boca" hidden></section>'+
+   '<div id="therapyRecords"></div>'+
+   '<label class="field">Orden<input id="therapyOrder" maxlength="200" placeholder="'+esc(placeholder)+'"></label>'+
    '<p class="note">Las indicaciones pendientes se distinguen de las intervenciones ejecutadas. Confirmá la preparación, la vía y la respuesta del paciente.</p>'+
    '<div class="actions"><button data-action="request-surgery">Solicitar interconsulta a cirugía</button><button data-action="request-icu">Solicitar interconsulta a UTI</button></div>'+
    '<div class="actions"><button data-action="order-therapy" class="primary">Indicar a Enfermera</button><button data-action="patient-chart">Volver</button></div>');render();
+ }
+ function renderNutrition(s){
+  const section=ui('oralNutrition');if(!section)return;
+  section.hidden=!s.oralNutrition;
+  if(section.hidden)return;
+  const decision=s.oralNutrition.decision?.decision,pending=nutritionRequest?.patientUid===s.patient.uid,
+   status=pending?'Registrando indicación…':decision==='oral'?'Alimentación por boca autorizada':
+    decision==='npo'?'Nada por boca':'Sin indicación registrada';
+  setHTML(section,'<h3>Alimentación por boca</h3><p role="status">'+status+'</p>'+(canRecordNutrition(s)?
+   '<div class="actions"><button type="button" data-action="nutrition-npo"'+(pending?' disabled':'')+'>Indicar ayuno</button>'+
+   '<button type="button" data-action="nutrition-oral"'+(pending?' disabled':'')+'>Autorizar alimentación por boca</button></div>':''));
  }
  function showHistory(){if(!state())return;open('<h2>Historia clínica</h2><div id="fullClinicalHistory"></div><div class="actions"><button data-action="patient-chart">Volver al paciente</button></div>');render();}
  function renderMonitorRecords(s){
@@ -313,6 +330,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   const caseDef=cases.find(c=>c.id===p.caseId);
   setHTML(ui('fullClinicalHistory'),historyHTML(p,caseDef));
   setHTML(ui('therapyRecords'),therapyHTML(p,caseDef));
+  renderNutrition(s);
   setHTML(ui('clinicalHistory'),p.intentHistory.map(x=>'<p>'+esc(x.answer)+'</p>').join('')||'<p>Sin datos interrogados.</p>');
   const workflow=clinicalWorkflow(s),progress=ui('clinicalWorkflow');
   if(progress&&workflow)setHTML(progress,'<h3>Estado de la atención</h3><div class="care-checkpoints">'+workflow.steps.map(step=>
@@ -406,6 +424,14 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    case 'studies':showStudies();return true;
    case 'examination':regionId='general';flippedRegion=null;examFeedback=null;open(examinationHTML());render();return true;
    case 'treatment':showTreatment();return true;
+   case 'nutrition-npo':case 'nutrition-oral':{
+    const s=state();
+    if(!canRecordNutrition(s)||nutritionRequest?.patientUid===s.patient.uid)return true;
+    const request={patientUid:s.patient.uid};nutritionRequest=request;renderNutrition(s);
+    try{await post(b.dataset.action==='nutrition-npo'?'Enfermera, nada por boca':'Enfermera, autorizo la alimentación por boca');}
+    finally{if(nutritionRequest===request){nutritionRequest=null;render();}}
+    return true;
+   }
    case 'record-vitals':await post('/signos');break;
    case 'toggle-monitor':await post('/monitor '+(state()?.patient.procedures?.monitor?.connected?'desconectar':'conectar'));break;
    case 'reassess':await post('/reevaluar');break;
@@ -429,5 +455,5 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   render();return true;
  }
  return Object.freeze({showPatient,showClosure,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
-  reset(){diagnosisEditorVersion++;diagnosisSessionVersion++;pendingDiagnoses.clear();failedDiagnosisDrafts.clear();patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
+  reset(){diagnosisEditorVersion++;diagnosisSessionVersion++;pendingDiagnoses.clear();failedDiagnosisDrafts.clear();nutritionRequest=null;patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }

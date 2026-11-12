@@ -660,6 +660,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    return {hintBinding:{roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId},hintCount:hintLedger.count(doctorId),
    caseReward,room,patient:subject,exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:displayMessages,progress:progress.read(),
    eligibleDestinations:options,
+   oralNutrition:care?.oralNutrition?.()??null,
    ...(checklist?{clinicalChecklist:clinicalChecklist(nativePatient,checklist.requirements,options.length>0||
     canRequest,activeReaction)}:{}),
    closure:copy(closureReadiness(executor==='peritonitis'?undefined:

@@ -118,14 +118,23 @@ export function routeWardSpeech(text,context={}){
  if(asksAllergies.test(nurseQuestion))return {recipient,patientUid,original,intents:patientUid?
   [{kind:'nurse.inquire',id:'allergies',sourceText:original}]:[],
   ...(!patientUid?{error:'no-patient-target'}:{})};
- // Natural fasting instructions are positive NPO orders even when phrased
- // with a prohibition. Only use the case's existing intervention and receipt.
- const npoInstruction=/^(?:(?:dejalo|dejala|dejarlo|dejarla|mantenelo|mantenela|mantenerlo|mantenerla|mantener|dejar|deje|mantenga)(?: al paciente)? en ayun(?:o|as?)|no (?:le )?(?:des|den|dar|darle|ofrecer|ofrezcas) (?:agua|comida|alimentos|nada por boca)(?: ni (?:agua|comida|alimentos))?|que no (?:coma|beba)(?: ni (?:coma|beba))?)$/;
- if(context.clinicalEvaluation&&npoInstruction.test(nurseQuestion)&&
-  (context.interventions||[]).some(item=>item.id==='npo'))
-  return {recipient,patientUid,original,intents:patientUid?
-   [{kind:'therapy.request',id:'npo',sourceText:original,clause:original,count:1}]:[],
-   ...(!patientUid?{error:'no-patient-target'}:{})};
+ // The case's native NPO conduct and an explicit oral intake decision share
+ // the nurse channel. A question must never execute either choice.
+ const npo=context.clinicalEvaluation&&(context.interventions||[]).find(item=>item.id==='npo');
+ if(npo){
+  const reply=nurseQuestion.replace(/\s+/g,' '),fastingReply=reply.replace(/^no\s*[,;:]\s*/,''),
+   oralReply=reply.replace(/^si\s*[,;:]\s*/,''),
+   npoInstruction=/^(?:(?:dejalo|dejala|dejarlo|dejarla|mantenelo|mantenela|mantenerlo|mantenerla|mantener|dejar|deje|mantenga)(?: al paciente)? en ayun(?:o|as?)|no (?:le )?(?:des|den|dar|darle|ofrecer|ofrezcas) (?:agua|comida|alimentos|nada por boca)(?: ni (?:agua|comida|alimentos))?|que no (?:coma|beba)(?: ni (?:coma|beba))?)$/,
+   oralInstruction=/^(?:(?:autorizo|autorizar|permito|permitir|iniciar|reiniciar)(?: la)? alimentacion (?:por boca|oral)|(?:dale|dele|darle) de comer|alimental[oa]|(?:levantar|levanta|levante|suspender|suspende|suspenda) el ayuno)$/;
+  const fasting=['npo',npo.label,...(npo.aliases||[])].some(alias=>clean(alias)===fastingReply)||npoInstruction.test(fastingReply),
+   oral=oralInstruction.test(oralReply)||oralReply!==reply&&/^(?:ya )?puede comer(?: y beber)?$/.test(oralReply);
+  if(fasting||oral){
+   const error=/[¿?]/.test(original)?'question-or-negation':!patientUid?'no-patient-target':null;
+   const intent=fasting?{kind:'therapy.request',id:'npo',sourceText:original,clause:original,count:1}:
+    {kind:'nutrition.record',id:'oral',sourceText:original};
+   return {recipient,patientUid,original,intents:error?[]:[intent],...(error?{error}:{})};
+  }
+ }
  // A discharge safety plan is a clinical meaning, not an exact password.
  // Require BOTH follow-up and a concrete return precaution; generic 'alta'
  // or 'control' alone must never earn documented follow-up credit.

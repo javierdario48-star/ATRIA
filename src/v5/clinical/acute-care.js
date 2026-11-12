@@ -21,12 +21,26 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,
   consults:[],pendingConsults:[],caseEnded:false,closure:null});
  initializeExamination(p);policy.initialize?.(p,c);
+ const nutritionAvailable=(policy.conducts||[]).includes('npo')&&c.interventions.some(item=>item.id==='npo');
+ function currentOralNutritionDecision(){
+  if(p.oralNutritionDecision?.patientUid===p.uid)return p.oralNutritionDecision;
+  // Older checkpoints only stored the native fasting conduct.
+  const fasting=p.treatments.find(t=>t.id==='npo'&&t.patientUid===p.uid);
+  return fasting?{decision:'npo',patientUid:p.uid,actorId:fasting.actorId,sourceEventId:fasting.sourceEventId,
+   recordedAtRealSecond:fasting.administeredAtRealSecond,recordedAtNativeMinute:fasting.administeredAtNativeMinute}:null;
+ }
+ function recordOralNutritionDecision(cmd,clock,decision){
+  p.oralNutritionDecision={decision,patientUid:p.uid,actorId:cmd.actorId,sourceEventId:cmd.eventId,
+   recordedAtRealSecond:clock.clinicalMinute,recordedAtNativeMinute:clock.nativeMinute};
+  return copy(p.oralNutritionDecision);
+ }
  const rejected=(cmd,reason,message)=>({status:'rejected',eventId:cmd.eventId,patientUid:p.uid,reason,
   ...(message?{receipt:{eventId:cmd.eventId,patientUid:p.uid,message}}:{})});
  const executed=(cmd,data)=>({status:'executed',eventId:cmd.eventId,patientUid:p.uid,
   receipt:{eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,kind:cmd.intent.kind,id:cmd.intent.id,...data}});
- const proof=(cmd,t,reused=false)=>executed(cmd,{therapyId:t.id,sourceEventId:t.sourceEventId,
+ const proof=(cmd,t,reused=false,oralNutritionDecision)=>executed(cmd,{therapyId:t.id,sourceEventId:t.sourceEventId,
   dose:copy(t.dose),administeredAtRealSecond:t.administeredAtRealSecond,
+  ...(oralNutritionDecision?{oralNutritionDecision}:{}),
   ...(t.regimen||t.kind==='procedure.performed'?{route:t.route,regimen:copy(t.regimen),
    status:t.status,completionStatus:t.completionStatus,deliveryFraction:t.deliveryFraction,
    completedAtRealSecond:t.completedAtRealSecond,completedAtNativeMinute:t.completedAtNativeMinute,
@@ -87,11 +101,17 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
  }
  return Object.freeze({
   checkpoint:()=>({iv:ivMedicines.checkpoint(),surgery:surgery.checkpoint(),conducts:[...pendingConducts]}),
+  oralNutrition:()=>nutritionAvailable?{decision:copy(currentOralNutritionDecision())}:null,
   readiness,
   execute(cmd,clock){
    if(cmd.patientUid!==p.uid)return rejected(cmd,'wrong-patient');
    if(p.caseEnded)return rejected(cmd,'patient-not-active');
    const {intent}=cmd;
+   if(intent.kind==='nutrition.record'&&intent.id==='oral'){
+    if(!nutritionAvailable)return rejected(cmd,'oral-nutrition-unavailable');
+    return executed(cmd,{sourceEventId:cmd.eventId,oralNutritionDecision:recordOralNutritionDecision(cmd,clock,'oral'),
+     message:'Alimentación por boca autorizada.'});
+   }
    const dialogue=executePatientDialogue(p,c,cmd,clock);if(dialogue)return dialogue;
    const exam=executePhysicalExam(p,c,cmd,clock);if(exam)return exam;
    const observation=executeObservation(p,cmd,clock);if(observation)return observation;
@@ -107,12 +127,13 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
    if(['therapy.request','procedure.request'].includes(intent.kind)&&(policy.conducts||[]).includes(intent.id)){
     const id=intent.id,label=c.interventions.find(i=>i.id===id)?.label||id;
     const existing=p.treatments.find(t=>t.id===id&&t.patientUid===p.uid);
-    if(existing)return proof(cmd,existing,true);
     if(id==='npo'){
-     const t={id,label,dose:null,sourceEventId:cmd.eventId,actorId:cmd.actorId,
+     const t=existing||{id,label,dose:null,sourceEventId:cmd.eventId,actorId:cmd.actorId,
       patientUid:p.uid,administeredAtRealSecond:clock.clinicalMinute,administeredAtNativeMinute:clock.nativeMinute};
-     p.treatments.push(t);return proof(cmd,t);
+     if(!existing)p.treatments.push(t);
+     return proof(cmd,t,!!existing,recordOralNutritionDecision(cmd,clock,'npo'));
     }
+    if(existing)return proof(cmd,existing,true);
     const definition=c.clinicalPolicy?nativeTreatmentDefinition(id,c):null;
     if(definition&&['procedure','conduct'].includes(definition.kind)){
      let dose;
