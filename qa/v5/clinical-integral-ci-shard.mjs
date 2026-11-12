@@ -53,16 +53,21 @@ export async function runNativeEvidenceShard({shard,shards=8,checkpoint=null,ver
  });
  const output=resolve(root,'qa/v5-integral-shard-results','shard-'+shard);mkdirSync(resolve(output,'rows'),{recursive:true});
  copyFileSync(manifestPath,resolve(output,'manifest.json'));
- const completed=[];
+ const completed=[],failures=[];
  for(let index=shard;index<manifest.scenarios.length;index+=shards){
-  const name=String(index).padStart(4,'0')+'.json',path=resolve(directory,'rows',name),row=JSON.parse(readFileSync(path));
-  const assessment=assessIntegralJourney(row);assert(assessment.complete&&assessment.integrityPassed,'incomplete native shard row '+index);
-  assert.equal(row.configurationDigest,manifest.configurationDigest);
-  copyFileSync(path,resolve(output,'rows',name));completed.push(row.scenarioId);
+  const scenario=manifest.scenarios[index],name=String(index).padStart(4,'0')+'.json',path=resolve(directory,'rows',name);
+  const row=JSON.parse(readFileSync(path)),assessment=assessIntegralJourney(row);
+  copyFileSync(path,resolve(output,'rows',name));
+  const valid=assessment.complete&&assessment.integrityPassed&&
+   row.scenarioId===scenario.scenarioId&&row.configurationDigest===manifest.configurationDigest;
+  if(valid)completed.push(row.scenarioId);
+  else failures.push({scenarioId:scenario.scenarioId,assessment:assessment.failures});
  }
  const report={kind:'atria-native-clinical-evidence-shard',sourceDigest:manifest.sourceDigest,
-  configurationDigest:manifest.configurationDigest,shard,shards,completed};
- writeFileSync(resolve(output,'shard.json'),JSON.stringify(report,null,2)+'\n');return report;
+  configurationDigest:manifest.configurationDigest,shard,shards,completed,failures};
+ writeFileSync(resolve(output,'shard.json'),JSON.stringify(report,null,2)+'\n');
+ assert.equal(failures.length,0,'incomplete or invalid native shard evidence; see the uploaded rows');
+ return report;
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const shard=Number(process.argv[2]??0),shards=Number(process.argv[3]??8);

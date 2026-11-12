@@ -7,9 +7,14 @@ on:
       - qa/v5/clinical-integral-*.mjs
       - src/v5/content/certified-case-packs.json
       - src/v5/content/cases.json
+      - src/v5/clinical/guard-runtime.js
+      - src/v5/clinical/studies.js
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: atria-v5-integral-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   native-journeys:
     runs-on: ubuntu-latest
