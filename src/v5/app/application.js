@@ -77,6 +77,7 @@ export async function createApplication({document,window,content,signal}){
  const account=createAccountClient({window});
  let progress;try{progress=createProgressionLedger(JSON.parse(window.localStorage.getItem(PROGRESS_KEY)||'{}'));}catch{progress=createProgressionLedger();}
  let savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;
+ const animatedExperience=new Set();
  const career=()=>account.read()||progress.read();
  let accountTransition=Promise.resolve();
  let guardRecovery=null;
@@ -473,7 +474,7 @@ export async function createApplication({document,window,content,signal}){
     const reward=value.clinical.caseReward;
     const revision=JSON.stringify([patientUid,value.clinical.room.revision,reward?.eventId,reward?.creditStatus,reward?.xp,
      value.clinical.communication?.revision,value.clinical.shift?.turn,value.clinical.deathReward,
-     value.clinical.diagnosisReveal?.requestId]);
+     value.clinical.diagnosisReveal?.requestId,value.clinical.dischargeRewards]);
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
     else if(value.acknowledgements?.length)renderGuardCommunication();
     for(const receipt of value.acknowledgements||[])notifyClinicalRejection(receipt);
@@ -746,6 +747,11 @@ export async function createApplication({document,window,content,signal}){
   transcript.replace([...display,...(channel.active==='activity'?[]:pending)]);
   clinicalUI.render();
   const closure=clinicalState.caseReward||clinicalState.patient.closure;
+  const doctor=clinicalState.hintBinding?.actorId;
+  const penalties=(clinicalState.progress?.penalties||[]).filter(p=>p.kind==='clinical.unsafe-discharge'&&
+   p.actorId===doctor&&p.patientUid===patientId);
+  if(!durableClient&&coopRoomId)for(const penalty of penalties)
+   progress.penalizeUnsafeDischarge(penalty);
   if(!durableClient&&closure?.closed){
    if(localAdmissions)settleLocalPatient(closure);
    if(coopRoomId){
@@ -756,11 +762,17 @@ export async function createApplication({document,window,content,signal}){
    }
    if(clinicalState?.competition?.mode!=='competitive')localShift.record(closure);
   }
-  if(progress.read().receipts.length+progress.read().penalties.length!==savedRewardCount){
-   try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;}
+  const practice=progress.read(),rewardCount=practice.receipts.length+practice.penalties.length;
+  if(rewardCount!==savedRewardCount){
+   try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(practice));savedRewardCount=rewardCount;}
    catch{toast('Progreso confirmado en esta sesión; no se pudo guardar en este dispositivo.');}
   }
   updateHud();
+  const debits=durableClient?(clinicalState.dischargeRewards||[]).filter(r=>r.creditStatus==='credited'):
+   practice.penalties.filter(r=>penalties.some(p=>p.eventId===r.eventId));
+  for(const debit of debits)if(animateExperience(debit.eventId,-debit.loss))
+   toast('Alta insegura registrada · −'+debit.loss+' XP');
+  if(closure?.closed&&(!durableClient||closure.creditStatus==='credited'))animateExperience(closure.eventId,closure.xp);
   if(closure?.closed&&announcedClosure===closure.eventId&&dialog.dataset.panel==='outcome'){
    const outcome=dialog.querySelector('#caseResult'),html=caseDebriefHTML(closure);
    if(outcome&&outcome.innerHTML!==html)outcome.innerHTML=html;
@@ -788,7 +800,7 @@ export async function createApplication({document,window,content,signal}){
   // Refresh the open result without reopening a dialog the doctor dismissed.
   if(!first&&dialog.dataset.panel!=='death-result')return;
   world.stop();patientWheel.hide();clinicalChecklist.hide();if(first)hospitalAudio.cue('death');
-  const penalty=guardSession?.read()?.progress?.penalties?.find(x=>x.patientUid===p.uid);
+  const penalty=guardSession?.read()?.progress?.penalties?.find(x=>x.patientUid===p.uid&&x.kind==='clinical.death');
   const loss=durableClient?reward?.loss:penalty?.loss||0;
   open('<h2>Paciente fallecido</h2><p>El paciente falleció tras un deterioro sostenido. Los demás pacientes de la guardia siguen necesitando atención.</p>'+
    '<div class="case-scorecard"><h3>Resultado · paciente fallecido</h3><p>Experiencia ganada: 0 XP</p>'+
@@ -823,6 +835,14 @@ export async function createApplication({document,window,content,signal}){
    }
   }else guardSession.advance(delta,{typing:clinicalTyping});
   announceDeath(guardSession.read(undefined,{includeChecklist:false})?.patient);
+ }
+ function animateExperience(eventId,delta){
+  if(!eventId||!Number.isSafeInteger(delta)||!delta||animatedExperience.has(eventId))return false;
+  animatedExperience.add(eventId);
+  if(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
+   ui('hudXpBar')?.animate?.([{filter:'brightness(1)'},{filter:delta<0?'sepia(1) saturate(3)':'brightness(1.8)'},
+    {filter:'brightness(1)'}],{duration:480,easing:'ease-out'});
+  return true;
  }
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard',clinical=guardSession?.read();
@@ -1058,7 +1078,7 @@ export async function createApplication({document,window,content,signal}){
   }
   if(guardSession&&guardChannels.state().active==='activity'&&!clinical&&!patientUid)return;
   if(guardSession&&focusedNpc==='companion'&&!clinical&&!patientUid&&
-     !/^\s*(?:\/|enfermer(?:a|o|[ií]a)\b|(?:dr\.?\s*)?vega\b)/i.test(text)){
+     !/^\s*(?:\/|enfermer(?:a|o|[ií]a)\b|(?:(?:dr|doctor)\.?\s*)?vega\b)/i.test(text)){
    patientUid=focusedPatientUid;
    if(!companionAddress.test(text))text='Acompañante, '+text;
   }

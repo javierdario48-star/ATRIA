@@ -10,11 +10,14 @@ async function waitForRetry(ms,signal){
 }
 
 function retainConfirmedRewards(next,previous){
+ const sameReward=(a,b)=>['actorId','patientUid','eventId'].every(key=>a[key]===b[key]);
  for(const field of ['caseReward','deathReward']){
   const reward=next[field],prior=previous?.[field];
-  if(reward?.creditStatus==='pending'&&prior?.creditStatus==='credited'&&
-   ['actorId','patientUid','eventId'].every(key=>prior[key]===reward[key]))next[field]=prior;
+  if(reward?.creditStatus==='pending'&&prior?.creditStatus==='credited'&&sameReward(reward,prior))next[field]=prior;
  }
+ if(next.dischargeRewards)next.dischargeRewards=next.dischargeRewards.map(reward=>
+  reward.creditStatus==='pending'?(previous?.dischargeRewards||[]).find(prior=>
+   prior.creditStatus==='credited'&&sameReward(reward,prior))??reward:reward);
  const known=new Map((previous?.shift?.outcomes||[]).filter(row=>row.creditStatus==='credited')
   .map(row=>[row.patientUid,row]));
  for(const row of [...(next.shift?.outcomes||[]),...(next.competition?.outcomes||[])]){

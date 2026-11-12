@@ -50,3 +50,14 @@ test('no closure action calculates XP, grants surgery or asserts outcome on its 
  assert(!/XP|100\/100|aceptada|éxito quirúrgico/i.test(rendered));
  assert(!rendered.includes('data-action="request-surgery"'));
 });
+test('an unsafe discharge shows the confirmed debit of the current physician and keeps care available',()=>{
+ const s=state();s.hintBinding={actorId:'a'};
+ s.dischargeRewards=[{kind:'clinical.unsafe-discharge',patientUid:'P1',actorId:'b',loss:11,creditStatus:'credited'},
+  {kind:'clinical.unsafe-discharge',patientUid:'P1',actorId:'a',loss:null,creditStatus:'pending'}];
+ assert.match(closureDecisionHTML(s),/Alta insegura registrada/);
+ assert.match(closureDecisionHTML(s),/Confirmando el descuento/);
+ assert.doesNotMatch(closureDecisionHTML(s),/−11 XP/);
+ s.dischargeRewards[1]={...s.dischargeRewards[1],loss:7,creditStatus:'credited'};
+ assert.match(closureDecisionHTML(s),/−7 XP/);
+ assert.match(closureDecisionHTML(s),/data-destination="alta"/);
+});

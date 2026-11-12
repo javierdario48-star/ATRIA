@@ -68,6 +68,22 @@ test('invalid credentials rejected before a clinical request',()=>{
  assert.throws(()=>createDurableCooperativeReplica({window:{},roomId:'../wrong',clientKey}),/invalid/);
 });
 
+test('a confirmed discharge debit does not return to pending when a later lookup fails',async()=>{
+ const debit={kind:'clinical.unsafe-discharge',actorId:'doctor-a',patientUid:'P',eventId:'alta',
+  creditStatus:'credited',loss:7};
+ let epoch=0;
+ const client=createDurableCooperativeReplica({roomId,clientKey,window:{fetch:async()=>({
+  ok:true,json:async()=>({epoch:++epoch,clinical:{room:{roomId},patient:{uid:'P'},
+   dischargeRewards:epoch===1?[debit]:[{...debit,creditStatus:'pending',loss:null},
+    {...debit,patientUid:'other',creditStatus:'pending',loss:null}]}})
+ })}});
+ try{
+  await client.sync();await client.sync();
+  assert.deepEqual(client.read().dischargeRewards,[debit,
+   {...debit,patientUid:'other',creditStatus:'pending',loss:null}]);
+ }finally{client.dispose();}
+});
+
 test('every authenticated replica request carries the physician captured before a cookie change',async()=>{
  const sent=[],client=createDurableCooperativeReplica({roomId,clientKey,actorId:'doctor-a',window:{fetch:async(_url,options)=>{
   const body=JSON.parse(options.body);sent.push(body);
