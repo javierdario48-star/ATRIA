@@ -35,6 +35,18 @@ son nuevas dosis ni nuevos descuentos. Dr. Vega recomienda; no concede permisos.
 - No introducir nuevas dependencias o un segundo motor de simulación cuando el actual resuelve la necesidad.
 - Preservar comportamiento en Aprendiz, Solitario, Cooperativo y Competitivo; mantener identidad y personalidad entre turnos, médicos, reconexiones y checkpoints.
 
+## Prueba de admisión de un caso adicional
+
+Desde la raíz del repositorio, ejecuta la prueba del importador.
+
+```bash
+node --test --test-name-pattern='real CLI certification' scripts/import-clinical-case-pack.test.mjs
+```
+
+La prueba agrega `RESP-56` a una copia temporal del catálogo certificado de 55 casos mediante `--activate`. El cargador habitual abre esa copia y la selección «Patología específica» admite el caso en Aprendiz, Solitario, Cooperativo y Competitivo. El recorrido comprueba antecedentes generados por semilla, anamnesis, pista para la gasometría del caso, atención confirmada por enfermería, dos muestras nativas con informes independientes y cierre en Observación con un único recibo de XP. También recupera el estado guardado y reintenta los comandos de la primera muestra y del cierre.
+
+La orden de observación activa (`/observacion`) mantiene al paciente en atención. El cierre deliberado con destino Observación (`/disposicion observacion`) exige los requisitos clínicos del caso y emite un recibo de cierre.
+
 ## Puerta de calidad para cada caso nuevo
 1. Ejecutar bots sobre el caso real: entrevista completa y repreguntas; decisiones acertadas, tardías, erróneas y ausencia de intervención.
 2. Comprobar evolución fisiológica temporal, cambios tras tratamiento **confirmado**, complicaciones, contraindicaciones, alergias, deterioro y cierres.
