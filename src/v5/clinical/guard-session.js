@@ -447,6 +447,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   },
   hintBinding(doctorId=actorId){return {roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId};},
   hintCount:doctorId=>hintLedger.count(doctorId),
+  closureReceipt:()=>copy(nativePatient.closure),
   rewardFor,
   async hint(request,authenticatedCredentials=credentials){
    if(disposed)return {status:'rejected',reason:'room-disposed'};

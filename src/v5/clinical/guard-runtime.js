@@ -102,7 +102,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  }
  function awardMembers(){
   for(const r of shift.records()){
-   const receipt=sessions.get(r.uid)?.read().patient.closure;
+   const receipt=sessions.get(r.uid)?.closureReceipt();
    if(!receipt?.closed)continue;
    shift.close(r.uid,r.ownerId,receipt.destination);
    world.departPatient(r.uid);
@@ -126,10 +126,12 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     score:p?.closure?.quality?.score??null};
   });
   const outcomes=items.filter(r=>r.closed||r.patientDied).map(r=>{
-   const {patient:p,caseReward}=sessions.get(r.uid).read(mode==='competitive'?(r.ownerId||actorId):actorId);
+   const {patient:p,caseReward}=patientStates.get(r.uid);
+   const reward=mode==='competitive'&&r.ownerId&&r.ownerId!==actorId?
+    sessions.get(r.uid).rewardFor(p.closure,r.ownerId):caseReward;
    return {patientUid:r.uid,ownerId:r.ownerId,closed:!!p.closure?.closed,
     survived:!p.patientDied,score:p.closure?.quality?.score??0,
-    xp:caseReward?.xp??p.closure?.xp??0,points:p.closure?.quality?.score??0};
+    xp:reward?.xp??p.closure?.xp??0,points:p.closure?.quality?.score??0};
   });
   state.shift={mode,elapsedSeconds:shift.elapsed(),remainingSeconds:shift.remaining(),ended:shift.ended(),
    turn:turn.view(actorId),
@@ -146,7 +148,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(state.caseReward&&ownerId!==actorId)
     state.caseReward={...state.caseReward,xp:0,creditStatus:'ineligible'};
   }
-  return state;
+  return {clinical:state,patientStates};
  }
  return Object.freeze({
   updateDoctorLevel(actorId,level){
@@ -287,7 +289,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
      throw Object.assign(Error('clinical patient projection forbidden'),{code:'forbidden'});
     session=sessions.get(patientUid);
    }
-   let clinical=clinicalView(actorId,session),catalog=session.catalog();
+   let {clinical,patientStates}=clinicalView(actorId,session),catalog=session.catalog();
    if(mode==='competitive'&&clinical.competition.ownerId&&clinical.competition.ownerId!==actorId){
     // When every bed belongs to a rival, preserve the reception/scoreboard
     // contract without returning that rival's clinical session. Allowlist the
@@ -302,10 +304,10 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    }
    const scene=world.snapshot();
    const deaths=[],dischargePenalties=[];
-   for(const record of shift.records()){
-    const state=sessions.get(record.uid).read(actorId,{includeChecklist:false}),p=state.patient;
+   for(const state of patientStates.values()){
+    const p=state.patient;
     if(p.patientDied&&p.deathAttribution?.classification==='treatment-contributed'&&p.deathAttribution.actorIds?.includes(actorId))
-     deaths.push({kind:'clinical.death',actorId,patientUid:record.uid,eventId:roomId+':death:'+record.uid});
+     deaths.push({kind:'clinical.death',actorId,patientUid:p.uid,eventId:roomId+':death:'+p.uid});
     dischargePenalties.push(...state.progress.penalties.filter(p=>p.kind==='clinical.unsafe-discharge'&&p.actorId===actorId));
    }
    return clone({clinical,catalog,
