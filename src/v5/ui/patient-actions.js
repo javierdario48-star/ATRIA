@@ -18,6 +18,7 @@ export const PATIENT_ACTIONS=Object.freeze([
 export function createPatientActionWheel({document,window}){
  const root=document.getElementById('patientWheel');
  if(!root)throw Error('Patient action wheel host missing');
+ const hud=document.getElementById('hud'),rail=document.querySelector('.guard-rail');
  const title=document.createElement('div');title.className='patient-wheel-caption';
  const controls=document.createElement('div');controls.className='patient-wheel-controls';
  root.replaceChildren(title,controls);
@@ -47,15 +48,33 @@ export function createPatientActionWheel({document,window}){
  function hide(){patient=null;root.hidden=true;delete root.dataset.patientUid;}
  function position(renderer,hudBottom,dockTop){
   if(!patient||root.hidden)return;
-  const rect=root.getBoundingClientRect(),vw=window.innerWidth,vh=window.innerHeight;
+  const vw=window.innerWidth,vh=window.innerHeight;
+  const top=Math.max(3,Number.isFinite(hudBottom)?hudBottom+4:0);
+  const bottom=Math.min(vh-3,Number.isFinite(dockTop)?dockTop-3:vh);
+  let left=6,right=vw-6,compact=false;
+  if(vw>vh&&vh<=500){
+   // Measure the radial layout independently of the current compact size.
+   const style=window.getComputedStyle(root);
+   const radialHeight=parseFloat(style.getPropertyValue('--patient-wheel-radial-height'))*
+    parseFloat(style.getPropertyValue('--patient-wheel-scale'));
+   compact=radialHeight>bottom-top;
+   if(compact){
+    const hudRect=hud?.getBoundingClientRect(),railRect=rail?.getBoundingClientRect();
+    if(hudRect?.width){left=Math.max(left,hudRect.left);right=Math.min(right,hudRect.right);}
+    if(railRect?.width&&railRect.bottom>top&&railRect.top<bottom)left=Math.max(left,railRect.right+6);
+    root.style.setProperty('--patient-wheel-available-width',Math.max(0,right-left)+'px');
+    root.style.setProperty('--patient-wheel-available-height',Math.max(44,bottom-top)+'px');
+   }
+  }
+  root.toggleAttribute('data-compact',compact);
+  const rect=root.getBoundingClientRect();
   const [sx,sy]=renderer.screen(patient.x,patient.y);
-  const x=Math.min(vw-rect.width/2-6,Math.max(rect.width/2+6,sx));
-  const top=Number.isFinite(hudBottom)?hudBottom:0,bottom=Number.isFinite(dockTop)?dockTop:vh;
+  const halfWidth=rect.width/2,halfHeight=rect.height/2;
+  const preferredX=compact&&sx+36+rect.width<=right?sx+36+halfWidth:sx;
+  const x=Math.min(right-halfWidth,Math.max(left+halfWidth,preferredX));
   const preferred=sy-30;
-  // Keep the wheel in the walkable area as far as possible, but never offscreen.
-  const low=Math.max(rect.height/2+3,top+rect.height/2+4);
-  const high=Math.min(vh-rect.height/2-3,bottom-rect.height/2-3);
-  const y=high>=low?Math.max(low,Math.min(high,preferred)):Math.max(rect.height/2,Math.min(vh-rect.height/2,preferred));
+  const low=top+halfHeight,high=bottom-halfHeight;
+  const y=high>=low?Math.max(low,Math.min(high,preferred)):Math.max(halfHeight,Math.min(vh-halfHeight,preferred));
   root.style.left=x+'px';root.style.top=y+'px';
  }
  return Object.freeze({show,hide,guide,position,

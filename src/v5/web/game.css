@@ -75,8 +75,9 @@ body.atria-keyboard-open #chatHistory.expanded{height:auto;max-height:min(33dvh,
 /* C05.c — world-anchored bedside actions, not a second clinical interface.
    Only the small buttons intercept touches; the surrounding hospital is walkable. */
 .patient-wheel{
- position:fixed;z-index:19;width:230px;height:224px;
- transform:translate(-50%,-50%);pointer-events:none;
+ --patient-wheel-radial-height:274px;--patient-wheel-scale:1;
+ position:fixed;z-index:19;width:230px;height:var(--patient-wheel-radial-height);
+ transform:translate(-50%,-50%) scale(var(--patient-wheel-scale));pointer-events:none;
  filter:drop-shadow(0 5px 10px #0007);
 }
 .patient-wheel-caption{
@@ -119,7 +120,7 @@ dialog[data-panel="diagnosis"]{max-width:460px}
 .action-treatment{left:40px;top:168px}
 .action-patient{left:0;top:101px}
 @media(max-width:350px), (max-height:620px){
- .patient-wheel{zoom:.82}
+ .patient-wheel{--patient-wheel-scale:.82}
 }
 
 /* C05.c — dedicated non-diagnostic bedside monitor presentation.
@@ -670,16 +671,26 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 }
 
 /* Contextual help stays inside the existing patient's action wheel. */
-.patient-wheel{height:274px}
 .patient-wheel-caption{top:42%}
 .patient-wheel-action[hidden]{display:none}
-.patient-wheel[data-companion]{height:324px}
+.patient-wheel[data-companion]{--patient-wheel-radial-height:324px}
 .patient-wheel[data-companion] .patient-wheel-caption{top:115px}
 .action-companion,.action-hint{left:8px;top:228px;width:214px;min-height:44px;display:flex;justify-content:center;gap:6px;padding:4px 8px;border-radius:12px;font-size:10px;white-space:nowrap}
 .action-companion{border:1px solid #80b9b6;background:#10343cef;color:#e8ffff}
 .patient-wheel[data-companion] .action-hint{top:276px}
 .action-hint{border:1px solid #c9b476a0;background:#173a3ff5;color:#fff0be}
 .action-companion .patient-wheel-glyph,.action-hint .patient-wheel-glyph{width:28px;height:28px;font-size:17px;box-shadow:none;border:0;background:none;flex-shrink:0}
+.patient-wheel[data-compact]{display:flex;align-items:center;gap:6px;
+ width:min(420px,var(--patient-wheel-available-width));height:auto;transform:translate(-50%,-50%)}
+.patient-wheel[data-compact] .patient-wheel-caption{position:static;transform:none;padding:5px 6px}
+.patient-wheel[data-compact] .patient-wheel-controls{flex:1;min-width:0;width:auto;height:auto;
+ display:grid;grid-template-columns:repeat(5,minmax(48px,1fr));gap:4px;
+ max-height:var(--patient-wheel-available-height);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
+.patient-wheel[data-compact] .patient-wheel-action{position:static;display:grid;width:auto;min-height:44px;
+ padding:2px;gap:1px;font-size:10px;line-height:1.05;text-align:center;white-space:normal;overflow-wrap:anywhere}
+.patient-wheel[data-compact] .patient-wheel-action:focus-visible{outline-offset:-2px}
+.patient-wheel[data-compact] .patient-wheel-glyph{width:19px;height:19px;font-size:15px}
+.patient-wheel[data-compact] .action-hint{grid-column:span 2}
 .vega-clinical-hint{position:fixed;z-index:25;top:88px;right:12px;width:min(360px,calc(100vw - 24px));box-sizing:border-box;display:flex;gap:10px;align-items:center;padding:12px;background:#12383df5;border:1px solid #8bc7b6;border-radius:14px;box-shadow:0 8px 24px #0006;color:#f1fffa;font:13px/1.4 system-ui,sans-serif}
 .vega-clinical-hint[hidden]{display:none}
 .vega-clinical-hint strong{display:block;font-size:12px;color:#c6f4df}

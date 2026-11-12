@@ -73,7 +73,46 @@ try{
    await p.screenshot({path:output+'/'+name+'-bedside.png'});
    assert.equal(bedside.patientOverlapped,false,name+' patient must remain visible beside the scoreboard: '+JSON.stringify(bedside));
    assert.deepEqual(bedside.controls,[],name+' bedside controls must remain clear');
-   results.push({name,physicalDevice:false,geometry,bedside});
+   const wheelLayouts=[];
+   if(name==='android-landscape'){
+    assert.equal(await p.locator('#bedsideChecklist [data-action="toggle-clinical-checklist"]').getAttribute('aria-expanded'),'true');
+    for(const keyboardOpen of [false,true]){
+     if(keyboardOpen)await p.locator('#keyboardToggleButton').tap();
+     assert.equal(await p.locator('#keyboardToggleButton').getAttribute('aria-pressed'),String(keyboardOpen));
+     const layout=await p.locator('#patientWheel').evaluate(async(wheel,keyboardOpen)=>{
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      const overlays=Object.fromEntries(['hud','chatDock','guardScoreboard','bedsideChecklist'].map(id=>
+       [id,document.getElementById(id).getBoundingClientRect().toJSON()]));
+      const overlaps=(a,b)=>a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
+      const wheelRect=wheel.getBoundingClientRect().toJSON();
+      const actions=[...wheel.querySelectorAll('button:not([hidden])')].map(button=>{
+       const rect=button.getBoundingClientRect().toJSON();
+       const target=document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);
+       const withinWheel=rect.left>=wheelRect.left&&rect.top>=wheelRect.top&&rect.right<=wheelRect.right&&rect.bottom<=wheelRect.bottom;
+       return {id:button.dataset.patientAction,rect,label:button.getAttribute('aria-label'),hit:button.contains(target),withinWheel};
+      });
+      return {keyboardOpen,wheel:wheelRect,overlays,actions,
+       withinViewport:wheelRect.left>=0&&wheelRect.top>=0&&wheelRect.right<=innerWidth&&wheelRect.bottom<=innerHeight,
+       overlaps:Object.keys(overlays).filter(id=>overlaps(wheelRect,overlays[id])),
+       actionOverlaps:actions.filter((a,i)=>actions.slice(i+1).some(b=>overlaps(a.rect,b.rect))).map(a=>a.id)};
+     },keyboardOpen);
+     wheelLayouts.push(layout);
+     if(keyboardOpen)await p.screenshot({path:output+'/'+name+'-bedside-keyboard.png'});
+    }
+    for(const layout of wheelLayouts){
+     const detail=' keyboard '+(layout.keyboardOpen?'open':'closed')+': '+JSON.stringify(layout);
+     assert.deepEqual(layout.overlaps,[],name+' wheel must clear the HUD, dock, score and expanded route with'+detail);
+     assert(layout.withinViewport,name+' wheel must stay inside the viewport with'+detail);
+     assert.deepEqual(layout.actions.map(action=>action.id),
+      ['talk','diagnosis','examination','history','studies','treatment','patient','hint']);
+     assert.deepEqual(layout.actionOverlaps,[],name+' each action needs its own touch target with'+detail);
+     assert(layout.actions.every(a=>a.hit&&a.label&&a.withinWheel&&a.rect.width>=44&&a.rect.height>=44),
+      name+' visible actions must have a labeled, reachable touch target with'+detail);
+    }
+    await p.locator('#patientWheel [data-patient-action="diagnosis"]').tap();
+    assert.equal(await p.locator('#modal').getAttribute('data-panel'),'diagnosis');
+   }
+   results.push({name,physicalDevice:false,geometry,bedside,...(wheelLayouts.length?{wheelLayouts}:{})});
   }finally{await context.close();}
  }
  assert.deepEqual(errors,[]);
