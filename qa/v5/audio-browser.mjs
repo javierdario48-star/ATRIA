@@ -106,7 +106,8 @@ async function offlineOriginalLoop(p){
 try{
  for(const name of ['desktop','mobile','landscape']){
   const options=name==='mobile'?h.devices['Pixel 5']:{viewport:name==='desktop'?{width:1280,height:800}:{width:844,height:390},hasTouch:name==='landscape'};
-  const context=await h.browser.newContext(options);
+  const browser=name==='desktop'?h.browser:await h.newBrowser();
+  const context=await browser.newContext(options);
   try{
    const p=await pageFor(context);
    const initial=initialAudio.get(p),locked=initial.audio;
@@ -173,7 +174,9 @@ try{
   }finally{await context.close();}
  }
  for(const mode of ['coop','competitive']){
-  const contexts=await Promise.all([h.browser.newContext({viewport:{width:1280,height:800}}),h.browser.newContext(h.devices['Pixel 5'])]);
+  const browsers=await Promise.all([h.newBrowser(),h.newBrowser()]);
+  const contexts=await Promise.all([browsers[0].newContext({viewport:{width:1280,height:800}}),
+   browsers[1].newContext(h.devices['Pixel 5'])]);
   try{
    const host=await pageFor(contexts[0],'Audio host '+mode),guest=await pageFor(contexts[1],'Audio guest '+mode);
    await lobby(host);await lobby(guest);
