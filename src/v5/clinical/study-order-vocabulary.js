@@ -19,6 +19,10 @@ const angioCtNames=['angio tc','angiotc','angio tac','angiotac','angio tomografi
 const angioCtPattern='(?:'+[...angioCtNames].sort((a,b)=>b.length-a.length).join('|')+')\\b';
 const angioCtPrefix=new RegExp('^'+angioCtPattern);
 const angioCtMention=new RegExp('\\b'+angioCtPattern+'|\\b(?:tc|tac) de (?:la )?aorta\\b','g');
+const angioCtControlOrder='(?:control(?:ar)?(?: de(?:l)?)?|repetir|repite|repita)(?: el| la| un| una)? ';
+const angioCtControlAtStart=new RegExp('^'+angioCtControlOrder);
+const angioCtControlBeforeMention=new RegExp('\\b'+angioCtControlOrder+'$');
+const authoredAngioCtPrefix=new RegExp('^(?:'+angioCtControlOrder+')?'+angioCtPattern);
 const angioCtFamilies=new Map([
  ['angio_aorta',['de aorta','de la aorta','aortica','de torax aortica','de aorta toracoabdominal','de la aorta toracoabdominal'],
   ['tc de aorta','tc de la aorta','tac de aorta','tac de la aorta']],
@@ -28,7 +32,8 @@ const angioCtFamilies=new Map([
  ['angio_cerebral',['cerebral']]
 ].map(([family,targets,other=[]])=>[family,[...targets.flatMap(target=>angioCtNames.map(name=>name+' '+target)),...other]]));
 const thoracicAngioCt=/^(?:de )?(?:torax|toracic[ao]|pecho|toracoabdominal)\b/;
-const unspecifiedAngioCt=/^(?:$|(?:y|e|o|urgente|ahora|por favor|con|sin|de control)\b|(?:de )?(?:abdomen|abdominal)\b)/;
+const abdominalAngioCt=/^(?:de )?(?:abdomen|abdominal)\b/;
+const unspecifiedAngioCt=/^(?:$|(?:y|e|o|urgente|ahora|por favor|con|sin|de control)\b)/;
 const angioCtModifier=/^(?:(?:urgente|ahora|inicial) )*(?:(?:de )?control|repetid[ao]|post|tras|sin contraste|con contraste)\b/;
 const groups=[
  ['troponina',[...troponinLongNames,'hs ctn','hsctn','ctn']],
@@ -98,7 +103,7 @@ export function authoredTroponinSeries(study){
 const terms=study=>[study.label,...(study.aliases||[])].map(normalizeStudyOrder);
 const containsTerm=(text,word)=>(' '+text+' ').includes(' '+word+' ');
 const startsWithTerm=(text,term)=>text===term||text.startsWith(term+' ');
-const isAngioCt=study=>terms(study).some(term=>angioCtPrefix.test(term));
+const isAngioCt=study=>terms(study).some(term=>authoredAngioCtPrefix.test(term));
 const documentedCRP=/\b(?:proteina c reactiva|pcr (?:(?:moderadamente|marcadamente|discretamente) )?(?:elevada|normal|\d+(?: \d+)? mg))\b/;
 export function isTroponinStudy(study){
  return terms(study).some(term=>troponinPattern.test(term))||measuredTroponin(study).length>0;
@@ -124,7 +129,7 @@ function studyRank(study,group,aliases){
  const [label,...authored]=terms(study);
  // An angio-TC, perfusion sequence or authored control is a separate study.
  if(ctFamilies.has(group)&&(!/^(?:tc|tac|tomografia) /.test(label)||containsTerm(label,'de control')))return 0;
- if(angioCtFamilies.has(group)&&containsTerm(label,'de control'))return 0;
+ if(angioCtFamilies.has(group)&&(containsTerm(label,'de control')||angioCtControlAtStart.test(label)))return 0;
  // PCR de un patógeno is molecular testing, even when the abbreviation matches.
  if(group==='pcr'&&label.startsWith('pcr de ')&&!containsTerm(label,'proteina c reactiva'))return 0;
  if(aliases.includes(label))return 4;
@@ -171,20 +176,25 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
  }
  const authoredAngioCt=new Map();
  for(const study of angiographic)for(const name of terms(study)){
-  const prefix=angioCtPrefix.exec(name);
+  const prefix=authoredAngioCtPrefix.exec(name);
   if(!prefix)continue;
   const target=name.slice(prefix[0].length).trim();
-  if(!thoracicAngioCt.test(target)&&!unspecifiedAngioCt.test(target)&&!authoredAngioCt.has(name))authoredAngioCt.set(name,study);
+  if(!thoracicAngioCt.test(target)&&!abdominalAngioCt.test(target)&&!unspecifiedAngioCt.test(target)&&!authoredAngioCt.has(name))
+   authoredAngioCt.set(name,study);
  }
  const availableAngioCt=[...angioCtFamilies].filter(([family])=>byFamily.has(family));
  const namedAngioCt=[...new Set([...authoredAngioCt.keys(),...availableAngioCt.flatMap(([,aliases])=>
   aliases.flatMap(alias=>[alias,alias+' con contraste']))])].sort((a,b)=>b.length-a.length);
  const angioCtIssue=word=>{
   for(const match of word.matchAll(angioCtMention)){
-   const phrase=word.slice(match.index),name=namedAngioCt.find(alias=>startsWithTerm(phrase,alias));
+   const control=angioCtControlBeforeMention.exec(word.slice(0,match.index)),phrase=word.slice(control?.index??match.index);
+   const name=namedAngioCt.find(alias=>startsWithTerm(phrase,alias));
    if(name&&!angioCtModifier.test(phrase.slice(name.length).trim()))continue;
-   const target=phrase.slice(match[0].length).trim();
-   if(!name&&(thoracicAngioCt.test(target)||unspecifiedAngioCt.test(target)))return 'study-protocol-ambiguous';
+   const target=word.slice(match.index+match[0].length).trim();
+   const region=thoracicAngioCt.exec(target)||abdominalAngioCt.exec(target);
+   const qualifier=target.slice(region?.[0].length??0).trim();
+   if(!name&&!control&&!/^(?:(?:urgente|ahora|inicial) )*(?:sin contraste|(?:de )?control)\b/.test(qualifier)&&
+    (region||unspecifiedAngioCt.test(target)))return 'study-protocol-ambiguous';
    return 'study-method-unavailable';
   }
   return null;

@@ -182,7 +182,8 @@ test('ambiguous angio-CT asks for a protocol and offers distinct native-first ch
    assert.deepEqual(thoracic.map(row=>row.id),[native,other]);
    const suggestions=clinicalCompletions('Angio-TC de tórax',context).filter(row=>row.kind==='study');
    assert.deepEqual(suggestions.map(row=>row.id),[native,other].map(id=>'study:'+id));
-   for(const [index,phrase] of ['angio TC aórtica de control','angio TC pulmonar sin contraste'].entries()){
+   for(const [index,phrase] of ['angio TC aórtica de control','controlar angio TC pulmonar',
+    'angio TC pulmonar sin contraste','angio TC de tórax sin contraste'].entries()){
     assert.deepEqual(studySearchChoices(phrase,context),[]);
     for(const [j,prefix] of ['/estudio ','Enfermera, '].entries()){
      const ack=await session.post({id:`unavailable-${index}-${j}`,text:prefix+phrase});
