@@ -54,6 +54,18 @@ async function recover(page){
  await page.waitForFunction(()=>atriaV5.snapshot().phase==='guard'&&atriaV5.diagnostics().cooperative.durable);
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.shift.turn.actor.participating);
 }
+async function finishParticipation(page,roomId){
+ const before=await api(page,'account/session');
+ assert.equal(before.status,200);
+ assert.equal(before.body.account.activeGuardId,roomId);
+ await page.locator('#guardButton').click();
+ const released=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/account/release-guard');
+ await page.locator('[data-action=account-release]').click();
+ const response=await released,result=await response.json();
+ assert.equal(response.status(),200,result.error);
+ assert.equal(result.account.activeGuardId,null);
+ await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby'&&!document.getElementById('modal').open);
+}
 async function reloadGuard(page,roomId){
  await page.reload();
  await page.waitForFunction(()=>document.body.dataset.boot==='ready');
@@ -170,6 +182,9 @@ try{
   check('real 24 minute clock pauses for explicit cooperative consent and continues the same patients without a new reward');
  }
  await picture('continued');await save(a);await save(b);
+ stage='finalize participation through recovery';
+ for(const page of pages)await finishParticipation(page,roomId);
+ check('both doctors confirm permanent participation release and return to the lobby');
  stage='room isolation, revocation and cleanup';
  const external=await (await newContext({viewport:{width:1100,height:800}})).newPage();
  await external.goto(origin);
@@ -189,7 +204,6 @@ try{
  assert.equal((await api(a,path+'/messages')).status,200);
  assert.equal((await api(a,path+'/cancel',{})).status,200);
  assert.equal((await api(a,path+'/messages')).status,404);
- for(const page of pages)assert.equal((await api(page,'account/release-guard',{roomId})).status,200);
  for(const page of pages)assert.equal((await api(page,'account/logout',{})).status,200);
  assert.deepEqual(errors,[]);
  check('authenticated outsider, revoked guest and closed room retain 401/403/404 boundaries');
