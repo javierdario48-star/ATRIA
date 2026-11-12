@@ -64,3 +64,19 @@ test('death debrief shows the exact persisted debit and an uninvolved physician 
  await rewards.settleClinicalAccount(colleague,backend,{actorId:'b',account:{auth_user_id:'auth-b'}},'room');
  assert.deepEqual(colleague.clinical.deathReward,{actorId:'b',patientUid:'p',creditStatus:'ineligible',loss:0});
 });
+test('an unsafe discharge debits its author while the patient is still active',async()=>{
+ const penalty={kind:'clinical.unsafe-discharge',actorId:'a',patientUid:'p',eventId:'discharge'};
+ const result={dischargePenalties:[penalty],clinical:{patient:{uid:'p',caseEnded:false},shift:{outcomes:[]}}};
+ let awards=0;const rows=[];
+ const backend={creditedGuardReceipts:async()=>rows,
+  award:async()=>{awards++;rows.push({kind:penalty.kind,patient_uid:'p',event_id:penalty.eventId,xp_delta:-10});},
+  byAuth:async()=>({...identity.account,xp:0})};
+ const account=await rewards.settleClinicalAccount(result,backend,identity,'room');
+ assert.equal(account.xp,0);
+ assert.deepEqual(result.clinical.dischargeRewards,[{...penalty,creditStatus:'credited',loss:10}]);
+ await rewards.settleClinicalAccount(result,backend,{...identity,account},'room');
+ assert.equal(awards,1);
+ const colleague={dischargePenalties:[penalty],clinical:{patient:{uid:'p'},shift:{outcomes:[]}}};
+ await rewards.settleClinicalAccount(colleague,backend,{actorId:'b',account:{auth_user_id:'auth-b'}},'room');
+ assert.equal(colleague.clinical.dischargeRewards,undefined);
+});

@@ -26,9 +26,17 @@ for(const [caseId,authorized] of Object.entries(destinations)){
     assert.deepEqual(CASE_CLOSURE_RULES_487[caseId].destinations,authorized);
     assert(!s.read().eligibleDestinations.length);
     const bad=(await s.post({id:'bad-dest',text:'/disposicion '+(authorized.includes('alta')?'quirofano':'alta')})).clinical;
-    assert.equal(bad[0]?.status,'rejected','invalid transfer cannot close');
+    if(authorized.includes('alta'))assert.equal(bad[0]?.status,'rejected','invalid transfer cannot close');
+    else {
+     assert.equal(bad[0]?.status,'executed');
+     assert.equal(bad[0]?.receipt.disposition.reason,'destination-not-indicated');
+     assert.equal(bad[0]?.receipt.disposition.closed,false);
+    }
     const premature=(await s.post({id:'early',text:'/disposicion '+authorized[0]})).clinical;
-    assert(['pending','rejected'].includes(premature[0]?.status), 'destination cannot directly grant closure');
+    if(authorized[0]==='alta'){
+     assert.equal(premature[0]?.status,'executed');
+     assert.equal(premature[0]?.receipt.disposition.closed,false);
+    }else assert(['pending','rejected'].includes(premature[0]?.status),'premature transfer cannot directly grant closure');
     assert.equal(s.read().patient.caseEnded,false);
     assert.equal(s.read().patient.closure,null);
     assert.equal(s.read().progress.xp,0);

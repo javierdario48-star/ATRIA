@@ -1,4 +1,5 @@
 import {routeWardSpeech} from './speech-router.js';
+import {dispositionProof} from './disposition-receipt.js';
 
 const VALID_MODES=new Set(['solo','apprentice','coop','competitive']);
 const id=x=>typeof x==='string'&&x.length>0&&x.length<=160;
@@ -50,13 +51,11 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
   if(!entry||entry.status!=='pending'||original.patientUid!==binding.patientUid||
      entry.kind!==binding.kind||entry.id!==binding.id)return;
   if(binding.kind==='case.close'&&result.status==='executed'){
-   const proof=result.receipt?.closure;
-   if(!proof||proof.closed!==true||proof.eventId!==result.eventId||
-      proof.patientUid!==binding.patientUid||proof.actorId!==binding.actorId)
-    return; // Quarantine invalid asynchronous handoff; never mint a closure.
+   const proof=dispositionProof(result,binding.id,binding.actorId);
    const patient=byPatient.get(binding.patientUid);
-   if(!patient||patient.closed)return;
-   patient.closed=true;
+   if(!proof||!patient||patient.closed)return;
+   patient.closed=proof.closed;
+   if(!proof.closed)patient.ownerId=null;
   }
   const clinical={...entry,status:result.status,reason:result.reason??null,receipt:copy(result.receipt??null)};
   const event={type:'clinical.completed',roomId,eventId:result.eventId,
@@ -123,10 +122,10 @@ export function createRoomAuthority({roomId,mode,members,patients,authenticate,c
       if(mode==='competitive'&&!patient.ownerId&&['executed','pending'].includes(outcome.status))
        patient.ownerId=actor.id;
       if(intent.kind==='case.close'&&outcome.status==='executed'){
-       const proof=outcome.receipt?.closure;
-       if(!proof||proof.closed!==true||proof.eventId!==eventId||proof.patientUid!==patientUid)
-        throw Error('invalid native closure receipt');
-       patient.closed=true;
+       const proof=dispositionProof(outcome,intent.id,actor.id);
+       if(!proof)throw Error('invalid native disposition receipt');
+       patient.closed=proof.closed;
+       if(!proof.closed)patient.ownerId=null;
       }
       if(outcome.status==='pending'&&!disposed)pendingExecutions.set(eventId,{key,
        commandId:envelope.id,actorId:actor.id,patientUid,index:clinical.length,

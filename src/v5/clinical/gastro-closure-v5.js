@@ -28,10 +28,12 @@ export function evaluateGastroDisposition(a={}){
  for(const id of rule.requiredStudies||[])
   if(!studies.has(id))need('study',{anyOf:[[id]]},'Revisar estudio imprescindible '+id+' antes de cerrar el caso.');
  const treatment=rule.treatmentByDestination?.[target]??rule.treatment;
- if(treatment?.length&&!treatment.some(group=>group.every(id=>done.has(id))))
-  need('treatment',{anyOf:treatment},'Confirmar las intervenciones imprescindibles y su ejecución real.');
- if(target==='alta'&&(rule.dischargeTreatments||[]).some(id=>!done.has(id)))
-  need('treatment',{anyOf:[rule.dischargeTreatments]},'Documentar un plan de seguimiento y signos de alarma antes del alta.');
+ const essential=target==='alta'?treatment?.map(group=>group.filter(id=>id!=='followup')):treatment;
+ if(essential?.length&&!essential.some(group=>group.every(id=>done.has(id))))
+  need('treatment',{anyOf:essential},'Confirmar las intervenciones imprescindibles y su ejecución real.');
+ const dischargeTreatment=(rule.dischargeTreatments||[]).filter(id=>id!=='followup');
+ if(target==='alta'&&dischargeTreatment.some(id=>!done.has(id)))
+  need('treatment',{anyOf:[dischargeTreatment]},'Completar las intervenciones imprescindibles para el alta.');
  if(critical&&!['fluid','vasopressor','transfusion'].some(id=>done.has(id)))
   need('treatment',{anyOf:[['fluid'],['vasopressor'],['transfusion']],urgent:true},'Iniciar soporte para la hipoperfusión.');
  if(Number(a.spo2??98)<90&&!done.has('oxygen'))need('treatment',{anyOf:[['oxygen']],urgent:true},'Tratar la hipoxemia.');
@@ -51,7 +53,9 @@ export function evaluateGastroDisposition(a={}){
  // 'studies'. Adapt real required physician observations into that slot;
  // this never adds an order/result or creates another quality/XP calculator.
  const examEvidence=requiredExams.map(id=>'exam:'+id),
-  qualityInput={...a,acceptedDiagnoses:matched?[...(a.acceptedDiagnoses||[]),a.diagnosis]:a.acceptedDiagnoses,keyStudies:[...(a.keyStudies||[]),...examEvidence]},
+  qualityInput={...a,acceptedDiagnoses:matched?[...(a.acceptedDiagnoses||[]),a.diagnosis]:a.acceptedDiagnoses,
+   keyInterventions:[...new Set([...(a.keyInterventions||[]),...(target==='alta'?rule.dischargeTreatments||[]:[])])],
+   keyStudies:[...(a.keyStudies||[]),...examEvidence]},
   qualityEvidence=new Set([...studies,...requiredExams.filter(id=>examined.has(id)).map(id=>'exam:'+id)]);
  return {caseId:a.caseId,ready,action:ready?target:null,destination:rule.destinations[0],
   choices:ready?[...rule.destinations]:[],missing,requirements,fulfilledTreatmentIds:[...done],diagnostic:matched,

@@ -43,12 +43,18 @@ async function scenario(bot,caseId,mode,skill){
   const current=s.read();
   assert.equal(current.progress.xp,0,'partial clinical exam must not mint XP');
   assert(!current.patient.closure,'incomplete work cannot create a closure');
-  assert(['rejected','pending'].includes(attempt.clinical[0]?.status));
+  if(plan.dest==='alta'){
+   assert.equal(attempt.clinical[0]?.status,'executed');
+   assert.equal(attempt.clinical[0]?.receipt.disposition.closed,false);
+  }else assert(['rejected','pending'].includes(attempt.clinical[0]?.status));
   report.push({caseId,mode,skill,missing:current.closure?.missing?.length??0,xp:0});
   return;
  }
  if(skill==='dangerous'){
-  assert.equal((await bot.post('/disposicion alta')).clinical[0].status,'rejected');
+  const decision=(await bot.post('/disposicion alta')).clinical[0];
+  assert.equal(decision.status,'executed');
+  assert.equal(decision.receipt.disposition.closed,false);
+  assert.equal(s.read().progress.penalties[0]?.eventId,decision.receipt.eventId);
   await bot.post('Enfermera ceftriaxona 99 g');
   await bot.post('Enfermera transfusion 99 unidades');
   assert.equal(s.read().patient.administrationLog.length,0,'orders without venous access cannot treat or poison');

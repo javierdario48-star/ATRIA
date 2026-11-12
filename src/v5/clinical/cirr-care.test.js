@@ -53,7 +53,9 @@ test('one CIRR case closes through the real executor only after evaluation, resu
  await f.send('/diagnostico cirrosis descompensada');await f.send('/reevaluar');
  assert.equal((await f.send('/disposicion sala')).clinical[0].status,'rejected');
  f.s.advance(120);await f.s.flush();await f.send('/reevaluar');
- assert.equal((await f.send('/disposicion alta')).clinical[0].status,'rejected');
+ const discharge=(await f.send('/disposicion alta')).clinical[0];
+ assert.equal(discharge.status,'executed');
+ assert.equal(discharge.receipt.disposition.closed,false);
  const ack=await f.send('/disposicion sala','close'),state=f.s.read();
  assert.equal(ack.clinical[0].status,'executed');assert(state.patient.caseEnded);
  assert.equal(state.patient.closure.destination,'sala');assert.equal(state.patient.closure.quality.score,100);

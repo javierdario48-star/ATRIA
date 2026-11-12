@@ -66,7 +66,9 @@ async function intelligent(f,caseId,mode){
 async function chaotic(f,caseId,mode){
  const initial=f.s.read(),caseData=content.cases.find(c=>c.id===caseId);
  const early=await f.post('/disposicion alta');
- assert.equal(early.clinical[0]?.status,'rejected');
+ assert.equal(early.clinical[0]?.status,'executed');
+ assert.equal(early.clinical[0]?.receipt.disposition.closed,false);
+ assert.equal(f.s.read().progress.penalties[0]?.eventId,early.clinical[0]?.receipt.eventId);
  await f.post('Enfermera no administrar Ringer');
  const invalid=await f.post('Enfermera ceftriaxona 99 g');
  assert.equal(invalid.clinical[0]?.status,'rejected');

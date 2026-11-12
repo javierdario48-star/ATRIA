@@ -1,3 +1,5 @@
+import {dispositionProof} from '../core/disposition-receipt.js';
+
 // The game composition binds every executed proof to its interpreted action.
 // Generic port consumers may add a different domain validator; the real guard
 // always uses this one in addition to the port's patient/event checks.
@@ -8,8 +10,8 @@ export function assertMatchingClinicalReceipt({result,intent}){
   intent.kind==='therapy.request'?r?.therapyId===expected:
   r?.kind===intent.kind&&r?.id===expected;
  if(!matches)throw Error('native receipt clinical action mismatch');
- if(intent.kind==='case.close'&&(!r.closure?.closed||r.closure.patientUid!==result.patientUid||r.closure.eventId!==result.eventId))
-  throw Error('native receipt clinical closure mismatch');
+ if(intent.kind==='case.close'&&!dispositionProof(result,expected,r.actorId))
+  throw Error('native receipt clinical disposition mismatch');
 }
 
 /** Read a completed patient-bound intervention at a given native clock time.

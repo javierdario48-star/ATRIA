@@ -23,6 +23,7 @@ const files=[
  'src/v5/content/packs/safety-treatments.js',
  'src/v5/clinical/iv-dose-contracts-487.js',
  'src/v5/clinical/morphine-487.js',
+ 'src/v5/core/disposition-receipt.js',
  'src/v5/core/room-authority.js',
  'src/v5/core/replica.js',
  'src/v5/adapters/native-clinical-port.js',

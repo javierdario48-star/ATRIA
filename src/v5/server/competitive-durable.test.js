@@ -55,6 +55,45 @@ for(const n of [2,3,4]){
  });
 }
 
+test('an unsafe discharge releases a competitive bed and replay cannot take it back',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'atria-competitive-discharge-'));
+ const store=createSqliteGuardStore(path.join(dir,'guard.sqlite'));
+ const roomId='competitive-discharge',roster=[{id:'a',name:'Ana'},{id:'b',name:'Bruno'}];
+ let now=100000;
+ const create=()=>createDurableGuardAuthority({store,content,now:()=>now});
+ let server=create();
+ const call=(actorId,extra={})=>server.transact({roomId,actorId,...extra});
+ try{
+  const started=await server.bootstrap({roomId,caseId:'PERI-PBE-001',members:roster,hostId:'a',actorId:'a',mode:'competitive'});
+  const uid=started.clinical.patient.uid;
+  const navigation=createWorld(content,{id:'a',name:'Ana'}).navigation;
+  const point=navigation.center(...content.beds[0].approach);
+  await call('a',{motion:[point.x,point.y]});
+  await call('b',{motion:[point.x+18,point.y]});
+  now+=20000;
+  const claim=await call('a',{claim:uid,commands:[{id:'initial',text:'/diagnostico PBE',targetPatientUid:uid}]});
+  assert.equal(claim.clinical.shift.confirmedFocusPatientUid,uid);
+  const command={id:'unsafe',text:'/disposicion alta',targetPatientUid:uid};
+  const result=await call('a',{commands:[command]});
+  const ack=result.acknowledgements[0].clinical[0];
+  assert.equal(ack.status,'executed');
+  assert.equal(result.clinical.shift.patients[0].ownerId,null);
+  assert.equal(result.clinical.shift.patients[0].closed,false);
+  assert.equal(result.claims.length,0);
+  assert.equal(result.dischargePenalties.length,1);
+
+  server=create();
+  const reassigned=await call('b',{claim:uid,commands:[{id:'follow-up',text:'/signos',targetPatientUid:uid}]});
+  assert.equal(reassigned.clinical.shift.patients[0].ownerId,'b');
+  assert.equal(reassigned.clinical.patient.diagnosis,'PBE');
+  assert.equal(reassigned.dischargePenalties.length,0);
+  const retry=await call('a',{commands:[command]});
+  assert.deepEqual(retry.acknowledgements[0].clinical[0],ack);
+  assert.equal(retry.clinical.shift.patients[0].ownerId,'b');
+  assert.equal(retry.dischargePenalties.length,1);
+ }finally{store.close();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
 test('competitive PBE closes once: only bedside owner receives clinical XP; rivals get zero',async()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'atria-competitive-closure-'));
  const store=createSqliteGuardStore(path.join(dir,'guard.sqlite'));

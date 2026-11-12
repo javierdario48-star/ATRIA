@@ -87,7 +87,9 @@ test('confirmed NPO and antibiotics with actual ultrasound, surgical acceptance 
   assert(ready.patient.administrationLog.some(x=>x.id==='metronidazole'));
   assert.deepEqual(ready.eligibleDestinations,['quirofano']);
   const bad=await f.post('/disposicion alta');
-  assert.equal(bad.clinical[0].status,'rejected');
+  assert.equal(bad.clinical[0].status,'executed');
+  assert.equal(bad.clinical[0].receipt.disposition.reason,'destination-not-indicated');
+  assert.equal(bad.clinical[0].receipt.disposition.closed,false);
   const closed=await f.post('/disposicion quirofano');
   assert.equal(closed.clinical[0].status,'executed');
   const end=f.s.read();

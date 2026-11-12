@@ -14,7 +14,7 @@ test('C12f six real bots: correct care closes APP/CIRR; incompetent care harms w
   assert.equal(good.closed.closeDestination,good.expectedDestination);
   assert.equal(good.preRejected,true);
   assert.equal(good.pendingRejected,true);
-  assert.equal(good.wrongDestinationRejected,true);
+  assert.equal(good.wrongDestinationUnresolved,true);
   assert.equal(good.uniqueXP,true);
   assert.equal(good.closed.died,false);
   const neglected=report.rows.find(x=>x.caseId===id&&x.strategy==='neglect');

@@ -28,7 +28,9 @@ for(const mode of ['solo','apprentice','coop'])test('physician rectal examinatio
   assert.equal(finding.patientUid,uid);assert.equal(finding.eventId,exam.clinical[0].receipt.eventId);
   assert.match(finding.rows[0].text,/materia fecal dura/i);
   assert(!session.read().messages.some(m=>m.role==='nurse'&&/Ampolla rectal|materia fecal dura/i.test(m.text)));
-  assert.equal((await post('/disposicion alta')).clinical[0]?.status,'rejected','diagnosis alone cannot substitute disimpaction');
+  const discharge=(await post('/disposicion alta')).clinical[0];
+  assert.equal(discharge?.status,'executed');
+  assert.equal(discharge.receipt.disposition.closed,false,'diagnosis alone cannot substitute disimpaction');
   await post('Enfermera desimpactacion');
   await post('/examen perineum rectal');
   assert.match(session.read().patient.examFindings.perineum.rectal.rows[0].text,/materia fecal dura/i,

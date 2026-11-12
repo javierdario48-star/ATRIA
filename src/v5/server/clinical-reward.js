@@ -29,7 +29,8 @@ export async function attachCreditedCaseReward(clinical,backend,actorId,roomId){
 // durable claim until its private receipt exists. An outage leaves XP pending.
 export async function settleClinicalAccount(result,backend,identity,roomId){
  const clinical=result.clinical,actorId=identity.actorId;
- const claims=[...(result.claims||[]).map(([,claim])=>claim),...(result.deaths||[])].filter(claim=>claim.actorId===actorId);
+ const discharges=(result.dischargePenalties||[]).filter(p=>p.actorId===actorId);
+ const claims=[...(result.claims||[]).map(([,claim])=>claim),...(result.deaths||[]),...discharges].filter(claim=>claim.actorId===actorId);
  const death=clinical.patient?.patientDied&&claims.find(claim=>claim.kind==='clinical.death'&&claim.patientUid===clinical.patient.uid);
  if(clinical.patient?.patientDied)clinical.deathReward=death?
   {actorId,patientUid:death.patientUid,eventId:death.eventId,creditStatus:'pending',loss:null}:
@@ -51,5 +52,9 @@ export async function settleClinicalAccount(result,backend,identity,roomId){
  await attachCreditedCaseReward(clinical,{...backend,creditedGuardRewards:async()=>rows.filter(row=>!row.kind||row.kind==='clinical.closure')},actorId,roomId);
  const debit=death&&rows.find(row=>row.kind==='clinical.death'&&row.patient_uid===death.patientUid&&row.event_id===death.eventId);
  if(debit)clinical.deathReward={...clinical.deathReward,creditStatus:'credited',loss:Math.max(0,-debit.xp_delta)};
+ if(discharges.length)clinical.dischargeRewards=discharges.map(({kind,actorId,patientUid,eventId})=>{
+  const debit=rows.find(row=>row.kind===kind&&row.patient_uid===patientUid&&row.event_id===eventId);
+  return {kind,actorId,patientUid,eventId,creditStatus:debit?'credited':'pending',loss:debit?Math.max(0,-debit.xp_delta):null};
+ });
  return account;
 }

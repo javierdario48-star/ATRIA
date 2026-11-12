@@ -95,6 +95,8 @@ export function createShiftFlow({content,mode,firstCaseId,roomId,snapshot=null,a
   close(uid,ownerId,destination=null){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;
    r.closed=true;r.departed=true;r.ownerId=ownerId;r.destination=destination;return true;},
   owner(uid,id){const r=records.find(r=>r.uid===uid);if(!r||r.closed)return false;if(r.ownerId)return r.ownerId===id;r.ownerId=id;return true;},
+  release(uid,id){const r=records.find(r=>r.uid===uid);if(!r||r.closed||r.ownerId!==id)return false;
+   r.ownerId=null;return true;},
   checkpoint:()=>clone({records,elapsedSeconds,nextIndex,durationSeconds,elapsedCompensation,...(sequence?{caseSequence:sequence}:{})})
  });
 }

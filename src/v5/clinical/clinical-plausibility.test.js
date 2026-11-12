@@ -99,7 +99,9 @@ test('achalasia discharge requires manometry and exclusion of pseudoachalasia by
  const f=doctor('ACAL-001');
  try{
   await assessed(f,'ACAL-001',['g_achal_manometry'],['Enfermera seguimiento']);
-  assert.equal((await f.post('/disposicion alta')).clinical[0]?.status,'rejected');
+  const premature=(await f.post('/disposicion alta')).clinical[0];
+  assert.equal(premature?.status,'executed');
+  assert.equal(premature.receipt.disposition.closed,false);
   assert.equal(f.s.read().progress.receipts.length,0);
   await f.post('/estudio g_achal_egd');await f.advance(240);await f.post('/reevaluar');
   assert.equal((await f.post('/disposicion alta')).clinical[0]?.status,'executed');
@@ -108,19 +110,21 @@ test('achalasia discharge requires manometry and exclusion of pseudoachalasia by
 });
 
 for(const caseId of ['DIVERT-001','HEPAT-001','PUD-001'])
- test(caseId+' discharge requires a documented follow-up and safety-net plan',async()=>{
-  const f=doctor(caseId);
+ test(caseId+' follow-up improves the score of a clinically valid discharge',async()=>{
+  const f=doctor(caseId),withPlan=doctor(caseId);
   try{
-   await assessed(f,caseId,book[caseId].studies,
-    caseId==='PUD-001'?['Enfermera omeprazol oral 20 mg']:[]);
-   assert.equal((await f.post('/disposicion alta')).clinical[0]?.status,'rejected');
-   assert.equal(f.s.read().progress.receipts.length,0);
-   await f.post('Enfermera plan de seguimiento y signos de alarma');
-   await f.advance(2);await f.post('/reevaluar');
-   assert.equal((await f.post('/disposicion alta')).clinical[0]?.status,'executed');
+   const treatment=caseId==='PUD-001'?['Enfermera omeprazol oral 20 mg']:[];
+   await assessed(f,caseId,book[caseId].studies,treatment);
+   await assessed(withPlan,caseId,book[caseId].studies,[...treatment,'Enfermera plan de seguimiento y signos de alarma']);
+   const without=(await f.post('/disposicion alta')).clinical[0]?.receipt.closure;
+   const withFollowup=(await withPlan.post('/disposicion alta')).clinical[0]?.receipt.closure;
+   assert.equal(without?.closed,true);
+   assert.equal(withFollowup?.closed,true);
+   assert(withFollowup.quality.treatment>without.quality.treatment);
    const state=f.s.read();assert.equal(state.progress.receipts.length,1);
+   assert.equal(state.progress.penalties.length,0);
    await f.post('/disposicion alta');assert.equal(f.s.read().progress.xp,state.progress.xp);
-  }finally{f.s.dispose();}
+  }finally{f.s.dispose();withPlan.s.dispose();}
  });
 
 // A chronic diagnosis is not a countdown to death. A complete guard with no

@@ -34,7 +34,9 @@ test('secondary peritonitis transfers to the accepted surgeon with original case
   await f.advance(3.51);await f.send('/reevaluar');
   const ready=f.s.read();assert.equal(ready.patient.consults.at(-1).accepted,true);
   assert.deepEqual(ready.eligibleDestinations,['quirofano'],'documented initial shock does not require elective CT first');
-  const wrong=await f.send('/disposicion alta');assert.equal(wrong.clinical[0].status,'rejected');
+  const wrong=(await f.send('/disposicion alta')).clinical[0];
+  assert.equal(wrong.status,'executed');
+  assert.equal(wrong.receipt.disposition.closed,false);
   const closure=await f.send('/disposicion quirofano');assert.equal(closure.clinical[0].status,'executed');
   const final=f.s.read();assert(final.patient.caseEnded);assert.equal(final.patient.phys.sourceControlled,false);
   assert(final.patient.closure.quality.score>=70&&final.patient.closure.quality.score<=100);

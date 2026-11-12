@@ -67,7 +67,9 @@ async function successful(caseId){
   const repeat=trajectory(f.session);
   return {caseId,strategy:'competent',initial,closed,preRejected:premature.clinical[0]?.status==='rejected',
    pendingRejected:preCompletion.clinical[0]?.status==='rejected',
-   wrongDestinationRejected:wrong.clinical[0]?.status==='rejected',
+   wrongDestinationUnresolved:caseId==='APP-001'?
+    wrong.clinical[0]?.status==='executed'&&wrong.clinical[0]?.receipt.disposition.closed===false:
+    wrong.clinical[0]?.status==='rejected',
    closedStatus:close.clinical[0]?.status,
    repeatStatus:after.clinical[0]?.status,
    uniqueXP:repeat.xp===closed.xp&&f.session.read().progress.receipts.length===1,
@@ -122,7 +124,7 @@ export async function runClinicalBotMatrix(){
  for(const r of rows){
   if(r.strategy==='competent'){
    if(r.closedStatus!=='executed'||r.closed.closeDestination!==r.expectedDestination||
-     !r.preRejected||!r.pendingRejected||!r.wrongDestinationRejected||
+     !r.preRejected||!r.pendingRejected||!r.wrongDestinationUnresolved||
      !r.uniqueXP||r.closed.died||r.closed.xp<=0)
     gaps.push(gap(r.caseId+'/competent','valid clinical sequence did not close safely and uniquely'));
   }else if(r.strategy==='neglect'){

@@ -176,21 +176,34 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    if(intent.kind==='case.close'){
     const rule=clinicalClosureRule(caseData);
-    if(rule&&!rule.destinations.includes(intent.id))return {status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
+    const discharge=intent.id==='alta'&&!!care;
+    let assessment;
+    if(rule&&!rule.destinations.includes(intent.id))assessment={status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
      receipt:{patientUid,eventId,decision:'REJECTED_NO_INDICATION',reasonCode:'destination-not-indicated',
       message:'El destino solicitado no está indicado con la situación clínica actual. Revisá la necesidad de vigilancia, tratamiento y nivel de cuidado.'}};
-    if(unrescuedTransferReactions(nativePatient,caseData,clock.nativeMinute).length)
-     return {status:'rejected',patientUid,eventId,reason:'stabilization-insufficient',
+    else if(unrescuedTransferReactions(nativePatient,caseData,clock.nativeMinute).length)
+     assessment={status:'rejected',patientUid,eventId,reason:'stabilization-insufficient',
       receipt:{patientUid,eventId,decision:'REJECTED_STABILIZATION_INSUFFICIENT',reasonCode:'stabilization-insufficient',
        message:'Reacción alérgica grave activa: falta un rescate confirmado posterior al desencadenante antes del traslado.'}};
-   }
-   if(nursing&&intent.kind==='case.close'&&nursingWorkPending())
-    return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
-   if(intent.kind==='case.close'&&!intent.partial){
-    const rule=clinicalClosureRule(caseData);
-    const issue=consultationEvidenceReview(nativePatient,caseData,rule);
-    if(issue)return {status:'rejected',patientUid,eventId,reason:rule?.consult?.[intent.id]?.length?'transfer-not-accepted':'closure-not-ready',
-     receipt:{eventId,patientUid,decision:issue.decision,reasonCode:issue.reasonCode,message:issue.reason}};
+    if(discharge){
+     // Both commands use the native assessment. The patient's course and any
+     // outstanding care survive a decision that does not resolve the case.
+     assessment??=care.execute({eventId,actorId,patientUid,intent:{...intent,partial:false}},clock);
+     if(assessment.status!=='rejected'||!['closure-not-ready','destination-not-indicated','stabilization-insufficient'].includes(assessment.reason))
+      return assessment;
+     const penalty=progress.penalizeUnsafeDischarge({eventId,actorId,patientUid});
+     const disposition={kind:penalty.kind,eventId,patientUid,actorId,destination:'alta',
+      closed:false,reason:assessment.reason,penaltyEventId:penalty.eventId};
+     const message='Alta insegura registrada. El paciente sigue disponible para atención. '+(assessment.receipt?.message||'');
+     return {status:'executed',eventId,patientUid,receipt:{eventId,actorId,patientUid,kind:intent.kind,id:intent.id,disposition,message}};
+    }
+    if(assessment)return assessment;
+    if(nursingWorkPending())return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
+    if(!intent.partial){
+     const issue=consultationEvidenceReview(nativePatient,caseData,rule);
+     if(issue)return {status:'rejected',patientUid,eventId,reason:rule?.consult?.[intent.id]?.length?'transfer-not-accepted':'closure-not-ready',
+      receipt:{eventId,patientUid,decision:issue.decision,reasonCode:issue.reasonCode,message:issue.reason}};
+    }
    }
    const ivMedicine=!!care&&intent.kind==='therapy.request'&&isNativeMedicine(intent.id);
    const nativeOralMedicine=!!care&&intent.kind==='therapy.request'&&!!GASTRO_CONDUCT_DOSES[intent.id];
@@ -287,7 +300,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   time:()=>clock.clinicalMinute,emit:(event,snapshot)=>onChange(copy(event),copy(snapshot))});
  function closureReadiness(destination){
   const out=care?.readiness(destination);if(!out)return null;
-  if(nursingWorkPending()){
+  if(destination!=='alta'&&nursingWorkPending()){
    out.ready=false;out.action=null;out.choices=[];
    out.missing.push('Esperar la ejecución o resolución de las tareas físicas de enfermería pendientes.');
   }

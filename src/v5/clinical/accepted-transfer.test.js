@@ -2,15 +2,50 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createGuardSession} from './guard-session.js';
+import {createProgressionLedger} from './progression.js';
+import {clinicalContent} from '../server/content.js';
 import {routeWardSpeech} from '../core/speech-router.js';
 const data=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name+'.json',import.meta.url)));
 const content={cases:data('cases'),therapies:data('therapies'),defaultDoses:data('default-doses')};
-function fixture(caseId,roomId){
+function fixture(caseId,roomId,options={}){
  let seq=0;
  const s=createGuardSession({roomId,mode:'solo',actorId:'doctor',actorName:'Medica',
-  patient:{uid:'P',caseId},content,resolveContext:()=>({patientUid:'P'})});
+  patient:{uid:'P',caseId},content,resolveContext:()=>({patientUid:'P'}),...options});
  return {s,caseId,post:text=>s.post({id:'t'+(++seq),text}),async advance(seconds){s.advance(seconds);await s.flush();}};
 }
+test('an unsafe discharge is recorded once and the same patient can later earn a valid closure',async()=>{
+ const roomId='discharge-continuity',attempt={id:'unsafe',text:'/disposicion alta'};
+ const progress=createProgressionLedger({receipts:[{kind:'clinical.closure',closed:true,
+  patientUid:'previous',eventId:'previous-closure',actorId:'doctor',xp:30}]});
+ const f=fixture('DIVERT-001',roomId,{progress,content:clinicalContent});let resumed;
+ try{
+  const unsafe=(await f.s.post(attempt)).clinical[0];
+  assert.equal(unsafe.status,'executed');
+  assert.equal(unsafe.receipt.disposition.kind,'clinical.unsafe-discharge');
+  assert.equal(unsafe.receipt.disposition.closed,false);
+  assert.equal(f.s.read().progress.xp,15);
+  assert.equal(f.s.read().progress.receipts.length,1);
+  assert.equal(f.s.read().room.patients[0].closed,false);
+  assert.equal(f.s.read().patient.caseEnded,false);
+
+  resumed=fixture(f.caseId,roomId,{checkpoint:await f.s.checkpoint(),content:clinicalContent});
+  assert.deepEqual((await resumed.s.post(attempt)).clinical[0],unsafe);
+  await resumed.s.post({id:'unsafe-again',text:'/cierre-parcial alta'});
+  assert.equal(resumed.s.read().progress.penalties.length,1);
+  assert.equal(resumed.s.read().progress.xp,15);
+  await bedsideWorkup(resumed,'diverticulitis aguda');
+  await resumed.post('¿Dónde le duele?');
+  await resumed.post('/estudio g_divert_ct');await resumed.advance(125);
+  await resumed.post('/reevaluar');
+  assert.equal(resumed.s.read().patient.uid,'P');
+  assert(resumed.s.read().clock.clinicalMinute>0);
+  assert(resumed.s.read().eligibleDestinations.includes('alta'),resumed.s.auditClosureRequirements('alta').missing.join(' / '));
+  const safe=(await resumed.post('/disposicion alta')).clinical[0];
+  assert.equal(safe.receipt.closure.closed,true);
+  assert.equal(resumed.s.read().progress.receipts.length,2);
+  assert.equal(resumed.s.read().progress.xp,15+safe.receipt.closure.xp);
+ }finally{f.s.dispose();resumed?.s.dispose();}
+});
 async function bedsideWorkup(f,diagnosis){
  await f.post('/diagnostico '+diagnosis);await f.post('/signos');
  for(const technique of ['general','inspection','auscultation','percussion','palpation'])

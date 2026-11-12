@@ -84,8 +84,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  const preferred=id=>focused.get(id)||firstUid;
  const activeSession=id=>sessions.get(preferred(id))||sessions.get(firstUid);
  function setFocus(actorId,uid){
-  if(focused.get(actorId)!==uid)focusVersions.set(actorId,(focusVersions.get(actorId)||0)+1);
-  focused.set(actorId,uid);
+  if((focused.get(actorId)??null)!==uid)focusVersions.set(actorId,(focusVersions.get(actorId)||0)+1);
+  if(uid===null)focused.delete(actorId);else focused.set(actorId,uid);
  }
  function claimPatient(actorId,uid){
   const r=shift.record(uid);
@@ -249,6 +249,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(!record||record.closed)return {roomId,commandId:envelope.id,status:'rejected',
     reason:'patient-not-active',clinical:[{kind:'case.close',status:'rejected',reason:'patient-not-active'}]};
    const session=activeSession(actorId),ack=await session.post({...envelope,targetPatientUid:uid},actorId);
+   if(mode==='competitive'&&ack.clinical?.some(item=>item.receipt?.disposition?.kind==='clinical.unsafe-discharge')&&
+      shift.release(uid,actorId))setFocus(actorId,null);
    await session.flush();awardMembers();return ack;
   },
   motion(actorId,target,sequence=null){
@@ -299,16 +301,17 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     catalog=[];
    }
    const scene=world.snapshot();
-   const deaths=[];
+   const deaths=[],dischargePenalties=[];
    for(const record of shift.records()){
     const state=sessions.get(record.uid).read(actorId,{includeChecklist:false}),p=state.patient;
     if(p.patientDied&&p.deathAttribution?.classification==='treatment-contributed'&&p.deathAttribution.actorIds?.includes(actorId))
      deaths.push({kind:'clinical.death',actorId,patientUid:record.uid,eventId:roomId+':death:'+record.uid});
+    dischargePenalties.push(...state.progress.penalties.filter(p=>p.kind==='clinical.unsafe-discharge'&&p.actorId===actorId));
    }
    return clone({clinical,catalog,
     spatial:{nurses:scene.nurses,doctors:[{...scene.player,id:hostId,kind:'doctor'},...scene.others],expert:scene.expert},
     motionReceipts:[...motionReceipts],claims:[...claims].filter(([,claim])=>mode!=='competitive'||claim.actorId===actorId),
-    deaths,deliveries:[...deliveries].filter(([id])=>mode!=='competitive'||id===actorId)});
+    deaths,dischargePenalties,deliveries:[...deliveries].filter(([id])=>mode!=='competitive'||id===actorId)});
   },
   async checkpoint(){
    await flush();

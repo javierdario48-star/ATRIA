@@ -88,7 +88,8 @@ test('CHOLANG diagnostic evidence, antimicrobial treatment, specialist handoff a
   assert.equal(prepared.patient.administrationLog.filter(x=>['fluid','ceftriaxone','metronidazole'].includes(x.id)).length,3);
   assert.deepEqual(prepared.eligibleDestinations,['procedimiento']);
   const premature=await f.post('/disposicion alta');
-  assert.equal(premature.clinical[0].status,'rejected');
+  assert.equal(premature.clinical[0].status,'executed');
+  assert.equal(premature.clinical[0].receipt.disposition.closed,false);
   const closure=await f.post('/disposicion procedimiento');
   assert.equal(closure.clinical[0].status,'executed');
   const end=f.session.read();
