@@ -15,6 +15,12 @@ const numberIn=(text,name)=>{
  const match=String(text).match(new RegExp('\\b'+name+'\\s*(\\d+(?:[.,]\\d+)?)','i'));
  return match?Number(match[1].replace(',','.')):null;
 };
+function arterialGasBaseline(definition){
+ if(!/gasometr|gases arteriales/i.test(definition.label||''))return null;
+ const ph=numberIn(definition.result,'pH'),co2=numberIn(definition.result,'PaCO2'),
+  oxygen=numberIn(definition.result,'PaO2');
+ return ph===null||co2===null||oxygen===null?null:{ph,co2,oxygen};
+}
 // Each dynamic order captures a new specimen at request time. Its report is
 // immutable when the result arrives; a later intervention needs another test.
 function currentStudyResult(definition,c,p,atNativeMinute){
@@ -47,10 +53,9 @@ function currentStudyResult(definition,c,p,atNativeMinute){
  if(definition.dynamic==='neuromuscular-ventilation'&&respiratory.ventilation==='invasive')
   return 'Referencia espontánea previa: '+definition.result+
    ' Control actual: ventilación invasiva confirmada. CVF y PIM espontáneas no comparables durante este soporte; persiste debilidad neuromuscular. La inmunoterapia no implica recuperación inmediata de fuerza.';
- if(!/gasometr|gases arteriales/i.test(definition.label||''))return definition.result;
- const initialPH=numberIn(definition.result,'pH'),initialCO2=numberIn(definition.result,'PaCO2'),
-  initialO2=numberIn(definition.result,'PaO2');
- if(initialPH==null||initialCO2==null||initialO2==null||!p.liveVitals)return definition.result;
+ const baseline=arterialGasBaseline(definition);
+ if(!baseline||!p.liveVitals)return definition.result;
+ const {ph:initialPH,co2:initialCO2,oxygen:initialO2}=baseline;
  // The initial bicarbonate retains the documented metabolic component. O2
  // and a lower displayed RR alone cannot clear a ventilatory CO2 burden.
  const hco3=numberIn(definition.result,'HCO3')??.03*initialCO2*10**(initialPH-6.1),
@@ -167,6 +172,11 @@ export function createStudyService(cases,checkpoint=null){
      studyId:id,...(series?{series:true}:{})});
     return acknowledged(patient,eventId,existing);
    }
+   // A bare dynamic flag with a static baseline cannot produce a control.
+   // Keep the initial report and any previously committed orders replayable.
+   if(repeatable&&native.dynamic===true&&!arterialGasBaseline(native)&&
+    patient.orders.some(order=>studyEvidenceId(caseDef,order.id)===evidenceId))
+    return rejected(patient,eventId,'study-control-unavailable');
    if(native?.requiresCompletedTreatments?.some(id=>!confirmedClinicalTreatment(patient,id,sampleMinute)))
     return rejected(patient,eventId,'study-requires-completed-treatment');
    events.set(eventId,{fingerprint});

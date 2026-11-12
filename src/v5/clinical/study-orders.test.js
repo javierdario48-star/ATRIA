@@ -288,6 +288,33 @@ test('RESP-03 captures a new blood gas after nurse-confirmed ventilation and res
  }finally{session.dispose();restored?.dispose();}
 });
 
+test('repeat controls cannot turn an authored baseline into a fresh report after real treatment',async()=>{
+ const session=setup('RESP-07',certifiedContent);
+ const advance=async seconds=>{session.advance(seconds);await session.flush();};
+ const first={id:'baseline-xray',text:'/estudio g_resp07_cxr'};
+ const gas={id:'baseline-gas',text:'/estudio g_resp07_gas'};
+ try{
+  await session.post(first);await session.post(gas);await advance(7);
+  const initial=session.read().patient.orders;
+  assert.equal(initial.length,2);
+  assert(initial.every(row=>row.status==='done'&&row.sampledAtNativeMinute===0));
+  await session.post({id:'vitals',text:'/signos'});
+  await session.post({id:'exam-a',text:'/examen thorax auscultation'});
+  await session.post({id:'exam-p',text:'/examen thorax percussion'});
+  await session.post({id:'needle',text:'/tratamiento needle_decompression'});await advance(24);
+  assert(session.read().patient.treatments.some(row=>row.id==='needle_decompression'&&row.kind==='procedure.performed'));
+  for(const [id,text] of [['control-xray','Enfermera radiografía de tórax'],['control-gas','Enfermera gasometría']]){
+   const rejected=(await session.post({id,text})).clinical[0];
+   assert.equal(rejected.status,'rejected');
+   assert.equal(rejected.reason,'study-control-unavailable');
+  }
+  assert.deepEqual(session.read().patient.orders,initial);
+  const replay=await session.post(first);
+  assert.equal(replay.clinical[0].receipt.sourceEventId,initial[0].sourceEventId);
+  assert.equal(replay.clinical[0].receipt.result,initial[0].result);
+ }finally{session.dispose();}
+});
+
 test('a troponin with an unavailable assay or unmodeled series never falls back to a single or foreign test',async()=>{
  for(const [caseId,phrases] of [
   ['CARD-01',['troponina T','hs-cTnT','troponina cardíaca ultrasensible T','troponina I/T','troponina C','troponinas seriadas',
