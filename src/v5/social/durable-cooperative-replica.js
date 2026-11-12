@@ -4,9 +4,9 @@ export const CLINICAL_REQUEST_TIMEOUT_MS=12000;
 const RECOVERY_CAS_BACKOFF_MS=[100,250,500,1000];
 
 async function waitForRetry(ms,signal){
- let timer;
- try{await awaitAbortable(new Promise(resolve=>timer=setTimeout(resolve,ms)),signal);}
- finally{clearTimeout(timer);}
+ const pause=AbortSignal.any([signal,AbortSignal.timeout(ms)]);
+ if(!pause.aborted)await new Promise(resolve=>pause.addEventListener('abort',resolve,{once:true}));
+ signal.throwIfAborted();
 }
 
 function retainConfirmedRewards(next,previous){
