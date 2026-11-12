@@ -23,3 +23,10 @@ test('0 XP and no hints are explicit; an unconfirmed reward is never displayed a
  assert.match(caseDebriefHTML({...raw,creditStatus:'pending'}),/pendiente de acreditación/i);
  assert.match(caseDebriefHTML({...raw,creditStatus:'ineligible'}),/tu cuenta no recibe XP/i);
 });
+test('diagnosis reveal has its own visible 50% discount alongside Vega',()=>{
+ const html=caseDebriefHTML({destination:'alta',quality:{score:86},xp:63,baseXP:133,
+  hintCount:1,hintPenaltyPercent:5,diagnosisRevealed:true,creditStatus:'credited'});
+ assert.match(html,/Penalización por pistas<\/span><b[^>]*>−5% · −7 XP/);
+ assert.match(html,/Diagnóstico revelado<\/span><b[^>]*>−50% · −63 XP/);
+ assert.match(html,/XP final obtenida<\/span><b[^>]*>63 XP/);
+});

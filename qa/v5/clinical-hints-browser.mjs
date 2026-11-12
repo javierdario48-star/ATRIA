@@ -8,7 +8,8 @@ const h=await browserHarness(),results=[],errors=[];
 await mkdir('qa/v5-hint-browser-results',{recursive:true});
 try{
  for(const [name,device,mode] of [['desktop',null,'solo'],['android',h.devices['Pixel 5'],'apprentice']]){
-  const context=await h.browser.newContext(device||{viewport:{width:1280,height:800}});
+  const browser=name==='desktop'?h.browser:await h.newBrowser();
+  const context=await browser.newContext(device||{viewport:{width:1280,height:800}});
   try{
    const p=await context.newPage();p.setDefaultTimeout(60000);p.on('pageerror',e=>errors.push(e.message));
    await p.goto(h.url);await p.waitForFunction(()=>document.body.dataset.boot==='ready');
@@ -44,20 +45,38 @@ try{
    await p.locator('#vegaClinicalHint').waitFor({state:'visible'});
    assert.equal((await p.evaluate(()=>atriaV5.snapshot().clinical)).hintCount,1,'same action must not charge again');
    await p.locator('#vegaClinicalHint button').click();
+   const reveal=name==='android';
+   if(reveal){
+    await tap();await p.locator('[data-patient-action="diagnosis"]').click();
+    const button=p.locator('[data-action="reveal-diagnosis"]');
+    assert.match(await button.textContent(),/−50% de XP/);
+    await button.click();
+    await p.locator('#diagnosisReveal .note').filter({hasText:/cirrosis/i}).waitFor();
+    const first=await p.evaluate(()=>atriaV5.snapshot().clinical);
+    assert.equal(first.patient.diagnosis,'');
+    assert.equal(first.hintCount,1);
+    await p.locator('#modalClose').click();
+    await tap();await p.locator('[data-patient-action="diagnosis"]').click();
+    await p.locator('#diagnosisReveal .note').waitFor();
+    assert.equal(await button.count(),0);
+    assert.deepEqual(await p.evaluate(()=>atriaV5.snapshot().clinical.diagnosisReveal),first.diagnosisReveal);
+    await p.locator('#modalClose').click();
+   }
    await send(p,'/diagnostico cirrosis descompensada');
    await send(p,'/cierre-parcial observacion');
    await p.locator('#caseResult .case-experience').waitFor({state:'visible'});
    const closed=await p.evaluate(()=>atriaV5.snapshot().clinical);
-   const award=Math.floor(closed.patient.closure.xp*95/100);
+   const award=Math.floor(closed.patient.closure.xp*95/(reveal?200:100));
    assert(award>0);assert.equal(closed.progress.xp,award);
    const experience=await p.locator('#caseResult .case-experience').innerText();
    assert.match(experience,/Pistas nuevas utilizadas\s+1/);
    assert.match(experience,/Penalización por pistas\s+−5%/);
+   if(reveal)assert.match(experience,/Diagnóstico revelado\s+−50%/);
    assert.match(experience,new RegExp('XP final obtenida\\s+'+award+' XP'));
    await p.screenshot({path:'qa/v5-hint-browser-results/'+name+'-xp.png'});
    results.push({device:name,mode,patientUid:uid,contextMenu:true,individualFee:true,repeatFree:true,noClinicalExecution:true,
-    creditedXP:award,visibleDiscount:5});
-  }finally{await context.close();}
+    creditedXP:award,visibleDiscount:5,diagnosisReveal:reveal});
+  }finally{await context.close();if(browser!==h.browser)await browser.close();}
  }
  assert.deepEqual(errors,[]);await writeFile('qa/v5-hint-browser-results/results.json',JSON.stringify(results,null,2)+'\n');
  console.log('ATRIA_CLINICAL_HINT_BROWSER='+JSON.stringify(results));

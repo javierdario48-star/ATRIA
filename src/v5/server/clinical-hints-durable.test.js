@@ -109,3 +109,37 @@ test('a painted hint acknowledgement in the same sync as closure is settled firs
   assert.deepEqual((await call(packet)).claims,closed.claims);
  }finally{store.close();}
 });
+
+test('a diagnosis reveal is private, survives reload and discounts one later closure without recording an impression',async()=>{
+ let r=await fixture();
+ try{
+  const uid='hint-runtime:patient';
+  assert(r.claim('b',uid));
+  const reveal=req(r,'a','reveal-diagnosis');
+  assert.equal((await r.hint('b',reveal)).status,'rejected');
+  assert.equal((await r.hint('a',{...reveal,patientUid:'other'})).status,'rejected');
+  const first=await r.hint('a',reveal);
+  assert.equal(first.status,'revealed');
+  assert.equal(first.patientUid,uid);
+  assert.equal(first.diagnosis,content.cases.find(c=>c.id==='CIRR-001').dx[0]);
+  assert.equal(r.view('a').clinical.patient.diagnosis,'');
+  assert.equal(r.view('a').clinical.hintCount,0);
+  assert.equal(r.view('b').clinical.diagnosisReveal,null);
+  assert.deepEqual(await r.hint('a',reveal),first);
+  const offer=await r.hint('a',req(r,'a','prepare',{verify:true}));
+  await r.hint('a',req(r,'a','displayed',{offerId:offer.offerId}));
+  const checkpoint=JSON.parse(JSON.stringify(await r.checkpoint()));r.dispose();
+  r=await createGuardRuntime({roomId:'hint-runtime',content,checkpoint,nowMs:20000});
+  assert.equal(r.view('a').clinical.diagnosisReveal.diagnosis,first.diagnosis);
+  assert.equal((await r.hint('a',req(r,'a','reveal-diagnosis'))).newReveal,false);
+  for(const [id,text] of [['dx','/diagnostico cirrosis descompensada'],['end','/cierre-parcial observacion']])
+   await r.post('a',{id,text,targetPatientUid:uid});
+  const a=r.view('a'),b=r.view('b'),base=a.clinical.patient.closure.xp;
+  assert(base>0);
+  assert.equal(a.clinical.caseReward.xp,Math.floor(base*95/200));
+  assert.equal(a.clinical.caseReward.diagnosisRevealed,true);
+  assert.equal(a.clinical.caseReward.hintCount,1);
+  assert.equal(b.clinical.caseReward.xp,base);
+  assert.deepEqual(a.claims.find(([id])=>id==='a')[1],a.clinical.caseReward);
+ }finally{r.dispose();}
+});

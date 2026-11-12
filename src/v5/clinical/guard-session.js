@@ -88,9 +88,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  const hintLedger=createClinicalHintLedger({roomId,encounterId,patientUid:nativePatient.uid},checkpoint?.hints);
  function rewardFor(receipt,doctorId){
   if(!receipt)return receipt;
-  const baseXP=receipt.baseXP??receipt.xp,count=hintLedger.count(doctorId);
+  const baseXP=receipt.baseXP??receipt.xp,count=hintLedger.count(doctorId),revealed=!!hintLedger.diagnosisReveal(doctorId);
   return {...copy(receipt),actorId:doctorId,baseXP,hintCount:count,
-   hintPenaltyPercent:hintPenaltyPercent(count),xp:hintAdjustedXP(baseXP,count)};
+   ...(revealed?{diagnosisRevealed:true}:{}),hintPenaltyPercent:hintPenaltyPercent(count),
+   xp:hintAdjustedXP(baseXP,count,revealed)};
  }
  const options={mode,defaultDoses:content.defaultDoses,
   progress:{...progress,award:receipt=>progress.award(rewardFor(receipt,receipt.actorId))},
@@ -456,7 +457,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(nativePatient.caseEnded||nativePatient.patientDied)return {status:'rejected',reason:'patient-not-active'};
    if(resolveContext({actorId:identity.id,targetPatientUid:nativePatient.uid})?.patientUid!==nativePatient.uid)
     return {status:'rejected',reason:'approach-patient-to-claim'};
-   try{return hintLedger.request(request,this.clinicalHint());}
+   try{return hintLedger.request(request,request.op==='reveal-diagnosis'?{diagnosis:care?caseData.dx?.[0]:null}:this.clinicalHint());}
    catch{return {status:'unavailable',reason:'hint-evaluation-failed'};}
   },
   clinicalHintRequirements(){return currentChecklist().requirements;},
@@ -658,6 +659,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    const activeReaction=checklist&&unrescuedTransferReactions(nativePatient,caseData,clock.nativeMinute).length>0;
    const canRequest=checklist&&!!checklist.assessment&&checklist.requirements.every(r=>r.type==='closure')&&!activeReaction;
    return {hintBinding:{roomId,encounterId,patientUid:nativePatient.uid,actorId:doctorId},hintCount:hintLedger.count(doctorId),
+   diagnosisReveal:hintLedger.diagnosisReveal(doctorId),
    caseReward,room,patient:subject,exposure:summarizeIVExposures(nativePatient),clock:copy(clock),messages:displayMessages,progress:progress.read(),
    eligibleDestinations:options,
    oralNutrition:care?.oralNutrition?.()??null,

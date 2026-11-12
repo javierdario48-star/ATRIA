@@ -2,9 +2,9 @@
 // case quality, clinical commands, another encounter or another physician.
 const XP_PERCENT_PER_HINT=5;
 export const hintPenaltyPercent=count=>Math.min(100,count*XP_PERCENT_PER_HINT);
-export function hintAdjustedXP(xp,count){
+export function hintAdjustedXP(xp,count,diagnosisRevealed=false){
  if(!Number.isSafeInteger(xp)||xp<0||!Number.isSafeInteger(count)||count<0)throw Error('invalid hint reward inputs');
- return Math.floor(xp*(100-hintPenaltyPercent(count))/100);
+ return Math.floor(xp*(100-hintPenaltyPercent(count))/(diagnosisRevealed?200:100));
 }
 const copy=x=>structuredClone(x);
 const validText=s=>typeof s==='string'&&s.length>0&&s.length<=240;
@@ -13,17 +13,20 @@ export function createClinicalHintLedger(binding,saved={}){
  if(![roomId,encounterId,patientUid].every(validText))throw Error('invalid hint encounter binding');
  if(saved.roomId&&[roomId,encounterId,patientUid].some((value,i)=>value!==saved[['roomId','encounterId','patientUid'][i]]))throw Error('wrong hint checkpoint encounter');
  const offers=new Map(copy(saved.offers||[])),requests=new Map(copy(saved.requests||[])),history=copy(saved.history||[]);
- const count=actorId=>new Set(history.filter(r=>r.actorId===actorId&&typeof r.key==='string'&&r.key).map(r=>r.key)).size;
+ const diagnosisReveal=actorId=>history.find(r=>r.actorId===actorId&&r.kind==='diagnosis-reveal')??null;
+ const count=actorId=>new Set(history.filter(r=>r.actorId===actorId&&r.kind!=='diagnosis-reveal'&&
+  typeof r.key==='string'&&r.key).map(r=>r.key)).size;
  const reject=(reason='invalid-hint-request')=>({status:'rejected',reason});
  const verified=offer=>({status:'verified',offerId:offer.offerId,roomId,encounterId,patientUid,
   actorId:offer.actorId,selectionRevision:offer.selectionRevision,...copy(offer.hint)});
  return Object.freeze({
   count,
+  diagnosisReveal:actorId=>copy(diagnosisReveal(actorId)),
   history:actorId=>copy(history.filter(r=>r.actorId===actorId)),
   checkpoint:()=>copy({version:1,roomId,encounterId,patientUid,offers:[...offers],requests:[...requests],history}),
   request(r,hint){
    if(!r||r.roomId!==roomId||r.encounterId!==encounterId||r.patientUid!==patientUid||
-    !validText(r.actorId)||!validText(r.requestId)||!['prepare','revalidate','displayed','cancel'].includes(r.op))return reject();
+    !validText(r.actorId)||!validText(r.requestId)||!['prepare','revalidate','displayed','cancel','reveal-diagnosis'].includes(r.op))return reject();
    const requestKey=r.actorId+':'+r.requestId,signature=JSON.stringify(r),previous=requests.get(requestKey);
    if(previous){
     if(previous.signature!==signature)return reject('hint-request-id-conflict');
@@ -32,6 +35,14 @@ export function createClinicalHintLedger(binding,saved={}){
     return copy(previous.result);
    }
    const remember=result=>{requests.set(requestKey,{signature,result:copy(result)});return copy(result);};
+   if(r.op==='reveal-diagnosis'){
+    const prior=diagnosisReveal(r.actorId);
+    if(!prior&&!validText(hint?.diagnosis))return remember({status:'unavailable',reason:'diagnosis-unavailable'});
+    const receipt=prior??{kind:'diagnosis-reveal',actorId:r.actorId,requestId:r.requestId,diagnosis:hint.diagnosis};
+    if(!prior)history.push(receipt);
+    return remember({status:'revealed',roomId,encounterId,patientUid,actorId:r.actorId,
+     selectionRevision:r.selectionRevision??0,diagnosis:receipt.diagnosis,newReveal:!prior});
+   }
    if(r.op==='prepare'){
     if(!hint?.key||!hint.action||!hint.text)return remember({status:'unavailable',reason:hint?.error||'no-executable-hint'});
     for(const offer of offers.values())if(offer.actorId===r.actorId&&offer.stage!=='displayed')offer.stage='cancelled';

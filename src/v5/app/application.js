@@ -140,12 +140,23 @@ export async function createApplication({document,window,content,signal}){
  const clinicalChecklist=createClinicalChecklist({document});
  const vegaHintCard=createVegaHintCard({document,portraitUrl:content.assetUrls.vega});
  function clinicalHintContext(){
-  const s=guardSession?.read(),self=coopRoomId?social.state().user?.id:'local-player';
+  const s=guardSession?.read(),self=durableClient?account.read()?.actorId||social.state().user?.id:
+   coopRoomId?social.state().user?.id:'local-player';
   if(world.snapshot().phase!=='guard'||!s?.hintBinding||s.patient.caseEnded||s.patient.patientDied||s.canEdit===false||
    focusedPatientUid!==s.patient.uid||s.shift?.ended||
    durableClient&&s.shift?.confirmedFocusPatientUid!==s.patient.uid||
    s.competition&&s.competition.ownerId!==self)return null;
   return {...s.hintBinding,actorId:self,selectionRevision:s.hintBinding.selectionRevision??0};
+ }
+ async function revealDiagnosis(uid){
+  const binding=clinicalHintContext(),session=guardSession;
+  if(!binding||binding.patientUid!==uid||!session)return {status:'rejected'};
+  const receipt=await awaitAbortable(session.hint({...binding,op:'reveal-diagnosis',requestId:window.crypto.randomUUID()}),
+   AbortSignal.timeout(20000));
+  const current=clinicalHintContext();
+  if(session!==guardSession||!current||['roomId','encounterId','patientUid','actorId','selectionRevision']
+    .some(key=>binding[key]!==current[key]))return {status:'stale'};
+  return receipt;
  }
  const clinicalHintPresenter=createClinicalHintPresenter({
   context:clinicalHintContext,request:request=>guardSession?.hint(request)??Promise.resolve({status:'rejected'}),
@@ -231,7 +242,7 @@ export async function createApplication({document,window,content,signal}){
   if(fromRecovery)returnFromGuardRecovery();
  }
  const clinicalUI=createClinicalInterface({document,session:()=>guardSession,open,close,send:(text,options)=>submitText(text,{...options,clinical:true}),notify:toast,cases:content.cases,
-  onTalk:uid=>selectRecipient('patient',uid),therapies:content.therapies,
+  onTalk:uid=>selectRecipient('patient',uid),therapies:content.therapies,revealDiagnosis,
    onMonitorOpen:()=>hospitalAudio.cue('monitorOpen')});
  const social=createCooperativeLink({window,profile,onAccount:value=>account.accept(value),
   onSocial:()=>{if(destroyed)return;const s=social.state();renderNotifications(s);if(world.snapshot().phase==='lobby'){
@@ -461,7 +472,8 @@ export async function createApplication({document,window,content,signal}){
     lastReceivedPatientCount=count;
     const reward=value.clinical.caseReward;
     const revision=JSON.stringify([patientUid,value.clinical.room.revision,reward?.eventId,reward?.creditStatus,reward?.xp,
-     value.clinical.communication?.revision,value.clinical.shift?.turn,value.clinical.deathReward]);
+     value.clinical.communication?.revision,value.clinical.shift?.turn,value.clinical.deathReward,
+     value.clinical.diagnosisReveal?.requestId]);
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
     else if(value.acknowledgements?.length)renderGuardCommunication();
     for(const receipt of value.acknowledgements||[])notifyClinicalRejection(receipt);
@@ -604,7 +616,9 @@ export async function createApplication({document,window,content,signal}){
   if(durableClient)return;
   if(coopRoomId&&social.isHost()&&packet.kind==='hint.request'&&social.isMember(sender)&&guardSession){
    const ack=await guardSession.hint(packet.request,sender);
-   social.send(sender,{kind:'hint.ack',roomId:coopRoomId,requestId:packet.request?.requestId,ack});return;
+   social.send(sender,{kind:'hint.ack',roomId:coopRoomId,requestId:packet.request?.requestId,ack});
+   if(ack.status==='revealed')publishCooperativeState(window.performance.now(),true);
+   return;
   }
   if(!coopRoomId&&packet.kind==='state'&&!account.read()?.activeGuardId&&sender===social.state().room?.hostUserId&&cooperativeFlow.mayEnter('guest',{phase:world.snapshot().phase,hasSession:!!guardSession,recovering:social.state().recovering})){
    const room=social.state().room;if(packet.roomId!==room.id||!playableIds.has(packet.clinical?.patient?.caseId))return;
@@ -614,7 +628,8 @@ export async function createApplication({document,window,content,signal}){
     patientUid:packet.clinical.patient.uid,members:room.members.map(x=>({id:x.userId,name:x.name})),authoritative:false});
    replica=createCooperativeReplica({roomId:room.id,hostId:sender,send:social.send,storage:window.sessionStorage,onSnapshot:value=>{
     world.applySharedSpatial(value.spatial,window.performance.now());
-    if(value.clinical.room.revision!==lastRemoteRevision){lastRemoteRevision=value.clinical.room.revision;clinicalChanged();}
+    const revision=JSON.stringify([value.clinical.room.revision,value.clinical.diagnosisReveal?.requestId]);
+    if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
     confirmOutcomeDelivery(sender,value.clinical.patient);
    }});
    replica.apply(packet);guardSession=replica;clinicalUI.reset();close();resetChat('Guardia cooperativa conectada.');renderGuardCommunication();confirmOutcomeDelivery(sender,packet.clinical.patient);lastClinicalFrame=window.performance.now();return;

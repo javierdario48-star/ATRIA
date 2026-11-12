@@ -18,8 +18,10 @@ export function caseDebriefHTML(closure){
  const base=closure.baseXP??closure.xp,factor=closure.rewardMultiplier??1;
  const hints=closure.hintCount??0,penalty=closure.hintPenaltyPercent??0;
  const scope=GUARD_SCOPES[closure.rewardScope]?.label;
- const beforeHints=Math.round(base*factor),lost=beforeHints-closure.xp;
- const hintDiscount=penalty?'−'+penalty+'%'+(closure.creditStatus!=='pending'&&lost>0?' · −'+lost+' XP':''):'0%';
+ const beforeHints=Math.round(base*factor),afterHints=Math.floor(beforeHints*(100-penalty)/100);
+ const lost=beforeHints-afterHints,revealLoss=afterHints-closure.xp;
+ const discount=(percent,xp)=>'−'+percent+'%'+(closure.creditStatus!=='pending'&&xp>0?' · −'+xp+' XP':'');
+ const hintDiscount=penalty?discount(penalty,lost):'0%';
  const experience='<section class="case-score-section case-experience"><h4>Experiencia obtenida</h4>'+
   (closure.creditStatus==='ineligible'?'<p class="case-score-empty">Tu cuenta no recibe XP por esta atención.</p>':
    row('XP base del caso',base+' XP')+
@@ -27,6 +29,7 @@ export function caseDebriefHTML(closure){
     row('XP antes de pistas',beforeHints+' XP'):'')+
    row('Pistas nuevas utilizadas',hints)+
    row('Penalización por pistas',hintDiscount,penalty?'score-loss':'')+
+   (closure.diagnosisRevealed?row('Diagnóstico revelado',discount(50,revealLoss),'score-loss'):'')+
    (closure.creditStatus==='pending'?'<p class="case-score-empty">XP pendiente de acreditación.</p>':
     row('XP final obtenida',closure.xp+' XP','score-gain')))+
   '</section>';

@@ -24,7 +24,8 @@ export function diagnosisEditorHTML(p,{readOnly=false}={}){
    'aria-controls="diagnosisSuggestions" value="'+esc(p.diagnosis)+'" placeholder="Escribí tu impresión diagnóstica"'+(readOnly?' readonly':'')+'></label>'+
   (readOnly?'<p>Observación: '+esc(p.diagnosis||'Sin impresión registrada.')+'</p>':
    '<div id="diagnosisSuggestions" class="diagnosis-suggestions"></div><div class="actions">'+
-   '<button type="button" data-action="clear-diagnosis">Borrar</button><button type="button" data-action="save-diagnosis" class="primary">Registrar impresión</button></div>')+'</section>';
+   '<button type="button" data-action="clear-diagnosis">Borrar</button><button type="button" data-action="save-diagnosis" class="primary">Registrar impresión</button></div>'+
+   '<div id="diagnosisReveal" aria-live="polite"></div>')+'</section>';
 }
 
 /** Cached UI projection positioned by the existing application RAF. No clock,

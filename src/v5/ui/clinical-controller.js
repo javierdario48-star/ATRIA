@@ -15,11 +15,11 @@ import {diagnosisEditorHTML,diagnosisSuggestionsHTML,destinationButtonsHTML} fro
 /** UI state only. Every clinical action keeps its explicit UID and uses send().
  * The app owns the dialog and event listener; this controller owns neither timers nor listeners.
  */
-export function createClinicalInterface({document,session,open,close,send,onTalk,notify,cases=[],therapies=[],onMonitorOpen=()=>{}}){
+export function createClinicalInterface({document,session,open,close,send,onTalk,notify,revealDiagnosis,cases=[],therapies=[],onMonitorOpen=()=>{}}){
  const ui=id=>document.getElementById(id);
  let patientUid=null,regionId='general',flippedRegion=null,examBusy=false,examFeedback=null,showOrderHints=false,lastEcgAt=-Infinity,lastMonitorOrderId=null,lastClosureMarkup='';
  let diagnosisEditorVersion=0,diagnosisSessionVersion=0;
- let nutritionRequest=null;
+ let nutritionRequest=null,diagnosisRevealRequest=null;
  const pendingDiagnoses=new Map(),failedDiagnosisDrafts=new Map();
  const ecgSweep=createEcgSweep();
  const state=()=>{const s=session()?.read();return s&&s.patient.uid===patientUid?s:null;};
@@ -53,11 +53,38 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   ui('modalContent').dataset.patientUid=patientUid;
   if(draft!==undefined&&!ui('diagnosisInput')?.readOnly)ui('diagnosisInput').value=draft;
   renderDiagnosisSuggestions();
+  renderDiagnosisReveal(s);
   ui('diagnosisInput')?.focus({preventScroll:true});
  }
  function renderDiagnosisSuggestions(){
   const field=ui('diagnosisInput');
   if(field&&!field.readOnly)setHTML(ui('diagnosisSuggestions'),diagnosisSuggestionsHTML(cases,field.value));
+ }
+ function renderDiagnosisReveal(s){
+  const receipt=s.diagnosisReveal;
+  const waiting=diagnosisRevealRequest?.patientUid===s.patient.uid;
+  setHTML(ui('diagnosisReveal'),receipt?
+   '<p class="note"><strong>Diagnóstico del caso</strong><br>'+esc(receipt.diagnosis)+
+    '<br><small>Descuento aplicado al cierre · 50% de XP</small></p>':
+   revealDiagnosis&&s.hintBinding?
+    '<button type="button" data-action="reveal-diagnosis"'+(waiting?' disabled':'')+'>'+
+    (waiting?'Consultando diagnóstico…':'Revelar diagnóstico · −50% de XP')+'</button>':'');
+ }
+ async function requestDiagnosisReveal(){
+  const s=state();
+  if(!revealDiagnosis||!s?.hintBinding||s.canEdit===false||s.patient.caseEnded||
+    s.patient.patientDied||s.diagnosisReveal||diagnosisRevealRequest?.patientUid===s.patient.uid)return;
+  const request={patientUid:s.patient.uid};diagnosisRevealRequest=request;renderDiagnosisReveal(s);
+  try{
+   const receipt=await revealDiagnosis(request.patientUid);
+   if(diagnosisRevealRequest===request&&state()?.patient.uid===request.patientUid&&receipt.status==='rejected')
+    notify('Acercate al paciente y seleccioná su cama para revelar el diagnóstico.');
+  }catch{
+   if(diagnosisRevealRequest===request&&state()?.patient.uid===request.patientUid)
+    notify('No llegó la confirmación del diagnóstico. Volvé a abrir la impresión o reintentá.');
+  }finally{
+   if(diagnosisRevealRequest===request){diagnosisRevealRequest=null;const current=state();if(current)renderDiagnosisReveal(current);}
+  }
  }
  async function saveDiagnosis(clear=false){
   const s=state(),field=ui('diagnosisInput');
@@ -302,6 +329,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
  }
  function render(){
   const s=state();if(!s){if(patientUid){close();patientUid=null;}return;}const p=s.patient;
+  renderDiagnosisReveal(s);
   if(document.getElementById('modal')?.dataset.panel==='case-close'){
    const content=ui('modalContent'),markup=closureDecisionHTML(s);
    if(content&&lastClosureMarkup!==markup){
@@ -436,6 +464,7 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    case 'toggle-monitor':await post('/monitor '+(state()?.patient.procedures?.monitor?.connected?'desconectar':'conectar'));break;
    case 'reassess':await post('/reevaluar');break;
    case 'save-diagnosis':await saveDiagnosis();return true;
+   case 'reveal-diagnosis':await requestDiagnosisReveal();return true;
    case 'clear-diagnosis':await saveDiagnosis(true);return true;
    case 'diagnosis-suggestion':{
     const field=ui('diagnosisInput');if(field&&!field.readOnly){field.value=b.dataset.diagnosis;renderDiagnosisSuggestions();field.focus({preventScroll:true});}return true;
@@ -455,5 +484,5 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   render();return true;
  }
  return Object.freeze({showPatient,showClosure,showMonitor,showDiagnosis,chooseDestination,saveDiagnosis,openSection,render,animate,onInput,submitMonitorOrder:sendMonitorOrder,handle,patientUid:()=>patientUid,
-  reset(){diagnosisEditorVersion++;diagnosisSessionVersion++;pendingDiagnoses.clear();failedDiagnosisDrafts.clear();nutritionRequest=null;patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
+  reset(){diagnosisEditorVersion++;diagnosisSessionVersion++;pendingDiagnoses.clear();failedDiagnosisDrafts.clear();nutritionRequest=null;diagnosisRevealRequest=null;patientUid=null;regionId='general';lastClosureMarkup='';flippedRegion=null;examBusy=false;examFeedback=null;lastEcgAt=-Infinity;lastMonitorOrderId=null;ecgSweep.reset();delete ui('modalContent').dataset.patientUid;}});
 }
