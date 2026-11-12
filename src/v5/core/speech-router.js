@@ -64,6 +64,13 @@ export function routeWardSpeech(text,context={}){
   const batchError=!error&&intents.length>1&&context.validateClinicalBatch?.(intents);
   return {recipient:'nurse',patientUid,original,intents:error||batchError?[]:intents,...(error||batchError?{error:error||batchError}:{})};
  }
+ const observation=/^(?:\/observacion|(?:enfermer(?:a|o|ia)[,:]?\s+)?(?:dejar|deja|mantener|mantene)(?:lo|la)?(?: al paciente)? en observacion)[.!]?$/i;
+ if(observation.test(normalized)&&context.clinicalEvaluation){
+  const patientUid=context.patientUid??null;
+  return {recipient:'nurse',patientUid,original,intents:patientUid?
+   [{kind:'case.observe',id:'observacion',sourceText:original}]:[],
+   ...(!patientUid?{error:'no-patient-target'}:{})};
+ }
  const clinical=/^\/(signos|examen|reevaluar|diagnostico|disposicion|cierre-parcial)(?:\s+(.+))?$/i.exec(original);
  if(clinical&&context.clinicalEvaluation){
   const action=clinical[1].toLowerCase(),value=clinical[2]?.trim(),patientUid=context.patientUid??null;

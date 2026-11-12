@@ -447,6 +447,16 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    case 'monitor-order-submit':await sendMonitorOrder();return true;
    case 'patient-target':close();onTalk(patientUid);return true;
    case 'close-diagnosis':{const p=state()?.patient;if(p)showDiagnosis(p);return true;}
+   case 'observe-patient':{
+    const s=state();
+    if(!s||s.canEdit===false||s.patient.caseEnded||s.patient.patientDied)return true;
+    try{
+     const reply=await post('/observacion');
+     if(reply?.clinical?.[0]?.status==='executed')notify(reply.clinical[0].receipt.message);
+     else notify('No se confirmó la observación. Revisá la respuesta clínica.');
+    }catch{notify('No se confirmó la observación. Revisá la conexión y reintentá.');}
+    return true;
+   }
    case 'patient-chart':return false; // World supplies the current identity and spatial metadata.
    case 'clinical-history':showHistory();return true;
    case 'studies':showStudies();return true;

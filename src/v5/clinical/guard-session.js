@@ -176,6 +176,15 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     if(!parts.length)parts.push('No constan alergias medicamentosas en la ficha disponible; hay que confirmarlo con el paciente o un acompañante.');
     return {status:'executed',patientUid,eventId,receipt:{patientUid,eventId,kind:intent.kind,id:intent.id,message:parts.join(' ')}};
    }
+   if(intent.kind==='case.observe'){
+    if(!care||nativePatient.caseEnded||nativePatient.patientDied)
+     return {status:'rejected',patientUid,eventId,reason:'patient-not-active'};
+    const review=closureReadiness(intent.id),missing=review?.missing??[];
+    const assessment={readyForHandoff:!!review?.ready,missing,quality:review?.quality??null};
+    const message='Observación registrada. El paciente sigue en atención y podés reevaluarlo.'+
+     (missing.length?' Antes del destino final: '+missing[0]:'');
+    return {status:'executed',patientUid,eventId,receipt:{eventId,actorId,patientUid,kind:intent.kind,id:intent.id,assessment,message}};
+   }
    if(intent.kind==='case.close'){
     const rule=clinicalClosureRule(caseData);
     const discharge=intent.id==='alta'&&!!care;

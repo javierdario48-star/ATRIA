@@ -64,6 +64,28 @@ test('an unsafe discharge is recorded once and the same patient can later earn a
   assert.equal(resumed.s.read().progress.xp,15+safe.receipt.closure.xp);
  }finally{f.s.dispose();resumed?.s.dispose();}
 });
+test('active observation records the clinical assessment without closing or changing the disease course',async()=>{
+ const roomId='active-observation',options={content:clinicalContent};
+ const f=fixture('PERI-SEC-001',roomId,options),control=fixture('PERI-SEC-001',roomId,options);
+ try{
+  const before=f.s.read();
+  const command={id:'observe',text:'Enfermera, dejalo en observación'};
+  const observed=(await f.s.post(command)).clinical[0];
+  assert.equal(observed.status,'executed');
+  assert.equal(observed.kind,'case.observe');
+  assert.equal(observed.receipt.assessment.readyForHandoff,false);
+  assert(observed.receipt.assessment.missing.length);
+  assert.deepEqual(f.s.read().patient,before.patient);
+  assert.equal(f.s.read().room.patients[0].closed,false);
+  assert.deepEqual(f.s.read().progress,before.progress);
+  assert.deepEqual((await f.s.post(command)).clinical[0],observed);
+  await f.advance(20);await control.advance(20);
+  assert.deepEqual(f.s.read().patient,control.s.read().patient);
+  const next=(await f.post('/reevaluar')).clinical[0];
+  assert.equal(next.status,'executed');
+  assert.equal(f.s.read().patient.reassessments,1);
+ }finally{f.s.dispose();control.s.dispose();}
+});
 async function bedsideWorkup(f,diagnosis){
  await f.post('/diagnostico '+diagnosis);await f.post('/signos');
  for(const technique of ['general','inspection','auscultation','percussion','palpation'])

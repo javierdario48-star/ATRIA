@@ -26,6 +26,7 @@ export function closureDecisionHTML(state){
     esc(diagnostic||'Todavía no registrada')+'</strong></div>'+
   consequence+
   (choices.length?
+   '<button type="button" data-action="observe-patient">Mantener en observación</button>'+
    '<p class="case-close-ready">Seleccioná un destino para evaluar el cierre</p>'+
    '<div id="caseClosureOptions" class="case-close-choices">'+destinationButtonsHTML(choices)+'</div>'+
    '<p class="case-close-note">Enfermería verifica los signos registrados y coordina la recepción cuando el destino lo requiere.</p>':
