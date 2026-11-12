@@ -114,8 +114,8 @@ function option(id,kind,label,command,aliases=[]){
  return {id,kind,label,command,terms:[...new Set(values)]};
 }
 export function clinicalVocabulary({caseId,cases=[],therapies=[],studies=[],studyOrdering}={}){
- const current=cases.find(c=>c.id===caseId);
- const studyList=(studyOrdering||studyOrderVocabulary(studies,current?.studies)).catalog;
+ const current=cases.find(c=>c.id===caseId),ordering=studyOrdering||studyOrderVocabulary(studies,current?.studies);
+ const studyList=ordering.searchCatalog??ordering.catalog;
  const items=[],seen=new Set();
  const add=item=>{if(!seen.has(item.kind+':'+item.id)){seen.add(item.kind+':'+item.id);items.push(item);}};
  // Reuse the established dose-specific monitor vocabulary when available.
@@ -159,10 +159,12 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
  const studyOrdering=studyOrderVocabulary(studies,cases?.find(c=>c.id===caseId)?.studies),
   matchedStudy=studyOrdering.search(clause),
   vocabulary=clinicalVocabulary({caseId,cases,therapies,studyOrdering});
- if(matchedStudy?.study)vocabulary.unshift({...option('study:'+matchedStudy.study.id,'study',
-  studyOrderLabel(matchedStudy.study,{series:matchedStudy.series,quantity:matchedStudy.quantity}),matchedStudy.command),studyMatch:true});
+ const studyMatches=matchedStudy?.choices??(matchedStudy?.study?[matchedStudy]:[]);
+ vocabulary.unshift(...studyMatches.map(({study,series,quantity,command},index)=>({
+  ...option('study:'+study.id,'study',studyOrderLabel(study,{series,quantity}),command),studyMatch:120-index
+ })));
  const rows=vocabulary.filter(item=>item.kind!=='study'||!matchedStudy||item.studyMatch).map(item=>({
-  ...item,score:item.studyMatch?120:Math.max(0,...item.terms.map(x=>rank(query,x)))
+  ...item,score:item.studyMatch||Math.max(0,...item.terms.map(x=>rank(query,x)))
  })).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||a.label.localeCompare(b.label,'es'));
  // A spoken prescription must have ONE selectable command even if the
  // shared dose catalog and a case-specific therapy register the same phrase.
@@ -183,8 +185,13 @@ export function studySearchChoices(query,{caseId,cases=[],studies=[]}={}){
   exact=ordering.search(query),term=normalizeStudyOrder(query);
  const row=(study,series=false,quantity,command)=>({id:study.id,label:studyOrderLabel(study,{series,quantity}),series,
   ...(quantity!==undefined?{quantity,command:'/estudio '+command}:{})});
- if(exact)return exact.study?[row(exact.study,exact.series,exact.quantity,exact.command)]:[];
- return ordering.catalog.flatMap(study=>{
+ if(exact){
+  const matches=exact.choices??(exact.study?[exact]:[]);
+  return matches.map(({study,series,quantity,command})=>row(study,series,quantity,command));
+ }
+ const direct=ordering.catalog.find(study=>study.id===String(query??'').trim().toLowerCase());
+ const candidates=direct&&!ordering.searchCatalog.includes(direct)?[direct]:ordering.searchCatalog;
+ return candidates.flatMap(study=>{
   const options=[];
   if(!term||[study.id,study.label,...study.aliases].some(value=>normalizeStudyOrder(value).includes(term)))options.push(row(study));
   if(ordering.supportsSeries(study.id)&&(!term||normalizeStudyOrder(study.label+' seriada').includes(term)))options.push(row(study,true));

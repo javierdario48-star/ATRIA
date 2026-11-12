@@ -51,6 +51,7 @@ const routeReason={
  'unknown-clause':'La indicación necesita una aclaración; no ejecuté acciones.',
  'study-assay-unavailable':'Este caso no documenta ese ensayo de troponina I o T. No solicité el estudio.',
  'study-method-unavailable':'Este caso no documenta ese método de medición. No solicité el estudio.',
+ 'study-protocol-ambiguous':'Especificá el protocolo de angio-TC. Para tórax, indicá si es aórtica o pulmonar.',
  'study-series-unavailable':'No hay una serie de troponina disponible con esa indicación. No solicité muestras.',
  'unsafe-compound-order':'Orden combinada no ejecutada: al menos una dosis, vía o intervención no está validada. Corregí la indicación completa.'
 };

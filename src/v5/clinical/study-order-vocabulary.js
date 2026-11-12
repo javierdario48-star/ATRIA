@@ -14,17 +14,35 @@ const ctFamilies=new Map([
   'tomografia abdominal','tomografia de abdomen','tomografia abdominopelvica']]
 ]);
 const contrastMethods=['con','sin'];
+const angioCtNames=['angio tc','angiotc','angio tac','angiotac','angio tomografia','angiotomografia','tc angiografia','tac angiografia',
+ ...['angio tomografia','angiotomografia'].flatMap(name=>[name+' computada',name+' computarizada'])];
+const angioCtPattern='(?:'+[...angioCtNames].sort((a,b)=>b.length-a.length).join('|')+')\\b';
+const angioCtPrefix=new RegExp('^'+angioCtPattern);
+const angioCtMention=new RegExp('\\b'+angioCtPattern+'|\\b(?:tc|tac) de (?:la )?aorta\\b','g');
+const angioCtFamilies=new Map([
+ ['angio_aorta',['de aorta','de la aorta','aortica','de torax aortica','de aorta toracoabdominal','de la aorta toracoabdominal'],
+  ['tc de aorta','tc de la aorta','tac de aorta','tac de la aorta']],
+ ['angio_pulmonar',['pulmonar','de torax pulmonar','de arterias pulmonares','de las arterias pulmonares']],
+ ['angio_mesenterica',['mesenterica','de vasos mesentericos','de los vasos mesentericos']],
+ ['angio_cabeza_cuello',['de cabeza y cuello','cabeza cuello','cabeza y cuello']],
+ ['angio_cerebral',['cerebral']]
+].map(([family,targets,other=[]])=>[family,[...targets.flatMap(target=>angioCtNames.map(name=>name+' '+target)),...other]]));
+const thoracicAngioCt=/^(?:de )?(?:torax|toracic[ao]|pecho|toracoabdominal)\b/;
+const unspecifiedAngioCt=/^(?:$|(?:y|e|o|urgente|ahora|por favor|con|sin|de control)\b|(?:de )?(?:abdomen|abdominal)\b)/;
+const angioCtModifier=/^(?:(?:urgente|ahora|inicial) )*(?:(?:de )?control|repetid[ao]|post|tras|sin contraste|con contraste)\b/;
 const groups=[
  ['troponina',[...troponinLongNames,'hs ctn','hsctn','ctn']],
  ['hemograma',['hemograma','hemograma completo','biometria','biometria hematica','cuadro hematico','recuento sanguineo','cbc',
   'leucocitos','recuento leucocitario','recuento de leucocitos']],
  ['pcr',['pcr','proteina c reactiva']],
- ['colonoscopia',['colonoscopia','colonoscopia con biopsia','videocolonoscopia','video colonoscopia','videoendoscopia digestiva baja','endoscopia digestiva baja','vedb','vcc']],
+ ['colonoscopia',['colonoscopia','colonoscopia con biopsia','colonoscopia biopsia','videocolonoscopia','videocolonoscopia biopsia',
+  'video colonoscopia','videoendoscopia digestiva baja','video endoscopia digestiva baja','endoscopia digestiva baja','vedb','vcc']],
+ ['eda',['endoscopia digestiva alta','endoscopia alta','videoendoscopia digestiva alta','video endoscopia digestiva alta','eda','veda','gastroscopia','videogastroscopia']],
  ['electrocardiograma',['electrocardiograma','ecg','ekg','electrocardiograma de 12 derivaciones','ecg de 12 derivaciones','ekg de 12 derivaciones']],
  ['glucemia',['glucemia','glicemia','glucosa','glucemia capilar','glicemia capilar','glucosa capilar','glucosa en sangre']],
  ['hepatograma',['hepatograma','perfil hepatico','funcion hepatica','pruebas hepaticas','enzimas hepaticas']],
  ['coagulograma',['coagulograma','coagulacion','perfil de coagulacion','pruebas de coagulacion']],
- ...ctFamilies
+ ...ctFamilies,...angioCtFamilies
 ];
 const assayNames=Object.fromEntries(['i','t'].map(assay=>[assay,[...troponinLongNames.flatMap(name=>[
  name+' '+assay,name.replace(/^(troponinas?)/,'$1 '+assay)
@@ -79,6 +97,8 @@ export function authoredTroponinSeries(study){
 
 const terms=study=>[study.label,...(study.aliases||[])].map(normalizeStudyOrder);
 const containsTerm=(text,word)=>(' '+text+' ').includes(' '+word+' ');
+const startsWithTerm=(text,term)=>text===term||text.startsWith(term+' ');
+const isAngioCt=study=>study.type==='imaging'&&terms(study).some(term=>angioCtPrefix.test(term));
 const documentedCRP=/\b(?:proteina c reactiva|pcr (?:(?:moderadamente|marcadamente|discretamente) )?(?:elevada|normal|\d+(?: \d+)? mg))\b/;
 export function isTroponinStudy(study){
  return terms(study).some(term=>troponinPattern.test(term))||measuredTroponin(study).length>0;
@@ -91,6 +111,8 @@ function seriesNames(names){
 const genericOptions=new Map(groups.flatMap(([family,aliases])=>aliases.map(alias=>[alias,{family}])));
 for(const [family,aliases] of ctFamilies)for(const method of contrastMethods)
  for(const alias of aliases)genericOptions.set(alias+' '+method+' contraste',{family,ctMethod:method});
+for(const [family,aliases] of angioCtFamilies)for(const alias of aliases)
+ genericOptions.set(alias+' con contraste',{family});
 for(const assay of ['i','t'])for(const alias of assayNames[assay])genericOptions.set(alias,{family:'troponina',assay});
 for(const [alias,descriptor] of [...genericOptions])if(descriptor.family==='troponina'){
  for(const name of seriesNames([alias]))genericOptions.set(name,{...descriptor,series:true});
@@ -102,6 +124,7 @@ function studyRank(study,group,aliases){
  const [label,...authored]=terms(study);
  // An angio-TC, perfusion sequence or authored control is a separate study.
  if(ctFamilies.has(group)&&(!/^(?:tc|tac|tomografia) /.test(label)||containsTerm(label,'de control')))return 0;
+ if(angioCtFamilies.has(group)&&containsTerm(label,'de control'))return 0;
  // PCR de un patógeno is molecular testing, even when the abbreviation matches.
  if(group==='pcr'&&label.startsWith('pcr de ')&&!containsTerm(label,'proteina c reactiva'))return 0;
  if(aliases.includes(label))return 4;
@@ -119,30 +142,63 @@ export function studyOrderLabel(study,{series=false,quantity}={}){
  return series?label+' seriada':label;
 }
 
-/** A common name has one destination. Prefer the current case, then the
- * existing universal study. Foreign panels remain available by their IDs.
+/** Prefer the current case, then the existing catalog for a named protocol.
+ * A vascular CT without a target needs clarification before it is requested.
+ * Foreign panels remain available by their IDs.
  * Results are read only to recognize an explicitly documented native assay. */
 export function studyOrderVocabulary(studies=[],nativeStudies=studies){
  const native=nativeStudies.filter(x=>!isPhysicianExamStudy(x.id)),nativeById=new Map(native.map(x=>[x.id,x]));
  const byId=new Map(nativeById);
  for(const study of studies)if(!byId.has(study.id)&&!isPhysicianExamStudy(study.id)&&
   (study.id==='troponina'||!isTroponinStudy(study)))byId.set(study.id,study);
- const catalog=[...byId.values()];
+ const catalog=[...byId.values()],angiographic=catalog.filter(isAngioCt),
+  nativeAngiographic=angiographic.filter(study=>nativeById.has(study.id));
  const collections=native.filter(study=>studyCollectionDefinition(study));
  const collection=collections.length===1?collections[0]:null;
  const byFamily=new Map();
- const preferredNative=(family,aliases,candidates=native)=>candidates
+ const preferred=(family,aliases,candidates=native)=>candidates
   .map(study=>({study,rank:studyRank(study,family,aliases)})).filter(x=>x.rank)
   .sort((a,b)=>b.rank-a.rank)[0]?.study;
  for(const [family,aliases] of groups){
-  const selected=preferredNative(family,aliases)??catalog.find(study=>study.id===family);
+  const selected=angioCtFamilies.has(family)?preferred(family,aliases,nativeAngiographic)??preferred(family,aliases,angiographic):
+   preferred(family,aliases)??byId.get(family);
   if(selected)byFamily.set(family,selected);
  }
  const ctByMethod=new Map();
  for(const [family,aliases] of ctFamilies)for(const method of contrastMethods){
   const candidates=native.filter(study=>terms(study).some(term=>containsTerm(term,method+' contraste')));
-  ctByMethod.set(family+':'+method,preferredNative(family,aliases,candidates));
+  ctByMethod.set(family+':'+method,preferred(family,aliases,candidates));
  }
+ const authoredAngioCt=new Map();
+ for(const study of angiographic)for(const name of terms(study)){
+  const prefix=angioCtPrefix.exec(name);
+  if(!prefix)continue;
+  const target=name.slice(prefix[0].length).trim();
+  if(!thoracicAngioCt.test(target)&&!unspecifiedAngioCt.test(target)&&!authoredAngioCt.has(name))authoredAngioCt.set(name,study);
+ }
+ const availableAngioCt=[...angioCtFamilies].filter(([family])=>byFamily.has(family));
+ const namedAngioCt=[...new Set([...authoredAngioCt.keys(),...availableAngioCt.flatMap(([,aliases])=>
+  aliases.flatMap(alias=>[alias,alias+' con contraste']))])].sort((a,b)=>b.length-a.length);
+ const angioCtIssue=word=>{
+  for(const match of word.matchAll(angioCtMention)){
+   const phrase=word.slice(match.index),name=namedAngioCt.find(alias=>startsWithTerm(phrase,alias));
+   if(name&&!angioCtModifier.test(phrase.slice(name.length).trim()))continue;
+   const target=phrase.slice(match[0].length).trim();
+   if(!name&&(thoracicAngioCt.test(target)||unspecifiedAngioCt.test(target)))return 'study-protocol-ambiguous';
+   return 'study-method-unavailable';
+  }
+  return null;
+ };
+ const angioCtChoices=word=>{
+  const target=word.replace(angioCtPrefix,'').trim();
+  const matches=new Map();
+  for(const [family,[command]] of availableAngioCt){
+   if(thoracicAngioCt.test(target)&&family!=='angio_aorta'&&family!=='angio_pulmonar')continue;
+   const study=byFamily.get(family);
+   if(!matches.has(study.id))matches.set(study.id,{study,command});
+  }
+  return [...matches.values()].sort((a,b)=>Number(nativeById.has(b.study.id))-Number(nativeById.has(a.study.id)));
+ };
  const troponin=byFamily.get('troponina'),nativeTroponin=troponin&&nativeById.get(troponin.id),
   assay=nativeTroponin&&assayOfStudy(nativeTroponin),hasSeries=authoredTroponinSeries(nativeTroponin),
   hasHighSensitivity=!!nativeTroponin&&highSensitivity.test(troponinDocumentation(nativeTroponin)),
@@ -152,6 +208,8 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   const requests=studyCollectionRequests(raw);
   if(requests.length&&(!collection||requests.length>1||requests.some(request=>!validStudyQuantity(request.quantity))))
    return 'study-quantity-unavailable';
+  const protocolIssue=angioCtIssue(word);
+  if(protocolIssue)return protocolIssue;
   if(capillaryGlucose.test(word)&&!capillary)return 'study-method-unavailable';
   if(!troponinPattern.test(word))return null;
   if(timedTroponin.test(word)||multipleTroponin.test(word)||explicitSeries.test(word)&&!hasSeries)return 'study-series-unavailable';
@@ -170,6 +228,8 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   if(!name){
    const issue=studyIssue(word);
    if(issue)return {error:issue};
+   const authored=authoredAngioCt.get(word);
+   if(authored)return {study:authored,command:word};
    if(troponinPattern.test(word)&&(explicitSeries.test(word)||timedTroponin.test(word)))
     return {error:'study-series-unavailable'};
    return null;
@@ -184,11 +244,14 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   if(name.family==='troponina'&&highSensitivity.test(word)&&!hasHighSensitivity||capillaryRequested&&!capillary)
    return {error:'study-method-unavailable'};
   if(name.series&&!hasSeries)return {error:'study-series-unavailable'};
-  return study?{study,command:word,...(name.series?{series:true}:{})}:{error:'unknown-study'};
+  return study?{study,command:word,...(name.series?{series:true}:{})}:
+   {error:angioCtFamilies.has(name.family)?'study-method-unavailable':'unknown-study'};
  };
  const resolve=phrase=>resolveWord(normalizeStudyOrder(phrase),phrase);
  const search=phrase=>{
   const word=normalizeStudyOrder(phrase),exact=resolveWord(word,phrase);
+  if(exact?.error==='study-protocol-ambiguous')return {...exact,choices:angioCtChoices(word)};
+  if(exact?.error==='study-method-unavailable'&&angioCtPrefix.test(word)&&namedAngioCt.some(alias=>alias.startsWith(word)))return null;
   if(exact||word.length<4||!(/^(?:trop|hs |hsct|ctn)/.test(word)))return exact;
   let unavailable=null;
   for(const [alias,name] of genericOptions)if(name.family==='troponina'&&alias.startsWith(word)){
@@ -216,8 +279,10 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
    return !study||study.id===id;
   });
  };
- const lexicon=catalog.map(study=>({ ...study,label:studyOrderLabel(study),
-  aliases:[...new Set([...(study.aliases||[]).filter(alias=>isAliasFor(alias,study.id)),...(extraAliases.get(study.id)||[])])] }));
+ const lexicon=catalog.map(study=>{
+  const authored=(study.aliases||[]).filter(alias=>isAliasFor(alias,study.id)),aliases=extraAliases.get(study.id)||[];
+  return {...study,label:studyOrderLabel(study),aliases:[...new Set(angiographic.includes(study)?[...aliases,...authored]:[...authored,...aliases])]};
+ });
  const seriesLexiconId=hasSeries?troponin.id+':series':null;
  const scanLexicon=lexicon.flatMap(study=>{
   const entry=isAliasFor(study.label,study.id)?study:{...study,label:''};
@@ -226,6 +291,17 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   return [{...entry,aliases:entry.aliases.filter(alias=>!resolve(alias)?.series)},
    {id:seriesLexiconId,label:'',aliases}];
  });
+ const orderable=lexicon.filter(study=>!byFamily.has(study.id)||byFamily.get(study.id).id===study.id||nativeById.has(study.id));
+ const duplicateAngioCt=study=>{
+  const label=normalizeStudyOrder(study.label);
+  if(!angioCtPrefix.test(label)||nativeById.has(study.id)||containsTerm(label,'de control'))return false;
+  return availableAngioCt.some(([family,aliases])=>{
+   const primary=byFamily.get(family);
+   if(primary.id===study.id)return false;
+   const primaryLabel=normalizeStudyOrder(primary.label);
+   return aliases.some(alias=>startsWithTerm(label,alias)&&startsWithTerm(primaryLabel,alias));
+  });
+ };
  return {resolve,search,studyIssue:phrase=>studyIssue(normalizeStudyOrder(phrase),phrase),
   scanText:phrase=>collection?studyCollectionScanText(phrase):phrase,
   lexicalIntent:(id,phrase)=>{
@@ -235,5 +311,6 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   },
   supportsSeries:id=>hasSeries&&id===troponin.id,
   lexicon:scanLexicon,
-  catalog:lexicon.filter(study=>!byFamily.has(study.id)||byFamily.get(study.id).id===study.id||nativeById.has(study.id))};
+  catalog:orderable,
+  searchCatalog:orderable.filter(study=>!duplicateAngioCt(study))};
 }

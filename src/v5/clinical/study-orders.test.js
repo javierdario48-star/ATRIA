@@ -10,7 +10,6 @@ import {neurologyPack} from '../content/packs/neurology-pack.js';
 import {clinicalCompletions,studySearchChoices} from '../ui/clinical-autocomplete.js';
 import {routeWardSpeech} from '../core/speech-router.js';
 import {selectClinicalHint} from './clinical-hints.js';
-import {studyOrderVocabulary} from './study-order-vocabulary.js';
 import {clinicalContent as certifiedContent} from '../server/content.js';
 
 const read=name=>JSON.parse(readFileSync(new URL('../content/'+name+'.json',import.meta.url)));
@@ -64,16 +63,37 @@ test('ward study search and nursing phrases request one native result with its o
 });
 
 
-test('VEDB and lower endoscopy names resolve to one native colonoscopy, never upper endoscopy',()=>{
+test('certified lower endoscopy aliases reuse one acquisition and upper endoscopy keeps its own ID',async()=>{
  for(const caseId of ['CROHN-001','COLON-001']){
-  const c=cases.find(item=>item.id===caseId);
-  const vocabulary=studyOrderVocabulary(c.studies,c.studies);
-  for(const phrase of ['VEDB','videoendoscopia digestiva baja','endoscopia digestiva baja',
-   'videocolonoscopia','video colonoscopia','colonoscopia','VCC']){
-   assert.equal(vocabulary.resolve(phrase)?.study?.id,'colonoscopia',caseId+': '+phrase);
-  }
-  assert.notEqual(vocabulary.resolve('endoscopia digestiva alta')?.study?.id,'colonoscopia');
-  assert.equal(vocabulary.catalog.filter(study=>study.id==='colonoscopia').length,1);
+  const session=setup(caseId,certifiedContent);
+  try{
+   const context={caseId,cases:certifiedContent.cases,studies:session.catalog(),mode:'monitor'};
+   const native=certifiedContent.cases.find(c=>c.id===caseId).studies.find(study=>study.id==='colonoscopia');
+   const aliases=['VEDB','videoendoscopia digestiva baja','video endoscopia digestiva baja',
+    'endoscopia digestiva baja','videocolonoscopia','video colonoscopia','colonoscopia','VCC'];
+   for(const [i,phrase] of aliases.entries()){
+    assert.deepEqual(studySearchChoices(phrase,context).map(row=>row.id),['colonoscopia'],caseId+': '+phrase);
+    assert.deepEqual(clinicalCompletions(phrase,context).filter(row=>row.kind==='study').map(row=>row.id),
+     ['study:colonoscopia'],caseId+': '+phrase);
+    const voice=await session.post({id:'alias-'+i,text:'Enfermera, '+phrase});
+    assert.deepEqual(voice.clinical.map(row=>row.id),['colonoscopia'],caseId+': '+phrase);
+   }
+   const authored=await session.post({id:'authored',text:'/estudio '+native.label});
+   assert.equal(authored.clinical[0]?.id,'colonoscopia');
+   const upper='endoscopia digestiva alta';
+   assert.deepEqual(studySearchChoices(upper,context).map(row=>row.id),['eda']);
+   const upperOrder=await session.post({id:'upper',text:'/estudio '+upper});
+   assert.equal(upperOrder.clinical[0]?.id,'eda');
+   assert.deepEqual(studySearchChoices('rectosigmoidoscopia',context),[]);
+   assert.deepEqual((await session.post({id:'rectosigmoidoscopia',text:'Enfermera, rectosigmoidoscopia'})).clinical,[]);
+   session.advance(240);await session.flush();
+   const orders=session.read().patient.orders;
+   assert.deepEqual(orders.map(({id,status})=>[id,status]),[['colonoscopia','done'],['eda','done']]);
+   assert.equal(orders[0].result,native.result);
+   const replay=await session.post({id:'replay',text:'/estudio VEDB'});
+   assert.equal(replay.clinical[0]?.receipt.sourceEventId,orders[0].sourceEventId);
+   assert.equal(session.read().patient.orders.length,2);
+  }finally{session.dispose();}
  }
 });
 test('hemogram, leukocytes and C-reactive protein follow the documented local panel',async()=>{
@@ -142,6 +162,94 @@ test('native CT technique is shared by clinical search, voice and direct request
   }finally{session.dispose();}
  }
 });
+test('ambiguous angio-CT asks for a protocol and offers distinct native-first choices',async()=>{
+ for(const [caseId,native,other] of [['CARD-08','g_card08_cta','g_resp05_ctpa'],
+  ['RESP-05','g_resp05_ctpa','g_card08_cta'],['RESP-06','g_resp06_ctpa','g_card08_cta']]){
+  const session=setup(caseId,certifiedContent);
+  try{
+   const context={caseId,cases:certifiedContent.cases,studies:session.catalog(),mode:'monitor'};
+   for(const [i,phrase] of ['angio TC','angiotomografía','angio TAC','Angio-TC de tórax'].entries()){
+    for(const [j,prefix] of ['Enfermera, ','/estudio ','Enfermera, ECG y '].entries()){
+     const ack=await session.post({id:`ambiguous-${i}-${j}`,text:prefix+phrase});
+     assert.equal(ack.routeError,'study-protocol-ambiguous',caseId+': '+prefix+phrase);
+     assert.deepEqual(ack.clinical,[]);
+    }
+   }
+   const broad=studySearchChoices('angio TC',context);
+   assert.equal(broad[0]?.id,native);
+   assert.equal(broad.filter(row=>/pulmonar/.test(row.label)).length,1);
+   const thoracic=studySearchChoices('Angio-TC de tórax',context);
+   assert.deepEqual(thoracic.map(row=>row.id),[native,other]);
+   const suggestions=clinicalCompletions('Angio-TC de tórax',context).filter(row=>row.kind==='study');
+   assert.deepEqual(suggestions.map(row=>row.id),[native,other].map(id=>'study:'+id));
+   for(const [index,phrase] of ['angio TC aórtica de control','angio TC pulmonar sin contraste'].entries()){
+    assert.deepEqual(studySearchChoices(phrase,context),[]);
+    for(const [j,prefix] of ['/estudio ','Enfermera, '].entries()){
+     const ack=await session.post({id:`unavailable-${index}-${j}`,text:prefix+phrase});
+     assert.equal(ack.routeError,'study-method-unavailable');
+     assert.deepEqual(ack.clinical,[]);
+    }
+   }
+   assert.deepEqual(session.read().patient.orders,[]);
+   const caseData=certifiedContent.cases.find(c=>c.id===caseId);
+   const pulmonary=caseId==='RESP-06'?'g_resp06_ctpa':'g_resp05_ctpa';
+   assert.deepEqual(studySearchChoices('angio tc pulm',context).map(row=>row.id),[pulmonary]);
+   for(const [phrase,id] of [['Angio-TC de tórax aórtica','g_card08_cta'],
+    ['Angiotomografía computarizada de arterias pulmonares',pulmonary],['Angio-TC pulmonar con contraste',pulmonary]]){
+    assert.deepEqual(studySearchChoices(phrase,context).map(row=>row.id),[id]);
+    assert.deepEqual(routeWardSpeech('Enfermera, '+phrase,{caseData,patientUid:'patient',studies:context.studies})
+     .intents.map(row=>row.id),[id]);
+   }
+   for(const [i,suggestion] of suggestions.entries()){
+    const routed=routeWardSpeech('Enfermera, '+suggestion.command,{caseData,patientUid:'patient',studies:context.studies});
+    assert.deepEqual(routed.intents.map(row=>row.id),[[native,other][i]]);
+   }
+  }finally{session.dispose();}
+ }
+});
+
+test('explicit aortic and pulmonary angio-CT orders preserve separate patient-bound acquisitions',async()=>{
+ const aorta=['g_card08_cta','Angio-TC de aorta toracoabdominal urgente','Angiotomografía de aorta',15];
+ const lung=['g_resp05_ctpa','Angio-TC pulmonar','Angio TAC pulmonar',12];
+ for(const [caseId,first,second] of [['CARD-08',aorta,lung],['RESP-05',lung,aorta]]){
+  const session=setup(caseId,certifiedContent);
+  let restored;
+  try{
+   const context={caseId,cases:certifiedContent.cases,studies:session.catalog()};
+   const requested={id:'initial',text:'/estudio '+first[1]};
+   assert.equal((await session.post(requested)).clinical[0]?.id,first[0]);
+   session.advance(3);await session.flush();
+   assert.equal((await session.post({id:'second',text:'Enfermera, '+second[2]})).clinical[0]?.id,second[0]);
+   assert.deepEqual(session.read().patient.orders.map(({id,status,result})=>[id,status,result]),
+    [[first[0],'pending',undefined],[second[0],'pending',undefined]]);
+   session.advance(20);await session.flush();
+   const [native,fallback]=session.read().patient.orders;
+   const definition=certifiedContent.cases.find(c=>c.id===caseId).studies.find(study=>study.id===first[0]);
+   assert.equal(native.resultSource,'native');
+   assert.equal(native.result,definition.result);
+   assert.equal(fallback.resultSource,'universal-fallback');
+   assert.notEqual(fallback.result,native.result);
+   assert.notEqual(fallback.sourceEventId,native.sourceEventId);
+   assert.equal(native.sampledAtNativeMinute,0);
+   assert.ok(fallback.sampledAtNativeMinute>native.sampledAtNativeMinute);
+   restored=setup(caseId,certifiedContent,await session.checkpoint());
+   for(const [i,[order,protocol]] of [[native,first],[fallback,second]].entries()){
+    const [id,,alias,turnaround]=protocol;
+    assert.deepEqual(studySearchChoices(alias,context).map(row=>row.id),[id]);
+    const receipt=(await restored.post({id:'alias-'+i,text:'/estudio '+alias})).clinical[0]?.receipt;
+    assert.equal(receipt.patientUid,'patient');
+    assert.equal(receipt.studyId,id);
+    assert.equal(receipt.sourceEventId,order.sourceEventId);
+    assert.equal(receipt.sampledAtNativeMinute,order.sampledAtNativeMinute);
+    assert.equal(receipt.readyAtMinute-receipt.requestedAtMinute,turnaround);
+    assert.equal(receipt.result,order.result);
+   }
+   assert.equal((await restored.post(requested)).clinical[0]?.receipt.sourceEventId,native.sourceEventId);
+   assert.deepEqual(restored.read().patient.orders,[native,fallback]);
+  }finally{session.dispose();restored?.dispose();}
+ }
+});
+
 test('RESP-03 captures a new blood gas after nurse-confirmed ventilation and restores both acquisitions',async()=>{
  const session=setup('RESP-03'),firstOrder={id:'gas-initial',text:'Enfermera gasometría'};
  let restored;
