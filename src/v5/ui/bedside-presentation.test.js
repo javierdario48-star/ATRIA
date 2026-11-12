@@ -33,7 +33,7 @@ test('C05.c connected monitor uses only known readings and labels pulse trace no
  assert.match(monitorHTML(p),/Atención cerrada/);
 });
 test('patient actions preserve the diagnosis editor and include contextual clinical help',()=>{
- assert.deepEqual(PATIENT_ACTIONS.map(a=>a.id),['talk','diagnosis','examination','history','studies','treatment','patient','hint']);
+ assert.deepEqual(PATIENT_ACTIONS.map(a=>a.id),['talk','diagnosis','examination','history','studies','treatment','patient','companion','hint']);
  assert.equal(new Set(PATIENT_ACTIONS.map(a=>a.id)).size,PATIENT_ACTIONS.length);
 });
 

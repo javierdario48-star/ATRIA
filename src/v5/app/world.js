@@ -19,6 +19,11 @@ export function createWorld(content,profile,checkpoint=null){
  let phase='title',mode=null,caseId=null,generation=0,player,nurses=[],patients=[],expert=null,pendingInteraction=null,nursing=null,others=[],authoritative=true,
   motionSequence=0,lastMotionIntent=null,mentorTrack=null;
  const lobbyRemotes=new Map(),guardRemotes=new Map(),nurseRemotes=new Map(),wardAppearances=new Map();
+ function describeCompanion(patient,caseData){
+  const source=caseData?.clinicalPolicy?.historySource;
+  if(source?.kind==='companion')patient.historyCompanion=source.label;
+  else delete patient.historyCompanion;
+ }
  const entities=()=>hospitalEntities({patients:patients.filter(p=>!p.departed),nurses,expert,phase},content.map,content.beds);
  function lobbyTile(){
   let hash=0;for(const char of profile.name||'Medico')hash=(hash*31+char.charCodeAt(0))>>>0;
@@ -49,6 +54,7 @@ export function createWorld(content,profile,checkpoint=null){
   const bed=content.beds.find(b=>b.id===(options.bedId||'B1'))||content.beds[0];
   patients=[{id:'patient-'+generation,uid:'patient-'+generation,caseId:c.id,bedId:bed.id,
    x:bed.patient[0],y:bed.patient[1],approach:[...bed.approach],name:c.demo,chief:c.chief}];
+  describeCompanion(patients[0],c);
   patients[0].uid=identity+':'+patients[0].uid;
   if(typeof options.patientUid==='string'&&options.patientUid)patients[0].uid=options.patientUid;
   expert=selected==='apprentice'?actor('vega',point([14,45]),{kind:'vega',name:'Dr. Vega',r:9.5,speed:220}):null;
@@ -61,6 +67,7 @@ export function createWorld(content,profile,checkpoint=null){
   if(!c||!bed)return false;
   const patient={id:'patient-'+(++generation),uid,caseId:c.id,bedId:bed.id,
    x:bed.patient[0],y:bed.patient[1],approach:[...bed.approach],name:c.demo,chief:c.chief};
+  describeCompanion(patient,c);
   patients.push(patient);nursing?.register(patient);return true;
  }
  /** Departure is committed only after a native closure receipt. Keep the
@@ -127,6 +134,7 @@ export function createWorld(content,profile,checkpoint=null){
   if(checkpoint.schemaVersion!==1||checkpoint.profile.id!==profile.id||checkpoint.state.phase!=='guard')throw Error('incompatible world checkpoint');
   const saved=structuredClone(checkpoint);profile=saved.profile;identity=saved.identity;
   ({phase,mode,caseId,generation,player,nurses,patients,expert,others}=saved.state);
+  for(const patient of patients)describeCompanion(patient,content.cases.find(c=>c.id===patient.caseId));
   authoritative=saved.authoritative;pendingInteraction=saved.pendingInteraction;
   if(authoritative)nursing=createNurseDispatcher({navigation,nurses,patients,checkpoint:saved.nursing});
  }

@@ -875,7 +875,7 @@ export async function createApplication({document,window,content,signal}){
   world.setLevel(account.read()?stats.level:1);
   const channel=guard?guardChannels.state().active:'clinical';
   ui('recipientButton').textContent=channel==='team'?'Equipo · privado':channel==='activity'?'Actividad clínica':
-   guard?({nurse:'Enfermera',vega:'Dr. Vega'}[focusedNpc]||'Paciente cercano'):'Lobby · público';
+   guard?({nurse:'Enfermera',vega:'Dr. Vega',companion:'Acompañante'}[focusedNpc]||'Paciente cercano'):'Lobby · público';
   if(nurseQuick)nurseQuick.hidden=!guard||channel!=='clinical';
   ui('guardChatTabs').hidden=!guard||!guardChannels.state().available;
   input.disabled=channel==='activity';ui('chatForm').querySelector('[type="submit"]').disabled=channel==='activity';
@@ -1031,15 +1031,16 @@ export async function createApplication({document,window,content,signal}){
   }
   chatSuggestions.replaceChildren(fragment);chatSuggestions.hidden=suggestions.length===0;
  }
+ const companionAddress=/^\s*(?:acompa[ñn]ante|familiar)\s*[,.:]\s*/i;
  function selectRecipient(kind,patientUid=null){
   guardChannels.select('clinical');
-  if(composition){deferredRecipient=kind;return;}
+  if(composition){deferredRecipient={kind,patientUid};return;}
   focusedNpc=kind==='patient'?null:kind;
   // Switching to nurse preserves the bedside patient; the server still
   // verifies range/ownership before accepting the nurse's diagnosis or order.
-  focusedPatientUid=kind==='patient'?patientUid:kind==='nurse'?focusedPatientUid:null;
-  const text=input.value.replace(/^(?:(?:dr\.?\s*)?vega|enfermera|enfermero)\s*[,.:]?\s*/i,'');
-  const prefix=kind==='nurse'?'Enfermera, ':kind==='vega'?'Vega, ':'';
+  focusedPatientUid=kind==='patient'||kind==='companion'?patientUid:kind==='nurse'?focusedPatientUid:null;
+  const text=input.value.replace(companionAddress,'').replace(/^(?:(?:dr\.?\s*)?vega|enfermera|enfermero)\s*[,.:]?\s*/i,'');
+  const prefix={nurse:'Enfermera, ',vega:'Vega, ',companion:'Acompañante, '}[kind]||'';
   input.value=prefix+text;updateHud();input.focus({preventScroll:true});input.setSelectionRange(prefix.length,prefix.length);updateTypingAssistance();
  }
  function notifyClinicalRejection(receipt){
@@ -1056,6 +1057,11 @@ export async function createApplication({document,window,content,signal}){
    }catch{toast('El mensaje de equipo sigue pendiente. Se enviará al reconectar.');return;}
   }
   if(guardSession&&guardChannels.state().active==='activity'&&!clinical&&!patientUid)return;
+  if(guardSession&&focusedNpc==='companion'&&!clinical&&!patientUid&&
+     !/^\s*(?:\/|enfermer(?:a|o|[ií]a)\b|(?:dr\.?\s*)?vega\b)/i.test(text)){
+   patientUid=focusedPatientUid;
+   if(!companionAddress.test(text))text='Acompañante, '+text;
+  }
   if(localAdmissions?.ended()&&!durableClient){toast('La guardia finalizó: no se admiten nuevas órdenes.');return;}
   if(guardSession&&/^\s*enfermer(?:a|o|ia)\b/i.test(text)){
    // Keep explicit bedside focus when talking to the nurse.
@@ -1337,6 +1343,10 @@ export async function createApplication({document,window,content,signal}){
    const b=event.target.closest('button[data-patient-action]');if(!b)return;
    const p=world.snapshot().patients.find(p=>p.uid===patientWheel.patientUid());
    patientWheel.hide();if(!p)return;
+   if(b.dataset.patientAction==='companion'){
+    if(p.historyCompanion)selectRecipient('companion',p.uid);
+    return;
+   }
    if(b.dataset.patientAction==='hint'){
     if(clinicalHintContext()?.patientUid===p.uid){
      ui('hudMenu').open=false;
@@ -1518,7 +1528,11 @@ export async function createApplication({document,window,content,signal}){
   input.value='';updateTypingAssistance();submitText(text);
  });
  listen(input,'compositionstart',()=>composition=true);
- listen(input,'compositionend',()=>{composition=false;if(deferredRecipient){const target=deferredRecipient;deferredRecipient=null;selectRecipient(target);}updateTypingAssistance();});
+ listen(input,'compositionend',()=>{
+  composition=false;
+  if(deferredRecipient){const {kind,patientUid}=deferredRecipient;deferredRecipient=null;selectRecipient(kind,patientUid);}
+  updateTypingAssistance();
+ });
  listen(canvas,'pointerdown',canvasDown);
  listen(canvas,'pointermove',event=>{
   if(!drag||drag.id!==event.pointerId||Math.hypot(event.clientX-drag.x,event.clientY-drag.y)<8)return;

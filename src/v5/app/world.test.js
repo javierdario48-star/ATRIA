@@ -4,6 +4,21 @@ import fs from 'node:fs';
 import {privateRoomMotionPrefix} from '../social/room-motion-scope.js';
 
 const read=name=>JSON.parse(fs.readFileSync(new URL('../content/'+name,import.meta.url)));
+test('the patient wheel receives only a declared companion label, including from old checkpoints',async()=>{
+ const {createWorld}=await import('./world.js'),{neurologyPack}=await import('../content/packs/neurology-pack.js');
+ const companion=neurologyPack.cases.find(c=>c.id==='NEUR-06'),profile={id:'a',name:'Ana'};
+ const content={map:read('hospital.json'),beds:read('beds.json'),cases:[companion,...read('cases.json')]};
+ const world=createWorld(content,profile);
+ world.enterGuard({mode:'solo',caseId:companion.id,patientUid:'with-witness'});
+ assert.equal(world.snapshot().patients[0].historyCompanion,'Familiar acompañante');
+ assert(world.addPatient({uid:'alone',caseId:'APP-001',bedId:'B2'}));
+ assert.equal(world.snapshot().patients[1].historyCompanion,undefined);
+ const checkpoint=world.checkpoint();
+ delete checkpoint.state.patients[0].historyCompanion;
+ const restored=createWorld(content,profile,checkpoint);
+ assert.equal(restored.snapshot().patients[0].historyCompanion,'Familiar acompañante');
+ assert.equal(restored.snapshot().patients[1].historyCompanion,undefined);
+});
 test('old clinical positions cannot rewind and replay an already completed local route',async()=>{
  const {createWorld}=await import('./world.js');
  const content={map:read('hospital.json'),beds:read('beds.json'),cases:read('cases.json')};

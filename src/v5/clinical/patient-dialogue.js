@@ -89,8 +89,21 @@ function knownAllergyAnswer(p){
 export function executePatientDialogue(p,c,cmd,clock){
  if(cmd.intent.kind!=='history.ask')return null;
  const profile=PATIENT_PROFILES[c.id]??authoredProfile(c);if(!profile)return null;
+ const raw=cmd.intent.sourceText,n=normalize(raw),observed=readPatientObservations(p,c.id,clock.nativeMinute),
+  verbal=observed.neuro.verbal,informant=c.clinicalPolicy?.historySource;
+ const addressedCompanion=cmd.intent.historyTarget==='companion';
+ const companionPresent=informant?.kind==='companion'&&!!informant.label;
+ if(addressedCompanion&&!companionPresent){
+  const {eventId,actorId,intent}=cmd,patientUid=p.uid;
+  return {status:'rejected',patientUid,eventId,reason:'companion-not-available',
+   receipt:{patientUid,eventId,actorId,kind:intent.kind,id:intent.id,responseSource:{kind:'observation'},
+    message:'No hay un acompañante disponible para este paciente.'}};
+ }
+ const proxyHistory=addressedCompanion||(verbal==null||verbal<=3)&&
+  ['companion','clinical-record'].includes(informant?.kind)&&!!informant.label;
+ const companion=proxyHistory&&companionPresent;
  p.interview??={lastSymptom:null,dimensions:{},symptoms:{},subjective:null};
- const context=p.interview,observed=readPatientObservations(p,c.id,clock.nativeMinute),answers=[],disclosures=[];
+ const context=p.interview,answers=[],disclosures=[];
  const speechContext=new Map();
  let sensitiveHistory=false;
  // A case's acquired history is shared. The conversational reference belongs
@@ -98,12 +111,22 @@ export function executePatientDialogue(p,c,cmd,clock){
  context.speakers??={};
  if(!Object.hasOwn(context.speakers,cmd.actorId))
   Object.defineProperty(context.speakers,cmd.actorId,{value:{topic:null,entry:null},enumerable:true});
- const speaker=context.speakers[cmd.actorId];
+ const doctor=context.speakers[cmd.actorId];
+ // Older checkpoints kept an indirect reply in the doctor's only thread.
+ if(doctor.entry?.historySource?.kind==='companion'){
+  doctor.companion??={topic:doctor.topic,entry:doctor.entry};
+  doctor.topic=null;doctor.entry=null;delete doctor.medicationIntent;
+ }
+ const speaker=companion?(doctor.companion??={topic:null,entry:null}):doctor;
  function remember(topic,entry=null){
   speaker.topic=topic;speaker.entry=entry;context.lastSymptom=topic;
  }
  function note(id,answer,source,domain=id?.replace(/^anamnesis:/,''),history,firstClauses){
   const entry={id,answer:lay(answer),source,eventId:cmd.eventId,patientUid:p.uid,nativeMinute:clock.nativeMinute};
+  if(proxyHistory){
+   entry.historySource={kind:informant.kind,label:informant.label};
+   if(source&&!source.startsWith('indirect-history:'))entry.source='indirect-history:'+source;
+  }
   disclosures.push(entry);
   speechContext.set(entry,{domain,history,firstClauses});
   if(id&&!p.intentHistory.some(x=>x.id===id))p.intentHistory.push(entry);
@@ -117,7 +140,8 @@ export function executePatientDialogue(p,c,cmd,clock){
   if(sensitiveTopics.has(topic))sensitiveHistory=true;
   const detail=followUpDetail(entry?.id?entry:null,kind,topic);
   // Rephrasing or narrowing a previously acquired fact cannot award a new one.
-  answers.push(note(null,detail.answer,detail.source||'native.history-detail-unavailable',topic,entry?.answer).answer);
+  const answer=companion&&!detail.source?'No puedo precisar ese dato.':detail.answer;
+  answers.push(note(null,answer,detail.source||'native.history-detail-unavailable',topic,entry?.answer).answer);
  }
  function symptom(id,duration){
   const def=symptomQuestions.find(s=>s[0]===id),fact=c.intents.find(i=>i.id===id||id==='diarrhea'&&i.id==='bowel');
@@ -140,9 +164,6 @@ export function executePatientDialogue(p,c,cmd,clock){
   else text='Sigo como cuando llegué. '+profile.symptoms;
   context.subjective={answer:text,patientUid:p.uid,eventId:cmd.eventId,nativeMinute:clock.nativeMinute};return text;
  }
- const raw=cmd.intent.sourceText,n=normalize(raw),verbal=observed.neuro.verbal;
- const informant=c.clinicalPolicy?.historySource,
-  proxyHistory=(verbal==null||verbal<=3)&&['companion','clinical-record'].includes(informant?.kind)&&informant.label;
  const greeting=/^(hola|hpla|holq|ola|buenas|buen dia|buenos dias|buenas tardes|buenas noches)\b/.test(n);
  if((verbal==null||verbal<=3)&&!proxyHistory)answers.push(verbal==null?'(No puede dar una respuesta verbal evaluable en este momento.)':
   verbal===3?'(Pronuncia palabras sueltas, sin poder precisar lo que siente.)':verbal===2?'Mmm…':'(No responde.)');
@@ -155,14 +176,14 @@ export function executePatientDialogue(p,c,cmd,clock){
    // the patient answered a symptom question ("con calma" is not analgesia).
    if(/^(?:le escucho|te escucho|le explico|te explico|estas preguntas ayudan|tomese su tiempo|tomate tu tiempo|necesito precisar|conteste rapido|no tengo tiempo|por favor sea breve)\b/.test(clause))continue;
    const openQuestion=openHistoryIntent(clause);
-   if(openQuestion==='reason'){
+   if(openQuestion==='reason'&&!companion){
     disclose('chiefComplaint','interview:symptoms',profile.symptoms,'native.patient-profile.symptoms');continue;
    }
-   if(openQuestion==='status'){remember('status');answers.push(subjective());continue;}
-   if(/como (?:estas|esta|te (?:sientes|sentis)|se siente)\b|(?:te|se) (?:sientes|sentis|siente) (?:mejor|peor)\b|estas (?:mejor|peor)\b|como (?:sigues|sigue|vas)\b|\b(?:mejoraste|mejoro)\b/.test(clause)){
+   if(openQuestion==='status'&&!companion){remember('status');answers.push(subjective());continue;}
+   if(!companion&&/como (?:estas|esta|te (?:sientes|sentis)|se siente)\b|(?:te|se) (?:sientes|sentis|siente) (?:mejor|peor)\b|estas (?:mejor|peor)\b|como (?:sigues|sigue|vas)\b|\b(?:mejoraste|mejoro)\b/.test(clause)){
     remember('status');answers.push(subjective());continue;
    }
-   if(/(?:sabes|sabe|decime|digame|en que lugar|donde).*(?:estas|esta|estamos)|(?:estas|esta) (?:orientad[oa]|confus[oa]|confundid[oa])|que (?:dia|fecha) es|como (?:te llamas|se llama)/.test(clause)){
+   if(!companion&&/(?:sabes|sabe|decime|digame|en que lugar|donde).*(?:estas|esta|estamos)|(?:estas|esta) (?:orientad[oa]|confus[oa]|confundid[oa])|que (?:dia|fecha) es|como (?:te llamas|se llama)/.test(clause)){
     answers.push(verbal===4?'No sé bien… ¿estoy en mi casa? ¿Dónde estamos?':/como.*llama/.test(clause)?'Me llamo '+(p.name||c.common?.name||'Paciente')+'.':
      /dia|fecha/.test(clause)?'Sé qué día es; me acuerdo de haber venido hoy a la guardia.':'Estoy en la guardia del hospital, para que me atiendan.');continue;
    }
@@ -173,7 +194,7 @@ export function executePatientDialogue(p,c,cmd,clock){
    // A case may distinguish a directed anticoagulation safety history from
    // its ordinary medication list. Preserve that authored domain before the
    // broad medication interpreter; otherwise its valid answer is unreachable.
-   if(exact&&['anticoagulation','anticoagulants'].includes(exact.id)){
+   if(!companion&&exact&&['anticoagulation','anticoagulants'].includes(exact.id)){
     disclose(exact.id,exact.id,exact.answers[0],'case.intents.'+exact.id);continue;
    }
    const topic=speaker.topic,shorthand=followUpQuestion(clause,topic);
@@ -181,6 +202,25 @@ export function executePatientDialogue(p,c,cmd,clock){
    const medicine=(!fact||fact.intent==='meds'||/ para /.test(clause)&&
     !['allergies','drugs','alcohol','surgeries'].includes(fact.intent))&&medicationIntent(clause,topic);
    if(medicine&&fact?.intent!=='meds')fact=csAnamnesisFact(c,'medicación');
+   if(companion){
+    const id=openQuestion==='reason'||fact?.intent==='reason'?'onset':
+     fact?.intent==='otherSymptoms'&&c.history?.associated?'associated':fact?.intent??exact?.id;
+    if(topic&&shorthand&&(!id||id==='onset'&&topic!=='onset')){
+     follow(shorthand,topic);continue;
+    }
+    // The witness can describe history authored for the case. Patient
+    // sensations, orientation and clinical advice are different sources.
+    const background=p.backgroundHistory?.history?.[id];
+    const allergy=id==='allergies'&&knownAllergyAnswer(p);
+    const authored=id!=='risk'&&c.history?.[id];
+    const text=allergy?'El paciente refirió: «'+allergy+'»':background||authored;
+    const source=allergy?'patient.allergies':background?'patient.backgroundHistory':'case.history.'+id;
+    const known=id==='meds'&&text?selectMedicationHistory(text,medicine||'routine',clause):null;
+    if(known)disclose(id,known.complete?id:'anamnesis:meds:'+medicine,known.answer,source);
+    else if(id!=='meds'&&!unavailable(text))disclose(id,id,text,source);
+    else answers.push('No puedo precisar ese dato.');
+    continue;
+   }
    const explicitPain=!medicine&&/\b(dolor|duele|molesta|hinchazon|hinchando)\b/.test(clause);
    const named=medicine?[]:symptomQuestions.filter(([,re])=>re.test(clause));
    // A composite authored symptom (for example vomiting blood) carries
@@ -271,24 +311,22 @@ export function executePatientDialogue(p,c,cmd,clock){
    if(!answers.length)answers.push(note('interview:symptoms',profile.symptoms,'native.patient-profile.symptoms').answer);
    answers[0]='Hola, doctor. '+answers[0];
   }
+  if(companion&&!answers.length)answers.push('Puedo contarle lo que sé del paciente.');
  }
  // Register and personality apply only to the outward utterance. Indirect
  // reports and impaired speech retain their own speaker and wording.
  const rawAnswer=lay([...new Set(answers)].join(' '));
  const personality=normalizePatientPersonality(p.personality);
- const directSpeech=verbal>=4;
- const fluent=verbal>=5&&rawAnswer;
+ const directSpeech=!proxyHistory&&verbal>=4;
+ const fluent=directSpeech&&verbal>=5&&rawAnswer;
  const protectedAnswer=sensitiveHistory||/alergia|urticaria|anafilaxia/i.test(rawAnswer);
  const canStyle=fluent&&!protectedAnswer;
  const prefix={anxious:'Estoy preocupado. ',reserved:'Bueno… ',talkative:'Le cuento, doctor. ',
   irritable:'Esto me tiene molesto. ',scared:'Tengo miedo. ',uncooperative:'No tengo muchas ganas de hablar. '}[personality];
- if(proxyHistory)for(const entry of p.intentHistory)if(entry.eventId===cmd.eventId){
-  entry.historySource={kind:informant.kind,label:informant.label};entry.source='indirect-history:'+entry.source;
- }
  const facts=[...new Set(answers)].map((text,i)=>{
   const canonical=lay(text.replace(/^Hola, doctor\. /,'')),entry=disclosures.find(e=>e.answer===canonical);
   return {id:entry?.id??'interview:response:'+i,canonical,
-   source:entry?.source??(verbal<4||verbal==null?'native.impaired-speech':'native.patient-observation'),
+   source:entry?.source??(companion?'native.history-detail-unavailable':verbal<4||verbal==null?'native.impaired-speech':'native.patient-observation'),
    ...speechContext.get(entry)};
  });
  let dialogue=null;

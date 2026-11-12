@@ -13,6 +13,13 @@ export function routeWardSpeech(text,context={}){
  const original=String(text??'').trim();
  if(!original||original.length>500)return {recipient:'none',patientUid:null,intents:[],error:'invalid-text'};
  const normalized=clean(original);
+ const companion=/^(?:acompa[ñn]ante|familiar)\s*[,.:]\s*/i.exec(original);
+ if(companion&&context.clinicalEvaluation){
+  const patientUid=context.patientUid??null,question=original.slice(companion[0].length);
+  return {recipient:'patient',patientUid,original,intents:patientUid?
+   [{kind:'history.ask',id:'dialogue',sourceText:question,historyTarget:'companion'}]:[],
+   ...(!patientUid?{error:'no-patient-target'}:{})};
+ }
  if(normalized==='/diagnostico-borrar'&&context.clinicalEvaluation){
   const patientUid=context.patientUid??null;
   return {recipient:'patient',patientUid,original,intents:patientUid?

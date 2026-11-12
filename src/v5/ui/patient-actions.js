@@ -12,6 +12,7 @@ export const PATIENT_ACTIONS=Object.freeze([
  {id:'studies',symbol:'⌁',label:CLINICAL_CONTROLS.studies},
  {id:'treatment',symbol:'✚',label:CLINICAL_CONTROLS.treatment},
  {id:'patient',symbol:'✓',label:CLINICAL_CONTROLS.patient},
+ {id:'companion',symbol:'♙',label:'Hablar con acompañante'},
  {id:'hint',symbol:'💡',label:CLINICAL_CONTROLS.hint}
 ]);
 export function createPatientActionWheel({document,window}){
@@ -22,7 +23,7 @@ export function createPatientActionWheel({document,window}){
  root.replaceChildren(title,controls);
  for(const {id,symbol,label} of PATIENT_ACTIONS){
   const button=document.createElement('button');button.type='button';button.dataset.patientAction=id;
-  button.hidden=id==='hint';button.className='patient-wheel-action action-'+id;button.setAttribute('aria-label',label);
+  button.hidden=id==='hint'||id==='companion';button.className='patient-wheel-action action-'+id;button.setAttribute('aria-label',label);
   const glyph=document.createElement('span');glyph.className='patient-wheel-glyph';glyph.setAttribute('aria-hidden','true');glyph.textContent=symbol;
   const text=document.createElement('span');text.textContent=label;button.append(glyph,text);controls.append(button);
  }
@@ -37,6 +38,9 @@ export function createPatientActionWheel({document,window}){
  }
  function show(p){if(!p?.uid)throw Error('World patient UID required');
   patient={uid:p.uid,x:p.x,y:p.y,bedId:p.bedId||'Paciente'};
+  const companion=controls.querySelector('[data-patient-action="companion"]');
+  companion.hidden=!p.historyCompanion;
+  root.toggleAttribute('data-companion',!companion.hidden);
   title.textContent=patient.bedId;root.dataset.patientUid=patient.uid;root.hidden=false;
   guide(null);
  }

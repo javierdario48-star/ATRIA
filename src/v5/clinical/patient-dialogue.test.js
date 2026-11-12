@@ -44,6 +44,71 @@ test('an unconscious patient retains impaired speech while an authored companion
   const meds=await s.post({id:'witness-meds',text:'¿Medicación?'});
   assert.match(answer(meds),/^Familiar acompañante \(anamnesis indirecta\): Levetiracetam domiciliario suspendido por tres días por falta de medicación\. No benzodiacepinas administradas antes de llegar\.$/);
   assert.equal(s.read().patient.intentHistory.find(x=>x.id==='meds').historySource.kind,'companion');
+  const orientation=await s.post({id:'witness-orientation',text:'Acompañante, ¿Sabe dónde está?'});
+  assert.match(answer(orientation),/No puedo precisar ese dato/);
+  assert.doesNotMatch(answer(orientation),/Estoy en la guardia/);
+ }finally{s.dispose();}
+});
+test('a named companion responds only with authored indirect facts even when the patient is alert',async()=>{
+ const c=neurologyPack.cases.find(x=>x.id==='NEUR-03'),historySource={kind:'companion',label:'Familiar acompañante'},
+  caseData={...c,clinicalPolicy:{...c.clinicalPolicy,historySource}},s=voiceSession(caseData);
+ let restored;
+ try{
+  const request={id:'companion-meds',text:'Acompañante, ¿Qué medicamentos toma?'};
+  const reply=await s.post(request);
+  assert.deepEqual(reply.clinical[0]?.receipt?.responseSource,historySource);
+  assert.match(answer(reply),/losart[aá]n y metformina/i);
+  assert.equal(s.read().messages.at(-1).name,historySource.label);
+  assert.equal(s.read().messages.at(-1).role,'system');
+  assert.equal((await s.post({id:'patient-history',text:'¿Qué antecedentes personales tiene?'})).clinical[0].receipt.responseSource.kind,'patient');
+  restored=voiceSession(caseData,JSON.parse(JSON.stringify(await s.checkpoint())));
+  assert.deepEqual(await restored.post(request),reply);
+  const follow=await restored.post({id:'companion-which',text:'Acompañante, ¿Cuáles?'});
+  assert.match(answer(follow),/losart[aá]n y metformina/i);
+  const unknown=await restored.post({id:'companion-dose',text:'Acompañante, ¿Qué dosis?'});
+  assert.match(answer(unknown),/No puedo precisar ese dato/);
+  assert.doesNotMatch(answer(unknown),/\b(?:tomo|tomé|mg)\b/i);
+  assert.equal(restored.read().patient.intentHistory.filter(row=>row.id==='meds').length,1);
+ }finally{s.dispose();restored?.dispose();}
+});
+test('explicit companion address cannot reveal history if the bedside has no declared witness',async()=>{
+ const s=voiceSession(neurologyPack.cases.find(c=>c.id==='NEUR-03'));
+ try{
+  const reply=await s.post({id:'absent-witness',text:'Acompañante, ¿Qué medicamentos toma?'});
+  assert.equal(reply.clinical[0]?.reason,'companion-not-available');
+  assert.equal(s.read().messages.at(-1).name,'ATRIA');
+  assert.match(s.read().messages.at(-1).text,/No hay un acompañante disponible/);
+  assert.deepEqual(s.read().patient.intentHistory,[]);
+ }finally{s.dispose();}
+});
+test('a companion question requires proximity and cannot execute a clinical order',async()=>{
+ const c=neurologyPack.cases.find(x=>x.id==='NEUR-06'),uid='witness-bedside',
+  f=setup(c.id,uid,createClinicalContent(content,{additionalCases:[c]}));
+ try{
+  f.near(null);
+  const distant=await f.send('Familiar: ¿Qué medicamentos toma?');
+  assert.equal(distant.routeError,'no-patient-target');
+  assert.equal(distant.clinical.length,0);
+  f.near(uid);
+  const order=await f.send('Acompañante, Enfermera, morfina 10 mg IV');
+  assert.deepEqual(order.clinical.map(row=>row.kind),['history.ask']);
+  assert.deepEqual(f.s.read().patient.intentHistory,[]);
+  assert.deepEqual(f.s.read().patient.administrationLog,[]);
+ }finally{f.s.dispose();}
+});
+test('cooperative physicians share indirect findings without sharing the witness follow-up topic',async()=>{
+ const c=neurologyPack.cases.find(x=>x.id==='NEUR-06'),uid='shared-witness',otherToken={};
+ const members=[{id:'doctor',name:'Doctor'},{id:'other',name:'Other'}];
+ const s=createGuardSession({roomId:uid,mode:'coop',actorId:'doctor',actorName:'Doctor',members,
+  patient:{uid,caseId:c.id},content:createClinicalContent(content,{additionalCases:[c]}),
+  resolveContext:()=>({patientUid:uid}),authenticate:token=>token===otherToken?{id:'other',roomId:uid}:null});
+ try{
+  await s.post({id:'first',text:'Acompañante, ¿Qué medicamentos toma?'});
+  const other=await s.post({id:'which',text:'Acompañante, ¿Cuáles?'},otherToken);
+  assert.match(answer(other),/No puedo precisar ese dato/);
+  assert.doesNotMatch(answer(other),/Levetiracetam/);
+  assert.match(answer(await s.post({id:'which',text:'Acompañante, ¿Cuáles?'})),/Levetiracetam/);
+  assert.equal(s.read().patient.intentHistory.filter(row=>row.id==='meds').length,1);
  }finally{s.dispose();}
 });
 test('a patient without a verbal response or a witness produces one automatic clinical observation in chat',async()=>{

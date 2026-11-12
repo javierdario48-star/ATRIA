@@ -97,12 +97,35 @@ try{
  assert((await state()).patient.intentHistory.some(x=>x.id==='meds'));
  assert.deepEqual((await state()).patient.administrationLog,[]);
  await page.screenshot({path:out+'/natural-medication-history.png'});
+ await page.locator('#guardButton').click();assert.equal(await state(),null);await guard('NEUR-06');
+ const bed=await page.evaluate(()=>{
+  const p=atriaV5.snapshot().patients[0],r=atriaV5.diagnostics().renderer,
+   rect=document.getElementById('game').getBoundingClientRect();
+  return [rect.left+(p.x-r.camera.x)*r.scale+r.anchorX,rect.top+(p.y-r.camera.y)*r.scale+r.anchorY];
+ });
+ await page.mouse.click(...bed);
+ const wheel=page.locator('#patientWheel');
+ const companion=wheel.getByRole('button',{name:'Hablar con acompañante'});
+ const companionRect=await companion.boundingBox(),hintRect=await wheel.locator('[data-patient-action="hint"]').boundingBox();
+ assert(companionRect,'the declared companion is directly reachable at the bedside');
+ if(hintRect)assert(companionRect.y+companionRect.height<=hintRect.y,'companion and hint must have distinct touch targets');
+ await companion.click();
+ assert.match(await page.locator('#recipientButton').innerText(),/Acompañante/);
+ assert.match(await page.locator('#dieInput').inputValue(),/^Acompañante,/);
+ reply=await send('¿Qué medicamentos toma?');
+ assert.equal(reply.name,'Familiar acompañante');assert.equal(reply.role,'system');
+ assert.match(reply.text,/Levetiracetam domiciliario suspendido/);
+ assert.match((await state()).room.transcript.at(-1).text,/^Acompañante,/);
+ reply=await send('¿Cuáles?');assert.match(reply.text,/Levetiracetam domiciliario suspendido/);
+ assert.equal((await state()).patient.neurology.verbal,1);
+ assert.deepEqual((await state()).patient.administrationLog,[]);
  await page.locator('#guardButton').click();assert.equal(await state(),null);assert.deepEqual(errors,[]);
  const report={test:'contextual-patient-dialogue',realBrowser:true,androidEmulated:true,physicalAndroid:false,
   compoundQuestions:true,shortFollowUps:true,symptomBoundDuration:true,caseScopedContext:true,acquiredHistory:true,
   greetingQuestionPreserved:true,painKeywordCollisionCovered:true,medicationFollowUps:true,medicationFirstPerson:true,
   naturalValveHistory:true,nativeValveAndBothImplantDenials:true,routineVersusExposureMedication:true,naturalValveReply,
-  oneGlobalTranscript:true,explicitNpcOverridesFocus:true,noFakeAssessmentOrMedication:true,cleanLobbyReturn:true,errors};
+  oneGlobalTranscript:true,explicitNpcOverridesFocus:true,noFakeAssessmentOrMedication:true,
+  companionBedsideTarget:true,companionFollowUp:true,cleanLobbyReturn:true,errors};
  await fs.writeFile(out+'/patient-dialogue-summary.json',JSON.stringify(report,null,2));console.log('PATIENT DIALOGUE REAL UI PASS',JSON.stringify(report));await context.close();
 }catch(error){if(page){await page.screenshot({path:out+'/patient-dialogue-failure.png'}).catch(()=>{});
  await fs.writeFile(out+'/patient-dialogue-failure.json',JSON.stringify({error:String(error),snapshot:await page.evaluate(()=>atriaV5.snapshot()).catch(()=>null)},null,2));}throw error;
