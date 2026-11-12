@@ -73,12 +73,21 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   new Set([...examined].map(id => id.split(':')[0])).size >= 2);
  if (!examDone) need('examination',{ids:requiredExams},'Completar examen físico dirigido.');
  for (const id of requiredExams) if (!examined.has(id)) need('examination',{ids:[id]},'Completar la exploración dirigida: ' + id + '.');
- if (!matched) need('diagnosis',{},'Registrar un diagnóstico presuntivo compatible.');
  const historyAnswered = [...new Set((patient.intentHistory || []).map(row => row.id))];
  const relevant = historyAnswered.filter(id => (caseData.requiredHistory || []).includes(id) || contextualHistory.has(id)||contextualHistory.has('anamnesis:'+id));
  const initialSys = Number(String(caseData.vitals?.bp || '').split('/')[0]);
- if (!relevant.length && !(initialSys < 90 || vitals.sys < 90)) need('history',{},'Obtener al menos un dato relevante de anamnesis.');
  const orientedStudy = (rule.study || []).some(group => group.some(id => studies.has(id)));
+ const traits=caseData.clinicalPolicy.traits||[];
+ // A time-critical receiver can act on the case's confirmed diagnostic
+ // evidence. The physician's impression still contributes to their score.
+ const objectiveReceiverIndication=!!rule.consult?.[target]?.length&&(
+  target==='quirofano'&&traits.includes('typeAAorticDissection')&&orientedStudy||
+  target==='procedimiento'&&traits.includes('coronaryOcclusion')&&orientedStudy||
+  ['procedimiento','uti'].includes(target)&&traits.includes('tensionPneumothorax')&&rule.urgentStudyBypass===true&&
+   requiredExams.length>0&&requiredExams.every(id=>examined.has(id))&&
+   (done.has('needle_decompression')||done.has('chest_drainage')));
+ if (!matched&&!objectiveReceiverIndication) need('diagnosis',{},'Registrar un diagnóstico presuntivo compatible.');
+ if (!relevant.length && !(initialSys < 90 || vitals.sys < 90)) need('history',{},'Obtener al menos un dato relevante de anamnesis.');
  const requiredSeries=(caseData.studies||[]).filter(study=>requiredStudySeries(caseData,study.id)).map(study=>study.id),
   requiredStudies=[...new Set([...(rule.requiredStudies||[]),...requiredSeries])],
   keyStudies=[...new Set([...(caseData.keyStudies||[]),...requiredSeries])];
@@ -138,7 +147,7 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   confirmed.filter(row => CLINICAL_TREATMENTS[row.id]?.kind === 'procedure').map(row => row.id);
  const ready = missing.length === 0;
  return {caseId, ready, action: ready ? target : null, destination: rule.destinations[0],
-  choices: ready ? [...rule.destinations] : [], missing, requirements, fulfilledTreatmentIds:[...transferred], diagnostic: matched, historyCount: relevant.length,
+  choices: ready ? [...rule.destinations] : [], missing, requirements, fulfilledTreatmentIds:[...transferred], diagnostic: matched, objectiveReceiverIndication, historyCount: relevant.length,
   studiesSatisfied: evidence, procedurePerformed: definitiveIds.some(id => confirmed.some(row => row.id === id && row.kind === 'procedure.performed')),
   quality: csClosureQuality487(qualityInput, rule, done, qualityEvidence)};
 }

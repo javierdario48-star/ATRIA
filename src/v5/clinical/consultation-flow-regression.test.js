@@ -182,12 +182,10 @@ test('CARD-08 service identifies diagnosis, monitoring, examination and essentia
   const accepted=await opinion();assert.equal(accepted.accepted,true,accepted.advice);
   assert.equal(accepted.decision,'ACCEPTED');
   await f.post('/diagnostico neumonia');
-  const rejected=await f.post('/disposicion quirofano');
-  assert.equal(rejected.clinical[0].status,'rejected','a previous acceptance cannot authorize a newly incompatible diagnosis');
-  assert.equal(f.s.read().patient.caseEnded,false);
-  await f.post('/diagnostico diseccion aortica tipo A');
-  assert.equal((await f.post('/disposicion quirofano')).clinical[0].status,'executed');
+  const transfer=await f.post('/disposicion quirofano');
+  assert.equal(transfer.clinical[0].status,'executed','the confirmed proximal dissection still indicates emergency surgery');
   assert.equal(f.s.read().progress.receipts.length,1);
+  assert.equal(f.s.read().progress.xp,0,'the wrong impression does not earn clinical XP');
  }finally{f.s.dispose();}
 });
 

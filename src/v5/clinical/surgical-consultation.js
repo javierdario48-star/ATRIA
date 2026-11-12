@@ -57,7 +57,9 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,pre
   if(!declared&&id!=='uti'&&!(id==='cirugia'&&
    ((c.keyInterventions||[]).some(key=>['source_control','surgery'].includes(key))||['MESI-001','ILEO-001','PERI-TER-001'].includes(c.id))))
    return noIndication(id);
-  const evidence=consultationEvidenceReview(p,c,rule);if(evidence)return evidence;
+  const destination=destinationFor(id),assessment=readiness(destination);
+  const evidence=consultationEvidenceReview(p,c,rule,{objectiveReceiverIndication:assessment?.objectiveReceiverIndication});
+  if(evidence)return evidence;
   if(id==='uti'){
    const traits=c.clinicalPolicy?.traits||[];
    const criticalIllness=traits.some(t=>['neuromuscularWeakness','intracranialBleed','statusEpilepticus','convulsiveStatusEpilepticus','respiratoryFailure','ards'].includes(t))||
@@ -65,7 +67,6 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,pre
    const critical=criticalCareReview487(p.liveVitals,{recentShock:Number(String(c.vitals.bp).split('/')[0])<90,criticalIllness});
    if(!critical.accepted)return {...critical,reasonCode:'destination-not-indicated',decision:'REJECTED_NO_INDICATION'};
   }
-  const destination=destinationFor(id),assessment=readiness(destination);
   if(transfer&&assessment?.requirements?.some(requirement=>requirement.reason==='destination-not-indicated'))
    return noIndication(id);
   const continuation=clinicalTransferContinuation(p,c,destination);

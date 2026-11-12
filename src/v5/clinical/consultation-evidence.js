@@ -5,17 +5,17 @@ import {hasRecordedVitals} from './observations.js';
 const refusal=(status,reasonCode,reason,decision='REJECTED_STABILIZATION_INSUFFICIENT')=>
  ({accepted:false,status,reasonCode,reason,decision});
 
-export function consultationEvidenceReview(p,c,rule){
+export function consultationEvidenceReview(p,c,rule,{objectiveReceiverIndication=false}={}){
  const dx=assessDiagnosticImpression(c,p.diagnosis);
- if(!dx.sufficient)return refusal(dx.level==='missing'?'missing-dx':dx.level==='incompatible'?'unsubstantiated':'insufficient-dx',
+ if(!dx.sufficient&&!objectiveReceiverIndication)return refusal(dx.level==='missing'?'missing-dx':dx.level==='incompatible'?'unsubstantiated':'insufficient-dx',
   dx.reasonCode,dx.message,'REJECTED_DIAGNOSIS_INSUFFICIENT');
  if(!hasRecordedVitals(p))
-  return refusal('missing-vitals','vitals-missing','La impresión está registrada. Faltan signos vitales efectivamente medidos; solicitar un monitor todavía no acredita su conexión.');
+  return refusal('missing-vitals','vitals-missing','Faltan signos vitales efectivamente medidos; solicitar un monitor todavía no acredita su conexión.');
  const performed=new Set(physicianExaminationsPerformed(p)),required=rule?.requiredExams||[];
  const remaining=required.filter(key=>!performed.has(key==='neurological:all'?'neurological:neurological':key.replace(/^(?:heart|lungs):/,'thorax:')));
  const sufficient=required.length?!remaining.length:performed.size>0&&(p.examDone||new Set([...performed].map(x=>x.split(':')[0])).size>=2);
  if(!sufficient)return refusal('missing-exam','examination-incomplete',
-  'La impresión y los signos están registrados. Falta completar el examen físico dirigido'+
+  'Falta completar el examen físico dirigido'+
   (remaining.length?' ('+[...new Set(remaining.map(x=>x.split(':')[0]))].join(', ')+')':'')+'.');
  return null;
 }

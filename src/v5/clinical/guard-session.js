@@ -212,7 +212,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     if(assessment)return assessment;
     if(nursingWorkPending())return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
     if(!intent.partial){
-     const issue=consultationEvidenceReview(nativePatient,caseData,rule);
+     const receiver=rule?.consult?.[intent.id]?.length;
+     const assessment=receiver?closureReadiness(intent.id):null;
+     const issue=consultationEvidenceReview(nativePatient,caseData,rule,{objectiveReceiverIndication:assessment?.objectiveReceiverIndication});
      if(issue)return {status:'rejected',patientUid,eventId,reason:rule?.consult?.[intent.id]?.length?'transfer-not-accepted':'closure-not-ready',
       receipt:{eventId,patientUid,decision:issue.decision,reasonCode:issue.reasonCode,message:issue.reason}};
     }

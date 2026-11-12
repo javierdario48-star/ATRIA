@@ -38,7 +38,7 @@ export function partialDisposition(p,c,destination,assessment,{cases}={}){
  if((destination==='alta'||destination==='sala'||destination==='observacion')&&
   (p.liveVitals.sys<90||p.liveVitals.spo2<90))
   return {ready:false,missing:['El paciente está inestable; no corresponde cerrar con ese destino.']};
- if(destination==='quirofano'&&!assessDiagnosticImpression(c,p.diagnosis).sufficient)
+ if(destination==='quirofano'&&!assessment?.objectiveReceiverIndication&&!assessDiagnosticImpression(c,p.diagnosis).sufficient)
   return {ready:false,missing:['Cirugía rechaza el traslado: la impresión diagnóstica no justifica la indicación.']};
  if(rule?.consult?.[destination]?.length||['quirofano','uti','procedimiento'].includes(destination)){
   const services=rule?.consult?.[destination]||[destination==='quirofano'?'cirugia':destination==='uti'?'uti':'gastro'];

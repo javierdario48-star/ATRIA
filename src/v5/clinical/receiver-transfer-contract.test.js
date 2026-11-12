@@ -109,6 +109,29 @@ for (const scenario of scenarios) for (const mode of ['solo', 'apprentice', 'coo
  });
 }
 
+for (const id of ['CARD-01', 'CARD-08', 'CARD-10', 'RESP-07']) test(id+': the emergency receiver uses confirmed findings when the impression is wrong', async () => {
+ const scenario = scenarios.find(row => row.caseId === id), f = fixture(scenario);
+ const request = '/disposicion ' + scenario.destination;
+ try {
+  await f.care('/diagnostico bronquitis aguda');
+  const premature = (await f.post(request)).clinical[0];
+  assert.equal(premature.status, 'rejected');
+  assert.equal(premature.receipt.reasonCode, 'diagnosis-incompatible');
+  assert(!f.s.read().patient.caseEnded);
+  await f.workup();
+  await f.care('/diagnostico bronquitis aguda');
+  assert.equal((await f.post(request)).clinical[0].status, 'pending');
+  await f.advance(3.5);
+  const result = f.s.read(), p = result.patient;
+  assert(p.consults.some(row => row.id === scenario.receiver && row.accepted));
+  assert.equal(p.closure?.destination, scenario.destination);
+  assert.equal(p.diagnosis, 'bronquitis aguda');
+  assert.equal(p.closure.quality.diagnosticFactor, 0);
+  assert.equal(result.progress.xp, 0);
+  assert(!p.treatments.some(row => row.id === scenario.definitive));
+ } finally {f.s.dispose();}
+});
+
 test('accepted surgery cannot hand off tension pneumothorax before immediate decompression', async () => {
  const scenario = {...scenarios.find(row => row.caseId === 'RESP-07'), treatments: ['oxygen']}, f = fixture(scenario);
  try {
