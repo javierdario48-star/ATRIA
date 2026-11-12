@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {browserHarness} from './browser-harness.mjs';
 
-const output='qa/v5-guard-score-results';await fs.mkdir(output,{recursive:true});
+const output=process.env.V5_QA_OUTPUT||'qa/v5-guard-score-results';await fs.mkdir(output,{recursive:true});
 const h=await browserHarness(),results=[],errors=[];
 const {webkit}=createRequire(import.meta.url)(process.env.PLAYWRIGHT_MODULE_PATH||process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright');
 let safari,webkitFailure;
@@ -38,6 +38,7 @@ try{
       const b=el.getBoundingClientRect();return b.width&&b.height&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
      }).map(el=>el.id||el.className);
     return {score:a.toJSON(),clock:document.getElementById('guardTime').getBoundingClientRect().toJSON(),overlaps,
+     hudLeft:document.getElementById('hud').getBoundingClientRect().left,
      pointerEvents:getComputedStyle(score).pointerEvents,viewport:{width:innerWidth,height:innerHeight}};
    });
    await p.screenshot({path:output+'/'+name+'.png'});
@@ -45,6 +46,7 @@ try{
    assert.equal(geometry.pointerEvents,'none');
    assert(geometry.score.top>=0&&geometry.score.bottom<=geometry.viewport.height);
    assert(geometry.score.left>=0&&geometry.score.right<=geometry.viewport.width);
+   assert(Math.abs(geometry.score.left-geometry.hudLeft)<=2,name+' scoreboard must align with the upper-left HUD');
    // Do not silently undo the requested elevation to make the overlap pass.
    assert(geometry.score.top<(name==='android-portrait'||name.startsWith('iphone')?130:141));
    if(await p.locator('#keyboardToggleButton').getAttribute('aria-pressed')==='true')await p.locator('#keyboardToggleButton').click();

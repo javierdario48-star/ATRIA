@@ -337,9 +337,10 @@ dialog[data-panel="monitor"] #modalClose{position:relative;z-index:2;margin:0 0 
 #chatHistory .line.nurse b{color:#f4cf83}
 @media(prefers-reduced-motion:reduce){.exam-flip-inner{transition:none}}
 
-/* On-demand bedside checklist: left edge, under HUD, above map; minimal overlap. */
-.bedside-checklist{position:fixed;z-index:9;top:calc(max(8px,env(safe-area-inset-top)) + 67px);
- left:max(6px,env(safe-area-inset-left));width:clamp(122px,30vw,166px);
+/* Score and on-demand bedside checklist share the upper-left column. */
+.guard-rail{position:fixed;z-index:11;top:calc(max(8px,env(safe-area-inset-top)) + 66px);
+ left:max(9px,env(safe-area-inset-left));display:grid;justify-items:start;gap:6px;pointer-events:none}
+.bedside-checklist{width:clamp(122px,30vw,166px);
  max-height:min(53dvh,365px);overflow:hidden;padding:7px 8px;
  background:rgba(5,29,37,.67);border:1px solid rgba(126,199,185,.36);
  border-radius:11px;box-shadow:0 6px 16px #00141d4a;backdrop-filter:blur(6px);
@@ -430,9 +431,8 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 @media(max-width:560px){#audioButton{min-width:28px;font-size:14px;padding:3px 4px}}
 
 /* Compact read-only career/guard scoreboard migrated from ATRIA 4.8.7. */
-.guard-scoreboard{position:fixed;z-index:11;top:calc(73px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);
- width:max-content;max-width:calc(100vw - 26px);pointer-events:none;border-radius:11px;
- padding:5px 12px 6px;background:#071f27d9;backdrop-filter:blur(10px);
+.guard-scoreboard{width:max-content;max-width:min(400px,calc(100vw - 26px));pointer-events:none;border-radius:11px;
+ padding:4px 8px 5px;background:rgba(7,31,39,.52);backdrop-filter:blur(8px);
  border:1px solid #9acdb747;box-shadow:0 6px 15px #0005;font-variant-numeric:tabular-nums}
 .guard-score-title{text-align:center;text-transform:uppercase;font-size:8px;letter-spacing:1.3px;color:#a4d4c9;font-weight:750}
 .guard-score-metrics{display:flex;gap:9px;align-items:center;justify-content:center;white-space:nowrap;font-size:9px;color:#b5d4d1}
@@ -443,8 +443,14 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 .guard-score-player{font-size:9px;padding:3px 6px;border-radius:5px;background:#173c43}
 .guard-score-player b,.guard-score-player span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .guard-score-player.leader{border:1px solid #e5c785}
-@media(max-width:430px){.guard-scoreboard{padding:4px 7px;top:calc(70px + env(safe-area-inset-top))}
-.guard-score-metrics{gap:6px;font-size:8px}.guard-score-metrics b{font-size:13px}}
+@media(max-width:600px),(max-height:500px){
+ .guard-scoreboard{max-width:min(190px,52vw);padding:4px 6px}
+ .guard-score-metrics{flex-direction:column;align-items:stretch;gap:1px;white-space:normal;font-size:8px}
+ .guard-score-metrics>div{justify-content:space-between;gap:3px}
+ .guard-score-metrics i{display:none}
+ .guard-score-metrics b{font-size:12px}
+ .guard-score-title{font-size:7px;letter-spacing:.6px}
+}
 
 /* Monitor acuity follows actual recorded measurements; zero state is neutral. */
 .device-acuity{margin-left:auto;flex-shrink:0;padding:4px 6px;border-radius:5px;
@@ -552,7 +558,7 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 @media(max-height:660px){.splash-card.avatar-creator{padding:10px 15px}.avatar-creator h1{margin:8px 0 3px}.avatar-creator .creator-intro{margin:0 0 3px!important}.avatar-display{min-height:164px;height:clamp(160px,29dvh,220px)}#avatarPreview{height:clamp(156px,28dvh,216px)}#profileForm .avatar-name-label{margin:0}.avatar-creator .creator-footer{margin-top:4px}}
 @media(prefers-reduced-motion:no-preference){.avatar-sex-choice button,.avatar-carousel>button{transition:background .16s ease,border-color .16s ease,transform .16s ease}.avatar-carousel>button:active{transform:scale(.94)}}
 
-/* Read-only guard clock. Top-right under the HUD; the scoreboard is below it. */
+/* Read-only guard clock. The application moves it into the HUD on entry. */
 .guard-time{position:fixed;z-index:12;top:calc(64px + env(safe-area-inset-top));
  right:max(8px,env(safe-area-inset-right));display:grid;justify-items:end;gap:1px;
  padding:6px 10px;border-radius:11px;border:1px solid #8acbb677;
@@ -562,54 +568,9 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 #guardTimeNow{font-size:21px;line-height:1;font-weight:800;color:#b9ffdf}
 #guardTimeProgress{font-size:9px;line-height:1;color:#bad1cb;letter-spacing:.03em}
 .guard-time[data-ended="true"] #guardTimeNow{color:#f1d391}
-body[data-phase="guard"] .guard-scoreboard{top:calc(121px + env(safe-area-inset-top))}
 @media(max-width:430px){
  .guard-time{top:calc(62px + env(safe-area-inset-top));padding:5px 8px}
  #guardTimeNow{font-size:18px}
- body[data-phase="guard"] .guard-scoreboard{top:calc(112px + env(safe-area-inset-top))}
-}
-/* Reserve the left clinical checklist without moving the score down. */
-@media(max-width:600px){
- body[data-phase="guard"]:has(.bedside-checklist:not([hidden])) .guard-scoreboard{margin-left:65px;max-width:calc(100vw - 150px)}
-}
-@media(max-height:500px) and (min-width:431px){
- body[data-phase="guard"] .guard-scoreboard{left:auto;right:max(8px,env(safe-area-inset-right));transform:none;margin-left:0}
-}
-
-/* Guard scoreboard sits beside the clock instead of obscuring the playfield.
-   Narrow screens use a stacked metric layout to preserve the clinical rail. */
-body[data-phase="guard"] .guard-scoreboard{
- top:calc(64px + env(safe-area-inset-top));
- left:auto;right:calc(190px + max(8px,env(safe-area-inset-right)));
- transform:none;margin-left:0;
- background:rgba(7,31,39,.62);backdrop-filter:blur(8px);
- padding:4px 8px 5px;
-}
-@media(max-width:600px){
- body[data-phase="guard"] .guard-scoreboard,
- body[data-phase="guard"]:has(.bedside-checklist:not([hidden])) .guard-scoreboard{
-  top:calc(62px + env(safe-area-inset-top));
-  right:calc(116px + max(8px,env(safe-area-inset-right)));
-  left:auto;transform:none;margin-left:0;
-  width:118px;max-width:118px;padding:4px 6px;
- }
- body[data-phase="guard"] .guard-score-metrics{
-  flex-direction:column;align-items:stretch;gap:1px;white-space:normal;font-size:8px;
- }
- body[data-phase="guard"] .guard-score-metrics>div{justify-content:space-between;gap:3px}
- body[data-phase="guard"] .guard-score-metrics i{display:none}
- body[data-phase="guard"] .guard-score-metrics b{font-size:12px}
- body[data-phase="guard"] .guard-score-title{font-size:7px;letter-spacing:.6px}
-}
-@media(max-width:370px){
- body[data-phase="guard"] .guard-scoreboard,
- body[data-phase="guard"]:has(.bedside-checklist:not([hidden])) .guard-scoreboard{
-  right:calc(109px + max(5px,env(safe-area-inset-right)));width:104px;max-width:104px;
- }
- body[data-phase="guard"] .guard-score-metrics{font-size:7px}
-}
-@media(max-height:500px) and (min-width:601px){
- body[data-phase="guard"] .guard-scoreboard{top:calc(64px + env(safe-area-inset-top));right:calc(190px + max(8px,env(safe-area-inset-right)))}
 }
 
 /* The creator canvas retains its source aspect ratio; raster backing is
@@ -686,7 +647,6 @@ body[data-phase="guard"] .guard-scoreboard{
 #hudClockSlot .guard-time-caption{font-size:7px}
 #hudClockSlot #guardTimeNow{font-size:16px}
 #hudClockSlot #guardTimeProgress{font-size:8px}
-body[data-phase="guard"] .guard-scoreboard{top:calc(74px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));left:auto;transform:none;margin-left:0;background:rgba(7,31,39,.52)}
 @media(max-width:600px){
  #hud{gap:4px;padding:5px}
  .brand{gap:4px}
@@ -702,11 +662,6 @@ body[data-phase="guard"] .guard-scoreboard{top:calc(74px + env(safe-area-inset-t
  .hud-actions #receptionButton{min-width:30px}
  #notificationsButton{min-width:29px;padding:3px 4px}
  #hudMenu>summary{min-width:28px;min-height:34px}
- body[data-phase="guard"] .guard-scoreboard,
- body[data-phase="guard"]:has(.bedside-checklist:not([hidden])) .guard-scoreboard{
-  top:calc(74px + env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));
-  left:auto;transform:none;margin-left:0;width:auto;max-width:min(190px,52vw)
- }
 }
 @media(max-width:390px){
  .brand b{font-size:9px}.brand small{font-size:7px;max-width:74px}

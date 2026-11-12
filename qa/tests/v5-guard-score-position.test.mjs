@@ -2,18 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const css=readFileSync(new URL('../../src/v5/web/game.css',import.meta.url),'utf8');
-const px=(rule)=>Number(rule.match(/top:calc\((\d+)px \+ env\(safe-area-inset-top\)\)/)?.[1]);
-test('guard score is raised and remains above the prior guard offsets',()=>{
- // The mobile media block also contains the clock's rules. Stopping at its
- // first closing brace incorrectly reported the existing score rule missing.
- const [desktop,mobile]=[...css.matchAll(/body\[data-phase="guard"\] \.guard-scoreboard\{[^}]*\}/g)].map(x=>x[0]);
- assert.ok(desktop,'guard-specific desktop score position missing');
- assert.ok(mobile,'guard-specific mobile score position missing');
- assert.ok(px(desktop)>=121&&px(desktop)<141);
- assert.ok(px(mobile)>=112&&px(mobile)<130);
- assert.ok(px(mobile)<px(desktop));
+const html=readFileSync(new URL('../../src/v5/web/index.html',import.meta.url),'utf8');
+test('guard score and checklist share the upper-left rail in DOM order',()=>{
+ assert.match(html,/<div class="guard-rail">\s*<aside id="guardScoreboard"[^>]*><\/aside>\s*<aside id="bedsideChecklist"/);
+ const rail=css.match(/\.guard-rail\{([^}]*)\}/)?.[1]||'';
+ assert.match(rail,/position:fixed/);
+ assert.match(rail,/top:calc\(max\(8px,env\(safe-area-inset-top\)\) \+ 66px\)/);
+ assert.match(rail,/left:max\(9px,env\(safe-area-inset-left\)\)/);
 });
-test('guard scoreboard is read-only and preserves its default center anchor',()=>{
- assert.match(css,/\.guard-scoreboard\{[^}]*left:50%;transform:translateX\(-50%\)/);
+test('guard scoreboard stays read-only and compacts in portrait and short landscape',()=>{
  assert.match(css,/\.guard-scoreboard\{[^}]*pointer-events:none/);
+ assert.match(css,/@media\(max-width:600px\),\(max-height:500px\)\{\s*\.guard-scoreboard\{[^}]*max-width:min\(190px,52vw\)/);
 });
