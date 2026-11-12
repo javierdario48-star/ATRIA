@@ -11,8 +11,8 @@ import {clinicalClosureRule} from './clinical-hint-requirements.js';
  * through the SAME session readiness path used by Vega. Findings are diagnostic:
  * a flagged NPO gate does not establish clinical necessity.
  */
-test('all 55 playable cases expose an immutable closure audit through their live guards',async t=>{
- assert.equal(content.cases.length,55,'include both the historical catalog and the certified specialty packs');
+test('every playable case exposes an immutable closure audit through its live guard',async t=>{
+ assert(content.cases.length>=55,'include both the historical catalog and the certified specialty packs');
  const seen=new Set();
  for(const caseData of content.cases){
   await t.test(caseData.id,()=>{

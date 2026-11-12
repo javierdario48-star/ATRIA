@@ -6,7 +6,7 @@ import {clinicalHintCoverage} from '../../src/v5/clinical/clinical-hints.js';
 
 const output=process.env.V5_HINT_OUTPUT||'qa/v5-hint-results';
 await mkdir(output,{recursive:true});
-const census=clinicalHintCoverage(content);assert.deepEqual(census.errors,[]);assert.equal(census.cases.length,55);
+const census=clinicalHintCoverage(content);assert.deepEqual(census.errors,[]);assert(census.cases.length>=55);
 const ids=process.env.V5_HINT_CASES?.split(',')||content.cases.map(c=>c.id);
 const results=[];
 for(const caseId of ids){

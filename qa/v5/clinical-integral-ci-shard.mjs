@@ -33,9 +33,14 @@ export async function readNativeEvidenceCheckpoint(path){
  }
  return {manifest,rows,indices};
 }
-export async function runNativeEvidenceShard({shard,shards=8,checkpoint=resolve(root,'docs/qa/2026-10-28-clinical-integral-checkpoint.jsonl.gz'),verifyOnly=false}){
+async function currentManifest(){
+ const identity=integralSourceIdentity(),{cases}=await integralClinicalContent();
+ return {...makeIntegralManifest(cases,{sourceDigest:identity.digest}),revision:identity.revision,sourceFiles:identity.sources};
+}
+export async function runNativeEvidenceShard({shard,shards=8,checkpoint=null,verifyOnly=false}){
  assert(Number.isInteger(shard)&&Number.isInteger(shards)&&shard>=0&&shard<shards&&shards<=16);
- const {manifest,rows,indices}=await readNativeEvidenceCheckpoint(checkpoint);
+ const {manifest,rows,indices}=checkpoint?await readNativeEvidenceCheckpoint(checkpoint):
+  {manifest:await currentManifest(),rows:[],indices:new Map()};
  if(verifyOnly)return {sourceDigest:manifest.sourceDigest,completed:rows.length,expected:manifest.scenarios.length};
  const directory=resolve(root,'qa/integral-results',manifest.configurationDigest),manifestPath=resolve(directory,'manifest.json');
  mkdirSync(resolve(directory,'rows'),{recursive:true});writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n');
@@ -61,5 +66,8 @@ export async function runNativeEvidenceShard({shard,shards=8,checkpoint=resolve(
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const shard=Number(process.argv[2]??0),shards=Number(process.argv[3]??8);
- console.log('ATRIA_NATIVE_SHARD='+JSON.stringify(await runNativeEvidenceShard({shard,shards,verifyOnly:process.argv.includes('--verify-only')})));
+ const flag=process.argv.indexOf('--checkpoint');
+ if(flag!==-1&&!process.argv[flag+1])throw Error('--checkpoint requires a path');
+ const checkpoint=flag===-1?null:resolve(process.argv[flag+1]);
+ console.log('ATRIA_NATIVE_SHARD='+JSON.stringify(await runNativeEvidenceShard({shard,shards,checkpoint,verifyOnly:process.argv.includes('--verify-only')})));
 }

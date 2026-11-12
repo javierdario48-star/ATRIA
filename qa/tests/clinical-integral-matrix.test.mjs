@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {clinicalCertificationContent,runClinicalCaseScenario,deriveClinicalCertificationPlan} from '../v5/certify-clinical-cases.mjs';
-import {INTEGRAL_SCENARIOS,assessIntegralJourney,makeIntegralManifest,summarizeIntegralRows} from '../v5/clinical-integral-matrix.mjs';
+import {INTEGRAL_SCENARIOS,assessIntegralJourney,integralClinicalContent,makeIntegralManifest,summarizeIntegralRows} from '../v5/clinical-integral-matrix.mjs';
+import {runNativeEvidenceShard} from '../v5/clinical-integral-ci-shard.mjs';
+import {clinicalContent} from '../../src/v5/server/content.js';
 import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
 test('tertiary ICU workup obtains initial imaging and organ function without waiting for late cultures',async()=>{
@@ -37,6 +39,15 @@ test('integral matrix schedules ten distinct journeys per authored case',()=>{
  assert(manifest.scenarios.every(x=>x.recovery===true));
  assert.deepEqual(new Set(manifest.scenarios.map(x=>x.mode)),new Set(['solo','apprentice','coop','competitive']));
  assert.notEqual(makeIntegralManifest(cases,{seed:'matrix',sourceDigest:'changed',horizon:60}).configurationDigest,manifest.configurationDigest);
+});
+test('fresh CI journeys cover the active certified catalog without loading archived rows',async()=>{
+ const {cases,origins}=await integralClinicalContent();
+ assert.deepEqual(cases,clinicalContent.cases);
+ assert(cases.length>=55);
+ assert(cases.every(c=>origins.get(c.id)?.sourceDefinitionDigest));
+ const shard=await runNativeEvidenceShard({shard:0,verifyOnly:true});
+ assert.equal(shard.completed,0);
+ assert.equal(shard.expected,10*cases.length);
 });
 test('competent legacy care requests its native handoff after observation without policy-only receipt gates',async()=>{
  const content=await clinicalCertificationContent(),c=content.cases.find(x=>x.id==='CIRR-001');

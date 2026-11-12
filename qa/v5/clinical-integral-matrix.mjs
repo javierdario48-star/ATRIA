@@ -5,10 +5,9 @@ import {readFileSync,writeFileSync,renameSync,mkdirSync,existsSync} from 'node:f
 import {resolve,relative,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync,fork} from 'node:child_process';
-import {clinicalCertificationContent,runClinicalCaseScenario,assessClinicalCertificationEvidence} from './certify-clinical-cases.mjs';
-import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
-import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
-import {neurologyPack} from '../../src/v5/content/packs/neurology-pack.js';
+import {runClinicalCaseScenario,assessClinicalCertificationEvidence} from './certify-clinical-cases.mjs';
+import {clinicalContent as content} from '../../src/v5/server/content.js';
+import certifiedCatalog from '../../src/v5/content/certified-case-packs.json' with {type:'json'};
 
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const self=fileURLToPath(import.meta.url);
@@ -121,12 +120,10 @@ export function integralSourceIdentity(){
  return {revision,digest:hash(sources),sources};
 }
 export async function integralClinicalContent(){
- const additional=[...respiratoryPack.cases,...cardiologyPack.cases,...neurologyPack.cases];
- const content=await clinicalCertificationContent(additional);
  const original=JSON.parse(readFileSync(resolve(root,'src/v5/content/cases.json')));
  const origins=new Map(original.map(c=>[c.id,{path:'src/v5/content/cases.json',catalog:'original-25',sourceDefinitionDigest:hash(c)}]));
- for(const [pack,path] of [[respiratoryPack,'respiratory-pack.js'],[cardiologyPack,'cardiology-pack.js'],[neurologyPack,'neurology-pack.js']])
-  for(const c of pack.cases)origins.set(c.id,{path:'src/v5/content/packs/'+path,catalog:pack.packId??pack.id??path,sourceDefinitionDigest:hash(c)});
+ for(const {pack} of certifiedCatalog.packs)
+  for(const c of pack.cases)origins.set(c.id,{path:'src/v5/content/certified-case-packs.json',catalog:pack.packId,sourceDefinitionDigest:hash(c)});
  return {content,cases:content.cases,origins};
 }
 const atomicJSON=(path,value)=>{mkdirSync(dirname(path),{recursive:true});const temporary=path+'.tmp-'+process.pid;
