@@ -84,6 +84,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  const firstUid=shift.records()[0].uid;
  const preferred=id=>focused.get(id)||firstUid;
  const activeSession=id=>sessions.get(preferred(id))||sessions.get(firstUid);
+ const canReadCompetitivePatient=(record,actorId)=>record.ownerId?record.ownerId===actorId:
+  !!world.patientInRangeFor(actorId,record.uid);
  function setFocus(actorId,uid){
   if((focused.get(actorId)??null)!==uid)focusVersions.set(actorId,(focusVersions.get(actorId)||0)+1);
   if(uid===null)focused.delete(actorId);else focused.set(actorId,uid);
@@ -149,7 +151,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    // This UID exists only after this actor's server-side proximity validation.
    confirmedFocusPatientUid:focused.get(actorId)||null,patients:items,outcomes};
   state.communication=communication.read({actorId,patients:rows.map(record=>({record,state:patientStates.get(record.uid),
-   visible:mode!=='competitive'||record.ownerId===actorId||!record.ownerId&&!!world.patientInRangeFor(actorId,record.uid)}))});
+   visible:mode!=='competitive'||canReadCompetitivePatient(record,actorId)}))});
   if(mode==='competitive'){
    const ownerId=focusedRecord.ownerId||null;
    state.competition={mode,ownerId,patientUid:state.patient.uid,outcomes};
@@ -290,16 +292,15 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(patientUid!==null){
     const record=shift.record(patientUid);
     if(!record||!sessions.has(patientUid))throw Object.assign(Error('unknown clinical patient'),{code:'invalid'});
-    if(mode==='competitive'&&(record.ownerId&&record.ownerId!==actorId||
-     !record.ownerId&&!world.patientInRangeFor(actorId,patientUid)))
+    if(mode==='competitive'&&!canReadCompetitivePatient(record,actorId))
      throw Object.assign(Error('clinical patient projection forbidden'),{code:'forbidden'});
     session=sessions.get(patientUid);
    }
    let {clinical,patientStates}=clinicalView(actorId,session),catalog=session.catalog();
-   if(mode==='competitive'&&clinical.competition.ownerId&&clinical.competition.ownerId!==actorId){
-    // When every bed belongs to a rival, preserve the reception/scoreboard
-    // contract without returning that rival's clinical session. Allowlist the
-    // public aggregate fields so new patient/history fields stay private.
+   if(mode==='competitive'&&(clinical.competition.ownerId||clinical.room.transcript.length)&&
+      !canReadCompetitivePatient({uid:clinical.patient.uid,ownerId:clinical.competition.ownerId},actorId)){
+    // A released bed can still contain prior clinical work. Only reception
+    // and score projections are available to a distant competitor.
     clinical={canEdit:false,readOnly:true,hintBinding:clinical.hintBinding,hintCount:0,caseReward:null,
      room:{roomId,mode:clinical.room.mode,revision:0,events:[],transcript:[]},
      patient:{uid:clinical.patient.uid,caseId:clinical.patient.caseId},clock:clinical.clock,messages:[],

@@ -69,7 +69,6 @@ test('an unsafe discharge releases a competitive bed and replay cannot take it b
   const navigation=createWorld(content,{id:'a',name:'Ana'}).navigation;
   const point=navigation.center(...content.beds[0].approach);
   await call('a',{motion:[point.x,point.y]});
-  await call('b',{motion:[point.x+18,point.y]});
   now+=20000;
   const claim=await call('a',{claim:uid,commands:[{id:'initial',text:'/diagnostico PBE',targetPatientUid:uid}]});
   assert.equal(claim.clinical.shift.confirmedFocusPatientUid,uid);
@@ -83,6 +82,15 @@ test('an unsafe discharge releases a competitive bed and replay cannot take it b
   assert.equal(result.dischargePenalties.length,1);
 
   server=create();
+  const distant=await server.observe({roomId,actorId:'b'});
+  assert.deepEqual(distant.clinical.patient,{uid,caseId:'PERI-PBE-001'});
+  assert.equal(distant.clinical.readOnly,true);
+  assert.deepEqual(distant.clinical.room.transcript,[]);
+  assert.deepEqual(distant.catalog,[]);
+  assert.equal(distant.clinical.shift.patients[0].ownerId,null);
+  await assert.rejects(server.observe({roomId,actorId:'b',targetPatientUid:uid}),error=>error.code==='forbidden');
+  await call('b',{motion:[point.x+18,point.y]});
+  now+=20000;
   const reassigned=await call('b',{claim:uid,commands:[{id:'follow-up',text:'/signos',targetPatientUid:uid}]});
   assert.equal(reassigned.clinical.shift.patients[0].ownerId,'b');
   assert.equal(reassigned.clinical.patient.diagnosis,'PBE');
