@@ -1,5 +1,55 @@
 # ATRIA 5.0 — CONTINUIDAD EXACTA PARA CHATGPT
 
+## Checkpoint vigente · 12 de noviembre de 2026
+
+Rama única `atria-5.0-core-rebuild-experimental` de `javierdario48-star/ATRIA`. HEAD inicial `cf13ec52a71452b0a921d22d921a3476382f6b39`. La reanudación encontró `ebba52e99eb05188ab15e92872647f71b1c2705b` en GitHub y los checkpoints locales posteriores intactos. HEAD de código verificado `3dc13907e84b69b9367a3cc28a0be9035c7138af`. El commit documental inmediato está en la [rama remota](https://github.com/javierdario48-star/ATRIA/tree/atria-5.0-core-rebuild-experimental).
+
+Lee el [inventario maestro](ATRIA-5-REMAINING-TASKS.md), el [traspaso histórico](ATRIA-5-CHATGPT-HANDOFF.md), `AGENTS.md` y el [contrato clínico](ATRIA-5-CASE-INTEGRATION-CONTRACT.md). [Commits y archivos de esta ejecución](https://github.com/javierdario48-star/ATRIA/compare/cf13ec52a71452b0a921d22d921a3476382f6b39...3dc13907e84b69b9367a3cc28a0be9035c7138af)
+
+| Commits | Resultado y módulos |
+| --- | --- |
+| `faf1f00`, `36bf20f` | El alta insegura registra la decisión, conserva el caso abierto, aplica un débito de hasta 15 XP una vez por médico y paciente y libera la asignación competitiva. Seguimiento y signos de alarma mejoran la calidad en los casos GI revisados. `clinical/guard-session.js`, `guard-runtime.js`, `progression.js`, `gastro-closure-v5.js`, `server/clinical-reward.js` y panel de cierre. |
+| `97ef4f9`, `4ca7286`, `a245215` | Angio-TC resuelve por protocolo explícito, conserva adquisiciones aórtica y pulmonar y pide aclaración para tórax ambiguo. Conserva la etiqueta certificada de sangrado de LGIB-001 y rechaza controles y técnicas ausentes. `clinical/study-order-vocabulary.js`, `ui/clinical-autocomplete.js`. |
+| `ebba52e` | Enfermería pregunta por alimentación oral en los cinco casos que declaran ayuno. Registra la decisión en el recibo nativo y restaura la última indicación. `acute-care.js`, `speech-router.js`, `clinical-controller.js`. |
+| `8ea6be9`, `f35ba43`, `9404669` | El primer 409 perdía la única sincronización de recuperación. La salida activa también podía esperar indefinidamente un recibo. Se reintenta la misma solicitud dentro de un plazo. Después, X y Escape vuelven al lobby y una respuesta tardía queda vinculada a la decisión original. `ui/guard-recovery.js`, `app/application.js`, `social/durable-cooperative-replica.js`. |
+| `a6fdc9d`, `81fd2da` | Directorio distingue disponible, en guardia y desconectado. Las coordenadas de guardia se entregan a miembros autorizados. La vista clínica reutiliza las proyecciones ya calculadas. `account-gateway.js`, `presence-storage.js`, `room-membership-store.js`, `guard-runtime.js`. |
+| `69a5a1f` | Revelación privada por médico y encuentro, con 50% sobre el XP del cierre después del factor de selección y del descuento de Vega. La impresión registrada es independiente. `clinical-hint-ledger.js`, `guard-session.js`, `ui/case-debrief.js`, RPC existente. |
+| `84af64f`, `3dc1390`, `2b2cd4a` | Interacción con acompañante declarado y contexto de repreguntas por médico e interlocutor en NEUR-06. La pregunta sobre antecedentes familiares desconocidos recibe una respuesta de incertidumbre, sin crédito de anamnesis. El marcador y la ruta clínica comparten la columna superior izquierda. `patient-dialogue.js`, `patient-actions.js`, `web/game.css`. |
+
+### Validación ejecutada
+
+- `npm run test:v5` **3.062/3.062** en el HEAD de código. `npm run test:v5-core` 40/40. Builds V5, V5 core y 4.8.7 aprobados. `audit-v5-boundary.mjs` pasó en 190 módulos. Seis archivos históricos ejecutados y aprobados.
+- Auditoría de 55 casos y 91 destinos. 55/55 recorridos dinámicos con Vega. CHOLE e ILEO cerraron con atención y aceptación documentadas. Las pruebas de DIVERT, HEPAT y PUD compararon alta válida con y sin seguimiento. La regresión competitiva verificó la reasignación del mismo paciente. En Pixel 5 emulado, el alta insegura bajó el saldo de 48 a 33 XP, la repetición mantuvo 33 XP y el paciente respondió en el mismo encuentro.
+- Chromium con dos cuentas locales aisladas y SQLite CAS verificó chat, enfoque A→B, una orden con ACK perdido, recuperación y los permisos del participante. Los dos sentidos de chat tardaron 336 ms y 586 ms entre el ACK y el mensaje visible del colega. La prueba de recuperación forzó conflictos iniciales y de salida. También mantuvo una petición activa sin respuesta y confirmó regreso al lobby con la misma referencia y XP después del plazo de 12 segundos.
+- En `a6fdc9d`, dos cuentas Chromium con reloj real alcanzaron 1.440 segundos y abrieron el turno 2 con los mismos pacientes después de las dos confirmaciones. El ensayo local finalizó a los 1.446 segundos de pared. El recorrido integrado de recuperación también pasó con reloj acelerado. Cuatro modos ejercitados en navegador local entre los guiones de recuperación y pistas.
+- Pixel 5 emulado verificó el acompañante de NEUR-06, las pistas, la revelación diagnóstica y la recuperación. El marcador quedó alineado con el HUD en cinco vistas Chromium, incluidas Android horizontal y vertical. WebKit y dispositivo físico siguen pendientes.
+- Se aplicaron `20261112030000_unsafe_discharge_rewards.sql` y `20261112133500_diagnosis_reveal_rewards.sql` a `atria-clinical`, la base del Preview. Pasaron 504 comprobaciones PostgreSQL con rollback (28 alta, 388 pistas y revelación, 16 muerte, 72 selección). El RPC conserva acceso exclusivo del servidor y RLS en los recibos. Aplica las migraciones en ese orden antes de activar la acreditación de esta versión en otro entorno.
+- Vercel confirmó READY para el [Preview de código](https://night-shift-clinical-1pj1cpl23-javierdario4878-7324.vercel.app). El cliente HTTP de este entorno agotó la conexión al dominio de Preview. Las pruebas nuevas con dos cuentas se ejecutaron en el servidor local. La comprobación de admisión 403 en el proveedor quedó registrada en el checkpoint anterior.
+
+## A. Tareas para ChatGPT normal
+
+1. **ANAM-01, próxima acción.** En `src/v5/content/legacy-patient-variation.js`, reproduce DIVERT-001 con «¿Qué enfermedades tenía antes de que empezara este problema?». `withPatientVariation` usa `anamnesis.historySummary` como antecedente y esa cadena coincide con el motivo actual en 12 casos históricos. Conserva la fuente explícita de antecedentes y amplía las variantes simuladas irrelevantes para el cuadro. Antes de cambiar el catálogo compuesto, incorpora su revisión actual a `clinical-content.js:previousClinicalContents` y verifica una guardia guardada con ese hash. Usa `patient-dialogue.test.js`, `guard-patient-variation.test.js` y `server/durable-guard-authority.test.js`. La regresión mínima comprueba que la respuesta de DIVERT deja de repetir dolor actual y fiebre, con mismo UID, hechos adquiridos y variante al restaurar.
+2. **CLOSE-01 y SAFE-01.** Amplía la regresión de `accepted-transfer.test.js` a alta insegura seguida de complicación atribuible y de atención posterior. Usa los recibos de `clinical/receipts.js` y `progression.js`. Conserva aceptación de servicios, estabilidad indispensable, dosis y reacciones reales. Revisa omisiones recomendables y alternativas según el destino.
+3. **XP-COOP y MP-01.** En `guard-runtime.js:awardMembers`, `guard-turn-control.js` y `server/clinical-reward.js`, reproduce la diferencia entre guardar y finalizar antes del cierre de un compañero. Añade regresión de créditos ya ganados, derecho a reingresar y nuevas recompensas por médico. Vincula el resultado al recibo de participación y a la membresía existente.
+4. **LAB-01, VEGA-COHERENCE-01 y UI-01.** Amplía a controles seriados con adquisición autorada en `studies-policy.test.js` y secuencia pista, orden, recibo y pista en `clinical-hints.test.js`. Si el estudio queda pendiente, la pista debe orientar la espera o una acción distinta. Para la rueda en paisaje de poca altura, reproduce el caso `high < low` en `ui/patient-actions.js:position` y valida en `qa/v5/guard-score-browser.mjs` con el teclado y la ruta abiertos.
+
+## B. Tareas que requieren Work o validación externa
+
+- Verificar el mismo SHA del Preview. Ejecutar `qa/v5/shared-guard-preview.mjs` con dos cuentas, incluidos aislamiento 401/403/404, recarga, guardado, finalización y `V5_REAL_TURN=1`. Repetir con Competitivo y verificar asignación, acreditación individual y cambio de control.
+- Aceptar Android físico. Reproducir las tres decisiones de guardia y un corte de red al guardar. Medir envío, autoridad, recibo y primer texto visible para paciente, Vega y Enfermería. Probar teclado, barra superior, recepción, chat, volumen y autocompletado de ecografía y troponina.
+- Aplicar y comprobar las migraciones de recompensas por entorno. Mantener los permisos del servicio y usar transacciones revertidas con cuentas QA para verificar XP.
+
+## Reglas de aceptación
+
+Un solo envío de DIALOG-AUTO-01 genera una respuesta veraz y acorde con conciencia y personalidad. VEGA-AUTO-01 muestra una pista tras un toque, con confirmación de visualización y 5% por pista nueva. VEGA-COHERENCE-01 lee el estado solicitado, pendiente, ejecutado e informado. Repetir una acción exige justificación temporal o fisiológica.
+
+La decisión de alta insegura conserva al paciente recuperable y aplica un solo débito. Una omisión menor afecta calidad o XP. Cada requisito indispensable para resolver el caso debe tener evidencia y una orientación accionable. Conserva la autoridad clínica, los recibos de XP, el aislamiento, el historial de estudios y la selección directa existentes.
+
+## Historial de ejecuciones anteriores
+
+<details>
+<summary>Entregas anteriores y evidencia por SHA</summary>
+
 ## Punto de partida
 
 Continúa en `javierdario48-star/ATRIA`, rama exclusiva `atria-5.0-core-rebuild-experimental`. Verifica primero su HEAD remoto. Work partió de `20be3574bace0a2dd3ca6cb6487e08bf958871d4`. El último commit técnico publicado es `27d4ede757f615fd91e6f89fdffc880b5a94ad8f`. El commit que contiene este bloque cierra la entrega. Su SHA se obtiene del HEAD remoto o de `git log -1 --format=%H -- docs/ATRIA-5-EXACT-CONTINUATION.md`. Integra cualquier avance posterior mediante fast-forward.
@@ -241,3 +291,5 @@ Partida desde `e92c351eaa36d6e47a6613a5c29bfb5a1cf802e6`, sin commits posteriore
 La causa probable del 403 de invitados tras aceptar invitación es la falta de persistencia multiinstancia de `qa-v1:room:<uuid>` y `atria-v5:room-member:<uuid>:<qa_id>`: `createPersistentSocialStorage` persistía únicamente claves de cuenta/contactos, mientras `pollRoom` interpreta 403/404 como pérdida definitiva de acceso. No desactivar RLS ni relajar autorización: la lectura de membresía continúa mediada por `createV5QaSocialServer`.
 
 Commits: `23e92efa7d1fb40ea9b145e472c82e51ceeae92d` (claves durables de sala/miembro) y `e6d06dff6d755dae481f27546eda333137e1a2b9` (regresiones de aceptación, nueva instancia, aislamiento y salida). Tests **escritos y publicados, no ejecutados**. Próxima acción: ejecutar `node --test src/v5/server/supabase-social-room-persistence.test.js` y pruebas sociales, build, dos cuentas reales; verificar limpieza/TTL. Después continuar CHOLE-001, ILEO-001 y LAB-01. No alterar criterios permanentes DIALOG-AUTO-01, VEGA-AUTO-01, VEGA-COHERENCE-01.
+
+</details>
