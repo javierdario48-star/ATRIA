@@ -7,7 +7,7 @@ import {patientRelationship,spontaneousHistory,composePatientConversation} from 
 import {normalizePatientQuestion as normalize,medicationIntent,selectMedicationHistory,unknownMedicationHistory,
  followUpQuestion,followUpDetail} from './patient-question-context.js';
 
-const sensitiveTopics=new Set(['allergies','meds','drugs','anticoagulants','anticoagulation','medications']);
+const sensitiveTopics=new Set(['allergies','meds','drugs','anticoagulants','anticoagulation','medications','familyHistory']);
 const unavailable=text=>!text||/^(?:no recuerdo todos los medicamentos puedo explicar|puedo comentarle mis antecedentes si me pregunta|no se documentaron otros antecedentes|no (?:puedo (?:precisar|ponerle un numero|describirlo con mas precision)|tengo claro))\b/.test(normalize(text))||
  /^no (?:recuerdo|me acuerdo de) (?:que|cuales)(?: son)?(?: los)? medicamentos(?: tomo(?: habitualmente)?)?$/.test(normalize(text));
 // Open-ended bedside questions are a distinct HISTORY intent, not a guessed
@@ -253,8 +253,9 @@ export function executePatientDialogue(p,c,cmd,clock){
    const authoredFact=c.intents.find(i=>i.id===historyIntent);
    const defaultFact=fact?.text;
    const authoredAnswer=c.history?.[historyIntent]||authoredFact?.answers?.find(answer=>!unavailable(answer));
-   if(!named.length&&fact&&!['onset','radiation','location','features','intensity','otherSymptoms','reason'].includes(historyIntent)&&
-     (defaultFact||identityAge||backgroundAnswer||authoredAnswer||['meds','drugs','alcohol'].includes(historyIntent))){
+   const familyHistory=historyIntent==='familyHistory';
+   if((!named.length||familyHistory)&&fact&&!['onset','radiation','location','features','intensity','otherSymptoms','reason'].includes(historyIntent)&&
+     (defaultFact||identityAge||backgroundAnswer||authoredAnswer||familyHistory||['meds','drugs','alcohol'].includes(historyIntent))){
     const id=exact?.id===historyIntent||historyIntent==='meds'&&authoredFact?historyIntent:'anamnesis:'+historyIntent;
     const allergyAnswer=historyIntent==='allergies'?knownAllergyAnswer(p):null;
     const selected=[
@@ -271,7 +272,7 @@ export function executePatientDialogue(p,c,cmd,clock){
     }
     else if(selected)disclose(historyIntent,id,...selected);
     else{
-     const answer=historyIntent==='meds'?'No recuerdo qué medicamentos tomo.':'No lo recuerdo con más detalle.';
+     const answer=familyHistory?'No sé qué enfermedades hubo en mi familia.':'No lo recuerdo con más detalle.';
      disclose(historyIntent,null,answer,'native.history-detail-unavailable');
     }
     continue;

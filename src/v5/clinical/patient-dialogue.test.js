@@ -16,6 +16,21 @@ function setup(caseId='APP-001',uid='P1',clinicalContent=content){
  return {s,send:text=>s.post({id:'d'+(++n),text}),near:x=>near=x,focus:x=>focus=x};
 }
 const answer=ack=>ack.clinical.map(x=>x.receipt?.answer||'').join(' ');
+test('unknown family history gets one reply and never borrows the patient’s own diseases',async()=>{
+ const c=respiratoryPack.cases.find(x=>x.id==='RESP-05');
+ const f=setup(c.id,'family-history-unknown',createClinicalContent(content,{additionalCases:[c]}));
+ try{
+  const reply=await f.send('¿Tiene antecedentes familiares de enfermedades?');
+  assert.equal(reply.clinical[0].status,'executed');
+  assert.match(answer(reply),/No sé qué enfermedades hubo en mi familia/);
+  assert.doesNotMatch(answer(reply),/cardiopulmonar|trombosis|cirugía/i);
+  assert.deepEqual(f.s.read().patient.intentHistory,[]);
+  const response=f.s.read().messages.at(-1);
+  assert.equal(response.role,'patient');
+  assert.match(response.text,/mi familia/);
+  assert.match(answer(await f.send('¿Qué enfermedades tenía antes?')),/cardiopulmonar/);
+ }finally{f.s.dispose();}
+});
 test('specific blood-vomit history is not replaced by a generic uncertain vomiting answer',async()=>{
  const f=setup('HDA-001');
  try{
