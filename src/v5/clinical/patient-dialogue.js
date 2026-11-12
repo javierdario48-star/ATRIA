@@ -1,6 +1,7 @@
 import {csAnamnesisFact} from '../../clinical/anamnesis-intents.js';
 import {PATIENT_PROFILES} from './patient-profiles.js';
 import {readPatientObservations} from './patient-observations.js';
+import {readLegacyPersonalHistory} from '../content/legacy-patient-variation.js';
 import {discloseAllergies,normalizePatientPersonality} from '../content/patient-variation.js';
 import {speakPatientHistory} from '../content/patient-language.js';
 import {patientRelationship,spontaneousHistory,composePatientConversation} from './patient-conversation.js';
@@ -104,6 +105,9 @@ export function executePatientDialogue(p,c,cmd,clock){
  const companion=proxyHistory&&companionPresent;
  p.interview??={lastSymptom:null,dimensions:{},symptoms:{},subjective:null};
  const context=p.interview,answers=[],disclosures=[];
+ const history=p.backgroundHistory?.history;
+ const personalBackground=readLegacyPersonalHistory(c,p.backgroundHistory);
+ const backgroundFor=id=>id==='pmh'?personalBackground:history?.[id];
  const speechContext=new Map();
  let sensitiveHistory=false;
  // A case's acquired history is shared. The conversational reference belongs
@@ -138,6 +142,8 @@ export function executePatientDialogue(p,c,cmd,clock){
  }
  function follow(kind,topic,entry=speaker.entry){
   if(sensitiveTopics.has(topic))sensitiveHistory=true;
+  if(topic==='pmh'&&entry?.source?.endsWith('patient.backgroundHistory')&&personalBackground!==history?.pmh&&
+    entry.answer===lay(history.pmh))entry={...entry,answer:lay(personalBackground)};
   const detail=followUpDetail(entry?.id?entry:null,kind,topic);
   // Rephrasing or narrowing a previously acquired fact cannot award a new one.
   const answer=companion&&!detail.source?'No puedo precisar ese dato.':detail.answer;
@@ -210,7 +216,7 @@ export function executePatientDialogue(p,c,cmd,clock){
     }
     // The witness can describe history authored for the case. Patient
     // sensations, orientation and clinical advice are different sources.
-    const background=p.backgroundHistory?.history?.[id];
+    const background=backgroundFor(id);
     const allergy=id==='allergies'&&knownAllergyAnswer(p);
     const authored=id!=='risk'&&c.history?.[id];
     const text=allergy?'El paciente refirió: «'+allergy+'»':background||authored;
@@ -249,7 +255,7 @@ export function executePatientDialogue(p,c,cmd,clock){
     }
     follow(shorthand,topic);continue;
    }
-   const backgroundAnswer=p.backgroundHistory?.history?.[historyIntent];
+   const backgroundAnswer=backgroundFor(historyIntent);
    const authoredFact=c.intents.find(i=>i.id===historyIntent);
    const defaultFact=fact?.text;
    const authoredAnswer=c.history?.[historyIntent]||authoredFact?.answers?.find(answer=>!unavailable(answer));

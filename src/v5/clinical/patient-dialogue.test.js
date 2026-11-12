@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {createWorld} from '../app/world.js';
 import {createGuardSession} from './guard-session.js';
+import {clinicalContentHash,createGuardRuntime} from './guard-runtime.js';
 import {executePatientDialogue} from './patient-dialogue.js';
-import {createClinicalContent} from '../content/clinical-content.js';
+import {createClinicalContent,previousClinicalContents} from '../content/clinical-content.js';
+import {clinicalContent as serverContent} from '../server/content.js';
 import {respiratoryPack} from '../content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
@@ -313,6 +316,48 @@ test('seeded identity and background stay identical across modes and survive pub
   assert.deepEqual(restored.read().patient.behavior,initial.behavior);
  }finally{solo.dispose();coop.dispose();restored?.dispose();}
 });
+
+const previousCatalogs={
+ full:'b95e47aa97fd1cfa1c369a5586c828eb1f18e2bce9e7c8b9f6e12ed7fd6cc5f7',
+ gastrointestinal:'09d000f7dab8d35e1be41526447099d833970e8379dc9262b2345197f3be5559'
+};
+for(const [catalogName,previousHash] of Object.entries(previousCatalogs))test(
+ `a runtime checkpoint from the previous ${catalogName} catalog keeps its seeded background and uses corrected personal history`,async t=>{
+ const catalogs=[serverContent,...previousClinicalContents(serverContent)];
+ const hashes=await Promise.all(catalogs.map(clinicalContentHash));
+ const previous=catalogs[hashes.indexOf(previousHash)];
+ assert(previous,'the previous catalog must be available at its original hash');
+ const caseId='VARIX-001',roomId='legacy-pmh-checkpoint-'+catalogName,hostId='doctor',name='Doctor';
+ const options={roomId,caseId,hostId,members:[{id:hostId,name}],mode:'solo',nowMs:0};
+ const runtime=await createGuardRuntime({...options,content:previous,guardSelection:{scope:'specific',selection:caseId}});
+ t.after(()=>runtime.dispose());
+ const point=createWorld(previous,{id:hostId,name}).navigation.center(...previous.beds[0].approach);
+ assert(runtime.motion(hostId,[point.x,point.y]));
+ await runtime.advanceTo(20000);
+ assert(runtime.claim(hostId,runtime.view(hostId).clinical.patient.uid));
+ const request={id:'legacy-pmh',text:'¿Qué antecedentes personales tiene?'};
+ const receipt=await runtime.post(hostId,request);
+ assert.equal(receipt.clinical[0].status,'executed');
+ const checkpoint=JSON.parse(JSON.stringify(await runtime.checkpoint()));
+ assert.equal(checkpoint.contentHash,previousHash);
+ const before=runtime.view(hostId).clinical.patient;
+ assert.match(before.backgroundHistory.history.pmh,/vomité muchísima sangre/i);
+ const restored=await createGuardRuntime({...options,content:serverContent,checkpoint,nowMs:checkpoint.lastWallMs});
+ t.after(()=>restored.dispose());
+ assert.deepEqual(await restored.post(hostId,request),receipt);
+ const followUp=await restored.post(hostId,{id:'legacy-pmh-followup',text:'¿Cuáles?'});
+ const fresh=await restored.post(hostId,{id:'legacy-pmh-new',text:'¿Antecedentes personales?'});
+ for(const reply of [followUp,fresh]){
+  assert.match(answer(reply),/várices esofágicas/i);
+  assert.match(answer(reply),/fractura de muñeca|esguince de tobillo/i);
+  assert.doesNotMatch(answer(reply),/vomité muchísima sangre/i);
+ }
+ const after=restored.view(hostId).clinical.patient;
+ assert.deepEqual(after.backgroundHistory,before.backgroundHistory);
+ assert.deepEqual(after.intentHistory,before.intentHistory);
+ assert.deepEqual(after.liveVitals,before.liveVitals);
+});
+
 test('natural compound pain questions acquire each actual dimension and the correct APP history facts',async()=>{
  const f=setup(),before=f.s.read();
  const a=await f.send('¿Dónde te duele y desde cuándo empezó?');
