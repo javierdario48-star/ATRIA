@@ -7,9 +7,9 @@ import {createGuardRuntime} from '../../src/v5/clinical/guard-runtime.js';
 import {createNavigation} from '../../src/v5/engine/navigation.js';
 import {CLINICAL_BOT_PLAYBOOK} from '../../src/v5/clinical/clinical-bot-playbooks.js';
 import {isPhysicianExamStudy} from '../../src/v5/clinical/exam-contract.js';
-import {nativeTreatmentDefinition} from '../../src/v5/clinical/native-medications.js';
+import {nativeMedicationDoseFraction,nativeTreatmentDefinition} from '../../src/v5/clinical/native-medications.js';
 import {clinicalInterventionEligibility} from '../../src/v5/clinical/native-medication-eligibility.js';
-import {confirmedClinicalTreatment,isDeliveredClinicalAdministration} from '../../src/v5/clinical/receipts.js';
+import {confirmedClinicalTreatment,currentClinicalTreatment,isDeliveredClinicalAdministration} from '../../src/v5/clinical/receipts.js';
 import {clinicalTransferContinuation} from '../../src/v5/clinical/transfer-continuation.js';
 import {generatePatientVariation} from '../../src/v5/content/patient-variation.js';
 import {diagnosticRequirements} from '../../src/v5/clinical/diagnostic-evidence.js';
@@ -133,6 +133,10 @@ function treatmentDefinition(content,id,c){
  const source=content.clinicalTreatments;
  return nativeTreatmentDefinition(id,c)||(source instanceof Map?source.get(id):source?.[id])||content.therapies.find(x=>x.id===id);
 }
+function requiresVenousAccess(c,content,id){
+ const definition=treatmentDefinition(content,id,c);
+ return definition?.requiresAccess??(definition?.route==='iv');
+}
 export function treatmentCommand(c,content,id){
  if(id==='iv')return 'Enfermera una vía';
  if(id==='monitor')return '/monitor conectar';
@@ -188,6 +192,72 @@ function actualTreatment(p,id,minute){
  if(id==='monitor')return p.procedures.monitor?.connected&&p.procedures.monitor.patientUid===p.uid;
  return !!confirmedClinicalTreatment(p,id,minute);
 }
+function treatmentPending(state,id){
+ const {patient,room}=state;
+ if(patient.pendingTreatments?.some(t=>t.id===id&&t.patientUid===patient.uid))return true;
+ // The physical nurse queue may precede the native preparation queue.
+ const action=room.events.findLast(event=>(event.patientUid??event.message?.patientUid)===patient.uid&&
+  event.clinical?.some(item=>item.id===id&&['therapy.request','procedure.request'].includes(item.kind)));
+ return action?.clinical.some(item=>item.id===id&&item.status==='pending')===true;
+}
+
+function transferredRescueIds(definition,procedures){
+ return (definition?.rescueAllOf||[]).filter(id=>procedures.includes(id));
+}
+function recordedRescueTreatment(row,patient,eventId,recoveredAt){
+ const treatment=patient.treatments.find(t=>t.sourceEventId===eventId);
+ if(!treatment||!confirmedClinicalTreatment(patient,treatment.id,recoveredAt,t=>t===treatment))return null;
+ const receipt=(row.clinicalReceipts||[]).find(r=>r.eventId===eventId&&r.patientUid===patient.uid&&
+  r.actorId===treatment.actorId&&r.id===treatment.id&&r.therapyId===treatment.id&&
+  ['therapy.request','procedure.request'].includes(r.kind)&&r.reused!==true);
+ if(!receipt)return null;
+ if(treatment.id==='oxygen'){
+  if(receipt.action!==treatment.action||receipt.flowLpm!==treatment.dose.amount)return null;
+ }else if(receipt.sourceEventId!==eventId||receipt.administeredAtNativeMinute!==treatment.administeredAtNativeMinute||
+  receipt.completedAtNativeMinute!==treatment.completedAtNativeMinute||
+  receipt.dose?.amount!==treatment.dose?.amount||receipt.dose?.unit!==treatment.dose?.unit)return null;
+ if(treatment.route==='procedure'&&!(treatment.performed===true&&receipt.performed===true&&
+  (row.nursing?.tasks||[]).some(task=>task.eventId===eventId&&task.patientUid===patient.uid&&task.stage==='confirmed')))return null;
+ const order=(row.commands||[]).find(command=>command.id===receipt.commandId&&command.clinical.some(item=>
+  item.id===treatment.id&&item.kind===receipt.kind&&['pending','executed'].includes(item.status)));
+ return order&&order.atRealSecond<=treatment.administeredAtRealSecond+1e-6?treatment:null;
+}
+function assessComplicationRescue(row){
+ const definitions=row.complicationDefinitions||[],episodes=row.complications||[];
+ if(row.profile!=='complication-rescue'||!definitions.length)return null;
+ const patient={uid:row.patientUid,treatments:row.treatments||[],administrationLog:row.administrations||[],procedures:row.procedures};
+ const closure=row.closureReceipt,receipts=row.clinicalReceipts||[],finalMinute=row.final?.atNativeMinute;
+ if(!Number.isFinite(finalMinute))return false;
+ return episodes.length>0&&episodes.every(episode=>{
+  const observed=(row.complicationObservations||[]).find(x=>x.id===episode.id);
+  const definition=definitions.find(def=>def.id===episode.id);
+  if(!definition||!observed||!['active','recovering'].includes(observed.status)||!Number.isFinite(episode.onsetAt)||
+   observed.onsetAt!==episode.onsetAt||!Number.isFinite(observed.atNativeMinute)||
+   observed.atNativeMinute+1e-6<episode.onsetAt||observed.atNativeMinute>finalMinute)return false;
+  if(episode.status!=='recovered'){
+   // A completed handoff can close a real active episode that needs surgery
+   // owned by the receiver. It has no treatment event or recovery credit.
+   const transferred=transferredRescueIds(definition,row.receiverOwnedDefinitiveProcedures||[]);
+   return ['active','recovering'].includes(episode.status)&&transferred.length>0&&
+    closure?.closed===true&&closure.patientUid===patient.uid&&closure.destination==='quirofano'&&
+    !patient.treatments.some(t=>transferred.includes(t.id))&&
+    receipts.some(r=>r.kind==='case.close'&&r.patientUid===patient.uid&&r.closure?.eventId===closure.eventId&&
+     r.closure.closed===true&&r.closure.destination===closure.destination)&&
+    (row.consultations||[]).some(consult=>row.plan?.consults?.includes(consult.id)&&consult.patientUid===patient.uid&&
+     consult.accepted===true&&consult.status==='done'&&receipts.some(r=>r.kind==='consult.request'&&
+      r.eventId===consult.sourceEventId&&r.patientUid===patient.uid&&r.consultId===consult.id&&r.accepted===true&&r.consultStatus==='done'));
+  }
+  if(!Number.isFinite(definition.recoveryMinutes)||!Number.isFinite(episode.rescueAt)||episode.rescueAt<episode.onsetAt||!Number.isFinite(episode.recoveredAt)||
+   episode.recoveredAt<episode.rescueAt+definition.recoveryMinutes-1e-6||
+   episode.recoveredAt<=observed.atNativeMinute||episode.recoveredAt>finalMinute+1e-6||
+   !Array.isArray(episode.rescueEvents)||!episode.rescueEvents.length)return false;
+  const all=definition.rescueAllOf||[],any=definition.rescueAnyOf||[];
+  const treatments=episode.rescueEvents.map(id=>recordedRescueTreatment(row,patient,id,episode.recoveredAt));
+  // The native episode may link to care that was already underway at onset.
+  return treatments.every(t=>t&&(all.includes(t.id)||any.includes(t.id)))&&
+   all.every(id=>treatments.some(t=>t.id===id))&&(!any.length||any.some(id=>treatments.some(t=>t.id===id)));
+ });
+}
 
 /** A read-only decision over evidence collected at the public runtime boundary.
  * A check that was not requested is null, never represented as a successful
@@ -233,27 +303,7 @@ export function assessClinicalCertificationEvidence(row){
  const performanceXP=closure?.closed?Number.isFinite(score)&&score>=0&&score<=100&&
   closure.xp===expectedXP&&row.progress?.xp===expectedXP:
   row.progress?.xp===0&&(row.xpReceipts||[]).length===0;
- const definitions=row.complicationDefinitions||[],episodes=row.complications||[];
- const complicationRescue=row.profile!=='complication-rescue'||!definitions.length?null:
-  episodes.length>0&&episodes.every(episode=>{
-   const observed=(row.complicationObservations||[]).find(x=>x.id===episode.id);
-   const definition=definitions.find(def=>def.id===episode.id);
-   // A definitive operation owned by the accepting surgical receiver is a
-   // verified handoff of the active complication, never a recovered episode.
-   const transferred=(definition?.rescueAllOf||[]).filter(id=>row.receiverOwnedDefinitiveProcedures?.includes(id));
-   if(transferred.length&&closure?.closed&&closure.destination==='quirofano')return !!observed&&
-    Number.isFinite(episode.onsetAt)&&episode.status!=='recovered'&&
-    !row.treatments.some(t=>transferred.includes(t.id))&&
-    row.plan.consults.some(id=>row.consultations.some(c=>c.id===id&&c.accepted===true&&c.status==='done'));
-   return definitions.some(def=>def.id===episode.id)&&observed&&episode.status==='recovered'&&
-    Number.isFinite(episode.onsetAt)&&episode.rescueAt>=episode.onsetAt&&episode.recoveredAt>episode.onsetAt&&
-    episode.rescueEvents?.length>0&&episode.rescueEvents.every(eventId=>row.treatments.some(t=>
-     t.sourceEventId===eventId&&t.patientUid===row.patientUid))&&
-    (row.rescueActions||[]).some(action=>action.complicationId===episode.id&&
-     action.issuedAtNativeMinute>=observed.atNativeMinute&&row.treatments.some(t=>
-      t.id===action.treatmentId&&t.patientUid===row.patientUid&&
-      t.administeredAtNativeMinute>=action.issuedAtNativeMinute));
-  });
+ const complicationRescue=assessComplicationRescue(row);
  const terminal=final?.died?!!row.terminalIntegrity&&Object.values(row.terminalIntegrity).every(value=>value===true)&&
   (row.deathEvents||[]).length===1&&!closure?.closed:
   closure?.closed?!!row.closureIntegrity&&['replayUnchanged','singleClosureReceipt','singleXPReceipt','noDeathEvent']
@@ -272,6 +322,7 @@ function finalEvidence(row,view,checkpoint,c,plan){
  row.final=snapshot(view);row.history=copy(p.intentHistory||[]);row.examLog=copy(p.examLog||[]);
  row.studies=copy(p.orders);row.administrations=copy(p.administrationLog||[]);
  row.treatments=copy(p.treatments);row.consultations=copy(p.consults||[]);
+ if(row.profile==='complication-rescue')row.procedures=copy(p.procedures||{});
  row.adverseEvents=copy(p.adverseEvents||[]);row.complications=copy(p.policyState?.complications||p.clinicalComplications||p.complications||[]);
  row.closureReceipt=copy(p.closure??null);row.xpReceipts=copy(s.progress.receipts);row.progress=copy(s.progress);
  row.readiness=copy(s.closure);row.eligibleDestinations=copy(s.eligibleDestinations);
@@ -362,8 +413,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   // The authored receiving surgical pathway is a handoff, not an operation
   // performed at the bedside. Keep the native complication active until an
   // actual procedural receipt exists; never queue that operation across transfer.
-  const transferredProcedures=new Set(plan.destination==='quirofano'?
-   (c.clinicalPolicy?.definitiveInterventions||[]).filter(id=>treatmentDefinition(content,id,c)?.kind==='procedure'):[]);
+  const transferredProcedures=plan.destination==='quirofano'?
+   (c.clinicalPolicy?.definitiveInterventions||[]).filter(id=>treatmentDefinition(content,id,c)?.kind==='procedure'):[];
   const seeded=random(seed),roomId=roomForScenario(c,mode,seed,profile);
   const members=mode==='coop'||mode==='competitive'?
    [{id:'host',name:'Certificación anfitrión'},{id:'doctor',name:'Certificación médico'}]:[{id:'doctor',name:'Certificación médico'}];
@@ -388,6 +439,10 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   }
   row.patientIdentity={patientUid:uid,initial:patientIdentity(initialView.clinical.patient),restoredIdentityUnchanged:true};
   row.patientUid=uid;row.initial=snapshot(initialView);const baseline=copy(initialView.clinical.patient.liveVitals);
+  const definitions=c.clinicalPolicy?.complications||[];
+  const selectedCandidates=new Set((initialView.clinical.patient.variation?.complicationCandidates||[]).map(x=>x.id));
+  const selectedComplications=definitions.filter(definition=>selectedCandidates.has(definition.id));
+  const complicationObservationMinute=Math.max(c.clinicalPolicy?.trajectory?.lateEnd??0,...selectedComplications.map(definition=>definition.minMinute));
   row.observations.push(row.initial);
   const observe=force=>{
    view=runtime.view(actorId);
@@ -458,8 +513,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     if(c.clinicalPolicy){
      // Access is requested through the nurse owner, before IV medication can
      // leave preparation. Its pending receipt is never counted as access.
-     const needsAccess=plan.treatmentIds.some(id=>id==='iv'||treatmentDefinition(content,id,c)?.requiresAccess||
-      (c.clinicalPolicy.regimens?.[id]?.route||treatmentDefinition(content,id,c)?.route)==='iv');
+     const needsAccess=plan.treatmentIds.some(id=>id==='iv'||requiresVenousAccess(c,content,id));
      if(needsAccess)firstOrder=await action('Enfermera una vía');
    }else for(const text of plan.legacyMedicationCommands){
     const ordered=await action(text);firstOrder??=ordered;
@@ -473,7 +527,24 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     row.unsafeMedicationCommand=wrongMedicationCommand;firstOrder=await action(wrongMedicationCommand);
    }
   }
-  const requested=new Set(),consulted=new Map(),rescued=new Set();let nextReassessment=0,recovered=false;
+  const requested=new Set(),consulted=new Map(),rescueAttempts=new Set();let nextReassessment=0,recovered=false;
+  const rescueUnderway=(state,id)=>treatmentPending(state,id)||!!currentClinicalTreatment(state.patient,id,state.clock.nativeMinute,
+   t=>nativeMedicationDoseFraction(t,c)>=1);
+  const availableRescue=(state,id)=>!transferredProcedures.includes(id)&&!rescueAttempts.has(id)&&
+   !clinicalInterventionEligibility(state.patient,c,id,state.clock);
+  const requestRescue=async(id,complicationId)=>{
+   const state=view.clinical,issuedAtNativeMinute=state.clock.nativeMinute;
+   if(rescueUnderway(state,id)||!availableRescue(state,id))return;
+   if(requiresVenousAccess(c,content,id)&&!actualTreatment(state.patient,'iv',issuedAtNativeMinute)){
+    if(!treatmentPending(state,'iv')){
+     const access=await action(treatmentCommand(c,content,'iv'));firstOrder??=access;
+    }
+    return;
+   }
+   const command=await action(treatmentCommand(c,content,id));rescueAttempts.add(id);firstOrder??=command;
+   if(complicationId)row.rescueActions.push({complicationId,treatmentId:id,commandId:command.id,issuedAtNativeMinute,
+    issuedAtRealSecond:command.issuedAtRealSecond});
+  };
   let lastCloseAttempt=-Infinity,wrongRepeatAt=0;
   while(view.clinical.clock.clinicalMinute<horizon-1e-8){
    const s=view.clinical,p=s.patient,second=s.clock.clinicalMinute;
@@ -492,14 +563,6 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
      if(id==='lung_protective_ventilation'&&!actualTreatment(p,'intubation',s.clock.nativeMinute))continue;
      const ordered=await action(treatmentCommand(c,content,id));requested.add(id);firstOrder??=ordered;
     }
-    const oxygen=confirmedClinicalTreatment(p,'oxygen',s.clock.nativeMinute);
-    if(oxygen&&s.clock.nativeMinute-oxygen.administeredAtNativeMinute>=5&&p.liveVitals.spo2<85&&
-     c.interventions.some(x=>x.id==='intubation')&&!requested.has('intubation')&&!rescued.has('intubation')&&
-     !actualTreatment(p,'intubation',s.clock.nativeMinute)&&!clinicalInterventionEligibility(p,c,'intubation',s.clock)){
-     const command=await action(treatmentCommand(c,content,'intubation'));rescued.add('intubation');
-     row.rescueActions.push({complicationId:'refractory-hypoxemia',treatmentId:'intubation',commandId:command.id,
-      issuedAtNativeMinute:s.clock.nativeMinute,issuedAtRealSecond:command.issuedAtRealSecond});
-    }
    }
    if(competent)for(const service of plan.consults)if(!p.consults.some(row=>row.id===service&&row.accepted)&&
     !p.pendingConsults.some(row=>row.id===service)&&second-(consulted.get(service)??-Infinity)>=15){
@@ -508,17 +571,22 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    if(competent&&second>=nextReassessment){await action('/reevaluar');nextReassessment=second+15;}
    // Rescue is triggered by an observed native complication. No seed, flag,
    // physiology or complication candidate is assigned to force it to occur.
-   if(competent){
-    const emerged=[...(p.policyState?.complications||[]),...(p.clinicalComplications||[]),...(p.complications||[]),...(p.adverseEvents||[])];
-    for(const def of c.clinicalPolicy?.complications||[]){
-     const active=emerged.some(x=>x.id===def.id||x.complicationId===def.id||x.kind===def.id);
-     if(!active)continue;
-     for(const id of [...(def.rescueAllOf||[]),...(def.rescueAnyOf||[]).slice(0,1)])if(!transferredProcedures.has(id)&&!rescued.has(id)&&!actualTreatment(view.clinical.patient,id,view.clinical.clock.nativeMinute)){
-      const issuedAtNativeMinute=view.clinical.clock.nativeMinute,command=await action(treatmentCommand(c,content,id));rescued.add(id);
-      row.rescueActions.push({complicationId:def.id,treatmentId:id,commandId:command.id,issuedAtNativeMinute,
-       issuedAtRealSecond:command.issuedAtRealSecond});
+   if(competent&&c.clinicalPolicy){
+    for(const episode of view.clinical.patient.policyState?.complications||[]){
+     if(episode.status==='recovered')continue;
+     const def=definitions.find(x=>x.id===episode.id);
+     for(const id of def?.rescueAllOf||[])await requestRescue(id,episode.id);
+     const alternatives=def?.rescueAnyOf||[];
+     if(!alternatives.some(id=>rescueUnderway(view.clinical,id))){
+      const id=alternatives.find(id=>availableRescue(view.clinical,id));
+      if(id)await requestRescue(id,episode.id);
      }
     }
+    // Ordinary airway escalation can precede a native complication, or
+    // address hypoxemia during an unrelated episode. Its receipts still exist.
+    const oxygen=confirmedClinicalTreatment(p,'oxygen',s.clock.nativeMinute);
+    if(oxygen&&s.clock.nativeMinute-oxygen.administeredAtNativeMinute>=5&&p.liveVitals.spo2<85&&
+     c.interventions.some(x=>x.id==='intubation'))await requestRescue('intubation');
    }
    if(profile==='wrong-medication'&&second>=wrongRepeatAt&&second<120){
     await send(wrongMedicationCommand);wrongRepeatAt=second+10;
@@ -547,9 +615,13 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    // A policy-only prefilter must not prevent asking that owner for handoff.
    const canAttempt=['omit-studies','inexperienced','negligent','wrong-medication'].includes(profile)||
     allStudies&&(!c.clinicalPolicy||allTreatments);
-   const complicationObservationComplete=profile!=='complication-rescue'||!c.clinicalPolicy?.complications?.length||
-    (current.patient.policyState?.complications||[]).some(episode=>episode.status==='recovered'||
-     (c.clinicalPolicy.complications.find(def=>def.id===episode.id)?.rescueAllOf||[]).some(id=>transferredProcedures.has(id)));
+   // Observe selected candidates through the authored trajectory window. The
+   // normal closure owner may accept a patient who never met an onset gate.
+   const complicationObservationComplete=profile!=='complication-rescue'||selectedComplications.every(definition=>{
+    const episode=current.patient.policyState?.complications.find(x=>x.id===definition.id);
+    return episode?episode.status==='recovered'||transferredRescueIds(definition,transferredProcedures).length>0:
+     current.clock.nativeMinute>=complicationObservationMinute;
+   });
    if(profile!=='abandon'&&canAttempt&&complicationObservationComplete&&
     (profile==='negligent'||second>=plan.minimumObservationSeconds)&&second-lastCloseAttempt>=15){
     await action('/reevaluar');await action('/disposicion '+plan.destination);lastCloseAttempt=second;

@@ -5,6 +5,7 @@ import {respiratoryPack} from '../../src/v5/content/packs/respiratory-pack.js';
 import {neurologyPack} from '../../src/v5/content/packs/neurology-pack.js';
 import {cardiologyPack} from '../../src/v5/content/packs/cardiology-pack.js';
 import {chooseClinicalScenarioSeed} from '../v5/scenario-seeds.mjs';
+import {assessIntegralJourney} from '../v5/clinical-integral-matrix.mjs';
 import * as certification from '../v5/certify-clinical-cases.mjs';
 import {certifyClinicalCases, runClinicalCaseScenario, deriveClinicalCertificationPlan,
  CLINICAL_CERTIFICATION_PROFILES} from '../v5/certify-clinical-cases.mjs';
@@ -74,6 +75,53 @@ test('cooperative endocarditis with valvular edema transfers for surgery without
  assert(row.pendingTreatments.every(pending=>row.handoffContinuations.continuingAdministrations
   .some(delivered=>delivered.sourceEventId===pending.sourceEventId)),'only confirmed infusions can accompany the handoff');
  assert.equal(row.xpReceipts.length,1);
+ const mismatched=structuredClone(row);
+ mismatched.consultations.find(x=>x.id==='cardiovascular'&&x.accepted).patientUid='another-patient';
+ assert.equal(certification.assessClinicalCertificationEvidence(mismatched).integrityChecks.complicationRescue,false);
+});
+test('early performed airway support can cause recovery without a duplicate order after onset',async()=>{
+ const c=neurologyPack.cases.find(x=>x.id==='NEUR-09');
+ const row=await runClinicalCaseScenario(c,{mode:'apprentice',profile:'complication-rescue',
+  seed:'atria55-native-v1:NEUR-09:complication-rescue',horizon:320,recovery:true});
+ const episode=row.complications.find(x=>x.id==='neur09_ventilatory_failure');
+ const airway=row.treatments.find(x=>x.id==='intubation');
+ assert.equal(episode?.status,'recovered');
+ assert(airway.performed&&airway.completedAtNativeMinute<episode.onsetAt);
+ assert.deepEqual(episode.rescueEvents,[airway.sourceEventId]);
+ assert.equal(row.commands.filter(x=>x.text==='/tratamiento intubation').length,1);
+ assert.equal(row.integrityChecks.complicationRescue,true,JSON.stringify(row.failures));
+ const wrongTreatment=structuredClone(row);
+ wrongTreatment.complications[0].rescueEvents=[row.treatments.find(t=>t.id==='ivig').sourceEventId];
+ assert.equal(certification.assessClinicalCertificationEvidence(wrongTreatment).integrityChecks.complicationRescue,false);
+ const wrongCommand=structuredClone(row);
+ wrongCommand.clinicalReceipts.find(x=>x.eventId===airway.sourceEventId).commandId='another-order';
+ assert.equal(certification.assessClinicalCertificationEvidence(wrongCommand).integrityChecks.complicationRescue,false);
+});
+test('a rescue-only procedure waits for confirmed venous access and yields its own causal receipt',async()=>{
+ const c=cardiologyPack.cases.find(x=>x.id==='CARD-02');
+ const row=await runClinicalCaseScenario(c,{profile:'complication-rescue',
+  seed:'atria55-native-v1:CARD-02:complication-rescue',horizon:650,recovery:true});
+ const episode=row.complications.find(x=>x.id==='card02-recurrent-ischemia');
+ const rescue=row.rescueActions.find(x=>x.complicationId===episode.id&&x.treatmentId==='coronary_reperfusion');
+ const access=row.clinicalReceipts.find(x=>x.id==='iv'&&x.patientUid===row.patientUid);
+ const reperfusion=row.clinicalReceipts.find(x=>x.commandId===rescue?.commandId);
+ assert(access&&row.nursing.confirmedEventIds.includes(access.eventId));
+ assert(reperfusion?.performed&&episode.rescueEvents.includes(reperfusion.sourceEventId));
+ assert(!row.commands.some(x=>x.clinical.some(item=>item.reason==='venous-access-required')));
+ assert.equal(episode.status,'recovered');
+ assert.equal(row.integrityChecks.complicationRescue,true,JSON.stringify(row.failures));
+});
+test('a never-emerged candidate allows indicated disposition after observation without rescue credit',async()=>{
+ const c=cardiologyPack.cases.find(x=>x.id==='CARD-06');
+ const row=await runClinicalCaseScenario(c,{profile:'complication-rescue',
+  seed:'atria55-native-v1:CARD-06:complication-rescue',horizon:650,recovery:true});
+ assert(row.patientIdentity.initial.variation.complicationCandidates.some(x=>x.id==='card06-low-output-collapse'));
+ assert.deepEqual(row.complications,[]);
+ assert.deepEqual(row.rescueActions,[]);
+ assert.equal(row.closureReceipt?.destination,'uti',JSON.stringify(row.readiness));
+ assert(row.final.atRealSecond<row.horizonRealSeconds);
+ assert.equal(row.integrityChecks.complicationRescue,false);
+ assert.equal(assessIntegralJourney(row).rescueOpportunity,'not-emerged');
 });
 test('abandonment preserves a single irreversible death when postmortem commands have no bedside target',async()=>{
  const c=respiratoryPack.cases.find(x=>x.id==='RESP-04'),row=await runClinicalCaseScenario(c,{profile:'abandon',horizon:400,seed:'abandoned-terminal'});
