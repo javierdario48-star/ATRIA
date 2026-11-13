@@ -286,8 +286,9 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(mode==='competitive'&&patientUid===null){
     const records=shift.records(),preferredRecord=shift.record(preferred(actorId))||records[0];
     const own=preferredRecord?.ownerId===actorId?preferredRecord:records.find(record=>record.ownerId===actorId);
-    const available=records.find(record=>!record.ownerId&&canReadCompetitivePatient(record,actorId));
-    session=sessions.get((own||available||preferredRecord).uid);
+    const unowned=records.filter(record=>!record.ownerId);
+    const available=unowned.find(record=>canReadCompetitivePatient(record,actorId));
+    session=sessions.get((own||available||unowned[0]||preferredRecord).uid);
    }
    if(patientUid!==null){
     const record=shift.record(patientUid);

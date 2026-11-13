@@ -132,18 +132,20 @@ async function exerciseImportedCase(t, content, mode, guardSelection) {
   assert.equal((await runtime.advanceTo(nowMs)).recovering, false);
  };
 
- const initial = state(), {uid, backgroundHistory} = initial.patient;
+ const initial = state(), {uid} = initial.patient;
  assert.equal(initial.patient.caseId, respiratoryProofCaseId);
  assert.deepEqual(initial.shift.guardSelection, {...guardSelection, multiplier: 1});
  assert.deepEqual(initial.shift.patients.map(row => row.caseId),
   mode === 'competitive' ? [respiratoryProofCaseId, respiratoryProofCaseId] : [respiratoryProofCaseId]);
- assert.match(backgroundHistory?.history?.pmh ?? '', /asma desde la infancia.*(?:fractur|esguince)/);
- assert(initial.patient.behavior);
+ if(mode==='competitive')assert.deepEqual(initial.patient,{uid,caseId:respiratoryProofCaseId});
  const bed = content.beds.find(row => row.id === initial.shift.patients[0].bedId);
  const {x, y} = createNavigation(content.map).center(...bed.approach);
  assert(runtime.motion(actorId, [x, y], 1));
  await advance(20);
  assert(runtime.claim(actorId, uid));
+ const {backgroundHistory,behavior}=state().patient;
+ assert.match(backgroundHistory?.history?.pmh ?? '', /asma desde la infancia.*(?:fractur|esguince)/);
+ assert(behavior);
  const send = (id, text) => runtime.post(actorId, {id, text, targetPatientUid: uid});
 
  await send('onset', '¿Desde cuándo empezó la falta de aire?');
