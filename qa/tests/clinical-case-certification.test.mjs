@@ -24,6 +24,23 @@ test('competitive certification verifies public convergence and rejects leaking 
  wrongCredit.sharedViews.find(view=>view.actorId===rival.actorId).claims=structuredClone(row.sharedViews.find(view=>view.actorId===row.careActorId).claims);
  assert.equal(certification.assessClinicalCertificationEvidence(wrongCredit).integrityChecks.sync,false);
 });
+test('competitive abandonment keeps the untouched chart private throughout a restored native journey',async()=>{
+ const row=await runClinicalCaseScenario(app,{content,mode:'competitive',profile:'abandon',horizon:20,recovery:true});
+ assert.equal(row.integrityChecks?.sync,true,JSON.stringify(row.failures));
+ assert.equal(row.integrityChecks.persistence,true);
+ assert.equal(row.reception.confirmedFocusPatientUid,null);
+ assert.equal(row.initial.atRealSecond,0);
+ assert.equal(row.final.atNativeMinute,2.4);
+ assert.deepEqual(row.commands,[]);
+ assert.deepEqual(row.administrations,[]);
+ assert.equal(row.closureReceipt,null);
+ const rival=row.sharedViews.find(view=>view.actorId!==row.careActorId);
+ assert.equal(rival.privateCaseHidden,true);
+ assert.equal(rival.explicitPatientDenied,true);
+ const exposure=structuredClone(row);
+ exposure.sharedViews.find(view=>view.actorId===rival.actorId).explicitPatientDenied=false;
+ assert.equal(certification.assessClinicalCertificationEvidence(exposure).integrityChecks.sync,false);
+});
 test('a declared definitive surgical pathway selects the receiving operating team before a routine ward',()=>{
  const c=cardiologyPack.cases.find(x=>x.id==='CARD-09');
  const plan=deriveClinicalCertificationPlan(c,content);

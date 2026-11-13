@@ -219,6 +219,7 @@ export function assessClinicalCertificationEvidence(row){
    if(!members.includes(view.actorId)||!validClaims(view.claims,view.actorId))return false;
    if(row.mode==='competitive'&&view.actorId!==row.careActorId)
     return view.privateCaseHidden===true&&view.publicPatientDigest===row.publicPatientDigest&&
+     view.explicitPatientDenied!==false&&
      view.progressXP===0&&view.closureEventId===null&&view.administrationEventIds.length===0&&
      view.deathEvents.every(event=>event.patientUid!==row.patientUid);
    return view.patientUid===row.patientUid&&view.patientDigest===row.patientDigest&&
@@ -370,10 +371,28 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   row.memberIds=members.map(member=>member.id);row.careActorId=actorId;
   const factory=checkpoint=>createGuardRuntime({content,roomId,caseId:c.id,members,hostId,mode,nowMs,checkpoint});
   runtime=await factory(null);let view=runtime.view(actorId);const uid=view.clinical.patient.uid;
-  row.patientIdentity={patientUid:uid,initial:patientIdentity(view.clinical.patient),restoredIdentityUnchanged:true};
-  row.patientUid=uid;row.initial=snapshot(view);const baseline=copy(view.clinical.patient.liveVitals);
+  const admission=view.clinical.shift.patients.find(x=>x.uid===uid);
+  const nav=createNavigation(content.map),atBed=nav.center(...content.beds.find(b=>b.id===admission.bedId).approach);
+  // Record the initial physiology from the same trusted checkpoint the
+  // runtime persists. Remote doctors at reception receive only triage.
+  const initialView=view.clinical.readOnly?{clinical:{...view.clinical,
+   patient:(await runtime.checkpoint()).session.patient}}:view;
+  if(mode==='competitive'&&profile==='abandon'){
+   // The QA observer starts bedside without claiming the patient or treating
+   // them. The rival stays at reception for the entire untreated trajectory.
+   const saved=await runtime.checkpoint();
+   const doctor=saved.world.state.others.find(actor=>actor.id===actorId);
+   Object.assign(doctor,atBed);
+   runtime.dispose();runtime=await factory(saved);view=runtime.view(actorId);
+   if(view.clinical.readOnly)throw Error('bedside observer could not read the unclaimed patient');
+  }
+  row.patientIdentity={patientUid:uid,initial:patientIdentity(initialView.clinical.patient),restoredIdentityUnchanged:true};
+  row.patientUid=uid;row.initial=snapshot(initialView);const baseline=copy(initialView.clinical.patient.liveVitals);
+  row.observations.push(row.initial);
   const observe=force=>{
-   view=runtime.view(actorId);const sample=snapshot(view),previous=row.observations.at(-1);
+   view=runtime.view(actorId);
+   if(view.clinical.readOnly)return view;
+   const sample=snapshot(view),previous=row.observations.at(-1);
    if(!row.firstMeaningfulPhysiologicalDelta){
     const delta=Object.fromEntries(vitalKeys.map(k=>[k,round(view.clinical.patient.liveVitals[k]-baseline[k])]));
     if(vitalKeys.some(k=>Math.abs(delta[k])>=meaningful[k]))row.firstMeaningfulPhysiologicalDelta={
@@ -409,11 +428,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     status:ack.status,reason:ack.reason??null,routeError:ack.routeError??null,clinical:copy(ack.clinical||[])});
    observe(false);return {id:commandId,ack,text,issuedAtRealSecond:view.clinical.clock.clinicalMinute};
   };
-  observe(true);
-  const admission=view.clinical.shift.patients.find(x=>x.uid===uid);
   row.reception={arrival:{patientUid:uid,caseId:admission.caseId,bedId:admission.bedId,
    arrivalAtRealSecond:admission.arrivalAt,triage:copy(admission.triage)},confirmedFocusPatientUid:null};
-  const nav=createNavigation(content.map),atBed=nav.center(...content.beds.find(b=>b.id===admission.bedId).approach);
   if(profile!=='abandon'){
    if(!runtime.motion(actorId,[atBed.x,atBed.y],1))throw Error('doctor path to admitted patient rejected');
    while(view.clinical.clock.clinicalMinute<Math.min(horizon,30)&&!runtime.claim(actorId,uid))await advance(.25);
@@ -582,10 +598,17 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   const checkpoint=await runtime.checkpoint();
   row.sharedViews=members.map(m=>{
    const shared=runtime.view(m.id),p=shared.clinical.patient;
+   let explicitPatientDenied;
+   if(mode==='competitive'&&m.id!==actorId){
+    try{runtime.view(m.id,{patientUid:uid});explicitPatientDenied=false;}
+    catch(error){if(error.code!=='forbidden')throw error;explicitPatientDenied=true;}
+   }
    return {actorId:m.id,patientUid:p.uid,patientDigest:hash(p),progressXP:shared.clinical.progress.xp,
     publicPatientDigest:hash(shared.clinical.shift.patients.find(record=>record.uid===uid)),
     privateCaseHidden:p.uid!==uid||shared.clinical.readOnly===true&&shared.catalog.length===0&&
+     Object.keys(p).every(key=>key==='uid'||key==='caseId')&&
      shared.clinical.messages.length===0&&shared.clinical.room.events.length===0&&shared.clinical.room.transcript.length===0,
+    ...(explicitPatientDenied===undefined?{}:{explicitPatientDenied}),
     closureEventId:p.closure?.eventId??null,administrationEventIds:(p.administrationLog||[]).map(x=>x.sourceEventId),
     deathEvents:shared.clinical.room.events.filter(x=>x.type==='clinical.patient-died')
      .map(x=>({roomId:x.roomId,patientUid:x.patientUid,revision:x.revision,atNativeMinute:x.atNativeMinute,cause:x.cause})),

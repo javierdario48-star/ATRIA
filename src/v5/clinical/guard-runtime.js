@@ -286,7 +286,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(mode==='competitive'&&patientUid===null){
     const records=shift.records(),preferredRecord=shift.record(preferred(actorId))||records[0];
     const own=preferredRecord?.ownerId===actorId?preferredRecord:records.find(record=>record.ownerId===actorId);
-    const available=!preferredRecord?.ownerId?preferredRecord:records.find(record=>!record.ownerId);
+    const available=records.find(record=>!record.ownerId&&canReadCompetitivePatient(record,actorId));
     session=sessions.get((own||available||preferredRecord).uid);
    }
    if(patientUid!==null){
@@ -297,12 +297,11 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     session=sessions.get(patientUid);
    }
    let {clinical,patientStates}=clinicalView(actorId,session),catalog=session.catalog();
-   if(mode==='competitive'&&(clinical.competition.ownerId||clinical.room.transcript.length)&&
-      !canReadCompetitivePatient({uid:clinical.patient.uid,ownerId:clinical.competition.ownerId},actorId)){
-    // A released bed can still contain prior clinical work. Only reception
-    // and score projections are available to a distant competitor.
+   if(mode==='competitive'&&!canReadCompetitivePatient(shift.record(clinical.patient.uid),actorId)){
+    // Reception and scores remain public to room members, even when a chart
+    // has no owner yet. Clinical reads use the same rule as explicit requests.
     clinical={canEdit:false,readOnly:true,hintBinding:clinical.hintBinding,hintCount:0,caseReward:null,
-     room:{roomId,mode:clinical.room.mode,revision:0,events:[],transcript:[]},
+     room:{roomId,mode:clinical.room.mode,revision:0,members:clinical.room.members,events:[],transcript:[]},
      patient:{uid:clinical.patient.uid,caseId:clinical.patient.caseId},clock:clinical.clock,messages:[],
      exposure:{patientUid:clinical.patient.uid,confirmedIvEventCount:0,confirmedCrystalloidMl:0,byDrug:{}},
      progress:{xp:0,level:1,receipts:[],penalties:[]},eligibleDestinations:[],closure:null,

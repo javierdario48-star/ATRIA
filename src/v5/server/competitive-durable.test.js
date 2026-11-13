@@ -29,13 +29,27 @@ for(const n of [2,3,4]){
    assert.equal(start.status,200);
    const patientUid=start.body.clinical.patient.uid;
    assert.equal(start.body.clinical.competition.ownerId,null);
+   assert.deepEqual(start.body.clinical.patient,{uid:patientUid,caseId:'PERI-PBE-001'});
+   assert.equal(start.body.clinical.readOnly,true);
+   assert.deepEqual(start.body.clinical.room.members,ids);
+   assert.deepEqual(start.body.clinical.room.transcript,[]);
+   assert.deepEqual(start.body.catalog,[]);
    assert.equal(start.body.clinical.shift.confirmedFocusPatientUid,null,
     'first-patient default snapshot must not masquerade as a verified bedside claim');
-   assert.equal((await call(1,'sync',{claim:patientUid})).body.clinical.competition.ownerId,null);
+   const distant=await call(1,'sync',{claim:patientUid});
+   assert.equal(distant.body.clinical.competition.ownerId,null);
+   assert.deepEqual(distant.body.clinical.patient,{uid:patientUid,caseId:'PERI-PBE-001'});
+   assert.equal((await call(1,'observe',{targetPatientUid:patientUid})).status,403);
    const world=createWorld(content,{id:ids[0],name:members[0].name});
    const point=world.navigation.center(...content.beds[0].approach);
    await call(1,'sync',{motion:[point.x,point.y],motionSequence:1});
    now+=20000;
+   await call(1,'sync');
+   const bedside=await call(1,'observe',{targetPatientUid:patientUid});
+   assert.equal(bedside.status,200);
+   assert.equal(bedside.body.clinical.competition.ownerId,null);
+   assert.equal(bedside.body.clinical.shift.confirmedFocusPatientUid,null);
+   assert(bedside.body.clinical.patient.liveVitals);
    const claimed=await call(1,'sync',{claim:patientUid});
    assert.equal(claimed.status,200);
    assert.equal(claimed.body.clinical.competition.ownerId,ids[1]);
