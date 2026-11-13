@@ -160,8 +160,8 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
   matchedStudy=studyOrdering.search(clause),
   vocabulary=clinicalVocabulary({caseId,cases,therapies,studyOrdering});
  const studyMatches=matchedStudy?.choices??(matchedStudy?.study?[matchedStudy]:[]);
- vocabulary.unshift(...studyMatches.map(({study,series,quantity,command},index)=>({
-  ...option('study:'+study.id,'study',studyOrderLabel(study,{series,quantity}),command),studyMatch:120-index
+ vocabulary.unshift(...studyMatches.map(({study,series,control,quantity,command},index)=>({
+  ...option('study:'+study.id,'study',studyOrderLabel(study,{series,control,quantity}),command),studyMatch:120-index
  })));
  const rows=vocabulary.filter(item=>item.kind!=='study'||!matchedStudy||item.studyMatch).map(item=>({
   ...item,score:item.studyMatch||Math.max(0,...item.terms.map(x=>rank(query,x)))
@@ -183,18 +183,18 @@ export function clinicalCompletions(text,{mode='chat',caseId,cases,therapies,stu
 export function studySearchChoices(query,{caseId,cases=[],studies=[]}={}){
  const ordering=studyOrderVocabulary(studies,cases.find(c=>c.id===caseId)?.studies),
   exact=ordering.search(query),term=normalizeStudyOrder(query);
- const row=(study,series=false,quantity,command)=>({id:study.id,label:studyOrderLabel(study,{series,quantity}),series,
-  ...(quantity!==undefined?{quantity,command:'/estudio '+command}:{})});
+ const row=(study,{series=false,control=false,quantity,command}={})=>({id:study.id,label:studyOrderLabel(study,{series,control,quantity}),series,
+  ...(quantity!==undefined?{quantity}:{}),...(control||quantity!==undefined?{command:'/estudio '+command}:{})});
  if(exact){
   const matches=exact.choices??(exact.study?[exact]:[]);
-  return matches.map(({study,series,quantity,command})=>row(study,series,quantity,command));
+  return matches.map(match=>row(match.study,match));
  }
  const direct=ordering.catalog.find(study=>study.id===String(query??'').trim().toLowerCase());
  const candidates=direct&&!ordering.searchCatalog.includes(direct)?[direct]:ordering.searchCatalog;
  return candidates.flatMap(study=>{
   const options=[];
   if(!term||[study.id,study.label,...study.aliases].some(value=>normalizeStudyOrder(value).includes(term)))options.push(row(study));
-  if(ordering.supportsSeries(study.id)&&(!term||normalizeStudyOrder(study.label+' seriada').includes(term)))options.push(row(study,true));
+  if(ordering.supportsSeries(study.id)&&(!term||normalizeStudyOrder(study.label+' seriada').includes(term)))options.push(row(study,{series:true}));
   return options;
  });
 }

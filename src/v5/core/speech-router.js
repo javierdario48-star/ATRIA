@@ -117,6 +117,7 @@ export function routeWardSpeech(text,context={}){
    (!study?'unknown-study':series&&!ordered.supportsSeries(study.id)?'study-series-unavailable':!patientUid?'no-patient-target':null);
   return {recipient:'nurse',patientUid,original,intents:error?[]:[{kind:'study.request',id:study.id,
    sourceText:original,clause:original,count:1,...(series?{series:true}:{}),
+   ...(selected?.control?{control:true}:{}),
    ...(selected?.quantity!==undefined?{quantity:selected.quantity,...(selected.additional?{additional:true}:{})}:{})}],...(error?{error}:{})};
  }
  const focus=context.focusedNpc;
@@ -191,7 +192,7 @@ export function routeWardSpeech(text,context={}){
    intent={kind,...identity,sourceText:original,clause:item.text,count:item.count||1},
    duplicate=kind==='study.request'?intents.findIndex(x=>x.kind===kind&&x.id===identity.id):-1;
   if(duplicate<0)intents.push(intent);
-  else if(identity.series)intents[duplicate]=intent;
+  else if(identity.series||identity.control)intents[duplicate]=intent;
  }
  const planned=planNursingIVAccess(intents,context);
  // A compound command is one clinical intention. Never start its monitor,

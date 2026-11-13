@@ -66,7 +66,8 @@ export function historyHTML(p,caseDef=null){
   ['Signos registrados',vitalsHTML(p)],['Examen realizado',examHTML(p)],
   ['Glasgow',p.glasgow?Object.entries(p.glasgow).filter(([k])=>['eye','verbal','motor'].includes(k)).map(([,v])=>'<p>'+esc(v.text)+' · '+(v.score??'NT')+'</p>').join('')+
    '<p>Total: '+(p.glasgow.total??'incompleto o no evaluable')+'</p>':'<p>Todavía no evaluado.</p>'],
-  ['Estudios y resultados',(p.orders||[]).map(o=>'<p><b>'+esc(o.label)+'</b> · '+(o.status==='done'?'Resultado disponible: '+esc(o.result):'Pendiente')+'</p>').join('')||'<p>No solicitados.</p>'],
+  ['Estudios y resultados',(p.orders||[]).map(o=>'<p><b>'+esc(o.label)+'</b> · '+(o.status==='done'?'Resultado disponible: '+esc(o.result):
+   o.status==='unavailable'?'Informe no disponible': 'Pendiente')+'</p>').join('')||'<p>No solicitados.</p>'],
   ['Tratamiento y consultas',therapyHTML(p,caseDef)],
   ...((p.adverseEvents||[]).length?[['Complicaciones documentadas',p.adverseEvents.map(x=>
    '<p>'+esc(x.message)+' · '+(x.status==='resolved'?'Resuelta':'En seguimiento')+'</p>').join('')]]:[])];

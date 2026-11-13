@@ -13,7 +13,7 @@ export function clinicalWorkflow(state){
  const examCount=Object.values(p.examFindings||{}).reduce((n,r)=>n+Object.keys(r||{}).length,0);
  const examined=recordedExam(p);
  const studies=(p.orders||[]).some(o=>o.status==='done');
- const waiting=(p.orders||[]).some(o=>o.status!=='done');
+ const waiting=(p.orders||[]).some(o=>o.status==='pending'||o.series?.status==='pending');
  // A pending hemogram or isolated question cannot trigger an early diagnosis.
  const diagnosticReady=historyCount>=2&&(examCount>=2||p.examDone)&&
   (studies||(historyCount>=3&&examCount>=3));

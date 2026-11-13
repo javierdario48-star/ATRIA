@@ -289,7 +289,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    if(intent.kind==='study.request'){
     const result=studies.request(nativePatient,{id:intent.id,eventId,actorId,atMinute:clock.clinicalMinute,
-     atNativeMinute:clock.nativeMinute,series:intent.series,quantity:intent.quantity,additional:intent.additional});
+     atNativeMinute:clock.nativeMinute,series:intent.series,control:intent.control,quantity:intent.quantity,additional:intent.additional});
     if(result.status==='pending'){
      const source=result.sourceEventId;
      const key=pendingStudyKey(source,result.series);
@@ -342,9 +342,11 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    if(item.status==='pending')return collectionLabel+': solicitado; toma pendiente. Microbiología pendiente.';
    if(item.status==='executed')return collectionLabel+': toma confirmada. '+item.receipt.result;
   }
+  if(item.kind==='study.request'&&item.receipt?.control&&item.status==='pending')
+   return item.receipt.label+': solicitado; pendiente de resultado.';
   if(item.status!=='rejected')return null;
   if(item.kind==='study.request'&&item.reason==='study-control-unavailable')
-   return label+': el informe inicial está disponible. Esta guardia no dispone de un informe de control para ese protocolo.';
+   return (item.receipt?.label||label)+': '+(item.receipt?.message||'Esta guardia no dispone de un informe de control para ese protocolo.');
   if(item.receipt?.message)return 'No ejecutado: '+item.receipt.message;
   if(item.reason==='clinical-action-not-migrated'){
    // Unsupported clinical execution is a system limitation, not a clinical

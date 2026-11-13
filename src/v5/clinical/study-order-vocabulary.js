@@ -108,6 +108,9 @@ const documentedCRP=/\b(?:proteina c reactiva|pcr (?:(?:moderadamente|marcadamen
 export function isTroponinStudy(study){
  return terms(study).some(term=>troponinPattern.test(term))||measuredTroponin(study).length>0;
 }
+export function isRepeatableStudy(study){
+ return !!study&&(study.repeatable===true||!!study.dynamic)&&!isTroponinStudy(study);
+}
 
 function seriesNames(names){
  return names.flatMap(name=>[name+' seriada',name+' seriadas',name+' en serie',name+' de control',name+' serial',
@@ -141,10 +144,10 @@ function studyRank(study,group,aliases){
   group==='troponina'&&isTroponinStudy(study)?1:0;
 }
 
-export function studyOrderLabel(study,{series=false,quantity}={}){
+export function studyOrderLabel(study,{series=false,control=false,quantity}={}){
  if(quantity!==undefined&&studyCollectionDefinition(study))return studyCollectionPhrase(quantity);
  const label=isTroponinStudy(study)?study.label.replace(/\s+seriad[ao]s?\b/i,''):study.label;
- return series?label+' seriada':label;
+ return series?label+' seriada':control?label+' (control)':label;
 }
 
 /** Prefer the current case, then the existing catalog for a named protocol.
@@ -158,6 +161,12 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   (study.id==='troponina'||!isTroponinStudy(study)))byId.set(study.id,study);
  const catalog=[...byId.values()],angiographic=catalog.filter(isAngioCt),
   nativeAngiographic=angiographic.filter(study=>nativeById.has(study.id));
+ const controlAliases=new Map();
+ for(const study of native){
+  if(!isRepeatableStudy(study)||studyCollectionDefinition(study)||study.requiresCompletedTreatments?.length||isAngioCt(study))continue;
+  for(const term of terms(study))if(term&&!containsTerm(term,'control')&&!controlAliases.has(term+' de control'))
+   controlAliases.set(term+' de control',study);
+ }
  const collections=native.filter(study=>studyCollectionDefinition(study));
  const collection=collections.length===1?collections[0]:null;
  const byFamily=new Map();
@@ -240,6 +249,8 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
    if(issue)return {error:issue};
    const authored=authoredAngioCt.get(word);
    if(authored)return {study:authored,command:word};
+   const control=controlAliases.get(word);
+   if(control)return {study:control,command:word,control:true};
    if(troponinPattern.test(word)&&(explicitSeries.test(word)||timedTroponin.test(word)))
     return {error:'study-series-unavailable'};
    return null;
@@ -294,13 +305,19 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   return {...study,label:studyOrderLabel(study),aliases:[...new Set(angiographic.includes(study)?[...aliases,...authored]:[...authored,...aliases])]};
  });
  const seriesLexiconId=hasSeries?troponin.id+':series':null;
+ const controlsById=new Map();
+ for(const [alias,study] of controlAliases){
+  const id=study.id+':control';
+  if(!controlsById.has(id))controlsById.set(id,{study,aliases:[]});
+  controlsById.get(id).aliases.push(alias);
+ }
  const scanLexicon=lexicon.flatMap(study=>{
   const entry=isAliasFor(study.label,study.id)?study:{...study,label:''};
   if(!hasSeries||study.id!==troponin.id)return [entry];
   const aliases=entry.aliases.filter(alias=>resolve(alias)?.series);
   return [{...entry,aliases:entry.aliases.filter(alias=>!resolve(alias)?.series)},
    {id:seriesLexiconId,label:'',aliases}];
- });
+ }).concat([...controlsById].map(([id,{aliases}])=>({id,label:'',aliases})));
  const orderable=lexicon.filter(study=>!byFamily.has(study.id)||byFamily.get(study.id).id===study.id||nativeById.has(study.id));
  const duplicateAngioCt=study=>{
   const label=normalizeStudyOrder(study.label);
@@ -316,6 +333,8 @@ export function studyOrderVocabulary(studies=[],nativeStudies=studies){
   scanText:phrase=>collection?studyCollectionScanText(phrase):phrase,
   lexicalIntent:(id,phrase)=>{
    if(id===seriesLexiconId)return {id:troponin.id,series:true};
+   const control=controlsById.get(id);
+   if(control)return {id:control.study.id,control:true};
    const request=collection?.id===id?studyCollectionRequests(phrase)[0]:null;
    return {id,...(request?{quantity:request.quantity,...(request.additional?{additional:true}:{})}:{})};
   },

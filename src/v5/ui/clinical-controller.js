@@ -338,11 +338,12 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
   }
   setHTML(ui('studyOrders'),p.orders.length?p.orders.map(order=>'<div data-study="'+esc(order.id)+'" data-status="'+(order.series?.status??order.status)+'"><b>'+esc(order.label)+'</b><small>'+
    (order.samples?order.samples.filter(sample=>sample.status==='done').length+' de '+order.samples.length+' resultados disponibles':
-    order.status==='done'?'Resultado disponible':'Pendiente · '+Math.max(0,Math.ceil(order.readyAtMinute-s.clock.clinicalMinute))+' min clínicos')+'</small>'+
+    order.status==='done'?'Resultado disponible':order.status==='unavailable'?'Informe no disponible':
+     'Pendiente · '+Math.max(0,Math.ceil(order.readyAtMinute-s.clock.clinicalMinute))+' min clínicos')+'</small>'+
    (order.samples?order.samples.map((sample,index)=>'<p>Muestra '+(index+1)+' · '+(sample.status==='scheduled'?'Pendiente de toma':
     'Tomada al minuto '+esc(sample.sampledAtNativeMinute.toLocaleString('es',{maximumFractionDigits:2}))+
     (sample.status==='done'?': '+esc(sample.result):' · pendiente de resultado'))+'</p>').join(''):
-    order.status==='done'?'<p>'+esc(order.result)+'</p>':'')+'</div>').join(''):'<p>Todavía no solicitaste estudios.</p>');
+    order.status==='done'?'<p>'+esc(order.result)+'</p>':order.status==='unavailable'?'<p>'+esc(order.message)+'</p>':'')+'</div>').join(''):'<p>Todavía no solicitaste estudios.</p>');
   if(!p.liveVitals)return;
   setHTML(ui('clinicalVitals'),vitalsHTML(p));
   const ecg=ecgPresentation(p);

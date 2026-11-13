@@ -8,8 +8,10 @@ import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 import {respiratoryPack} from '../content/packs/respiratory-pack.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
 import {clinicalCompletions,studySearchChoices} from '../ui/clinical-autocomplete.js';
+import {historyHTML} from '../ui/clinical-panels.js';
 import {routeWardSpeech} from '../core/speech-router.js';
 import {selectClinicalHint} from './clinical-hints.js';
+import {patientStudyOrders} from './study-evidence.js';
 import {clinicalContent as certifiedContent} from '../server/content.js';
 
 const read=name=>JSON.parse(readFileSync(new URL('../content/'+name+'.json',import.meta.url)));
@@ -288,30 +290,104 @@ test('RESP-03 captures a new blood gas after nurse-confirmed ventilation and res
  }finally{session.dispose();restored?.dispose();}
 });
 
-test('repeat controls cannot turn an authored baseline into a fresh report after real treatment',async()=>{
+async function completePleuralProcedure(session,id,seconds){
+ await session.post({id:'vitals',text:'/signos'});
+ await session.post({id:'exam-a',text:'/examen thorax auscultation'});
+ await session.post({id:'exam-p',text:'/examen thorax percussion'});
+ await session.post({id:'pleural-procedure',text:'/tratamiento '+id});
+ session.advance(seconds);await session.flush();
+ const receipt=session.read().patient.treatments.find(row=>row.id===id);
+ assert.equal(receipt?.kind,'procedure.performed');
+ assert.equal(receipt.completionStatus,'completed');
+ return receipt;
+}
+
+test('repeat controls record unavailability after real treatment and preserve prior reports after recovery',async()=>{
  const session=setup('RESP-07',certifiedContent);
- const advance=async seconds=>{session.advance(seconds);await session.flush();};
  const first={id:'baseline-xray',text:'/estudio g_resp07_cxr'};
  const gas={id:'baseline-gas',text:'/estudio g_resp07_gas'};
+ const requests=[{id:'control-xray',text:'Enfermera radiografía de tórax de control'},
+  {id:'control-gas',text:'Enfermera gasometría de control'}];
+ let restored;
  try{
-  await session.post(first);await session.post(gas);await advance(7);
+  await session.post(first);await session.post(gas);session.advance(7);await session.flush();
   const initial=session.read().patient.orders;
   assert.equal(initial.length,2);
   assert(initial.every(row=>row.status==='done'&&row.sampledAtNativeMinute===0));
-  await session.post({id:'vitals',text:'/signos'});
-  await session.post({id:'exam-a',text:'/examen thorax auscultation'});
-  await session.post({id:'exam-p',text:'/examen thorax percussion'});
-  await session.post({id:'needle',text:'/tratamiento needle_decompression'});await advance(24);
-  assert(session.read().patient.treatments.some(row=>row.id==='needle_decompression'&&row.kind==='procedure.performed'));
-  for(const [id,text] of [['control-xray','Enfermera radiografía de tórax'],['control-gas','Enfermera gasometría']]){
-   const rejected=(await session.post({id,text})).clinical[0];
-   assert.equal(rejected.status,'rejected');
-   assert.equal(rejected.reason,'study-control-unavailable');
+  const treatment=await completePleuralProcedure(session,'needle_decompression',24);
+  const outcomes=[];
+  for(const [index,request] of requests.entries()){
+   const ack=await session.post(request),item=ack.clinical[0];
+   assert.equal(ack.routeError,null);
+   assert.equal(item.status,'rejected');
+   assert.equal(item.reason,'study-control-unavailable');
+   assert.equal(item.receipt.control,true);
+   assert.equal(item.receipt.studyId,initial[index].id);
+   assert.equal(item.receipt.patientUid,initial[index].patientUid);
+   assert.notEqual(item.receipt.sourceEventId,initial[index].sourceEventId);
+   assert(item.receipt.requestedAtNativeMinute>treatment.completedAtNativeMinute);
+   assert.equal(item.receipt.sampledAtNativeMinute,undefined);
+   assert.equal(item.receipt.result,undefined);
+   outcomes.push(item);
   }
-  assert.deepEqual(session.read().patient.orders,initial);
-  const replay=await session.post(first);
+  const orders=session.read().patient.orders;
+  assert.deepEqual(orders.slice(0,2),initial);
+  assert.deepEqual(orders.slice(2).map(o=>[o.status,o.sourceEventId]),outcomes.map(o=>['unavailable',o.receipt.sourceEventId]));
+  restored=setup('RESP-07',certifiedContent,await session.checkpoint());
+  const replay=await restored.post(first);
   assert.equal(replay.clinical[0].receipt.sourceEventId,initial[0].sourceEventId);
   assert.equal(replay.clinical[0].receipt.result,initial[0].result);
+  for(const [index,request] of requests.entries())assert.deepEqual((await restored.post(request)).clinical[0],outcomes[index]);
+  assert.deepEqual(restored.read().patient.orders,orders);
+ }finally{session.dispose();restored?.dispose();}
+});
+
+for(const [procedure,seconds] of [['needle_decompression',24],['chest_drainage',90]])
+ test('RESP-07 first studies after confirmed '+procedure+' do not present the historical baseline as a new sample',async()=>{
+  const session=setup('RESP-07',certifiedContent),caseData=certifiedContent.cases.find(c=>c.id==='RESP-07');
+  try{
+   const treatment=await completePleuralProcedure(session,procedure,seconds);
+   const ids=['g_resp07_cxr','g_resp07_gas'];
+   for(const [index,text] of ['Enfermera radiografía de tórax','Enfermera gasometría'].entries()){
+    const ack=await session.post({id:'first-study-'+index,text}),item=ack.clinical[0];
+    assert.equal(item.id,ids[index]);
+    assert.equal(item.reason,'study-control-unavailable');
+    assert.equal(item.receipt.status,'unavailable');
+    assert(item.receipt.requestedAtNativeMinute>treatment.completedAtNativeMinute);
+   }
+   assert.deepEqual(session.advance(10),[]);await session.flush();
+   const {patient,messages}=session.read();
+   assert.deepEqual(patient.orders.map(o=>[o.id,o.status,o.sampledAtNativeMinute,o.result]),
+    ids.map(id=>[id,'unavailable',undefined,undefined]));
+   assert.deepEqual(patientStudyOrders(patient,'done',caseData),[]);
+   assert.deepEqual(patientStudyOrders(patient,'pending',caseData),[]);
+   assert.match(historyHTML(patient,caseData),/Informe no disponible/);
+   assert(messages.some(message=>/no dispone de un informe de control/.test(message.text)));
+   assert(!messages.some(message=>/el informe inicial está disponible/i.test(message.text)));
+  }finally{session.dispose();}
+ });
+
+test('a case-native control phrase keeps the qualification through suggestions and the study owner',async()=>{
+ const caseId='RESP-07',cases=certifiedContent.cases,session=setup(caseId,certifiedContent);
+ const phrase='gasometría de control',id='g_resp07_gas';
+ try{
+  const ctx={caseId,cases,studies:session.catalog(),mode:'monitor'};
+  const [suggestion]=clinicalCompletions(phrase,ctx).filter(x=>x.kind==='study');
+  assert.equal(suggestion?.id,'study:'+id);
+  assert.match(suggestion.command,/de control$/);
+  const [choice]=studySearchChoices(phrase,ctx);
+  assert.equal(choice?.id,id);
+  assert.match(choice.command,/^\/estudio .* de control$/);
+  const route=routeWardSpeech('Enfermera gasometría y '+suggestion.command,
+   {caseData:cases.find(c=>c.id===caseId),patientUid:'patient',studies:ctx.studies});
+  assert.deepEqual(route.intents.map(x=>[x.id,x.control]),[[id,true]]);
+  await session.post({id:'first-gas',text:'Enfermera gasometría'});
+  const reply=await session.post({id:'control-before-first-report',text:choice.command}),item=reply.clinical[0];
+  assert.equal(item?.reason,'study-control-unavailable');
+  assert.equal(item.receipt.control,true);
+  assert.deepEqual(session.read().patient.orders.map(x=>x.status),['pending','unavailable']);
+  session.advance(5);await session.flush();
+  assert.deepEqual(session.read().patient.orders.map(x=>x.status),['done','unavailable']);
  }finally{session.dispose();}
 });
 

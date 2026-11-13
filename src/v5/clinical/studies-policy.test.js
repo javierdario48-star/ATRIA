@@ -36,6 +36,27 @@ test('repeatable policy studies create fresh samples only after completion and r
  assert.equal(p.orders.length,2);
 });
 
+test('modelled control aliases share the acquisition at the same native minute',()=>{
+ const service=createStudyService(cases),p=patient('RESP-04'),id='g_resp04_gas';
+ const baseline=command(id,'baseline',10,1),control={...command(id,'control',11,1),control:true};
+ assert.equal(service.request(p,baseline).status,'pending');
+ const initialAlias=service.request(p,control);
+ assert.equal(initialAlias.sourceEventId,'baseline');
+ assert.equal(initialAlias.receipt?.control,true);
+ const later={...command(id,'later-control',12,2),control:true};
+ assert.equal(service.request(p,later).sourceEventId,later.eventId);
+ assert.equal(service.request(p,{...later,eventId:'qualified-alias'}).sourceEventId,later.eventId);
+ assert.equal(service.request(p,command(id,'plain-alias',13,2)).sourceEventId,later.eventId);
+ assert.deepEqual(p.orders.map(o=>o.sampledAtNativeMinute),[1,2]);
+ service.advance(p,18,3);
+ const restored=createStudyService(cases,service.checkpoint());
+ const replay=restored.request(p,{...control,atMinute:50,atNativeMinute:8});
+ assert.equal(replay.receipt.sourceEventId,'baseline');
+ assert.equal(replay.receipt.sampledAtNativeMinute,1);
+ assert.equal(replay.receipt.control,true);
+ assert.equal(restored.request(p,{...control,control:false}).reason,'study-event-identity-collision');
+});
+
 test('severe-asthma repeat blood gas measures worsening ventilation and preserves the old sample',()=>{
  const service=createStudyService(cases),p=patient('RESP-04'),id='g_resp04_gas';
  service.request(p,command(id,'initial'));service.advance(p,5);
@@ -135,6 +156,30 @@ test('every dynamic blood gas uses the native clock for future and unmatched ven
  }
 });
 
+test('mixed arterial gas retains baseline lactate without giving the control a lactate value',()=>{
+ const p=patient('RESP-06'),service=createStudyService(cases),id='g_resp06_gas';
+ service.request(p,command(id,'initial'));service.advance(p,5);
+ const first=structuredClone(p.orders[0]);
+ assert.match(first.result,/Lactato basal de referencia: 5,8 mmol\/L/i);
+ administer(p,'intubation',5);
+ p.liveVitals.spo2=90;
+ service.request(p,{...command(id,'follow-up',7,6),control:true});
+ const control=p.orders[1].result;
+ assert.match(control,/Ventilación invasiva confirmada/);
+ assert.match(control,/Lactato de esta muestra: no disponible/i);
+ assert.doesNotMatch(control,/5[,.]8/);
+ assert.deepEqual(p.orders[0],first);
+});
+
+test('the first mixed arterial gas after support does not include a baseline lactate value',()=>{
+ const p=patient('RESP-06'),service=createStudyService(cases),id='g_resp06_gas';
+ // A support change can precede a visible saturation change.
+ administer(p,'intubation',4);
+ service.request(p,command(id,'after-support',40,4));
+ assert.match(p.orders[0].result,/Lactato de esta muestra: no disponible/i);
+ assert.doesNotMatch(p.orders[0].result,/5[,.]8/);
+});
+
 test('policy fallback studies cannot inherit repeatability from another case',()=>{
  const service=createStudyService(cases),p=patient('CARD-05');
  service.request(p,command('g_resp04_gas','fallback'));service.advance(p,100);
@@ -173,6 +218,35 @@ test('post-treatment samples reject foreign, future, duplicate and unmatched adm
   const p=patient(c.id),service=createStudyService([c]);administer(p,'alteplase_pe',30,'iv');corrupt(p);
   const result=service.request(p,command(id,'followup',200,40));
   assert.equal(result.status,'rejected');assert.equal(p.orders.length,0);
+ }
+});
+
+test('a completed pleural procedure does not rebind an order to a pending preprocedure acquisition',()=>{
+ const service=createStudyService(cases),p=patient('RESP-07'),id='g_resp07_cxr';
+ const baseline=command(id,'baseline',100,4),control=command(id,'control',101,5);
+ p.pendingTreatments=[{id:'needle_decompression',sourceEventId:'pending'}];
+ assert.equal(service.request(p,baseline).status,'pending');
+ administer(p,'needle_decompression',5);
+ const unavailable=service.request(p,control);
+ assert.equal(unavailable.receipt?.status,'unavailable');
+ assert.deepEqual(p.orders.map(o=>[o.status,o.requestedAtMinute,o.sampledAtNativeMinute]),[
+  ['pending',100,4],['unavailable',101,undefined]
+ ]);
+ assert.equal(service.advance(p,107,7).length,1);
+ const restored=createStudyService(cases),retry={...control,atMinute:500,atNativeMinute:20};
+ assert.deepEqual(restored.request(p,retry),unavailable);
+ assert.equal(restored.request(p,{...retry,control:true}).reason,'study-event-identity-collision');
+ assert.equal(restored.request(p,{...baseline,atMinute:500,atNativeMinute:20}).receipt.sampledAtNativeMinute,4);
+});
+
+test('a pleural baseline remains available before a patient-bound procedure actually completes',()=>{
+ for(const corrupt of [t=>{t.administeredAtNativeMinute=60;},t=>{t.patientUid='other';},t=>{t.completionStatus='pending';}]){
+  const p=patient('RESP-07'),service=createStudyService(cases);
+  const procedure=administer(p,'chest_drainage',1);corrupt(procedure);
+  const result=service.request(p,command('g_resp07_cxr','initial',100,4));
+  assert.equal(result.status,'pending');
+  assert.equal(p.orders[0].sampledAtNativeMinute,4);
+  assert.match(p.orders[0].result,/Imagen basal/);
  }
 });
 
