@@ -1,8 +1,7 @@
 // Case-specific disposition and physiology policies composed into the ONLY
 // existing native acute-care executor; no second authority, XP engine or clock.
 import {createAcuteCare} from './acute-care.js';
-import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
-import {evaluateGastroDisposition} from './gastro-closure-v5.js';
+import {evaluateGastroDisposition,evaluateHistoricalGastroDisposition} from './gastro-closure-v5.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {createPancCare} from './panc-care.js';
@@ -63,7 +62,7 @@ export function createAdditionalCaseCare(p,c,options){
   }},
   evaluate:(patient,caseData,destination)=>caseData.clinicalPolicy?evaluateClinicalPolicyDisposition(patient,caseData,destination):gastroClosureRule(caseData.id)?
    evaluateGastroDisposition(additionalCaseClosureSnapshot(patient,caseData,destination)):
-   csEvaluateClosure487(additionalCaseClosureSnapshot(patient,caseData,destination)),
+   evaluateHistoricalGastroDisposition(additionalCaseClosureSnapshot(patient,caseData,destination)),
   conducts:policy.conducts,
   reassessmentMessage:patient=>'Reevaluación: PA '+Math.round(patient.liveVitals.sys)+'/'+Math.round(patient.liveVitals.dia)+
    ', FC '+Math.round(patient.liveVitals.hr)+

@@ -5,12 +5,13 @@ import {cholangitisClosureSnapshot} from './cholangitis-care.js';
 // Read-only requirement projection. Declarative V5 gates report their own
 // requirements. Characterized legacy gates are queried with evidence snapshots;
 // neither the real patient nor the legacy evaluator is modified.
-import {CASE_CLOSURE_RULES_487,csEvaluateClosure487} from '../../clinical/case-completion-487.js';
-import {PERITONITIS_IDS_V487,csPeritonitisEvaluate487} from '../../clinical/peritonitis-pathways.js';
+import {CASE_CLOSURE_RULES_487} from '../../clinical/case-completion-487.js';
+import {PERITONITIS_IDS_V487} from '../../clinical/peritonitis-pathways.js';
 import {additionalCaseClosureSnapshot} from './additional-case-care.js';
 import {appClosureSnapshot} from './app-care.js';
 import {closureSnapshot} from './cirr-care.js';
 import {peritonitisClosureSnapshot} from './peritonitis-care.js';
+import {evaluateHistoricalGastroDisposition} from './gastro-closure-v5.js';
 import {gastroClosureRule} from './gastro-expansion-policies.js';
 import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 import {isNativeMedicine} from './native-medications.js';
@@ -22,12 +23,11 @@ function legacyProjection(p,c){
  const peritonitis=PERITONITIS_IDS_V487.includes(c.id),rule=clinicalClosureRule(c);
  const snapshots={cirr:closureSnapshot,app:appClosureSnapshot,chole:choleClosureSnapshot,panc:pancClosureSnapshot,cholangitis:cholangitisClosureSnapshot,additional:additionalCaseClosureSnapshot,peritonitis:peritonitisClosureSnapshot};
  const snapshot=snapshots[clinicalExecutorFor(c)](p,c);
- const evaluate=peritonitis?csPeritonitisEvaluate487:csEvaluateClosure487;
+ const evaluate=evaluateHistoricalGastroDisposition;
  const medicines=unique([...(c.interventions||[]).map(x=>x.id),...antimicrobialRegimens487(c).flat(),
   'fluid','vasopressor','oxygen']).filter(id=>isNativeMedicine(id)||id==='oxygen'||c.interventions.some(x=>x.id===id));
  const fulfilled=peritonitis?snapshot.administered:snapshot.delivered;
- const full=evaluate({...snapshot,vitalsKnown:true,examDone:true,examRegionsCount:2,historyCount:1,
-  historyAnswered:[...(c.requiredHistory||[]),'anamnesis:reason'],diagnosis:c.dx[0],diagnosticCompatible:true,
+ const full=evaluate({...snapshot,vitalsKnown:true,examDone:true,examRegionsCount:2,diagnosis:c.dx[0],diagnosticCompatible:true,
   studiesDone:c.studies.map(s=>s.id),administered:medicines,delivered:medicines,
   consultsDone:['cirugia','uti','gastro']});
  return {snapshot,evaluate,rule,medicines,fulfilled,destination:full.action||rule?.destinations[0]};
@@ -57,7 +57,6 @@ function legacyRequirements(p,c,destination){
  }
  probe({vitalsKnown:true},{type:'vitals'});
  probe({examDone:true,examRegionsCount:2},{type:'examination',ids:[]});
- probe({historyCount:1,historyAnswered:unique([...(snapshot.historyAnswered||[]),...(c.requiredHistory||[]),'anamnesis:reason'])},{type:'history'});
  probe({diagnosis:c.dx[0],diagnosticCompatible:true},{type:'diagnosis'});
  probe({reassessments:1},{type:'reassess'});
  for(const s of c.studies)probe({studiesDone:unique([...snapshot.studiesDone,s.id])},{type:'study',anyOf:[[s.id]]});
@@ -80,7 +79,12 @@ export function clinicalHintRequirements(p,c,assessment,destination=hintDestinat
  // These requirements are added by the existing care/session wrapper, after
  // its case evaluator. Read that verdict rather than reimplementing its gate.
  if(assessment?.missing?.some(s=>/^Esperar/.test(s)&&/pendientes|tareas físicas|ejecución o resolución/.test(s)))requirements.push({type:'wait'});
- return hasRecordedVitals(p)?requirements.filter(r=>r.type!=='reassess'):requirements;
+ const next=hasRecordedVitals(p)?requirements.filter(r=>r.type!=='reassess'):requirements;
+ // Interviewing is useful during an unfinished workup. A patient who can be
+ // discharged or transferred need not answer an additional question first.
+ if(!p.intentHistory?.length&&next.some(r=>r.type!=='closure'&&r.type!=='wait'))
+  next.push({type:'history',recommended:true});
+ return next;
 }
 
 // The same typed gates drive hints and the player-facing checklist. Activity
@@ -95,7 +99,7 @@ export function clinicalChecklist(patient,requirements,ready,activeReaction=fals
  const stage=(activity,...types)=>closed||!pending(...types)?'done':activity?'partial':'pending';
  const stabilization=stage(hasRecordedVitals(patient),'vitals','reassess','stability');
  return {
-  history:stage(patient.intentHistory?.length,'history'),
+  history:closed||patient.intentHistory?.length?'done':'pending',
   exam:stage(Object.keys(patient.examFindings||{}).length,'examination'),
   studies:stage(patient.orders?.length,'study'),
   stabilization:activeReaction||pending('stability')?'attention':stabilization,

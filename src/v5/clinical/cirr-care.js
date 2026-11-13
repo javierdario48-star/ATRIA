@@ -1,5 +1,5 @@
 import {executePatientDialogue} from './patient-dialogue.js';
-import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
+import {evaluateHistoricalGastroDisposition} from './gastro-closure-v5.js';
 import {initialCirrVitals,parseCirrDose,advanceCirrVitals} from './native-cirr.js';
 import {nativeCaseXP} from './progression.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
@@ -44,7 +44,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected,checkpoint:checkpoint?.iv});
  const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,checkpoint:checkpoint?.surgery});
  function readiness(destination,patient=p){
-  const out=csEvaluateClosure487(closureSnapshot(patient,c,destination));
+  const out=evaluateHistoricalGastroDisposition(closureSnapshot(patient,c,destination));
   if(unrescuedTransferReactions(p,c,clinicalClock?.().nativeMinute??p.phys?.lastNativeMinute??0).length){
    out.ready=false;out.action=null;
    out.missing.push('Reacción alérgica grave activa: falta un rescate confirmado posterior al desencadenante antes del traslado.');

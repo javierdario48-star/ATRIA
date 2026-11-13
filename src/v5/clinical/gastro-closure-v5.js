@@ -1,10 +1,27 @@
 // V5-only GI disposition extension. No edits to the characterized V4
 // handoff evaluator. XP quality is the ORIGINAL csClosureQuality487 calculator.
 // The shared shift/actor authority still owns final receipts exactly once.
-import {csClosureQuality487} from '../../clinical/case-completion-487.js';
+import {csClosureQuality487,csEvaluateClosure487} from '../../clinical/case-completion-487.js';
+import {PERITONITIS_IDS_V487,csPeritonitisEvaluate487} from '../../clinical/peritonitis-pathways.js';
 import {gastroClosureRule} from './gastro-expansion-policies.js';
 import {hasAcuteInstability} from './clinical-risk.js';
 const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+
+// Probe disposition eligibility with the legacy interview gate satisfied.
+// Patient knowledge, receipts and quality still use the actual observations.
+export function evaluateHistoricalGastroDisposition(snapshot){
+ if(PERITONITIS_IDS_V487.includes(snapshot.caseId)){
+  const actual=csPeritonitisEvaluate487(snapshot);
+  if(actual.ready||snapshot.historyCount>0||snapshot.caseEnded||snapshot.patientDied)return actual;
+  const disposition=csPeritonitisEvaluate487({...snapshot,historyCount:1});
+  return {...disposition,historyDeferredForEmergency:actual.historyDeferredForEmergency};
+ }
+ const actual=csEvaluateClosure487(snapshot);
+ if(!actual||actual.ready||actual.historyCount!==0)return actual;
+ const disposition=csEvaluateClosure487({...snapshot,historyAnswered:[...(snapshot.historyAnswered||[]),'anamnesis:reason']});
+ return {...disposition,historyCount:actual.historyCount,quality:actual.quality};
+}
+
 export function evaluateGastroDisposition(a={}){
  const rule=gastroClosureRule(a.caseId);if(!rule)return null;
  const done=new Set(a.delivered||[]),studies=new Set(a.studiesDone||[]),missing=[],requirements=[];
@@ -19,7 +36,6 @@ export function evaluateGastroDisposition(a={}){
  const contextual=['anamnesis:reason','anamnesis:pmh','anamnesis:allergies','anamnesis:meds',
   'anamnesis:surgeries','anamnesis:familyHistory'];
  const history=(a.historyAnswered||[]).filter(x=>(a.historyRelevant||[]).includes(x)||contextual.includes(x));
- if(!history.length&&!critical)need('history',{},'Obtener al menos un dato relevante de anamnesis.');
  const examined=new Set(a.examPerformed||[]),requiredExams=rule.requiredExams||[];
  for(const id of requiredExams)if(!examined.has(id))need('examination',{ids:[id]},'Completar la exploración dirigida: '+(id==='perineum:rectal'?'tacto rectal':id)+'.');
  const evidence=rule.study?.length?rule.study.some(group=>group.some(id=>studies.has(id))):

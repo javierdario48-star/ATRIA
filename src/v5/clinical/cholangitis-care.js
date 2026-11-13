@@ -2,7 +2,7 @@
 // trajectory. CPRE/ERCP and source control are performed AFTER ED handoff;
 // an order, study or accepted consultation never means drainage occurred.
 import {createAcuteCare} from './acute-care.js';
-import {csEvaluateClosure487} from '../../clinical/case-completion-487.js';
+import {evaluateHistoricalGastroDisposition} from './gastro-closure-v5.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {postInterventionReassessments} from './observations.js';
@@ -35,7 +35,7 @@ export function createCholangitisCare(patient,caseData,options){
   initialize:initializeNativePeritonitis,
   advanceVitals:advancePeritonitisVitals,
   onAdministration:applyConfirmedSepsisAdministration487,
-  evaluate:(p,c,destination)=>csEvaluateClosure487(cholangitisClosureSnapshot(p,c,destination)),
+  evaluate:(p,c,destination)=>evaluateHistoricalGastroDisposition(cholangitisClosureSnapshot(p,c,destination)),
   reassessmentMessage:p=>'Reevaluación: PA '+Math.round(p.liveVitals.sys)+'/'+Math.round(p.liveVitals.dia)+
    ', FC '+Math.round(p.liveVitals.hr)+'. Sospecha de infección biliar obstructiva: comprobar respuesta y coordinar drenaje con el servicio receptor.',
   closureMessage:receipt=>(receipt.destination==='uti'?

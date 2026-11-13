@@ -1,6 +1,6 @@
 import {createAcuteCare} from './acute-care.js';
 import {CLINICAL_EXECUTORS} from '../content/clinical-cases.js';
-import {csPeritonitisEvaluate487} from '../../clinical/peritonitis-pathways.js';
+import {evaluateHistoricalGastroDisposition} from './gastro-closure-v5.js';
 import {csDxMatchesCase487} from '../../clinical/diagnostic-impression-487.js';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
 import {hasPhysicianReassessment} from './observations.js';
@@ -17,23 +17,23 @@ export function peritonitisClosureSnapshot(p,c,cases=[c]){
   patientDied:!!p.patientDied,caseEnded:p.caseEnded,sourceControlled:p.phys.sourceControlled};
 }
 /** Numeric V19 quality followed by the effective peritonitis safe-handoff
- * correction. Eligibility is exclusively csPeritonitisEvaluate487. The shared
+ * correction. Eligibility comes from the historical disposition adapter. The shared
  * V5 adverse-event deduction preserves clinical freedom with consequences.
  */
 export function peritonitisClosureQuality487(p,c,snapshot,destination,safeHandoff){
  const delivered=new Set(snapshot.administered),historyAnswered=new Set(p.intentHistory.map(x=>x.id));
  const started=c.keyInterventions.some(id=>delivered.has(id));
  let diagnosis=snapshot.diagnosticCompatible?15:0;
- let history=Math.round(15*c.requiredHistory.filter(id=>historyAnswered.has(id)).length/Math.max(1,c.requiredHistory.length));
+ const history=Math.round(15*c.requiredHistory.filter(id=>historyAnswered.has(id)).length/Math.max(1,c.requiredHistory.length));
  let safety=Math.min(25,(snapshot.vitalsKnown?8:0)+(p.examDone?7:0)+(started?(hasPhysicianReassessment(p)?5:2):0)+(destination?5:0));
  let studies=Math.round(15*c.keyStudies.filter(id=>snapshot.studiesDone.includes(id)).length/Math.max(1,c.keyStudies.length));
  let treatment=c.keyInterventions.length?Math.round(25*c.keyInterventions.filter(id=>delivered.has(id)).length/c.keyInterventions.length):25;
  const extraStudies=p.orders.filter(x=>!c.keyStudies.includes(x.id)).length,extraStudyPenalty=Math.min(5,extraStudies);
  const efficiency=5-extraStudyPenalty,adversePenalty=Math.min(20,confirmedClinicalMissteps(p,c).adverseCount*5);
- if(safeHandoff){diagnosis=15;history=Math.max(history,10);safety=Math.max(safety,20);studies=Math.max(studies,12);treatment=Math.max(treatment,20);}
+ if(safeHandoff){diagnosis=15;safety=Math.max(safety,20);studies=Math.max(studies,12);treatment=Math.max(treatment,20);}
  const subtotal=diagnosis+history+safety+studies+treatment+efficiency-adversePenalty;
  const score=p.patientDied?Math.min(20,Math.max(0,subtotal)):
-  safeHandoff?Math.max(70,Math.min(100,subtotal)):Math.max(0,Math.min(69,subtotal));
+  safeHandoff?Math.min(100,subtotal):Math.max(0,Math.min(69,subtotal));
  return {score,diagnosis,history,safety,studies,treatment,efficiency,
   penalty:adversePenalty+extraStudyPenalty,extraStudies,extraStudyPenalty,
   handoffCredit:safeHandoff?score-subtotal:0};
@@ -44,7 +44,7 @@ export function createPeritonitisCare(p,c,options){
   initialVitals:initialPeritonitisVitals,initialize:initializeNativePeritonitis,
   advanceVitals:advancePeritonitisVitals,onAdministration:applyConfirmedSepsisAdministration487,
   evaluate(patient,caseData,destination){
-   const snapshot=peritonitisClosureSnapshot(patient,caseData,options.cases),out=csPeritonitisEvaluate487(snapshot);
+   const snapshot=peritonitisClosureSnapshot(patient,caseData,options.cases),out=evaluateHistoricalGastroDisposition(snapshot);
    // The legacy metadata conflates the medical PBE seed with an operation.
    // No source-control procedure is executable in this bedside migration.
    out.procedurePerformed=false;

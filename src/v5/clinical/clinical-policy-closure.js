@@ -75,7 +75,6 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  for (const id of requiredExams) if (!examined.has(id)) need('examination',{ids:[id]},'Completar la exploración dirigida: ' + id + '.');
  const historyAnswered = [...new Set((patient.intentHistory || []).map(row => row.id))];
  const relevant = historyAnswered.filter(id => (caseData.requiredHistory || []).includes(id) || contextualHistory.has(id)||contextualHistory.has('anamnesis:'+id));
- const initialSys = Number(String(caseData.vitals?.bp || '').split('/')[0]);
  const orientedStudy = (rule.study || []).some(group => group.some(id => studies.has(id)));
  const traits=caseData.clinicalPolicy.traits||[];
  // A time-critical receiver can act on the case's confirmed diagnostic
@@ -87,7 +86,6 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
    requiredExams.length>0&&requiredExams.every(id=>examined.has(id))&&
    (done.has('needle_decompression')||done.has('chest_drainage')));
  if (!matched&&!objectiveReceiverIndication) need('diagnosis',{},'Registrar un diagnóstico presuntivo compatible.');
- if (!relevant.length && !(initialSys < 90 || vitals.sys < 90)) need('history',{},'Obtener al menos un dato relevante de anamnesis.');
  const requiredSeries=(caseData.studies||[]).filter(study=>requiredStudySeries(caseData,study.id)).map(study=>study.id),
   requiredStudies=[...new Set([...(rule.requiredStudies||[]),...requiredSeries])],
   keyStudies=[...new Set([...(caseData.keyStudies||[]),...requiredSeries])];

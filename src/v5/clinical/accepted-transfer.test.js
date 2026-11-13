@@ -13,6 +13,38 @@ function fixture(caseId,roomId,options={}){
   patient:{uid:'P',caseId},content,resolveContext:()=>({patientUid:'P'}),...options});
  return {s,caseId,post:text=>s.post({id:'t'+(++seq),text}),async advance(seconds){s.advance(seconds);await s.flush();}};
 }
+
+test('zero interview answers affect quality but never prevent an otherwise valid disposition',async t=>{
+ const scenarios=[
+  {id:'DIVERT-001',dx:'diverticulitis aguda',destination:'alta',studies:['g_divert_ct'],meds:[],wait:125},
+  {id:'CIRR-001',dx:'cirrosis descompensada',destination:'sala',studies:['renal'],meds:['Enfermera espironolactona 100 mg'],wait:125},
+  {id:'APP-001',dx:'apendicitis aguda',destination:'quirofano',studies:['app_us'],meds:['Enfermera ceftriaxona 1 g y metronidazol 500 mg'],wait:100},
+  {id:'PERI-PBE-001',dx:'peritonitis bacteriana espontánea',destination:'sala',studies:['pbe_paracentesis'],meds:['Enfermera ceftriaxona 1 g y albumina 1.5 g/kg'],wait:70},
+  {id:'RESP-01',dx:'neumonía adquirida en la comunidad',destination:'alta',studies:['g_resp01_cxr'],meds:['/tratamiento amoxicillin'],wait:130}
+ ];
+ for(const plan of scenarios)await t.test(plan.id,async()=>{
+  const f=fixture(plan.id,'no-history-'+plan.id,{content:clinicalContent});
+  try{
+   const c=clinicalContent.cases.find(c=>c.id===plan.id);
+   await f.post('/diagnostico '+plan.dx);await f.post('/signos');await f.post('Enfermera una vía');
+   for(const technique of ['general','inspection','auscultation','percussion','palpation'])
+    await f.post('/examen '+technique);
+   for(const id of plan.studies)await f.post('/estudio '+id);
+   for(const text of plan.meds)await f.post(text);
+   await f.advance(plan.wait);await f.post('/reevaluar');
+   assert.equal(f.s.read().patient.intentHistory.length,0);
+   const command={id:'close',text:'/disposicion '+plan.destination};
+   const result=await f.s.post(command);
+   if(result.clinical[0]?.status==='pending')await f.advance(3.5);
+   const after=f.s.read();
+   assert.equal(after.patient.closure?.destination,plan.destination,JSON.stringify({caseId:c.id,missing:after.closure?.missing,reply:result.clinical}));
+   assert.equal(after.patient.closure.quality.history,0);
+   assert.equal(after.progress.receipts.length,1);
+   assert.equal((await f.s.post(command)).clinical[0].status,'executed');
+   assert.equal(f.s.read().progress.receipts.length,1);
+  }finally{f.s.dispose();}
+ });
+});
 test('an unsafe discharge changes the doctor record, without changing patient state anywhere in the catalogue',async t=>{
  for(const c of clinicalContent.cases)await t.test(c.id,async()=>{
   const f=fixture(c.id,'unsafe-'+c.id,{content:clinicalContent});
