@@ -23,9 +23,10 @@ const revisedHandoffRules=Object.freeze({
  'CHOLE-001':Object.freeze({destinations:['quirofano'],study:[['chole_us']],
   treatment:[['ceftriaxone','metronidazole'],['piptazo'],['imipenem']],consult:{quirofano:['cirugia']}}),
  // This seed starts without ischemia/perforation. Deterioration despite
- // initial treatment warrants escalation; stable ward care needs bowel rest.
+ // initial treatment warrants escalation. Documenting bowel rest contributes
+ // to quality; the receiving ward can continue it after handoff.
  'ILEO-001':Object.freeze({destinations:['sala','quirofano','uti'],study:[['ileo_xray','ileo_ct']],
-  treatment:[['fluid','ngt']],treatmentByDestination:{sala:[['fluid','ngt','npo']]},
+  treatment:[['fluid','ngt']],
   unstableTransferDestinations:['quirofano','uti'],consult:{quirofano:['cirugia'],uti:['uti']}})
 });
 export const gastroClosureRule=caseId=>revisedHandoffRules[caseId]||GASTRO_CASE_RULES[caseId];

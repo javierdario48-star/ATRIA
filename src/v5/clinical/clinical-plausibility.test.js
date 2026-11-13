@@ -130,6 +130,17 @@ test('achalasia discharge requires manometry and exclusion of pseudoachalasia by
  }finally{f.s.dispose();}
 });
 
+test('achalasia observation can close with valid assessment before the follow-up conduct is recorded',async()=>{
+ const f=doctor('ACAL-001');
+ try{
+  await assessed(f,'ACAL-001',['g_achal_manometry','g_achal_egd'],[]);
+  const closed=(await f.post('/disposicion observacion')).clinical[0]?.receipt.closure;
+  assert.equal(closed?.destination,'observacion');
+  assert.equal(closed.quality.treatment,0);
+  assert.equal(f.s.read().progress.receipts.length,1);
+ }finally{f.s.dispose();}
+});
+
 for(const caseId of ['DIVERT-001','HEPAT-001','PUD-001'])
  test(caseId+' follow-up improves the score of a clinically valid discharge',async()=>{
   const f=doctor(caseId),withPlan=doctor(caseId);

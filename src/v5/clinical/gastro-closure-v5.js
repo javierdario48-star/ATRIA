@@ -44,7 +44,7 @@ export function evaluateGastroDisposition(a={}){
  for(const id of rule.requiredStudies||[])
   if(!studies.has(id))need('study',{anyOf:[[id]]},'Revisar estudio imprescindible '+id+' antes de cerrar el caso.');
  const treatment=rule.treatmentByDestination?.[target]??rule.treatment;
- const essential=target==='alta'?treatment?.map(group=>group.filter(id=>id!=='followup')):treatment;
+ const essential=treatment?.map(group=>group.filter(id=>id!=='followup'));
  if(essential?.length&&!essential.some(group=>group.every(id=>done.has(id))))
   need('treatment',{anyOf:essential},'Confirmar las intervenciones imprescindibles y su ejecución real.');
  const dischargeTreatment=(rule.dischargeTreatments||[]).filter(id=>id!=='followup');

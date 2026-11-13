@@ -310,15 +310,15 @@ async function obstructionWorkup(f,volume,wait){
  assert.match(p.orders[0].result,/sin signos de perforación ni isquemia/i);
  assert(p.treatments.some(row=>row.id==='fluid')&&p.treatments.some(row=>row.id==='ngt'));
 }
-test('ILEO with documented improvement and uncomplicated CT requires the conservative preparation and rejects emergency destinations',async()=>{
+test('ILEO with documented improvement and uncomplicated CT can continue on the ward with or without a recorded fasting order',async()=>{
  const f=fixture('ILEO-001','transfer-ileo-stable');
+ const withFasting=fixture('ILEO-001','transfer-ileo-fasting');
+ const resumedOral=fixture('ILEO-001','transfer-ileo-resumed-oral');
  try{
   await obstructionWorkup(f,1000,115);
-  assert.equal((await f.post('/disposicion sala')).clinical[0].status,'rejected');
-  assert.equal(f.s.clinicalHint().action?.id,'npo');
-  const npo=await f.post('Enfermera dejar en ayuno');
-  assert.equal(npo.clinical[0].status,'executed');
-  await f.post('/reevaluar');
+  await obstructionWorkup(withFasting,1000,115);
+  assert.equal((await withFasting.post('Enfermera dejar en ayuno')).clinical[0].status,'executed');
+  await withFasting.post('/reevaluar');
   assert.equal((await f.post('/consulta cirugia')).clinical[0].status,'pending');
   await f.advance(3.5);
   assert(f.s.read().patient.consults.some(row=>row.id==='cirugia'&&row.accepted));
@@ -329,9 +329,19 @@ test('ILEO with documented improvement and uncomplicated CT requires the conserv
   }
   assert.equal(f.s.clinicalHint().action?.id,'sala');
   assert.equal((await f.post('/disposicion sala')).clinical[0].status,'executed');
-  assert.equal(f.s.read().patient.closure?.destination,'sala');
+  const without=f.s.read().patient.closure;
+  assert.equal(without?.destination,'sala');
+  assert.match(without.debrief.missing.join(' '),/nada por boca/i);
   assert.equal(f.s.read().progress.receipts.length,1);
- }finally{f.s.dispose();}
+  assert.equal((await withFasting.post('/disposicion sala')).clinical[0].status,'executed');
+  assert(withFasting.s.read().patient.closure.quality.treatment>without.quality.treatment);
+  await obstructionWorkup(resumedOral,1000,115);
+  await resumedOral.post('Enfermera dejar en ayuno');
+  assert.equal((await resumedOral.post('Enfermera levantar el ayuno')).clinical[0].status,'executed');
+  assert.equal((await resumedOral.post('/disposicion sala')).clinical[0].status,'executed');
+  assert.equal(resumedOral.s.read().patient.closure.quality.treatment,without.quality.treatment);
+  assert.match(resumedOral.s.read().patient.closure.debrief.missing.join(' '),/nada por boca/i);
+ }finally{f.s.dispose();withFasting.s.dispose();resumedOral.s.dispose();}
 });
 for(const destination of ['uti','quirofano']){
  test('ILEO with evolving instability can transfer to '+destination+' after confirmed support without a separate fasting order',async()=>{

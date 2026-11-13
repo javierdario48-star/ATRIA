@@ -23,7 +23,8 @@ export function additionalCaseClosureSnapshot(p,c,destination){
   studiesDone:patientStudyOrders(p,'done',c).map(x=>studyEvidenceId(c,x.id)),
   extraStudies:p.orders.map(x=>studyEvidenceId(c,x.id)).filter(id=>!c.keyStudies.includes(id)),
   keyStudies:diagnosticRequirements(c).studies,keyInterventions:c.keyInterventions,
-  delivered:[...new Set([...p.treatments.filter(x=>!matchesMedicationAllergy487(p,x.id)).map(x=>x.id),
+  delivered:[...new Set([...p.treatments.filter(x=>!matchesMedicationAllergy487(p,x.id)&&
+   !(x.id==='npo'&&p.oralNutritionDecision?.patientUid===p.uid&&p.oralNutritionDecision.decision==='oral')).map(x=>x.id),
    ...(p.venousAccessCount>0?['iv']:[])])],
   consultsDone:p.consults.filter(x=>x.status==='done'&&x.accepted).map(x=>x.id),
   disposition:destination,sys:p.liveVitals.sys,dia:p.liveVitals.dia,hr:p.liveVitals.hr,
