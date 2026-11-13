@@ -55,7 +55,10 @@ export const GASTRO_DYNAMICS=Object.freeze({
  'DIVERT-001':{early:[.1,3,0,-1,0,0],late:[.1,2,0,-1,0,0],earlyEnd:280,lateEnd:1100,therapy:null,protection:0,fluidResponse:0},
  'LGIB-001':{early:[0,15,3,-12,-7,-.4],late:[0,18,3,-13,-7,-1],earlyEnd:130,lateEnd:460,therapy:null,protection:0,fluidResponse:.9},
  'HEPAT-001':{early:[.1,3,0,-1,-1,0],late:[.1,2,1,-1,0,0],earlyEnd:300,lateEnd:1100,therapy:null,protection:0,fluidResponse:0},
- 'DIARR-001':{early:[.1,10,1,-7,-4,0],late:[.15,11,2,-9,-5,-.1],earlyEnd:180,lateEnd:620,therapy:'oral_rehydration',protection:.5,protectionAxes:['hr','sys','dia'],fluidResponse:.8},
+ // ORS is documented without a measured oral volume. Model gradual recovery
+ // of the presenting volume deficit within the shared circulatory envelope.
+ 'DIARR-001':{early:[.1,10,1,-7,-4,0],late:[.15,11,2,-9,-5,-.1],earlyEnd:180,lateEnd:620,
+  therapy:'oral_rehydration',protection:0,fluidResponse:.8,oralRehydration:{onset:10,peak:90,maximum:.9}},
  'FECAL-001':{early:[0,2,0,-1,0,0],late:[0,2,0,-1,0,0],earlyEnd:350,lateEnd:1200,therapy:'disimpaction',protection:0,fluidResponse:0},
  'PUD-001':{early:[0,2,0,0,0,0],late:[0,1,0,0,0,0],earlyEnd:420,lateEnd:1200,therapy:null,protection:0,fluidResponse:0},
  'CELIAC-001':{early:[0,1,0,0,0,0],late:[0,1,0,0,0,0],earlyEnd:600,lateEnd:1200,therapy:null,protection:0,fluidResponse:0},

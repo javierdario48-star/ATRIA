@@ -83,6 +83,27 @@ for(const [caseId,order] of [
  }finally{treated.s.dispose();control.s.dispose();}
 });
 
+test('DIARR-001 confirmed oral rehydration gradually improves the presenting dehydration',async()=>{
+ const treated=doctor('DIARR-001'),control=doctor('DIARR-001');
+ try{
+  const arrival=treated.s.read().patient.liveVitals;
+  assert.equal((await treated.post('Enfermera sales de rehidratacion oral')).clinical[0]?.status,'pending');
+  assert.equal(treated.s.read().patient.treatments.length,0);
+  assert.deepEqual(treated.s.read().patient.liveVitals,arrival);
+  await treated.advance(70);await control.advance(70);
+  const early=treated.s.read();
+  assert.equal(early.clock.nativeMinute,8.4);
+  assert(early.patient.treatments.some(t=>t.id==='oral_rehydration'&&t.patientUid===early.patient.uid));
+  assert.deepEqual(early.patient.liveVitals,arrival,'early handoff precedes the physiological response');
+  await treated.advance(530);await control.advance(530);
+  const hydrated=treated.s.read().patient.liveVitals,untreated=control.s.read().patient.liveVitals;
+  assert(hydrated.hr<arrival.hr-2,'rehydration should improve presenting tachycardia');
+  assert(hydrated.sys>arrival.sys+3&&hydrated.dia>arrival.dia+1,'rehydration should improve presenting perfusion');
+  assert(untreated.hr>arrival.hr&&untreated.sys<arrival.sys,'untreated losses should still worsen perfusion');
+  for(const axis of ['temp','rr','spo2'])assert.equal(hydrated[axis],untreated[axis]);
+ }finally{treated.s.dispose();control.s.dispose();}
+});
+
 for(const caseId of ['CROHN-001','DIVERT-001'])test(caseId+' normovolemia receives no free IV pressure or pulse bonus',async()=>{
  const treated=doctor(caseId),control=doctor(caseId),c=content.cases.find(x=>x.id===caseId);
  try{

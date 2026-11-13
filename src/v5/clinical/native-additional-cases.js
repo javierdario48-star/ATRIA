@@ -9,7 +9,7 @@ import {applyMedicationHarmTargets487} from './medication-harms-487.js';
 import {applyConfirmedMorphineTargetOffsets487} from './morphine-487.js';
 import {applyConfirmedNativeSupportTargets487} from './native-support-487.js';
 import {GASTRO_DYNAMICS} from './gastro-expansion-policies.js';
-import {confirmedClinicalTreatment} from './receipts.js';
+import {confirmedClinicalTreatment,isDeliveredClinicalAdministration} from './receipts.js';
 import {nativeMedicationDoseFraction} from './native-medications.js';
 import {clinicalPolicyTargets,advanceClinicalComplications} from './clinical-policy-effects.js';
 const axes=['temp','hr','rr','sys','dia','spo2'];
@@ -17,6 +17,14 @@ const bounds={temp:[34.5,41],hr:[38,175],rr:[8,42],sys:[55,190],dia:[30,115],spo
 const policyBounds={temp:[34,41.5],hr:[20,240],rr:[4,60],sys:[40,240],dia:[20,140],spo2:[50,100]};
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const ramp=(t,a,b)=>clamp((t-a)/(b-a),0,1);
+function deliveredCrystalloidMl(p,minute){
+ let total=0;
+ for(const row of p.administrationLog||[]){
+  if(row.id==='fluid'&&row.route==='iv'&&row.dose?.unit==='ml'&&isDeliveredClinicalAdministration(p,row,minute))
+   total+=row.dose.amount;
+ }
+ return total;
+}
 export const ADDITIONAL_CASE_TRAJECTORIES=Object.freeze({
  ...GASTRO_DYNAMICS,
  // Inflammation can improve gradually, without a direct BP/SpO2 bonus or
@@ -51,18 +59,23 @@ export function additionalCaseTargets(p,c,minute){
  if(c?.clinicalPolicy)return clinicalPolicyTargets(p,c,minute);
  const rule=ADDITIONAL_CASE_TRAJECTORIES[c?.id];
  if(!rule||!Number.isFinite(minute)||minute<0)throw Error('invalid disease target');
+ const oral=rule.oralRehydration;
  const therapyIds=Array.isArray(rule.therapy)?rule.therapy:rule.therapy?[rule.therapy]:[];
- const confirmed=therapyIds.map(id=>confirmedClinicalTreatment(p,id,minute)).find(Boolean);
- const protective=confirmed?rule.protection*nativeMedicationDoseFraction(confirmed,c)*ramp(
+ const confirmed=therapyIds.map(id=>confirmedClinicalTreatment(p,id,minute,
+  receipt=>!oral||receipt.route==='documented')).find(Boolean);
+ const protective=confirmed&&rule.protection?rule.protection*nativeMedicationDoseFraction(confirmed,c)*ramp(
   minute-confirmed.administeredAtNativeMinute,rule.onset??10,rule.peak??130):0;
  const first=ramp(minute,20,rule.earlyEnd),second=ramp(minute,rule.earlyEnd,rule.lateEnd);
  const out=Object.fromEntries(axes.map((axis,i)=>[axis,
   (rule.early[i]*first+rule.late[i]*second)*
    (1-(rule.protectionAxes||[]).includes(axis)*protective)]));
- // Volume resuscitation must be ADMINISTERED. A pending order cannot
- // produce a miraculous response. Crystalloid is not a definitive therapy.
- const iv=summarizeIVExposures(p);
- const fluid=clamp(iv.confirmedCrystalloidMl/1000,0,1.25)*rule.fluidResponse;
+ const ml=oral?deliveredCrystalloidMl(p,minute):summarizeIVExposures(p).confirmedCrystalloidMl;
+ const iv=ml/1000*rule.fluidResponse;
+ const absorbed=oral&&confirmed?oral.maximum*ramp(
+  minute-(confirmed.completedAtNativeMinute??confirmed.administeredAtNativeMinute),oral.onset,oral.peak):0;
+ // Both routes address the same volume deficit. Apply the stronger response
+ // within the established crystalloid envelope.
+ const fluid=clamp(Math.max(iv,absorbed),0,1.25*rule.fluidResponse);
  out.sys+=14*fluid;out.dia+=7*fluid;out.hr-=11*fluid;
  // Transfusion physiology is owned ONLY by applyConfirmedNativeSupportTargets487.
  return out;

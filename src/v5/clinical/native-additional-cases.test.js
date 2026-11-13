@@ -53,3 +53,42 @@ test('GI cases inherit confirmed repeat-diuretic harm and freeze physiology afte
   assert.deepEqual(p.liveVitals,after,id+' transfer freezes all vital changes');
  }
 });
+
+test('DIARR-001 oral recovery requires a completed patient-bound conduct and elapsed native time',()=>{
+ const {c,p}=factory('DIARR-001'),{p:control}=factory('DIARR-001');
+ const oral={id:'oral_rehydration',patientUid:p.uid,sourceEventId:'oral',route:'documented',
+  kind:'documented-clinical-conduct',administeredAtNativeMinute:70};
+ p.treatments.push({...oral,patientUid:'other-patient'});
+ assert.deepEqual(additionalCaseTargets(p,c,145),additionalCaseTargets(control,c,145));
+ p.treatments[0]={...oral,status:'pending'};
+ assert.deepEqual(additionalCaseTargets(p,c,145),additionalCaseTargets(control,c,145));
+ p.treatments[0]=oral;
+ for(const minute of [69,70,78])
+  assert.deepEqual(additionalCaseTargets(p,c,minute),additionalCaseTargets(control,c,minute));
+ const delayed=additionalCaseTargets(p,c,145),untreated=additionalCaseTargets(control,c,145);
+ assert(delayed.hr<0&&delayed.sys>0,'confirmed rehydration improves circulation after absorption');
+ for(const axis of ['temp','rr','spo2'])assert.equal(delayed[axis],untreated[axis]);
+});
+
+test('DIARR-001 oral and confirmed IV fluid share one bounded circulatory response',()=>{
+ const {c,p}=factory('DIARR-001'),{p:control}=factory('DIARR-001');
+ const fluid={id:'fluid',patientUid:p.uid,sourceEventId:'iv',dose:{amount:250,unit:'ml'},route:'iv',
+  administeredAtNativeMinute:1};
+ const oral={id:'oral_rehydration',patientUid:p.uid,sourceEventId:'oral',route:'documented',
+  kind:'documented-clinical-conduct',administeredAtNativeMinute:1};
+ const minute=145,untreated=additionalCaseTargets(control,c,minute);
+ p.administrationLog.push(fluid);
+ assert.deepEqual(additionalCaseTargets(p,c,minute),untreated,'an unmatched exposure cannot improve perfusion');
+ p.treatments.push({...fluid,patientUid:'other-patient'});
+ assert.deepEqual(additionalCaseTargets(p,c,minute),untreated,'delivery evidence belongs to the patient');
+ p.treatments[0]={...fluid};
+ assert.deepEqual(additionalCaseTargets(p,c,0),additionalCaseTargets(control,c,0),'future IV delivery has no effect');
+ const small=additionalCaseTargets(p,c,minute);
+ fluid.dose={amount:1250,unit:'ml'};
+ p.treatments[0]={...fluid};
+ const iv=additionalCaseTargets(p,c,minute);
+ assert(small.sys>untreated.sys&&iv.sys>small.sys);
+ assert(small.hr<untreated.hr&&iv.hr<small.hr);
+ p.treatments.push(oral);
+ assert.deepEqual(additionalCaseTargets(p,c,minute),iv,'combining routes must not count the same deficit twice');
+});
