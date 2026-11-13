@@ -439,7 +439,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   const competent=['competent','complication-rescue','no-allergy-question','slow','omit-studies'].includes(profile);
   const pace=profile==='slow'?()=>3+seeded()*7:()=>0;
   const action=async text=>{const out=await send(text),delay=pace();if(delay)await advance(delay);return out;};
-  const history=plan.history.filter(x=>profile!=='no-allergy-question'||x.intentId!=='allergies');
+  const omitHistory=profile==='no-allergy-question'?['allergies']:[];
+  const history=plan.history.filter(x=>!omitHistory.includes(x.intentId));
   let firstOrder=null;const requestedStudies=new Set();
   const canRequestStudy=(id,state)=>!(c.studies.find(study=>study.id===id)?.requiresCompletedTreatments||[])
    .some(treatmentId=>!confirmedClinicalTreatment(state.patient,treatmentId,state.clock.nativeMinute));
@@ -486,7 +487,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
      if(requested.has(id)||id==='iv')continue;
      const eligibility=c.clinicalPolicy.eligibility?.[id];
      if((eligibility?.requiredStudies||[]).some(x=>!done.has(x)))continue;
-     if(clinicalInterventionEligibility(p,c,id,s.clock))continue;
+     if(clinicalInterventionEligibility(p,c,id,s.clock,{omitHistory}))continue;
      if(eligibility?.requiresSafeSwallowOrEnteralTube&&!actualTreatment(p,'swallow_screen',s.clock.nativeMinute))continue;
      if(id==='lung_protective_ventilation'&&!actualTreatment(p,'intubation',s.clock.nativeMinute))continue;
      const ordered=await action(treatmentCommand(c,content,id));requested.add(id);firstOrder??=ordered;

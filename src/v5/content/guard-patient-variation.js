@@ -33,10 +33,15 @@ export function materializeGuardPatient(patient,caseData,checkpoint=null,options
   assertIdentity(patient,caseData);return withBehavior(patient);
  }
  const profile=caseData?.variation===true?DEFAULT_PATIENT_VARIATION:caseData?.variation;
- if(!profile)return patient;
+ const existing=[...(patient.allergies||[]),...(patient.clinicalFlags?.drugAllergies||[])];
+ if(!profile){
+  const history=patient.allergyHistory||[];
+  const newEntries=existing.filter(reaction=>reaction&&typeof reaction==='object'&&
+   !history.some(entry=>entry.id===reaction.id&&drugId(entry)===drugId(reaction)));
+  return newEntries.length?{...patient,allergyHistory:[...new Set([...history,...newEntries])]}:patient;
+ }
  assertIdentity(patient,caseData);
  const v=generatePatientVariation(profile,patient.variation?.seed??patient.uid+':'+caseData.id,guardContext(patient,options));
- const existing=[...(patient.allergies||[]),...(patient.clinicalFlags?.drugAllergies||[])];
  const allergies=new Set();
  const severe=new Set([...(patient.severeAllergies||[]),...(patient.clinicalFlags?.severeAllergies||[])]);
  const intolerances=new Set(patient.intolerances||[]);

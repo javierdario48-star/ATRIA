@@ -82,6 +82,54 @@ test('typed nonsevere hypersensitivity causes observable skin findings with mode
  p.allergyHistory=[{drugId:'ceftriaxone',type:'intolerance',severity:'severe',reaction:'náuseas'}];
  assert.equal(confirmedMedicationHarms487(p,c,6).reactions.length,0);
 });
+test('a previous guard retains a known mild reaction when only the normalized fact was stored',()=>{
+ const p=patient();
+ Object.assign(p,{severeAllergies:[],allergies:['ceftriaxone'],hypersensitivities:['ceftriaxone'],allergyHistory:[]});
+ const [reaction]=confirmedMedicationHarms487(p,c,6).reactions;
+ assert.equal(reaction?.kind,'cutaneous-drug-hypersensitivity');
+ assert.equal(reaction.offsets.sys,0);
+});
+test('documenting a drug history and restoring it do not change the response to the same exposure',async t=>{
+ const histories=[
+  {label:'severe',type:'hypersensitivity',severity:'severe',reaction:'Me costó respirar.',kind:'severe-drug-allergy'},
+  {label:'mild',type:'hypersensitivity',severity:'mild',reaction:'Me salieron ronchas.',kind:'cutaneous-drug-hypersensitivity'},
+  {label:'intolerance',type:'intolerance',severity:'mild',reaction:'Me dio náuseas.',kind:null},
+  {label:'safe alternative',type:'hypersensitivity',severity:'severe',reaction:'Me costó respirar.',kind:null,drug:'metronidazol 500 mg'}
+ ];
+ for(const scenario of histories)await t.test(scenario.label,async()=>{
+  const patient={uid:'P',caseId:'APP-001',allergyHistory:[],allergies:[{drugId:'ceftriaxone',type:scenario.type,
+   severity:scenario.severity,historyDisclosure:scenario.reaction}]};
+  const opts={roomId:'exposure-'+scenario.label,mode:'solo',actorId:'doc',actorName:'Doctor',
+   patient,content,resolveContext:()=>({patientUid:'P'})};
+  async function run(ask){
+   let s=createGuardSession(opts);
+   try{
+    if(ask){
+     await s.post({id:'allergy-question',text:'¿Es alérgico a algún medicamento?'});
+     const answer=s.read().patient.intentHistory.find(row=>row.id==='anamnesis:allergies');
+     assert(answer?.answer.includes(scenario.reaction));
+    }
+    assert.deepEqual(s.read().patient.adverseEvents,[]);
+    const checkpoint=JSON.parse(JSON.stringify(await s.checkpoint()));
+    s.dispose();s=createGuardSession({...opts,checkpoint});
+    const before=s.read().patient;
+    assert.equal(before.intentHistory.some(row=>row.id==='anamnesis:allergies'),ask);
+    await s.post({id:'access',text:'Enfermera una vía'});
+    const dose=await s.post({id:'exposure',text:'Enfermera '+(scenario.drug??'ceftriaxona 1 g')});
+    assert.equal(dose.clinical[0].status,'pending');
+    assert.deepEqual(s.read().patient.adverseEvents,[]);
+    s.advance(60);await s.flush();
+    const after=s.read().patient;
+    assert.equal(after.administrationLog.length,1);
+    const reactions=confirmedMedicationHarms487(after,c,s.read().clock.nativeMinute).reactions;
+    assert.deepEqual(reactions.map(x=>x.kind),scenario.kind?[scenario.kind]:[]);
+    assert(reactions.every(row=>row.sourceEventId===after.administrationLog[0].sourceEventId));
+    return {facts:after.allergyHistory,vitals:after.liveVitals,reactions};
+   }finally{s.dispose();}
+  }
+  assert.deepEqual(await run(true),await run(false));
+ });
+});
 test('new formulary hazard labels and appropriate reperfusion never fabricate hemorrhage or anaphylaxis',()=>{
  for(const id of Object.keys(CLINICAL_TREATMENTS)){
   const p={uid:'P',administrationLog:[],treatments:[]};administer(p,id,0);

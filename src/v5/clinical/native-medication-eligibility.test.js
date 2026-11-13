@@ -55,3 +55,19 @@ test('alternate legitimate reaction-history wording satisfies the same clinical 
  p.intentHistory[0].patientUid='another';
  assert.equal(clinicalInterventionEligibility(p,c,'amoxicillin',clock).reason,'clinical-evidence-required');
 });
+
+test('an intentional omission can leave allergy history unanswered without skipping another advisory',()=>{
+ const {p,c,clock}=fixture(true),rule=c.clinicalPolicy.eligibility.heparin_therapeutic;
+ const option={omitHistory:['allergies']};
+ rule.requiresHistory=['allergies','meds'];p.intentHistory=[];
+ assert.deepEqual(clinicalInterventionEligibility(p,c,'heparin_therapeutic',clock,option).prerequisites.history,['meds']);
+ rule.requiresHistory=['allergies'];
+ assert.equal(clinicalInterventionEligibility(p,c,'heparin_therapeutic',clock,option),null);
+ assert.deepEqual(p.intentHistory,[]);
+ assert.deepEqual(clinicalInterventionEligibility(p,c,'heparin_therapeutic',clock).prerequisites.history,['allergies']);
+ rule.requiredStudies=['g_confirmed_indication'];
+ assert.equal(clinicalInterventionEligibility(p,c,'heparin_therapeutic',clock,option).reason,'clinical-evidence-required');
+ delete rule.requiredStudies;
+ rule.bpLimit={min:130};
+ assert.equal(clinicalInterventionEligibility(p,c,'heparin_therapeutic',clock,option).reason,'clinical-blood-pressure-limit');
+});

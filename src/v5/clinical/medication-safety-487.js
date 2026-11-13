@@ -48,7 +48,10 @@ export function normalizeDocumentedAllergies487(raw=[]){
 export function patientAllergyFacts487(patient){
  const flags=patient?.clinicalFlags||{};
  const history=[...(patient?.allergyHistory??[]),...(patient?.variation?.allergies??[])];
- const raw=[...(patient?.allergies??[]),...(flags.drugAllergies??[])];
+ // Older sessions saved the normalized hypersensitivity list even when the
+ // corresponding typed interview detail was unavailable.
+ const recordedHypersensitivities=patient?.hypersensitivities??[];
+ const raw=[...(patient?.allergies??[]),...(flags.drugAllergies??[]),...recordedHypersensitivities];
  const intolerances=normalizeDocumentedAllergies487([
   ...(patient?.intolerances??[]),...history.filter(intolerance),...raw.filter(intolerance)]);
  const typedAllergies=[...history,...raw].filter(item=>!intolerance(item));
@@ -56,8 +59,9 @@ export function patientAllergyFacts487(patient){
   ...(patient?.severeAllergies??[]).filter(item=>!intolerance(item)),
   ...(flags.severeAllergies??[]).filter(item=>!intolerance(item)),...typedAllergies.filter(severe)]);
  const allergies=normalizeDocumentedAllergies487([...typedAllergies,...severeAllergies]);
- const hypersensitivities=normalizeDocumentedAllergies487(typedAllergies.filter(item=>
-  typeof item==='object'&&!severe(item)&&['hypersensitivity','allergy'].includes(item.type??item.reactionType)));
+ const hypersensitivities=normalizeDocumentedAllergies487([
+  ...recordedHypersensitivities,...typedAllergies.filter(item=>
+   typeof item==='object'&&!severe(item)&&['hypersensitivity','allergy'].includes(item.type??item.reactionType))]);
  return {allergies,severeAllergies,intolerances,hypersensitivities,
   clinicalFlags:{...flags,drugAllergies:[...allergies],severeAllergies:[...severeAllergies]}};
 }

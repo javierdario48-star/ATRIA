@@ -46,6 +46,20 @@ test('a declared definitive surgical pathway selects the receiving operating tea
  const plan=deriveClinicalCertificationPlan(c,content);
  assert.equal(plan.destination,'quirofano');assert.deepEqual(plan.consults,['cardiovascular']);
 });
+test('the no-allergy-question profile delivers indicated medicine and preserves the omitted-history score',async()=>{
+ const c=cardiologyPack.cases.find(x=>x.id==='CARD-09');
+ const row=await runClinicalCaseScenario(c,{mode:'apprentice',profile:'no-allergy-question',
+  seed:'atria55-native-v1:CARD-09:no-allergy-question',horizon:200,recovery:true});
+ assert.equal(row.safetyHistory.allergyQuestionAsked,false);
+ assert.equal(row.checks.history,false);
+ assert.equal(row.integrityChecks.performanceXP,true);
+ assert.equal(row.closureReceipt?.destination,'quirofano',JSON.stringify(row.failures));
+ for(const id of ['ampicillin','ceftriaxone']){
+  const a=row.administrations.find(x=>x.id===id);
+  assert(a?.dose.amount>0&&a.patientUid===row.patientUid);
+ }
+ assert.deepEqual(row.failures,['missing actual history evidence']);
+});
 test('cooperative endocarditis with valvular edema transfers for surgery without claiming an unfinished operation',async()=>{
  const c=cardiologyPack.cases.find(x=>x.id==='CARD-09'),composed=await certification.clinicalCertificationContent([c]);
  const seed=chooseClinicalScenarioSeed(composed.cases.find(x=>x.id===c.id),'valvular-edema',

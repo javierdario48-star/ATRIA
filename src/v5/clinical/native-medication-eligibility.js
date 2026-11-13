@@ -7,7 +7,7 @@ const noBleedingDrugs=new Set(['aspirin','ticagrelor','clopidogrel','enoxaparin'
 const fail=(reason,message,prerequisites)=>({reason,message,...(prerequisites?{prerequisites}:{})});
 const complete=(p,id,minute)=>confirmedClinicalTreatment(p,id,minute);
 
-export function clinicalInterventionEligibility(p,c,id,clock={}){
+export function clinicalInterventionEligibility(p,c,id,clock={}, {omitHistory=[]}={}){
  const policy=c?.clinicalPolicy;if(!policy)return null; // The 25 GI contracts retain their exact freedom of execution.
  const rule=policy.eligibility?.[id]||{},traits=new Set([...(policy.traits||[]),...(p.clinicalTraits||[])]);
  const minute=Number.isFinite(clock.nativeMinute)?clock.nativeMinute:0;
@@ -16,14 +16,16 @@ export function clinicalInterventionEligibility(p,c,id,clock={}){
  const done=new Set(studies.map(o=>studyEvidenceId(c,o.id)));
  const history=new Set((p.intentHistory||[]).filter(x=>x.patientUid===undefined||x.patientUid===p.uid)
   .map(x=>typeof x.id==='string'?x.id.replace(/^anamnesis:/,''):x.id));
+ const unanswered=ids=>ids.filter(key=>!omitHistory.includes(key)&&!history.has(key));
  const evidence=studies.map(o=>norm(o.result)).join('\n');
  const v=p.liveVitals||{},unstable=v.sys<90||v.spo2<90||v.hr>=150||v.rr>=35;
  const excluded=[...(rule.excludeTraits||[])];
  if(noBleedingDrugs.has(id))excluded.push('activeBleeding','intracranialBleed','intracranialBleeding','aorticDissection');
  if(excluded.some(t=>traits.has(t)))return fail('clinical-contraindication','La indicación tiene una contraindicación clínica documentada.');
- if((rule.requiredStudies||[]).some(s=>!done.has(s))&&!(rule.unlessUnstable&&unstable)||
-  (rule.requiresHistory||[]).some(h=>!history.has(h)))
-  return fail('clinical-evidence-required','Completar los estudios y antecedentes requeridos antes de esta intervención.');
+ const missingHistory=unanswered(rule.requiresHistory||[]);
+ if((rule.requiredStudies||[]).some(s=>!done.has(s))&&!(rule.unlessUnstable&&unstable)||missingHistory.length)
+  return fail('clinical-evidence-required','Completar los estudios y antecedentes requeridos antes de esta intervención.',
+   {history:missingHistory});
  if((rule.requiresCompletedTreatments||[]).some(treatmentId=>!complete(p,treatmentId,minute)))
   return fail('clinical-treatment-required','Confirmar la finalización real del tratamiento previo antes de esta intervención.');
  for(const prerequisite of rule.requiresStudiesAfterTreatments||[]){
@@ -93,7 +95,7 @@ export function clinicalInterventionEligibility(p,c,id,clock={}){
   return fail('clinical-indication-not-supported','No se documentó elegibilidad para trombólisis cerebral.');
  if(id==='alteplase_pe'){
   if(!traits.has('obstructiveShockPE'))return fail('clinical-indication-not-supported','La trombólisis pulmonar está reservada a TEP de alto riesgo elegible.');
-  const missingHistory=['bleeding','meds'].filter(id=>!history.has(id));
+  const missingHistory=unanswered(['bleeding','meds']);
   const studyAlternatives=studies.some(o=>/echo|ctpa/.test(o.id))?[]:
    c.studies.filter(s=>/echo|ctpa/.test(s.id)).map(s=>s.id);
   if(missingHistory.length||!studies.some(o=>/echo|ctpa/.test(o.id)))
