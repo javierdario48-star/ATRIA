@@ -191,9 +191,20 @@ try{
     assert(outcome.distance<=150,'Reception did not reach the actual patient bedside: '+JSON.stringify(outcome));
     return outcome;
    },page);
+   await record(label+' patient action wheel and history',async()=>{
+    await page.waitForFunction(()=>!document.getElementById('patientWheel').hidden,null,{timeout:13000});
+    const wheel=page.locator('#patientWheel');
+    assert(await wheel.locator('[data-patient-action="history"]').isVisible());
+    await wheel.locator('[data-patient-action="history"]').click();
+    assert(await page.locator('#modal').evaluate(el=>el.open),'patient history button did not open a dialog');
+    await page.locator('#modalClose').click();
+   },page);
    await record(label+' nurse and chat controls',async()=>{
     await page.locator('#nurseQuickButton').click();
-    assert.match(await page.locator('#recipientButton').innerText(),/Enfermera/);
+    // A recently delivered automatic patient greeting can update the recipient
+    // label on the same frame. The nurse shortcut must preserve its actual
+    // outgoing "Enfermera," command prefix even during that transition.
+    assert.match(await page.locator('#dieInput').inputValue(),/^Enfermera,s*/,'nurse shortcut must prepare the nurse command');
     const input=page.locator('#dieInput');
     await input.fill('Enfermera, hemograma');
     await page.locator('#chatForm [type="submit"]').click();
@@ -252,6 +263,15 @@ try{
    await page.clock.runFor(250);
    assert(await page.locator('[data-action="continue-shift"]').isVisible(),'continue shift not offered');
    assert(await page.locator('[data-action="save-shift"]').isVisible(),'save and leave not offered');
+  },page);
+  await record('continue another 24-minute guard and save',async()=>{
+   await page.locator('[data-action="continue-shift"]').click();
+   assert.equal(await page.evaluate(()=>atriaV5.snapshot().phase),'guard','continue must retain active guard');
+   await page.clock.fastForward(24*60*1000);
+   await page.clock.runFor(250);
+   assert(await page.locator('[data-action="save-shift"]').isVisible(),'second turn must offer save and exit');
+   await page.locator('[data-action="save-shift"]').click();
+   await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');
   },page);
  }catch(error){
   await record('admissions primary journey',()=>{throw error;},page);
