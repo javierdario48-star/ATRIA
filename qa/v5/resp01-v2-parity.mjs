@@ -96,6 +96,11 @@ for(const x of base){
   samePersonality:pair.rows.v1.identity.personality===pair.rows.v2.identity.personality,
   sameHistoryVariant:pair.rows.v1.identity.backgroundHistory===pair.rows.v2.identity.backgroundHistory
  };
+ // A candidate that adds observation may cost elapsed time, but a clean
+ // outpatient bot must not duplicate examination/reassessment work.
+ if(x.profile==='competent'&&pair.rows.v2.complications.length===0&&
+   pair.delta.commands>1)
+  errors.push('v2/'+x.profile+'/'+x.mode+': unnecessary outpatient bot actions beyond one final observation check: '+pair.delta.commands);
  pairs.push(pair);
  console.log(JSON.stringify({profile:x.profile,mode:x.mode,
   v1:{outcome:pair.rows.v1.outcome,quality:pair.rows.v1.qualityScore,xp:pair.rows.v1.xp},
