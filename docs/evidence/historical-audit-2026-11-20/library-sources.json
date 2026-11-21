@@ -1,0 +1,472 @@
+[
+  {
+    "name": "ATRIA-5.0-prompt-continuidad.md",
+    "library_file_id": "libfile_b0e3d18b0a348191a40f242d44b11752",
+    "start": 1,
+    "end": 109,
+    "total": 109,
+    "has_more": false,
+    "text_sha256": "e49bfd92d689e7103a5a2e6d84a9bf8e7e5ac9775420f419116ada8335dc6d11",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "ATRIA_V5_SQM_catalogo_y_fisica.md",
+    "library_file_id": "libfile_da56f3f33afc819198ef25d2b34bf0bd",
+    "start": 1,
+    "end": 114,
+    "total": 114,
+    "has_more": false,
+    "text_sha256": "af37cce076cb0006fb408a9a2576f8a04feca63fa68d0ff7283aaff91d2e93a8",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "atria_hd_atlas_transfer.txt",
+    "library_file_id": "libfile_9a053949416c8191aa7ea3a7a232d8a6",
+    "start": 1,
+    "end": 249,
+    "total": 249,
+    "has_more": false,
+    "text_sha256": "98e99b5f9871cc8db879e4f024fea39415b296805ca6bc348dc1d467b211f36b",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "atria_avatar_corrected_atlas_export.txt",
+    "library_file_id": "libfile_645c3e78a3d881918499e6467295d959",
+    "start": 1,
+    "end": 1,
+    "total": 1,
+    "has_more": false,
+    "text_sha256": "f7afb45f9a2f2e6c412751337a8d3686ed39f08fc59b551e3c3c283c0b3c89a3",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "atria_avatar_atlas_hd_export.txt",
+    "library_file_id": "libfile_53818f7c7adc8191a7282626c0828f04",
+    "start": 1,
+    "end": 1,
+    "total": 1,
+    "has_more": false,
+    "text_sha256": "a4f68280303cf6f9a5526ae99df102cc91fd2bb6aeff8eba9f3a9ab97d32e644",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "atria_avatar_atlas_encoded_export.txt",
+    "library_file_id": "libfile_1300743aab5c81919622c6baab847d27",
+    "start": 1,
+    "end": 1,
+    "total": 1,
+    "has_more": false,
+    "text_sha256": "83624cd0d50c1df812b69ca47e9461af8ce5e69348c7abe989293fd55571cd78",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "atria_wardrobe_transfer_v2(1).txt",
+    "library_file_id": "libfile_041289581b2481919482ef4603034741",
+    "start": 1,
+    "end": 77,
+    "total": 77,
+    "has_more": false,
+    "text_sha256": "d5ddb3500f29ef9502ad0c39b4240f438cd8ea766e6dc02deb52c0a6bd1bf4b4",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "atria_wardrobe_transfer_v2.txt",
+    "library_file_id": "libfile_e5f000f0da64819183314b6f98c401fa",
+    "start": 1,
+    "end": 77,
+    "total": 77,
+    "has_more": false,
+    "text_sha256": "d5ddb3500f29ef9502ad0c39b4240f438cd8ea766e6dc02deb52c0a6bd1bf4b4",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "atria_wardrobe_transfer.txt",
+    "library_file_id": "libfile_7eeef74de1e4819196734cf6d0f7fc31",
+    "start": 1,
+    "end": 67,
+    "total": 67,
+    "has_more": false,
+    "text_sha256": "c36f218a38c5a3cbd5005ca5929096c0165f8c69bd9a1eec5dab3bdb7d712463",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "atria_transfer_probe.txt",
+    "library_file_id": "libfile_ac86b9e299fc81919036c24b72baa3d3",
+    "start": 1,
+    "end": 1,
+    "total": 1,
+    "has_more": false,
+    "text_sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "ATRIA_4.8.7_auditoria_estructural_2026-10-14.md",
+    "library_file_id": "libfile_f9d3db8350588191aff22f6affd4433d",
+    "start": 1,
+    "end": 110,
+    "total": 110,
+    "has_more": false,
+    "text_sha256": "b24cb9fca5878f44a0a7bd85f454880376813139cf117fb7e2743f5efa81501b",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "ATRIA_487_PHARMACOLOGY_INFRASTRUCTURE_RESULTS.md",
+    "library_file_id": "libfile_3f05961561788191994c3ab19cc8c12c",
+    "start": 1,
+    "end": 165,
+    "total": 165,
+    "has_more": false,
+    "text_sha256": "c94210f48110a23b1e0566e22bfb23c8e17371821c3d5731276182c3ab3f9304",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "ATRIA_Prueba_Farmacos_648ab59.md",
+    "library_file_id": "libfile_cf6de0a181488191b2c3699a6d7d6ded",
+    "start": 1,
+    "end": 153,
+    "total": 153,
+    "has_more": false,
+    "text_sha256": "2c27f2c542d908bcf76cd9b7d85ce1e60ac0d5e240ae43b215625f5388e674d3",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "ATRIA_487_STABILIZATION_CHECKPOINTS.md",
+    "library_file_id": "libfile_e7c38743be6c819195b4e4ebf6c23ca1",
+    "start": 1,
+    "end": 228,
+    "total": 228,
+    "has_more": false,
+    "text_sha256": "0301516cb0b63082913e8fa0f0b43ebeb6a5f82032fa131129d7c32d6b5a5a19",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "ATRIA_Auditoria_Arquitectonica_2026-10-10.md",
+    "library_file_id": "libfile_f100c450305481918e12b132be1744bf",
+    "start": 1,
+    "end": 864,
+    "total": 864,
+    "has_more": false,
+    "text_sha256": "8719a2ed8229ae1b60bc09e316f38cc42cf52a912938e77367ec38e42f12f66f",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "ATRIA_AUDITORIA_PROCEDIMIENTOS_PERITONITIS_487.md",
+    "library_file_id": "libfile_bebbafa23eb08191af27cb6b601ac417",
+    "start": 1,
+    "end": 79,
+    "total": 79,
+    "has_more": false,
+    "text_sha256": "7901c61a2e0574d5e77b006a17abd026b66a369c4cfee6240724f8cb73833033",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "ATRIA_FICHA_MAESTRA_CLINICA_v1.md",
+    "library_file_id": "libfile_6712389c7c54819196229363c9763339",
+    "start": 1,
+    "end": 100,
+    "total": 100,
+    "has_more": false,
+    "text_sha256": "01571667a1d929ff9e7433341471763bd9e46cf12b0b24ce7a03d417092d0cc3",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "Clinical_Shift_V4_1_3_QA.md",
+    "library_file_id": "libfile_4bd2ddd95a008191b1aa7a886d0980cb",
+    "start": 1,
+    "end": 107,
+    "total": 107,
+    "has_more": false,
+    "text_sha256": "ca2dadb09a777b17feccbc492651e95ef4f1e5900f1e154df95300434f3f0bb6",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "Clinical_Shift_V4_1_2_QA.md",
+    "library_file_id": "libfile_917dc29122108191b14acd85c53d46a8",
+    "start": 1,
+    "end": 111,
+    "total": 111,
+    "has_more": false,
+    "text_sha256": "119b5441ff17500f721765e0b265f142370f1fd12c1f2bbea4411e0284b8a7da",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "Clinical_Shift_V4_1_1_QA.md",
+    "library_file_id": "libfile_265d85894c8c8191937903e0fcb9ff9a",
+    "start": 1,
+    "end": 65,
+    "total": 65,
+    "has_more": false,
+    "text_sha256": "b66f557d6b2615c26429758d754ef6f9771913ab0469da2f2d84abb14e0663dc",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "QA_Clinical_Shift_V4_0_6_VEGA_FLOW_NLU.txt",
+    "library_file_id": "libfile_ea17a6ce701c819198fb68163956296d",
+    "start": 1,
+    "end": 43,
+    "total": 43,
+    "has_more": false,
+    "text_sha256": "2089906218a91bc50691579363bd84f346223626d1bd1b1d4944e92c42fd2234",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "QA_Clinical_Shift_V4_0_5_MOVEMENT_MAP.txt",
+    "library_file_id": "libfile_280e4aacaab48191a9edf19e4575fa2e",
+    "start": 1,
+    "end": 37,
+    "total": 37,
+    "has_more": false,
+    "text_sha256": "cb6083ae3c9f42bfc8e8198596ce3846edcc1f1afb14161b88e86ae678591293",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "QA_Clinical_Shift_V4_0_4_MULTIPATIENT_FLOW.txt",
+    "library_file_id": "libfile_7e479dd5d6448191b5c89c594a4d9744",
+    "start": 1,
+    "end": 96,
+    "total": 96,
+    "has_more": false,
+    "text_sha256": "652f9dd2c557a5af93021b88931c76beb7ac19b0a6dfe79a3c3d090cb83c996b",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "QA_Clinical_Shift_V3_9_BOTS_EXECUTED.txt",
+    "library_file_id": "libfile_d782d5b901c88191a0158a5abfa6d8f7",
+    "start": 1,
+    "end": 1000,
+    "total": 1180,
+    "has_more": true,
+    "text_sha256": "9d35f93da10e28233ee5b2a261c5ec78ac8646b1baeb3a3bca55d1abda43f7b9",
+    "scope": "parcial; registro crudo largo de bots"
+  },
+  {
+    "name": "QA_Clinical_Shift_V3_9_DYNAMIC_PATIENTS_BEDS.txt",
+    "library_file_id": "libfile_ce30f306eff0819193afc17ce731f3ef",
+    "start": 1,
+    "end": 57,
+    "total": 57,
+    "has_more": false,
+    "text_sha256": "7fa929903eb699b68cf159fadb5e84ff3c045e87543b2f5e620d18204500c04b",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "QA_Clinical_Shift_V3_8_ENGAGEMENT_NEUROSCIENCE.txt",
+    "library_file_id": "libfile_daf8059b5ad0819185e5a82fdb449205",
+    "start": 1,
+    "end": 82,
+    "total": 82,
+    "has_more": false,
+    "text_sha256": "7579002102683bdcb4b7da52412752a36c8473941d54805aa0cc9624103d6792",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "QA_Clinical_Shift_V3_7_FINAL.txt",
+    "library_file_id": "libfile_2af99b8770ec8191a2f928fae5a5f248",
+    "start": 1,
+    "end": 12,
+    "total": 12,
+    "has_more": false,
+    "text_sha256": "0c8a0770279fbfef752e92705b272e985d27eea55343eddf0babbc38783d22da",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "QA_Clinical_Shift_V3_6_3_FULL_BOT_AUDIT.txt",
+    "library_file_id": "libfile_92339ab4e4cc81919a6c30c2533f3e79",
+    "start": 1,
+    "end": 174,
+    "total": 174,
+    "has_more": false,
+    "text_sha256": "fd62e947cef5c979c3b71fc78a3c274330925f4c643093145b4baa410af7c667",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "QA_Clinical_Shift_V3_5_2_THREE_BOTS.txt",
+    "library_file_id": "libfile_e001aba26dbc81919bd7761c2a512f7a",
+    "start": 1,
+    "end": 38,
+    "total": 38,
+    "has_more": false,
+    "text_sha256": "a95fd9b2193a12564640f95380de44c403e864df701a6450caad3d7b5c644ad3",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "Clinical_Shift_v0_21_7_REGRESSION_REPORT.txt",
+    "library_file_id": "libfile_abf5835a381481919e747ed024e7e976",
+    "start": 1,
+    "end": 59,
+    "total": 59,
+    "has_more": false,
+    "text_sha256": "ab26f1c71995b90d1024d3f780546605dca25ba64e337c6f05cdc7e4a3c910ef",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "Clinical_Shift_v0_21_4_ROOT_CAUSE_REPORT.txt",
+    "library_file_id": "libfile_c2cccb1e4e408191b363de0584a52940",
+    "start": 1,
+    "end": 42,
+    "total": 42,
+    "has_more": false,
+    "text_sha256": "24d43b3a3a1924650cb0cae06afaab428d5d0ddb62c473c49d96050774c65d4c",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "Clinical_Shift_v0_21_3_PERFORMANCE_REPORT.txt",
+    "library_file_id": "libfile_7f6e0357f69c819188e05a530d191bb0",
+    "start": 1,
+    "end": 33,
+    "total": 33,
+    "has_more": false,
+    "text_sha256": "b3badb0f1c82e95f9b98ca65c27d45904b0d961d6d197df4884fe33e6cb0b018",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "Clinical_Shift_v0_21_0_PERF_REPORT.md",
+    "library_file_id": "libfile_ccb82068d67c8191927591b8ab7e7aa3",
+    "start": 1,
+    "end": 49,
+    "total": 49,
+    "has_more": false,
+    "text_sha256": "341e679b73b4fdcba0b9ccc3c09c9424585afaa6b0f53007b1ccc93fd6eeabfd",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "clinical_shift_v0_6_QA_summary.md",
+    "library_file_id": "libfile_9dcde8286d188191a3bc1e04857c03bc",
+    "start": 1,
+    "end": 43,
+    "total": 43,
+    "has_more": false,
+    "text_sha256": "50efb164c590e273cce13f277bc4a286084b558344195f8afe329454c58361ec",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "LEEME_NIGHT_SHIFT_V4_3_0.md",
+    "library_file_id": "libfile_3372d2274bb881919bedeff4c28a7ea9",
+    "start": 1,
+    "end": 38,
+    "total": 38,
+    "has_more": false,
+    "text_sha256": "a96bfbd704e5a2ca5e739b9222f62582fe32c8a32a931c9b1513bc801ff990a6",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "LEEME_NIGHT_SHIFT_V4_2_9.md",
+    "library_file_id": "libfile_1eb26c5917f4819185e642770d877d50",
+    "start": 1,
+    "end": 60,
+    "total": 60,
+    "has_more": false,
+    "text_sha256": "293a091c9b53290688043ab20a430a467f1e6450072b336cd3a88a60d37f6556",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "LEEME_NIGHT_SHIFT_V4_2_8.md",
+    "library_file_id": "libfile_eb99c20a206c8191a845310affad18f1",
+    "start": 1,
+    "end": 26,
+    "total": 26,
+    "has_more": false,
+    "text_sha256": "33c19a2984bd47565d89c3c18e4bda2009cc0c197c696e9395ded797fb340e78",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_7_REVISION_WEB.md",
+    "library_file_id": "libfile_909bac2e3a988191a17eb548c6272e4c",
+    "start": 1,
+    "end": 88,
+    "total": 88,
+    "has_more": false,
+    "text_sha256": "607f8bd9646469352b6bc15e4c3d2dc65d097f702878f2112e114a5900b2554f",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_7_PRUEBA_ANDROID.md",
+    "library_file_id": "libfile_51f24dde8b488191b32f13176f3392d1",
+    "start": 1,
+    "end": 39,
+    "total": 39,
+    "has_more": false,
+    "text_sha256": "ef684267a2c4b6492da9dfedec5b247bd50eebe5efea1c73cf3785062aacc446",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_7_AUDITORIA.md",
+    "library_file_id": "libfile_52e41ca48e688191967aca2ced707131",
+    "start": 1,
+    "end": 111,
+    "total": 111,
+    "has_more": false,
+    "text_sha256": "ad9eba1551b912add837c31ba7d5c0899998a8a07e96b5520504b4118cf6fecf",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_6_AUDITORIA.md",
+    "library_file_id": "libfile_6c32263cab188191a0151e464a6e88d3",
+    "start": 1,
+    "end": 92,
+    "total": 92,
+    "has_more": false,
+    "text_sha256": "ce4ab0f0a2aee6eab354f4e17a213c790b7cb458c0df2068e1854632abf92144",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_5_AUDITORIA.md",
+    "library_file_id": "libfile_8f53c65e0c7c81918dba0b7e348f2dd1",
+    "start": 1,
+    "end": 112,
+    "total": 112,
+    "has_more": false,
+    "text_sha256": "ea542f89075cdfe74963688e55cd0f296d052480799012a35569bdca6fdbe61c",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_4_AUDITORIA.md",
+    "library_file_id": "libfile_47e594fb327481919a80521fe36e3eb2",
+    "start": 1,
+    "end": 107,
+    "total": 107,
+    "has_more": false,
+    "text_sha256": "b78c29011adebf1f4b22c8177e15c6e79c90c20262727434902c231accf090ee",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_3_AUDITORIA.md",
+    "library_file_id": "libfile_a7b41c0a8e6c8191be68d98194870e22",
+    "start": 1,
+    "end": 128,
+    "total": 128,
+    "has_more": false,
+    "text_sha256": "4510319ddf3e56e3bf16591b15b885606cca073a928467b162d2b34383a1a0fe",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_2_AUDITORIA.md",
+    "library_file_id": "libfile_a6bc0bb7043c8191aa6e2ea2c825896a",
+    "start": 1,
+    "end": 106,
+    "total": 106,
+    "has_more": false,
+    "text_sha256": "ca17b56fd52c6a9710725c089f2820d139f93cf1a0916e9e36beb8b8a4d6a1b5",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_1_AUDITORIA.md",
+    "library_file_id": "libfile_6b33946d77008191a14d1b9ac0267f75",
+    "start": 1,
+    "end": 116,
+    "total": 116,
+    "has_more": false,
+    "text_sha256": "8e697c4ce35cd37b3fe15875a33e26b588cb5c3fdf8c9ec7c5f4b8265aeb010e",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  },
+  {
+    "name": "NIGHT_SHIFT_V4_2_0_AUDITORIA.md",
+    "library_file_id": "libfile_1f9259d84d24819194c8392b71dc3e27",
+    "start": 1,
+    "end": 134,
+    "total": 134,
+    "has_more": false,
+    "text_sha256": "12a0921370ccbffcff04cada9fde88feca9f9402611d23982406e7afde7ed969",
+    "scope": "texto devuelto; lectura analítica dirigida"
+  }
+]

@@ -1,0 +1,326 @@
+[
+  {
+    "id": "U-AUDIT",
+    "date": "2026-11-20",
+    "kind": "Solicitud original recuperada",
+    "description": "Mensaje íntegro de esta ejecución: auditoría y ejemplos repetidos",
+    "locator": "Conversación actual",
+    "read_scope": "Sí",
+    "limitations": "Las fechas originales de los ejemplos repetidos no están dadas."
+  },
+  {
+    "id": "DOC-INVENTARIO",
+    "date": "2026-11-11/12",
+    "kind": "Documentación indirecta",
+    "description": "docs/ATRIA-5-REMAINING-TASKS.md en 98b4baf y 1b17484",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "Conserva correspondencias por rango, no textos individuales de 1–60."
+  },
+  {
+    "id": "DOC-HANDOFF",
+    "date": "2026-11-11/12",
+    "kind": "Entrega técnica",
+    "description": "docs/ATRIA-5-CHATGPT-HANDOFF.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "No acredita aceptación de usuario ni hardware."
+  },
+  {
+    "id": "DOC-EXACT",
+    "date": "2026-11-11/12",
+    "kind": "Entrega técnica",
+    "description": "docs/ATRIA-5-EXACT-CONTINUATION.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "Estado documental anterior al HEAD de código."
+  },
+  {
+    "id": "DOC-CONTRATO",
+    "date": "vigente en HEAD",
+    "kind": "Contrato técnico",
+    "description": "docs/ATRIA-5-CASE-INTEGRATION-CONTRACT.md y AGENTS.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "Cinco capas y libertad clínica vigentes; no es la transcripción original."
+  },
+  {
+    "id": "MIG-PLAN",
+    "date": "2026-10-16 y etapas",
+    "kind": "Documentación indirecta",
+    "description": "docs/ATRIA_50_MIGRATION_MASTER_PLAN.md; docs/migration/STATUS.md; C01–C25",
+    "locator": "Git",
+    "read_scope": "Sí, archivos principales",
+    "limitations": "Su tabla de pendientes es histórica, no inventario actual."
+  },
+  {
+    "id": "MIG-MANUAL",
+    "date": "referencia de migración",
+    "kind": "Documentación indirecta",
+    "description": "docs/migration/ATRIA_50_MANUAL_MAESTRO_FUNCIONAL.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "Caracterización histórica V4/V5; restricciones posteriores pueden sustituirla."
+  },
+  {
+    "id": "DOC-QA26",
+    "date": "2026-10-26",
+    "kind": "Entrega técnica",
+    "description": "docs/qa/2026-10-26-quality-results.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "Resultados del SHA de esa entrega."
+  },
+  {
+    "id": "DOC-MORTALITY",
+    "date": "2026-10-26/27",
+    "kind": "Entrega técnica",
+    "description": "docs/qa/2026-10-26-mortality-results.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "No repetir automáticamente166escenarios por una edición documental."
+  },
+  {
+    "id": "DOC-RPG",
+    "date": "2026-10-27",
+    "kind": "Entrega técnica",
+    "description": "docs/qa/2026-10-27-rpg-results.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "La velocidad inicial205fue reducida después a184,5px/s."
+  },
+  {
+    "id": "DOC-GUARDSELECTION",
+    "date": "2026-10-27",
+    "kind": "Entrega técnica",
+    "description": "docs/qa/2026-10-27-guard-selection-results.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "Multiplicadores actuales1,5/1,2/1,0."
+  },
+  {
+    "id": "DOC-WELCOME",
+    "date": "2026-10-27",
+    "kind": "Entrega técnica",
+    "description": "docs/qa/2026-10-27-welcome-results.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "La imagen de referencia no aportó texto legible al intentar leerla."
+  },
+  {
+    "id": "DOC-AUDIO",
+    "date": "2026-10-29/30",
+    "kind": "Entrega técnica",
+    "description": "docs/ATRIA-5-BOTS-AUDIO-VISUAL.md; src/v5/content/audio/README.md",
+    "locator": "Git",
+    "read_scope": "Sí",
+    "limitations": "Instrumentación no certifica calidad sonora percibida."
+  },
+  {
+    "id": "LIB-FARMACOS",
+    "date": "2026-10-10",
+    "kind": "Entrega técnica",
+    "description": "ATRIA_Prueba_Farmacos_648ab59.md",
+    "locator": "libfile_cf6de0a181488191b2c3699a6d7d6ded",
+    "read_scope": "Sí",
+    "limitations": "HallazgosV4contrastados con módulosV5; no copiarlos como defectos actuales."
+  },
+  {
+    "id": "LIB-STABILIZATION",
+    "date": "2026-10-10 y actualizaciones",
+    "kind": "Entrega técnica",
+    "description": "ATRIA_487_STABILIZATION_CHECKPOINTS.md",
+    "locator": "libfile_e7c38743be6c819195b4e4ebf6c23ca1",
+    "read_scope": "Sí",
+    "limitations": "Protección3+2ycréditoposterior pertenecen a revisiones distintas."
+  },
+  {
+    "id": "LIB-SQM",
+    "date": "2026-10-25/26",
+    "kind": "Borrador técnico",
+    "description": "ATRIA_V5_SQM_catalogo_y_fisica.md",
+    "locator": "libfile_da56f3f33afc819198ef25d2b34bf0bd",
+    "read_scope": "Sí",
+    "limitations": "Dice expresamente no implementado;32 familias propuestas no son32órdenes originales."
+  },
+  {
+    "id": "LIB-CS412",
+    "date": "2026-10-03",
+    "kind": "Entrega técnica",
+    "description": "Clinical_Shift_V4_1_2_QA.md",
+    "locator": "libfile_917dc29122108191b14acd85c53d46a8",
+    "read_scope": "Sí",
+    "limitations": "234 atenciones enDOMemulado; sin prueba física."
+  },
+  {
+    "id": "LIB-ANDROID",
+    "date": "2026-10-05",
+    "kind": "Entrega técnica",
+    "description": "NIGHT_SHIFT_V4_2_7_PRUEBA_ANDROID.md",
+    "locator": "libfile_51f24dde8b488191b32f13176f3392d1",
+    "read_scope": "Sí",
+    "limitations": "Explicita0comprobacionesvisualesnuevas yGboardpendiente."
+  },
+  {
+    "id": "DOC-CONTINUIDAD",
+    "date": "2026-10-26",
+    "kind": "Prompt/entrega derivada",
+    "description": "ATRIA-5.0-prompt-continuidad.md",
+    "locator": "libfile_b0e3d18b0a348191a40f242d44b11752",
+    "read_scope": "Sí",
+    "limitations": "Checkpoint257a0a1; no contiene todo el historial."
+  },
+  {
+    "id": "GIT-13",
+    "date": "2026-11-12/13",
+    "kind": "Implementación primaria",
+    "description": "Ocho commits 7afa707..162d0cf posteriores a1b17484",
+    "locator": "Git",
+    "read_scope": "Sí, diffs dirigidos",
+    "limitations": "Ninguna modificación remota posterior al13/11al comienzo de esta ejecución."
+  },
+  {
+    "id": "RUN-HEAD",
+    "date": "2026-11-13; consultado2026-11-20",
+    "kind": "Ejecución primaria",
+    "description": "Actions43435355473,43435355500,43435355599 y logsdejobs fallidos",
+    "locator": "GitHub",
+    "read_scope": "Sí",
+    "limitations": "Lista de runs por API pública porque conector solo devuelve pull-request runs."
+  },
+  {
+    "id": "LOCAL-WORK",
+    "date": "workspacesprevios",
+    "kind": "Trabajo local",
+    "description": "Siete checkouts anteriores, dos con cambios funcionales sincommit",
+    "locator": "Scratch disponible",
+    "read_scope": "Sí, estado/diffs dirigidos",
+    "limitations": "No tocar/limpiar esos workspaces; algunos cambios están integrados de otra forma."
+  },
+  {
+    "id": "PC-01",
+    "date": "2026-10-01",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta history_1",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-02",
+    "date": "2026-10-02",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta discovery_1",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-03-07",
+    "date": "2026-10-03..07",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta deep_1",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-08-14",
+    "date": "2026-10-08..14",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta hist_batch_1_0",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-15-23",
+    "date": "2026-10-15..23",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta hist_batch_1_1",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-17-23",
+    "date": "2026-10-17..23",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta audit_step_2",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-23",
+    "date": "2026-10-23",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta audit_step_2",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-24-31",
+    "date": "2026-10-24..31",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta hist_batch_2_0",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-NOV",
+    "date": "2026-11-01..10 /04..08",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta hist_batch_2_1,last_history_2",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-11-20",
+    "date": "2026-11-11..20",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta hist_batch_3_0",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-12-20",
+    "date": "2026-11-12..20",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta audit_step_3",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-SOCIAL",
+    "date": "2026-10..11",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta next_4",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-03-04",
+    "date": "2026-10-03..04",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta history_final_0",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "PC-09-10",
+    "date": "2026-11-09..10",
+    "kind": "Solicitud documentada indirectamente",
+    "description": "Extractos de recuperación contextual; consulta history_final_1",
+    "locator": "Sin URL/ID canónico de conversación",
+    "read_scope": "Parcial",
+    "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  }
+]

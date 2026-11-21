@@ -1,0 +1,83 @@
+{
+  "B0": {
+    "name": "Integridad de certificación y contratos de prueba",
+    "priority": "P1",
+    "env": "CHATGPT NORMAL",
+    "effort": "2–4 días",
+    "risk": "medio",
+    "depends": "ninguna",
+    "cause": "Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad."
+  },
+  "B1": {
+    "name": "Recuperación, cola durable y latencia",
+    "priority": "P0/P1",
+    "env": "MIXTA",
+    "effort": "3–6 días + aceptación física",
+    "risk": "alto",
+    "depends": "B0 para certificación",
+    "cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza."
+  },
+  "B2": {
+    "name": "Evidencia clínica, estudios y cierres",
+    "priority": "P1",
+    "env": "MIXTA",
+    "effort": "4–8 días",
+    "risk": "alto",
+    "depends": "B0; recibos existentes",
+    "cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución."
+  },
+  "B3": {
+    "name": "Conversación y docencia",
+    "priority": "P1",
+    "env": "MIXTA",
+    "effort": "4–8 días",
+    "risk": "medio",
+    "depends": "B1/B2 para medición y checklist",
+    "cause": "Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado."
+  },
+  "B4": {
+    "name": "Recompensas cooperativas y sociales",
+    "priority": "P2",
+    "env": "MIXTA",
+    "effort": "4–7 días",
+    "risk": "alto",
+    "depends": "B1; política XP del usuario",
+    "cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5."
+  },
+  "B5": {
+    "name": "Voz e interacción móvil",
+    "priority": "P2",
+    "env": "MIXTA",
+    "effort": "5–10 días",
+    "risk": "medio/alto",
+    "depends": "B1; permisos de audio; Android físico",
+    "cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil."
+  },
+  "B6": {
+    "name": "Fisiología, seguridad e importación",
+    "priority": "P1/P2",
+    "env": "CHATGPT NORMAL",
+    "effort": "5–10 días por conjunto de mecanismos",
+    "risk": "alto",
+    "depends": "B0/B2 y referencias del caso",
+    "cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes."
+  },
+  "B7": {
+    "name": "Mundo y presentación RPG",
+    "priority": "P3",
+    "env": "MIXTA",
+    "effort": "2–5 semanas para mapa modular completo",
+    "risk": "alto",
+    "depends": "B1; decisión visual pendiente para nuevo mapa",
+    "cause": "Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta."
+  },
+  "B8": {
+    "name": "Recuperación de fuentes y continuidad documental",
+    "priority": "P1",
+    "env": "BLOQUEADA",
+    "effort": "1–3 días tras obtener fuentes",
+    "risk": "bajo",
+    "depends": "historial completo/exportación disponible",
+    "cause": "No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA."
+  }
+}

@@ -1,5 +1,26 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
+## Vigente · Auditoría histórica del 20/11/2026
+
+Repositorio `javierdario48-star/ATRIA`; única rama autorizada `atria-5.0-core-rebuild-experimental`. HEAD inicial auditado: `162d0cf24a936e302e2a3efadcc168e1459d86d5`, remoto verificado. Su código es del 13/11 y contiene ocho correcciones posteriores al traspaso `1b17484` del 12/11. Comparar el HEAD remoto antes de continuar. El commit documental se obtiene con `git log -1 --format=%H -- docs/ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md`.
+
+**Entregables:** [auditoría histórica](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md), [inventario](ATRIA-5-REMAINING-TASKS.md), [matriz](ATRIA-5-REQUIREMENTS-TRACEABILITY.md), [plan](ATRIA-5-EXECUTION-PLAN.md) y datos en `docs/evidence/historical-audit-2026-11-20/`. Se conservan 20 IDs y 60 referencias numéricas; hay 87 entradas de seguimiento, incluidas dos sustituidas. No equivalen a 87 citas originales: la lista literal individual 1–60 y todos los chats íntegros no son accesibles. No afirmar exhaustividad conversacional.
+
+**Hallazgos principales:** chat privado de amigos sin integrar; dictado/PTT de V5 y tutor/delegación de Vega incompletos; XP cooperativa comparte créditos de cierre, pero ayudas y débitos siguen por actor; mapa SQM aún en propuesta. Selección directa, pista en un toque, cuentas, cierres y recuperación ya tienen implementación publicada: no rehacerlos. Las quejas reiteradas de latencia/Android requieren aceptación real.
+
+**Verificación de base:** Node 24.22.3, suite V5 3.164/3.167, tres fallos y cero cancelaciones. Builds V5/core y frontera pasan (217 archivos, 190 módulos, un RAF). CI del HEAD: Experimental Game 28/30, Transfers 7/11, Native Matrix 8/8. Vercel success no acredita CI global. Los fixtures de personalidad y mortalidad leen datos competitivos antes del claim; la prueba de nutrición espera igualdad de calidad después de cambiar ayuno por alimentación oral. CI en Node 22 también cancela pruebas de recuperación por una promesa sin actividad en el loop: investigar con reproducción dirigida. No se ejecutó aquí Android físico ni un preview nuevo.
+
+**Siguiente tarea ejecutable:** B0 del [plan](ATRIA-5-EXECUTION-PLAN.md). Conservar RED; observar datos privados después de tomar el paciente sin abrir expedientes distantes. En nutrición, probar que cambiar indicación modifica calidad sin fabricar administración y que replay/recuperación conservan el resultado. Revisar `transfer-certification.mjs` antes de restaurar rechazos contrarios a libertad clínica. Después avanzar a B1 (medición/recuperación) y B2 (muestras/cierres). No hay un P0 jugable actual reproducido; REC mantiene P0 por impacto del reporte y aceptación pendiente.
+
+**Trabajo local previo:** no copiar parches antiguos sobre el árbol actual. El ledger de revelación y parte del compilador ya están integrados. `rtc-diagnostics.mjs` existe solo en un workspace anterior; es un auxiliar técnico, no una solicitud histórica automáticamente pendiente. Se preservaron los checkouts originales.
+
+## Historial anterior íntegro (referencia de su SHA)
+
+<details>
+<summary>Traspaso previo conservado; sus próximos pasos y resultados pueden estar superados</summary>
+
+# ATRIA 5.0 · Traspaso a ChatGPT
+
 ## Vigente al 12 de noviembre de 2026
 
 Retoma la rama autorizada a partir del [checkpoint de continuidad](ATRIA-5-EXACT-CONTINUATION.md). El checkpoint contiene las comprobaciones publicadas de XP, recuperación, clínica y admisión de casos. El [inventario maestro](ATRIA-5-REMAINING-TASKS.md) conserva los 60 números y la evidencia de cada área.
@@ -242,3 +263,5 @@ Si el checkout está limpio y el historial permite avance directo, usar `git mer
 Implementar una tarea por vez. Ejecutar los comandos dirigidos de su sección con Node.js 22 o posterior. Los recorridos de navegador necesitan Playwright y Chromium. En CI se usa Playwright 1.58.2. Si se instala en un directorio de pruebas separado, indicar su módulo con `PLAYWRIGHT_MODULE_PATH` y el binario disponible con `CHROMIUM_EXECUTABLE_PATH`. Añadir la prueba que reproduce el defecto. Si ChatGPT dispone solo de lectura del repositorio, entregar un diff concreto y señalar qué comandos quedan por ejecutar. Publicar cambios mediante avance directo de la rama cuando esté autorizado. Comparar el SHA de GitHub con el del preview antes de usar el enlace. La evidencia de un commit anterior sigue sirviendo para módulos sin cambios y se identifica como tal.
 
 REC-01 se acepta en Android físico con las dos cuentas afectadas o dispositivos controlados por el usuario. Abrir guardia guardada, tocar Retomar, guardar, volver desde otra sesión y tocar Finalizar. Verificar retorno al lobby, continuidad del colega y XP. Si aparece el problema, guardar fase, texto visible y estado HTTP del paso, sin cookies, contraseñas ni contenido de conversaciones. Work se reserva para esa prueba, una medición real con dos cuentas, o un despliegue/migración que ChatGPT no pueda verificar con el acceso disponible.
+
+</details>

@@ -1,0 +1,996 @@
+[
+  {
+    "path": "docs/2026-11-05-shared-guard-implementation.md",
+    "title": "Libertad clínica y guardias compartidas — plan de implementación",
+    "bytes": 7258,
+    "sha256": "3eb9d98ec95a234a680fc9ca9c2e41f2ec565426f92ab0fc885a8d8d7c76565f",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ARCHITECTURE.md",
+    "title": "ATRIA — Architecture Baseline",
+    "bytes": 1924,
+    "sha256": "ed3d5e41a4991b98b8e9fd8bf889cf73708cfaafc560788d9278c63b4f8fbd9f",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA-5-BOTS-AUDIO-VISUAL.md",
+    "title": "ATRIA 5.0 — Bots, audio y marcador",
+    "bytes": 6895,
+    "sha256": "72c894934843e163dd804f77e1fe8060cc6f27ace11e5e84fde8541b0e59fbd4",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA-5-CASE-INTEGRATION-CONTRACT.md",
+    "title": "ATRIA 5.0 — Contrato obligatorio para incorporar casos clínicos",
+    "bytes": 8050,
+    "sha256": "000d45edf8e863de5ab0cd22844f8e84a12ff52180595060e9bc34ad9d5368e7",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA-5-CHATGPT-HANDOFF.md",
+    "title": "ATRIA 5.0 · Traspaso a ChatGPT",
+    "bytes": 35288,
+    "sha256": "a8370f42e60aef3c515d5104d197c5c514f56c6633c8b4fc9e0e5a4938b48669",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA-5-EXACT-CONTINUATION.md",
+    "title": "ATRIA 5.0 — CONTINUIDAD EXACTA PARA CHATGPT",
+    "bytes": 56225,
+    "sha256": "1a7d5aa6074a9ff2a7cab8db5bd2338ab7994bfc83b13b6c620b375aa5923181",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA-5-EXECUTION-PLAN.md",
+    "title": "ATRIA 5.0 — Plan técnico de ejecución",
+    "bytes": 26735,
+    "sha256": "fdf67127a347e2aceae4a65f50fc2cde83de1ce0c024e79acecce747f0aecad2",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA-5-GUARD-RECOVERY.md",
+    "title": "Saved guard recovery",
+    "bytes": 3300,
+    "sha256": "9013be9c835dacda918761fbb4f1af66266172b8ee8d84f4479803215ca4b92d",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md",
+    "title": "ATRIA 5.0 — Auditoría histórica: octubre–noviembre de 2026",
+    "bytes": 34821,
+    "sha256": "3bc71c6ef5fde4e997fc45b00e2ee2e2fda123133decaea3f2a4d54233b19827",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA-5-REMAINING-TASKS.md",
+    "title": "ATRIA 5.0 — Inventario maestro de requisitos",
+    "bytes": 172924,
+    "sha256": "a56256e9164e9ac91a4fbc7d7d86da0775632c32bd5805d86331220a6509cb99",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA-5-REQUIREMENTS-TRACEABILITY.md",
+    "title": "ATRIA 5.0 — Matriz de trazabilidad",
+    "bytes": 48234,
+    "sha256": "1c36e118fe11fcf3a58350c364d951b5afdc67dc0fa6aac094dace83bafcda7a",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA_50_C3A_CHARACTERIZATION.md",
+    "title": "C3a — APP-001 native characterization and integration status",
+    "bytes": 6379,
+    "sha256": "977a8a497c1ab02f2e1771a1ab937e8e924850563dac7a97fe606cb8edbdb0a8",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA_50_CORE_REBUILD.md",
+    "title": "ATRIA 5.0 — experimental core rebuild",
+    "bytes": 23183,
+    "sha256": "d1b36dbc75e2da6e9df46d058af9454e5cacc331ab8f86c2677cad5d5398b4a8",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA_50_HANDOFF.md",
+    "title": "ATRIA 5.0 — transferencia técnica",
+    "bytes": 25311,
+    "sha256": "a997fa08a58a8b2f10e87a18a619794d2dba9e6e702ae7f1de98a04173b854ad",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA_50_IMPLEMENTATION_PLAN.md",
+    "title": "ATRIA 5.0 implementation plan",
+    "bytes": 10966,
+    "sha256": "56e9b54c7683af2c32fe1889a3b05ba9d98da5d36aa68c51653e45734e284bca",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/ATRIA_50_MIGRATION_MASTER_PLAN.md",
+    "title": "ATRIA 5.0 — Plan maestro de migración y criterios de salida",
+    "bytes": 18950,
+    "sha256": "1265ca4f0fbed277b978b6402f33f02fa8e1622539c58a5c1f93f38d26b08b97",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/GOLDEN_MASTER_RECOVERY.md",
+    "title": "ATRIA 4.8.6 golden-master recovery",
+    "bytes": 453,
+    "sha256": "67576023cd1ba4cce2c02b33a8bdc01ba72c1aa0bdd3c914bb2cc70917e503cc",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/OTSERVER_ARCHITECTURE_BLUEPRINT_487.md",
+    "title": "ATRIA 4.8.7 — Architecture reference (OT Server principles, JavaScript implementation)",
+    "bytes": 9148,
+    "sha256": "ee6ae0667b852ed795c341b86cf2f529aefb97f74a7b0ca0b1491464bccbb426",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/QA_CHAT_VEGA_487.md",
+    "title": "ATRIA 4.8.7: chat and Vega verification",
+    "bytes": 10099,
+    "sha256": "4a1a8bf13dfb523f1fc616d0415201f2293ff8fe32561377749beca5498da28a",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/QA_CLINICAL_MULTIPLAYER_487_PLAN.md",
+    "title": "ATRIA 4.8.7 clinical multiplayer implementation plan",
+    "bytes": 4861,
+    "sha256": "c900b4722cf44e6ba43f7d868143ac56d8736ec19f44f2534a17cd3ca0d99830",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/QA_GATE.md",
+    "title": "ATRIA QA Gate",
+    "bytes": 803,
+    "sha256": "acdd75281dc1e0510ceafec6462d9223290452321d4b9ba9270867326e60887e",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/QA_REMOTE_MOTION_487.md",
+    "title": "Remote motion 4.8.7",
+    "bytes": 18761,
+    "sha256": "1d95a981aa7d539af303aa54a791b2af00ce5cae604d821d9c94806f09146f00",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/REGRESSION_CONTRACT.md",
+    "title": "ATRIA regression contract — 4.8.7",
+    "bytes": 1841,
+    "sha256": "398d1eeb55a7ed1dedd57025df1d3956353c4cb852d5d9ae2a96e539a1633f90",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/WORK_HANDOFF_487.md",
+    "title": "Paste this small prompt into ChatGPT Work",
+    "bytes": 1483,
+    "sha256": "76bffcb4369531d86deb23b15dbdbe390ca95261b3c619b2c6bc6f1b75508eaf",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/WORK_LOW_CREDIT_PLAYBOOK_487.md",
+    "title": "ATRIA 4.8.7 — Low-credit Work execution protocol",
+    "bytes": 5377,
+    "sha256": "23a82fcd3e64760450664966824868c629a040f76368bd4ebb5309eab997a809",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/clinical/CASE_INTEGRATION_STANDARD.md",
+    "title": "ATRIA 5.0 — contrato de integración clínica (Respiratorio, Cardio, Neuro)",
+    "bytes": 7650,
+    "sha256": "d187c6847238ca4668646977aa761226a8861fc79698a3e81affcad8f6b8ce5b",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/clinical/cardiology-references.md",
+    "title": "Referencias del contenido cardiológico",
+    "bytes": 4360,
+    "sha256": "9e06e9757785650c84f7c63e079cfdd1ed7d18b63c41dbe7bea635298048f847",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/clinical/medication-safety-references.md",
+    "title": "Seguridad de medicamentos y rescate de anafilaxia",
+    "bytes": 2393,
+    "sha256": "48ec7c3da9300e70611802540d395b0648cdbab4c375765c8b3905899ad4eed9",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/clinical/neurology-references.md",
+    "title": "Referencias del contenido neurológico",
+    "bytes": 5881,
+    "sha256": "af1813c12d733a749d97738fd1a97cb73f53edb2e0d6fe2fe3e32d3c5bd80d42",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/clinical/respiratory-references.md",
+    "title": "Referencias del contenido respiratorio",
+    "bytes": 6033,
+    "sha256": "e57d0774bf89d05ec51f85af64e52092af95405f761f9abf8ae1e90c23441066",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/evidence/npc-personalities-2026-10-29/10_anamnesis_completas.md",
+    "title": "Diez anamnesis completas del ejecutor real — APP-001",
+    "bytes": 23279,
+    "sha256": "93220ba2b6bdf7dc2daeb259d06176f5391c2017e75131c027fb6ed89972e5cc",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/evidence/npc-personalities-2026-10-29/Informe_ATRIA_NPC.md",
+    "title": "ATRIA 5.0 — Personalidades NPC: implementación y evidencia",
+    "bytes": 13795,
+    "sha256": "c781aa6f45a4849dec5b4044850335bc2cf673fa6f091b903d79598bf9e7c745",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/ATRIA_50_MANUAL_MAESTRO_FUNCIONAL.md",
+    "title": "ATRIA 5.0 — Manual maestro de diseño, migración y aceptación funcional",
+    "bytes": 45760,
+    "sha256": "f5486b287c75ed8a3aa58b4ef44c27f734a769e23a0eaabe8b9a3b8496e6b4f5",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C1_CLINICAL_FREEDOM.md",
+    "title": "C1 — Clinical freedom and inherited consequences",
+    "bytes": 6844,
+    "sha256": "7dd489c86176c679799f81e1de2f5e83becfbc14e8c634bb0fbf691c43ea69c1",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C2A_ANTIMICROBIAL_EXECUTION.md",
+    "title": "C2.a — Original antimicrobial formulations through the shared executor",
+    "bytes": 4959,
+    "sha256": "5bef0c3dd983e90397be74a1228f302e5a8c74ac061bd03d5dd7cb2fade94c4a",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C2B_MORPHINE_EXECUTION.md",
+    "title": "C2.b — Morfina efectiva 4.8.7, administración y evolución",
+    "bytes": 9108,
+    "sha256": "8934d462fa7c34313f758692b6cacfbab2869fd38c9e772ac33b93fc8da322af",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C2C_SPECIAL_SUPPORT_EXECUTION.md",
+    "title": "C2.c — formulaciones especiales y soporte nativo compartido",
+    "bytes": 7806,
+    "sha256": "ce669906eb78f11657652432547e464f8abe56123e54716cac2b20fdf2688b5e",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C3A_SECONDARY_PERITONITIS.md",
+    "title": "C3.a — peritonitis secundaria con fisiología original y derivación real",
+    "bytes": 11557,
+    "sha256": "81e2fcba16d0c6de7e5ea783baaa4e0286883b59fa2210305a87ebf6639af63d",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C3B_PBE.md",
+    "title": "C3.b — PBE en el ejecutor clínico compartido",
+    "bytes": 5153,
+    "sha256": "1f0c517c32497530bc6e5220d01dc157db0f85068e992e0de4349aff2681ae4c",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C3C_TERTIARY_PERITONITIS.md",
+    "title": "C3.c — peritonitis terciaria y receptor clínico",
+    "bytes": 6454,
+    "sha256": "ddff6d956b2851fc00204be08b0eb926a596e5de51ceaec85b6aac5d71d94942",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C5A_SHARED_CLINICAL_GUARD.md",
+    "title": "C5.a — primera guardia clínica compartida",
+    "bytes": 10603,
+    "sha256": "315e1ad4a9c73f13f4b466ea19cc4a66a6963cf583a49e975f0ec2918e021025",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C5B2_SUPABASE_STORE.md",
+    "title": "C5.b.2 — Supabase PostgreSQL private checkpoint store (pre-activation)",
+    "bytes": 3066,
+    "sha256": "dad2af81ecaa47c38d5caa4a249d036200512db13dcf9ee085c092a3fb9f7d30",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/C5B_PERSISTENT_CLINICAL_AUTHORITY.md",
+    "title": "C5.b — continuidad clínica durable (implementación en checkpoints)",
+    "bytes": 9645,
+    "sha256": "fc0d7791cfe118d895839b8eacc442ad1bf5167b329072765ba7ae9aa59e386b",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/CLINICAL_PARITY_GATE.md",
+    "title": "ATRIA 5.0 — Puerta obligatoria de paridad clínica V4.8.7 → V5",
+    "bytes": 10876,
+    "sha256": "fbd022169a5f10588f2c15430cd788270043eef7aabe5c02aab0c70be5afee5a",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/CURRENT_HANDOFF.md",
+    "title": "ATRIA 5.0 — C5.b.3 Cooperativo persistente",
+    "bytes": 57870,
+    "sha256": "0f13376828f116ec4ddce4cd52232c77d2bece7db3ef7627f55b6f1a7697934b",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/INTEGRITY_AUDIT_2026_10_16.md",
+    "title": "ATRIA 5.0 — Auditoría de integridad previa a C21.d / C22",
+    "bytes": 10023,
+    "sha256": "f354fe6bce810728b8dffb023a07366024a5eea8586dc50f268a73681622527b",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/LEGACY_MULTIPLAYER_TRANSPORT_AUDIT.md",
+    "title": "ATRIA 4.8.7 — Auditoría del transporte social REAL (fuente efectiva, no recuerdos)",
+    "bytes": 7107,
+    "sha256": "8c97d6ed15f6499bc3025c77649d3cbf22bead70ac6ee056cf3ccafab96e6a9e",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/LEGACY_PHYSIOLOGY_REUSE_REVIEW.md",
+    "title": "ATRIA 5.0 — Validación médica de la fisiología heredada 4.8.7 y decisión de reutilización",
+    "bytes": 9609,
+    "sha256": "dda7b5e60693e79231fa7b101c48d90c4506640d0e468c82bbda59137193cd52",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/PARITY_MATRIX.md",
+    "title": "C02 — Matriz de equivalencia y contratos",
+    "bytes": 10378,
+    "sha256": "f32b110844123877f5244842bf98e0344517bbedeb1d33130a44227aff67a76a",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/PHASE_A_IMPLEMENTATION.md",
+    "title": "Migración de sistemas: contrato y ejecución de Fase A",
+    "bytes": 3295,
+    "sha256": "28c653ef9e8d25651ca9f6e5f1ee27281ba2558da2066c5747cc0c1cd1d7ca70",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/ROADMAP_PRODUCT_V5.md",
+    "title": "ATRIA 5.0 — Ruta de producto: lobby compartido, cuatro modos y app escalable",
+    "bytes": 10462,
+    "sha256": "4086a535a5ab512de496629a18178d8c64ac2a09b0a492f90a504f701ce079cf",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STATUS.md",
+    "title": "ATRIA 5.0 — Registro de checkpoints y continuidad",
+    "bytes": 19150,
+    "sha256": "7dc40bd2f4298603eea1c0bc371195ea1606a3271487787330558d1159487397",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_01_HANDOFF.md",
+    "title": "ATRIA 5.0 — C01 — Consolidación de la versión móvil aprobada",
+    "bytes": 8833,
+    "sha256": "4b9ebe02cc0562f1d1fe1ec93ddb4e8dc53b6ef3d402b181a4d7b5617f94ab17",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_02_HANDOFF.md",
+    "title": "C02 — Inventario técnico de equivalencia",
+    "bytes": 3723,
+    "sha256": "f9b939c0cbb073c0c17f9c274527fd892724c665acf8949c0b8baccce5b6e536",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_04_HANDOFF.md",
+    "title": "C04 — Examen anatómico y Glasgow de CIRR/APP",
+    "bytes": 6031,
+    "sha256": "7cd2ce29d9d466509c232256d5e30d4d25ddbe2babd14e95e9ebe82d7963a403",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_05C_HANDOFF.md",
+    "title": "ATRIA 5.0 — C05.c — Menú contextual sobre el paciente y monitor de cabecera",
+    "bytes": 7302,
+    "sha256": "862115618f858233d4cdcec7ed96cefa7d5af8764e444a67fb92289ccc52a10b",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_05D_HANDOFF.md",
+    "title": "ATRIA 5.0 — C05.d — ECG dinámico y órdenes dentro del monitor",
+    "bytes": 7637,
+    "sha256": "2700dea09671b6b4417eb769c3b284395b6b010d9cdad69ce323006877081bec",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_05E_HANDOFF.md",
+    "title": "ATRIA 5.0 — C05.e — Barrido ECG temporal correcto y prevención de parches",
+    "bytes": 7216,
+    "sha256": "4d3a71d5b1b1599153934a64b64718bad40a894bf1499d86d2edce74caa38a37",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_05_HANDOFF.md",
+    "title": "C05.a — Pacientes, monitor del mundo e historia clínica",
+    "bytes": 8168,
+    "sha256": "fb6215f046428effc7054541ee94109a06ab848b5a58c7c5876905db00d049e7",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_06_HANDOFF.md",
+    "title": "C06.a — Anamnesis natural y contexto de pacientes CIRR/APP",
+    "bytes": 8253,
+    "sha256": "8606cb4ceb5126c90253973bb4727ad19a1d8c1fb52d30e9380ce315961e0142",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_07C_HANDOFF.md",
+    "title": "ATRIA 5.0 — C07.c + C05.f — seguimiento clínico e instrumentación dinámica del monitor",
+    "bytes": 7128,
+    "sha256": "01c2cac716f7715504f99e43eb517a5edede3e79bfabfc882016579bc3e3023c",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_07D_HANDOFF.md",
+    "title": "ATRIA 5.0 — C07.d: dependencias IV y canalización automática visible",
+    "bytes": 7900,
+    "sha256": "b434548c00823ad4e9db8452ef7103e5bc7686559a64761d3eaebf72db9d5602",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_07E_HANDOFF.md",
+    "title": "ATRIA 5.0 — C07.e: órdenes combinadas reales y comprobantes independientes",
+    "bytes": 5443,
+    "sha256": "cdb48bf916d800a49dc125ae5f71a12d0b75497ec883a313393394bb360ab79d",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_07_HANDOFF.md",
+    "title": "ATRIA 5.0 — C07.a — Integridad de dosis y comprobantes de enfermería",
+    "bytes": 7402,
+    "sha256": "dfad421ef45a4ffa55e753fb0dae3803d0988e8a30b063837c5a6e6f36aa8970",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_08A_HANDOFF.md",
+    "title": "ATRIA 5.0 — C08.a: planificador espacial de enfermería, sin ejecuciones ficticias",
+    "bytes": 8637,
+    "sha256": "927a9cd99b98e0f58d0ed44ea090a2921ae2fc7e3582d7c2f69d5e20b20d553c",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_08B2_HANDOFF.md",
+    "title": "ATRIA 5.0 — C08.b2: medicación y procedimientos físicos bajo la autoridad existente",
+    "bytes": 7313,
+    "sha256": "68e099c549468391cceb35cb54de963caab58d8034033851865730963a7ba6f2",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_08B3_HANDOFF.md",
+    "title": "ATRIA 5.0 — C08.b3 — reparación de acceso venoso y confirmaciones clínicas",
+    "bytes": 4400,
+    "sha256": "aefca5ea9f7d0eea99efd00b828f4d80349f23b65b135d66cecc02257cc084cd",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_08B_HANDOFF.md",
+    "title": "ATRIA 5.0 — C08.b1: ejecución clínica tras llegada física de enfermería",
+    "bytes": 8084,
+    "sha256": "4109aeaeece4428d74c042278e8e336a9ef1600f283a6b1dce3f9954397d2db5",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_08C_HANDOFF.md",
+    "title": "ATRIA 5.0 — C08.c: oxígeno físico sin inventar la respuesta fisiológica",
+    "bytes": 9731,
+    "sha256": "8650cdabb10a06890137b74a6c0fd0ed6f121c0ea28a4cee090c8a0ab08b53ba",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_08D_HANDOFF.md",
+    "title": "ATRIA 5.0 — C08.d: signos vitales físicos y monitor sin visitas innecesarias",
+    "bytes": 5374,
+    "sha256": "dd6f7128baf5b92a25f8ec61d705a40a13c6ed3b45d68dcd60d79a62dce0eacc",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_09A_HANDOFF.md",
+    "title": "ATRIA 5.0 — C09.a — Vega contesta dentro del chat global sin ejecutar acciones",
+    "bytes": 5429,
+    "sha256": "188ca72f9c1e6f3506839fd992109ec0f45c0f6de199d66ceb16f94f2a917638",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_11A_HANDOFF.md",
+    "title": "ATRIA 5.0 — C11.a — orden farmacológico transversal sin perder fisiología del caso",
+    "bytes": 6787,
+    "sha256": "86784a55207dc502e180e541f817d1c25c766835dd217d8acd96484f0aa13e39",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_11B_HANDOFF.md",
+    "title": "ATRIA 5.0 — C11.b: prevalidación atómica de órdenes compuestas",
+    "bytes": 6797,
+    "sha256": "4987e4d813caa0cf1f3bb4a7dc1f7ee0ba311b7a2f31f77a1cd02121d2534d58",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_11C_HANDOFF.md",
+    "title": "ATRIA 5.0 — C11.c: libertad de nuevas prescripciones y trazabilidad por dosis",
+    "bytes": 6962,
+    "sha256": "efd11dacf529034a94b1d65b04d95276743f861ecb77881bfea468503289a388",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12A_HANDOFF.md",
+    "title": "ATRIA 5.0 — C12.a: paridad ejecutable sin arrastrar fallos antiguos",
+    "bytes": 5516,
+    "sha256": "267b8d1e3c454325d475c5b3028da0f272b2e67c656f676d839de4d5a70a32d0",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12B_HANDOFF.md",
+    "title": "ATRIA 5.0 — C12.b: primera respuesta iatrogénica rápida causal",
+    "bytes": 6532,
+    "sha256": "0b4cf721858d217f215c436998e42f9a46fcc411cf58ba6e23e33dfd927812db",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12D_PHARMACOLOGY.md",
+    "title": "ATRIA 5.0 — C12.d: catálogo farmacológico global y reglas por caso",
+    "bytes": 7137,
+    "sha256": "f2030e50d3e1375f23afd45a69d8e3cbf3da4a0de3133743dde9ad38e2bcff74",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12E1_OXYGEN.md",
+    "title": "ATRIA 5.0 — C12.e1: Oxígeno con efecto clínico real, fuente de verdad única",
+    "bytes": 4835,
+    "sha256": "90058a23cb7302be7e5a05c12e7c3f31c63988682ed65a16e85b9d077b52e8bf",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12E2_FUROSEMIDE.md",
+    "title": "ATRIA 5.0 — C12.e2: Furosemida IV real",
+    "bytes": 4739,
+    "sha256": "24f253888570c33ec07f84a5f9a4190e553cfeb3780177fc03334055f392057c",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12F1A_SURVIVAL_REUSE.md",
+    "title": "ATRIA 5.0 — C12.f1a: supervivencia nativa reutilizando evaluadores puros V4.8.7",
+    "bytes": 5580,
+    "sha256": "8303c5f95a410324673e288df019d59ca77a293003bcfebf283bfc9b4c392e54",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12F1B_CASE_AND_DEATH.md",
+    "title": "ATRIA 5.0 — C12.f1b: APP progression, death room synchronization and early/late rescue bots",
+    "bytes": 4865,
+    "sha256": "d190e4edc05bc3b5807d695160368a1d7d70a54fc6709f3b0d96fa96a09b3b1e",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12F_BOT_CHARACTERIZATION.md",
+    "title": "ATRIA 5.0 — Clinical bot characterization C12.f0",
+    "bytes": 2581,
+    "sha256": "0d94d9159a9f6e31934bd51dbc77370970394c300d9dc53bf55263edfb7c4cff",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12G_DOSE_BOTS_AND_DEBRIEF.md",
+    "title": "ATRIA 5.0 — C12.g: bots de Ringer, errores de medicación y resultados con XP",
+    "bytes": 5992,
+    "sha256": "21c0b24f03e30636ec207792c766a6573daa13cc032fb8e2c192bed3f6a385ac",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12H_LEGACY_FUNCTIONAL_AUDIT.md",
+    "title": "ATRIA 5.0 — Auditoría ejecutable del legado 4.8.7 (C12.h)",
+    "bytes": 11716,
+    "sha256": "5571c137e6e2c4343e372fa515c35bb79a3e1e176e7596408375ad8d086a5ab5",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12I_FLUID_RECEIPT_BRIDGE.md",
+    "title": "ATRIA 5.0 — C12.i: primer módulo funcional de recuperación de comportamiento V4",
+    "bytes": 3890,
+    "sha256": "c32300f5f2f8100657a64fc540b2125fbabdec8e813f2735c04efc6d4b98a7d9",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12J_LEGACY_SEPSIS_PHYSIOLOGY.md",
+    "title": "ATRIA 5.0 — C12.j: motor fisiológico heredado de peritonitis/sepsis (extracción verificada)",
+    "bytes": 5317,
+    "sha256": "986142c9289049e1ea69777772001cbcd14b3c263a9bdaf56fd90486f4fe69ab",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_12K_MEDICATION_AND_CLOCK_DOMAINS.md",
+    "title": "ATRIA 5.0 — C12.k: clock domains + inherited drug safety",
+    "bytes": 8087,
+    "sha256": "8efc1f516441532792254d9bb7bde2db58fe05e4fa3116b3c2e8c35edf8fabf7",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_13A_DIAGNOSIS_AND_SURGICAL_HANDOFF.md",
+    "title": "D1 — Impresión diagnóstica y derivación clínica original",
+    "bytes": 7036,
+    "sha256": "182e2de416bbd5b2dff20e841aecbbcb4d07176ad6b15910e49df216c1aaa0ed",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_13B_PERITONITIS_TIMING_PARITY.md",
+    "title": "ATRIA 5.0 — C3.a.1: alcance verificado de la fisiología PERI-SEC con órdenes escalonadas",
+    "bytes": 5721,
+    "sha256": "8e9be4148dbbaad30329a259d0571604dde41790a87ce7acde75057b131b6123",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_20A_HANDOFF.md",
+    "title": "ATRIA 5.0 — C20.a: lobby autoritativo y contrato de guardias multijugador",
+    "bytes": 7717,
+    "sha256": "32d6672c9d5277a14dbfb979549e9e26ea9028427804fa51fdb78ad0cbabd79c",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_21C_HANDOFF.md",
+    "title": "ATRIA 5.0 — C21.c: HTTP real, guardias 2–4 y recuperación verificable",
+    "bytes": 6414,
+    "sha256": "13cdbbff1e5f1299b9b57db57e735e6333625108268942729dbdf1c257319c33",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/STEP_21_HANDOFF.md",
+    "title": "ATRIA 5.0 — C21.a/b: relé HTTP robusto y autoridad de guardia única",
+    "bytes": 4132,
+    "sha256": "997dcf4c9f0e405c7ef0ca65b07e5cfc04de4e7dcbb629ba7030bc40f86cd87b",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/migration/WORK_CONTINUATION_FROM_MANUAL.md",
+    "title": "Orden de trabajo para ChatGPT Work — continuidad fiel de ATRIA 5.0",
+    "bytes": 8373,
+    "sha256": "7c586f4a30e24d99c14135c85257d9c0acc6244bce57782aa9014d830ac9485b",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/2026-10-26-mortality-results.md",
+    "title": "ATRIA V5: mortalidad y consecuencias clínicas — checkpoint A",
+    "bytes": 59816,
+    "sha256": "9a74ac00eb5ced9e44cefd26767e76ca50751cace8701cc5877a54b7674a151c",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/2026-10-26-quality-results.md",
+    "title": "ATRIA V5: calidad clínica, examen físico y recuperación visual",
+    "bytes": 12583,
+    "sha256": "231a6efb822ee0bbe25267d4eff5163719942204ea2a6619a061530f69f157c2",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/2026-10-27-guard-selection-results.md",
+    "title": "ATRIA 5 — selección de guardia y XP verificada",
+    "bytes": 6064,
+    "sha256": "a32947d26ddde4c5a8f9f0093ce4c80084a9c1857e548c2e7a994e3b23fb4b04",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/2026-10-27-rpg-continuity.md",
+    "title": "Prompt de continuidad — ATRIA 5.0",
+    "bytes": 9071,
+    "sha256": "18973101b2f7051f34b92dfa9bda164a0f28f2642700b580c31a3388d9723df7",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/2026-10-27-rpg-progress.md",
+    "title": "",
+    "bytes": 2630,
+    "sha256": "ba1ed2fb049790a8b54704c8810d39e710290ae419779d7dc46d0cc2763fc7b6",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/2026-10-27-rpg-results.md",
+    "title": "ATRIA 5.0 — cuentas persistentes y experiencia RPG",
+    "bytes": 10890,
+    "sha256": "adef569f4070adeead5b4dff22deefccd9224ada19d30991e70dc8989a0823d7",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/2026-10-27-welcome-results.md",
+    "title": "Bienvenida RPG y nombre de médico — 27 de octubre de 2026",
+    "bytes": 5740,
+    "sha256": "3a483662ef19b9f399183081ac906e414f2f74e18261d40680aafcd42144907f",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/2026-10-28-clinical-recovery.md",
+    "title": "Clinical recovery, 2026-10-28",
+    "bytes": 5334,
+    "sha256": "d7bb0292f4a452c744d68404cc228adff1b25a51cc35362a96a31146ab237f91",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/atria-25-clinical-medical-review.md",
+    "title": "ATRIA 5.0 — Auditoría docente y farmacológica de 25 casos",
+    "bytes": 8683,
+    "sha256": "5d8f7512600027befbe148834509ef5b3050e8f45a83a652237a04ba61030bb5",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/qa/npc-personality-certification-plan.md",
+    "title": "NPC conversation certification — 2026-10-29",
+    "bytes": 1900,
+    "sha256": "cfe6a0e160b0022521c72ca8e14c3ca8c23b2d46544a2974382b4315458e6c9c",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/superpowers/plans/2026-10-26-clinical-visual-quality.md",
+    "title": "ATRIA V5 clinical and visual quality implementation plan",
+    "bytes": 5678,
+    "sha256": "de679c27b1b41747a60791c7bc957989216645dd9149f746df3b45f0eeb11e84",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/superpowers/plans/2026-10-26-mortality-regression.md",
+    "title": "Mortality evidence and regression implementation plan",
+    "bytes": 3690,
+    "sha256": "452a07c2664f9b070af9d334a6589e15623de3c40484f71412c560e235d9d702",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/superpowers/plans/2026-10-29-music-integration.md",
+    "title": "ATRIA music integration implementation plan",
+    "bytes": 4620,
+    "sha256": "e3f3e070650d6b6d445dd55154fef157c601d2081bb3d9aec4185b46eaeda46c",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/superpowers/plans/2026-10-30-contextual-hints.md",
+    "title": "Contextual hints Implementation Plan",
+    "bytes": 3795,
+    "sha256": "070ebfb718bda2b0b05c8c28f7b8edee5bf960ecd180fe851087410fb627f727",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/superpowers/plans/2026-11-06-guard-recovery.md",
+    "title": "Guard recovery Implementation Plan",
+    "bytes": 5117,
+    "sha256": "4008a9dbf730674e9587fb0cbf5faa48bc18a360028b484fdd25bb748220ae82",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/third-party-spanish-lexicon.md",
+    "title": "Spanish keyboard lexicon attribution",
+    "bytes": 818,
+    "sha256": "5e16ac5f765613cba194c351e78eb1e143aab3299bda1b1dac4213df6a0dd666",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/v5/architecture-boundaries.md",
+    "title": "ATRIA 5.0 — límites de arquitectura y criterios de aceptación",
+    "bytes": 5125,
+    "sha256": "05faeebd0c2d4e3fefbe9eb98e0befff9da3df748c2c241ec2a38a55c37dafba",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/v5/contextual-clinical-hints.md",
+    "title": "Pistas clínicas contextuales",
+    "bytes": 3147,
+    "sha256": "11765385f776f6aea2b7ac54435dc92ef00c1d896c3154f0e86186bbb44a8c67",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "docs/v5/quality-handoff-2026-10-25.md",
+    "title": "ATRIA V5 — QA de arquitectura y concurrencia (25-10-2026)",
+    "bytes": 3834,
+    "sha256": "68544ba5433a160b14ce284fa4963e989f8bc6c403416e3030e6abe330531308",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_ANDROID_FIX_CHECKPOINTS.md",
+    "title": "ATRIA 4.8.7 Android regression checkpoints",
+    "bytes": 8474,
+    "sha256": "18f6d75586424c6f8eb60d067f790a20fa60e7ceed68aa2ee78e899a2835e1b0",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_ANDROID_FIX_PLAN.md",
+    "title": "ATRIA 4.8.7 — Android nursing, native closure and beta-blocker audit",
+    "bytes": 3146,
+    "sha256": "449eedc8066e62f54e60e6be0d939886010ff62693adc14aeab809fba74f02fc",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_ANDROID_FIX_RESULTS.md",
+    "title": "ATRIA 4.8.7 — Correcciones de enfermería y cierre tras evidencia Android",
+    "bytes": 13696,
+    "sha256": "f52f28cb2e755034bdf0787b6511c6c04b16f9b5fa3ccd26b8df27dd530b777e",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_A.md",
+    "title": "ATRIA 4.8.7 — B1 Checkpoint A: Ringer educativo simplificado",
+    "bytes": 4152,
+    "sha256": "f4eb64536788ff1115cb9330449af05f4bc2b7b239345a5520bbef5d06627bcd",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_B_OXYGEN_PREFLIGHT.md",
+    "title": "ATRIA 4.8.7 — Checkpoint B: preflight de oxígeno sin duplicar efectos",
+    "bytes": 4422,
+    "sha256": "b6b456949d8de6a16cb1f35ccc2b5b7f4d14938f0cc569deb45862d73618743a",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_C_OXYGEN_OWNER_BOUNDARY.md",
+    "title": "ATRIA 4.8.7 — Oxígeno: frontera causal y bloqueo de propiedad (Checkpoint C)",
+    "bytes": 4430,
+    "sha256": "88691744f4a038d300813cfa74f4ba7e738384ad6cafdd98fde168e8ccd4d316",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_D_OXYGEN_STOP.md",
+    "title": "ATRIA 4.8.7 — Checkpoint D: suspensión de oxígeno realmente ejecutada",
+    "bytes": 8890,
+    "sha256": "6e625a798172eae92312267d1a7049c374f6f4925424a4fe24d9c7744f8c9179",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_B1_FUNCTIONAL_CHECKPOINT_E_NORADRENALINE.md",
+    "title": "ATRIA 4.8.7 — Checkpoint E: noradrenalina ejecutada, titulada y suspendida",
+    "bytes": 11154,
+    "sha256": "d3afcafceb3cb165949dc778f789e18d52aea0e551ed4e1c482fbe088e53a803",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_B1_FUNCTIONAL_COVERAGE_30.md",
+    "title": "ATRIA 4.8.7 — Cobertura funcional real: 30 entradas × 13 casos",
+    "bytes": 5049,
+    "sha256": "390285affacca3d0f05b53bf4d51b6be0e52c77530d96f8a8b92a7ca76784465",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_B2_HANDOFF_READINESS.md",
+    "title": "ATRIA 4.8.7 — B2 implementation handoff / verified entry gates",
+    "bytes": 11108,
+    "sha256": "71131f5e93bd6f240cd5f8f8d2a082b706c7257c607ead3fb006e65d144d94c8",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_DIAGNOSTIC_IMPRESSION_ONBOARDING.md",
+    "title": "ATRIA 4.8.7 QA — Impresión diagnóstica y alta de nuevas patologías",
+    "bytes": 3904,
+    "sha256": "ad1e9f568956313f3e5dcfbf71c75ba0793a500d78e0e48d1cad70a69ee1bf08",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_EXTENSIBLE_PHARMACOLOGY_PLAN.md",
+    "title": "Pharmacology infrastructure implementation plan",
+    "bytes": 11647,
+    "sha256": "309ab176612d4a2e0e1dbe91bda677fdaceeb0edcd8d20f8dec330a77deb70d1",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_FULL_CASE_JOURNEYS.md",
+    "title": "ATRIA 4.8.7 — 13 clinical care pathways, medicines, vitals and discharge gates",
+    "bytes": 5168,
+    "sha256": "8580d517ad29c1bc2d792019a1b7f8ec5d7ff68580b08a7797729fcb5022f01e",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_GENERAL_THERAPY_CONTRACT.md",
+    "title": "ATRIA 4.8.7 — Contrato general de tratamientos para casos nuevos",
+    "bytes": 4177,
+    "sha256": "fced4073572398d0dd7bd3ecb0c40cd7912e297685559fc38c1c517a273066a3",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_MEDICAL_RULES_AUDIT.md",
+    "title": "ATRIA 4.8.7 — Matriz farmacológica clínica verificable (30 × 13)",
+    "bytes": 11430,
+    "sha256": "ed80e714e8f30b75b1acc3171c861d1c49435a8f6079eebd8c36d07fa502a5ef",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_MINIMUM_HANDOFF_AND_GRADED_XP.md",
+    "title": "ATRIA 4.8.7 · Preparación clínica, cierre de guardia y XP",
+    "bytes": 4394,
+    "sha256": "095f84e326b70288e029c53faf539f8a1c80c1c92c3c2ba1d16f84673eceb4af",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_PHARMACOLOGY_INFRASTRUCTURE_RESULTS.md",
+    "title": "ATRIA 4.8.7 — Infraestructura farmacológica extensible",
+    "bytes": 19135,
+    "sha256": "b996f6e42d02ff5bdf679b2d05c1b06f1c8df68c22d346bfcd9b3edcf25b708b",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_PHARMACOLOGY_SCALING_PLAN.md",
+    "title": "ATRIA 4.8.7 — Existing-case pharmacology baseline and scaling gates",
+    "bytes": 24024,
+    "sha256": "4201f353c54fc13200fbb99de6c6ed4a7317e0703cd156f7594d28ede74cff70",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_PHYSIOLOGY_LIVE_COMPARISON.md",
+    "title": "Checkpoint 1 — Comparación del flujo clínico observado",
+    "bytes": 6212,
+    "sha256": "6eff9a3df9059c46d3e069b663c2a436d98a36d91578cd323f123a1a0c31a58b",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_PHYSIOLOGY_LIVE_OBSERVER_RESULTS.md",
+    "title": "ATRIA 4.8.7 — Checkpoint 1: flujo clínico observado",
+    "bytes": 18103,
+    "sha256": "5338eedbcaa786bb1eba9ecd6f137c80b66e4079d4c020b57c3ffb779b5279f5",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_PHYSIOLOGY_PILOT_EVIDENCE.md",
+    "title": "ATRIA 4.8.7 shared physiology pilot: clinical evidence",
+    "bytes": 13994,
+    "sha256": "3d0353f337745701df60ce09625275051ea03b7e1122bb3c80b65f652379d6ea",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_PHYSIOLOGY_PILOT_PLAN.md",
+    "title": "Shared physiology B1 pilot — implementation plan",
+    "bytes": 6978,
+    "sha256": "1f8ea8cd1cd60f99717666a7d6427aec1e57313418c34f46917fe86abb2933d9",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_PHYSIOLOGY_PILOT_RESULTS.md",
+    "title": "ATRIA B1 — comparación fisiológica aislada",
+    "bytes": 14173,
+    "sha256": "b6c05163bb34483c3265d1b0c7eeca098b79967632c06b624ae506d9dffb27f5",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_PHYSIOLOGY_TRANSITION_PLAN.md",
+    "title": "Physiological transition Implementation Plan",
+    "bytes": 5214,
+    "sha256": "4d594d93fda1f3083b345a1e9c6c8befc31deae248971885f8af138992ae99e9",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_PHYSIOLOGY_TRANSITION_RESULTS.md",
+    "title": "ATRIA 4.8.7 — Transición de responsabilidad fisiológica: resultado del preflight",
+    "bytes": 21116,
+    "sha256": "a467195ad761b54ef1ab3411c9ea262ebef984255093d8e430112a333eaa039d",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_RESCUE_OWNERSHIP_RESULTS.md",
+    "title": "ATRIA 4.8.7 — Rescate finito y frontera de responsabilidad de Ringer",
+    "bytes": 6817,
+    "sha256": "85f61326325b5dea0debf03546ab8aec4c1b183245ee3eb1a4806ea2eb44762a",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_RINGER_INDEPENDENT_CLINICAL_AUDIT.md",
+    "title": "ATRIA 4.8.7 — Auditoría clínica independiente de Ringer experimental",
+    "bytes": 9411,
+    "sha256": "76b9fd819db06693d2d926d54e53e61c586c1caabbcbc7656afcb4ad199b1482",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_RINGER_OWNERSHIP_RESULTS.md",
+    "title": "ATRIA 4.8.7 — Ringer: un responsable por mecanismo en QA",
+    "bytes": 19157,
+    "sha256": "be552be23c7f04c3c369eec2e00eb8f68c56dd384eaffba175811bd3e5e9351f",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/ATRIA_487_STABILIZATION_CHECKPOINTS.md",
+    "title": "ATRIA 4.8.7 — Stabilization checkpoints",
+    "bytes": 126620,
+    "sha256": "a305704721457814c5168f2b54ad40c7953e0d83dec18d918d10a9c5914f8673",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  },
+  {
+    "path": "qa/physiology-pilot/parameters-487.md",
+    "title": "B1 parameter provenance and supported interpretation",
+    "bytes": 7399,
+    "sha256": "0cca7de49394ec54945facc789aa8e02b00b54e4fa7998e42476e4d9169ec4f2",
+    "scope": "indexado; no se afirma lectura íntegra de todos los diffs/documentos"
+  }
+]

@@ -1,0 +1,98 @@
+[
+  {
+    "workspace": "a61a30af827b",
+    "head": "89513692dbaa6f8f26b3a4c1b79ab152a8b99432",
+    "modified_files": [],
+    "scope": "read-only; no old workspace modified"
+  },
+  {
+    "workspace": "81946b15abba",
+    "head": "23ce429893f028f27a05d44395059901d992d770",
+    "modified_files": [
+      {
+        "path": "qa/v5/browser-harness.mjs",
+        "equal_to_audited_head": false
+      },
+      {
+        "path": "qa/v5/certify-clinical-cases.mjs",
+        "equal_to_audited_head": false
+      },
+      {
+        "path": "src/v5/clinical/clinical-policy-closure.js",
+        "equal_to_audited_head": false
+      },
+      {
+        "path": "src/v5/clinical/clinical-policy-closure.test.js",
+        "equal_to_audited_head": false
+      },
+      {
+        "path": "src/v5/clinical/clinical-policy-registry.js",
+        "equal_to_audited_head": false
+      },
+      {
+        "path": "src/v5/clinical/clinical-policy-registry.test.js",
+        "equal_to_audited_head": true
+      },
+      {
+        "path": "src/v5/content/assets/welcome-doctors.webp",
+        "equal_to_audited_head": false
+      },
+      {
+        "path": "src/v5/content/compile-clinical-case-pack.js",
+        "equal_to_audited_head": true
+      }
+    ],
+    "scope": "read-only; no old workspace modified"
+  },
+  {
+    "workspace": "89bd8fcf6af7",
+    "head": "00af17d1ba9a6382a2da73f439946f7a48f579e2",
+    "modified_files": [],
+    "scope": "read-only; no old workspace modified"
+  },
+  {
+    "workspace": "54a34d764189",
+    "head": "98b4baf8cb4ff89db637ff62ac88b4c74c0985f0",
+    "modified_files": [],
+    "scope": "read-only; no old workspace modified"
+  },
+  {
+    "workspace": "cbe415d2dd4f",
+    "head": "a0c4b11a33adbbbfa55fe4620897abdaf74599e6",
+    "modified_files": [],
+    "scope": "read-only; no old workspace modified"
+  },
+  {
+    "workspace": "c1d073ab5eb6",
+    "head": "d082adab29e88db5e60afeeaf027e7b5cb9ca844",
+    "modified_files": [],
+    "scope": "read-only; no old workspace modified"
+  },
+  {
+    "workspace": "bd5f051b931b",
+    "head": "52cedd46797e6eaa2c7f774b433ad4ab3786d2b6",
+    "modified_files": [
+      {
+        "path": "src/v5/clinical/clinical-hint-ledger.js",
+        "equal_to_audited_head": true
+      },
+      {
+        "path": "src/v5/clinical/guard-session.js",
+        "equal_to_audited_head": false
+      },
+      {
+        "path": "src/v5/clinical/study-order-vocabulary.js",
+        "equal_to_audited_head": false
+      },
+      {
+        "path": "src/v5/clinical/study-orders.test.js",
+        "equal_to_audited_head": false
+      },
+      {
+        "path": "src/v5/server/clinical-hints-durable.test.js",
+        "equal_to_audited_head": true
+      }
+    ],
+    "scope": "read-only; no old workspace modified"
+  }
+]

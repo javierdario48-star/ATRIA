@@ -1,0 +1,32 @@
+{
+  "base_head": "162d0cf24a936e302e2a3efadcc168e1459d86d5",
+  "local_runtime": "Node 24.22.3",
+  "local_v5": {
+    "tests": 3167,
+    "pass": 3164,
+    "fail": 3,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "local_failing_tests": [
+    "competitive persists the same native personality, doctor relationships and replay memory across server recovery",
+    "competitive SQLite worker restart preserves shared mortality and rejects postmortem therapy",
+    "oral nutrition follows the authenticated decision and replay preserves it across restore"
+  ],
+  "test_log_sha256": "e0840e6a4f1e92eaf6e425ddc2ecf19f2612899dcc2fa2372c2fe98919b14119",
+  "builds": {
+    "v5": "passed: 217 files",
+    "v5_core": "passed",
+    "boundary": "passed: 190 production modules; one RAF"
+  },
+  "browser": "No new preview acceptance; prior CI/browser evidence explicitly scoped",
+  "physical_android": "unavailable",
+  "document_checks": {
+    "unique_requirement_ids": 87,
+    "all_original_numbers": 60,
+    "file_and_test_paths": "all exist",
+    "original_documents": "preserved verbatim",
+    "links": "resolved"
+  }
+}
