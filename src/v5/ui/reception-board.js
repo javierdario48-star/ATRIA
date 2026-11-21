@@ -28,7 +28,7 @@ export function receptionBoardHTML(shift,cases=[],selfId=null){
   '<h3>Atenciones finalizadas · '+finished.length+'</h3>'+finished.map(render).join('');
  return '<h2>Recepción · Guardia '+esc(shift.mode)+'</h2><p>'+
   (shift.ended?'Jornada finalizada.':'24 min reales = 24 horas del hospital')+
-  ' · Tiempo restante: '+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0')+'</p>'+
+  ' · Tiempo restante: <span data-reception-clock>'+String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0')+'</span></p>'+
   '<p class="note">Triaje de ingreso; el monitor conectado indica mediciones posteriores.</p>'+
   '<div class="reception-list">'+items+'</div>'+
   '<div class="actions"><button data-action="close">Volver a la guardia</button></div>';
