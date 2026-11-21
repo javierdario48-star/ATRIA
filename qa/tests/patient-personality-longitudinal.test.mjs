@@ -16,11 +16,15 @@ for(const mode of ['solo','apprentice','coop','competitive'])test(mode+' persist
  const call=(actorId,extra={})=>authority.transact({roomId,actorId,...extra});
  try{
   const initial=await authority.bootstrap({roomId,caseId:'APP-001',members,hostId:'a',actorId:'a',mode});
-  const first=initial.clinical.shift.patients[0],stable=initial.clinical.patient.behavior;
-  assert(stable);
+  const first=initial.clinical.shift.patients[0];
+  if(mode==='competitive')assert.equal(initial.clinical.patient.behavior,undefined,
+   'an unclaimed competitive chart must not disclose its personality');
   const point=createWorld(content,{id:'a',name:'Ana'}).navigation.center(...content.beds.find(b=>b.id===first.bedId).approach);
   for(const member of members)await call(member.id,{motion:[point.x,point.y],motionSequence:1});
-  now+=20000;await call('a',{claim:first.uid});
+  now+=20000;
+  const claimed=await call('a',{claim:first.uid}),stable=claimed.clinical.patient.behavior;
+  assert.equal(claimed.clinical.shift.confirmedFocusPatientUid,first.uid);
+  assert(stable,'the physician can read the native personality after a valid bedside claim');
   const command={id:'explain',text:'Le escucho con calma. Le explico: estas preguntas ayudan a entender lo que siente. ¿Qué le pasa?'};
   const spoken=await call('a',{commands:[command]});
   assert(spoken.acknowledgements[0].clinical.some(x=>x.kind==='history.ask'&&x.status==='executed'));

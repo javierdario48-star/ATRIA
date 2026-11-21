@@ -246,10 +246,15 @@ export async function runDurableMortalityScenario(spec,{mode='competitive',horiz
   if(sample.critical&&row.firstCriticalAt===null)row.firstCriticalAt=sample.atRealSecond;
   row.trace.push({type:'observation',...sample});return view;
  };
- const advance=async seconds=>{
+ const advance=async(seconds,{record=true}={})=>{
   assert(seconds>0&&seconds<=5,'durable bot must use ordinary incremental recovery');
   now+=Math.round(seconds*1000);let view=await call();
-  while(view.recovering)view=await call();return remember(view);
+  while(view.recovering)view=await call();
+  // A competitive arrival is public, but its physiology remains private
+  // until this physician reaches and claims the bed. Never fabricate a
+  // baseline observation from that intentionally redacted projection.
+  if(!record){latest=view;return view;}
+  return remember(view);
  };
  const post=async(text,id=null,actorId='b')=>{
   const view=await call(actorId,{commands:[{id:id??'d-'+(++sequence),text,targetPatientUid:uid}]});
@@ -261,13 +266,16 @@ export async function runDurableMortalityScenario(spec,{mode='competitive',horiz
  };
  try{
   const opened=await authority.bootstrap({roomId,caseId:spec.caseId,members,hostId:'a',actorId:'a',mode});
-  uid=opened.clinical.patient.uid;row.patientUid=uid;row.initial=snapshot(opened.clinical);
+  uid=opened.clinical.shift.patients[0].uid;row.patientUid=uid;
+  if(mode==='competitive')assert.equal(opened.clinical.patient.liveVitals,undefined,
+   'an unclaimed competitive chart must not disclose physiology');
   const nav=createWorld(content,{id:'a',name:'Médico 1'}).navigation;
   const first=opened.clinical.shift.patients[0],target=nav.center(...content.beds.find(b=>b.id===first.bedId).approach);
   await call('b',{motion:[target.x,target.y],motionSequence:1});
   if(mode==='coop')await call('a',{motion:[target.x,target.y],motionSequence:1});
-  for(let s=0;s<20;s+=5)await advance(5);
+  for(let s=0;s<20;s+=5)await advance(5,{record:false});
   const claimed=await call('b',{claim:uid});assert.equal(claimed.clinical.shift.confirmedFocusPatientUid,uid);
+  row.initial=snapshot(claimed.clinical);
   remember(claimed);
   if(spec.bot==='competent'){
    let commands=clinicalBotAssessmentActions(content.cases.find(c=>c.id===spec.caseId),'expert');

@@ -77,11 +77,20 @@ test('oral nutrition follows the authenticated decision and replay preserves it 
   assert.notEqual(clinicalWorkflow(after).cue?.id,'oral-nutrition');
   assert.deepEqual(after.patient.treatments,before.patient.treatments);
   assert.deepEqual(after.patient.administrationLog,before.patient.administrationLog);
-  assert.deepEqual(after.closure,before.closure);
+  // Feeding revokes the current fasting instruction, while the historical
+  // administration stays intact. Fasting affects care quality, not an
+  // otherwise unchanged decision about where the patient can go.
+  const disposition=({quality,fulfilledTreatmentIds,...eligibility})=>eligibility;
+  assert.deepEqual(disposition(after.closure),disposition(before.closure));
+  assert(before.closure.fulfilledTreatmentIds.includes('npo'));
+  assert(!after.closure.fulfilledTreatmentIds.includes('npo'));
+  assert(after.closure.quality.treatment<before.closure.quality.treatment);
+  assert(after.closure.quality.score<before.closure.quality.score);
   assert.deepEqual(after.progress,before.progress);
 
   restored=fixture('ILEO-001',await session.checkpoint()).session;
   assert.deepEqual(restored.read().oralNutrition.decision,decision);
+  assert.deepEqual(restored.read().closure,after.closure);
   assert.notEqual(clinicalWorkflow(restored.read()).cue?.id,'oral-nutrition');
   assert.deepEqual(await restored.post(command,colleague),permission);
   assert.equal(restored.read().messages.filter(row=>row.id==='ack:doctor-b:permit:0').length,1);
@@ -93,6 +102,8 @@ test('oral nutrition follows the authenticated decision and replay preserves it 
   assert.deepEqual(last.oralNutrition.decision,{...decision,decision:'npo',actorId:'doctor-a',
    sourceEventId:'nutrition:doctor-a:fast-again:0'});
   assert.equal(last.patient.treatments.filter(row=>row.id==='npo').length,1);
+  assert.deepEqual(last.closure.quality,before.closure.quality,
+   'restoring fasting restores its quality credit without a second administration');
   assert.deepEqual(await restored.post(command,colleague),permission);
   assert.deepEqual(restored.read().oralNutrition,last.oralNutrition);
  }finally{restored?.dispose();session.dispose();}
