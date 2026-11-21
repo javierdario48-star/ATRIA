@@ -42,7 +42,7 @@ test('unmanifested random candidates and unknown episode IDs cannot restrict a d
   const c=def;
   assert.deepEqual(assess(c,{status:'candidate'}),[]);
   assert.deepEqual(assess(c,{onsetAt:undefined}),[]);
-  assert.deepEqual(assess(c,{id:'not-real'}),assess(c), 'unknown IDs ignored by helper only when real case ID selected');
+  assert.deepEqual(assess(c,{id:'not-real'}),[], 'unknown episode IDs do not create a rescue gate');
   assert.deepEqual(required({patient:{policyState:{complications:[{id:'secret-candidate',status:'active',onsetAt:1}]}},
    caseData:c,destination:'alta',fulfilled:new Set(),continuation:{}}),[]);
  }
