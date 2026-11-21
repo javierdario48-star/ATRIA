@@ -4,6 +4,8 @@ Base auditada: `162d0cf24a936e302e2a3efadcc168e1459d86d5`. Corrección publicada
 
 ## Dirección operativa actual — plataforma jugable primero, casos por planilla después
 
+**Norma V2 aprobada para staging (21/11/2026):** [contrato de integración clínica, «Protocolo de migración de enfermedades V2»](ATRIA-5-CASE-INTEGRATION-CONTRACT.md#protocolo-de-migración-de-enfermedades-v2-congelado-como-norma-de-trabajo-21112026). Foto de catálogo: **55 casos (25 digestivos/abdominales + 10 respiratorios + 10 cardiológicos + 10 neurológicos)**; seis destinos declarados y familias de tratamiento/evolución combinables. **No borrar V1 ni activar V2 aún**: el registro es append-only, el selector V1/V2 por revisión todavía no existe y Vercel está suspendido. Primer candidato recomendado para staging: `RESP-01`; no creado ni publicado. Cada commit de V2 solo en GitHub experimental; desplegar Preview del mismo SHA una vez Vercel vuelva, nunca producción directamente.
+
 ### Auditoría de respuesta de plataforma — 21/11/2026
 
 **Foco:** revisión de pendientes originales de octubre–noviembre **sin tocar enfermedades existentes ni modificar el motor clínico**. Nuevos tests solo en `qa/v5/responsiveness-browser.mjs` y workflow independiente.
