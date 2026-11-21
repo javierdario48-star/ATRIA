@@ -55,6 +55,7 @@ export function validateVariation(input){
   if(v[k]!==undefined&&!Array.isArray(v[k])){errors.push('invalid '+k);continue;}
   for(const option of v[k]||[])if(!option||typeof option!=='object'||!option.id||!Number.isFinite(option.probability)||option.probability<0||option.probability>1)errors.push('invalid '+k);
  }
+ if(v.independentComplicationDraws!==undefined&&typeof v.independentComplicationDraws!=='boolean')errors.push('invalid independentComplicationDraws');
  for(const a of Array.isArray(v.allergies)?v.allergies:[])
   if(!a||typeof a.drugId!=='string'||!a.drugId.trim()||typeof a.historyDisclosure!=='string'||!a.historyDisclosure.trim())errors.push('allergy requires drug and disclosure');
  for(const c of Array.isArray(v.complications)?v.complications:[])
