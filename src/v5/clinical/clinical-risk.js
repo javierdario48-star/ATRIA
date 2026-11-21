@@ -59,28 +59,20 @@ export function confirmedClinicalMissteps(patient,caseDef){
  const traits=caseDef?.pharmacology?.traits||BASE_CASE_PHARMACOLOGY_487[caseDef?.id]||[];
  if(!traits.includes('infection')){
   for(const [id,exposure] of Object.entries(exposures)){
-   if(caseDef?.id==='VARIX-001'&&id==='ceftriaxone')continue; // documented variceal prophylaxis
+   if((caseDef?.keyInterventions||[]).includes(id))continue; // any declared prophylaxis is a valid authored intervention
    if(exposure.administrations&&['antibiotic','aminoglycoside','antifungal'].includes(PHARMA_RULES_487[id]?.classId)){
     const label=patient.administrationLog.find(x=>x.id===id)?.label||id;
     notes.push(label+' sin foco infeccioso identificado en '+caseDef?.id);
    }
   }
  }
- if(caseDef?.id==='APP-001'&&exposures.furosemide?.administrations&&
-    lung.confirmedFluidMl<3000)
-  notes.push('Furosemida sin sobrecarga demostrada en APP-001');
- if(caseDef?.id==='PERI-SEC-001'&&exposures.furosemide?.administrations&&
-    lung.confirmedFluidMl<3000)
-  notes.push('Furosemida en peritonitis secundaria con hipovolemia, sin sobrecarga demostrada');
- // Native peritonitis avoid lists already drive renal stress in the sole
- // physiology owner. Preserve that clinical mistake in the shared debrief;
- // this is a safety assessment, never another organ-toxicity equation.
- if(['PERI-PBE-001','PERI-TER-001'].includes(caseDef?.id)){
-  for(const id of ['amikacin','gentamicin'])
-   if(caseDef.physiology?.avoid?.includes(id)&&exposures[id]?.administrations)
-    notes.push((patient.administrationLog.find(x=>x.id===id)?.label||id)+' con riesgo renal documentado en '+caseDef.id);
-  if(caseDef.physiology?.avoid?.includes('furosemide')&&exposures.furosemide?.administrations&&lung.confirmedFluidMl<3000)
-   notes.push('Furosemida con hipovolemia y riesgo renal en '+caseDef.id);
+ // A physiology-declared avoid-list applies to EVERY case; no per-case
+ // switches in the shared quality evaluator. Specific lack-of-indication
+ // decisions are attached at administration by medication-indication-review.
+ for(const id of caseDef?.physiology?.avoid||[]){
+  if(!exposures[id]?.administrations)continue;
+  const name=patient.administrationLog.find(x=>x.id===id)?.label||id;
+  notes.push(name+' contraindicado o desaconsejado por el perfil fisiológico documentado.');
  }
  if((exposures.furosemide?.totalAmount??0)>160)
   notes.push('Dosis acumuladas de furosemida superiores a la pauta del caso');
