@@ -10,6 +10,10 @@ on:
       - 'src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js'
       - 'src/v5/content/packs/respiratory-v2-observation-flow.test.js'
       - 'src/v5/clinical/clinical-policy-closure.js'
+      - 'src/v5/clinical/medication-indication-review.js'
+      - 'src/v5/clinical/medication-indication-review.test.js'
+      - 'src/v5/clinical/native-medications.js'
+      - 'src/v5/clinical/clinical-risk.js'
       - 'src/v5/clinical/clinical-disposition-safety.js'
       - 'src/v5/clinical/clinical-disposition-safety.test.js'
       - 'src/v5/clinical/unsafe-disposition-continuity.test.js'
@@ -47,6 +51,8 @@ jobs:
         run: node --test src/v5/content/packs/respiratory-v2-candidate.test.js src/v5/content/packs/respiratory-v2-e2e-audit.test.js src/v5/content/packs/respiratory-v2-personality-audit.test.js src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js src/v5/clinical/clinical-disposition-safety.test.js src/v5/clinical/public-receiver-policy.test.js src/v5/clinical/unsafe-disposition-continuity.test.js src/v5/clinical/unsafe-disposition-runtime.test.js src/v5/clinical/progression.test.js src/v5/ui/clinical-bedside-ux.test.js src/v5/content/packs/respiratory-v2-observation-flow.test.js
       - name: Existing policy closure regression
         run: node --test src/v5/clinical/clinical-policy-closure.test.js
+      - name: Universal medication freedom and scoring certification
+        run: node --test src/v5/clinical/medication-indication-review.test.js src/v5/clinical/clinical-risk-regression.test.js src/v5/clinical/clinical-freedom.test.js
       - name: Universal clinical regression (medication harm, delayed physiology, dialogue, Vega, rescue)
         run: |
           node --test src/v5/clinical/clinical-policy-effects.test.js \
