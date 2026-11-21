@@ -190,7 +190,13 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     // Any physician can attempt discharge or formal observation at any time.
     // Reprimand unsafe dispositions; do not end or reset the encounter.
     // case.observe is active monitoring, not a formal closure request.
-    const dispositionAttempt=!!care&&!intent.partial&&['alta','observacion'].includes(intent.id);
+    // In every v2 clinical revision, the legacy partial-close command cannot
+    // bypass safety or the Vega reprimand. Historical V1 partial grading is
+    // preserved until the catalog migration is explicitly approved.
+    const revision=String(caseData.clinicalRevision||'');
+    const v2SafetyContract=/^v2(?:$|[-.])/.test(revision);
+    const dispositionAttempt=!!care&&['alta','observacion'].includes(intent.id)&&
+     (!intent.partial||v2SafetyContract);
     let assessment;
     if(rule&&!rule.destinations.includes(intent.id))assessment={status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
      receipt:{patientUid,eventId,decision:'REJECTED_NO_INDICATION',reasonCode:'destination-not-indicated',
