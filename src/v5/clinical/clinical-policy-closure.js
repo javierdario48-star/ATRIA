@@ -101,7 +101,7 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   need('treatment',{anyOf:[rule.dischargeTreatments]},'Documentar el tratamiento y plan de seguimiento antes del alta.');
  // Opt-in V2 safety gate, driven by native complication receipts and state.
  // Other clinical cases preserve their V1 eligibility unchanged.
- if (target === 'alta' && rule.dischargeRequiresResolvedComplications === true) {
+ if (['alta','observacion','sala'].includes(target) && rule.dischargeRequiresResolvedComplications === true) {
   for (const episode of patient.policyState?.complications || []) {
    if (episode.status === 'recovered') continue;
    const definition = (caseData.clinicalPolicy.complications || []).find(item => item.id === episode.id);
