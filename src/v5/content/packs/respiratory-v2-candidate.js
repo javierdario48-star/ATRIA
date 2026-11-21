@@ -9,6 +9,9 @@ const original=respiratoryCaseDefinitions.find(c=>c.id==='RESP-01');
 if(!original)throw Error('RESP-01 V1 source missing');
 const candidate=structuredClone(original);
 candidate.clinicalRevision='v2-candidate';
+// Dedicated complication draw preserves age, identity, personality and history
+// under the same seed when comparing the V1 and V2 clinical revisions.
+candidate.variation.independentComplicationDraws=true;
 candidate.revisionSource='atria-respiratory@1.0.0:RESP-01';
 candidate.title='Neumonía adquirida en la comunidad de bajo riesgo';
 candidate.difficulty='intermedia'; // Includes chance of an unpredictable setback.
