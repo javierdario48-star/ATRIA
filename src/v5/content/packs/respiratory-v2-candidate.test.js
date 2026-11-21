@@ -25,7 +25,10 @@ test('RESP-01 V2 is an isolated same-ID revision, not another active case or mot
  assert.deepEqual(v1.clinicalPolicy.complications,[]);
  assert.deepEqual(v2.clinicalPolicy.closure.destinations,['alta','observacion','sala']);
  assert.equal(v1.clinicalPolicy.closure.dischargeRequiresResolvedComplications,undefined);
- assert.equal(v2.clinicalPolicy.closure.dischargeRequiresResolvedComplications,true);
+ assert.equal(v2.clinicalPolicy.closure.dischargeRequiresResolvedComplications,undefined,
+  'complication safety is a universal engine rule, not a V2 case switch');
+ assert.equal(v2.clinicalPolicy.closure.minimumObservationMinutes,undefined,
+  'stable patients must not wait for arbitrary fixed observation');
  const staged=compileClinicalCasePack(resp01V2ExperimentalPack,CLINICAL_POLICY_REGISTRIES);
  assert.equal(staged.ok,true,staged.errors?.join('\n'));
  assert.equal(staged.cases[0].id,'RESP-01');
@@ -62,12 +65,12 @@ test('unresolved complication specifically blocks V2 alta; V1 is not changed',()
  };
  const active=evaluateClinicalPolicyDisposition(patient,v2,'alta');
  assert.equal(active.ready,false);
- assert(active.missing.some(x=>/rescate confirmado/i.test(x)),active.missing.join(' | '));
+ assert(active.missing.some(x=>/estabilización inmediata documentada/i.test(x)),active.missing.join(' | '));
  const observed=evaluateClinicalPolicyDisposition(patient,v2,'observacion');
- assert(observed.missing.some(x=>/rescate confirmado/i.test(x)),'observation must also request rescue during active deterioration');
+ assert(observed.missing.some(x=>/estabilización inmediata documentada/i.test(x)),'observation must also request rescue during active deterioration');
  const recovered=evaluateClinicalPolicyDisposition(
   {...patient,policyState:{...patient.policyState,complications:[{id:complication,status:'recovered'}]}},v2,'alta');
- assert(!recovered.missing.some(x=>/rescate confirmado|resolución fisiológica confirmada/i.test(x)));
+ assert(!recovered.missing.some(x=>/estabilización inmediata documentada|recuperación fisiológica confirmada/i.test(x)));
  const wardWithoutDeterioration=evaluateClinicalPolicyDisposition({
   ...patient,policyState:{...patient.policyState,complications:[]}},v2,'sala');
  assert(wardWithoutDeterioration.requirements.some(x=>x.reason==='destination-not-indicated'),
@@ -76,7 +79,7 @@ test('unresolved complication specifically blocks V2 alta; V1 is not changed',()
  assert(!wardDuringDeterioration.requirements.some(x=>x.reason==='destination-not-indicated'),
   'manifested complication may justify a ward transfer after preparation');
  const old=evaluateClinicalPolicyDisposition(patient,v1,'alta');
- assert(!old.missing.some(x=>/rescate confirmado|resolución fisiológica confirmada/i.test(x)));
+ assert(!old.missing.some(x=>/estabilización inmediata documentada|recuperación fisiológica confirmada/i.test(x)));
 });
 
 test('Dr. Vega uses the same staged V2 readiness and moves to a new real control',async()=>{
