@@ -143,7 +143,13 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
    }
    if(profile==='nursing-recovery'&&!restored&&at>2)await restore();
    if(at-lastReassessment>=10){await send('/reevaluar');lastReassessment=at;}
-   if(at>=plan.minimumObservationSeconds&&at-lastAttempt>=10){
+   // A well-prepared physician does not repeatedly attempt an elective
+   // disposition before the existing clinical readiness gate accepts it.
+   // Adversarial profiles retain full freedom and receive native sanctions.
+   const preparedProfile=['competent','slow','nursing-recovery','closure-recovery','multiplayer'].includes(profile);
+   const localElective=['alta','observacion'].includes(plan.destination);
+   const attemptAllowed=!preparedProfile||!localElective||read().eligibleDestinations.includes(plan.destination);
+   if(at>=plan.minimumObservationSeconds&&at-lastAttempt>=10&&attemptAllowed){
     const command={id:'destination-'+(++sequence),text:'/disposicion '+plan.destination};
     const ack=await send(command.text,command.id);lastAttempt=at;
     if(profile==='closure-recovery'&&!restored&&ack.clinical.some(x=>x.status==='pending')){replay=command;await restore();await send(command.text,command.id);}
@@ -159,7 +165,15 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
   checks.examination=p.examLog?.length>0;
   checks.ordersAnswered=!final.room.events.some(e=>e.clinical?.some(x=>x.status==='unconfirmed'));
   checks.closed=p.closure?.closed===true&&p.closure.destination===plan.destination;
-  checks.xp=checks.closed&&final.progress.xp===p.closure.xp&&final.progress.receipts.length===1;
+  // The single clinical closure award is gross XP; prior Dr Vega mistakes
+  // debit the net balance and may leave debt, without invalidating the award.
+  const grossXP=final.progress.receipts.reduce((sum,x)=>sum+Number(x.xp||0),0);
+  const penaltyXP=final.progress.penalties.reduce((sum,x)=>sum+Number(x.loss||0),0);
+  checks.xp=checks.closed&&final.progress.receipts.length===1&&
+   final.progress.receipts[0].eventId===p.closure.eventId&&
+   grossXP===p.closure.xp&&
+   final.progress.xp===Math.max(0,grossXP-penaltyXP)&&
+   (final.progress.xpDebt??0)===Math.max(0,penaltyXP-grossXP);
   checks.physiologyChanged=Object.keys(initial).some(key=>Math.abs(initial[key]-p.liveVitals[key])>.01||
    unsafeVitals&&Math.abs(initial[key]-unsafeVitals[key])>.01)||p.patientDied===true;
   if(checks.closed){
