@@ -133,3 +133,21 @@ test('wrong observation after measured vitals does not manufacture a phantom rea
   assert.equal(s.read().progress.xpDebt,15);
  }finally{s.dispose();}
 });
+
+
+for(const destination of ['alta','observacion'])test(
+ 'V2: legacy partial '+destination+' cannot bypass native safety, Vega sanction or continuation',async()=>{
+ const {s,send}=fixture('partial-'+destination);
+ try{
+  const before=structuredClone(s.read().patient);
+  const reply=await send('A','partial-attempt','/cierre-parcial '+destination);
+  checkRebuke(reply,destination,destination==='alta'?
+   'clinical.unsafe-discharge':'clinical.unsafe-observation');
+  const now=s.read();
+  assert.deepEqual(now.patient,before,'a bad partial choice must not fake a completed case');
+  assert.equal(now.progress.xpDebt,15);
+  const next=await send('B','continue-after-partial','/signos');
+  assert.equal(next.clinical?.[0]?.status,'executed');
+  assert.equal(s.read().patient.caseEnded,false);
+ }finally{s.dispose();}
+});
