@@ -373,8 +373,16 @@ function finalEvidence(row,view,checkpoint,c,plan){
  const closure=p.closure;
  const actualClosure=!!closure?.closed&&closure.patientUid===p.uid&&closure.destination===plan.destination&&
   typeof closure.eventId==='string'&&receipts.some(x=>x.closure?.eventId===closure.eventId&&x.closure.closed);
- const xp=!!closure&&closure.xp>0&&s.progress.receipts.length===1&&s.progress.receipts[0].patientUid===p.uid&&
-  s.progress.receipts[0].eventId===closure.eventId&&s.progress.receipts[0].xp===closure.xp&&s.progress.xp===closure.xp;
+ // A closure reward is GROSS XP. The actor's persisted net balance may
+ // differ after verified unsafe decisions. Never misreport a valid clinical
+ // closure as duplicate/missing XP merely because a real penalty was applied.
+ const grossXP=(s.progress.receipts||[]).reduce((n,r)=>n+Number(r.xp||0),0);
+ const penaltyXP=(s.progress.penalties||[]).reduce((n,r)=>n+Number(r.loss||0),0);
+ const netXP=Math.max(0,grossXP-penaltyXP),debtXP=Math.max(0,penaltyXP-grossXP);
+ const xp=!!closure&&Number.isSafeInteger(closure.xp)&&closure.xp>=0&&
+  s.progress.receipts.length===1&&s.progress.receipts[0].patientUid===p.uid&&
+  s.progress.receipts[0].eventId===closure.eventId&&s.progress.receipts[0].xp===closure.xp&&
+  s.progress.xp===netXP&&(s.progress.xpDebt??0)===debtXP;
  const sourceQuestions=CLINICAL_BOT_PLAYBOOK[c.id]?.history||[];
  const nativeHistory=!c.clinicalPolicy&&sourceQuestions.length>0&&sourceQuestions.every(text=>
   row.commands.filter(command=>command.text===text).some(command=>command.clinical.some(item=>item.kind==='history.ask'&&
@@ -647,8 +655,12 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     return episode?episode.status==='recovered'||transferredRescueIds(definition,transferredProcedures).length>0:
      current.clock.nativeMinute>=complicationObservationMinute;
    });
-   const acceptsCurrentDestination=preferredDestination===null||
-    !['competent','slow','no-allergy-question','complication-rescue'].includes(profile)||
+   // A competent physician must not spam premature alta/observacion while
+   // the clinical requirements remain unmet. Other dispositions may need an
+   // early request to start asynchronous receiver acceptance. Bad-choice
+   // profiles retain FULL agency to attempt an unsafe destination.
+   const electiveLocal=['alta','observacion'].includes(plan.destination);
+   const acceptsCurrentDestination=!competent||!electiveLocal||
     current.eligibleDestinations?.includes(plan.destination);
    if(profile!=='abandon'&&canAttempt&&acceptsCurrentDestination&&complicationObservationComplete&&
     (profile==='negligent'||second>=plan.minimumObservationSeconds)&&second-lastCloseAttempt>=15){
