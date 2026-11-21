@@ -45,6 +45,8 @@ const pairs=[],errors=[];
 function digest(row){
  const s=row.final??{},q=row.closureReceipt?.quality??{},comp=row.complications??[];
  const uniqueCommands=new Set((row.commands||[]).map(x=>x.id));
+ const unsafeDischargeAttempts=(row.commands||[]).flatMap(x=>x.clinical||[])
+  .filter(x=>x.receipt?.disposition?.kind==='clinical.unsafe-discharge').length;
  return {
   passed:row.passed===true,outcome:row.outcome??'error',
   failures:row.failures||[],
@@ -53,7 +55,7 @@ function digest(row){
   xp:s.xp??null,qualityScore:q.score??null,diagnosticFactor:q.diagnosticFactor??null,
   completedStudies:(row.studies||[]).filter(x=>x.status==='done').length,
   totalStudies:(row.studies||[]).length,administrationCount:(row.administrations||[]).length,
-  totalCommands:uniqueCommands.size,complications:comp.map(x=>({id:x.id,status:x.status,
+  totalCommands:uniqueCommands.size,unsafeDischargeAttempts,complications:comp.map(x=>({id:x.id,status:x.status,
    onsetAt:x.onsetAt??null,recoveredAt:x.recoveredAt??null})),
   hintActions:(row.commands||[]).filter(x=>/vega|pista/i.test(x.text)).length,
   recoveryRestored:row.recovery?.sameClinicalPatient??null,
@@ -80,6 +82,9 @@ for(const x of base){
    errors.push(label+'/'+x.profile+'/'+x.mode+': competent path failed: '+(row.failures||[]).join('; '));
   if(x.profile==='complication-rescue'&&label==='v2'&&row.passed!==true)
    errors.push(label+'/'+x.profile+'/'+x.mode+': complication/rescue failed: '+(row.failures||[]).join('; '));
+  if(label==='v2'&&['competent','slow','no-allergy-question','complication-rescue'].includes(x.profile)&&
+   summarized.unsafeDischargeAttempts>0)
+   errors.push(label+'/'+x.profile+'/'+x.mode+': medically competent bot attempted premature unsafe discharge '+summarized.unsafeDischargeAttempts+' times');
  }
  pair.delta={
   elapsedRealSeconds:(pair.rows.v2.atRealSecond??0)-(pair.rows.v1.atRealSecond??0),
