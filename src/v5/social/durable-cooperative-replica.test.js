@@ -188,6 +188,13 @@ test('a confirmed death debit survives a later failed lookup only for its exact 
 });
 
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
+// AbortSignal.timeout() deliberately does not keep Node 22's process alive.
+// Production retry scheduling stays timer-free; these isolated tests must
+// retain an event-loop handle while exercising its native backoff.
+async function holdNodeEventLoop(operation){
+ const keepAlive=setTimeout(()=>{},5000);
+ try{return await operation();}finally{clearTimeout(keepAlive);}
+}
 function patientFrame(epoch,uid='A',confirmed='A',mode='coop',extra={}){
  return {epoch,clinical:{room:{roomId,revision:epoch},patient:{uid,caseId:'PERI-PBE-001',procedures:{},ecg:{},lastVitalsKnown:{},label:uid+'-'+epoch},
   hintBinding:{roomId,patientUid:uid,selectionRevision:epoch},
@@ -213,7 +220,7 @@ test('recovery retries the same request after CAS contention through the final l
     shiftRequestId:shift.requestId,shiftAcknowledgement:{...shift,status:'accepted'}}:{})};
   }}});
  try{
-  const result=await replica.recoverTurn('leave');
+  const result=await holdNodeEventLoop(()=>replica.recoverTurn('leave'));
   assert.equal(result.clinical.shift.turn.actor.participating,false);
   assert.equal(sent.length,4);
   assert.deepEqual(sent[0],sent[1]);assert.deepEqual(sent[2],sent[3]);
@@ -230,7 +237,7 @@ for(const [code,attempts] of [['busy',5],['fenced',1]])test('recovery '+code+' e
   sent++;return {ok:false,status:409,json:async()=>({code,error:'test authority rejection'})};
  }}});
  try{
-  await assert.rejects(replica.recoverTurn('leave'),{code,status:409});
+  await assert.rejects(holdNodeEventLoop(()=>replica.recoverTurn('leave')),{code,status:409});
   assert.equal(sent,attempts);
  }finally{replica.dispose();}
 });
