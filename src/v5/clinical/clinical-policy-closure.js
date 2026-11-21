@@ -107,7 +107,7 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
    const definition = (caseData.clinicalPolicy.complications || []).find(item => item.id === episode.id);
    const rescue = definition?.rescueAllOf || [];
    if (rescue.length && !rescue.every(id => done.has(id)))
-    need('treatment',{anyOf:[rescue]},'Completar el rescate confirmado de la complicación antes del alta.');
+    need('treatment',{anyOf:[rescue]},'Completar el rescate confirmado de la complicación antes del destino.');
    else if(target==='alta') need('wait',{reason:'complication'},'Esperar resolución fisiológica confirmada antes del alta.');
   }
  }
