@@ -31,6 +31,16 @@ jobs:
         run: node --test src/v5/content/packs/respiratory-v2-candidate.test.js src/v5/content/packs/respiratory-v2-e2e-audit.test.js src/v5/clinical/clinical-disposition-safety.test.js
       - name: Existing policy closure regression
         run: node --test src/v5/clinical/clinical-policy-closure.test.js
+      - name: Universal clinical regression (medication harm, delayed physiology, dialogue, Vega, rescue)
+        run: |
+          node --test src/v5/clinical/clinical-policy-effects.test.js \
+            src/v5/clinical/inappropriate-medication-bots.test.js \
+            src/v5/clinical/clinical-risk-regression.test.js \
+            src/v5/clinical/clinical-rescue-paths.test.js \
+            src/v5/clinical/clinical-freedom.test.js \
+            src/v5/clinical/patient-dialogue.test.js \
+            src/v5/clinical/clinical-hint-session.test.js
+
   paired-native-bot:
     runs-on: ubuntu-latest
     timeout-minutes: 25
