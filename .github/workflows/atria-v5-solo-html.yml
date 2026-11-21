@@ -6,6 +6,11 @@ on:
     paths:
       - 'scripts/build-v5-solo-compact.mjs'
       - 'scripts/verify-v5-solo-compact.mjs'
+      - 'scripts/audit-v5-solo-compact.mjs'
+      - 'src/v5/app/**'
+      - 'src/v5/ui/**'
+      - 'src/v5/render/**'
+      - 'src/v5/engine/**'
       - '.github/workflows/atria-v5-solo-html.yml'
   workflow_dispatch:
 
@@ -39,7 +44,13 @@ jobs:
           ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node scripts/verify-v5-solo-compact.mjs
+      - name: Audit the actual HTML as a player (desktop, Android and accelerated admission clock)
+        env:
+          ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node scripts/audit-v5-solo-compact.mjs
       - name: Publish downloadable HTML and smoke evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: atria-v5-solo-html
