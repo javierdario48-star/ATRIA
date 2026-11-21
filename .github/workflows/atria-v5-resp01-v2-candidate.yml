@@ -8,6 +8,7 @@ on:
       - 'src/v5/content/packs/respiratory-v2-e2e-audit.test.js'
       - 'src/v5/content/packs/respiratory-v2-personality-audit.test.js'
       - 'src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js'
+      - 'src/v5/content/packs/respiratory-v2-observation-flow.test.js'
       - 'src/v5/clinical/clinical-policy-closure.js'
       - 'src/v5/clinical/clinical-disposition-safety.js'
       - 'src/v5/clinical/clinical-disposition-safety.test.js'
@@ -43,7 +44,7 @@ jobs:
         with:
           node-version: '22'
       - name: Verify candidate is isolated and obeys native policy
-        run: node --test src/v5/content/packs/respiratory-v2-candidate.test.js src/v5/content/packs/respiratory-v2-e2e-audit.test.js src/v5/content/packs/respiratory-v2-personality-audit.test.js src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js src/v5/clinical/clinical-disposition-safety.test.js src/v5/clinical/public-receiver-policy.test.js src/v5/clinical/unsafe-disposition-continuity.test.js src/v5/clinical/unsafe-disposition-runtime.test.js src/v5/clinical/progression.test.js src/v5/ui/clinical-bedside-ux.test.js
+        run: node --test src/v5/content/packs/respiratory-v2-candidate.test.js src/v5/content/packs/respiratory-v2-e2e-audit.test.js src/v5/content/packs/respiratory-v2-personality-audit.test.js src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js src/v5/clinical/clinical-disposition-safety.test.js src/v5/clinical/public-receiver-policy.test.js src/v5/clinical/unsafe-disposition-continuity.test.js src/v5/clinical/unsafe-disposition-runtime.test.js src/v5/clinical/progression.test.js src/v5/ui/clinical-bedside-ux.test.js src/v5/content/packs/respiratory-v2-observation-flow.test.js
       - name: Existing policy closure regression
         run: node --test src/v5/clinical/clinical-policy-closure.test.js
       - name: Universal clinical regression (medication harm, delayed physiology, dialogue, Vega, rescue)
