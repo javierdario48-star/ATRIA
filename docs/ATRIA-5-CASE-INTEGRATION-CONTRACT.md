@@ -205,3 +205,32 @@ Por cada caso, y variantes con semillas distintas:
 - Guardar para cada prueba ID/semilla/versión/SHA, acción, evidencia, respuesta receptor, signos, puntuación, fallo o éxito, y rollback. CI del SHA antes de Preview Android físico.
 
 **Puerta de implementación:** primera contraprueba cruzada con APP-001 y un paciente no quirúrgico diagnosticado como apendicitis; después RESP-01 V2 aislado. Revisar antes de modificar las rutas GI heredadas y los casos con urgencias de recepción objetiva. No activar V2 ni reescribir en masa los 55 casos hasta cerrar contrato y regresiones.
+
+## Enmienda: decisión libre de alta u observación y sanción de Dr. Vega (21/11/2026)
+
+**La interfaz nunca impide intentar una decisión médica equivocada.** En cualquier caso, el médico puede solicitar ALTA o cierre formal en OBSERVACIÓN, incluso sin haber terminado la evaluación. La autorización real se calcula desde el evaluador común y los recibos, no desde la apariencia del botón ni desde un bloqueo previo del menú.
+
+```mermaid
+flowchart TD
+  A["Médico elige: ALTA u OBSERVACIÓN formal en cualquier instante"] --> B["Guardar intento con ID, actor, paciente y destino"]
+  B --> C{"¿Evaluador clínico permite el cierre con el estado actual?"}
+  C -- Sí --> D["Cierre único según reglas comunes; XP de calidad"]
+  C -- No --> E["Dr. Vega: reprimenda explícita y causa clínica"]
+  E --> F["Penalización XP una vez por actor/paciente/destino"]
+  F --> G["No cerrar ni modificar diagnósticos, órdenes, estudios, fisiología ni reloj"]
+  G --> H{"¿Modalidad competitiva con asignación exclusiva?"}
+  H -- Sí --> I["Liberar propietario y foco; paciente sigue en la cama"]
+  H -- No --> J["En cooperativo o solitario la atención continúa accesible"]
+  I --> K["Mismo paciente puede ser reclamado por otro jugador autorizado"]
+  J --> K
+  K --> L["Anamnesis, intervención, rescate y reevaluación continúan desde recibos persistidos"]
+  L --> A
+```
+
+**Distinción obligatoria:** la acción de **vigilancia activa** (case.observe, /observacion) registra que se observa al paciente *sin cerrar el caso*. No es un intento de trasladar al paciente al destino formal Observación y no merece reprimenda. La decisión de **cierre formal** (/disposicion observacion) sí se evalúa como un intento definitivo y, si no cumple seguridad y destino, recibe Dr. Vega y penalización.
+
+**Sanción durable:** conservar las claves históricas de alta insegura y admitir una clave específica para Observación insegura. La política vigente impone una sola multa de 15 XP por destino erróneo, actor y paciente; repetir el mismo intento no duplica el cargo. Si todavía no hay XP, registrar deuda y descontarla cuando se obtengan recompensas posteriores: saldo visible no negativo, deuda persistida. El mensaje identifica la sanción, permite continuar y comunica los requisitos clínicos incumplidos.
+
+**Multijugador:** en Competitivo, el rechazo de cualquiera de los dos cierres libera el reclamo exclusivo y el foco; el UID, la cama, los resultados, las órdenes en curso, los signos y el historial quedan intactos para que otro jugador se acerque y lo reclame. En Cooperativo, los otros médicos autorizados ya comparten la atención; el rechazo nunca desconecta al paciente ni cancela la enfermería. El siguiente intento siempre se reevaluará con las nuevas evidencias.
+
+**Estado:** lógica implementada en la rama experimental. Las pruebas de conversación, persistencia, rebuke, deuda XP y propiedad multijugador son obligatorias antes de declarar esta enmienda certificada en CI; la versión V1 activa no se reemplaza ni se publica en HTML privado hasta pasar todas las regresiones.
