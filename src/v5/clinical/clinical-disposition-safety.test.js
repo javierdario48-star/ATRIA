@@ -57,3 +57,16 @@ test('receiver-owned definitive procedures are not falsely required as bedside r
   fulfilled:new Set([def.rescueAllOf[0]]),continuation:deferred});
  assert(discharge.some(x=>x.type==='wait'),'deferred rescue never proves full recovery for alta');
 });
+
+
+test('a real Stanford A leak is transferred for receiver-owned surgery, never blocked until surgery is already performed',()=>{
+ const c=cardiologyPack.cases.find(x=>x.id==='CARD-08'),comp=c.clinicalPolicy.complications[0];
+ assert(comp.rescueAllOf.includes('aortic_surgery'));
+ const patient={policyState:{complications:[{id:comp.id,status:'active',onsetAt:35}]}};
+ const transfer=required({patient,caseData:c,destination:'quirofano',fulfilled:new Set(),
+  continuation:{deferredTreatmentIds:[]}});
+ assert.deepEqual(transfer,[],'the cardiovascular receiver performs the operation AFTER transfer');
+ const discharge=required({patient,caseData:c,destination:'alta',fulfilled:new Set(),
+  continuation:{deferredTreatmentIds:[]}});
+ assert(discharge.some(x=>x.type==='treatment'),'no surgical cure may be inferred at an unsupported elective discharge');
+});
