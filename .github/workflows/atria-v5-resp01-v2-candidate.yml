@@ -1,0 +1,48 @@
+name: ATRIA V5 RESP-01 V2 Candidate (isolated)
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - 'src/v5/content/packs/respiratory-v2-candidate.js'
+      - 'src/v5/content/packs/respiratory-v2-candidate.test.js'
+      - 'src/v5/clinical/clinical-policy-closure.js'
+      - 'src/v5/clinical/clinical-policy-registry.js'
+      - 'qa/v5/resp01-v2-parity.mjs'
+      - '.github/workflows/atria-v5-resp01-v2-candidate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atria-v5-resp01-v2-candidate-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  staging-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify candidate is isolated and obeys native policy
+        run: node --test src/v5/content/packs/respiratory-v2-candidate.test.js
+      - name: Existing policy closure regression
+        run: node --test src/v5/clinical/clinical-policy-closure.test.js
+  paired-native-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compare V1 and V2 with same native runtime and paired seeds
+        run: node qa/v5/resp01-v2-parity.mjs
+      - name: Save full native receipts, patient trajectories and differences
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atria-resp01-v1-v2-native-evidence
+          path: qa/v5-resp01-v2-parity/
+          if-no-files-found: warn
+          retention-days: 30
