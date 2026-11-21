@@ -99,6 +99,18 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   need('treatment',{anyOf:requiredTreatmentGroups},'Confirmar las intervenciones imprescindibles y su ejecución real.');
  if (target === 'alta' && (rule.dischargeTreatments || []).some(id => !done.has(id)))
   need('treatment',{anyOf:[rule.dischargeTreatments]},'Documentar el tratamiento y plan de seguimiento antes del alta.');
+ // Opt-in V2 safety gate, driven by native complication receipts and state.
+ // Other clinical cases preserve their V1 eligibility unchanged.
+ if (target === 'alta' && rule.dischargeRequiresResolvedComplications === true) {
+  for (const episode of patient.policyState?.complications || []) {
+   if (episode.status === 'recovered') continue;
+   const definition = (caseData.clinicalPolicy.complications || []).find(item => item.id === episode.id);
+   const rescue = definition?.rescueAllOf || [];
+   if (rescue.length && !rescue.every(id => done.has(id)))
+    need('treatment',{anyOf:[rescue]},'Completar el rescate confirmado de la complicación antes del alta.');
+   else need('wait',{reason:'complication'},'Esperar resolución fisiológica confirmada antes del alta.');
+  }
+ }
  const reassessment = patient.lastReassessment;
  const reassessed = Number(patient.reassessments) > 0 && text(reassessment?.eventId) && finiteMinute(reassessment?.nativeMinute) &&
   reassessment.nativeMinute <= minute && confirmed.every(row =>
