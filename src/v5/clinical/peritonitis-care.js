@@ -24,13 +24,18 @@ export function peritonitisClosureQuality487(p,c,snapshot,destination,safeHandof
  const delivered=new Set(snapshot.administered),historyAnswered=new Set(p.intentHistory.map(x=>x.id));
  const started=c.keyInterventions.some(id=>delivered.has(id));
  let diagnosis=snapshot.diagnosticCompatible?15:0;
- const history=Math.round(15*c.requiredHistory.filter(id=>historyAnswered.has(id)).length/Math.max(1,c.requiredHistory.length));
+ let history=Math.round(15*c.requiredHistory.filter(id=>historyAnswered.has(id)).length/Math.max(1,c.requiredHistory.length));
  let safety=Math.min(25,(snapshot.vitalsKnown?8:0)+(p.examDone?7:0)+(started?(hasPhysicianReassessment(p)?5:2):0)+(destination?5:0));
  let studies=Math.round(15*c.keyStudies.filter(id=>snapshot.studiesDone.includes(id)).length/Math.max(1,c.keyStudies.length));
  let treatment=c.keyInterventions.length?Math.round(25*c.keyInterventions.filter(id=>delivered.has(id)).length/c.keyInterventions.length):25;
  const extraStudies=p.orders.filter(x=>!c.keyStudies.includes(x.id)).length,extraStudyPenalty=Math.min(5,extraStudies);
  const efficiency=5-extraStudyPenalty,adversePenalty=Math.min(20,confirmedClinicalMissteps(p,c).adverseCount*5);
- if(safeHandoff){diagnosis=15;safety=Math.max(safety,20);studies=Math.max(studies,12);treatment=Math.max(treatment,20);}
+ if(safeHandoff){
+  // The native 4.8.7 peritonitis handoff scores a minimum 10 for anamnesis
+  // deferred by an accepted emergency transfer, without fabricating answers.
+  diagnosis=15;history=Math.max(history,10);
+  safety=Math.max(safety,20);studies=Math.max(studies,12);treatment=Math.max(treatment,20);
+ }
  const subtotal=diagnosis+history+safety+studies+treatment+efficiency-adversePenalty;
  const score=p.patientDied?Math.min(20,Math.max(0,subtotal)):
   safeHandoff?Math.min(100,subtotal):Math.max(0,Math.min(69,subtotal));

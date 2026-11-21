@@ -117,11 +117,12 @@ test('the physical PERI guard shares IV access, five genuine support doses, surg
   await send('/reevaluar');assert.deepEqual(s.read().eligibleDestinations,['quirofano']);
   const closed=await send('/disposicion quirofano');assert.equal(closed.clinical[0].status,'executed');
   assert.equal(s.read().patient.phys.sourceControlled,false);
-  assert.equal(s.read().patient.closure.quality.history,4);
-  assert.equal(s.read().patient.closure.quality.score,81);
+  // Native emergency-handoff quality credits 10 history points without inventing interview facts.
+  assert.equal(s.read().patient.closure.quality.history,10);
+  assert.equal(s.read().patient.closure.quality.score,87);
   assert(s.read().patient.closure.debrief.missing.some(text=>/foco.*diferido.*receptor/.test(text)),
    'the handoff report must not imply that operating in the ED was required');
-  assert.equal(s.read().progress.xp,112);
+  assert.equal(s.read().progress.xp,118);
  }finally{s.dispose();world.enterLobby();}
 });
 test('clinical freedom survives the migration: severe allergy is learned on asking and harms only after actual secondary-case administration',async()=>{
