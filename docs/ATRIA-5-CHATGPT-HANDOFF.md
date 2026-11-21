@@ -1,5 +1,8 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
+> **Estado operativo vigente (20–21/11/2026):** usar como índice y secuencia [ATRIA-5-EXECUTION-PLAN.md](ATRIA-5-EXECUTION-PLAN.md), sección «Dirección operativa actual». B0 de juego [30/30 CI verde](https://github.com/javierdario48-star/ATRIA/actions/runs/44856218209); [traslados verdes](https://github.com/javierdario48-star/ATRIA/actions/runs/44856218283). Matriz clínica aún sin conclusión al último control; preview real bloqueado por Vercel. **Ahora J1 plataforma de juego; casos individuales después en planilla C1.** Las notas históricas de B0 más abajo reflejan checkpoints anteriores y no reemplazan el estado operativo actual.
+
+
 ## B0 · Segunda certificación — causa única y prueba corregida (`b3750a6`)
 
 - [ATRIA 5 Experimental Game #1080](https://github.com/javierdario48-star/ATRIA/actions/runs/44854297473) para `dcab2ac`: 29/30 jobs `SUCCESS`; `clean-core-contract` falla en `src/v5/clinical/accepted-transfer.test.js:41`, subcaso `PERI-PBE-001`, `quality.history`: **10 real frente a 0 esperado**. Resultado Node: **3165 pass, 2 fail** (subprueba y contenedor), **0 cancelled**. El fallo ocurre en la fase de tests unitarios, antes de caracterización posterior.
