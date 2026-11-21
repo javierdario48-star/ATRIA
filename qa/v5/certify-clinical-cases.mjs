@@ -590,7 +590,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     (p.lastReassessment?.nativeMinute??-1)>=lastAdministration&&
     !(p.pendingTreatments||[]).length&&!(p.pendingConsults||[]).length&&
     !(p.policyState?.complications||[]).some(episode=>episode.status!=='recovered');
-   if(competent&&second>=nextReassessment&&!waitingForObservation){
+   if(competent&&second>=nextReassessment&&!waitingForObservation&&
+    !(preferredDestination!==null&&s.eligibleDestinations?.includes(plan.destination))){
     await action('/reevaluar');nextReassessment=second+15;
    }
    // Rescue is triggered by an observed native complication. No seed, flag,
