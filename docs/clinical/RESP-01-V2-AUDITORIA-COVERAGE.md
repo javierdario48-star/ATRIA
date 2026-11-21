@@ -1,5 +1,17 @@
 # ATRIA 5.0 — Auditoría de cobertura real de RESP-01 V2
 
+## Adenda de certificación final — bot de observación corregido
+
+**GitHub Actions [44949121720](https://github.com/javierdario48-star/ATRIA/actions/runs/44949121720): SUCCESS**, SHA `8710447553f2f5673834250e6c41621e12d6ff50`. Se completaron los 15 pares de comparación sin errores de la matriz; **8/8 pruebas específicas** de la candidata y de interacción real, y **10/10 regresiones del cierre**. Un perfil adverso con `passed=false` sigue siendo un desenlace negativo documentado, no una prueba clínica aprobada.
+
+La corrección eliminó los **dos intentos prematuros de alta** del bot competente y redujo los comandos de **+6 a +1** frente a V1 en Solitario estable (V1: **22** comandos, V2: **23**). Reevaluaciones: 2 frente a 3. V1 cerró en **12,25 segundos** simulados y V2 en **42 segundos**: el costo residual de **29,75 segundos** se explica por la ventana obligatoria de cinco minutos nativos, **no por CPU ni latencia de red demostradas**. Ambos terminaron en alta con **100 puntos y 133 XP**, sin eventos de alta insegura. El médico lento terminó igual en ambas versiones (138,02 s, 100 puntos). En la complicación rescatada V2 hubo 27 comandos y cierre en Sala a los 150 s; se registró recuperación confirmada y 133 XP.
+
+**Hallazgos vigentes:** siguen sin estar probadas todas las combinaciones del catálogo global, anamnesis libre exhaustiva, todos los medicamentos incorrectos/dosis/contraindicaciones, todas las pistas dentro de un recorrido completo, la historia longitudinal de respuesta al antibiótico ni el HTML/Android físico; no debe confundirse un CI en verde con cobertura del 100 %. La ventana de observación es una decisión de diseño todavía por validar clínicamente: debe existir una alternativa coherente a forzar esperas artificiales cuando la NAC es estable.
+
+---
+
+### Registro histórico: campaña anterior, antes de optimizar el bot
+
 **Fecha de revisión:** 21 de noviembre de 2026. **Objeto:** separar lo ejecutado de lo presumido al comparar V1/V2. Fuente primaria: [GitHub Actions 44934331942](https://github.com/javierdario48-star/ATRIA/actions/runs/44934331942), ZIP de 30 trayectorias nativas y recibos (15 V1 y 15 V2). La ampliación de pruebas de interacción fue certificada con 8/8 y 10/10 el mismo día en la rama experimental. Los recorridos adversos no deben contarse como éxitos de atención aunque el comparador sea verde.
 
 ## Resultado de cobertura
