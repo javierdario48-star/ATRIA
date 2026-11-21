@@ -20,22 +20,31 @@ async function walkthrough(s,steps=70){
    assert(!state.patient.patientDied,'patient died before completing Vega-guided care: '+JSON.stringify(trace));
    const audit=s.auditClosureRequirements(),hint=s.clinicalHint();
    assert(hint?.action,'no executable Vega hint: '+JSON.stringify({audit,trace}));
-   const action=hint.action.command;
-   if(hint.action.kind==='wait'){
-    s.advance(20);await s.flush();
+   // Vega provides an actual UI control, not always a chat command.
+   // Diagnosis belongs to the physician: this competent QA actor makes its
+   // own clinical hypothesis from the authored fixture; the hint never
+   // supplies the secret diagnosis to the player.
+   const kind=hint.action.kind;
+   if(kind==='wait'){
+    s.advance(8);await s.flush();
     trace.push({kind:'wait',hint:hint.key,minute:s.read().clock.nativeMinute});
     continue;
    }
-   assert(typeof action==='string'&&action.length>1,'Vega returned non-executable command '+JSON.stringify(hint));
-   const key=action+':'+JSON.stringify(audit.missing);
+   const commands=kind==='diagnosis'?['/diagnostico '+caseData.dx[0]]:
+    kind==='examination'?hint.action.commands:
+    [hint.action.command];
+   assert(Array.isArray(commands)&&commands.length&&commands.every(x=>typeof x==='string'&&x.length>1),
+    'Vega returned a UI control without executable actions '+JSON.stringify(hint));
+   const key=kind+':'+hint.action.id+':'+JSON.stringify(audit.missing);
    const repetitions=(counts.get(key)||0)+1;counts.set(key,repetitions);
-   assert(repetitions<=2,'Vega repeating same action without changing readiness: '+JSON.stringify({action,audit,trace}));
-   const out=await s.post({id:'vega-walkthrough-'+i,text:action});
-   trace.push({kind:hint.action.kind,action,status:out.clinical?.[0]?.status,reason:out.clinical?.[0]?.reason});
-   assert(out.clinical?.length,'hint command did not reach clinical authority '+action);
-   if(out.clinical[0].status==='rejected'){
-    // A non-executable control is a contract defect, not a patient's clinical failure.
-    throw Error('Dr Vega proposed rejected action '+JSON.stringify({action,reason:out.clinical[0].reason,trace}));
+   assert(repetitions<=2,'Vega repeating same control without changing readiness: '+JSON.stringify({hint,audit,trace}));
+   for(const [j,command] of commands.entries()){
+    const out=await s.post({id:'vega-walkthrough-'+i+'-'+j,text:command});
+    trace.push({kind,command,status:out.clinical?.[0]?.status,reason:out.clinical?.[0]?.reason});
+    assert(out.clinical?.length,'Vega action did not reach clinical authority '+command);
+    if(out.clinical[0].status==='rejected'){
+     throw Error('Dr Vega proposed rejected action '+JSON.stringify({command,reason:out.clinical[0].reason,trace}));
+    }
    }
    s.advance(2);await s.flush();
   }
