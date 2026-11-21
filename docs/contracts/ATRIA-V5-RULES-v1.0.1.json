@@ -1,0 +1,126 @@
+{
+  "schema": "atria.v5.extractable-rules.v1",
+  "version": "1.0.1",
+  "date": "2026-11-21",
+  "scope": "ATRIA 5.0 core, RESP-01 V2 experimental validation",
+  "status": "experimental-no-go",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "immutableRule": "Create a new versioned snapshot on changes; never rewrite prior snapshots",
+  "master": "docs/ATRIA-5-CASE-INTEGRATION-CONTRACT.md",
+  "clinical": {
+    "freedom": "Allow any medically inappropriate action supported technically by the validated formulary/clinical controls; never veto using hidden true case ID",
+    "technicalLimits": "Reject impossible routes, unparseable dose dimensions and absent required physical access; these are not medical-indication gates",
+    "physiologyOwner": "existing native clinical physiology and nursing-time engine",
+    "effects": [
+      "only confirmed receipts and actual elapsed native time affect physiology",
+      "pending orders, random candidates alone and chat declarations have no effect",
+      "random complication onset is eligible by measured state plus seeded candidate",
+      "recover only after delivered effective rescue and elapsed recovery"
+    ],
+    "diagnosis": "physician declares their own hypothesis, not prefilled by Dr Vega",
+    "historyAndExam": "free interview and directed physical exam with authored patient personalities; actual receipts required",
+    "nursing": "single physical nursing executor and authoritative queue, with durable completion",
+    "hints": "Dr Vega -5 percent XP per distinct chargeable hint, once per actor and semantic key; repeated and wait hints free; do not leak case truth",
+    "clinicalScore": "single native hidden-case requirements quality evaluator: diagnosis, targeted history, exam/reassessment, necessary studies, confirmed correct treatment, appropriate destination; subtract documented harm and resource overuse. No reward for unrelated actions",
+    "unsafeElectiveDestination": "physician may attempt formal alta or observacion; if unsafe, confirmed Dr Vega rebuke, -15XP one time per actor/patient/destination, no closure, same patient and dossier remain claimable",
+    "activeObservation": "observación clínica is not formal closure and never triggers inappropriate-disposition penalty",
+    "legacyPartialClosure": "V1 preserves historical /cierre-parcial behavior. All clinicalRevision v2* cases use the one native safety assessment for alta/observacion, including partial command; unsafe choices require confirmed Vega sanction and do not close.",
+    "transfer": "real receiver acceptance and safe handoff required; receiver should use publicly declared diagnosis and communicated evidence, never true hidden case ID",
+    "continuity": "persist patient UID, measured vitals, treatments, orders, complications, chat, native clock, medical actions and unique XP receipts across reconnect",
+    "physiologicalParameterization": "case files provide only declarative trajectory, eligibility, pharmacology response, complication probability and rescue rules; no case-specific executor fork"
+  },
+  "modes": {
+    "solo": {
+      "participants": {
+        "min": 1,
+        "max": 1
+      },
+      "care": "independent",
+      "patientClaim": "bedside",
+      "xpMultiplier": 1.2,
+      "shiftSeconds": 1440
+    },
+    "apprentice": {
+      "participants": {
+        "min": 1,
+        "max": 1
+      },
+      "care": "independent with instructional tools",
+      "patientClaim": "bedside",
+      "xpMultiplier": 1,
+      "shiftSeconds": 1440
+    },
+    "coop": {
+      "participants": {
+        "min": 2,
+        "max": 4
+      },
+      "care": "shared clinical history and physical nursing",
+      "patientClaim": "shared bedside",
+      "reward": "per active participating doctor; independent hint debits",
+      "shiftSeconds": 1440
+    },
+    "competitive": {
+      "participants": {
+        "min": 2,
+        "max": 4
+      },
+      "care": "exclusive patient owner, with private clinical chart outside permitted access",
+      "patientClaim": "one physician at a time; release upon unsafe elective disposition",
+      "reward": "only actual owner on valid closure; private penalty/XP projection",
+      "shiftSeconds": 1440
+    }
+  },
+  "sharedShift": {
+    "seconds": 1440,
+    "arrivalSeconds": [
+      0,
+      180,
+      420,
+      720,
+      1020,
+      1260
+    ],
+    "continuation": "persisted decision after all active participants agree; otherwise save or exit"
+  },
+  "sources": {
+    "game": "src/v5/clinical/guard-runtime.js",
+    "shift": "src/v5/clinical/shift-flow.js",
+    "room": "src/v5/core/room-authority.js",
+    "sessions": "src/v5/clinical/guard-session.js",
+    "caseData": "src/v5/content/packs/respiratory-v2-candidate.js",
+    "physiology": "src/v5/clinical/clinical-policy-effects.js",
+    "nursing": "src/v5/clinical/physical-nursing.js",
+    "medication": "src/v5/clinical/native-medications.js",
+    "medicationIndication": "src/v5/clinical/medication-indication-review.js",
+    "clinicalRisk": "src/v5/clinical/clinical-risk.js",
+    "closureQuality": "src/clinical/case-completion-487.js",
+    "dispositions": "src/v5/clinical/clinical-policy-closure.js",
+    "receiptValidation": "src/v5/core/disposition-receipt.js",
+    "hints": "src/v5/clinical/clinical-hint-ledger.js",
+    "modeTurns": "src/v5/clinical/guard-turn-control.js",
+    "publicReceiver": "src/v5/clinical/public-receiver-policy.js",
+    "ci": ".github/workflows/atria-v5-resp01-v2-candidate.yml"
+  },
+  "releaseGates": {
+    "candidateIsolated": true,
+    "scoreHiddenOnly": true,
+    "allFourModesCert": true,
+    "correctMedications": true,
+    "wrongMedications": true,
+    "wrongDosesAndAllergies": true,
+    "delayComplicationRescue": true,
+    "drVega": true,
+    "nursingDialogueExam": true,
+    "receiverBlindToHiddenTruth": false,
+    "accountXPOnline": false,
+    "physicalAndroid": false,
+    "vercelPreviewCommitNotVerified": true,
+    "v2PartialClosureSafe": true
+  },
+  "notes": [
+    "Contract is a published target specification; it is not proof that all features pass",
+    "Do not activate candidate while mandatory release gates remain unmet",
+    "Changes from 1.0.0: shared disposition proof recognizes unsafe observation; all clinicalRevision v2* elective partial closures retain Vega safety; transfer bot reconciles gross reward versus net actor balance."
+  ]
+}
