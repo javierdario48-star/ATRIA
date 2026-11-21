@@ -79,6 +79,7 @@ function validateClosure(c) {
  if (!(rule.requiredStudies?.length || rule.study?.length || rule.requiredExams?.length)) errors.push('meaningful diagnostic closure evidence required');
  if (!text(rule.summary)) errors.push('clinical closure summary required');
  if (rule.minimumObservationMinutes !== undefined && (!nonnegative(rule.minimumObservationMinutes) || rule.minimumObservationMinutes > 10080)) errors.push('invalid minimumObservationMinutes');
+ if (rule.escalationDestinations !== undefined && (!strings(rule.escalationDestinations) || rule.escalationDestinations.some(id => !rule.destinations?.includes(id) || !['sala','uti','procedimiento','quirofano'].includes(id)))) errors.push('invalid escalationDestinations');
  if (rule.urgentStudyBypass !== undefined && typeof rule.urgentStudyBypass !== 'boolean') errors.push('invalid urgentStudyBypass');
  if (rule.dischargeRequiresResolvedComplications !== undefined && typeof rule.dischargeRequiresResolvedComplications !== 'boolean') errors.push('invalid dischargeRequiresResolvedComplications');
  if (rule.consult !== undefined && !record(rule.consult)) errors.push('invalid closure receiver policy');
