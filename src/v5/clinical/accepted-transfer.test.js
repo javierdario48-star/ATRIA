@@ -38,7 +38,11 @@ test('zero interview answers affect quality but never prevent an otherwise valid
    if(result.clinical[0]?.status==='pending')await f.advance(3.5);
    const after=f.s.read();
    assert.equal(after.patient.closure?.destination,plan.destination,JSON.stringify({caseId:c.id,missing:after.closure?.missing,reply:result.clinical}));
-   assert.equal(after.patient.closure.quality.history,0);
+   // The native peritonitis contract credits 10 history points for a confirmed
+   // safe emergency handoff, even when no questions could be answered. That
+   // quality credit must not fabricate any interview facts (checked above).
+   const expectedHistory=plan.id==='PERI-PBE-001'?10:0;
+   assert.equal(after.patient.closure.quality.history,expectedHistory);
    assert.equal(after.progress.receipts.length,1);
    assert.equal((await f.s.post(command)).clinical[0].status,'executed');
    assert.equal(f.s.read().progress.receipts.length,1);
