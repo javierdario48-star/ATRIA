@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 
 const repo=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 export function loadAtriaRules(version='1.0.0'){
- if(!/^\\d+\\.\\d+\\.\\d+$/.test(version))throw Error('invalid rule version');
+ if(!/^\d+\.\d+\.\d+$/.test(version))throw Error('invalid rule version');
  const file=resolve(repo,'docs/contracts/ATRIA-V5-RULES-v'+version+'.json');
  const rule=JSON.parse(readFileSync(file,'utf8'));
  if(rule.schema!=='atria.v5.extractable-rules.v1'||rule.version!==version||
