@@ -16,10 +16,16 @@ import {CLINICAL_POLICY_REGISTRIES} from '../clinical/clinical-policy-registry.j
 import {createApplication} from './application.js';
 const raw=${JSON.stringify(raw)},assets=${JSON.stringify(assets)};
 const fetchOriginal=window.fetch.bind(window);
-window.fetch=(input,opts)=>{let url=new URL(typeof input==='string'?input:input.url,location.href);
-if(url.pathname==='/api/account/session'&&(url.protocol==='file:'||url.protocol.startsWith('http')))
+window.fetch=(input,opts)=>{
+// Chrome for Android opens a downloaded HTML through content:// instead of file://.
+// Match /api routes BEFORE URL resolution, which may fail for content:// origins.
+const target=typeof input==='string'?input:input.url;
+let pathname=target;
+if(!target.startsWith('/api/')){try{pathname=new URL(target,location.href).pathname;}catch{}}
+if(pathname==='/api/account/session')
 return Promise.resolve(new Response(JSON.stringify({account:null,enabled:false}),{status:404,headers:{'content-type':'application/json'}}));
-if(['file:','http:','https:'].includes(url.protocol))return Promise.resolve(new Response(JSON.stringify({error:'Solo sin servidor'}),{status:503,headers:{'content-type':'application/json'}}));
+if(pathname.startsWith('/api/'))
+return Promise.resolve(new Response(JSON.stringify({error:'Sin servidor en la copia Solitario'}),{status:503,headers:{'content-type':'application/json'}}));
 return fetchOriginal(input,opts);};
 const abort=new AbortController();
 (async()=>{try{const {certifiedCatalog,...content}=raw;content.assetUrls=assets;
@@ -39,6 +45,10 @@ const js=result.outputFiles[0]?.text;if(!js)throw Error('Missing game bundle');
 let html=await fs.readFile('src/v5/web/index.html','utf8');let css=await fs.readFile('src/v5/web/game.css','utf8');
 const style='<link rel="stylesheet" href="./src/v5/web/game.css">';if(!html.includes(style))throw Error('CSS changed');
 html=html.replace(style,'<style>'+css.replaceAll('</style','<\\/style')+'</style>');
+// The welcome image is referenced directly by HTML, not by assets.json.
+const welcomeSrc='./src/v5/content/assets/welcome-doctors.webp';
+if(!html.includes('src="'+welcomeSrc+'"'))throw Error('Welcome artwork reference changed');
+html=html.replace('src="'+welcomeSrc+'"','src="'+await uri('assets/welcome-doctors.webp')+'"');
 const script=/<script type="module" src="\.\/src\/v5\/app\/main\.js" onerror="[^"]*"><\/script>/;
 if(!script.test(html))throw Error('Entry changed');
 html=html.replace(script,()=>'<script>'+js.replaceAll('</script','<\\/script')+'</script>');
