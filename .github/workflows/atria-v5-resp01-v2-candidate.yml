@@ -12,10 +12,12 @@ on:
       - 'src/v5/clinical/clinical-disposition-safety.js'
       - 'src/v5/clinical/clinical-disposition-safety.test.js'
       - 'src/v5/clinical/unsafe-disposition-continuity.test.js'
+      - 'src/v5/clinical/unsafe-disposition-runtime.test.js'
+      - 'src/v5/clinical/guard-runtime.js'
       - 'src/v5/clinical/guard-session.js'
       - 'src/v5/clinical/progression.js'
       - 'src/v5/clinical/public-receiver-policy.js'
-      - 'src/v5/clinical/public-receiver-policy.test.js src/v5/clinical/unsafe-disposition-continuity.test.js'
+      - 'src/v5/clinical/public-receiver-policy.test.js'
       - 'src/v5/clinical/clinical-policy-registry.js'
       - 'qa/v5/resp01-v2-parity.mjs'
       - '.github/workflows/atria-v5-resp01-v2-candidate.yml'
@@ -35,7 +37,7 @@ jobs:
         with:
           node-version: '22'
       - name: Verify candidate is isolated and obeys native policy
-        run: node --test src/v5/content/packs/respiratory-v2-candidate.test.js src/v5/content/packs/respiratory-v2-e2e-audit.test.js src/v5/content/packs/respiratory-v2-personality-audit.test.js src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js src/v5/clinical/clinical-disposition-safety.test.js src/v5/clinical/public-receiver-policy.test.js
+        run: node --test src/v5/content/packs/respiratory-v2-candidate.test.js src/v5/content/packs/respiratory-v2-e2e-audit.test.js src/v5/content/packs/respiratory-v2-personality-audit.test.js src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js src/v5/clinical/clinical-disposition-safety.test.js src/v5/clinical/public-receiver-policy.test.js src/v5/clinical/unsafe-disposition-continuity.test.js src/v5/clinical/unsafe-disposition-runtime.test.js
       - name: Existing policy closure regression
         run: node --test src/v5/clinical/clinical-policy-closure.test.js
       - name: Universal clinical regression (medication harm, delayed physiology, dialogue, Vega, rescue)
