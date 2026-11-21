@@ -6,6 +6,8 @@ import {compileClinicalCasePack} from '../compile-clinical-case-pack.js';
 import {CLINICAL_POLICY_REGISTRIES} from '../../clinical/clinical-policy-registry.js';
 import {generatePatientVariation} from '../patient-variation.js';
 import {evaluateClinicalPolicyDisposition} from '../../clinical/clinical-policy-closure.js';
+import {clinicalContent} from '../../server/content.js';
+import {createGuardSession} from '../../clinical/guard-session.js';
 
 const v1=respiratoryPack.cases.find(c=>c.id==='RESP-01');
 const v2=resp01V2Candidate;
@@ -75,4 +77,24 @@ test('unresolved complication specifically blocks V2 alta; V1 is not changed',()
   'manifested complication may justify a ward transfer after preparation');
  const old=evaluateClinicalPolicyDisposition(patient,v1,'alta');
  assert(!old.missing.some(x=>/rescate confirmado|resolución fisiológica confirmada/i.test(x)));
+});
+
+test('Dr. Vega uses the same staged V2 readiness and moves to a new real control',async()=>{
+ const stagedContent={...clinicalContent,cases:clinicalContent.cases.map(c=>c.id==='RESP-01'?v2:c)};
+ const uid='resp01-v2-vega-patient',session=createGuardSession({
+  roomId:'resp01-v2-vega',mode:'solo',actorId:'doctor',actorName:'Auditor',
+  patient:{uid,caseId:v2.id},content:stagedContent,
+  resolveContext:()=>({patientUid:uid})
+ });
+ try{
+  const initial=session.clinicalHint();
+  assert.equal(initial.action?.kind,'vitals');
+  assert.equal(initial.action?.command,'/signos');
+  assert.equal(session.hintCount('doctor'),0,'selection alone is never billed');
+  const ack=await session.post({id:'resp01-v2-vega-vitals',text:initial.action.command});
+  assert(ack.clinical?.some(x=>x.status==='executed'),'real vitals command is acknowledged');
+  const second=session.clinicalHint();
+  assert(second?.action&&second.action.kind!=='vitals','hint must advance after confirmed action');
+  assert.equal(session.hintCount('doctor'),0,'querying another hint does not bill XP');
+ }finally{session.dispose();}
 });
