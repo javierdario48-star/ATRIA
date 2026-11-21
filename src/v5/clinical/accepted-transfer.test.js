@@ -62,7 +62,7 @@ test('an unsafe discharge changes the doctor record, without changing patient st
    assert.deepEqual(after.progress.receipts,before.progress.receipts);
    assert.equal(after.progress.penalties.length,1);
    assert(after.messages.some(row=>row.name==='Dr. Vega'&&row.role==='mentor'&&
-    /cómo vas a darle el alta/i.test(row.text)));
+    /cómo (?:se te ocurre dar de alta|vas a darle el alta)/i.test(row.text)));
   }finally{f.s.dispose();}
  });
 });
@@ -84,7 +84,7 @@ test('an unsafe discharge is recorded once and the same patient can later earn a
 
   resumed=fixture(f.caseId,roomId,{checkpoint:await f.s.checkpoint(),content:clinicalContent});
   assert.deepEqual((await resumed.s.post(attempt)).clinical[0],unsafe);
-  await resumed.s.post({id:'unsafe-again',text:'/cierre-parcial alta'});
+  await resumed.s.post({id:'unsafe-again',text:'/disposicion alta'});
   assert.equal(resumed.s.read().progress.penalties.length,1);
   assert.equal(resumed.s.read().progress.xp,15);
   await bedsideWorkup(resumed,'diverticulitis aguda');
