@@ -35,7 +35,7 @@ const source="new URL('../content/audio/"+name+"',import.meta.url).href";
 if(!contents.includes(source))throw Error('Missing audio source '+name);
 contents=contents.replace(source,JSON.stringify(data));}return {contents,loader:'js'};});}};
 const result=await esbuild.build({entryPoints:[entry],bundle:true,write:false,format:'iife',platform:'browser',target:'chrome112',minify:true,plugins:[plugin]});
-const js=result.outputFiles.find(x=>x.path.endsWith('.js'))?.text;if(!js)throw Error('Missing game bundle');
+const js=result.outputFiles[0]?.text;if(!js)throw Error('Missing game bundle');
 let html=await fs.readFile('src/v5/web/index.html','utf8');let css=await fs.readFile('src/v5/web/game.css','utf8');
 const style='<link rel="stylesheet" href="./src/v5/web/game.css">';if(!html.includes(style))throw Error('CSS changed');
 html=html.replace(style,'<style>'+css.replaceAll('</style','<\\/style')+'</style>');
