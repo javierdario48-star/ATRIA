@@ -187,7 +187,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    }
    if(intent.kind==='case.close'){
     const rule=clinicalClosureRule(caseData);
-    const discharge=intent.id==='alta'&&!!care;
+    // Any physician can attempt discharge or formal observation at any time.
+    // Reprimand unsafe dispositions; do not end or reset the encounter.
+    // case.observe is active monitoring, not a formal closure request.
+    const dispositionAttempt=!!care&&!intent.partial&&['alta','observacion'].includes(intent.id);
     let assessment;
     if(rule&&!rule.destinations.includes(intent.id))assessment={status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
      receipt:{patientUid,eventId,decision:'REJECTED_NO_INDICATION',reasonCode:'destination-not-indicated',
@@ -196,16 +199,27 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      assessment={status:'rejected',patientUid,eventId,reason:'stabilization-insufficient',
       receipt:{patientUid,eventId,decision:'REJECTED_STABILIZATION_INSUFFICIENT',reasonCode:'stabilization-insufficient',
        message:'Reacción alérgica grave activa: falta un rescate confirmado posterior al desencadenante antes del traslado.'}};
-    if(discharge){
+    if(dispositionAttempt){
      // Both commands use the native assessment. The patient's course and any
      // outstanding care survive a decision that does not resolve the case.
      assessment??=care.execute({eventId,actorId,patientUid,intent:{...intent,partial:false}},clock);
      if(assessment.status!=='rejected'||!['closure-not-ready','destination-not-indicated','stabilization-insufficient'].includes(assessment.reason))
       return assessment;
-     const penalty=progress.penalizeUnsafeDischarge({eventId,actorId,patientUid});
-     const disposition={kind:penalty.kind,eventId,patientUid,actorId,destination:'alta',
-      closed:false,reason:assessment.reason,penaltyEventId:penalty.eventId};
-     const message='¿Cómo vas a darle el alta si el caso todavía no está resuelto? Seguí atendiendo al paciente. '+
+     const penalty=intent.id==='observacion'?
+      progress.penalizeUnsafeObservation({eventId,actorId,patientUid}):
+      progress.penalizeUnsafeDischarge({eventId,actorId,patientUid});
+     const reused=penalty.eventId!==eventId;
+     const destination=intent.id;
+     const disposition={kind:penalty.kind,eventId,patientUid,actorId,destination,
+      closed:false,reason:assessment.reason,penaltyEventId:penalty.eventId,
+      penaltyLoss:reused?0:penalty.loss,penaltyPreviouslyApplied:reused,
+      xpDebt:progress.read().xpDebt};
+     const rebuke=destination==='alta'?
+      '¿Cómo se te ocurre dar de alta a un paciente que todavía requiere evaluación o tratamiento?':
+      '¿Cómo se te ocurre dejar formalmente en observación a un paciente que todavía requiere evaluación o un destino de mayor cuidado?';
+     const message='Dr. Vega: '+rebuke+' La decisión no se ejecutó. '+
+      (reused?'Este error ya tenía una penalización registrada.':'Se descuentan '+penalty.loss+' XP.')+
+      ' El paciente continúa disponible, con toda su historia, para ti o cualquier colega autorizado. '+
       (assessment.receipt?.message||'');
      return {status:'executed',eventId,patientUid,receipt:{eventId,actorId,patientUid,kind:intent.kind,id:intent.id,disposition,message}};
     }
@@ -422,7 +436,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
        item.kind==='study.request'?label+': solicitado; pendiente de resultado.':
         label+': orden recibida; pendiente de enfermería o preparación, todavía no ejecutada.':
        label+': resultado disponible.'));
-     const speaker=item.receipt?.disposition?.kind==='clinical.unsafe-discharge'?{name:'Dr. Vega',role:'mentor'}:
+     const speaker=['clinical.unsafe-discharge','clinical.unsafe-observation'].includes(item.receipt?.disposition?.kind)?{name:'Dr. Vega',role:'mentor'}:
       item.kind==='history.ask'?historySpeaker(item.receipt):
       isExaminationKind(item.kind)?{name:'ATRIA',role:'system'}:{name:'Enfermera',role:'nurse'};
      rows.push({id:'ack:'+message.id+':'+i,...speaker,actorId:message.actorId,text:feedback});
