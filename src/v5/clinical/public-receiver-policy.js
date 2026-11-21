@@ -7,7 +7,17 @@ import {CASE_CLOSURE_RULES_487} from '../../clinical/case-completion-487.js';
 import {gastroClosureRule} from './gastro-expansion-policies.js';
 
 const nonBlank=x=>typeof x==='string'&&x.trim().length>0;
-const defaultService={quirofano:'cirugia',uti:'uti',procedimiento:'gastro',sala:'clinica'};
+// For older case definitions without directed-exam metadata, infer the
+// *domain of assessment* from their published complaint, never patient truth.
+// These are clinical categories, not case IDs or a diagnosis oracle.
+function reportedExamDomain(publicCase){
+ const text=String(publicCase.chief||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ if(/abdom|hipocond|fosa iliaca|flanco|melena|hematemes|vomit|ascitis/.test(text))return ['abdomen:palpation'];
+ if(/disnea|torac|tos|expector|sibilanc|pulmon|respira/.test(text))return ['thorax:auscultation'];
+ if(/convuls|afasia|paresia|paralisis|neurolog|cefalea|conciencia|confusion/.test(text))
+  return ['neurological:neurological'];
+ return [];
+}
 function ruleFor(publicCase){
  return publicCase.clinicalPolicy?.closure||gastroClosureRule(publicCase.id)||
   CASE_CLOSURE_RULES_487[publicCase.id]||null;
@@ -33,7 +43,7 @@ export function publicReceiverIndication({diagnosis,destination,service,catalog}
   if(!rule?.destinations?.includes(destination)||!publicServices(rule,destination).includes(service))continue;
   matches.push({publicDiagnosis:published.dx[0],publicCaseId:published.id,
    specificity:candidate.level,urgentStudyBypass:rule.urgentStudyBypass===true,
-   requiredExams:[...(rule.requiredExams||[])],requiredStudies:[...(rule.requiredStudies||[])],
+   requiredExams:[...new Set([...(rule.requiredExams||[]),...(!rule.requiredExams?.length?reportedExamDomain(published):[])])],requiredStudies:[...(rule.requiredStudies||[])],
    studyAlternatives:(rule.study||[]).map(group=>[...group])});
  }
  return matches.length?{supported:true,reasonCode:null,matches}:
