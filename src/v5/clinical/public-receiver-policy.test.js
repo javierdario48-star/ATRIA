@@ -29,6 +29,10 @@ test('public receiver preparation has two independent gates: declared indication
  assert(noVital.reasons.includes('measured-vitals-required'));
  const shock=preparation({indication:hypothesis,record:{...stable,vitals:{...stable.vitals,sys:78}},destination:'quirofano'});
  assert(shock.reasons.includes('insufficient-transfer-stabilization'));
+ const wrongRegion=preparation({indication:hypothesis,record:{
+  ...stable,performedExams:['general:general','thorax:auscultation']},destination:'quirofano'});
+ assert(wrongRegion.reasons.includes('indispensable-evidence-pending'),
+  'a lung exam alone cannot justify an abdominal operation on a false diagnosis');
  const noExam=preparation({indication:hypothesis,record:{...stable,performedExams:[]},destination:'quirofano'});
  assert(noExam.reasons.includes('physical-examination-required'));
  const pending=preparation({indication:hypothesis,record:{...stable,pendingRescue:true},destination:'quirofano'});
