@@ -39,6 +39,8 @@ for(const destination of ['alta','observacion'])test(
    assert.equal(after.clinical.shift.patients[0].closed,false);
    assert.deepEqual(after.clinical.patient,before,'failed destination must preserve patient state');
    assert.equal(after.dischargePenalties.length,1);
+   assert.equal(after.clinical.progress.xpDebt,15,'author must retain their own XP debt');
+   assert.equal(after.clinical.progress.penalties.length,1);
    assert.equal(after.dischargePenalties[0].actorId,'a');
    assert.equal(after.dischargePenalties[0].loss,15);
    const save=await runtime.checkpoint();
@@ -58,6 +60,10 @@ for(const destination of ['alta','observacion'])test(
    assert.equal(patient.uid,uid);
    assert.equal(patient.diagnosis,before.diagnosis);
    assert.equal(patient.caseEnded,false);
+   assert.equal(runtime.view('b').clinical.progress.xpDebt,0,
+    'successor doctor cannot inherit the previous owner\'s XP debt');
+   assert.deepEqual(runtime.view('b').clinical.progress.penalties,[],
+    'successor cannot read first doctor private penalty receipts');
    assert.equal(runtime.view('b').dischargePenalties.length,0,
     'a colleague cannot read another doctor\'s private penalty');
   }finally{runtime?.dispose();}
