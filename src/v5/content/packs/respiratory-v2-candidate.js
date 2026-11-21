@@ -36,7 +36,7 @@ const policy=candidate.clinicalPolicy;
 policy.complications=[{
  id:'resp01_v2_hypoxemic_setback',
  progressionId:'offset-ramp-v1',rescueId:'confirmed-rescue-v1',
- probability:0.2,minMinute:3,requiredState:{spo2:{lt:97}},
+ probability:0.2,minMinute:1,requiredState:{spo2:{lt:97}},
  offsets:[0.6,12,6,-4,-2,-6],riseMinutes:12,recoveryMinutes:15,
  rescueAllOf:['amoxicillin','oxygen'],
  rationale:'Complicación intercurrente hipoxémica simulada aun con atención inicial adecuada; requiere reevaluar y aportar oxígeno.',
@@ -50,10 +50,9 @@ closure.treatmentByDestination={
  sala:[['amoxicillin','oxygen']]
 };
 closure.consult={sala:['clinica']};
-// Opt-in generic guard: unresolved active deterioration cannot be dismissed
-// simply by temporarily raising SpO2. Existing V1 cases do not enable it.
-closure.dischargeRequiresResolvedComplications=true;
-closure.minimumObservationMinutes=5;
+// Uncomplicated stable patients need no arbitrary mandatory waiting period.
+// The universal disposition safety rule gates active complications and confirmed
+// reassessment; this revision supplies only disease-specific physiology.
 // Hospitalization needs observed deterioration or a manifested complication.
 // Merely having pneumonia is not sufficient to hospitalize a stable patient.
 closure.escalationDestinations=['sala'];
