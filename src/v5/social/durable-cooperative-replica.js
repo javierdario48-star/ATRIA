@@ -4,16 +4,8 @@ export const CLINICAL_REQUEST_TIMEOUT_MS=12000;
 const RECOVERY_CAS_BACKOFF_MS=[100,250,500,1000];
 
 async function waitForRetry(ms,signal){
- // AbortSignal.timeout() uses an unref'ed timer in Node 22. As the only
- // pending work, it lets the process exit with an unresolved recovery promise.
- // Keep the bounded retry alive and always cancel the timer on abort.
- signal.throwIfAborted();
- await new Promise((resolve,reject)=>{
-  const onAbort=()=>{clearTimeout(timer);reject(signal.reason);};
-  const timer=setTimeout(()=>{signal.removeEventListener('abort',onAbort);resolve();},ms);
-  signal.addEventListener('abort',onAbort,{once:true});
-  if(signal.aborted){signal.removeEventListener('abort',onAbort);onAbort();}
- });
+ const pause=AbortSignal.any([signal,AbortSignal.timeout(ms)]);
+ if(!pause.aborted)await new Promise(resolve=>pause.addEventListener('abort',resolve,{once:true}));
  signal.throwIfAborted();
 }
 
