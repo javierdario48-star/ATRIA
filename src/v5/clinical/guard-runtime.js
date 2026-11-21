@@ -259,7 +259,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    if(!record||record.closed)return {roomId,commandId:envelope.id,status:'rejected',
     reason:'patient-not-active',clinical:[{kind:'case.close',status:'rejected',reason:'patient-not-active'}]};
    const session=activeSession(actorId),ack=await session.post({...envelope,targetPatientUid:uid},actorId);
-   if(mode==='competitive'&&ack.clinical?.some(item=>item.receipt?.disposition?.kind==='clinical.unsafe-discharge')&&
+   if(mode==='competitive'&&ack.clinical?.some(item=>
+    ['clinical.unsafe-discharge','clinical.unsafe-observation'].includes(item.receipt?.disposition?.kind))&&
       shift.release(uid,actorId))setFocus(actorId,null);
    await session.flush();awardMembers();return ack;
   },
@@ -315,7 +316,8 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     const p=state.patient;
     if(p.patientDied&&p.deathAttribution?.classification==='treatment-contributed'&&p.deathAttribution.actorIds?.includes(actorId))
      deaths.push({kind:'clinical.death',actorId,patientUid:p.uid,eventId:roomId+':death:'+p.uid});
-    dischargePenalties.push(...state.progress.penalties.filter(p=>p.kind==='clinical.unsafe-discharge'&&p.actorId===actorId));
+    dischargePenalties.push(...state.progress.penalties.filter(p=>
+     ['clinical.unsafe-discharge','clinical.unsafe-observation'].includes(p.kind)&&p.actorId===actorId));
    }
    return clone({clinical,catalog,
     spatial:{nurses:scene.nurses,doctors:[{...scene.player,id:hostId,kind:'doctor'},...scene.others],expert:scene.expert},
