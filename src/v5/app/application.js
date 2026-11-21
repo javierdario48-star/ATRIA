@@ -495,8 +495,21 @@ export async function createApplication({document,window,content,signal}){
        else clinicalUI.showDiagnosis(p);
       }else {patientWheel.show(p);guidePatientWheel();clinicalChecklist.show(p.uid,guardSession?.read());}}
     }
-    if(dialog.open&&dialog.dataset.panel==='reception')
-     ui('modalContent').innerHTML=receptionBoardHTML(value.clinical.shift,content.cases,self);
+    if(dialog.open&&dialog.dataset.panel==='reception'){
+     const host=ui('modalContent'),next=receptionBoardHTML(value.clinical.shift,content.cases,self);
+     // Server snapshots advance the countdown frequently. Replacing the entire
+     // reception DOM each time detaches a real user's button mid-click (notably
+     // with four physicians). Keep the actionable rows stable for clock-only
+     // changes, but still render assignment, ownership and triage changes.
+     const withoutClock=html=>html.replace(/<span data-reception-clock(?:="")?>[^<]*<\/span>/g,
+      '<span data-reception-clock></span>');
+     if(withoutClock(host.innerHTML)!==withoutClock(next))host.innerHTML=next;
+     else{
+      const clock=host.querySelector('[data-reception-clock]'),
+       label=next.match(/<span data-reception-clock>([^<]*)<\/span>/)?.[1];
+      if(clock&&label!==undefined&&clock.textContent!==label)clock.textContent=label;
+     }
+    }
     presentGuardTurn(value.clinical);
     const terminal=outcomeId(value.clinical.patient);
     if(terminal)client.confirm(value.clinical.room.revision,terminal);
