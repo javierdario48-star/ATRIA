@@ -32,6 +32,11 @@ on:
       - 'src/v5/clinical/public-receiver-policy.test.js'
       - 'src/v5/clinical/clinical-policy-registry.js'
       - 'qa/v5/resp01-v2-parity.mjs'
+      - 'qa/v5/resp01-v2-all-modes.mjs'
+      - 'scripts/export-atria-v5-rules.mjs'
+      - 'scripts/export-atria-v5-rules.test.mjs'
+      - 'docs/contracts/ATRIA-V5-RULES-v1.0.0.json'
+      - 'src/v5/core/disposition-receipt.js'
       - '.github/workflows/atria-v5-resp01-v2-candidate.yml'
   workflow_dispatch:
 permissions:
@@ -80,5 +85,42 @@ jobs:
         with:
           name: atria-resp01-v1-v2-native-evidence
           path: qa/v5-resp01-v2-parity/
+          if-no-files-found: warn
+          retention-days: 30
+
+  versioned-mode-rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Certify extractable immutable clinical and four-mode contract
+        run: node --test scripts/export-atria-v5-rules.test.mjs
+      - name: Export recoverable rules artifact without modifying sources
+        run: node scripts/export-atria-v5-rules.mjs --version 1.0.0 --out qa/v5-rule-snapshots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atria-v5-immutable-rules-1.0.0
+          path: qa/v5-rule-snapshots/
+          if-no-files-found: error
+          retention-days: 90
+
+  four-mode-native-bots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exercise V2 in solo, apprentice, cooperative and competitive, nine profiles each
+        run: node qa/v5/resp01-v2-all-modes.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-resp01-v2-36-native-scenarios
+          path: qa/v5-resp01-v2-modes/
           if-no-files-found: warn
           retention-days: 30
