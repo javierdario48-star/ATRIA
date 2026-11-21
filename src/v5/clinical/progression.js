@@ -7,8 +7,9 @@ export function nativeCaseXP({score,mode,autonomy=100,practiceMult=1,shiftMult=1
 export function createProgressionLedger(saved={}){
  const receipts=new Map(),penalties=new Map();
  const penaltyKey=({kind,patientUid,actorId})=>kind==='clinical.death'?patientUid:JSON.stringify([kind,patientUid,actorId]);
- const balance=()=>Math.max(0,[...receipts.values()].reduce((sum,r)=>sum+r.xp,0)-
-  [...penalties.values()].reduce((sum,p)=>sum+p.loss,0));
+ const grossXP=()=>[...receipts.values()].reduce((sum,r)=>sum+r.xp,0);
+ const penaltyXP=()=>[...penalties.values()].reduce((sum,p)=>sum+p.loss,0);
+ const balance=()=>Math.max(0,grossXP()-penaltyXP());
  function validate(r){
   if(r?.kind!=='clinical.closure'||typeof r.eventId!=='string'||!r.eventId||typeof r.patientUid!=='string'||!r.patientUid||
    typeof r.actorId!=='string'||!r.actorId||!Number.isSafeInteger(r.xp)||r.xp<0||r.closed!==true)throw Error('invalid closure XP receipt');
@@ -17,8 +18,8 @@ export function createProgressionLedger(saved={}){
  for(const previous of saved.penalties||[]){
   const p={...previous,kind:previous.kind??'clinical.death'};
   if(typeof p.patientUid!=='string'||!p.patientUid||typeof p.eventId!=='string'||
-   !['clinical.death','clinical.unsafe-discharge'].includes(p.kind)||
-   p.kind==='clinical.unsafe-discharge'&&(typeof p.actorId!=='string'||!p.actorId)||
+   !['clinical.death','clinical.unsafe-discharge','clinical.unsafe-observation'].includes(p.kind)||
+   ['clinical.unsafe-discharge','clinical.unsafe-observation'].includes(p.kind)&&(typeof p.actorId!=='string'||!p.actorId)||
    !Number.isSafeInteger(p.loss)||p.loss<0||p.loss>15||penalties.has(penaltyKey(p)))
    throw Error('invalid or duplicate clinical penalty');
   penalties.set(penaltyKey(p),structuredClone(p));
@@ -29,7 +30,10 @@ export function createProgressionLedger(saved={}){
   const receipt={kind,patientUid,eventId,actorId},key=penaltyKey(receipt);
   if(penalties.has(key))return structuredClone(penalties.get(key));
   if(receipts.has(patientUid))throw Error('cannot penalize a successfully closed patient');
-  receipt.loss=Math.min(15,balance());
+  // A premature discharge/observation incurs a durable penalty even when no
+  // XP has been earned. Future awards service that debt; XP cannot be negative.
+  // Historical death penalties remain capped at available XP.
+  receipt.loss=kind==='clinical.death'?Math.min(15,balance()):15;
   penalties.set(key,receipt);return structuredClone(receipt);
  }
  return Object.freeze({
@@ -39,9 +43,10 @@ export function createProgressionLedger(saved={}){
   },
   penalizeDeath:binding=>penalize('clinical.death',binding),
   penalizeUnsafeDischarge:binding=>penalize('clinical.unsafe-discharge',binding),
+  penalizeUnsafeObservation:binding=>penalize('clinical.unsafe-observation',binding),
   read(){const list=[...receipts.values()],penaltyList=[...penalties.values()];
    const xp=balance();
-   return structuredClone({xp,level:1+Math.floor(xp/200),receipts:list,penalties:penaltyList});
+   return structuredClone({xp,xpDebt:Math.max(0,penaltyXP()-grossXP()),level:1+Math.floor(xp/200),receipts:list,penalties:penaltyList});
   }
  });
 }
