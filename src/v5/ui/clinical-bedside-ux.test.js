@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {clinicalChecklistHTML} from './clinical-checklist.js';
-import {closureDecisionHTML} from './clinical-closure-panel.js';
+import {closureDecisionHTML,unsafeDispositionVegaHTML} from './clinical-closure-panel.js';
 
 const state=()=>({patient:{
  uid:'P1',diagnosis:'',intentHistory:[],examFindings:{},examDone:false,
@@ -60,4 +60,27 @@ test('an unsafe discharge shows the confirmed debit of the current physician and
  s.dischargeRewards[1]={...s.dischargeRewards[1],loss:7,creditStatus:'credited'};
  assert.match(closureDecisionHTML(s),/−7 XP/);
  assert.match(closureDecisionHTML(s),/data-destination="alta"/);
+});
+
+test('Vega renders a modal rebuke for unsafe formal observation without concealing accumulated XP debts or exposing another doctor',()=>{
+ const s=state();s.hintBinding={actorId:'A'};
+ s.dischargeRewards=[
+  {kind:'clinical.unsafe-observation',patientUid:'P1',actorId:'A',loss:15,creditStatus:'credited'},
+  {kind:'clinical.unsafe-discharge',patientUid:'P1',actorId:'A',loss:15,creditStatus:'credited'},
+  {kind:'clinical.unsafe-discharge',patientUid:'P1',actorId:'B',loss:15,creditStatus:'credited'}
+ ];
+ const html=closureDecisionHTML(s);
+ assert.match(html,/Decisiones inseguras registradas/);
+ assert.match(html,/−30 XP/);
+ assert.doesNotMatch(html,/−45 XP/);
+ assert.match(html,/data-destination="observacion"/,'player may still attempt an observation');
+ const receipt={message:'Dr. Vega: ¿Cómo se te ocurre dejar en observación? <script>evil</script>',
+  disposition:{kind:'clinical.unsafe-observation',destination:'observacion',closed:false,penaltyLoss:15,xpDebt:15}};
+ const card=unsafeDispositionVegaHTML(receipt);
+ assert.match(card,/Dr. Vega — Observación insegura/);
+ assert.match(card,/−15 XP/);
+ assert.match(card,/El caso no terminó/);
+ assert.match(card,/data-action="close"/);
+ assert(!card.includes('<script>'),'patient-facing Dr Vega card must escape server text');
+ assert.equal(unsafeDispositionVegaHTML({}), '');
 });
