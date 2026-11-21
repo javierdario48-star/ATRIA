@@ -1,0 +1,38 @@
+name: ATRIA 5 Response Latency and Nurse Silence Audit
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - '.github/workflows/atria-v5-responsiveness.yml'
+      - 'qa/v5/responsiveness-browser.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atria-v5-responsiveness-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  vega-nurse-local-timing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Playwright driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-respond-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Build canonical V5 game for the test server
+        run: npm run build:v5
+      - name: Play the game and measure 6 Vega hints, 24 nurse replies and 8 Vega chat responses
+        env:
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-respond-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node qa/v5/responsiveness-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-responsiveness-evidence
+          path: qa/v5-responsiveness-results/
+          if-no-files-found: error
+          retention-days: 30
