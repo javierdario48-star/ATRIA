@@ -1,6 +1,6 @@
 # ATRIA 5.0 — Plan técnico de ejecución
 
-Base auditada: `162d0cf24a936e302e2a3efadcc168e1459d86d5`. Corte de solicitudes: 20/11/2026, Buenos Aires. [Inventario y aceptación por ID](ATRIA-5-REMAINING-TASKS.md) · [Matriz](ATRIA-5-REQUIREMENTS-TRACEABILITY.md) · [Límites históricos](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md).
+Base auditada: `162d0cf24a936e302e2a3efadcc168e1459d86d5`. Corrección publicada: `7cde6fa905e81ed3d548cf256f1b5201a281ec94`; suite local final 3.167/3.167. Corte de solicitudes: 20/11/2026, Buenos Aires. [Inventario y aceptación por ID](ATRIA-5-REMAINING-TASKS.md) · [Matriz](ATRIA-5-REQUIREMENTS-TRACEABILITY.md) · [Límites históricos](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md).
 
 ## Prioridad y ejecución
 
@@ -23,7 +23,7 @@ Los esfuerzos corresponden al bloque completo: no sumarlos por cada fila. Las en
 
 **Funciones y rutas:** Fixtures de personalidad, runDurableMortalityScenario/snapshot, runTransferBot y prueba de nutrición.
 
-**Modificación propuesta:** Tomar el paciente antes de leer datos privados, comprobando antes su ausencia. Separar elegibilidad de calidad en la prueba de ayuno/comida. Revisar el bot de traslados según rechazo técnico, decisión insegura ejecutada o destino válido. Reproducir la cancelación de Node 22 antes de alterar reintentos.
+**Modificación propuesta:** Las lecturas privadas y la prueba de ayuno/comida ya se corrigieron en 7cde6fa, sin alterar producción. Revisar el bot de traslados según rechazo técnico, decisión insegura ejecutada o destino válido. Reproducir la cancelación de Node 22 antes de alterar reintentos.
 
 **Pruebas dirigidas:** `src/v5/clinical/mortality-regression.test.js`, `src/v5/clinical/native-death-room.test.js`, `qa/tests/patient-personality-longitudinal.test.mjs`, `src/v5/clinical/nursing-nutrition.test.js`, `qa/tests/clinical-case-certification.test.mjs`.
 
@@ -33,7 +33,7 @@ Los esfuerzos corresponden al bloque completo: no sumarlos por cada fila. Las en
 
 **Prioridad:** P0/P1. **Entorno:** MIXTA. **Esfuerzo:** 3–6 días + aceptación física. **Riesgo:** alto.
 
-**IDs:** VEGA-AUTO-01, LAT-01, MP-01, REC-01, SEL-00, DX-01, NUR-03, COMP-01, SOCIAL-02, CHAT-01, TURN-01, TURN-02, WORLD-02, QA-02, AUTH-02.
+**IDs:** PERF-01, VEGA-AUTO-01, LAT-01, MP-01, REC-01, SEL-00, DX-01, NUR-03, COMP-01, SOCIAL-02, CHAT-01, TURN-01, TURN-02, WORLD-02, QA-02, AUTH-02.
 
 **Causa e impacto:** Demoras, recuperación y participación dependen de cola, CAS, plazos y foco confirmado.
 
@@ -48,6 +48,8 @@ Los esfuerzos corresponden al bloque completo: no sumarlos por cada fila. Las en
 **Pruebas dirigidas:** `src/v5/clinical/clinical-hint-ledger.test.js`, `src/v5/server/clinical-hints-durable.test.js`, `src/v5/social/durable-cooperative-replica.test.js`, `qa/v5/shared-guard-auth-browser.mjs`, `src/v5/server/supabase-social-room-persistence.test.js`, `src/v5/clinical/cooperative-care.test.js`, `qa/v5/shared-guard-preview.mjs`, `src/v5/ui/guard-recovery.test.js`, `qa/v5/guard-recovery-browser.mjs`, `src/v5/app/patient-selection.test.js`, `src/v5/ui/diagnostic-impression.test.js`, `qa/v5/diagnosis-browser.mjs`, `src/v5/engine/nurse-dispatcher.test.js`, `src/v5/server/competitive-durable.test.js`, `qa/tests/clinical-case-certification.test.mjs`, `src/v5/social/cooperative-link.test.js`, `src/v5/clinical/guard-communication.test.js`, `src/v5/ui/guard-communication-view.test.js`, `src/v5/clinical/guard-day-clock.test.js`, `src/v5/clinical/shift-flow-chaos.test.js`, `qa/v5/full-guard-24h.mjs`, `src/v5/clinical/guard-turn-continuity.test.js`, `src/social/remote-motion-continuity.test.js`, `src/social/remote-generation-order.test.js`, `qa/v5/competitive-browser.mjs`, `src/v5/server/durable-guard-authority.test.js`, `src/v5/server/account-gateway.test.js`.
 
 **Aceptación:** Menor latencia bajo la misma carga, sin perder progreso ni duplicar dosis; decisiones de recuperación independientes y cambios vinculados al UID correcto. Añadir la condición específica de cada ID y declarar el entorno realmente evaluado.
+
+**Condición adicional ISSUE-01 / PERF-01:** antes de cambiar transporte, medir lobby/sala/guardia/reconexión con 1, 2 y 4 clientes: requests por endpoint/minuto, p50/p95, CPU si existe, errores y duplicados. Separar espacio, señalización WebRTC y clínica durable. No atribuir 4h13m de CPU a ATRIA sin datos. Proponer solo el cambio mínimo con flag OFF, rollback exacto y misma batería antes/después. Aceptar menor consumo sin peor latencia/fluidez, con progreso/Enfermería/Vega/XP/reconexión intactos; después comparar costos. El ticket llama P0 a estos prerrequisitos de optimización, sin evidencia de P0 jugable actual. No migrar ni desplegar en producción por esta auditoría. PERF-01 comparte instrumentación con LAT-01; no duplica su implementación. Estimación adicional: 2–4 días; Android físico y CPU del proveedor dependen de acceso real.
 
 ## B2 · Evidencia clínica, estudios y cierres
 
@@ -200,7 +202,7 @@ Los esfuerzos corresponden al bloque completo: no sumarlos por cada fila. Las en
 
 ## Primera tarea ejecutable y comprobaciones
 
-Conservar los fallos de base y ejecutar la reproducción dirigida:
+Los tres fixtures/harness siguientes ya se corrigieron en 7cde6fa (26/26 dirigidas; suite completa 3.167/3.167). No repetirlos salvo cambios nuevos o diagnóstico de Node 22:
 
 ```bash
 node --test qa/tests/patient-personality-longitudinal.test.mjs src/v5/clinical/mortality-regression.test.js src/v5/clinical/nursing-nutrition.test.js

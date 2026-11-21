@@ -1,30 +1,32 @@
 # ATRIA 5.0 — Inventario maestro de requisitos
 
-## Estado vigente de auditoría ·20 de noviembrede2026
+## Estado vigente · 20 de noviembre de 2026
 
-Base `162d0cf24a936e302e2a3efadcc168e1459d86d5`. [Auditoría y límites históricos](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md) · [Matriz de fuentes y1–60](ATRIA-5-REQUIREMENTS-TRACEABILITY.md) · [Plan por causas raíz](ATRIA-5-EXECUTION-PLAN.md). No se sustituyen ni eliminan20IDshistóricos ni los60númerosoriginales. Eltextoindividual1–60sigue no recuperable; asignarles títulos desde rangos sería inventarlo.
+Base auditada `162d0cf24a936e302e2a3efadcc168e1459d86d5`. Corrección de certificación publicada en `7cde6fa905e81ed3d548cf256f1b5201a281ec94`; **3.167/3.167 pruebas locales aprobadas**. [Auditoría histórica y sus límites](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md) · [Matriz de trazabilidad y referencias 1–60](ATRIA-5-REQUIREMENTS-TRACEABILITY.md) · [Plan por causas raíz](ATRIA-5-EXECUTION-PLAN.md).
 
-Los estados son los ocho de la misión. «COMPLETADO Y VERIFICADO» se aplica al contrato local evaluado, sin aceptación físicaimplícita. «IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN» conserva los reportes repetidos delusuario aunque hayaNode/CI/browser. «IMPLEMENTADO CON DEFECTOS» puede señalar un fallo de certificaciónpreciso, sin afirmarpor ello defecto clínico deljugador. «REGRESIÓN» exige evidenciaantes/despuésdelmismoflujo; no presentar una regresión histórica ya corregida como defecto actual.
+Se conservan los 20 IDs de familias anteriores y las 60 referencias numéricas. El texto individual original 1–60 no se recuperó. Hay 88 entradas de seguimiento con condiciones, cambios y aceptación; no son 88 citas originales independientes. Las regresiones CLIN se resuelven con sus familias relacionadas y no generan parches duplicados.
+
+«COMPLETADO Y VERIFICADO» se limita al contrato y entorno evaluados. «IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN» conserva reportes repetidos aunque existan tests Node/CI. «IMPLEMENTADO CON DEFECTOS» identifica un fallo concreto, incluida certificación, sin atribuirlo automáticamente al motor clínico. «REGRESIÓN» exige evidencia antes/después del mismo flujo. No se declara aceptación física por emulación.
 
 | Estado | Entradas |
 | --- | --- |
 | COMPLETADO Y VERIFICADO | 9 |
 | PARCIALMENTE IMPLEMENTADO | 17 |
-| IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | 48 |
-| IMPLEMENTADO CON DEFECTOS | 5 |
-| NO IMPLEMENTADO | 2 |
+| IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | 51 |
+| NO IMPLEMENTADO | 3 |
 | REEMPLAZADO | 2 |
 | NO VERIFICABLE | 4 |
+| IMPLEMENTADO CON DEFECTOS | 2 |
 
 ## Registro maestro único vigente
 
-| ID | Subsistema /refsoriginales | Estado | Criterio solicitado | Pendiente /bloque /entorno |
+| ID | Subsistema / referencias originales | Estado | Comportamiento solicitado | Pendiente / bloque / entorno |
 | --- | --- | --- | --- | --- |
 | ARCH-01 | Arquitectura y motor clínico | COMPLETADO Y VERIFICADO | Un único motor y autoridad clínica; importar un caso con cinco capas reales, sin respuestas o efectos paralelos. | Conservar estas garantías en cada importación; no equivale a fidelidad ilimitada de todos los mecanismos. B6 / CHATGPT NORMAL |
 | LAB-01 | Estudios y resultados · 1–3, 5–6, 9 | PARCIALMENTE IMPLEMENTADO | Resultados coherentes por paciente, técnica, muestra y minuto: TC/angio-TC, gasometrías, hemograma/leucocitos/PCR y troponinas I/T/seriadas. | Inventariar controles aún sin modelo (radiografía RESP-07, PEF, lactato y protocolos cualitativos); medir reportes originales del usuario con IDs. B2 / MIXTA |
 | LAB-02 | Voz, teclado y autocompletado · 4, 7 | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Encontrar y ordenar VEDB/VCC/videocolonoscopia/colonoscopia y estudios como ecografía abdominal mediante los mismos alias canónicos. | Validar teclado Android físico y órdenes de estudios reportadas como ausentes. B5 / MIXTA |
 | ANAM-01 | Anamnesis y diálogo · 10–13, 16–17 | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Responder a lo preguntado en primera persona: saludos, antecedentes previos distintos de cuadro actual, medicaciones, ALiCIA y repreguntas coherentes. | Probar preguntas exactas del usuario en móvil, ampliar antecedentes documentados y evaluar naturalidad sin prefijos repetidos. B3 / MIXTA |
-| NUR-01 | Enfermería · 18–19, 21–24 | IMPLEMENTADO CON DEFECTOS | Enfermería contesta y ejecuta órdenes naturales/combinadas; alergias es consulta, ayuno es conducta; pregunta alimentación una vez y conserva decisiones. | Resolver contrato de prueba sin volver a bloquear destino por NPO; reproducir silencio con frase, UID, cola y recibo en teléfono. B2 / MIXTA |
+| NUR-01 | Enfermería · 18–19, 21–24 | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Enfermería contesta y ejecuta órdenes naturales/combinadas; alergias es consulta, ayuno es conducta; pregunta alimentación una vez y conserva decisiones. | Reproducir silencio con frase, UID, cola y recibo en teléfono; validar alimentación, alergias, oxígeno y seguimiento en Android físico. B2 / MIXTA |
 | CLOSE-01 | Diagnóstico y evaluación · 25–32 | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Cierre al alta o recepción por servicio con alternativas válidas; anamnesis/seguimiento prescindibles reducen calidad y no bloquean; libertad de decisiones y paciente recuperable. | Aceptar rutas alternativas y condiciones reales repetidas del usuario; actualizar certificación de disposición sin debilitar seguridad física. B2 / MIXTA |
 | VEGA-01 | Dr. Vega · 8, 33–34, 53 | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | «¿Qué hago ahora? −5% XP» en paciente activo da una sola acción prioritaria con nombre de control/comando y destino real. | Medir latencia física y escenarios con actualización concurrente; conservar acciones alternativas. B3 / MIXTA |
 | DIALOG-AUTO-01 | Anamnesis y diálogo | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Una pregunta produce respuesta automática contextual; no exigir segundo envío o botón adicional. | Probar primer contacto y pregunta normal en preview y teléfono con cronómetro. B3 / MIXTA |
@@ -47,7 +49,7 @@ Los estados son los ocho de la misión. «COMPLETADO Y VERIFICADO» se aplica al
 | PHYS-02 | Fisiología y evolución temporal | PARCIALMENTE IMPLEMENTADO | Bolus/infusión tienen inicio, exposición, descenso/retirada y contexto renal/hepático; no offsets terapéuticos permanentes universales. | Matriz por mecanismo/fármaco (ejecutable/efecto/retirada) y clearance específico cuando corresponda, sin trasladar constantes sin fuente. B6 / CHATGPT NORMAL |
 | PHYS-03 | Fisiología y evolución temporal | COMPLETADO Y VERIFICADO | Un dueño por efecto; antibiótico no mejora presión inmediatamente, heparina no reperfunde, oxígeno no oscila por feedback circular. | Conservar prueba de no doble efecto en cambios de terapia. B6 / CHATGPT NORMAL |
 | PHYS-04 | Fisiología y evolución temporal | COMPLETADO Y VERIFICADO | Protección contra muerte prematura por reloj real activo, manteniendo evolución y administraciones reales. | Prueba física de tiempo de atención pertenece a ANDROID-01; no reintroducir vitales artificiales. B6 / CHATGPT NORMAL |
-| PHYS-05 | Fisiología y evolución temporal | IMPLEMENTADO CON DEFECTOS | Deterioro, rescate y muerte plausibles; no resurrección tras recargar y penalización solo por daño causal atribuible. | Reparar harness bajo privacidad actual y repetir escenarios afectados; conservar causalidad. B0 / CHATGPT NORMAL |
+| PHYS-05 | Fisiología y evolución temporal | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Deterioro, rescate y muerte plausibles; no resurrección tras recargar y penalización solo por daño causal atribuible. | Mantener regresión del harness y aceptar escenarios adversos físicos cuando corresponda; no atribuir aceptación del teléfono a esta prueba Node. B0 / MIXTA |
 | PHYS-06 | Fisiología y evolución temporal | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Monitor, color/estado y síntomas cambian con fisiología observada; ECG sigue frecuencia/ritmo explícito, sin fingir medición diagnóstica. | Aceptar trazado/color en pantalla real; ampliar solo ritmos autorados necesarios. B5 / MIXTA |
 | NUR-02 | Enfermería | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Enfermera del box correcto y cola por paciente: vías plural=dos, monitor+Ringer+O2+antibióticos completos; paciente cambiado no redirige tarea. | Aceptar combinadas en dos camas y teléfonos; distinguir retraso físico de silencio/timeout. B2 / MIXTA |
 | NUR-03 | Enfermería | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Recuperar Enfermería tras recarga, bloquear/desbloquear trayectos y reintentos sin atascar cola ni duplicar dosis. | Android con background/reload mientras hay tareas. B1 / MIXTA |
@@ -83,1182 +85,2196 @@ Los estados son los ocho de la misión. «COMPLETADO Y VERIFICADO» se aplica al
 | VOICE-02 | Voz, teclado y autocompletado | PARCIALMENTE IMPLEMENTADO | Voz entre jugadores/PTT en lobby y4 modos donde corresponda; WebRTC/TURN/Android físico y separación de dictado. | Migrar sesión de voz existente y probar audio bidireccional físico; infraestructura TURN no verificada. B5 / MIXTA |
 | KEYBOARD-01 | Voz, teclado y autocompletado | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Teclado propio compacto aprobado,4 filas, edición/foco/IME y envío; no tapar input/historial ni desplazar/teletransportar juego. | Gboard real en campos nativos, rotación, caret, borrar, Enter y botón enviar. B5 / MIXTA |
 | KEYBOARD-OLD | Voz, teclado y autocompletado | REEMPLAZADO | Teclado nativo como única entrada del juego. | Ninguna tarea; campos nativos deben seguir siendo accesibles. B5 / MIXTA |
-| ANDROID-01 | Android y rendimiento | NO VERIFICABLE | Aceptar en teléfono físico teclado, monitor/Box2B, audio, pistas, recuperación y multijugador bajo red real. | Dispositivo/cuentas concretas. Work tampoco sustituye hardware ausente. B5 / MIXTA |
-| ANDROID-02 | Android y rendimiento | NO VERIFICABLE | Comprobar WebKit/iPhone y restricciones de audio/viewport cuando se declara soporte móvil. | RunnerWebKit/dispositivo y navegador compatibles. B5 / MIXTA |
+| ANDROID-01 | Android y rendimiento | NO VERIFICABLE | Aceptar en teléfono físico teclado, monitor/Box2B, audio, pistas, recuperación y multijugador bajo red real. | Dispositivo/cuentas concretas. Work tampoco sustituye hardware ausente. B5 / BLOQUEADA |
+| ANDROID-02 | Android y rendimiento | NO VERIFICABLE | Comprobar WebKit/iPhone y restricciones de audio/viewport cuando se declara soporte móvil. | RunnerWebKit/dispositivo y navegador compatibles. B5 / BLOQUEADA |
 | BOTS-01 | Bots médicos | COMPLETADO Y VERIFICADO | Bots experto/competente/principiante/lento/peligroso y omisiones con velocidades/conocimiento distintos; usar motor y comandos reales en4 modos. | Mantener perfiles adversos y evidencia causal; no usar texto de bot como prueba de efecto. B0 / CHATGPT NORMAL |
 | BOTS-02 | Bots médicos | NO VERIFICABLE | Intentar TestSprite y preparar entorno para auditoría de roles/modos mientras Work termina. | No obliga a instalar servicio ni pagar. Recuperar resultado del intento; bots existentes cumplen pruebas técnicas de otro origen. B8 / BLOQUEADA |
-| CASE-01 | Importación de casos | PARCIALMENTE IMPLEMENTADO | Importar desde libro/contenido conservando procedencia; al menos un caso por tema/capítulo solicitado, sin generar patologías fuera del motor. | Comparar índice real del libro con catálogo antes de prometer cobertura total; contrato5capas obligatorio. B6 / CHATGPT NORMAL |
+| CASE-01 | Importación de casos | PARCIALMENTE IMPLEMENTADO | Importar desde libro/contenido conservando procedencia; al menos un caso por tema/capítulo solicitado, sin generar patologías fuera del motor. | Comparar índice real del libro con catálogo antes de prometer cobertura total; contrato5capas obligatorio. B6 / BLOQUEADA |
 | CASE-02 | Importación de casos | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Completar sistemas primero; después expansión autorizada a55 casos (10respiratorios/10cardio/10neuro nuevos), usando reglas comunes. | Mantener certificación, no tomar antiguos planes de13/25 casos como HEAD actual. B6 / CHATGPT NORMAL |
 | VAR-01 | Variabilidad clínica | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Identidad/edad/comorbilidades/severidad/alergias/evolución con semillas reproducibles, sin contradicciones fijas y persistiendo por paciente. | Validar plausibilidad de nuevas variantes y banco de antecedentes, sin confundir volumen combinatorio con aceptación clínica. B6 / CHATGPT NORMAL |
-| VAR-02 | Variabilidad clínica | IMPLEMENTADO CON DEFECTOS | Personalidad multidimensional y relación por médico heredadas automáticamente; conversación específica se combina sin cambiar hechos. | Corregir fixture y certificar privacidad+misma personalidad después de tomar, recuperar y replay. B0 / CHATGPT NORMAL |
+| VAR-02 | Variabilidad clínica | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Personalidad multidimensional y relación por médico heredadas automáticamente; conversación específica se combina sin cambiar hechos. | Aceptar naturalidad, contexto por médico y recuperación de personalidad en dispositivo físico; mantener la restricción de datos antes de tomar la cama. B0 / MIXTA |
 | VAR-03 | Variabilidad clínica | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Complicaciones, prevención y rescate causales; alergia≠intolerancia, no preguntar no cambia susceptibilidad. | Aceptar trayectorias adversas de variantes nuevas y distinguir no activada/tratada/rescatada. B6 / CHATGPT NORMAL |
-| QA-01 | Certificación y pruebas | IMPLEMENTADO CON DEFECTOS | Pruebas pertinentes ejecutadas y CI por SHA; no llamar terminado al código publicado o a test no corrido. | Resolver fallos reales de harness/regresión y no reportar verde global por Vercelsuccess o matriz sola. B0 / CHATGPT NORMAL |
+| QA-01 | Certificación y pruebas | IMPLEMENTADO CON DEFECTOS | Pruebas pertinentes ejecutadas y CI por SHA; no llamar terminado al código publicado o a test no corrido. | Reproducir cancelaciones Node 22, revisar certificación de traslados y obtener conclusión de CI del código publicado. El perfilado de red no debe ocultar fallos deterministas. B0 / CHATGPT NORMAL |
 | QA-02 | Certificación y pruebas | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Aceptar preview del mismoSHA,2–4 cuentas, recuperación, cuatro modos y controles; conservar fallos/reintentos sin repetir campañas costosas. | Aceptación dirigida solo para contrato modificado ySHAactual; cuota429de tercera cuenta histórica no prueba fallo de clínica. B1 / MIXTA |
 | QA-03 | Certificación y pruebas | IMPLEMENTADO CON DEFECTOS | Certificar traslados correctos/erróneos, preparación, diagnóstico omitido/equivocado, rescate y cierre con libertad clínica vigente. | Separar rechazo técnico, decisión insegura ejecutada y cierre válido; investigar efectos reales antes de ajustar expectativas. B0 / CHATGPT NORMAL |
-| DEPLOY-01 | Despliegue y persistencia | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Gratis para usuarios, sin Replit; publicar solo experimental y no modificar main/V4/estables ni sobrescribir trabajo concurrente. | Mantener control de HEAD/fast-forward y costos de infraestructura explícitos si limitan servicio. B8 / BLOQUEADA |
+| DEPLOY-01 | Despliegue y persistencia | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Gratis para usuarios, sin Replit; publicar solo experimental y no modificar main/V4/estables ni sobrescribir trabajo concurrente. | Resolver la disponibilidad de un preview utilizable y aceptar su entrada real cuando el servicio permita desplegar; medir consumo antes de comparar planes. No migrar proveedor ni contratar servicios por esta auditoría. B8 / CHATGPT NORMAL |
 | AUTH-01 | Despliegue y persistencia | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Bienvenida con ilustración original sin globosDr/Darío; nombre único normalizado/reserva atómica, personalización y contraseña≥12; volver desde otro dispositivo. | Aceptar ilustración/creación/volver/migración de cuenta en móvil y otro dispositivo. B4 / MIXTA |
 | AUTH-02 | Despliegue y persistencia | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Persistencia multiinstanciaCAS/RLS, controlador único por cuenta, transferencia explícita de dispositivo, no perder amigos/XP históricos. | Aceptar sesiones del usuario, caducidad y nueva instancia con red móvil. B1 / MIXTA |
 | SCALE-01 | Lobby y presencia | PARCIALMENTE IMPLEMENTADO | Escalar lobby con vecindad/interés y datos privados, sin difundir mapa/historias a todos; guardar hasta4por guardia. | Carga medida y presupuesto por sala antes de prometer lobby masivo/TURN/WAN. B7 / MIXTA |
-| CONT-01 | Continuidad y recuperación histórica | COMPLETADO Y VERIFICADO | Checkpoints pequeños, informes/SHA/pruebas reales, continuar autónomamente sin rehacer; recuperar Work publicado aunque no haya respuesta final. | Mantener práctica en cada sesión; recursos locales no son continuidad durable hasta publicar. B8 / BLOQUEADA |
+| CONT-01 | Continuidad y recuperación histórica | COMPLETADO Y VERIFICADO | Checkpoints pequeños, informes/SHA/pruebas reales, continuar autónomamente sin rehacer; recuperar Work publicado aunque no haya respuesta final. | Mantener práctica en cada sesión; recursos locales no son continuidad durable hasta publicar. B8 / CHATGPT NORMAL |
 | CONT-02 | Continuidad y recuperación histórica | NO VERIFICABLE | Recuperar listado literal1–60 y todosloschats/ejecuciones del período, conservar correcciones sin inventarlas. | Requiere fuentes conversacionales completas accesibles; no bloquear auditoría/repo ni fabricar60títulos. B8 / BLOQUEADA |
-| CONT-03 | Continuidad y recuperación histórica | PARCIALMENTE IMPLEMENTADO | Recuperar modificaciones locales de Work y distinguir equivalencia ya publicada de código huérfano. | Comparar porcomportamiento/hunk, preservar solo auxiliares útiles y no aplicar parches antiguos sobre código actual. B8 / BLOQUEADA |
+| CONT-03 | Continuidad y recuperación histórica | PARCIALMENTE IMPLEMENTADO | Recuperar modificaciones locales de Work y distinguir equivalencia ya publicada de código huérfano. | Comparar porcomportamiento/hunk, preservar solo auxiliares útiles y no aplicar parches antiguos sobre código actual. B8 / CHATGPT NORMAL |
 | CLIN-HEPAT-01 | Estudios y resultados | COMPLETADO Y VERIFICADO | HEPAT-001: una adquisición con INR y glucemia satisface ambas evidencias; no repetir por alias ni por pista. | Conservar como regresión específica de LAB-01 y VEGA-COHERENCE-01; no es otro parche independiente. B2 / MIXTA |
 | CLIN-CARD08-01 | Diagnóstico y evaluación | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | CARD-08: disección Stanford A corresponde a Cirugía cardiovascular, no exigir betabloqueo contraindicado por hipotensión para derivar. | Aceptar variante hipotensa/deteriorada y alternativa ETE, sin debilitar estabilización que sí corresponda. B2 / MIXTA |
 | CLIN-VARIX-01 | Diagnóstico y evaluación | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | VARIX-001: estabilización y derivación endoscópica/UTI alcanzables; evitar reevaluación manual oculta y XP duplicada. | Repetir secuencia exacta del reporte en teléfono solo si hay reproducción; nunca afirmar ligadura realizada. B2 / MIXTA |
 | CLIN-HDA-01 | Diagnóstico y evaluación | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | HDA-001 y hemorragia variceal no deben confundirse; soporte, terapia y destino conservan reglas propias. | Proteger por regresión etología/hipótesis/terapia/recepción con las fuentes del caso, sin copiar tratamientos de VARIX a toda HDA. B2 / MIXTA |
 | NUR-04 | Enfermería | PARCIALMENTE IMPLEMENTADO | Enfermería automatiza reevaluaciones rutinarias; el médico decide conductas y no debe descubrir comandos ocultos para poder cerrar. | Distinguir medición rutinaria, reevaluación clínica deliberada y condición indispensable por caso; ligar la primera a Enfermería/recibo sin fabricar examen médico. B2 / MIXTA |
+| PERF-01 | Android y rendimiento | NO IMPLEMENTADO | Medir tráfico y CPU antes de optimizar: lobby/sala/guardia/reconexión con 1, 2 y 4 clientes; distinguir movimiento, señalización WebRTC y clínica durable; cambio mínimo con flag OFF, rollback y comparación reproducible. | Medir requests por endpoint/minuto, p50/p95, CPU si está disponible, errores y duplicados; validar 2/4 clientes, desconexión, progreso, chat, Enfermería, Vega, XP y recuperación en cuatro modos. Comparar costo después de aceptar métricas; no atribuir 4h13m de CPU exclusivamente a ATRIA. B1 / MIXTA |
 
 ## Fichas de verificación y aceptación
 
-Los archivos y pruebas se contrastaron con el árbol real. Que un archivo esté listado no significa que su prueba haya pasado: la evidencia detalla fallos y alcance. Todas las pruebasV5 incluidas en la ejecución local terminaron con3164pasesy3fallos; los scripts de navegador aquí citados usan evidencia histórica/CIoquedan como aceptación requerida. Pruebas legacy fuera deV5 no se vuelven a declarar ejecutadas por estar versionadas.
+Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos por cada fila de la misma causa raíz. Las pruebas incluidas en `npm run test:v5` se ejecutaron en el código 7cde6fa y pasaron; los scripts de campaña externos se distinguen de ese resultado.
 
 ### ARCH-01 · Arquitectura y motor clínico
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;DOC-CONTRATO;MIG-MANUAL · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** COMPLETADO Y VERIFICADO.
-- **Comportamiento:** Un único motor y autoridad clínica; importar un caso con cinco capas reales, sin respuestas o efectos paralelos.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/core/room-authority.js`, `src/v5/adapters/native-clinical-port.js`, `src/v5/content/compile-clinical-case-pack.js`, `scripts/import-clinical-case-pack.mjs`.
-- **Pruebas pertinentes:** `scripts/import-clinical-case-pack.test.mjs`.
-- **Evidencia y alcance:** RESP-56 temporal recorre cuatro modos, muestras, diálogo, cierre y XP; importador pasa en suite local. Frontera: 190 módulos, un RAF.
-- **Pendiente:** Conservar estas garantías en cada importación; no equivale a fidelidad ilimitada de todos los mecanismos.
-- **Aceptación:** Un caso adicional usa cargador y autoridad habitual y recupera recibos sin duplicar XP.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;DOC-CONTRATO;MIG-MANUAL.
+
+**Solicitud final:** Un único motor y autoridad clínica; importar un caso con cinco capas reales, sin respuestas o efectos paralelos.
+
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** RESP-56 temporal recorre cuatro modos, muestras, diálogo, cierre y XP; importador pasa en suite local. Frontera: 190 módulos, un RAF.
+
+**Archivos responsables:** `src/v5/core/room-authority.js`, `src/v5/adapters/native-clinical-port.js`, `src/v5/content/compile-clinical-case-pack.js`, `scripts/import-clinical-case-pack.mjs`.
+
+**Pruebas identificadas:** `scripts/import-clinical-case-pack.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `scripts/import-clinical-case-pack.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Conservar estas garantías en cada importación; no equivale a fidelidad ilimitada de todos los mecanismos.
+
+**Criterio de aceptación:** Un caso adicional usa cargador y autoridad habitual y recupera recibos sin duplicar XP.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Conservar estas garantías en cada importación; no equivale a fidelidad ilimitada de todos los mecanismos. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### LAB-01 · Estudios y resultados
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;GIT-13;U-AUDIT · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Resultados coherentes por paciente, técnica, muestra y minuto: TC/angio-TC, gasometrías, hemograma/leucocitos/PCR y troponinas I/T/seriadas.
-- **Historia/vigencia:** 11/11 adquisición/PCR; 12/11 rechazo seguro de controles no modelados; 13/11 enlace de órdenes seriadas a muestras disponibles. La limitación de un control no significa que el estudio basal falte.
-- **Archivos responsables:** `src/v5/clinical/studies.js`, `src/v5/clinical/study-evidence.js`, `src/v5/clinical/study-collections.js`, `src/v5/clinical/study-order-vocabulary.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/studies-policy.test.js`, `src/v5/clinical/study-orders.test.js`, `src/v5/clinical/study-collections.test.js`.
-- **Evidencia y alcance:** 4c8fdcb añade controles basados en evidencia disponible. d260564 conserva informe basal si no hay modelo. La suite local aprueba estas pruebas; no confirma todos los informes futuros.
-- **Pendiente:** Inventariar controles aún sin modelo (radiografía RESP-07, PEF, lactato y protocolos cualitativos); medir reportes originales del usuario con IDs.
-- **Aceptación:** Una muestra es inmutable; alias no duplican; nueva muestra autorizada tiene tiempo propio y no reutiliza falsamente el informe basal.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;GIT-13;U-AUDIT.
+
+**Solicitud final:** Resultados coherentes por paciente, técnica, muestra y minuto: TC/angio-TC, gasometrías, hemograma/leucocitos/PCR y troponinas I/T/seriadas.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** 4c8fdcb añade controles basados en evidencia disponible. d260564 conserva informe basal si no hay modelo. La suite local aprueba estas pruebas; no confirma todos los informes futuros.
+
+**Archivos responsables:** `src/v5/clinical/studies.js`, `src/v5/clinical/study-evidence.js`, `src/v5/clinical/study-collections.js`, `src/v5/clinical/study-order-vocabulary.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/studies-policy.test.js`, `src/v5/clinical/study-orders.test.js`, `src/v5/clinical/study-collections.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/studies-policy.test.js`, `src/v5/clinical/study-orders.test.js`, `src/v5/clinical/study-collections.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Inventariar controles aún sin modelo (radiografía RESP-07, PEF, lactato y protocolos cualitativos); medir reportes originales del usuario con IDs.
+
+**Criterio de aceptación:** Una muestra es inmutable; alias no duplican; nueva muestra autorizada tiene tiempo propio y no reutiliza falsamente el informe basal.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Inventariar controles aún sin modelo (radiografía RESP-07, PEF, lactato y protocolos cualitativos); medir reportes originales del usuario con IDs. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** 11/11 adquisición/PCR; 12/11 rechazo seguro de controles no modelados; 13/11 enlace de órdenes seriadas a muestras disponibles. La limitación de un control no significa que el estudio basal falte.
 
 ### LAB-02 · Voz, teclado y autocompletado
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-SOCIAL · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Encontrar y ordenar VEDB/VCC/videocolonoscopia/colonoscopia y estudios como ecografía abdominal mediante los mismos alias canónicos.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/study-order-vocabulary.js`, `src/v5/ui/clinical-autocomplete.js`, `src/v5/core/speech-router.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/study-orders.test.js`, `src/v5/ui/clinical-autocomplete.test.js`, `qa/tests/v5-nurse-study-autocomplete.test.mjs`.
-- **Evidencia y alcance:** Alias integrados y aprobados en Node; evidencia Chromium histórica en CROHN/COLON. Autocompletado ejecuta router común.
-- **Pendiente:** Validar teclado Android físico y órdenes de estudios reportadas como ausentes.
-- **Aceptación:** VEDB baja no se confunde con endoscopia alta; alias repiten una adquisición, no dos.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-SOCIAL.
+
+**Solicitud final:** Encontrar y ordenar VEDB/VCC/videocolonoscopia/colonoscopia y estudios como ecografía abdominal mediante los mismos alias canónicos.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Alias integrados y aprobados en Node; evidencia Chromium histórica en CROHN/COLON. Autocompletado ejecuta router común.
+
+**Archivos responsables:** `src/v5/clinical/study-order-vocabulary.js`, `src/v5/ui/clinical-autocomplete.js`, `src/v5/core/speech-router.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/study-orders.test.js`, `src/v5/ui/clinical-autocomplete.test.js`, `qa/tests/v5-nurse-study-autocomplete.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/study-orders.test.js`, `src/v5/ui/clinical-autocomplete.test.js`, `qa/tests/v5-nurse-study-autocomplete.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Validar teclado Android físico y órdenes de estudios reportadas como ausentes.
+
+**Criterio de aceptación:** VEDB baja no se confunde con endoscopia alta; alias repiten una adquisición, no dos.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Validar teclado Android físico y órdenes de estudios reportadas como ausentes. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### ANAM-01 · Anamnesis y diálogo
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-08-14;PC-NOV · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Responder a lo preguntado en primera persona: saludos, antecedentes previos distintos de cuadro actual, medicaciones, ALiCIA y repreguntas coherentes.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/patient-dialogue.js`, `src/v5/clinical/patient-question-context.js`, `src/v5/content/patient-language.js`, `src/v5/content/legacy-patient-variation.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/patient-dialogue.test.js`, `qa/tests/patient-personality-integration.test.mjs`.
-- **Evidencia y alcance:** adfa5e9 separa antecedentes en 12 legacy; 550 entrevistas/8.250 turnos documentados al 12/11. Suite local de diálogo pasa; persiste límite de respuestas autoradas.
-- **Pendiente:** Probar preguntas exactas del usuario en móvil, ampliar antecedentes documentados y evaluar naturalidad sin prefijos repetidos.
-- **Aceptación:** «¿Otra enfermedad?» no devuelve edad ni motivo actual; «¿desde cuándo?» conserva interlocutor, tema y hechos tras reconexión.
-- **Ejecución:** P1 · B3 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo medio; dependencias: B1/B2 para medición y checklist.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-08-14;PC-NOV.
+
+**Solicitud final:** Responder a lo preguntado en primera persona: saludos, antecedentes previos distintos de cuadro actual, medicaciones, ALiCIA y repreguntas coherentes.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** adfa5e9 separa antecedentes en 12 legacy; 550 entrevistas/8.250 turnos documentados al 12/11. Suite local de diálogo pasa; persiste límite de respuestas autoradas.
+
+**Archivos responsables:** `src/v5/clinical/patient-dialogue.js`, `src/v5/clinical/patient-question-context.js`, `src/v5/content/patient-language.js`, `src/v5/content/legacy-patient-variation.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/patient-dialogue.test.js`, `qa/tests/patient-personality-integration.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/patient-dialogue.test.js`, `qa/tests/patient-personality-integration.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Probar preguntas exactas del usuario en móvil, ampliar antecedentes documentados y evaluar naturalidad sin prefijos repetidos.
+
+**Criterio de aceptación:** «¿Otra enfermedad?» no devuelve edad ni motivo actual; «¿desde cuándo?» conserva interlocutor, tema y hechos tras reconexión.
+
+**Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Probar preguntas exactas del usuario en móvil, ampliar antecedentes documentados y evaluar naturalidad sin prefijos repetidos. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### NUR-01 · Enfermería
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-08-14;PC-NOV;U-AUDIT · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO CON DEFECTOS.
-- **Comportamiento:** Enfermería contesta y ejecuta órdenes naturales/combinadas; alergias es consulta, ayuno es conducta; pregunta alimentación una vez y conserva decisiones.
-- **Historia/vigencia:** Errores de vías/monitor/una sola tarea 10/10; 13–14/10 correcciones de chat; 11–12/11 alergias, ayuno y alimentación. La queja repetida no se cierra por tests de otras frases.
-- **Archivos responsables:** `src/v5/core/speech-router.js`, `src/v5/clinical/guard-session.js`, `src/v5/clinical/nursing-nutrition.test.js`, `src/v5/engine/nurse-dispatcher.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/physical-nursing.test.js`, `src/v5/core/nurse-diagnosis-speech.test.js`, `src/v5/clinical/nursing-nutrition.test.js`.
-- **Evidencia y alcance:** Consultas/NPO/seguimiento y proactividad están integrados. Se reproduce fallo de contrato de nutrición: permitir comer cambia calidad/fulfilledTreatmentIds frente a expectativa antigua de igualdad.
-- **Pendiente:** Resolver contrato de prueba sin volver a bloquear destino por NPO; reproducir silencio con frase, UID, cola y recibo en teléfono.
-- **Aceptación:** Cada orden queda reconocida, en tarea o rechazada con motivo; una sola pregunta y un recibo recuperable, sin confirmación de administración anticipada.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-08-14;PC-NOV;U-AUDIT.
+
+**Solicitud final:** Enfermería contesta y ejecuta órdenes naturales/combinadas; alergias es consulta, ayuno es conducta; pregunta alimentación una vez y conserva decisiones.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** La prueba de nutrición se corrigió en 7cde6fa: cambiar ayuno por alimentación oral conserva administraciones y elegibilidad, modifica calidad y recupera ese estado sin duplicar recibos. Las 26 pruebas dirigidas pasan.
+
+**Archivos responsables:** `src/v5/core/speech-router.js`, `src/v5/clinical/guard-session.js`, `src/v5/clinical/nursing-nutrition.test.js`, `src/v5/engine/nurse-dispatcher.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/physical-nursing.test.js`, `src/v5/core/nurse-diagnosis-speech.test.js`, `src/v5/clinical/nursing-nutrition.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/physical-nursing.test.js`, `src/v5/core/nurse-diagnosis-speech.test.js`, `src/v5/clinical/nursing-nutrition.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Reproducir silencio con frase, UID, cola y recibo en teléfono; validar alimentación, alergias, oxígeno y seguimiento en Android físico.
+
+**Criterio de aceptación:** Cada orden queda reconocida, en tarea o rechazada con motivo; una sola pregunta y un recibo recuperable, sin confirmación de administración anticipada.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Reproducir silencio con frase, UID, cola y recibo en teléfono; validar alimentación, alergias, oxígeno y seguimiento en Android físico. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Errores de vías/monitor/una sola tarea 10/10; 13–14/10 correcciones de chat; 11–12/11 alergias, ayuno y alimentación. La queja repetida no se cierra por tests de otras frases. Checkpoint del 20/11: corrección dirigida de certificación publicada en 7cde6fa; no cambió reglas clínicas.
+
+**Estado anterior conservado:** 162d0cf24a936e302e2a3efadcc168e1459d86d5 — IMPLEMENTADO CON DEFECTOS: Consultas/NPO/seguimiento y proactividad están integrados. Se reproduce fallo de contrato de nutrición: permitir comer cambia calidad/fulfilledTreatmentIds frente a expectativa antigua de igualdad.
 
 ### CLOSE-01 · Diagnóstico y evaluación
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-NOV;GIT-13 · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Cierre al alta o recepción por servicio con alternativas válidas; anamnesis/seguimiento prescindibles reducen calidad y no bloquean; libertad de decisiones y paciente recuperable.
-- **Historia/vigencia:** 24/10 cierre al aceptar Cirugía; 26/10 seguimiento era gate; 4–12/11 libertad/alta insegura; 12–13/11 entrevista y seguimiento pasan a calidad. El requisito antiguo de bloqueo absoluto queda sustituido dentro de esta misma entrada.
-- **Archivos responsables:** `src/v5/clinical/clinical-policy-closure.js`, `src/v5/clinical/gastro-closure-v5.js`, `src/v5/clinical/consultation-evidence.js`, `src/v5/clinical/guard-session.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/accepted-transfer.test.js`, `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/receiver-transfer-contract.test.js`.
-- **Evidencia y alcance:** 7afa707 y c0e9ed4 separan entrevista/seguimiento/NPO de elegibilidad. 9a14b00 admite receptor urgente por hallazgos. Matriz nativa del HEAD aprobada; bot de traslados conserva expectativas antiguas de rechazo.
-- **Pendiente:** Aceptar rutas alternativas y condiciones reales repetidas del usuario; actualizar certificación de disposición sin debilitar seguridad física.
-- **Aceptación:** Alta insegura registra error/débito y deja caso abierto; derivación indicada cierra una vez al aceptar receptor, sin simular operación realizada.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-NOV;GIT-13.
+
+**Solicitud final:** Cierre al alta o recepción por servicio con alternativas válidas; anamnesis/seguimiento prescindibles reducen calidad y no bloquean; libertad de decisiones y paciente recuperable.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** 7afa707 y c0e9ed4 separan entrevista/seguimiento/NPO de elegibilidad. 9a14b00 admite receptor urgente por hallazgos. Matriz nativa del HEAD aprobada; bot de traslados conserva expectativas antiguas de rechazo.
+
+**Archivos responsables:** `src/v5/clinical/clinical-policy-closure.js`, `src/v5/clinical/gastro-closure-v5.js`, `src/v5/clinical/consultation-evidence.js`, `src/v5/clinical/guard-session.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/accepted-transfer.test.js`, `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/receiver-transfer-contract.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/accepted-transfer.test.js`, `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/receiver-transfer-contract.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar rutas alternativas y condiciones reales repetidas del usuario; actualizar certificación de disposición sin debilitar seguridad física.
+
+**Criterio de aceptación:** Alta insegura registra error/débito y deja caso abierto; derivación indicada cierra una vez al aceptar receptor, sin simular operación realizada.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Aceptar rutas alternativas y condiciones reales repetidas del usuario; actualizar certificación de disposición sin debilitar seguridad física. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** 24/10 cierre al aceptar Cirugía; 26/10 seguimiento era gate; 4–12/11 libertad/alta insegura; 12–13/11 entrevista y seguimiento pasan a calidad. El requisito antiguo de bloqueo absoluto queda sustituido dentro de esta misma entrada.
 
 ### VEGA-01 · Dr. Vega
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-NOV;U-AUDIT · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** «¿Qué hago ahora? −5% XP» en paciente activo da una sola acción prioritaria con nombre de control/comando y destino real.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/clinical-hints.js`, `src/v5/clinical/clinical-hint-requirements.js`, `src/v5/ui/clinical-hint-presenter.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/clinical-hints.test.js`, `src/v5/ui/clinical-hint-presenter.test.js`.
-- **Evidencia y alcance:** 55/55 cierres guiados documentados; selector comparte checklist y revisión de foco. Un prepare verificado antes de pintar.
-- **Pendiente:** Medir latencia física y escenarios con actualización concurrente; conservar acciones alternativas.
-- **Aceptación:** Una pulsación produce instrucción ejecutable para ese encuentro, nunca un permiso clínico.
-- **Ejecución:** P1 · B3 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo medio; dependencias: B1/B2 para medición y checklist.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-NOV;U-AUDIT.
+
+**Solicitud final:** «¿Qué hago ahora? −5% XP» en paciente activo da una sola acción prioritaria con nombre de control/comando y destino real.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** 55/55 cierres guiados documentados; selector comparte checklist y revisión de foco. Un prepare verificado antes de pintar.
+
+**Archivos responsables:** `src/v5/clinical/clinical-hints.js`, `src/v5/clinical/clinical-hint-requirements.js`, `src/v5/ui/clinical-hint-presenter.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/clinical-hints.test.js`, `src/v5/ui/clinical-hint-presenter.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/clinical-hints.test.js`, `src/v5/ui/clinical-hint-presenter.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Medir latencia física y escenarios con actualización concurrente; conservar acciones alternativas.
+
+**Criterio de aceptación:** Una pulsación produce instrucción ejecutable para ese encuentro, nunca un permiso clínico.
+
+**Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Medir latencia física y escenarios con actualización concurrente; conservar acciones alternativas. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### DIALOG-AUTO-01 · Anamnesis y diálogo
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-11-20 · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Una pregunta produce respuesta automática contextual; no exigir segundo envío o botón adicional.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/app/application.js`, `src/v5/clinical/patient-dialogue.js`, `src/v5/ui/guard-message-policy.js`.
-- **Pruebas pertinentes:** `qa/v5/patient-dialogue-browser.mjs`, `src/v5/clinical/patient-dialogue.test.js`.
-- **Evidencia y alcance:** 69a27ec atribuye respuesta a fuente; 84af64f incorpora acompañante; navegador previo vio respuesta con un envío. Modo y fuente no sustituyen aceptación física.
-- **Pendiente:** Probar primer contacto y pregunta normal en preview y teléfono con cronómetro.
-- **Aceptación:** Pregunta única, respuesta única visible ligada al paciente; incapacidad verbal conserva fuente indirecta/observación.
-- **Ejecución:** P1 · B3 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo medio; dependencias: B1/B2 para medición y checklist.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-11-20.
+
+**Solicitud final:** Una pregunta produce respuesta automática contextual; no exigir segundo envío o botón adicional.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** 69a27ec atribuye respuesta a fuente; 84af64f incorpora acompañante; navegador previo vio respuesta con un envío. Modo y fuente no sustituyen aceptación física.
+
+**Archivos responsables:** `src/v5/app/application.js`, `src/v5/clinical/patient-dialogue.js`, `src/v5/ui/guard-message-policy.js`.
+
+**Pruebas identificadas:** `qa/v5/patient-dialogue-browser.mjs`, `src/v5/clinical/patient-dialogue.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/patient-dialogue.test.js`. No repetidas aquí: `qa/v5/patient-dialogue-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Probar primer contacto y pregunta normal en preview y teléfono con cronómetro.
+
+**Criterio de aceptación:** Pregunta única, respuesta única visible ligada al paciente; incapacidad verbal conserva fuente indirecta/observación.
+
+**Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Probar primer contacto y pregunta normal en preview y teléfono con cronómetro. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### VEGA-AUTO-01 · Dr. Vega
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-11-20 · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Mostrar pista en un toque, cobrar 5% por nueva acción tras visualización; repetición y espera gratis, historial persistente hasta 0 XP.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/clinical-hint-presenter.js`, `src/v5/clinical/clinical-hint-ledger.js`, `src/v5/server/clinical-hints-durable.test.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/clinical-hint-ledger.test.js`, `src/v5/server/clinical-hints-durable.test.js`.
-- **Evidencia y alcance:** 448917d integra verificación en prepare; 8cacfdd refresca oferta obsoleta dentro del mismo toque. Ledger aplica min(100,5*n); displayed idempotente.
-- **Pendiente:** Medir del toque al texto y cobro en teléfono; validar paciente cambiado durante entrega.
-- **Aceptación:** No cobrar oferta descartada/no pintada; una ayuda conocida no vuelve a descontar tras recarga.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-11-20.
+
+**Solicitud final:** Mostrar pista en un toque, cobrar 5% por nueva acción tras visualización; repetición y espera gratis, historial persistente hasta 0 XP.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** 448917d integra verificación en prepare; 8cacfdd refresca oferta obsoleta dentro del mismo toque. Ledger aplica min(100,5*n); displayed idempotente.
+
+**Archivos responsables:** `src/v5/ui/clinical-hint-presenter.js`, `src/v5/clinical/clinical-hint-ledger.js`, `src/v5/server/clinical-hints-durable.test.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/clinical-hint-ledger.test.js`, `src/v5/server/clinical-hints-durable.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/clinical-hint-ledger.test.js`, `src/v5/server/clinical-hints-durable.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Medir del toque al texto y cobro en teléfono; validar paciente cambiado durante entrega.
+
+**Criterio de aceptación:** No cobrar oferta descartada/no pintada; una ayuda conocida no vuelve a descontar tras recarga.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Medir del toque al texto y cobro en teléfono; validar paciente cambiado durante entrega. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### VEGA-COHERENCE-01 · Dr. Vega
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-NOV · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** La pista lee recibos y requisitos reales de cierre, respeta alternativas y no repite estudios o intervenciones confirmados.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/clinical-hint-requirements.js`, `src/v5/clinical/clinical-hints.js`, `src/v5/clinical/study-evidence.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/clinical-hints.test.js`, `src/v5/clinical/closure-catalog-audit.test.js`.
-- **Evidencia y alcance:** HEPAT INR/glucosa y CARD-08 documentados; checklist por destino y 91 destinos auditados. Un estudio solicitado no equivale a informado.
-- **Pendiente:** Probar pista→orden→recibo→pista por destino, alternativas y controles nuevos indicados.
-- **Aceptación:** Solo repetir adquisición cuando su tiempo/indicación lo justifiquen; todo gate imprescindible tiene explicación y acción.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-NOV.
+
+**Solicitud final:** La pista lee recibos y requisitos reales de cierre, respeta alternativas y no repite estudios o intervenciones confirmados.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** HEPAT INR/glucosa y CARD-08 documentados; checklist por destino y 91 destinos auditados. Un estudio solicitado no equivale a informado.
+
+**Archivos responsables:** `src/v5/clinical/clinical-hint-requirements.js`, `src/v5/clinical/clinical-hints.js`, `src/v5/clinical/study-evidence.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/clinical-hints.test.js`, `src/v5/clinical/closure-catalog-audit.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/clinical-hints.test.js`, `src/v5/clinical/closure-catalog-audit.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Probar pista→orden→recibo→pista por destino, alternativas y controles nuevos indicados.
+
+**Criterio de aceptación:** Solo repetir adquisición cuando su tiempo/indicación lo justifiquen; todo gate imprescindible tiene explicación y acción.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Probar pista→orden→recibo→pista por destino, alternativas y controles nuevos indicados. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### LAT-01 · Android y rendimiento
 
-- **Fuente/fecha/naturaleza:** PC-NOV;PC-09-10;DOC-INVENTARIO;U-AUDIT · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Respuestas, órdenes, selección, pistas y diagnóstico ágiles; eliminar espera real y textos técnicos persistentes.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/social/durable-cooperative-replica.js`, `src/v5/server/durable-guard-authority.js`, `src/v5/app/application.js`, `src/v5/ui/guard-chat-view.js`.
-- **Pruebas pertinentes:** `src/v5/social/durable-cooperative-replica.test.js`, `qa/v5/shared-guard-auth-browser.mjs`.
-- **Evidencia y alcance:** Un prepare ahorrado; proyección reutilizada 81fd2da; chat local ACK→DOM 336/586 ms histórico. No hay medición end-to-end en Android físico ni SLA acordado.
-- **Pendiente:** Medir cola/HTTP/CAS/recibo/render antes de optimizar; «pendiente de confirmación» reportado otra vez no demuestra un fix aceptado.
-- **Aceptación:** Misma red/carga antes/después, IDs estables, cero dosis duplicadas, interacción local inmediata y confirmación autoritativa veraz.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-NOV;PC-09-10;DOC-INVENTARIO;U-AUDIT.
+
+**Solicitud final:** Respuestas, órdenes, selección, pistas y diagnóstico ágiles; eliminar espera real y textos técnicos persistentes.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Un prepare ahorrado; proyección reutilizada 81fd2da; chat local ACK→DOM 336/586 ms histórico. No hay medición end-to-end en Android físico ni SLA acordado.
+
+**Archivos responsables:** `src/v5/social/durable-cooperative-replica.js`, `src/v5/server/durable-guard-authority.js`, `src/v5/app/application.js`, `src/v5/ui/guard-chat-view.js`.
+
+**Pruebas identificadas:** `src/v5/social/durable-cooperative-replica.test.js`, `qa/v5/shared-guard-auth-browser.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/social/durable-cooperative-replica.test.js`. No repetidas aquí: `qa/v5/shared-guard-auth-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Medir cola/HTTP/CAS/recibo/render antes de optimizar; «pendiente de confirmación» reportado otra vez no demuestra un fix aceptado.
+
+**Criterio de aceptación:** Misma red/carga antes/después, IDs estables, cero dosis duplicadas, interacción local inmediata y confirmación autoritativa veraz.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Medir cola/HTTP/CAS/recibo/render antes de optimizar; «pendiente de confirmación» reportado otra vez no demuestra un fix aceptado. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Resolver conjuntamente con:** PERF-01.
 
 ### MP-01 · Cooperativo
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-SOCIAL;PC-11-20 · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Cooperativo 2–4 comparte pacientes sin propiedad exclusiva; invitados, chat, Enfermería, estado y reconexión funcionan desde inicio.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/guard-runtime.js`, `src/v5/social/cooperative-link.js`, `src/v5/server/supabase-account-store.js`, `src/v5/social/room-membership-store.js`.
-- **Pruebas pertinentes:** `src/v5/server/supabase-social-room-persistence.test.js`, `src/v5/clinical/cooperative-care.test.js`, `qa/v5/shared-guard-preview.mjs`.
-- **Evidencia y alcance:** 403 del 11/11 corregido con persistencia de sala/membresía y revocación. CI HEAD: pruebas browser compartidas aprobadas; reporte usuario 5/11 de mensajes que llegan juntos sigue sin aceptación física.
-- **Pendiente:** Verificar primer minuto con 2–4 cuentas, red móvil, abandono y retorno; no asumir que login/lobby acredita guardia.
-- **Aceptación:** Médicos autorizados ven mismos recibos y pacientes, una autoridad y revocación válida, sin relajar RLS.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-SOCIAL;PC-11-20.
+
+**Solicitud final:** Cooperativo 2–4 comparte pacientes sin propiedad exclusiva; invitados, chat, Enfermería, estado y reconexión funcionan desde inicio.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** 403 del 11/11 corregido con persistencia de sala/membresía y revocación. CI HEAD: pruebas browser compartidas aprobadas; reporte usuario 5/11 de mensajes que llegan juntos sigue sin aceptación física.
+
+**Archivos responsables:** `src/v5/clinical/guard-runtime.js`, `src/v5/social/cooperative-link.js`, `src/v5/server/supabase-account-store.js`, `src/v5/social/room-membership-store.js`.
+
+**Pruebas identificadas:** `src/v5/server/supabase-social-room-persistence.test.js`, `src/v5/clinical/cooperative-care.test.js`, `qa/v5/shared-guard-preview.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/server/supabase-social-room-persistence.test.js`, `src/v5/clinical/cooperative-care.test.js`. No repetidas aquí: `qa/v5/shared-guard-preview.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Verificar primer minuto con 2–4 cuentas, red móvil, abandono y retorno; no asumir que login/lobby acredita guardia.
+
+**Criterio de aceptación:** Médicos autorizados ven mismos recibos y pacientes, una autoridad y revocación válida, sin relajar RLS.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Verificar primer minuto con 2–4 cuentas, red móvil, abandono y retorno; no asumir que login/lobby acredita guardia. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### XP-COOP · XP y progresión
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-NOV;PC-12-20 · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Compartir en Cooperativo XP, débitos y pistas; participación pausa al salir y vuelve al reconectar; Competitivo conserva independencia.
-- **Historia/vigencia:** 5/11 usuario pide compartir incluso pistas; 12/11 se añade pausa/resume. La implementación de créditos de cierre no sustituye el pedido de compartir penalizaciones.
-- **Archivos responsables:** `src/v5/clinical/guard-runtime.js`, `src/v5/clinical/guard-session.js`, `src/v5/clinical/clinical-hint-ledger.js`, `src/v5/server/clinical-reward.js`.
-- **Pruebas pertinentes:** `src/v5/server/clinical-reward.test.js`, `src/v5/server/clinical-hints-durable.test.js`.
-- **Evidencia y alcance:** 7eed9e2 fija elegibilidad al cierre y pausa por salida. rewardFor usa hintLedger.count(doctorId), revelación y daño por actor: compartir todos los descuentos no está implementado.
-- **Pendiente:** Integrar política cooperativa solicitada y animación por recibo; documentar compatibilidad de recibos previos y causalidad de muerte.
-- **Aceptación:** Dos cooperantes reciben exactamente la política compartida vigente por evento, salida no gana cierres nuevos y rival no hereda pérdidas.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
-- **Omisión/condición recuperada:** B: el resumen de XP compartida pierde la condición «incluidas pistas».
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-NOV;PC-12-20.
+
+**Solicitud final:** Compartir en Cooperativo XP, débitos y pistas; participación pausa al salir y vuelve al reconectar; Competitivo conserva independencia.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** 7eed9e2 fija elegibilidad al cierre y pausa por salida. rewardFor usa hintLedger.count(doctorId), revelación y daño por actor: compartir todos los descuentos no está implementado.
+
+**Archivos responsables:** `src/v5/clinical/guard-runtime.js`, `src/v5/clinical/guard-session.js`, `src/v5/clinical/clinical-hint-ledger.js`, `src/v5/server/clinical-reward.js`.
+
+**Pruebas identificadas:** `src/v5/server/clinical-reward.test.js`, `src/v5/server/clinical-hints-durable.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/server/clinical-reward.test.js`, `src/v5/server/clinical-hints-durable.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Integrar política cooperativa solicitada y animación por recibo; documentar compatibilidad de recibos previos y causalidad de muerte.
+
+**Criterio de aceptación:** Dos cooperantes reciben exactamente la política compartida vigente por evento, salida no gana cierres nuevos y rival no hereda pérdidas.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Integrar política cooperativa solicitada y animación por recibo; documentar compatibilidad de recibos previos y causalidad de muerte. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** 5/11 usuario pide compartir incluso pistas; 12/11 se añade pausa/resume. La implementación de créditos de cierre no sustituye el pedido de compartir penalizaciones.
+
+**Condición recuperada/olvidada:** B: el resumen de XP compartida pierde la condición «incluidas pistas».
 
 ### DX-REVEAL · Diagnóstico y evaluación
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-09-10 · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Revelar diagnóstico correcto del caso por 50% XP, sin reemplazar impresión propia ni cerrar atención.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/clinical-hint-ledger.js`, `src/v5/clinical/guard-session.js`, `src/v5/ui/case-debrief.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/clinical-hint-ledger.test.js`, `src/v5/server/clinical-hints-durable.test.js`.
-- **Evidencia y alcance:** 69a5a1f y SQL 20261112133500; fórmula floor(base*(100−5*n)/(reveal?200:100)), una revelación por médico/encuentro.
-- **Pendiente:** Aceptar preview/Android del HEAD, incluir composición con política cooperativa XP-COOP.
-- **Aceptación:** Doble toque/recarga no cobra dos veces; impresión permanece; desglose muestra composición exacta.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-09-10.
+
+**Solicitud final:** Revelar diagnóstico correcto del caso por 50% XP, sin reemplazar impresión propia ni cerrar atención.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** 69a5a1f y SQL 20261112133500; fórmula floor(base*(100−5*n)/(reveal?200:100)), una revelación por médico/encuentro.
+
+**Archivos responsables:** `src/v5/clinical/clinical-hint-ledger.js`, `src/v5/clinical/guard-session.js`, `src/v5/ui/case-debrief.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/clinical-hint-ledger.test.js`, `src/v5/server/clinical-hints-durable.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/clinical-hint-ledger.test.js`, `src/v5/server/clinical-hints-durable.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar preview/Android del HEAD, incluir composición con política cooperativa XP-COOP.
+
+**Criterio de aceptación:** Doble toque/recarga no cobra dos veces; impresión permanece; desglose muestra composición exacta.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Aceptar preview/Android del HEAD, incluir composición con política cooperativa XP-COOP. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### FAM-01 · Familiares y acompañantes
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-NOV · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Paciente incapaz activa familiar/enfermería con fuente explícita; acompañante seleccionable, respuestas/repreguntas y atribución propias.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/patient-dialogue.js`, `src/v5/clinical/patient-conversation.js`, `src/v5/app/world.js`, `src/v5/ui/patient-actions.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/patient-dialogue.test.js`, `qa/v5/patient-dialogue-browser.mjs`.
-- **Evidencia y alcance:** NEUR-06 tiene acompañante clínico interactuable; 3dc1390 separa antecedentes del informante. createWorld anota historyCompanion pero no crea un sprite familiar independiente.
-- **Pendiente:** Completar aparición/intervención espontánea donde haya informante declarado, segunda presentación y aceptación táctil; nunca inventar familiares.
-- **Aceptación:** Incapacidad verbal prevalece sobre personalidad; relato atribuible y contexto por médico sobreviven recarga sin hechos inventados.
-- **Ejecución:** P1 · B3 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo medio; dependencias: B1/B2 para medición y checklist.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-NOV.
+
+**Solicitud final:** Paciente incapaz activa familiar/enfermería con fuente explícita; acompañante seleccionable, respuestas/repreguntas y atribución propias.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** NEUR-06 tiene acompañante clínico interactuable; 3dc1390 separa antecedentes del informante. createWorld anota historyCompanion pero no crea un sprite familiar independiente.
+
+**Archivos responsables:** `src/v5/clinical/patient-dialogue.js`, `src/v5/clinical/patient-conversation.js`, `src/v5/app/world.js`, `src/v5/ui/patient-actions.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/patient-dialogue.test.js`, `qa/v5/patient-dialogue-browser.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/patient-dialogue.test.js`. No repetidas aquí: `qa/v5/patient-dialogue-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Completar aparición/intervención espontánea donde haya informante declarado, segunda presentación y aceptación táctil; nunca inventar familiares.
+
+**Criterio de aceptación:** Incapacidad verbal prevalece sobre personalidad; relato atribuible y contexto por médico sobreviven recarga sin hechos inventados.
+
+**Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Completar aparición/intervención espontánea donde haya informante declarado, segunda presentación y aceptación táctil; nunca inventar familiares. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### REC-01 · Recuperación de guardias
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-11-20;PC-12-20;U-AUDIT · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Retomar, Finalizar y Después independientes; X/Escape/lobby disponibles; conservar progreso, sin imponer recuperación ni bloquear navegación.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/guard-recovery.js`, `src/v5/app/application.js`, `src/v5/social/durable-cooperative-replica.js`, `src/v5/server/account-gateway.js`.
-- **Pruebas pertinentes:** `src/v5/ui/guard-recovery.test.js`, `src/v5/social/durable-cooperative-replica.test.js`, `qa/v5/guard-recovery-browser.mjs`.
-- **Evidencia y alcance:** 8ea6be9, f35ba43 y 9404669 corrigen primer409/plazo/salida de 12s. Browser durable CI HEAD aprobado. CI Node 22 canceló tests por promesa sin event loop; local Node 24 pasa recuperación.
-- **Pendiente:** Investigar cancelación Node 22 y probar las cuentas/dispositivo del usuario con ACK perdido y red móvil. No hay P0 jugable reproducido aquí.
-- **Aceptación:** Después navega sin operación remota; Retomar/Finalizar acotados e idempotentes y no actúan sobre otra cuenta/guardia.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-11-20;PC-12-20;U-AUDIT.
+
+**Solicitud final:** Retomar, Finalizar y Después independientes; X/Escape/lobby disponibles; conservar progreso, sin imponer recuperación ni bloquear navegación.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P0. **Entorno:** MIXTA.
+
+**Evidencia:** 8ea6be9, f35ba43 y 9404669 corrigen primer409/plazo/salida de 12s. Browser durable CI HEAD aprobado. CI Node 22 canceló tests por promesa sin event loop; local Node 24 pasa recuperación.
+
+**Archivos responsables:** `src/v5/ui/guard-recovery.js`, `src/v5/app/application.js`, `src/v5/social/durable-cooperative-replica.js`, `src/v5/server/account-gateway.js`.
+
+**Pruebas identificadas:** `src/v5/ui/guard-recovery.test.js`, `src/v5/social/durable-cooperative-replica.test.js`, `qa/v5/guard-recovery-browser.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/guard-recovery.test.js`, `src/v5/social/durable-cooperative-replica.test.js`. No repetidas aquí: `qa/v5/guard-recovery-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Investigar cancelación Node 22 y probar las cuentas/dispositivo del usuario con ACK perdido y red móvil. No hay P0 jugable reproducido aquí.
+
+**Criterio de aceptación:** Después navega sin operación remota; Retomar/Finalizar acotados e idempotentes y no actúan sobre otra cuenta/guardia.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Investigar cancelación Node 22 y probar las cuentas/dispositivo del usuario con ACK perdido y red móvil. No hay P0 jugable reproducido aquí. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### SEL-00 · Interfaz clínica
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-09-10;U-AUDIT · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Seleccionar cama/paciente directamente, sin esperas de recepción; mensajes y respuestas tardías conservan UID elegido.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/app/patient-selection.js`, `src/v5/app/application.js`, `src/v5/social/durable-cooperative-replica.js`.
-- **Pruebas pertinentes:** `src/v5/app/patient-selection.test.js`, `src/v5/social/durable-cooperative-replica.test.js`.
-- **Evidencia y alcance:** Selección directa ya publicada; current intent no concede autorización y confirma vista del servidor. A→B y vistas tardías pasan localmente.
-- **Pendiente:** Medir espera de claim/foco en Android antes de otra modificación. No rehacer selección automática existente.
-- **Aceptación:** Toque A→B jamás envía pregunta a A ni muestra expediente de rival sin autorización.
-- **Ejecución:** P1 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-09-10;U-AUDIT.
+
+**Solicitud final:** Seleccionar cama/paciente directamente, sin esperas de recepción; mensajes y respuestas tardías conservan UID elegido.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Selección directa ya publicada; current intent no concede autorización y confirma vista del servidor. A→B y vistas tardías pasan localmente.
+
+**Archivos responsables:** `src/v5/app/patient-selection.js`, `src/v5/app/application.js`, `src/v5/social/durable-cooperative-replica.js`.
+
+**Pruebas identificadas:** `src/v5/app/patient-selection.test.js`, `src/v5/social/durable-cooperative-replica.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/app/patient-selection.test.js`, `src/v5/social/durable-cooperative-replica.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Medir espera de claim/foco en Android antes de otra modificación. No rehacer selección automática existente.
+
+**Criterio de aceptación:** Toque A→B jamás envía pregunta a A ni muestra expediente de rival sin autorización.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Medir espera de claim/foco en Android antes de otra modificación. No rehacer selección automática existente. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### DX-01 · Diagnóstico y evaluación
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-23;PC-09-10 · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Editor de impresión cierra con un envío; borrador recuperable, badge confirmado, doble toque y respuestas tardías seguros.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/clinical-controller.js`, `src/v5/ui/diagnostic-impression.js`, `src/v5/app/application.js`.
-- **Pruebas pertinentes:** `src/v5/ui/diagnostic-impression.test.js`, `qa/v5/diagnosis-browser.mjs`.
-- **Evidencia y alcance:** d4a6ebd/991e152/a660c74 aíslan editor/UID/sesión; e6f9781 desbloquea expediente tras ACK. Pruebas locales pasan.
-- **Pendiente:** Preview con red perdida, nueva instancia del editor para mismo UID, borrado y Android físico.
-- **Aceptación:** No esperar red para cerrar editor, no cerrar uno nuevo por ACK viejo, error conserva borrador y badge refleja recibo.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-23;PC-09-10.
+
+**Solicitud final:** Editor de impresión cierra con un envío; borrador recuperable, badge confirmado, doble toque y respuestas tardías seguros.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** d4a6ebd/991e152/a660c74 aíslan editor/UID/sesión; e6f9781 desbloquea expediente tras ACK. Pruebas locales pasan.
+
+**Archivos responsables:** `src/v5/ui/clinical-controller.js`, `src/v5/ui/diagnostic-impression.js`, `src/v5/app/application.js`.
+
+**Pruebas identificadas:** `src/v5/ui/diagnostic-impression.test.js`, `qa/v5/diagnosis-browser.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/diagnostic-impression.test.js`. No repetidas aquí: `qa/v5/diagnosis-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Preview con red perdida, nueva instancia del editor para mismo UID, borrado y Android físico.
+
+**Criterio de aceptación:** No esperar red para cerrar editor, no cerrar uno nuevo por ACK viejo, error conserva borrador y badge refleja recibo.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Preview con red perdida, nueva instancia del editor para mismo UID, borrado y Android físico. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### UI-01 · Interfaz clínica
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;PC-SOCIAL · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** HUD profesional compacto, rueda accesible, recepción fija, marcador superior izquierdo y controles legibles sin tapar juego.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/web/game.css`, `src/v5/ui/patient-actions.js`, `src/v5/ui/guard-scoreboard.js`, `src/v5/app/application.js`.
-- **Pruebas pertinentes:** `qa/tests/v5-guard-score-position.test.mjs`, `qa/v5/navigation-browser.mjs`.
-- **Evidencia y alcance:** 2b2cd4a marcador/HUD; bc543cd rueda en landscape corto; cinco vistas y 440 paneles documentados. Aprobación física no disponible.
-- **Pendiente:** Comprobar vertical/horizontal, banda libre menor a una fila, teclado abierto y toque monitor/Box2B.
-- **Aceptación:** Mapa usable, recepción y rueda no ocultan acciones ni envíos; marcador en posición pedida.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-SOCIAL.
+
+**Solicitud final:** HUD profesional compacto, rueda accesible, recepción fija, marcador superior izquierdo y controles legibles sin tapar juego.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** 2b2cd4a marcador/HUD; bc543cd rueda en landscape corto; cinco vistas y 440 paneles documentados. Aprobación física no disponible.
+
+**Archivos responsables:** `src/v5/web/game.css`, `src/v5/ui/patient-actions.js`, `src/v5/ui/guard-scoreboard.js`, `src/v5/app/application.js`.
+
+**Pruebas identificadas:** `qa/tests/v5-guard-score-position.test.mjs`, `qa/v5/navigation-browser.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `qa/tests/v5-guard-score-position.test.mjs`. No repetidas aquí: `qa/v5/navigation-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Comprobar vertical/horizontal, banda libre menor a una fila, teclado abierto y toque monitor/Box2B.
+
+**Criterio de aceptación:** Mapa usable, recepción y rueda no ocultan acciones ni envíos; marcador en posición pedida.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Comprobar vertical/horizontal, banda libre menor a una fila, teclado abierto y toque monitor/Box2B. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### SAFE-01 · Medicación y seguridad
 
-- **Fuente/fecha/naturaleza:** DOC-CONTRATO;PC-08-14;PC-NOV · ≤2026-11-11; fecha original no recuperada · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Ejecutar decisiones posibles aunque contraindicadas; dosis/vía/paciente/autor/tiempo verdaderos, alergias preexisten, rescate y daño causal.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/native-medication-eligibility.js`, `src/v5/clinical/medication-safety-487.js`, `src/v5/clinical/receipts.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/clinical-execution-freedom.test.js`, `src/v5/clinical/medication-harms-487.test.js`.
-- **Evidencia y alcance:** 3431230 separa susceptibilidad de preguntar; metadata blocked:false no inventa anafilaxia para intolerancia. Regresiones de libertad/daño pasan.
-- **Pendiente:** Aceptar combinaciones, omisiones y rescates por mecanismo; alcance no es farmacología general universal.
-- **Aceptación:** Contraindicación influye consejo/consecuencia y calidad; límites técnicos se explican; replay no administra otra dosis.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-CONTRATO;PC-08-14;PC-NOV.
+
+**Solicitud final:** Ejecutar decisiones posibles aunque contraindicadas; dosis/vía/paciente/autor/tiempo verdaderos, alergias preexisten, rescate y daño causal.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** 3431230 separa susceptibilidad de preguntar; metadata blocked:false no inventa anafilaxia para intolerancia. Regresiones de libertad/daño pasan.
+
+**Archivos responsables:** `src/v5/clinical/native-medication-eligibility.js`, `src/v5/clinical/medication-safety-487.js`, `src/v5/clinical/receipts.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/clinical-execution-freedom.test.js`, `src/v5/clinical/medication-harms-487.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/clinical-execution-freedom.test.js`, `src/v5/clinical/medication-harms-487.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar combinaciones, omisiones y rescates por mecanismo; alcance no es farmacología general universal.
+
+**Criterio de aceptación:** Contraindicación influye consejo/consecuencia y calidad; límites técnicos se explican; replay no administra otra dosis.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Aceptar combinaciones, omisiones y rescates por mecanismo; alcance no es farmacología general universal. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### ARCH-02 · Arquitectura y motor clínico
 
-- **Fuente/fecha/naturaleza:** MIG-PLAN · 2026-10-15/16 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** COMPLETADO Y VERIFICADO.
-- **Comportamiento:** Un scheduler, un renderer y ciclo de vida, sin listeners/RAF duplicados al entrar/salir ni cambiar apariencia.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/app/application.js`, `src/v5/app/world.js`, `src/v5/render/hospital.js`.
-- **Pruebas pertinentes:** `src/v5/app/build.test.js`, `src/v5/render/hospital.test.js`.
-- **Evidencia y alcance:** Frontera local aprueba un RAF; CI navegación y browser independiente HEAD aprueban.
-- **Pendiente:** Mantener regresiones en cambios UI.
-- **Aceptación:** Cinco entradas/salidas no agregan loops ni cambian estado clínico.
-- **Ejecución:** P3 · B7 · MIXTA · esfuerzo del bloque 2–5 semanas para mapa modular completo (no sumarlo por cada fila), riesgo alto; dependencias: B1; decisión visual pendiente para nuevo mapa.
+**Fecha y origen:** 2026-10-15/16 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-PLAN.
+
+**Solicitud final:** Un scheduler, un renderer y ciclo de vida, sin listeners/RAF duplicados al entrar/salir ni cambiar apariencia.
+
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P3. **Entorno:** MIXTA.
+
+**Evidencia:** Frontera local aprueba un RAF; CI navegación y browser independiente HEAD aprueban.
+
+**Archivos responsables:** `src/v5/app/application.js`, `src/v5/app/world.js`, `src/v5/render/hospital.js`.
+
+**Pruebas identificadas:** `src/v5/app/build.test.js`, `src/v5/render/hospital.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/app/build.test.js`, `src/v5/render/hospital.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Mantener regresiones en cambios UI.
+
+**Criterio de aceptación:** Cinco entradas/salidas no agregan loops ni cambian estado clínico.
+
+**Causa / bloque:** Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. B7. **Dependencias:** B1; decisión visual pendiente para nuevo mapa. **Impacto:** Mantener regresiones en cambios UI. **Riesgo:** alto. **Esfuerzo:** 2–5 semanas para mapa modular completo.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### ARCH-03 · Arquitectura y motor clínico
 
-- **Fuente/fecha/naturaleza:** PC-03-07;MIG-PLAN · 2026-10-07→16 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** COMPLETADO Y VERIFICADO.
-- **Comportamiento:** Build V5 autónomo: sin parches de strings sobre HTML, eval ni modificar golden master.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `scripts/build-v5.mjs`, `scripts/audit-v5-boundary.mjs`.
-- **Pruebas pertinentes:** `src/v5/app/build.test.js`.
-- **Evidencia y alcance:** Build local 217 archivos y frontera pasan; no requiere HTML histórico.
-- **Pendiente:** Conservar fuente original y rama exclusiva.
-- **Aceptación:** Build V5 se reproduce desde módulos y assets declarados.
-- **Ejecución:** P1 · B0 · CHATGPT NORMAL · esfuerzo del bloque 2–4 días (no sumarlo por cada fila), riesgo medio; dependencias: ninguna.
+**Fecha y origen:** 2026-10-07→16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-07;MIG-PLAN.
+
+**Solicitud final:** Build V5 autónomo: sin parches de strings sobre HTML, eval ni modificar golden master.
+
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Build local 217 archivos y frontera pasan; no requiere HTML histórico.
+
+**Archivos responsables:** `scripts/build-v5.mjs`, `scripts/audit-v5-boundary.mjs`.
+
+**Pruebas identificadas:** `src/v5/app/build.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/app/build.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Conservar fuente original y rama exclusiva.
+
+**Criterio de aceptación:** Build V5 se reproduce desde módulos y assets declarados.
+
+**Causa / bloque:** Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad. B0. **Dependencias:** ninguna. **Impacto:** Conservar fuente original y rama exclusiva. **Riesgo:** medio. **Esfuerzo:** 2–4 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### ARCH-04 · Arquitectura y motor clínico
 
-- **Fuente/fecha/naturaleza:** PC-15-23;MIG-PLAN · 2026-10-15 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Organización modular inspirada en TFS, reutilizando lo funcional sin reconstruir cada sesión.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/core/room-authority.js`, `src/v5/adapters/native-clinical-port.js`, `src/v5/app/application.js`.
-- **Pruebas pertinentes:** `src/v5/core/room-authority.test.js`.
-- **Evidencia y alcance:** Autoridad/puerto/módulos integrados. Coordinador application.js aún amplio (~1.700 líneas); esto no demuestra defecto por sí solo.
-- **Pendiente:** Refactorizar solo límite concreto medido, sin otro motor.
-- **Aceptación:** Sistemas nuevos comparten contratos y no reinician mapa, clínica o red.
-- **Ejecución:** P3 · B7 · MIXTA · esfuerzo del bloque 2–5 semanas para mapa modular completo (no sumarlo por cada fila), riesgo alto; dependencias: B1; decisión visual pendiente para nuevo mapa.
+**Fecha y origen:** 2026-10-15 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-15-23;MIG-PLAN.
+
+**Solicitud final:** Organización modular inspirada en TFS, reutilizando lo funcional sin reconstruir cada sesión.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P3. **Entorno:** MIXTA.
+
+**Evidencia:** Autoridad/puerto/módulos integrados. Coordinador application.js aún amplio (~1.700 líneas); esto no demuestra defecto por sí solo.
+
+**Archivos responsables:** `src/v5/core/room-authority.js`, `src/v5/adapters/native-clinical-port.js`, `src/v5/app/application.js`.
+
+**Pruebas identificadas:** `src/v5/core/room-authority.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/core/room-authority.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Refactorizar solo límite concreto medido, sin otro motor.
+
+**Criterio de aceptación:** Sistemas nuevos comparten contratos y no reinician mapa, clínica o red.
+
+**Causa / bloque:** Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. B7. **Dependencias:** B1; decisión visual pendiente para nuevo mapa. **Impacto:** Refactorizar solo límite concreto medido, sin otro motor. **Riesgo:** alto. **Esfuerzo:** 2–5 semanas para mapa modular completo.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### PHYS-01 · Fisiología y evolución temporal
 
-- **Fuente/fecha/naturaleza:** LIB-FARMACOS;MIG-MANUAL · 2026-10-10 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** COMPLETADO Y VERIFICADO.
-- **Comportamiento:** Cantidad cero/no válida no puede transformarse en dosis por defecto; unidades, g/kg, mg/kg, vía y formulación coherentes.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/native-medications.js`, `src/v5/clinical/medication-exposure.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/native-medications-packs.test.js`, `src/v5/clinical/medication-exposure.test.js`.
-- **Evidencia y alcance:** Fallos V4 documentados de 0→500ml; V5 valida dosis y exposición confirmada; tests de entrada inválida pasan.
-- **Pendiente:** Conservar límites por fármaco al ampliar catálogo.
-- **Aceptación:** Cero exposición genera cero efecto y cero administración confirmada.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** 2026-10-10 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-FARMACOS;MIG-MANUAL.
+
+**Solicitud final:** Cantidad cero/no válida no puede transformarse en dosis por defecto; unidades, g/kg, mg/kg, vía y formulación coherentes.
+
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Fallos V4 documentados de 0→500ml; V5 valida dosis y exposición confirmada; tests de entrada inválida pasan.
+
+**Archivos responsables:** `src/v5/clinical/native-medications.js`, `src/v5/clinical/medication-exposure.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/native-medications-packs.test.js`, `src/v5/clinical/medication-exposure.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/native-medications-packs.test.js`, `src/v5/clinical/medication-exposure.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Conservar límites por fármaco al ampliar catálogo.
+
+**Criterio de aceptación:** Cero exposición genera cero efecto y cero administración confirmada.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Conservar límites por fármaco al ampliar catálogo. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### PHYS-02 · Fisiología y evolución temporal
 
-- **Fuente/fecha/naturaleza:** LIB-FARMACOS;MIG-MANUAL · 2026-10-10/16 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Bolus/infusión tienen inicio, exposición, descenso/retirada y contexto renal/hepático; no offsets terapéuticos permanentes universales.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/medication-exposure.js`, `src/v5/clinical/native-medications.js`, `src/v5/clinical/medication-harms-487.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/guard-session-infusion.test.js`, `src/v5/clinical/morphine-487.test.js`.
-- **Evidencia y alcance:** Exposición, infusiones y retirada modeladas para familias cubiertas; no existe PK/PD general validada para todo el catálogo.
-- **Pendiente:** Matriz por mecanismo/fármaco (ejecutable/efecto/retirada) y clearance específico cuando corresponda, sin trasladar constantes sin fuente.
-- **Aceptación:** Bolo se elimina e infusión responde a tasa/stop en mecanismos declarados; lo no modelado se explicita.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** 2026-10-10/16 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-FARMACOS;MIG-MANUAL.
+
+**Solicitud final:** Bolus/infusión tienen inicio, exposición, descenso/retirada y contexto renal/hepático; no offsets terapéuticos permanentes universales.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Exposición, infusiones y retirada modeladas para familias cubiertas; no existe PK/PD general validada para todo el catálogo.
+
+**Archivos responsables:** `src/v5/clinical/medication-exposure.js`, `src/v5/clinical/native-medications.js`, `src/v5/clinical/medication-harms-487.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/guard-session-infusion.test.js`, `src/v5/clinical/morphine-487.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/guard-session-infusion.test.js`, `src/v5/clinical/morphine-487.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Matriz por mecanismo/fármaco (ejecutable/efecto/retirada) y clearance específico cuando corresponda, sin trasladar constantes sin fuente.
+
+**Criterio de aceptación:** Bolo se elimina e infusión responde a tasa/stop en mecanismos declarados; lo no modelado se explicita.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Matriz por mecanismo/fármaco (ejecutable/efecto/retirada) y clearance específico cuando corresponda, sin trasladar constantes sin fuente. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### PHYS-03 · Fisiología y evolución temporal
 
-- **Fuente/fecha/naturaleza:** LIB-FARMACOS;DOC-QA26 · 2026-10-10→26 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** COMPLETADO Y VERIFICADO.
-- **Comportamiento:** Un dueño por efecto; antibiótico no mejora presión inmediatamente, heparina no reperfunde, oxígeno no oscila por feedback circular.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/native-additional-cases.js`, `src/v5/clinical/oxygen-physiology.js`, `src/v5/clinical/crystalloid-overload.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/legacy-pharmacology-sanity.test.js`, `src/v5/clinical/oxygen-physiology.test.js`.
-- **Evidencia y alcance:** Informe26/10 y pruebas actualizadas limitan beneficios por mecanismo y administraciones, no órdenes.
-- **Pendiente:** Conservar prueba de no doble efecto en cambios de terapia.
-- **Aceptación:** Entradas constantes no crean oscilación artificial ni bonus no relacionado.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** 2026-10-10→26; SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-FARMACOS;DOC-QA26.
+
+**Solicitud final:** Un dueño por efecto; antibiótico no mejora presión inmediatamente, heparina no reperfunde, oxígeno no oscila por feedback circular.
+
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Informe26/10 y pruebas actualizadas limitan beneficios por mecanismo y administraciones, no órdenes.
+
+**Archivos responsables:** `src/v5/clinical/native-additional-cases.js`, `src/v5/clinical/oxygen-physiology.js`, `src/v5/clinical/crystalloid-overload.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/legacy-pharmacology-sanity.test.js`, `src/v5/clinical/oxygen-physiology.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/legacy-pharmacology-sanity.test.js`, `src/v5/clinical/oxygen-physiology.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Conservar prueba de no doble efecto en cambios de terapia.
+
+**Criterio de aceptación:** Entradas constantes no crean oscilación artificial ni bonus no relacionado.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Conservar prueba de no doble efecto en cambios de terapia. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### PHYS-04 · Fisiología y evolución temporal
 
-- **Fuente/fecha/naturaleza:** PC-08-14;LIB-STABILIZATION · 2026-10-10 (original indirecta) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** COMPLETADO Y VERIFICADO.
-- **Comportamiento:** Protección contra muerte prematura por reloj real activo, manteniendo evolución y administraciones reales.
-- **Historia/vigencia:** Octubre pasó de 3+2 min a crédito máximo hasta 480s documentado. No se crean tareas separadas para cada versión temporal.
-- **Archivos responsables:** `src/v5/clinical/survival-487-bridge.js`, `src/clinical/grace-survival-487.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/peritonitis-care.test.js`, `src/v5/clinical/tertiary-care.test.js`.
-- **Evidencia y alcance:** V5 conserva releaseAt=180+300*earnedCredit, exposición crítica nativa; muertes no se disparan por render.
-- **Pendiente:** Prueba física de tiempo de atención pertenece a ANDROID-01; no reintroducir vitales artificiales.
-- **Aceptación:** Muerte respeta protección acumulada, reloj y causa nativa; no por contar frames.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** 2026-10-10 (original indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-08-14;LIB-STABILIZATION.
+
+**Solicitud final:** Protección contra muerte prematura por reloj real activo, manteniendo evolución y administraciones reales.
+
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** V5 conserva releaseAt=180+300*earnedCredit, exposición crítica nativa; muertes no se disparan por render.
+
+**Archivos responsables:** `src/v5/clinical/survival-487-bridge.js`, `src/clinical/grace-survival-487.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/peritonitis-care.test.js`, `src/v5/clinical/tertiary-care.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/peritonitis-care.test.js`, `src/v5/clinical/tertiary-care.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Prueba física de tiempo de atención pertenece a ANDROID-01; no reintroducir vitales artificiales.
+
+**Criterio de aceptación:** Muerte respeta protección acumulada, reloj y causa nativa; no por contar frames.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Prueba física de tiempo de atención pertenece a ANDROID-01; no reintroducir vitales artificiales. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Octubre pasó de 3+2 min a crédito máximo hasta 480s documentado. No se crean tareas separadas para cada versión temporal.
 
 ### PHYS-05 · Fisiología y evolución temporal
 
-- **Fuente/fecha/naturaleza:** PC-17-23;DOC-MORTALITY · 2026-10-17→27 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO CON DEFECTOS.
-- **Comportamiento:** Deterioro, rescate y muerte plausibles; no resurrección tras recargar y penalización solo por daño causal atribuible.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/survival-487-bridge.js`, `qa/v5/mortality-regression.mjs`.
-- **Pruebas pertinentes:** `src/v5/clinical/mortality-regression.test.js`, `src/v5/clinical/native-death-room.test.js`.
-- **Evidencia y alcance:** 166 escenarios/62 muertes históricos; suite actual falla harness competitivo por leer liveVitals privado antes del claim. No prueba que muerte clínica esté rota.
-- **Pendiente:** Reparar harness bajo privacidad actual y repetir escenarios afectados; conservar causalidad.
-- **Aceptación:** Tras restauración, mismos vitales/administraciones/muerte, cero XP de cierre y rechazo post mortem.
-- **Ejecución:** P1 · B0 · CHATGPT NORMAL · esfuerzo del bloque 2–4 días (no sumarlo por cada fila), riesgo medio; dependencias: ninguna.
+**Fecha y origen:** 2026-10-17→27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-17-23;DOC-MORTALITY.
+
+**Solicitud final:** Deterioro, rescate y muerte plausibles; no resurrección tras recargar y penalización solo por daño causal atribuible.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** El harness competitivo de mortalidad se corrigió en 7cde6fa: no observa fisiología privada antes del claim. El primer registro autorizado conserva su tiempo real. Muerte, reinicio SQLite, vitales/administraciones y rechazo post mortem pasan en Cooperativo y Competitivo.
+
+**Archivos responsables:** `src/v5/clinical/survival-487-bridge.js`, `qa/v5/mortality-regression.mjs`.
+
+**Pruebas identificadas:** `src/v5/clinical/mortality-regression.test.js`, `src/v5/clinical/native-death-room.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/mortality-regression.test.js`, `src/v5/clinical/native-death-room.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Mantener regresión del harness y aceptar escenarios adversos físicos cuando corresponda; no atribuir aceptación del teléfono a esta prueba Node.
+
+**Criterio de aceptación:** Tras restauración, mismos vitales/administraciones/muerte, cero XP de cierre y rechazo post mortem.
+
+**Causa / bloque:** Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad. B0. **Dependencias:** ninguna. **Impacto:** Mantener regresión del harness y aceptar escenarios adversos físicos cuando corresponda; no atribuir aceptación del teléfono a esta prueba Node. **Riesgo:** medio. **Esfuerzo:** 2–4 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita. Checkpoint del 20/11: corrección dirigida de certificación publicada en 7cde6fa; no cambió reglas clínicas.
+
+**Estado anterior conservado:** 162d0cf24a936e302e2a3efadcc168e1459d86d5 — IMPLEMENTADO CON DEFECTOS: 166 escenarios/62 muertes históricos; suite actual falla harness competitivo por leer liveVitals privado antes del claim. No prueba que muerte clínica esté rota.
 
 ### PHYS-06 · Fisiología y evolución temporal
 
-- **Fuente/fecha/naturaleza:** PC-03-04;PC-17-23 · 2026-10-04→23 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Monitor, color/estado y síntomas cambian con fisiología observada; ECG sigue frecuencia/ritmo explícito, sin fingir medición diagnóstica.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/ecg-morphology.js`, `src/v5/clinical/patient-observations.js`, `src/v5/ui/ecg-sweep.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/ecg-morphology.test.js`, `src/v5/ui/ecg-sweep.test.js`.
-- **Evidencia y alcance:** Barrido4,5s/125Hz y ritmos explícitos; panel advierte trazado ilustrativo. No equivale a ECG diagnóstico de12derivaciones.
-- **Pendiente:** Aceptar trazado/color en pantalla real; ampliar solo ritmos autorados necesarios.
-- **Aceptación:** Lectura sin monitor no inventa medición y el audio sigue FC conocida.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-04→23; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-17-23.
+
+**Solicitud final:** Monitor, color/estado y síntomas cambian con fisiología observada; ECG sigue frecuencia/ritmo explícito, sin fingir medición diagnóstica.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Barrido4,5s/125Hz y ritmos explícitos; panel advierte trazado ilustrativo. No equivale a ECG diagnóstico de12derivaciones.
+
+**Archivos responsables:** `src/v5/clinical/ecg-morphology.js`, `src/v5/clinical/patient-observations.js`, `src/v5/ui/ecg-sweep.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/ecg-morphology.test.js`, `src/v5/ui/ecg-sweep.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/ecg-morphology.test.js`, `src/v5/ui/ecg-sweep.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar trazado/color en pantalla real; ampliar solo ritmos autorados necesarios.
+
+**Criterio de aceptación:** Lectura sin monitor no inventa medición y el audio sigue FC conocida.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Aceptar trazado/color en pantalla real; ampliar solo ritmos autorados necesarios. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### NUR-02 · Enfermería
 
-- **Fuente/fecha/naturaleza:** PC-03-04;PC-08-14;LIB-CS412 · 2026-10-03→14 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Enfermera del box correcto y cola por paciente: vías plural=dos, monitor+Ringer+O2+antibióticos completos; paciente cambiado no redirige tarea.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/engine/nurse-dispatcher.js`, `src/v5/clinical/guard-session.js`, `src/clinical/nurse-scanner-487.js`.
-- **Pruebas pertinentes:** `src/v5/engine/nurse-dispatcher.test.js`, `src/v5/clinical/physical-nursing.test.js`.
-- **Evidencia y alcance:** FIFO/journeyId/UID y recibos físicos integrados; no se completa hasta llegada y ejecución.
-- **Pendiente:** Aceptar combinadas en dos camas y teléfonos; distinguir retraso físico de silencio/timeout.
-- **Aceptación:** Todas las cláusulas admitidas dejan recibo verdadero en su paciente; preguntas/negación no administran.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** 2026-10-03→14; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-08-14;LIB-CS412.
+
+**Solicitud final:** Enfermera del box correcto y cola por paciente: vías plural=dos, monitor+Ringer+O2+antibióticos completos; paciente cambiado no redirige tarea.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** FIFO/journeyId/UID y recibos físicos integrados; no se completa hasta llegada y ejecución.
+
+**Archivos responsables:** `src/v5/engine/nurse-dispatcher.js`, `src/v5/clinical/guard-session.js`, `src/clinical/nurse-scanner-487.js`.
+
+**Pruebas identificadas:** `src/v5/engine/nurse-dispatcher.test.js`, `src/v5/clinical/physical-nursing.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/engine/nurse-dispatcher.test.js`, `src/v5/clinical/physical-nursing.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar combinadas en dos camas y teléfonos; distinguir retraso físico de silencio/timeout.
+
+**Criterio de aceptación:** Todas las cláusulas admitidas dejan recibo verdadero en su paciente; preguntas/negación no administran.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Aceptar combinadas en dos camas y teléfonos; distinguir retraso físico de silencio/timeout. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### NUR-03 · Enfermería
 
-- **Fuente/fecha/naturaleza:** PC-08-14;PC-24-31 · 2026-10-10/30 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Recuperar Enfermería tras recarga, bloquear/desbloquear trayectos y reintentos sin atascar cola ni duplicar dosis.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/engine/nurse-dispatcher.js`, `src/v5/clinical/guard-session.js`.
-- **Pruebas pertinentes:** `src/v5/engine/nurse-dispatcher.test.js`.
-- **Evidencia y alcance:** Timeout de ruta inalcanzable y receipts idempotentes; CI nursing-recovery aprobado en55 casos.
-- **Pendiente:** Android con background/reload mientras hay tareas.
-- **Aceptación:** Ruta fallida libera recurso y explica fallo; replay mantiene una administración y permite reintento autorizado.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** 2026-10-10/30; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-08-14;PC-24-31.
+
+**Solicitud final:** Recuperar Enfermería tras recarga, bloquear/desbloquear trayectos y reintentos sin atascar cola ni duplicar dosis.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Timeout de ruta inalcanzable y receipts idempotentes; CI nursing-recovery aprobado en55 casos.
+
+**Archivos responsables:** `src/v5/engine/nurse-dispatcher.js`, `src/v5/clinical/guard-session.js`.
+
+**Pruebas identificadas:** `src/v5/engine/nurse-dispatcher.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/engine/nurse-dispatcher.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Android con background/reload mientras hay tareas.
+
+**Criterio de aceptación:** Ruta fallida libera recurso y explica fallo; replay mantiene una administración y permite reintento autorizado.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Android con background/reload mientras hay tareas. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### MED-01 · Medicación y seguridad
 
-- **Fuente/fecha/naturaleza:** LIB-FARMACOS;MIG-MANUAL · 2026-10-10/16 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Catálogo universal administrable separado de pertinencia; antibiótico nunca bloqueado por no ser el correcto para ese caso.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/native-medication-eligibility.js`, `src/v5/clinical/pharmacology-catalog.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/native-medication-eligibility.test.js`, `src/v5/clinical/clinical-execution-freedom.test.js`.
-- **Evidencia y alcance:** Libertad técnica cubierta, mecanismos no universales. Tests distinguen fármaco disponible y vía no implementada.
-- **Pendiente:** Auditar cobertura por molécula/forma/ruta y efectos; no deducir del tamaño de catálogo.
-- **Aceptación:** Orden posible llega a ejecutor; contraindicación no se convierte en permiso artificial.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** 2026-10-10/16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-FARMACOS;MIG-MANUAL.
+
+**Solicitud final:** Catálogo universal administrable separado de pertinencia; antibiótico nunca bloqueado por no ser el correcto para ese caso.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Libertad técnica cubierta, mecanismos no universales. Tests distinguen fármaco disponible y vía no implementada.
+
+**Archivos responsables:** `src/v5/clinical/native-medication-eligibility.js`, `src/v5/clinical/pharmacology-catalog.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/native-medication-eligibility.test.js`, `src/v5/clinical/clinical-execution-freedom.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/native-medication-eligibility.test.js`, `src/v5/clinical/clinical-execution-freedom.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Auditar cobertura por molécula/forma/ruta y efectos; no deducir del tamaño de catálogo.
+
+**Criterio de aceptación:** Orden posible llega a ejecutor; contraindicación no se convierte en permiso artificial.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Auditar cobertura por molécula/forma/ruta y efectos; no deducir del tamaño de catálogo. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### MED-02 · Medicación y seguridad
 
-- **Fuente/fecha/naturaleza:** DOC-CONTRATO;PC-24-31;DOC-INVENTARIO · 2026-10-24→11-05 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Ampicilina en endocarditis, tres pares de hemocultivos, alternativas de antibióticos y rescate tras reacción antes del traslado.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/clinical-policy-closure.js`, `src/v5/clinical/studies.js`, `src/v5/content/packs/cardiology-pack.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/accepted-transfer.test.js`, `src/v5/clinical/studies-policy.test.js`.
-- **Evidencia y alcance:** Casos/políticas y recibos conservan estas condiciones; matriz final HEAD aprueba. Correcciones históricas no equivalen a aceptación de todos los escenarios.
-- **Pendiente:** Prueba dirigida de omisión, alternativa, reacción y recuperación con evidencia del segundo médico.
-- **Aceptación:** Servicio recibe con evidencia válida y no exige una terapia contraindicada; cultivos preservan pares/muestra.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** 2026-10-24→11-05 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-CONTRATO;PC-24-31;DOC-INVENTARIO.
+
+**Solicitud final:** Ampicilina en endocarditis, tres pares de hemocultivos, alternativas de antibióticos y rescate tras reacción antes del traslado.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Casos/políticas y recibos conservan estas condiciones; matriz final HEAD aprueba. Correcciones históricas no equivalen a aceptación de todos los escenarios.
+
+**Archivos responsables:** `src/v5/clinical/clinical-policy-closure.js`, `src/v5/clinical/studies.js`, `src/v5/content/packs/cardiology-pack.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/accepted-transfer.test.js`, `src/v5/clinical/studies-policy.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/accepted-transfer.test.js`, `src/v5/clinical/studies-policy.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Prueba dirigida de omisión, alternativa, reacción y recuperación con evidencia del segundo médico.
+
+**Criterio de aceptación:** Servicio recibe con evidencia válida y no exige una terapia contraindicada; cultivos preservan pares/muestra.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Prueba dirigida de omisión, alternativa, reacción y recuperación con evidencia del segundo médico. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### DX-02 · Diagnóstico y evaluación
 
-- **Fuente/fecha/naturaleza:** MIG-MANUAL · 2026-10-16 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Autocompletar impresión diagnóstica desde catálogo global, sin filtrar por diagnóstico oculto; badge persistente y rival solo lectura.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/diagnostic-impression.js`, `src/v5/ui/clinical-controller.js`.
-- **Pruebas pertinentes:** `src/v5/ui/diagnostic-impression.test.js`, `qa/v5/diagnosis-browser.mjs`.
-- **Evidencia y alcance:** Catálogo global/editor/UID y borrado probados; browser histórico cubre globalVocabulary.
-- **Pendiente:** Aceptar en Android sobre contexto competitivo.
-- **Aceptación:** Buscador no revela caso; guardar propia hipótesis no se confunde con revelación pagada.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-16 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-MANUAL.
+
+**Solicitud final:** Autocompletar impresión diagnóstica desde catálogo global, sin filtrar por diagnóstico oculto; badge persistente y rival solo lectura.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Catálogo global/editor/UID y borrado probados; browser histórico cubre globalVocabulary.
+
+**Archivos responsables:** `src/v5/ui/diagnostic-impression.js`, `src/v5/ui/clinical-controller.js`.
+
+**Pruebas identificadas:** `src/v5/ui/diagnostic-impression.test.js`, `qa/v5/diagnosis-browser.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/diagnostic-impression.test.js`. No repetidas aquí: `qa/v5/diagnosis-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar en Android sobre contexto competitivo.
+
+**Criterio de aceptación:** Buscador no revela caso; guardar propia hipótesis no se confunde con revelación pagada.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Aceptar en Android sobre contexto competitivo. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### DX-03 · Diagnóstico y evaluación
 
-- **Fuente/fecha/naturaleza:** MIG-MANUAL;PC-12-20 · 2026-10-16→11-12 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Evaluación separa calidad de elegibilidad: diagnóstico, historia, seguridad, estudios, tratamiento/destino, eficiencia y eventos; desglose sumó/descontó/faltó.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/closure-debrief.js`, `src/v5/ui/case-debrief.js`, `src/clinical/case-completion-487.js`.
-- **Pruebas pertinentes:** `src/v5/ui/case-debrief.test.js`, `src/v5/clinical/accepted-transfer.test.js`.
-- **Evidencia y alcance:** Calidad0–100 y XP separadas; 36bf20f muestra crédito/débito acreditado. Nuevas reglas13/11 separan historia y consejos de cierre.
-- **Pendiente:** Revisar desglose por destino alternativo y animación en teléfono.
-- **Aceptación:** Omitir anamnesis baja nota, no bloquea por sí solo; XP viene de recibo, no del DOM.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** 2026-10-16→11-12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-MANUAL;PC-12-20.
+
+**Solicitud final:** Evaluación separa calidad de elegibilidad: diagnóstico, historia, seguridad, estudios, tratamiento/destino, eficiencia y eventos; desglose sumó/descontó/faltó.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Calidad0–100 y XP separadas; 36bf20f muestra crédito/débito acreditado. Nuevas reglas13/11 separan historia y consejos de cierre.
+
+**Archivos responsables:** `src/v5/clinical/closure-debrief.js`, `src/v5/ui/case-debrief.js`, `src/clinical/case-completion-487.js`.
+
+**Pruebas identificadas:** `src/v5/ui/case-debrief.test.js`, `src/v5/clinical/accepted-transfer.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/case-debrief.test.js`, `src/v5/clinical/accepted-transfer.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Revisar desglose por destino alternativo y animación en teléfono.
+
+**Criterio de aceptación:** Omitir anamnesis baja nota, no bloquea por sí solo; XP viene de recibo, no del DOM.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Revisar desglose por destino alternativo y animación en teléfono. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### VEGA-02 · Dr. Vega
 
-- **Fuente/fecha/naturaleza:** PC-02;PC-03-04;MIG-MANUAL · 2026-10-02/04→16 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Mentor Aprendiz docente multietapa: reconoce duda/hipótesis, pregunta razonamiento, ABC primero y memoria pedagógica, sin bucles.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/vega-guidance.js`, `src/v5/clinical/clinical-hints.js`, `src/v5/clinical/guard-session.js`.
-- **Pruebas pertinentes:** `src/v5/core/nurse-diagnosis-speech.test.js`.
-- **Evidencia y alcance:** vegaGuidance actual orienta al botón de pista y explica límites/dosis; no conserva toda la conversación docente multietapa previa.
-- **Pendiente:** Migrar razonamiento y memoria existentes sobre la misma autoridad; no confundir selección de próxima acción con tutor completo.
-- **Aceptación:** «No sé» es duda, «¿qué significa?» es pregunta, no diagnóstico ni tratamiento; orientación se adapta al encuentro.
-- **Ejecución:** P1 · B3 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo medio; dependencias: B1/B2 para medición y checklist.
-- **Omisión/condición recuperada:** C/F: paridad docente incompleta; intención de eliminación no recuperable.
+**Fecha y origen:** 2026-10-02/04→16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-02;PC-03-04;MIG-MANUAL.
+
+**Solicitud final:** Mentor Aprendiz docente multietapa: reconoce duda/hipótesis, pregunta razonamiento, ABC primero y memoria pedagógica, sin bucles.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** vegaGuidance actual orienta al botón de pista y explica límites/dosis; no conserva toda la conversación docente multietapa previa.
+
+**Archivos responsables:** `src/v5/clinical/vega-guidance.js`, `src/v5/clinical/clinical-hints.js`, `src/v5/clinical/guard-session.js`.
+
+**Pruebas identificadas:** `src/v5/core/nurse-diagnosis-speech.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/core/nurse-diagnosis-speech.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Migrar razonamiento y memoria existentes sobre la misma autoridad; no confundir selección de próxima acción con tutor completo.
+
+**Criterio de aceptación:** «No sé» es duda, «¿qué significa?» es pregunta, no diagnóstico ni tratamiento; orientación se adapta al encuentro.
+
+**Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Migrar razonamiento y memoria existentes sobre la misma autoridad; no confundir selección de próxima acción con tutor completo. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** C/F: paridad docente incompleta; intención de eliminación no recuperable.
 
 ### VEGA-03 · Dr. Vega
 
-- **Fuente/fecha/naturaleza:** PC-02;PC-03-04;MIG-PLAN · 2026-10-02/04→16 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Delegación «hazlo tú» y rescate docente limitado ante gravedad en Aprendiz, por órdenes reales, sin administrar automáticamente paciente estable.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/vega-guidance.js`, `src/v5/clinical/guard-session.js`.
-- **Pruebas pertinentes:** `src/v5/core/nurse-diagnosis-speech.test.js`.
-- **Evidencia y alcance:** Pista y soporte pedagógico existen; no se identificó ejecutor V5 de delegación física docente equivalente a C09 completo.
-- **Pendiente:** Recuperar política exacta y enlazar ejecución autorizada/receptores, conservar límites de modo.
-- **Aceptación:** Delegación explícita crea recibos reales; charla no cuenta como tratamiento; inactividad estable no dispara medicación.
-- **Ejecución:** P1 · B3 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo medio; dependencias: B1/B2 para medición y checklist.
-- **Omisión/condición recuperada:** C: docencia y delegación quedaron fuera del inventario reciente.
+**Fecha y origen:** 2026-10-02/04→16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-02;PC-03-04;MIG-PLAN.
+
+**Solicitud final:** Delegación «hazlo tú» y rescate docente limitado ante gravedad en Aprendiz, por órdenes reales, sin administrar automáticamente paciente estable.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Pista y soporte pedagógico existen; no se identificó ejecutor V5 de delegación física docente equivalente a C09 completo.
+
+**Archivos responsables:** `src/v5/clinical/vega-guidance.js`, `src/v5/clinical/guard-session.js`.
+
+**Pruebas identificadas:** `src/v5/core/nurse-diagnosis-speech.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/core/nurse-diagnosis-speech.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Recuperar política exacta y enlazar ejecución autorizada/receptores, conservar límites de modo.
+
+**Criterio de aceptación:** Delegación explícita crea recibos reales; charla no cuenta como tratamiento; inactividad estable no dispara medicación.
+
+**Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Recuperar política exacta y enlazar ejecución autorizada/receptores, conservar límites de modo. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** C: docencia y delegación quedaron fuera del inventario reciente.
 
 ### XP-01 · XP y progresión
 
-- **Fuente/fecha/naturaleza:** PC-02;PC-24-31;DOC-RPG · 2026-10-02→27 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Todos los modos puntúan, nivel y velocidad vienen de XP autoritativa, progreso persistente entre dispositivos.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/progression.js`, `src/v5/engine/movement-progression.js`, `src/v5/server/clinical-reward.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/progression.test.js`, `src/v5/server/account-movement.test.js`.
-- **Evidencia y alcance:** Cuenta/recibos y curva saturada integradas; nivel1=184,5px/s tras ajuste−10%, no fórmula histórica205.
-- **Pendiente:** Aceptar progreso en teléfono con sesión recuperada; no convertir XP local sin verificar en cuenta.
-- **Aceptación:** Ningún cliente puede fabricar nivel, velocidad ni cobrar dos veces por cierre.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
+**Fecha y origen:** 2026-10-02→27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-02;PC-24-31;DOC-RPG.
+
+**Solicitud final:** Todos los modos puntúan, nivel y velocidad vienen de XP autoritativa, progreso persistente entre dispositivos.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Cuenta/recibos y curva saturada integradas; nivel1=184,5px/s tras ajuste−10%, no fórmula histórica205.
+
+**Archivos responsables:** `src/v5/clinical/progression.js`, `src/v5/engine/movement-progression.js`, `src/v5/server/clinical-reward.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/progression.test.js`, `src/v5/server/account-movement.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/progression.test.js`, `src/v5/server/account-movement.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar progreso en teléfono con sesión recuperada; no convertir XP local sin verificar en cuenta.
+
+**Criterio de aceptación:** Ningún cliente puede fabricar nivel, velocidad ni cobrar dos veces por cierre.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Aceptar progreso en teléfono con sesión recuperada; no convertir XP local sin verificar en cuenta. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### XP-02 · XP y progresión
 
-- **Fuente/fecha/naturaleza:** PC-02 · 2026-10-02 (indirecta) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Recompensas y personalización desbloqueable (bata/niveles), con nombre y color propios.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/avatar-creator.js`, `src/v5/app/avatar-appearance.js`, `src/v5/clinical/progression.js`.
-- **Pruebas pertinentes:** `src/v5/ui/avatar-creator.test.js`, `src/v5/app/avatar-appearance.test.js`.
-- **Evidencia y alcance:** Selector/ropa y niveles existen; no se identificó mecanismo de desbloqueo de bata por nivel/recompensa en V5.
-- **Pendiente:** Recuperar umbral/política si existe; implementar catálogo de recompensas sin inventar umbral histórico.
-- **Aceptación:** Recompensa persistente autoritativa y apariencia disponible según política documentada.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
-- **Omisión/condición recuperada:** A: desbloqueo de vestimenta no está explícito en inventario recuperado.
+**Fecha y origen:** 2026-10-02 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-02.
+
+**Solicitud final:** Recompensas y personalización desbloqueable (bata/niveles), con nombre y color propios.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Selector/ropa y niveles existen; no se identificó mecanismo de desbloqueo de bata por nivel/recompensa en V5.
+
+**Archivos responsables:** `src/v5/ui/avatar-creator.js`, `src/v5/app/avatar-appearance.js`, `src/v5/clinical/progression.js`.
+
+**Pruebas identificadas:** `src/v5/ui/avatar-creator.test.js`, `src/v5/app/avatar-appearance.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/avatar-creator.test.js`, `src/v5/app/avatar-appearance.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Recuperar umbral/política si existe; implementar catálogo de recompensas sin inventar umbral histórico.
+
+**Criterio de aceptación:** Recompensa persistente autoritativa y apariencia disponible según política documentada.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Recuperar umbral/política si existe; implementar catálogo de recompensas sin inventar umbral histórico. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** A: desbloqueo de vestimenta no está explícito en inventario recuperado.
 
 ### XP-03 · XP y progresión
 
-- **Fuente/fecha/naturaleza:** PC-09-10;DOC-INVENTARIO · 2026-11-09→12 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Cambios de XP visibles y animados una vez por recibo; distinguir puntos clínicos, XP, penalización de pistas, alta y muerte.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/guard-scoreboard.js`, `src/v5/ui/case-debrief.js`, `src/v5/app/application.js`.
-- **Pruebas pertinentes:** `src/v5/ui/guard-scoreboard.test.js`, `src/v5/ui/case-debrief.test.js`.
-- **Evidencia y alcance:** Débitos/créditos visibles y desglose existen. No se demostró animación única compartida entre dispositivos para todos los eventos pedidos.
-- **Pendiente:** Deduplicar animación por médico/recibo/dispositivo y verificar dos cuentas, pistas y reconexión.
-- **Aceptación:** Saldo coincide con recibos y recarga no vuelve a animar/créditar evento.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
+**Fecha y origen:** 2026-11-09→12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-09-10;DOC-INVENTARIO.
+
+**Solicitud final:** Cambios de XP visibles y animados una vez por recibo; distinguir puntos clínicos, XP, penalización de pistas, alta y muerte.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Débitos/créditos visibles y desglose existen. No se demostró animación única compartida entre dispositivos para todos los eventos pedidos.
+
+**Archivos responsables:** `src/v5/ui/guard-scoreboard.js`, `src/v5/ui/case-debrief.js`, `src/v5/app/application.js`.
+
+**Pruebas identificadas:** `src/v5/ui/guard-scoreboard.test.js`, `src/v5/ui/case-debrief.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/guard-scoreboard.test.js`, `src/v5/ui/case-debrief.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Deduplicar animación por médico/recibo/dispositivo y verificar dos cuentas, pistas y reconexión.
+
+**Criterio de aceptación:** Saldo coincide con recibos y recarga no vuelve a animar/créditar evento.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Deduplicar animación por médico/recibo/dispositivo y verificar dos cuentas, pistas y reconexión. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### COMP-01 · Competitivo
 
-- **Fuente/fecha/naturaleza:** MIG-MANUAL;GIT-13 · 2026-10-07→11-13 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Competitivo2–4: primer contacto clínico válido toma propiedad; rivales no tratan ni ven expediente privado; cama liberada no filtra historia anterior.
-- **Historia/vigencia:** Regresión de privacidad reproducida12/11, fix adicional13/11. El estado actual no se infiere del verde anterior.
-- **Archivos responsables:** `src/v5/clinical/guard-runtime.js`, `src/v5/app/patient-selection.js`.
-- **Pruebas pertinentes:** `src/v5/server/competitive-durable.test.js`, `qa/tests/clinical-case-certification.test.mjs`.
-- **Evidencia y alcance:** 33f85e3→f2b104a→775ccda reparan privacidad libre/liberada y visibilidad de camas; CI browser2/3/4 y matriz final aprueban.
-- **Pendiente:** Aceptar red móvil y 2–4 cuentas; tests de fixtures que leen privado antes del claim fallan y deben corregirse.
-- **Aceptación:** Visibilidad pública de cama no concede historia privada; propiedad/XP nunca se duplican.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
-- **Omisión/condición recuperada:** E: corrección de cama liberada no cubría cama nunca tomada.
+**Fecha y origen:** 2026-10-07→11-13; SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-MANUAL;GIT-13.
+
+**Solicitud final:** Competitivo2–4: primer contacto clínico válido toma propiedad; rivales no tratan ni ven expediente privado; cama liberada no filtra historia anterior.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** 33f85e3→f2b104a→775ccda reparan privacidad libre/liberada y visibilidad de camas; CI browser2/3/4 y matriz final aprueban.
+
+**Archivos responsables:** `src/v5/clinical/guard-runtime.js`, `src/v5/app/patient-selection.js`.
+
+**Pruebas identificadas:** `src/v5/server/competitive-durable.test.js`, `qa/tests/clinical-case-certification.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/server/competitive-durable.test.js`, `qa/tests/clinical-case-certification.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar red móvil y 2–4 cuentas; tests de fixtures que leen privado antes del claim fallan y deben corregirse.
+
+**Criterio de aceptación:** Visibilidad pública de cama no concede historia privada; propiedad/XP nunca se duplican.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Aceptar red móvil y 2–4 cuentas; tests de fixtures que leen privado antes del claim fallan y deben corregirse. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Regresión de privacidad reproducida12/11, fix adicional13/11. El estado actual no se infiere del verde anterior.
+
+**Condición recuperada/olvidada:** E: corrección de cama liberada no cubría cama nunca tomada.
 
 ### LOBBY-01 · Lobby y presencia
 
-- **Fuente/fecha/naturaleza:** PC-SOCIAL;DOC-RPG · 2026-10-05→11-12 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Presencia disponible/en guardia/offline correcta, solicitudes visibles con contador y acceso a perfil al tocar avatar.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/lobby-directory.js`, `src/v5/ui/player-profile-card.js`, `src/v5/server/account-gateway.js`.
-- **Pruebas pertinentes:** `src/v5/ui/lobby-directory.test.js`, `src/v5/social/player-profile.test.js`.
-- **Evidencia y alcance:** a6fdc9d calcula disponibilidad, perfiles tienen avatar/nombre/nivel/casos/amigos/estado; invitaciones y avisos integrados.
-- **Pendiente:** Presencia tardía, regreso al lobby y notificación de amistad en teléfonos.
-- **Aceptación:** Invitar disponible y tocar jugador abre acciones sociales, no mención clínica.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
+**Fecha y origen:** 2026-10-05→11-12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-SOCIAL;DOC-RPG.
+
+**Solicitud final:** Presencia disponible/en guardia/offline correcta, solicitudes visibles con contador y acceso a perfil al tocar avatar.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** a6fdc9d calcula disponibilidad, perfiles tienen avatar/nombre/nivel/casos/amigos/estado; invitaciones y avisos integrados.
+
+**Archivos responsables:** `src/v5/ui/lobby-directory.js`, `src/v5/ui/player-profile-card.js`, `src/v5/server/account-gateway.js`.
+
+**Pruebas identificadas:** `src/v5/ui/lobby-directory.test.js`, `src/v5/social/player-profile.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/lobby-directory.test.js`, `src/v5/social/player-profile.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Presencia tardía, regreso al lobby y notificación de amistad en teléfonos.
+
+**Criterio de aceptación:** Invitar disponible y tocar jugador abre acciones sociales, no mención clínica.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Presencia tardía, regreso al lobby y notificación de amistad en teléfonos. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### SOCIAL-01 · Amigos y chat
 
-- **Fuente/fecha/naturaleza:** PC-SOCIAL · 2026-10-05/20/30 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** NO IMPLEMENTADO.
-- **Comportamiento:** Chat privado de amigos separado del público/clínico, minimizable y usable durante guardia.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/player-profile-card.js`, `src/v5/app/application.js`, `src/social/qa-social-server.js`.
-- **Pruebas pertinentes:** No identificadas; requiere nueva prueba dirigida..
-- **Evidencia y alcance:** Tarjeta solo ofrece amistad/invitación; rutas sociales tienen lobby/chat y la guardia tiene Equipo/Actividad. No hay hilo directo de amigos integrado.
-- **Pendiente:** Implementar almacenamiento/ruta autorizada por participantes, bandeja, no leídos y control minimizable sin afectar clínica.
-- **Aceptación:** Dos amigos conversan en privado durante guardias distintas; no aparece en transcript clínico ni activa órdenes.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
-- **Omisión/condición recuperada:** A/C: Equipo fue presentado como mejora social, pero no satisface mensajes directos de amigos.
+**Fecha y origen:** 2026-10-05/20/30; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-SOCIAL.
+
+**Solicitud final:** Chat privado de amigos separado del público/clínico, minimizable y usable durante guardia.
+
+**Estado:** NO IMPLEMENTADO. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Tarjeta solo ofrece amistad/invitación; rutas sociales tienen lobby/chat y la guardia tiene Equipo/Actividad. No hay hilo directo de amigos integrado.
+
+**Archivos responsables:** `src/v5/ui/player-profile-card.js`, `src/v5/app/application.js`, `src/social/qa-social-server.js`.
+
+**Pruebas identificadas:** No identificadas; consultar criterio de aceptación..
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación.
+
+**Pendiente:** Implementar almacenamiento/ruta autorizada por participantes, bandeja, no leídos y control minimizable sin afectar clínica.
+
+**Criterio de aceptación:** Dos amigos conversan en privado durante guardias distintas; no aparece en transcript clínico ni activa órdenes.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Implementar almacenamiento/ruta autorizada por participantes, bandeja, no leídos y control minimizable sin afectar clínica. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** A/C: Equipo fue presentado como mejora social, pero no satisface mensajes directos de amigos.
 
 ### SOCIAL-02 · Amigos y chat
 
-- **Fuente/fecha/naturaleza:** PC-SOCIAL;PC-11-20 · 2026-10-20→11-11 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Invitación unilateral llega y se acepta sin invitación mutua ni códigos; persistir aceptación y revocación entre instancias.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/social/cooperative-link.js`, `src/v5/social/room-membership-store.js`, `src/v5/server/supabase-account-store.js`.
-- **Pruebas pertinentes:** `src/v5/server/supabase-social-room-persistence.test.js`, `src/v5/social/cooperative-link.test.js`.
-- **Evidencia y alcance:** Aislamiento, TTL y 401/403/404 documentados; CI lobby y multiplayer HEAD aprueban.
-- **Pendiente:** Teléfono de ambas cuentas con pestaña inactiva y presencia atrasada.
-- **Aceptación:** Una invitación basta; miembro revocado pierde acceso y no reentra por replay.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** 2026-10-20→11-11; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-SOCIAL;PC-11-20.
+
+**Solicitud final:** Invitación unilateral llega y se acepta sin invitación mutua ni códigos; persistir aceptación y revocación entre instancias.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Aislamiento, TTL y 401/403/404 documentados; CI lobby y multiplayer HEAD aprueban.
+
+**Archivos responsables:** `src/v5/social/cooperative-link.js`, `src/v5/social/room-membership-store.js`, `src/v5/server/supabase-account-store.js`.
+
+**Pruebas identificadas:** `src/v5/server/supabase-social-room-persistence.test.js`, `src/v5/social/cooperative-link.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/server/supabase-social-room-persistence.test.js`, `src/v5/social/cooperative-link.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Teléfono de ambas cuentas con pestaña inactiva y presencia atrasada.
+
+**Criterio de aceptación:** Una invitación basta; miembro revocado pierde acceso y no reentra por replay.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Teléfono de ambas cuentas con pestaña inactiva y presencia atrasada. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### CHAT-01 · Cooperativo
 
-- **Fuente/fecha/naturaleza:** U-AUDIT;DOC-INVENTARIO · 2026-11 (fecha original parcial) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Equipo y Actividad visibles y actualizados desde inicio; no esperar minutos ni llegada de todo de golpe.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/guard-communication.js`, `src/v5/ui/guard-communication-view.js`, `src/v5/app/application.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/guard-communication.test.js`, `src/v5/ui/guard-communication-view.test.js`.
-- **Evidencia y alcance:** Canales se renderizan desde communication; Equipo solo coop, actividad derivada de eventos. Browser compartido aprueba en HEAD, aceptación física falta.
-- **Pendiente:** Primer minuto en2–4 cuentas bajo red móvil: pertenencia, hydrate, stream de eventos y pestañas.
-- **Aceptación:** Mensaje de colega visible desde primer envío; actividad conserva orden/UID tras recuperar.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** 2026-11 (fecha original parcial); SOLICITUD DOCUMENTADA INDIRECTAMENTE; U-AUDIT;DOC-INVENTARIO.
+
+**Solicitud final:** Equipo y Actividad visibles y actualizados desde inicio; no esperar minutos ni llegada de todo de golpe.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Canales se renderizan desde communication; Equipo solo coop, actividad derivada de eventos. Browser compartido aprueba en HEAD, aceptación física falta.
+
+**Archivos responsables:** `src/v5/clinical/guard-communication.js`, `src/v5/ui/guard-communication-view.js`, `src/v5/app/application.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/guard-communication.test.js`, `src/v5/ui/guard-communication-view.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/guard-communication.test.js`, `src/v5/ui/guard-communication-view.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Primer minuto en2–4 cuentas bajo red móvil: pertenencia, hydrate, stream de eventos y pestañas.
+
+**Criterio de aceptación:** Mensaje de colega visible desde primer envío; actividad conserva orden/UID tras recuperar.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Primer minuto en2–4 cuentas bajo red móvil: pertenencia, hydrate, stream de eventos y pestañas. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### CHAT-02 · Interfaz clínica
 
-- **Fuente/fecha/naturaleza:** PC-01;PC-02;PC-08-14;MIG-MANUAL · 2026-10-01→14 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Chat contextual RPG con burbujas y único historial clínico; paciente cercano por defecto, Enfermera/Vega por invocación; alcance por paredes.
-- **Historia/vigencia:** Historial único clínico inicial; petición posterior de Equipo/Actividad añade vistas. No interpretar historial único como prohibición vigente del canal solicitado después.
-- **Archivos responsables:** `src/v5/core/speech-router.js`, `src/v5/ui/guard-chat-view.js`, `src/v5/ui/spatial-ward-speech.js`.
-- **Pruebas pertinentes:** `src/v5/ui/spatial-ward-speech.test.js`, `src/v5/core/nurse-diagnosis-speech.test.js`.
-- **Evidencia y alcance:** Router de destinatarios/UID, memoria y oclusión integrados. Equipo/Actividad posteriores complementan; no sustituyen routing clínico.
-- **Pendiente:** Probar proximidad, Box2B, paciente distinto y lectura de historial con teclado.
-- **Aceptación:** Solo interlocutor pertinente responde; tocar colega abre perfil; paciente no recibe orden de Equipo.
-- **Ejecución:** P1 · B3 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo medio; dependencias: B1/B2 para medición y checklist.
+**Fecha y origen:** 2026-10-01→14; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-01;PC-02;PC-08-14;MIG-MANUAL.
+
+**Solicitud final:** Chat contextual RPG con burbujas y único historial clínico; paciente cercano por defecto, Enfermera/Vega por invocación; alcance por paredes.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Router de destinatarios/UID, memoria y oclusión integrados. Equipo/Actividad posteriores complementan; no sustituyen routing clínico.
+
+**Archivos responsables:** `src/v5/core/speech-router.js`, `src/v5/ui/guard-chat-view.js`, `src/v5/ui/spatial-ward-speech.js`.
+
+**Pruebas identificadas:** `src/v5/ui/spatial-ward-speech.test.js`, `src/v5/core/nurse-diagnosis-speech.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/spatial-ward-speech.test.js`, `src/v5/core/nurse-diagnosis-speech.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Probar proximidad, Box2B, paciente distinto y lectura de historial con teclado.
+
+**Criterio de aceptación:** Solo interlocutor pertinente responde; tocar colega abre perfil; paciente no recibe orden de Equipo.
+
+**Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Probar proximidad, Box2B, paciente distinto y lectura de historial con teclado. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Historial único clínico inicial; petición posterior de Equipo/Actividad añade vistas. No interpretar historial único como prohibición vigente del canal solicitado después.
 
 ### TURN-01 · Guardia de 24 minutos
 
-- **Fuente/fecha/naturaleza:** PC-03-04;PC-24-31;DOC-CONTINUIDAD · 2026-10-03/04→27 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** 24min reales=24h simuladas, ingresos dinámicos y varios pacientes; reloj sobrevive lag/teclado/recarga sin acelerar farmacología indebidamente.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/guard-clock.js`, `src/v5/clinical/shift-flow.js`, `src/v5/clinical/guard-runtime.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/guard-day-clock.test.js`, `src/v5/clinical/shift-flow-chaos.test.js`, `qa/v5/full-guard-24h.mjs`.
-- **Evidencia y alcance:** 1440s y seis admisiones; tiempo nativo .12/.03 min/s separado. CI full-guard24h pasa; dos cuentas1.456s pared documentadas12/11.
-- **Pendiente:** Aceptar turno completo del preview actual en teléfono; no repetir reloj real local sin cambio que lo justifique.
-- **Aceptación:** No se pierden pacientes/órdenes al terminar; no confundir clock HUD con cinética.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** 2026-10-03/04→27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-24-31;DOC-CONTINUIDAD.
+
+**Solicitud final:** 24min reales=24h simuladas, ingresos dinámicos y varios pacientes; reloj sobrevive lag/teclado/recarga sin acelerar farmacología indebidamente.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** 1440s y seis admisiones; tiempo nativo .12/.03 min/s separado. CI full-guard24h pasa; dos cuentas1.456s pared documentadas12/11.
+
+**Archivos responsables:** `src/v5/clinical/guard-clock.js`, `src/v5/clinical/shift-flow.js`, `src/v5/clinical/guard-runtime.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/guard-day-clock.test.js`, `src/v5/clinical/shift-flow-chaos.test.js`, `qa/v5/full-guard-24h.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/guard-day-clock.test.js`, `src/v5/clinical/shift-flow-chaos.test.js`. No repetidas aquí: `qa/v5/full-guard-24h.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar turno completo del preview actual en teléfono; no repetir reloj real local sin cambio que lo justifique.
+
+**Criterio de aceptación:** No se pierden pacientes/órdenes al terminar; no confundir clock HUD con cinética.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Aceptar turno completo del preview actual en teléfono; no repetir reloj real local sin cambio que lo justifique. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### TURN-02 · Guardia de 24 minutos
 
-- **Fuente/fecha/naturaleza:** U-AUDIT;DOC-INVENTARIO · 2026-11 (original parcial) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Al finalizar, continuar otra guardia o guardar y salir, conservando pacientes/progreso y decisión por participante.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/guard-turn-control.js`, `src/v5/app/application.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/guard-turn-continuity.test.js`, `qa/v5/guard-recovery-browser.mjs`.
-- **Evidencia y alcance:** continue/leave/resume idempotentes; continuación necesita decisiones de participantes activos y extiende mismo runtime.
-- **Pendiente:** Aceptar consenso2 cuentas, salida de uno, desconexión y siguiente turno en Android.
-- **Aceptación:** Continuar extiende turno sin duplicar cierre/XP; guardar no fuerza reingreso ni borra atención.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** 2026-11 (original parcial); SOLICITUD DOCUMENTADA INDIRECTAMENTE; U-AUDIT;DOC-INVENTARIO.
+
+**Solicitud final:** Al finalizar, continuar otra guardia o guardar y salir, conservando pacientes/progreso y decisión por participante.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** continue/leave/resume idempotentes; continuación necesita decisiones de participantes activos y extiende mismo runtime.
+
+**Archivos responsables:** `src/v5/clinical/guard-turn-control.js`, `src/v5/app/application.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/guard-turn-continuity.test.js`, `qa/v5/guard-recovery-browser.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/guard-turn-continuity.test.js`. No repetidas aquí: `qa/v5/guard-recovery-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar consenso2 cuentas, salida de uno, desconexión y siguiente turno en Android.
+
+**Criterio de aceptación:** Continuar extiende turno sin duplicar cierre/XP; guardar no fuerza reingreso ni borra atención.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Aceptar consenso2 cuentas, salida de uno, desconexión y siguiente turno en Android. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### SELECT-01 · Selección de guardias y especialidades
 
-- **Fuente/fecha/naturaleza:** PC-03-04;PC-24-31;DOC-GUARDSELECTION · 2026-10-04→27 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Selección cualquier caso/especialidad/patología, evitar revelar enfermedad al azar, multiplicadores actuales×1,5/×1,2/×1,0.
-- **Historia/vigencia:** ×5/×3/×1 de4/10 fue sustituido explícitamente por×1,5/×1,2/×1,0 el27/10; no son dos pendientes.
-- **Archivos responsables:** `src/v5/clinical/guard-selection-policy.js`, `src/v5/app/application.js`, `src/v5/server/clinical-reward.js`.
-- **Pruebas pertinentes:** `src/v5/server/guard-selection-integration.test.js`.
-- **Evidencia y alcance:** Selección y SQL27/10,137/otras pruebas históricas; multiplicador persistido autoritativo, no precio desde cliente.
-- **Pendiente:** Aceptar UI en teléfono y que no filtre diagnóstico en selección general.
-- **Aceptación:** Tipo de guardia restaura mismo alcance/multiplicador; patología explícita sí permite conocerla.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
+**Fecha y origen:** 2026-10-04→27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-24-31;DOC-GUARDSELECTION.
+
+**Solicitud final:** Selección cualquier caso/especialidad/patología, evitar revelar enfermedad al azar, multiplicadores actuales×1,5/×1,2/×1,0.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Selección y SQL27/10,137/otras pruebas históricas; multiplicador persistido autoritativo, no precio desde cliente.
+
+**Archivos responsables:** `src/v5/clinical/guard-selection-policy.js`, `src/v5/app/application.js`, `src/v5/server/clinical-reward.js`.
+
+**Pruebas identificadas:** `src/v5/server/guard-selection-integration.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/server/guard-selection-integration.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar UI en teléfono y que no filtre diagnóstico en selección general.
+
+**Criterio de aceptación:** Tipo de guardia restaura mismo alcance/multiplicador; patología explícita sí permite conocerla.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Aceptar UI en teléfono y que no filtre diagnóstico en selección general. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** ×5/×3/×1 de4/10 fue sustituido explícitamente por×1,5/×1,2/×1,0 el27/10; no son dos pendientes.
 
 ### SELECT-OLD · Selección de guardias y especialidades
 
-- **Fuente/fecha/naturaleza:** PC-03-04;PC-24-31 · 2026-10-04→27 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** REEMPLAZADO.
-- **Comportamiento:** Multiplicadores iniciales×5/×3/×1.
-- **Historia/vigencia:** Sustituido por SELECT-01; fila histórica excluida del total de pendientes.
-- **Archivos responsables:** `src/v5/clinical/guard-selection-policy.js`.
-- **Pruebas pertinentes:** `src/v5/server/guard-selection-integration.test.js`.
-- **Evidencia y alcance:** Especificación posterior27/10 usada por catálogo/SQL.
-- **Pendiente:** Ninguna tarea; conservar antecedente en SELECT-01.
-- **Aceptación:** No reintroducir multiplicadores antiguos.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
+**Fecha y origen:** 2026-10-04→27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-24-31.
+
+**Solicitud final:** Multiplicadores iniciales×5/×3/×1.
+
+**Estado:** REEMPLAZADO. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Especificación posterior27/10 usada por catálogo/SQL.
+
+**Archivos responsables:** `src/v5/clinical/guard-selection-policy.js`.
+
+**Pruebas identificadas:** `src/v5/server/guard-selection-integration.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/server/guard-selection-integration.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Ninguna tarea; conservar antecedente en SELECT-01.
+
+**Criterio de aceptación:** No reintroducir multiplicadores antiguos.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Ninguna tarea; conservar antecedente en SELECT-01. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** Sustituido por SELECT-01; fila histórica excluida del total de pendientes.
 
 ### UI-02 · Interfaz clínica
 
-- **Fuente/fecha/naturaleza:** PC-03-04;PC-SOCIAL · 2026-10-03/14 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Cada monitor pertenece a su cama; monitor faltante interactuable; Box2B, examen táctil y camas nuevas sincronizados.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/engine/interactions.js`, `src/v5/app/world.js`, `src/v5/ui/clinical-controller.js`, `src/v5/content/beds.json`.
-- **Pruebas pertinentes:** `src/v5/engine/interactions.test.js`, `src/v5/ui/clinical-bedside-ux.test.js`.
-- **Evidencia y alcance:** Ocho camas/puntos de interacción; 440 paneles documentados. No hay censo actual de un toque por todos54controles originales.
-- **Pendiente:** Censo accionable de controles faltantes y aceptación Box2B Android+PC.
-- **Aceptación:** Toque abre el paciente/monitor correcto y segundo ingreso aparece en todos.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-03/14; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-SOCIAL.
+
+**Solicitud final:** Cada monitor pertenece a su cama; monitor faltante interactuable; Box2B, examen táctil y camas nuevas sincronizados.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Ocho camas/puntos de interacción; 440 paneles documentados. No hay censo actual de un toque por todos54controles originales.
+
+**Archivos responsables:** `src/v5/engine/interactions.js`, `src/v5/app/world.js`, `src/v5/ui/clinical-controller.js`, `src/v5/content/beds.json`.
+
+**Pruebas identificadas:** `src/v5/engine/interactions.test.js`, `src/v5/ui/clinical-bedside-ux.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/engine/interactions.test.js`, `src/v5/ui/clinical-bedside-ux.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Censo accionable de controles faltantes y aceptación Box2B Android+PC.
+
+**Criterio de aceptación:** Toque abre el paciente/monitor correcto y segundo ingreso aparece en todos.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Censo accionable de controles faltantes y aceptación Box2B Android+PC. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### EXAM-01 · Interfaz clínica
 
-- **Fuente/fecha/naturaleza:** PC-03-04;DOC-QA26;MIG-MANUAL · 2026-10-04→26 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Examen anatómico por órgano/técnica, ALiCIA/Glasgow, tacto rectal como maniobra; resultados en panel, sin narrarlos Enfermería ni repetir globos.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/observations.js`, `src/v5/ui/clinical-controller.js`, `src/v5/ui/clinical-panels.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/physical-exam.test.js`, `src/v5/ui/examination-feedback.test.js`.
-- **Evidencia y alcance:** 26/10 paridad de examen100/100 y FECAL periné/tacto; UI no simula estudio de Enfermería.
-- **Pendiente:** Aceptar maniobras/scroll/proximidad y acceso físico a todos los controles.
-- **Aceptación:** Maniobra deja hallazgo del paciente y no adelanta fisiología ni añade diagnóstico por ausencia de dato.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-04→26; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;DOC-QA26;MIG-MANUAL.
+
+**Solicitud final:** Examen anatómico por órgano/técnica, ALiCIA/Glasgow, tacto rectal como maniobra; resultados en panel, sin narrarlos Enfermería ni repetir globos.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** 26/10 paridad de examen100/100 y FECAL periné/tacto; UI no simula estudio de Enfermería.
+
+**Archivos responsables:** `src/v5/clinical/observations.js`, `src/v5/ui/clinical-controller.js`, `src/v5/ui/clinical-panels.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/physical-exam.test.js`, `src/v5/ui/examination-feedback.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/physical-exam.test.js`, `src/v5/ui/examination-feedback.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar maniobras/scroll/proximidad y acceso físico a todos los controles.
+
+**Criterio de aceptación:** Maniobra deja hallazgo del paciente y no adelanta fisiología ni añade diagnóstico por ausencia de dato.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Aceptar maniobras/scroll/proximidad y acceso físico a todos los controles. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### WORLD-01 · Mundo RPG, movimiento y gráficos
 
-- **Fuente/fecha/naturaleza:** PC-01;PC-02;PC-15-23;DOC-RPG · 2026-10-01→27 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Preservar mapa/personajes HD/proporciones, piernas y orientación; cambiar nombre/ropa sin teleportar ni vibrar cámara.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/app/world.js`, `src/v5/app/avatar-appearance.js`, `src/v5/render/hospital.js`.
-- **Pruebas pertinentes:** `src/v5/app/avatar-appearance.test.js`, `src/v5/engine/navigation.test.js`.
-- **Evidencia y alcance:** Interpolación/colisiones/ropa live; recursosHD/navy corregidos, nivel1−10% vigente; no se rediseñaron por auditoría.
-- **Pendiente:** Aceptar marcha local/remota en dispositivo físico y zoom.
-- **Aceptación:** Aspecto original y movimiento continuo; cambio de ropa conserva posición/cámara.
-- **Ejecución:** P3 · B7 · MIXTA · esfuerzo del bloque 2–5 semanas para mapa modular completo (no sumarlo por cada fila), riesgo alto; dependencias: B1; decisión visual pendiente para nuevo mapa.
+**Fecha y origen:** 2026-10-01→27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-01;PC-02;PC-15-23;DOC-RPG.
+
+**Solicitud final:** Preservar mapa/personajes HD/proporciones, piernas y orientación; cambiar nombre/ropa sin teleportar ni vibrar cámara.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P3. **Entorno:** MIXTA.
+
+**Evidencia:** Interpolación/colisiones/ropa live; recursosHD/navy corregidos, nivel1−10% vigente; no se rediseñaron por auditoría.
+
+**Archivos responsables:** `src/v5/app/world.js`, `src/v5/app/avatar-appearance.js`, `src/v5/render/hospital.js`.
+
+**Pruebas identificadas:** `src/v5/app/avatar-appearance.test.js`, `src/v5/engine/navigation.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/app/avatar-appearance.test.js`, `src/v5/engine/navigation.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar marcha local/remota en dispositivo físico y zoom.
+
+**Criterio de aceptación:** Aspecto original y movimiento continuo; cambio de ropa conserva posición/cámara.
+
+**Causa / bloque:** Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. B7. **Dependencias:** B1; decisión visual pendiente para nuevo mapa. **Impacto:** Aceptar marcha local/remota en dispositivo físico y zoom. **Riesgo:** alto. **Esfuerzo:** 2–5 semanas para mapa modular completo.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### WORLD-02 · Mundo RPG, movimiento y gráficos
 
-- **Fuente/fecha/naturaleza:** PC-03-07;PC-SOCIAL · 2026-10-06→23 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Corregir remoto entrecortado, retroceso, repetición de ruta, desaparición y asimetría;2–4 jugadores.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/social/remote-motion.js`, `src/v5/app/world.js`, `src/v5/social/room-motion-scope.js`.
-- **Pruebas pertinentes:** `src/social/remote-motion-continuity.test.js`, `src/social/remote-generation-order.test.js`, `qa/v5/competitive-browser.mjs`.
-- **Evidencia y alcance:** Reutiliza continuidad/generación/scope; CI2/3/4 pasa; Android físico/WAN no certificados.
-- **Pendiente:** Reproducir con RTT/jitter reales y medir salto remoto; no aplicar la misma solución al lag local sin traza.
-- **Aceptación:** No se confunde pose de lobby con guardia y no desaparece remoto autorizado.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** 2026-10-06→23; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-07;PC-SOCIAL.
+
+**Solicitud final:** Corregir remoto entrecortado, retroceso, repetición de ruta, desaparición y asimetría;2–4 jugadores.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Reutiliza continuidad/generación/scope; CI2/3/4 pasa; Android físico/WAN no certificados.
+
+**Archivos responsables:** `src/social/remote-motion.js`, `src/v5/app/world.js`, `src/v5/social/room-motion-scope.js`.
+
+**Pruebas identificadas:** `src/social/remote-motion-continuity.test.js`, `src/social/remote-generation-order.test.js`, `qa/v5/competitive-browser.mjs`.
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. No repetidas aquí: `src/social/remote-motion-continuity.test.js`, `src/social/remote-generation-order.test.js`, `qa/v5/competitive-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Reproducir con RTT/jitter reales y medir salto remoto; no aplicar la misma solución al lag local sin traza.
+
+**Criterio de aceptación:** No se confunde pose de lobby con guardia y no desaparece remoto autorizado.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Reproducir con RTT/jitter reales y medir salto remoto; no aplicar la misma solución al lag local sin traza. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### WORLD-03 · Mundo RPG, movimiento y gráficos
 
-- **Fuente/fecha/naturaleza:** PC-24-31;LIB-SQM · 2026-10-12/26 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** NO IMPLEMENTADO.
-- **Comportamiento:** Migrar fondo+malla a mapa modular SQM32×32 con objetos, colisiones y física propias, una autoridad y sin bitmap final monolítico.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/content/hospital.json`, `src/v5/engine/navigation.js`, `src/v5/render/hospital.js`.
-- **Pruebas pertinentes:** `src/v5/engine/navigation.test.js`.
-- **Evidencia y alcance:** LIB-SQM se declara borrador/no implementado. Juego aún renderiza hospital.webp sobre malla; no hay catálogo de instancias completo.
-- **Pendiente:** Aprobar arte del prototipo y plan de migración compatible; no tratar32 familias propuestas como32 solicitudes individuales.
-- **Aceptación:** Colisión nace de objetos autorados y acceso a8camas/recepción se conserva sin segundo mapa.
-- **Ejecución:** P3 · B7 · MIXTA · esfuerzo del bloque 2–5 semanas para mapa modular completo (no sumarlo por cada fila), riesgo alto; dependencias: B1; decisión visual pendiente para nuevo mapa.
-- **Omisión/condición recuperada:** A/C: propuesta independiente omitida por inventario clínico reciente.
+**Fecha y origen:** 2026-10-12/26; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;LIB-SQM.
+
+**Solicitud final:** Migrar fondo+malla a mapa modular SQM32×32 con objetos, colisiones y física propias, una autoridad y sin bitmap final monolítico.
+
+**Estado:** NO IMPLEMENTADO. **Prioridad:** P3. **Entorno:** MIXTA.
+
+**Evidencia:** LIB-SQM se declara borrador/no implementado. Juego aún renderiza hospital.webp sobre malla; no hay catálogo de instancias completo.
+
+**Archivos responsables:** `src/v5/content/hospital.json`, `src/v5/engine/navigation.js`, `src/v5/render/hospital.js`.
+
+**Pruebas identificadas:** `src/v5/engine/navigation.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/engine/navigation.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aprobar arte del prototipo y plan de migración compatible; no tratar32 familias propuestas como32 solicitudes individuales.
+
+**Criterio de aceptación:** Colisión nace de objetos autorados y acceso a8camas/recepción se conserva sin segundo mapa.
+
+**Causa / bloque:** Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. B7. **Dependencias:** B1; decisión visual pendiente para nuevo mapa. **Impacto:** Aprobar arte del prototipo y plan de migración compatible; no tratar32 familias propuestas como32 solicitudes individuales. **Riesgo:** alto. **Esfuerzo:** 2–5 semanas para mapa modular completo.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** A/C: propuesta independiente omitida por inventario clínico reciente.
 
 ### WORLD-04 · Mundo RPG, movimiento y gráficos
 
-- **Fuente/fecha/naturaleza:** LIB-SQM · 2026-10-26 (indirecta) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Puertas/cortinas/visión/sonido/mobiliario/cama-monitor y rutas NPC comparten geometría; separar mundo de fisiología, XP y reloj.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/engine/navigation.js`, `src/v5/engine/interactions.js`, `src/v5/ui/spatial-ward-speech.js`.
-- **Pruebas pertinentes:** `src/v5/engine/navigation.test.js`, `src/v5/ui/spatial-ward-speech.test.js`.
-- **Evidencia y alcance:** Puertas/oclusión actuales pasan pruebas; asociación cama-monitor declarada. Física de catálogo modular y objetos móviles no implementada.
-- **Pendiente:** Completar tras WORLD-03; mantener transformaciones/anclajes de huellas rotadas y nav única.
-- **Aceptación:** Cambiar puerta actualiza paso/visión/audio; no mueve estado clínico por renderer.
-- **Ejecución:** P3 · B7 · MIXTA · esfuerzo del bloque 2–5 semanas para mapa modular completo (no sumarlo por cada fila), riesgo alto; dependencias: B1; decisión visual pendiente para nuevo mapa.
+**Fecha y origen:** 2026-10-26 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-SQM.
+
+**Solicitud final:** Puertas/cortinas/visión/sonido/mobiliario/cama-monitor y rutas NPC comparten geometría; separar mundo de fisiología, XP y reloj.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P3. **Entorno:** MIXTA.
+
+**Evidencia:** Puertas/oclusión actuales pasan pruebas; asociación cama-monitor declarada. Física de catálogo modular y objetos móviles no implementada.
+
+**Archivos responsables:** `src/v5/engine/navigation.js`, `src/v5/engine/interactions.js`, `src/v5/ui/spatial-ward-speech.js`.
+
+**Pruebas identificadas:** `src/v5/engine/navigation.test.js`, `src/v5/ui/spatial-ward-speech.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/engine/navigation.test.js`, `src/v5/ui/spatial-ward-speech.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Completar tras WORLD-03; mantener transformaciones/anclajes de huellas rotadas y nav única.
+
+**Criterio de aceptación:** Cambiar puerta actualiza paso/visión/audio; no mueve estado clínico por renderer.
+
+**Causa / bloque:** Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. B7. **Dependencias:** B1; decisión visual pendiente para nuevo mapa. **Impacto:** Completar tras WORLD-03; mantener transformaciones/anclajes de huellas rotadas y nav única. **Riesgo:** alto. **Esfuerzo:** 2–5 semanas para mapa modular completo.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### WORLD-05 · Mundo RPG, movimiento y gráficos
 
-- **Fuente/fecha/naturaleza:** PC-03-04 · 2026-10-03 (indirecta) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Café cierra chat antes de caminar; recepción muestra cola, box y responsables; señal sobre paciente/monitor disponible.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/reception-board.js`, `src/v5/ui/patient-actions.js`, `src/v5/app/application.js`.
-- **Pruebas pertinentes:** `src/v5/ui/reception-board.test.js`, `src/v5/ui/clinical-bedside-ux.test.js`.
-- **Evidencia y alcance:** Recepción y glow disponibles integrados; no se identificó acción de café en el coordinador V5.
-- **Pendiente:** Recuperar aceptación del gesto de café y decidir su migración; mantener recepción ya funcional.
-- **Aceptación:** Recepción coherente en4 modos; acción de café existente no camina con teclado tapando mundo.
-- **Ejecución:** P3 · B7 · MIXTA · esfuerzo del bloque 2–5 semanas para mapa modular completo (no sumarlo por cada fila), riesgo alto; dependencias: B1; decisión visual pendiente para nuevo mapa.
-- **Omisión/condición recuperada:** A/C: acción de café heredada sin ruta V5 identificable.
+**Fecha y origen:** 2026-10-03 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04.
+
+**Solicitud final:** Café cierra chat antes de caminar; recepción muestra cola, box y responsables; señal sobre paciente/monitor disponible.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P3. **Entorno:** MIXTA.
+
+**Evidencia:** Recepción y glow disponibles integrados; no se identificó acción de café en el coordinador V5.
+
+**Archivos responsables:** `src/v5/ui/reception-board.js`, `src/v5/ui/bedside-guidance.js`, `src/v5/app/application.js`.
+
+**Pruebas identificadas:** `src/v5/ui/reception-board.test.js`, `src/v5/ui/bedside-guidance.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/reception-board.test.js`, `src/v5/ui/bedside-guidance.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Recuperar aceptación del gesto de café y decidir su migración; mantener recepción ya funcional.
+
+**Criterio de aceptación:** Recepción coherente en4 modos; acción de café existente no camina con teclado tapando mundo.
+
+**Causa / bloque:** Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. B7. **Dependencias:** B1; decisión visual pendiente para nuevo mapa. **Impacto:** Recuperar aceptación del gesto de café y decidir su migración; mantener recepción ya funcional. **Riesgo:** alto. **Esfuerzo:** 2–5 semanas para mapa modular completo.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** A/C: acción de café heredada sin ruta V5 identificable.
 
 ### AUDIO-01 · Audio y música
 
-- **Fuente/fecha/naturaleza:** PC-24-31;DOC-AUDIO · 2026-10-29 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Música nueva inicio/lobby y clásica predeterminada guardia; ajuste Nueva/Clásica, click en menús, mute permanente solo música y preferencias.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/hospital-audio.js`, `src/v5/ui/audio-assets.js`, `src/v5/ui/audio-settings.js`, `src/v5/app/application.js`.
-- **Pruebas pertinentes:** `src/v5/ui/hospital-audio.test.js`, `src/v5/ui/audio-assets.test.js`, `qa/v5/audio-browser.mjs`.
-- **Evidencia y alcance:** f6ba34f integra audio, crossfade2,5s/silencio250ms y assetAAC. Escucha física sigue pendiente.
-- **Pendiente:** Escuchar Android/parlante, comprobar autoplay tras gesto, mute y preferencias anteriores.
-- **Aceptación:** Música cambia sin corte accidental; mutear música conserva efectos; menú click una vez.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-29; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-AUDIO.
+
+**Solicitud final:** Música nueva inicio/lobby y clásica predeterminada guardia; ajuste Nueva/Clásica, click en menús, mute permanente solo música y preferencias.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** f6ba34f integra audio, crossfade2,5s/silencio250ms y assetAAC. Escucha física sigue pendiente.
+
+**Archivos responsables:** `src/v5/ui/hospital-audio.js`, `src/v5/ui/audio-assets.js`, `src/v5/ui/audio-settings.js`, `src/v5/app/application.js`.
+
+**Pruebas identificadas:** `src/v5/ui/hospital-audio.test.js`, `src/v5/ui/audio-assets.test.js`, `qa/v5/audio-browser.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/hospital-audio.test.js`, `src/v5/ui/audio-assets.test.js`. No repetidas aquí: `qa/v5/audio-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Escuchar Android/parlante, comprobar autoplay tras gesto, mute y preferencias anteriores.
+
+**Criterio de aceptación:** Música cambia sin corte accidental; mutear música conserva efectos; menú click una vez.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Escuchar Android/parlante, comprobar autoplay tras gesto, mute y preferencias anteriores. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### AUDIO-02 · Audio y música
 
-- **Fuente/fecha/naturaleza:** PC-03-04;PC-SOCIAL;DOC-RPG · 2026-10-03/04/27 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Máster y canales ajustables, volumen predeterminado más alto, sin ruido blanco; monitores cercanos siguen FC real, alarmas no saturan.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/hospital-audio.js`, `src/v5/ui/audio-settings.js`.
-- **Pruebas pertinentes:** `src/v5/ui/hospital-audio.test.js`.
-- **Evidencia y alcance:** Valor inicial0,74 documentado27/10; eventos/monitores/eco finito; preferencias guardadas no se sobreescriben.
-- **Pendiente:** Aceptar volumen percibido Android y límites de alarma en guardia larga.
-- **Aceptación:** Audio se suspende al ocultar página sin acumular eventos; ajuste antiguo se respeta.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-03/04/27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-SOCIAL;DOC-RPG.
+
+**Solicitud final:** Máster y canales ajustables, volumen predeterminado más alto, sin ruido blanco; monitores cercanos siguen FC real, alarmas no saturan.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Valor inicial0,74 documentado27/10; eventos/monitores/eco finito; preferencias guardadas no se sobreescriben.
+
+**Archivos responsables:** `src/v5/ui/hospital-audio.js`, `src/v5/ui/audio-settings.js`.
+
+**Pruebas identificadas:** `src/v5/ui/hospital-audio.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/hospital-audio.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar volumen percibido Android y límites de alarma en guardia larga.
+
+**Criterio de aceptación:** Audio se suspende al ocultar página sin acumular eventos; ajuste antiguo se respeta.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Aceptar volumen percibido Android y límites de alarma en guardia larga. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### VOICE-01 · Voz, teclado y autocompletado
 
-- **Fuente/fecha/naturaleza:** PC-03-07;PC-08-14;MIG-PLAN · 2026-10-06/08→16 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Dictado Android por mismo router: inicio ágil, no duplicar primera palabra/onresult+onend, diagnóstico de voz y Enter único.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/voice/revision-buffer.js`, `src/voice/android-v2-active-adapter.test.js`, `src/v5/app/application.js`, `src/v5/web/index.html`.
-- **Pruebas pertinentes:** `src/voice/revision-buffer.test.js`, `src/voice/android-v2-active-adapter.test.js`.
-- **Evidencia y alcance:** Módulos históricos existen y C10 sigue pendiente; application/index V5 no conectan entrada de dictado ni micrófono. Tests legacy no prueban rutaV5.
-- **Pendiente:** Conectar captura/normalizador→submitText una vez, lifecycle y permisos; validar Gboard/SpeechRecognition físicos.
-- **Aceptación:** Un audio final produce un envelope con UID, sin primera palabra doble ni micrófono persistente al salir.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
-- **Omisión/condición recuperada:** C/F: funcionalidad previa sin integración en V5; eliminación accidental no demostrada.
+**Fecha y origen:** 2026-10-06/08→16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-07;PC-08-14;MIG-PLAN.
+
+**Solicitud final:** Dictado Android por mismo router: inicio ágil, no duplicar primera palabra/onresult+onend, diagnóstico de voz y Enter único.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Módulos históricos existen y C10 sigue pendiente; application/index V5 no conectan entrada de dictado ni micrófono. Tests legacy no prueban rutaV5.
+
+**Archivos responsables:** `src/voice/revision-buffer.js`, `src/voice/android-v2-active-adapter.test.js`, `src/v5/app/application.js`, `src/v5/web/index.html`.
+
+**Pruebas identificadas:** `src/voice/revision-buffer.test.js`, `src/voice/android-v2-active-adapter.test.js`.
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. No repetidas aquí: `src/voice/revision-buffer.test.js`, `src/voice/android-v2-active-adapter.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Conectar captura/normalizador→submitText una vez, lifecycle y permisos; validar Gboard/SpeechRecognition físicos.
+
+**Criterio de aceptación:** Un audio final produce un envelope con UID, sin primera palabra doble ni micrófono persistente al salir.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Conectar captura/normalizador→submitText una vez, lifecycle y permisos; validar Gboard/SpeechRecognition físicos. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** C/F: funcionalidad previa sin integración en V5; eliminación accidental no demostrada.
 
 ### VOICE-02 · Voz, teclado y autocompletado
 
-- **Fuente/fecha/naturaleza:** PC-03-07;PC-SOCIAL · 2026-10-06/07 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Voz entre jugadores/PTT en lobby y4 modos donde corresponda; WebRTC/TURN/Android físico y separación de dictado.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/social/voice-session.js`, `src/v5/social/cooperative-link.js`, `src/v5/app/application.js`.
-- **Pruebas pertinentes:** `src/social/voice-session.test.js`.
-- **Evidencia y alcance:** Subsistema voice-session histórico; no se identificó controlV5/PTT/canal de voz activo. Transporte RTC de datos no demuestra voz.
-- **Pendiente:** Migrar sesión de voz existente y probar audio bidireccional físico; infraestructura TURN no verificada.
-- **Aceptación:** Dos teléfonos oyen al colega correcto, mute/PTT funciona y salida no deja captura activa.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
-- **Omisión/condición recuperada:** C: voz social no figura como pendiente independiente en inventario anterior.
+**Fecha y origen:** 2026-10-06/07; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-07;PC-SOCIAL.
+
+**Solicitud final:** Voz entre jugadores/PTT en lobby y4 modos donde corresponda; WebRTC/TURN/Android físico y separación de dictado.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Subsistema voice-session histórico; no se identificó controlV5/PTT/canal de voz activo. Transporte RTC de datos no demuestra voz.
+
+**Archivos responsables:** `src/social/voice-session.js`, `src/v5/social/cooperative-link.js`, `src/v5/app/application.js`.
+
+**Pruebas identificadas:** `src/social/voice-session.test.js`.
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. No repetidas aquí: `src/social/voice-session.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Migrar sesión de voz existente y probar audio bidireccional físico; infraestructura TURN no verificada.
+
+**Criterio de aceptación:** Dos teléfonos oyen al colega correcto, mute/PTT funciona y salida no deja captura activa.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Migrar sesión de voz existente y probar audio bidireccional físico; infraestructura TURN no verificada. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** C: voz social no figura como pendiente independiente en inventario anterior.
 
 ### KEYBOARD-01 · Voz, teclado y autocompletado
 
-- **Fuente/fecha/naturaleza:** PC-01;PC-08-14;MIG-PLAN · 2026-10-01→16 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Teclado propio compacto aprobado,4 filas, edición/foco/IME y envío; no tapar input/historial ni desplazar/teletransportar juego.
-- **Historia/vigencia:** 1/10 teclado normal;14–16/10 preferencia explícita teclado propio compacto. No hay dos implementaciones pendientes alternativas.
-- **Archivos responsables:** `src/v5/ui/atria-keyboard.js`, `src/v5/app/application.js`, `src/v5/web/game.css`.
-- **Pruebas pertinentes:** `src/v5/ui/atria-keyboard.test.js`, `qa/v5/keyboard-camera-browser.mjs`.
-- **Evidencia y alcance:** Teclado propio reemplaza preferencia inicial de nativo; Chromium/mobile UI y CI pasan.
-- **Pendiente:** Gboard real en campos nativos, rotación, caret, borrar, Enter y botón enviar.
-- **Aceptación:** Una pulsación envía una vez y conserva mensajes/borradores; cámara usa región disponible.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-01→16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-01;PC-08-14;MIG-PLAN.
+
+**Solicitud final:** Teclado propio compacto aprobado,4 filas, edición/foco/IME y envío; no tapar input/historial ni desplazar/teletransportar juego.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Teclado propio reemplaza preferencia inicial de nativo; Chromium/mobile UI y CI pasan.
+
+**Archivos responsables:** `src/v5/ui/atria-keyboard.js`, `src/v5/app/application.js`, `src/v5/web/game.css`.
+
+**Pruebas identificadas:** `src/v5/ui/atria-keyboard.test.js`, `qa/v5/keyboard-camera-browser.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/atria-keyboard.test.js`. No repetidas aquí: `qa/v5/keyboard-camera-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Gboard real en campos nativos, rotación, caret, borrar, Enter y botón enviar.
+
+**Criterio de aceptación:** Una pulsación envía una vez y conserva mensajes/borradores; cámara usa región disponible.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Gboard real en campos nativos, rotación, caret, borrar, Enter y botón enviar. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** 1/10 teclado normal;14–16/10 preferencia explícita teclado propio compacto. No hay dos implementaciones pendientes alternativas.
 
 ### KEYBOARD-OLD · Voz, teclado y autocompletado
 
-- **Fuente/fecha/naturaleza:** PC-01;PC-08-14;MIG-PLAN · 2026-10-01→16 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** REEMPLAZADO.
-- **Comportamiento:** Teclado nativo como única entrada del juego.
-- **Historia/vigencia:** Sustituido por KEYBOARD-01; excluido de pendientes activos.
-- **Archivos responsables:** `src/v5/ui/atria-keyboard.js`.
-- **Pruebas pertinentes:** `src/v5/ui/atria-keyboard.test.js`.
-- **Evidencia y alcance:** Decisión posterior de teclado propio documentada en plan de migración.
-- **Pendiente:** Ninguna tarea; campos nativos deben seguir siendo accesibles.
-- **Aceptación:** No revertir teclado aprobado por una preferencia anterior.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-01→16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-01;PC-08-14;MIG-PLAN.
+
+**Solicitud final:** Teclado nativo como única entrada del juego.
+
+**Estado:** REEMPLAZADO. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Decisión posterior de teclado propio documentada en plan de migración.
+
+**Archivos responsables:** `src/v5/ui/atria-keyboard.js`.
+
+**Pruebas identificadas:** `src/v5/ui/atria-keyboard.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/atria-keyboard.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Ninguna tarea; campos nativos deben seguir siendo accesibles.
+
+**Criterio de aceptación:** No revertir teclado aprobado por una preferencia anterior.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Ninguna tarea; campos nativos deben seguir siendo accesibles. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Sustituido por KEYBOARD-01; excluido de pendientes activos.
 
 ### ANDROID-01 · Android y rendimiento
 
-- **Fuente/fecha/naturaleza:** LIB-ANDROID;PC-08-14;DOC-INVENTARIO;U-AUDIT · 2026-10-04→11-20 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** NO VERIFICABLE.
-- **Comportamiento:** Aceptar en teléfono físico teclado, monitor/Box2B, audio, pistas, recuperación y multijugador bajo red real.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `qa/v5/navigation-browser.mjs`, `qa/v5/guard-recovery-browser.mjs`, `qa/v5/guard-entry-preview.mjs`.
-- **Pruebas pertinentes:** `qa/v5/keyboard-camera-browser.mjs`, `qa/v5/shared-guard-preview.mjs`.
-- **Evidencia y alcance:** Solo emulación Pixel/Chromium y reportes usuario; no hay dispositivo físico accesible ni captura con modelo/versión que certifique arreglo actual.
-- **Pendiente:** Dispositivo/cuentas concretas. Work tampoco sustituye hardware ausente.
-- **Aceptación:** Registrar modelo/navegador/orientación/red, SHA y latencias del primer contacto, pista, selección/diagnóstico y recuperación.
-- **Ejecución:** P1 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-04→11-20; SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-ANDROID;PC-08-14;DOC-INVENTARIO;U-AUDIT.
+
+**Solicitud final:** Aceptar en teléfono físico teclado, monitor/Box2B, audio, pistas, recuperación y multijugador bajo red real.
+
+**Estado:** NO VERIFICABLE. **Prioridad:** P1. **Entorno:** BLOQUEADA.
+
+**Evidencia:** Solo emulación Pixel/Chromium y reportes usuario; no hay dispositivo físico accesible ni captura con modelo/versión que certifique arreglo actual.
+
+**Archivos responsables:** `qa/v5/navigation-browser.mjs`, `qa/v5/guard-recovery-browser.mjs`, `qa/v5/guard-entry-preview.mjs`.
+
+**Pruebas identificadas:** `qa/v5/keyboard-camera-browser.mjs`, `qa/v5/shared-guard-preview.mjs`.
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. No repetidas aquí: `qa/v5/keyboard-camera-browser.mjs`, `qa/v5/shared-guard-preview.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Dispositivo/cuentas concretas. Work tampoco sustituye hardware ausente.
+
+**Criterio de aceptación:** Registrar modelo/navegador/orientación/red, SHA y latencias del primer contacto, pista, selección/diagnóstico y recuperación.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Dispositivo/cuentas concretas. Work tampoco sustituye hardware ausente. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### ANDROID-02 · Android y rendimiento
 
-- **Fuente/fecha/naturaleza:** MIG-PLAN;DOC-INVENTARIO · 2026-10-16→11-12 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** NO VERIFICABLE.
-- **Comportamiento:** Comprobar WebKit/iPhone y restricciones de audio/viewport cuando se declara soporte móvil.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `qa/v5/navigation-browser.mjs`, `qa/v5/audio-browser.mjs`.
-- **Pruebas pertinentes:** `qa/v5/navigation-browser.mjs`.
-- **Evidencia y alcance:** Documentos dejan WebKit/físico pendientes; no se ejecutaron aquí.
-- **Pendiente:** RunnerWebKit/dispositivo y navegador compatibles.
-- **Aceptación:** Mismo flujo legible y sin captura/audio/teclado bloqueados en entorno declarado.
-- **Ejecución:** P2 · B5 · MIXTA · esfuerzo del bloque 5–10 días (no sumarlo por cada fila), riesgo medio/alto; dependencias: B1; permisos de audio; Android físico.
+**Fecha y origen:** 2026-10-16→11-12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-PLAN;DOC-INVENTARIO.
+
+**Solicitud final:** Comprobar WebKit/iPhone y restricciones de audio/viewport cuando se declara soporte móvil.
+
+**Estado:** NO VERIFICABLE. **Prioridad:** P2. **Entorno:** BLOQUEADA.
+
+**Evidencia:** Documentos dejan WebKit/físico pendientes; no se ejecutaron aquí.
+
+**Archivos responsables:** `qa/v5/navigation-browser.mjs`, `qa/v5/audio-browser.mjs`.
+
+**Pruebas identificadas:** `qa/v5/navigation-browser.mjs`.
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. No repetidas aquí: `qa/v5/navigation-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** RunnerWebKit/dispositivo y navegador compatibles.
+
+**Criterio de aceptación:** Mismo flujo legible y sin captura/audio/teclado bloqueados en entorno declarado.
+
+**Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** RunnerWebKit/dispositivo y navegador compatibles. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### BOTS-01 · Bots médicos
 
-- **Fuente/fecha/naturaleza:** PC-02;PC-03-04;PC-24-31;DOC-INVENTARIO · 2026-10-02→11-12 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** COMPLETADO Y VERIFICADO.
-- **Comportamiento:** Bots experto/competente/principiante/lento/peligroso y omisiones con velocidades/conocimiento distintos; usar motor y comandos reales en4 modos.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `qa/v5/certify-clinical-cases.mjs`, `qa/v5/clinical-integral-matrix.mjs`, `qa/v5/personality-anamnesis-bots.mjs`.
-- **Pruebas pertinentes:** `qa/tests/clinical-case-certification.test.mjs`, `qa/tests/clinical-integral-matrix.test.mjs`.
-- **Evidencia y alcance:** MatrizHEAD43435355500 aprobada8 shards; testsQA actuales pasan salvo fixture longitudinal independiente.
-- **Pendiente:** Mantener perfiles adversos y evidencia causal; no usar texto de bot como prueba de efecto.
-- **Aceptación:** Diferenciar final vivo abierto/muerte/cierre y persistir evidencia por semilla/SHA.
-- **Ejecución:** P1 · B0 · CHATGPT NORMAL · esfuerzo del bloque 2–4 días (no sumarlo por cada fila), riesgo medio; dependencias: ninguna.
+**Fecha y origen:** 2026-10-02→11-12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-02;PC-03-04;PC-24-31;DOC-INVENTARIO.
+
+**Solicitud final:** Bots experto/competente/principiante/lento/peligroso y omisiones con velocidades/conocimiento distintos; usar motor y comandos reales en4 modos.
+
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** MatrizHEAD43435355500 aprobada8 shards; testsQA actuales pasan salvo fixture longitudinal independiente.
+
+**Archivos responsables:** `qa/v5/certify-clinical-cases.mjs`, `qa/v5/clinical-integral-matrix.mjs`, `qa/v5/personality-anamnesis-bots.mjs`.
+
+**Pruebas identificadas:** `qa/tests/clinical-case-certification.test.mjs`, `qa/tests/clinical-integral-matrix.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `qa/tests/clinical-case-certification.test.mjs`, `qa/tests/clinical-integral-matrix.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Mantener perfiles adversos y evidencia causal; no usar texto de bot como prueba de efecto.
+
+**Criterio de aceptación:** Diferenciar final vivo abierto/muerte/cierre y persistir evidencia por semilla/SHA.
+
+**Causa / bloque:** Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad. B0. **Dependencias:** ninguna. **Impacto:** Mantener perfiles adversos y evidencia causal; no usar texto de bot como prueba de efecto. **Riesgo:** medio. **Esfuerzo:** 2–4 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### BOTS-02 · Bots médicos
 
-- **Fuente/fecha/naturaleza:** PC-03-04 · 2026-10-04 (indirecta) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** NO VERIFICABLE.
-- **Comportamiento:** Intentar TestSprite y preparar entorno para auditoría de roles/modos mientras Work termina.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `qa/v5/certify-clinical-cases.mjs`.
-- **Pruebas pertinentes:** No identificadas; requiere nueva prueba dirigida..
-- **Evidencia y alcance:** Recuperación indica solicitud de intento; no hay evidencia de ejecución TestSprite ni decisión posterior de sustituir proveedor.
-- **Pendiente:** No obliga a instalar servicio ni pagar. Recuperar resultado del intento; bots existentes cumplen pruebas técnicas de otro origen.
-- **Aceptación:** Registrar resultado auténtico del intento o limitación de acceso, sin atribuirle ejecuciones de otros bots.
-- **Ejecución:** P3 · B8 · BLOQUEADA · esfuerzo del bloque 1–3 días tras obtener fuentes (no sumarlo por cada fila), riesgo bajo; dependencias: historial completo/exportación disponible.
+**Fecha y origen:** 2026-10-04 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04.
+
+**Solicitud final:** Intentar TestSprite y preparar entorno para auditoría de roles/modos mientras Work termina.
+
+**Estado:** NO VERIFICABLE. **Prioridad:** P3. **Entorno:** BLOQUEADA.
+
+**Evidencia:** Recuperación indica solicitud de intento; no hay evidencia de ejecución TestSprite ni decisión posterior de sustituir proveedor.
+
+**Archivos responsables:** `qa/v5/certify-clinical-cases.mjs`.
+
+**Pruebas identificadas:** No identificadas; consultar criterio de aceptación..
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación.
+
+**Pendiente:** No obliga a instalar servicio ni pagar. Recuperar resultado del intento; bots existentes cumplen pruebas técnicas de otro origen.
+
+**Criterio de aceptación:** Registrar resultado auténtico del intento o limitación de acceso, sin atribuirle ejecuciones de otros bots.
+
+**Causa / bloque:** No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA. B8. **Dependencias:** historial completo/exportación disponible. **Impacto:** No obliga a instalar servicio ni pagar. Recuperar resultado del intento; bots existentes cumplen pruebas técnicas de otro origen. **Riesgo:** bajo. **Esfuerzo:** 1–3 días tras obtener fuentes.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### CASE-01 · Importación de casos
 
-- **Fuente/fecha/naturaleza:** PC-01;PC-24-31;DOC-CONTRATO · 2026-10-01→28 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Importar desde libro/contenido conservando procedencia; al menos un caso por tema/capítulo solicitado, sin generar patologías fuera del motor.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `scripts/import-clinical-case-pack.mjs`, `src/v5/content/compile-clinical-case-pack.js`, `src/v5/content/certified-case-packs.json`.
-- **Pruebas pertinentes:** `scripts/import-clinical-case-pack.test.mjs`.
-- **Evidencia y alcance:** Importador/catálogo55 con fuentes por pack. No se recuperó libro completo ni índice exhaustivo de capítulos solicitado el1/10.
-- **Pendiente:** Comparar índice real del libro con catálogo antes de prometer cobertura total; contrato5capas obligatorio.
-- **Aceptación:** Cada caso tiene fuente/versión y recorrido jugable; sin fuente no afirmar cobertura de capítulo.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
-- **Omisión/condición recuperada:** A: cobertura por libro no equivale a tener55 casos.
+**Fecha y origen:** 2026-10-01→28; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-01;PC-24-31;DOC-CONTRATO.
+
+**Solicitud final:** Importar desde libro/contenido conservando procedencia; al menos un caso por tema/capítulo solicitado, sin generar patologías fuera del motor.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P1. **Entorno:** BLOQUEADA.
+
+**Evidencia:** Importador/catálogo55 con fuentes por pack. No se recuperó libro completo ni índice exhaustivo de capítulos solicitado el1/10.
+
+**Archivos responsables:** `scripts/import-clinical-case-pack.mjs`, `src/v5/content/compile-clinical-case-pack.js`, `src/v5/content/certified-case-packs.json`.
+
+**Pruebas identificadas:** `scripts/import-clinical-case-pack.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `scripts/import-clinical-case-pack.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Comparar índice real del libro con catálogo antes de prometer cobertura total; contrato5capas obligatorio.
+
+**Criterio de aceptación:** Cada caso tiene fuente/versión y recorrido jugable; sin fuente no afirmar cobertura de capítulo.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Comparar índice real del libro con catálogo antes de prometer cobertura total; contrato5capas obligatorio. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** A: cobertura por libro no equivale a tener55 casos.
 
 ### CASE-02 · Importación de casos
 
-- **Fuente/fecha/naturaleza:** PC-15-23;PC-24-31;DOC-CONTRATO · 2026-10-16→28 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Completar sistemas primero; después expansión autorizada a55 casos (10respiratorios/10cardio/10neuro nuevos), usando reglas comunes.
-- **Historia/vigencia:** 16/10 no nuevos casos durante migración;27–28/10 expansión explícita posterior. No es infracción de la restricción ya sustituida.
-- **Archivos responsables:** `src/v5/content/certified-case-packs.json`, `src/v5/content/packs/respiratory-pack.js`, `src/v5/content/packs/cardiology-pack.js`, `src/v5/content/packs/neurology-pack.js`.
-- **Pruebas pertinentes:** `qa/tests/clinical-case-certification.test.mjs`.
-- **Evidencia y alcance:** 55 catálogo jugable y30 nuevos publicados28/10; matrizHEAD aprobada. La prohibición temporal de nuevos casos fue sustituida por autorización posterior.
-- **Pendiente:** Mantener certificación, no tomar antiguos planes de13/25 casos como HEAD actual.
-- **Aceptación:** Los55 usan núcleo/capas y selección ordinaria; no dobles motores por especialidad.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** 2026-10-16→28; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-15-23;PC-24-31;DOC-CONTRATO.
+
+**Solicitud final:** Completar sistemas primero; después expansión autorizada a55 casos (10respiratorios/10cardio/10neuro nuevos), usando reglas comunes.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** 55 catálogo jugable y30 nuevos publicados28/10; matrizHEAD aprobada. La prohibición temporal de nuevos casos fue sustituida por autorización posterior.
+
+**Archivos responsables:** `src/v5/content/certified-case-packs.json`, `src/v5/content/packs/respiratory-pack.js`, `src/v5/content/packs/cardiology-pack.js`, `src/v5/content/packs/neurology-pack.js`.
+
+**Pruebas identificadas:** `qa/tests/clinical-case-certification.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `qa/tests/clinical-case-certification.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Mantener certificación, no tomar antiguos planes de13/25 casos como HEAD actual.
+
+**Criterio de aceptación:** Los55 usan núcleo/capas y selección ordinaria; no dobles motores por especialidad.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Mantener certificación, no tomar antiguos planes de13/25 casos como HEAD actual. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** 16/10 no nuevos casos durante migración;27–28/10 expansión explícita posterior. No es infracción de la restricción ya sustituida.
 
 ### VAR-01 · Variabilidad clínica
 
-- **Fuente/fecha/naturaleza:** PC-24-31;DOC-CONTRATO · 2026-10-24→29 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Identidad/edad/comorbilidades/severidad/alergias/evolución con semillas reproducibles, sin contradicciones fijas y persistiendo por paciente.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/content/patient-variation.js`, `src/v5/content/guard-patient-variation.js`, `src/v5/content/patient-name-bank.js`.
-- **Pruebas pertinentes:** `src/v5/content/patient-variation.test.js`, `src/v5/content/guard-patient-variation.test.js`.
-- **Evidencia y alcance:** Bancos1251/1405 documentados; nuevo13/11 conserva susceptibilidad aun sin preguntas. Tests reproducibilidad pasan.
-- **Pendiente:** Validar plausibilidad de nuevas variantes y banco de antecedentes, sin confundir volumen combinatorio con aceptación clínica.
-- **Aceptación:** Misma semilla/checkpoint conserva hechos; edad/antecedentes no contradicen condición inmutable.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** 2026-10-24→29; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-CONTRATO.
+
+**Solicitud final:** Identidad/edad/comorbilidades/severidad/alergias/evolución con semillas reproducibles, sin contradicciones fijas y persistiendo por paciente.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Bancos1251/1405 documentados; nuevo13/11 conserva susceptibilidad aun sin preguntas. Tests reproducibilidad pasan.
+
+**Archivos responsables:** `src/v5/content/patient-variation.js`, `src/v5/content/guard-patient-variation.js`, `src/v5/content/patient-name-bank.js`.
+
+**Pruebas identificadas:** `src/v5/content/patient-variation.test.js`, `src/v5/content/guard-patient-variation.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/content/patient-variation.test.js`, `src/v5/content/guard-patient-variation.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Validar plausibilidad de nuevas variantes y banco de antecedentes, sin confundir volumen combinatorio con aceptación clínica.
+
+**Criterio de aceptación:** Misma semilla/checkpoint conserva hechos; edad/antecedentes no contradicen condición inmutable.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Validar plausibilidad de nuevas variantes y banco de antecedentes, sin confundir volumen combinatorio con aceptación clínica. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### VAR-02 · Variabilidad clínica
 
-- **Fuente/fecha/naturaleza:** DOC-CONTRATO;DOC-INVENTARIO · 2026-10-29→11-12 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO CON DEFECTOS.
-- **Comportamiento:** Personalidad multidimensional y relación por médico heredadas automáticamente; conversación específica se combina sin cambiar hechos.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/content/patient-behavior.js`, `src/v5/content/patient-language.js`, `src/v5/clinical/patient-conversation.js`, `qa/tests/patient-personality-longitudinal.test.mjs`.
-- **Pruebas pertinentes:** `qa/tests/patient-personality-longitudinal.test.mjs`.
-- **Evidencia y alcance:** Motor integrado, banco y memoria; test competitivo falla al leer conducta antes de claim ahora privado. Persistencia después del claim no se invalida por esa lectura incorrecta.
-- **Pendiente:** Corregir fixture y certificar privacidad+misma personalidad después de tomar, recuperar y replay.
-- **Aceptación:** No adquirir datos clínicos sin permiso; tras tomar, conducta/relación persisten y otro médico tiene contexto propio.
-- **Ejecución:** P1 · B0 · CHATGPT NORMAL · esfuerzo del bloque 2–4 días (no sumarlo por cada fila), riesgo medio; dependencias: ninguna.
+**Fecha y origen:** 2026-10-29→11-12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-CONTRATO;DOC-INVENTARIO.
+
+**Solicitud final:** Personalidad multidimensional y relación por médico heredadas automáticamente; conversación específica se combina sin cambiar hechos.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** 7cde6fa comprueba ausencia de personalidad privada antes del claim y conservación posterior en cuatro modos, replay y recuperación del servidor. Pruebas dirigidas 26/26, sin modificar contenido ni privacidad.
+
+**Archivos responsables:** `src/v5/content/patient-behavior.js`, `src/v5/content/patient-language.js`, `src/v5/clinical/patient-conversation.js`, `qa/tests/patient-personality-longitudinal.test.mjs`.
+
+**Pruebas identificadas:** `qa/tests/patient-personality-longitudinal.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `qa/tests/patient-personality-longitudinal.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar naturalidad, contexto por médico y recuperación de personalidad en dispositivo físico; mantener la restricción de datos antes de tomar la cama.
+
+**Criterio de aceptación:** No adquirir datos clínicos sin permiso; tras tomar, conducta/relación persisten y otro médico tiene contexto propio.
+
+**Causa / bloque:** Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad. B0. **Dependencias:** ninguna. **Impacto:** Aceptar naturalidad, contexto por médico y recuperación de personalidad en dispositivo físico; mantener la restricción de datos antes de tomar la cama. **Riesgo:** medio. **Esfuerzo:** 2–4 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita. Checkpoint del 20/11: corrección dirigida de certificación publicada en 7cde6fa; no cambió reglas clínicas.
+
+**Estado anterior conservado:** 162d0cf24a936e302e2a3efadcc168e1459d86d5 — IMPLEMENTADO CON DEFECTOS: Motor integrado, banco y memoria; test competitivo falla al leer conducta antes de claim ahora privado. Persistencia después del claim no se invalida por esa lectura incorrecta.
 
 ### VAR-03 · Variabilidad clínica
 
-- **Fuente/fecha/naturaleza:** PC-24-31;DOC-CONTRATO;GIT-13 · 2026-10-28→11-13 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Complicaciones, prevención y rescate causales; alergia≠intolerancia, no preguntar no cambia susceptibilidad.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/content/guard-patient-variation.js`, `src/v5/clinical/complication-eligibility.js`, `src/v5/clinical/medication-safety-487.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/medication-harms-487.test.js`, `qa/tests/clinical-case-certification.test.mjs`.
-- **Evidencia y alcance:** 3431230 y162d0cf cambian hechos/recibos de rescate; certificador observa ventanas realistas, no inserta respuesta.
-- **Pendiente:** Aceptar trayectorias adversas de variantes nuevas y distinguir no activada/tratada/rescatada.
-- **Aceptación:** Rescate se atribuye solo a intervención confirmada tras oportunidad real o prevención temprana modelada.
-- **Ejecución:** P1 · B6 · CHATGPT NORMAL · esfuerzo del bloque 5–10 días por conjunto de mecanismos (no sumarlo por cada fila), riesgo alto; dependencias: B0/B2 y referencias del caso.
+**Fecha y origen:** 2026-10-28→11-13; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-CONTRATO;GIT-13.
+
+**Solicitud final:** Complicaciones, prevención y rescate causales; alergia≠intolerancia, no preguntar no cambia susceptibilidad.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** 3431230 y162d0cf cambian hechos/recibos de rescate; certificador observa ventanas realistas, no inserta respuesta.
+
+**Archivos responsables:** `src/v5/content/guard-patient-variation.js`, `src/v5/clinical/complication-eligibility.js`, `src/v5/clinical/medication-safety-487.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/medication-harms-487.test.js`, `qa/tests/clinical-case-certification.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/medication-harms-487.test.js`, `qa/tests/clinical-case-certification.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar trayectorias adversas de variantes nuevas y distinguir no activada/tratada/rescatada.
+
+**Criterio de aceptación:** Rescate se atribuye solo a intervención confirmada tras oportunidad real o prevención temprana modelada.
+
+**Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Aceptar trayectorias adversas de variantes nuevas y distinguir no activada/tratada/rescatada. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### QA-01 · Certificación y pruebas
 
-- **Fuente/fecha/naturaleza:** MIG-PLAN;DOC-INVENTARIO;RUN-HEAD · 2026-10-07→11-20 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO CON DEFECTOS.
-- **Comportamiento:** Pruebas pertinentes ejecutadas y CI por SHA; no llamar terminado al código publicado o a test no corrido.
-- **Historia/vigencia:** Resultados3137del 12/11 no describen162d0cf del 13/11; matriz43289556288 terminó6/8, luego43435355500sí8/8.
-- **Archivos responsables:** `.github/workflows/atria-v5-core.yml`, `.github/workflows/atria-v5-integral.yml`, `.github/workflows/atria-v5-transfers.yml`.
-- **Pruebas pertinentes:** `qa/tests/patient-personality-longitudinal.test.mjs`, `src/v5/clinical/nursing-nutrition.test.js`, `src/v5/clinical/mortality-regression.test.js`.
-- **Evidencia y alcance:** HEAD local3167:3164pasan/3fallan; build/frontera pasan. CI43435355473:28/30 jobs; transfers43435355599:7/11; native matrix43435355500:8/8.
-- **Pendiente:** Resolver fallos reales de harness/regresión y no reportar verde global por Vercelsuccess o matriz sola.
-- **Aceptación:** Registros identifican ámbito ySHA; una suite fallida nunca se describe como aprobada.
-- **Ejecución:** P1 · B0 · CHATGPT NORMAL · esfuerzo del bloque 2–4 días (no sumarlo por cada fila), riesgo medio; dependencias: ninguna.
+**Fecha y origen:** 2026-10-07→11-20; SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-PLAN;DOC-INVENTARIO;RUN-HEAD;ISSUE-01.
+
+**Solicitud final:** Pruebas pertinentes ejecutadas y CI por SHA; no llamar terminado al código publicado o a test no corrido.
+
+**Estado:** IMPLEMENTADO CON DEFECTOS. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Base 162d0cf: 3164/3167 local, CI Experimental 28/30 y Transfers 7/11. Corrección 7cde6fa: suite local completa 3167/3167 y 26/26 dirigidas; recuperación Node 24, 24/24. El estado final del nuevo CI se registra por run/SHA: no se infiere verde global de Node local ni de Vercel.
+
+**Archivos responsables:** `.github/workflows/atria-v5-core.yml`, `.github/workflows/atria-v5-integral.yml`, `.github/workflows/atria-v5-transfers.yml`.
+
+**Pruebas identificadas:** `qa/tests/patient-personality-longitudinal.test.mjs`, `src/v5/clinical/nursing-nutrition.test.js`, `src/v5/clinical/mortality-regression.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `qa/tests/patient-personality-longitudinal.test.mjs`, `src/v5/clinical/nursing-nutrition.test.js`, `src/v5/clinical/mortality-regression.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Reproducir cancelaciones Node 22, revisar certificación de traslados y obtener conclusión de CI del código publicado. El perfilado de red no debe ocultar fallos deterministas.
+
+**Criterio de aceptación:** Registros identifican ámbito ySHA; una suite fallida nunca se describe como aprobada.
+
+**Causa / bloque:** Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad. B0. **Dependencias:** ninguna. **Impacto:** Reproducir cancelaciones Node 22, revisar certificación de traslados y obtener conclusión de CI del código publicado. El perfilado de red no debe ocultar fallos deterministas. **Riesgo:** medio. **Esfuerzo:** 2–4 días.
+
+**Evolución y sustituciones:** Resultados3137del 12/11 no describen162d0cf del 13/11; matriz43289556288 terminó6/8, luego43435355500sí8/8. El 20/11 se corrigieron tres fixtures/harness en 7cde6fa; no se modificaron reglas clínicas. Suite final completa aprobada.
 
 ### QA-02 · Certificación y pruebas
 
-- **Fuente/fecha/naturaleza:** PC-03-07;DOC-INVENTARIO;RUN-HEAD · 2026-10-07→11-13 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Aceptar preview del mismoSHA,2–4 cuentas, recuperación, cuatro modos y controles; conservar fallos/reintentos sin repetir campañas costosas.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `qa/v5/guard-entry-preview.mjs`, `qa/v5/shared-guard-preview.mjs`, `qa/v5/shared-guard-auth-browser.mjs`.
-- **Pruebas pertinentes:** `qa/v5/shared-guard-preview.mjs`.
-- **Evidencia y alcance:** CIbrowserHEAD mayoritariamente verde; previews previos por SHA documentados. No se abrió preview nuevo ni se crearon cuentas aquí.
-- **Pendiente:** Aceptación dirigida solo para contrato modificado ySHAactual; cuota429de tercera cuenta histórica no prueba fallo de clínica.
-- **Aceptación:** Enlace/metadataSHAytraza demuestran flujo exacto; emulación no se declara Android físico.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** 2026-10-07→11-13; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-07;DOC-INVENTARIO;RUN-HEAD.
+
+**Solicitud final:** Aceptar preview del mismoSHA,2–4 cuentas, recuperación, cuatro modos y controles; conservar fallos/reintentos sin repetir campañas costosas.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** CIbrowserHEAD mayoritariamente verde; previews previos por SHA documentados. No se abrió preview nuevo ni se crearon cuentas aquí. Nuevo run 44847181991 falla al esperar que el preview sirva la autoridad/aplicación/audio/CSS del checkout, antes de aceptación funcional; no demuestra un defecto de navegación del jugador.
+
+**Archivos responsables:** `qa/v5/guard-entry-preview.mjs`, `qa/v5/shared-guard-preview.mjs`, `qa/v5/shared-guard-auth-browser.mjs`.
+
+**Pruebas identificadas:** `qa/v5/shared-guard-preview.mjs`.
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. No repetidas aquí: `qa/v5/shared-guard-preview.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptación dirigida solo para contrato modificado ySHAactual; cuota429de tercera cuenta histórica no prueba fallo de clínica.
+
+**Criterio de aceptación:** Enlace/metadataSHAytraza demuestran flujo exacto; emulación no se declara Android físico.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Aceptación dirigida solo para contrato modificado ySHAactual; cuota429de tercera cuenta histórica no prueba fallo de clínica. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### QA-03 · Certificación y pruebas
 
-- **Fuente/fecha/naturaleza:** PC-24-31;RUN-HEAD · 2026-10-30→11-20 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO CON DEFECTOS.
-- **Comportamiento:** Certificar traslados correctos/erróneos, preparación, diagnóstico omitido/equivocado, rescate y cierre con libertad clínica vigente.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `qa/v5/transfer-certification.mjs`, `.github/workflows/atria-v5-transfers.yml`.
-- **Pruebas pertinentes:** `qa/tests/clinical-case-certification.test.mjs`.
-- **Evidencia y alcance:** 4 perfiles fallan por «missing initial refusal»; no se puede asumir misma política de rechazo para alta insegura registrada y destino seguro sin anamnesis.
-- **Pendiente:** Separar rechazo técnico, decisión insegura ejecutada y cierre válido; investigar efectos reales antes de ajustar expectativas.
-- **Aceptación:** Prueba adversa exige consecuencias/recepción/XP acordes; no reinstala gate clínico antiguo para hacerCIverde.
-- **Ejecución:** P1 · B0 · CHATGPT NORMAL · esfuerzo del bloque 2–4 días (no sumarlo por cada fila), riesgo medio; dependencias: ninguna.
+**Fecha y origen:** 2026-10-30→11-20; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;RUN-HEAD.
+
+**Solicitud final:** Certificar traslados correctos/erróneos, preparación, diagnóstico omitido/equivocado, rescate y cierre con libertad clínica vigente.
+
+**Estado:** IMPLEMENTADO CON DEFECTOS. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** 4 perfiles fallan por «missing initial refusal»; no se puede asumir misma política de rechazo para alta insegura registrada y destino seguro sin anamnesis. En el nuevo código 7cde6fa, run 44847181875 conserva 4 perfiles fallidos de 11; el log wrong-dx certifica 47/55 y 8 fallan por missing initial refusal.
+
+**Archivos responsables:** `qa/v5/transfer-certification.mjs`, `.github/workflows/atria-v5-transfers.yml`.
+
+**Pruebas identificadas:** `qa/tests/clinical-case-certification.test.mjs`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `qa/tests/clinical-case-certification.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Separar rechazo técnico, decisión insegura ejecutada y cierre válido; investigar efectos reales antes de ajustar expectativas.
+
+**Criterio de aceptación:** Prueba adversa exige consecuencias/recepción/XP acordes; no reinstala gate clínico antiguo para hacerCIverde.
+
+**Causa / bloque:** Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad. B0. **Dependencias:** ninguna. **Impacto:** Separar rechazo técnico, decisión insegura ejecutada y cierre válido; investigar efectos reales antes de ajustar expectativas. **Riesgo:** medio. **Esfuerzo:** 2–4 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### DEPLOY-01 · Despliegue y persistencia
 
-- **Fuente/fecha/naturaleza:** PC-01;MIG-PLAN;U-AUDIT · 2026-10-01→11-20 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Gratis para usuarios, sin Replit; publicar solo experimental y no modificar main/V4/estables ni sobrescribir trabajo concurrente.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `vercel.json`, `src/v5/server/account-gateway.js`, `docs/ATRIA-5-CHATGPT-HANDOFF.md`.
-- **Pruebas pertinentes:** No identificadas; requiere nueva prueba dirigida..
-- **Evidencia y alcance:** Vercel+Supabase actuales y rama dedicada; cuotasfree de proveedor no desaparecen por preferencia. No existe cobro a usuarios identificado.
-- **Pendiente:** Mantener control de HEAD/fast-forward y costos de infraestructura explícitos si limitan servicio.
-- **Aceptación:** Publicación queda en experimental; no se promete ausencia universal de límites gratuitos del proveedor.
-- **Ejecución:** P1 · B8 · BLOQUEADA · esfuerzo del bloque 1–3 días tras obtener fuentes (no sumarlo por cada fila), riesgo bajo; dependencias: historial completo/exportación disponible.
+**Fecha y origen:** 2026-10-01→11-20; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-01;MIG-PLAN;U-AUDIT;ISSUE-01.
+
+**Solicitud final:** Gratis para usuarios, sin Replit; publicar solo experimental y no modificar main/V4/estables ni sobrescribir trabajo concurrente.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Rama dedicada y servicios Vercel/Supabase existentes. El estado Vercel de 7cde6fa es failure con enlace deployment-blocked; Issue #1 lo atribuye a cuota Hobby. No acredita por sí solo caída de una versión previa. El registro de CI/preview se conserva separado de la suite local.
+
+**Archivos responsables:** `vercel.json`, `src/v5/server/account-gateway.js`, `docs/ATRIA-5-CHATGPT-HANDOFF.md`.
+
+**Pruebas identificadas:** No identificadas; consultar criterio de aceptación..
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación.
+
+**Pendiente:** Resolver la disponibilidad de un preview utilizable y aceptar su entrada real cuando el servicio permita desplegar; medir consumo antes de comparar planes. No migrar proveedor ni contratar servicios por esta auditoría.
+
+**Criterio de aceptación:** Publicación queda en experimental; no se promete ausencia universal de límites gratuitos del proveedor.
+
+**Causa / bloque:** No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA. B8. **Dependencias:** Servicios de despliegue disponibles para aceptación pública; cambios en GitHub no dependen de restablecer cuota.. **Impacto:** Resolver la disponibilidad de un preview utilizable y aceptar su entrada real cuando el servicio permita desplegar; medir consumo antes de comparar planes. No migrar proveedor ni contratar servicios por esta auditoría. **Riesgo:** bajo. **Esfuerzo:** 1–3 días tras obtener fuentes.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita. Issue #1 del 20/11 añade diagnóstico de cuota y comparación de costo posterior a medición; no autoriza migración.
 
 ### AUTH-01 · Despliegue y persistencia
 
-- **Fuente/fecha/naturaleza:** PC-24-31;DOC-WELCOME;DOC-RPG · 2026-10-27 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Bienvenida con ilustración original sin globosDr/Darío; nombre único normalizado/reserva atómica, personalización y contraseña≥12; volver desde otro dispositivo.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/welcome-flow.js`, `src/v5/server/account-gateway.js`, `src/v5/server/supabase-account-store.js`, `src/v5/content/assets/welcome-doctors.webp`.
-- **Pruebas pertinentes:** `src/v5/server/account-gateway.test.js`, `src/v5/server/account-clinical-integration.test.js`.
-- **Evidencia y alcance:** Registro/login/cookieHttpOnly y renovación/sesiones documentados27/10; no se recuperó comparación visual física de arte aprobado.
-- **Pendiente:** Aceptar ilustración/creación/volver/migración de cuenta en móvil y otro dispositivo.
-- **Aceptación:** Nombre único ignora mayúsculas/tildes según contrato, no duplica actor; contraseñas/tokens no se guardan en cliente.
-- **Ejecución:** P2 · B4 · MIXTA · esfuerzo del bloque 4–7 días (no sumarlo por cada fila), riesgo alto; dependencias: B1; política XP del usuario.
+**Fecha y origen:** 2026-10-27 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-WELCOME;DOC-RPG.
+
+**Solicitud final:** Bienvenida con ilustración original sin globosDr/Darío; nombre único normalizado/reserva atómica, personalización y contraseña≥12; volver desde otro dispositivo.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
+
+**Evidencia:** Registro/login/cookieHttpOnly y renovación/sesiones documentados27/10; no se recuperó comparación visual física de arte aprobado.
+
+**Archivos responsables:** `src/v5/ui/welcome-flow.js`, `src/v5/server/account-gateway.js`, `src/v5/server/supabase-account-store.js`, `src/v5/content/assets/welcome-doctors.webp`.
+
+**Pruebas identificadas:** `src/v5/server/account-gateway.test.js`, `src/v5/server/account-clinical-integration.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/server/account-gateway.test.js`, `src/v5/server/account-clinical-integration.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar ilustración/creación/volver/migración de cuenta en móvil y otro dispositivo.
+
+**Criterio de aceptación:** Nombre único ignora mayúsculas/tildes según contrato, no duplica actor; contraseñas/tokens no se guardan en cliente.
+
+**Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Aceptar ilustración/creación/volver/migración de cuenta en móvil y otro dispositivo. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### AUTH-02 · Despliegue y persistencia
 
-- **Fuente/fecha/naturaleza:** PC-17-23;DOC-RPG · 2026-10-18→27 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** Persistencia multiinstanciaCAS/RLS, controlador único por cuenta, transferencia explícita de dispositivo, no perder amigos/XP históricos.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/server/postgres-guard-store.js`, `src/v5/server/supabase-account-store.js`, `src/v5/server/durable-guard-authority.js`.
-- **Pruebas pertinentes:** `src/v5/server/durable-guard-authority.test.js`, `src/v5/server/account-gateway.test.js`.
-- **Evidencia y alcance:** Supabase reemplaza Blob suspendido; cercados y migraciones versionados; XP local no verificada se conserva como historial.
-- **Pendiente:** Aceptar sesiones del usuario, caducidad y nueva instancia con red móvil.
-- **Aceptación:** Solicitud vieja no reabre guardia liberada ni mueve otro actor; progreso previo se conserva sin fabricarXP.
-- **Ejecución:** P0 · B1 · MIXTA · esfuerzo del bloque 3–6 días + aceptación física (no sumarlo por cada fila), riesgo alto; dependencias: B0 para certificación.
+**Fecha y origen:** 2026-10-18→27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-17-23;DOC-RPG.
+
+**Solicitud final:** Persistencia multiinstanciaCAS/RLS, controlador único por cuenta, transferencia explícita de dispositivo, no perder amigos/XP históricos.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Supabase reemplaza Blob suspendido; cercados y migraciones versionados; XP local no verificada se conserva como historial.
+
+**Archivos responsables:** `src/v5/server/postgres-guard-store.js`, `src/v5/server/supabase-account-store.js`, `src/v5/server/durable-guard-authority.js`.
+
+**Pruebas identificadas:** `src/v5/server/durable-guard-authority.test.js`, `src/v5/server/account-gateway.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/server/durable-guard-authority.test.js`, `src/v5/server/account-gateway.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar sesiones del usuario, caducidad y nueva instancia con red móvil.
+
+**Criterio de aceptación:** Solicitud vieja no reabre guardia liberada ni mueve otro actor; progreso previo se conserva sin fabricarXP.
+
+**Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Aceptar sesiones del usuario, caducidad y nueva instancia con red móvil. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### SCALE-01 · Lobby y presencia
 
-- **Fuente/fecha/naturaleza:** MIG-PLAN;MIG-MANUAL · 2026-10-16→27 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Escalar lobby con vecindad/interés y datos privados, sin difundir mapa/historias a todos; guardar hasta4por guardia.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/social/presence-storage.js`, `src/v5/social/room-motion-scope.js`, `src/v5/server/account-gateway.js`.
-- **Pruebas pertinentes:** `src/v5/social/cooperative-link.test.js`.
-- **Evidencia y alcance:** Directorio/presencia autorizados y aislamiento implementados;600 actores virtuales históricos no son600 clientes reales.
-- **Pendiente:** Carga medida y presupuesto por sala antes de prometer lobby masivo/TURN/WAN.
-- **Aceptación:** Solo vecinos reciben movimiento pertinente; datos clínicos permanecen en sala autorizada.
-- **Ejecución:** P3 · B7 · MIXTA · esfuerzo del bloque 2–5 semanas para mapa modular completo (no sumarlo por cada fila), riesgo alto; dependencias: B1; decisión visual pendiente para nuevo mapa.
+**Fecha y origen:** 2026-10-16→27 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-PLAN;MIG-MANUAL.
+
+**Solicitud final:** Escalar lobby con vecindad/interés y datos privados, sin difundir mapa/historias a todos; guardar hasta4por guardia.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P3. **Entorno:** MIXTA.
+
+**Evidencia:** Directorio/presencia autorizados y aislamiento implementados;600 actores virtuales históricos no son600 clientes reales.
+
+**Archivos responsables:** `src/v5/social/presence-storage.js`, `src/v5/social/room-motion-scope.js`, `src/v5/server/account-gateway.js`.
+
+**Pruebas identificadas:** `src/v5/social/cooperative-link.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/social/cooperative-link.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Carga medida y presupuesto por sala antes de prometer lobby masivo/TURN/WAN.
+
+**Criterio de aceptación:** Solo vecinos reciben movimiento pertinente; datos clínicos permanecen en sala autorizada.
+
+**Causa / bloque:** Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. B7. **Dependencias:** B1; decisión visual pendiente para nuevo mapa. **Impacto:** Carga medida y presupuesto por sala antes de prometer lobby masivo/TURN/WAN. **Riesgo:** alto. **Esfuerzo:** 2–5 semanas para mapa modular completo.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### CONT-01 · Continuidad y recuperación histórica
 
-- **Fuente/fecha/naturaleza:** PC-03-07;MIG-PLAN;U-AUDIT · 2026-10-07→11-20 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** COMPLETADO Y VERIFICADO.
-- **Comportamiento:** Checkpoints pequeños, informes/SHA/pruebas reales, continuar autónomamente sin rehacer; recuperar Work publicado aunque no haya respuesta final.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `docs/ATRIA-5-CHATGPT-HANDOFF.md`, `docs/ATRIA-5-EXACT-CONTINUATION.md`, `docs/ATRIA-5-REMAINING-TASKS.md`.
-- **Pruebas pertinentes:** No identificadas; requiere nueva prueba dirigida..
-- **Evidencia y alcance:** Historial completo de rama2152 commits enventana;HEAD13/11 incluye8 cambios posteriores aúltimohandoff12/11.
-- **Pendiente:** Mantener práctica en cada sesión; recursos locales no son continuidad durable hasta publicar.
-- **Aceptación:** Antes de editar compararHEAD, no inferir pérdida por pantalla Work cargando y dejar siguiente tareaejecutable.
-- **Ejecución:** P1 · B8 · BLOQUEADA · esfuerzo del bloque 1–3 días tras obtener fuentes (no sumarlo por cada fila), riesgo bajo; dependencias: historial completo/exportación disponible.
+**Fecha y origen:** 2026-10-07→11-20; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-07;MIG-PLAN;U-AUDIT.
+
+**Solicitud final:** Checkpoints pequeños, informes/SHA/pruebas reales, continuar autónomamente sin rehacer; recuperar Work publicado aunque no haya respuesta final.
+
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Historial completo de rama2152 commits enventana;HEAD13/11 incluye8 cambios posteriores aúltimohandoff12/11.
+
+**Archivos responsables:** `docs/ATRIA-5-CHATGPT-HANDOFF.md`, `docs/ATRIA-5-EXACT-CONTINUATION.md`, `docs/ATRIA-5-REMAINING-TASKS.md`.
+
+**Pruebas identificadas:** No identificadas; consultar criterio de aceptación..
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación.
+
+**Pendiente:** Mantener práctica en cada sesión; recursos locales no son continuidad durable hasta publicar.
+
+**Criterio de aceptación:** Antes de editar compararHEAD, no inferir pérdida por pantalla Work cargando y dejar siguiente tareaejecutable.
+
+**Causa / bloque:** No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA. B8. **Dependencias:** historial completo/exportación disponible. **Impacto:** Mantener práctica en cada sesión; recursos locales no son continuidad durable hasta publicar. **Riesgo:** bajo. **Esfuerzo:** 1–3 días tras obtener fuentes.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### CONT-02 · Continuidad y recuperación histórica
 
-- **Fuente/fecha/naturaleza:** U-AUDIT · 2026-11-20 (solicitud original actual) · SOLICITUD ORIGINAL RECUPERADA.
-- **Estado:** NO VERIFICABLE.
-- **Comportamiento:** Recuperar listado literal1–60 y todosloschats/ejecuciones del período, conservar correcciones sin inventarlas.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `docs/ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md`, `docs/ATRIA-5-REQUIREMENTS-TRACEABILITY.md`.
-- **Pruebas pertinentes:** No identificadas; requiere nueva prueba dirigida..
-- **Evidencia y alcance:** Inventario recuperado solo conoce correspondencias por rango; navegadorChatGPTsin login y extractoscontextualesparciales. Fechas/títuloscompletosno recuperables.
-- **Pendiente:** Requiere fuentes conversacionales completas accesibles; no bloquear auditoría/repo ni fabricar60títulos.
-- **Aceptación:** Cada texto original obtenido se enlaza aIDestable o se marca no recuperable; nuncanombrar conversación no abierta como revisada completa.
-- **Ejecución:** P1 · B8 · BLOQUEADA · esfuerzo del bloque 1–3 días tras obtener fuentes (no sumarlo por cada fila), riesgo bajo; dependencias: historial completo/exportación disponible.
+**Fecha y origen:** 2026-11-20 (solicitud original actual); SOLICITUD ORIGINAL RECUPERADA; U-AUDIT.
+
+**Solicitud final:** Recuperar listado literal1–60 y todosloschats/ejecuciones del período, conservar correcciones sin inventarlas.
+
+**Estado:** NO VERIFICABLE. **Prioridad:** P1. **Entorno:** BLOQUEADA.
+
+**Evidencia:** Inventario recuperado solo conoce correspondencias por rango; navegadorChatGPTsin login y extractoscontextualesparciales. Fechas/títuloscompletosno recuperables.
+
+**Archivos responsables:** `docs/ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md`, `docs/ATRIA-5-REQUIREMENTS-TRACEABILITY.md`.
+
+**Pruebas identificadas:** No identificadas; consultar criterio de aceptación..
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación.
+
+**Pendiente:** Requiere fuentes conversacionales completas accesibles; no bloquear auditoría/repo ni fabricar60títulos.
+
+**Criterio de aceptación:** Cada texto original obtenido se enlaza aIDestable o se marca no recuperable; nuncanombrar conversación no abierta como revisada completa.
+
+**Causa / bloque:** No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA. B8. **Dependencias:** historial completo/exportación disponible. **Impacto:** Requiere fuentes conversacionales completas accesibles; no bloquear auditoría/repo ni fabricar60títulos. **Riesgo:** bajo. **Esfuerzo:** 1–3 días tras obtener fuentes.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 ### CONT-03 · Continuidad y recuperación histórica
 
-- **Fuente/fecha/naturaleza:** LOCAL-WORK;GIT-13 · 2026-11-20 (hallazgo técnico) · INFERENCIA TÉCNICA.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Recuperar modificaciones locales de Work y distinguir equivalencia ya publicada de código huérfano.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `qa/v5/browser-harness.mjs`, `qa/v5/certify-clinical-cases.mjs`, `src/v5/clinical/clinical-policy-registry.js`.
-- **Pruebas pertinentes:** No identificadas; requiere nueva prueba dirigida..
-- **Evidencia y alcance:** Dosworkspacescon cambios sin commit; ledgerreveal/compiler ya se encuentran en HEAD. rtc-diagnostics.mjslocalno está versionado ydiagnósticosbrowserdifieren.
-- **Pendiente:** Comparar porcomportamiento/hunk, preservar solo auxiliares útiles y no aplicar parches antiguos sobre código actual.
-- **Aceptación:** No sepierdeunapeticiónnilarecuperaciónrevierte8 fixes publicados; hipótesis de trabajos perdidos se etiquetan.
-- **Ejecución:** P2 · B8 · BLOQUEADA · esfuerzo del bloque 1–3 días tras obtener fuentes (no sumarlo por cada fila), riesgo bajo; dependencias: historial completo/exportación disponible.
-- **Omisión/condición recuperada:** G: hay material local no publicado; no todo representa funcionalidad pendiente.
+**Fecha y origen:** 2026-11-20 (hallazgo técnico); INFERENCIA TÉCNICA; LOCAL-WORK;GIT-13.
+
+**Solicitud final:** Recuperar modificaciones locales de Work y distinguir equivalencia ya publicada de código huérfano.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P2. **Entorno:** CHATGPT NORMAL.
+
+**Evidencia:** Dosworkspacescon cambios sin commit; ledgerreveal/compiler ya se encuentran en HEAD. rtc-diagnostics.mjslocalno está versionado ydiagnósticosbrowserdifieren.
+
+**Archivos responsables:** `qa/v5/browser-harness.mjs`, `qa/v5/certify-clinical-cases.mjs`, `src/v5/clinical/clinical-policy-registry.js`.
+
+**Pruebas identificadas:** No identificadas; consultar criterio de aceptación..
+
+**Ejecución comprobada:** Sin prueba de esta entrada incluida en la suite local. Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación.
+
+**Pendiente:** Comparar porcomportamiento/hunk, preservar solo auxiliares útiles y no aplicar parches antiguos sobre código actual.
+
+**Criterio de aceptación:** No sepierdeunapeticiónnilarecuperaciónrevierte8 fixes publicados; hipótesis de trabajos perdidos se etiquetan.
+
+**Causa / bloque:** No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA. B8. **Dependencias:** historial completo/exportación disponible. **Impacto:** Comparar porcomportamiento/hunk, preservar solo auxiliares útiles y no aplicar parches antiguos sobre código actual. **Riesgo:** bajo. **Esfuerzo:** 1–3 días tras obtener fuentes.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Condición recuperada/olvidada:** G: hay material local no publicado; no todo representa funcionalidad pendiente.
 
 ### CLIN-HEPAT-01 · Estudios y resultados
 
-- **Fuente/fecha/naturaleza:** DOC-INVENTARIO;DOC-HANDOFF · 2026-11 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** COMPLETADO Y VERIFICADO.
-- **Comportamiento:** HEPAT-001: una adquisición con INR y glucemia satisface ambas evidencias; no repetir por alias ni por pista.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/gastro-expansion-policies.js`, `src/v5/clinical/study-evidence.js`, `src/v5/clinical/clinical-hints.test.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/clinical-hints.test.js`.
-- **Evidencia y alcance:** Prueba nativa HEPAT requests g_encef_liver/g_hepat_inr conserva una orden, espera informe INR 1,2/glucemia normal y permite avanzar a alta; pasa en suite local.
-- **Pendiente:** Conservar como regresión específica de LAB-01 y VEGA-COHERENCE-01; no es otro parche independiente.
-- **Aceptación:** Solicitud, resultado, Ruta clínica y Vega comparten una muestra y un criterio cumplido.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** 2026-11 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;DOC-HANDOFF.
+
+**Solicitud final:** HEPAT-001: una adquisición con INR y glucemia satisface ambas evidencias; no repetir por alias ni por pista.
+
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Prueba nativa HEPAT requests g_encef_liver/g_hepat_inr conserva una orden, espera informe INR 1,2/glucemia normal y permite avanzar a alta; pasa en suite local.
+
+**Archivos responsables:** `src/v5/clinical/gastro-expansion-policies.js`, `src/v5/clinical/study-evidence.js`, `src/v5/clinical/clinical-hints.test.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/clinical-hints.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/clinical-hints.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Conservar como regresión específica de LAB-01 y VEGA-COHERENCE-01; no es otro parche independiente.
+
+**Criterio de aceptación:** Solicitud, resultado, Ruta clínica y Vega comparten una muestra y un criterio cumplido.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Conservar como regresión específica de LAB-01 y VEGA-COHERENCE-01; no es otro parche independiente. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Resolver conjuntamente con:** LAB-01, VEGA-COHERENCE-01.
 
 ### CLIN-CARD08-01 · Diagnóstico y evaluación
 
-- **Fuente/fecha/naturaleza:** PC-24-31;DOC-INVENTARIO · 2026-10-30 (documentada) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** CARD-08: disección Stanford A corresponde a Cirugía cardiovascular, no exigir betabloqueo contraindicado por hipotensión para derivar.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/content/packs/cardiology-pack.js`, `src/v5/clinical/clinical-policy-closure.js`, `src/v5/clinical/consultation-evidence.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/receiver-transfer-contract.test.js`, `src/v5/clinical/clinical-policy-closure.test.js`.
-- **Evidencia y alcance:** Receptor cardiovascular y excepciones contextuales en evaluador compartido; transferencia urgente con impresión equivocada cubierta. No equivale a realizar reparación aórtica.
-- **Pendiente:** Aceptar variante hipotensa/deteriorada y alternativa ETE, sin debilitar estabilización que sí corresponda.
-- **Aceptación:** Hallazgos/recepción justifican destino y la pista no pide tratamiento inseguro como llave de cierre.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** 2026-10-30 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-INVENTARIO.
+
+**Solicitud final:** CARD-08: disección Stanford A corresponde a Cirugía cardiovascular, no exigir betabloqueo contraindicado por hipotensión para derivar.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Receptor cardiovascular y excepciones contextuales en evaluador compartido; transferencia urgente con impresión equivocada cubierta. No equivale a realizar reparación aórtica.
+
+**Archivos responsables:** `src/v5/content/packs/cardiology-pack.js`, `src/v5/clinical/clinical-policy-closure.js`, `src/v5/clinical/consultation-evidence.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/receiver-transfer-contract.test.js`, `src/v5/clinical/clinical-policy-closure.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/receiver-transfer-contract.test.js`, `src/v5/clinical/clinical-policy-closure.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Aceptar variante hipotensa/deteriorada y alternativa ETE, sin debilitar estabilización que sí corresponda.
+
+**Criterio de aceptación:** Hallazgos/recepción justifican destino y la pista no pide tratamiento inseguro como llave de cierre.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Aceptar variante hipotensa/deteriorada y alternativa ETE, sin debilitar estabilización que sí corresponda. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Resolver conjuntamente con:** CLOSE-01, VEGA-COHERENCE-01.
 
 ### CLIN-VARIX-01 · Diagnóstico y evaluación
 
-- **Fuente/fecha/naturaleza:** PC-24-31;PC-NOV;DOC-INVENTARIO · 2026-10-30→11-04 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** VARIX-001: estabilización y derivación endoscópica/UTI alcanzables; evitar reevaluación manual oculta y XP duplicada.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/gastro-expansion-policies.js`, `src/v5/clinical/guard-session.js`, `src/v5/clinical/transfer-continuation.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/accepted-transfer.test.js`.
-- **Evidencia y alcance:** Política distingue soporte confirmado, terlipresina/ceftriaxona y aceptación de receptor; Work documentó corrección del cierre. Suite actual de transferencias nativas pasa.
-- **Pendiente:** Repetir secuencia exacta del reporte en teléfono solo si hay reproducción; nunca afirmar ligadura realizada.
-- **Aceptación:** Después de mínimos indispensables un único destino válido genera un cierre/XP y Vega no mantiene una reevaluación invisible.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** 2026-10-30→11-04; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;PC-NOV;DOC-INVENTARIO.
+
+**Solicitud final:** VARIX-001: estabilización y derivación endoscópica/UTI alcanzables; evitar reevaluación manual oculta y XP duplicada.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Política distingue soporte confirmado, terlipresina/ceftriaxona y aceptación de receptor; Work documentó corrección del cierre. Suite actual de transferencias nativas pasa.
+
+**Archivos responsables:** `src/v5/clinical/gastro-expansion-policies.js`, `src/v5/clinical/guard-session.js`, `src/v5/clinical/transfer-continuation.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/accepted-transfer.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/accepted-transfer.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Repetir secuencia exacta del reporte en teléfono solo si hay reproducción; nunca afirmar ligadura realizada.
+
+**Criterio de aceptación:** Después de mínimos indispensables un único destino válido genera un cierre/XP y Vega no mantiene una reevaluación invisible.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Repetir secuencia exacta del reporte en teléfono solo si hay reproducción; nunca afirmar ligadura realizada. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Resolver conjuntamente con:** CLOSE-01, NUR-04.
 
 ### CLIN-HDA-01 · Diagnóstico y evaluación
 
-- **Fuente/fecha/naturaleza:** PC-24-31;DOC-INVENTARIO · 2026-10-28→30 · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN.
-- **Comportamiento:** HDA-001 y hemorragia variceal no deben confundirse; soporte, terapia y destino conservan reglas propias.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/clinical/additional-case-care.js`, `src/v5/clinical/gastro-expansion-policies.js`, `src/v5/clinical/diagnostic-assessment.js`.
-- **Pruebas pertinentes:** `src/v5/ui/diagnostic-impression.test.js`, `src/v5/clinical/accepted-transfer.test.js`.
-- **Evidencia y alcance:** Catálogo y evaluadores separados; reportes de octubre pidieron ambos casos. No se recuperó toda la redacción original de cada corrección clínica.
-- **Pendiente:** Proteger por regresión etología/hipótesis/terapia/recepción con las fuentes del caso, sin copiar tratamientos de VARIX a toda HDA.
-- **Aceptación:** Motor y evaluación reconocen evidencia y tratamiento propios; no se da un beneficio por solo decir un diagnóstico.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** 2026-10-28→30; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-INVENTARIO.
+
+**Solicitud final:** HDA-001 y hemorragia variceal no deben confundirse; soporte, terapia y destino conservan reglas propias.
+
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Catálogo y evaluadores separados; reportes de octubre pidieron ambos casos. No se recuperó toda la redacción original de cada corrección clínica.
+
+**Archivos responsables:** `src/v5/clinical/additional-case-care.js`, `src/v5/clinical/gastro-expansion-policies.js`, `src/v5/clinical/diagnostic-assessment.js`.
+
+**Pruebas identificadas:** `src/v5/ui/diagnostic-impression.test.js`, `src/v5/clinical/accepted-transfer.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/ui/diagnostic-impression.test.js`, `src/v5/clinical/accepted-transfer.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Proteger por regresión etología/hipótesis/terapia/recepción con las fuentes del caso, sin copiar tratamientos de VARIX a toda HDA.
+
+**Criterio de aceptación:** Motor y evaluación reconocen evidencia y tratamiento propios; no se da un beneficio por solo decir un diagnóstico.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Proteger por regresión etología/hipótesis/terapia/recepción con las fuentes del caso, sin copiar tratamientos de VARIX a toda HDA. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Resolver conjuntamente con:** CLOSE-01, SAFE-01.
 
 ### NUR-04 · Enfermería
 
-- **Fuente/fecha/naturaleza:** PC-NOV;DOC-HANDOFF · 2026-11-04 (indirecta) · SOLICITUD DOCUMENTADA INDIRECTAMENTE.
-- **Estado:** PARCIALMENTE IMPLEMENTADO.
-- **Comportamiento:** Enfermería automatiza reevaluaciones rutinarias; el médico decide conductas y no debe descubrir comandos ocultos para poder cerrar.
-- **Historia/vigencia:** Vigente; no se recuperó sustitución explícita.
-- **Archivos responsables:** `src/v5/ui/clinical-workflow.js`, `src/v5/clinical/guard-session.js`, `src/v5/clinical/transfer-continuation.js`.
-- **Pruebas pertinentes:** `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/accepted-transfer.test.js`.
-- **Evidencia y alcance:** Continuación de traslado y reevaluación de salida existen; todavía hay cues que piden reevaluación cuando faltan requisitos. No se demostró automatización universal de todo control rutinario.
-- **Pendiente:** Distinguir medición rutinaria, reevaluación clínica deliberada y condición indispensable por caso; ligar la primera a Enfermería/recibo sin fabricar examen médico.
-- **Aceptación:** No bloqueos ocultos ni datos inventados; si una decisión médica es imprescindible, Vega explica la acción ejecutable.
-- **Ejecución:** P1 · B2 · MIXTA · esfuerzo del bloque 4–8 días (no sumarlo por cada fila), riesgo alto; dependencias: B0; recibos existentes.
+**Fecha y origen:** 2026-11-04 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-NOV;DOC-HANDOFF.
+
+**Solicitud final:** Enfermería automatiza reevaluaciones rutinarias; el médico decide conductas y no debe descubrir comandos ocultos para poder cerrar.
+
+**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Continuación de traslado y reevaluación de salida existen; todavía hay cues que piden reevaluación cuando faltan requisitos. No se demostró automatización universal de todo control rutinario.
+
+**Archivos responsables:** `src/v5/ui/clinical-workflow.js`, `src/v5/clinical/guard-session.js`, `src/v5/clinical/transfer-continuation.js`.
+
+**Pruebas identificadas:** `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/accepted-transfer.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/accepted-transfer.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Distinguir medición rutinaria, reevaluación clínica deliberada y condición indispensable por caso; ligar la primera a Enfermería/recibo sin fabricar examen médico.
+
+**Criterio de aceptación:** No bloqueos ocultos ni datos inventados; si una decisión médica es imprescindible, Vega explica la acción ejecutable.
+
+**Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Distinguir medición rutinaria, reevaluación clínica deliberada y condición indispensable por caso; ligar la primera a Enfermería/recibo sin fabricar examen médico. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
+
+**Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+### PERF-01 · Android y rendimiento
+
+**Fecha y origen:** 2026-11-20 21:58:18 America/Argentina/Buenos_Aires; SOLICITUD DOCUMENTADA INDIRECTAMENTE; ISSUE-01.
+
+**Solicitud final:** Medir tráfico y CPU antes de optimizar: lobby/sala/guardia/reconexión con 1, 2 y 4 clientes; distinguir movimiento, señalización WebRTC y clínica durable; cambio mínimo con flag OFF, rollback y comparación reproducible.
+
+**Estado:** NO IMPLEMENTADO. **Prioridad:** P1. **Entorno:** MIXTA.
+
+**Evidencia:** Issue #1 leído íntegro y sin comentarios. Código confirma presencia/roster 260 ms, mensajes 320 ms, sala 1000 ms y clínica 900 ms, sujetos a solicitudes en vuelo. No se identificó un perfil reproducible completo por endpoint, fase y 1/2/4 clientes ni medición causal de CPU. Las cadencias no son una medición de consumo.
+
+**Archivos responsables:** `src/v5/social/cooperative-link.js`, `src/v5/social/durable-cooperative-replica.js`.
+
+**Pruebas identificadas:** `qa/v5/shared-guard-auth-browser.mjs`, `src/v5/social/durable-cooperative-replica.test.js`.
+
+**Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/social/durable-cooperative-replica.test.js`. No repetidas aquí: `qa/v5/shared-guard-auth-browser.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
+
+**Pendiente:** Medir requests por endpoint/minuto, p50/p95, CPU si está disponible, errores y duplicados; validar 2/4 clientes, desconexión, progreso, chat, Enfermería, Vega, XP y recuperación en cuatro modos. Comparar costo después de aceptar métricas; no atribuir 4h13m de CPU exclusivamente a ATRIA.
+
+**Criterio de aceptación:** Misma carga y batería antes/después; menor consumo medido sin peor fluidez ni latencia, integridad clínica intacta. Flag desactivado por defecto y rollback al comportamiento previo. Sin migración, cambio de cadencias o despliegue de producción no justificado.
+
+**Causa / bloque:** Falta de línea base por endpoint/fase/carga; polling social, señalización y clínica son responsabilidades diferentes. B1. **Dependencias:** B0: CI y fallos deterministas investigados antes de optimización; entorno de perfilado reproducible. **Impacto:** Medir requests por endpoint/minuto, p50/p95, CPU si está disponible, errores y duplicados; validar 2/4 clientes, desconexión, progreso, chat, Enfermería, Vega, XP y recuperación en cuatro modos. Comparar costo después de aceptar métricas; no atribuir 4h13m de CPU exclusivamente a ATRIA. **Riesgo:** alto si se altera transporte. **Esfuerzo:** 2–4 días de perfilado y diagnóstico; aceptación Android bloqueada por dispositivo.
+
+**Evolución y sustituciones:** Issue creado durante esta sesión tras 9c176df: se incorpora sin fingir que estaba disponible en la búsqueda inicial. El ticket llama P0 a CI y perfilado como prerrequisitos de optimización; en esta auditoría se prioriza P1 al no demostrar bloqueo actual del juego.
+
+**Resolver conjuntamente con:** LAT-01, MP-01, QA-01, DEPLOY-01.
+
+**Condición recuperada/olvidada:** A: la condición de consumo medido, flag OFF y rollback no estaba explícita en el inventario anterior. LAT-01 conserva percepción de latencia; PERF-01 solo añade la condición de consumo/medición.
 
 ## Historial íntegro anterior — conservado, superado por la auditoría vigente
 
 <details>
-<summary>Inventario tal como estaba en162d0cf; sus estados corresponden alcheckpoint de12/11</summary>
+<summary>Inventario anterior tal como estaba en 162d0cf (sin eliminar su historial)</summary>
 
 # ATRIA 5.0 · Inventario maestro de requisitos
 

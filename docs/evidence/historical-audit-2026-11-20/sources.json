@@ -322,5 +322,14 @@
     "locator": "Sin URL/ID canónico de conversación",
     "read_scope": "Parcial",
     "limitations": "No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos."
+  },
+  {
+    "id": "ISSUE-01",
+    "date": "2026-11-20 21:58:18 Buenos Aires (2026-11-21T00:58:18Z)",
+    "kind": "Solicitud documentada indirectamente: ticket",
+    "description": "Issue #1: recuperar CI y perfilar tráfico/CPU antes de optimizar",
+    "locator": "https://github.com/javierdario48-star/ATRIA/issues/1",
+    "read_scope": "Texto íntegro y comentarios: 0",
+    "limitations": "Creado durante esta auditoría tras 9c176df; no era accesible en la búsqueda inicial. No demuestra causa de CPU ni recupera la conversación original."
   }
 ]

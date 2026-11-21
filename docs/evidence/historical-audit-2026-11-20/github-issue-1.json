@@ -1,0 +1,28 @@
+{
+  "issue": {
+    "id": 6522484932,
+    "url": "https://github.com/javierdario48-star/ATRIA/issues/1",
+    "title": "ATRIA 5.0 — Recuperar CI verde y medir tráfico/CPU antes de optimizar multijugador",
+    "issue_number": 1,
+    "body": "## Objetivo y alcance\nContinuar ATRIA **sin reconstruir** el motor clínico ni reescribir el multijugador. Preservar la rama autorizada `atria-5.0-core-rebuild-experimental`; no tocar `main`, ATRIA 4.8.7 ni producción. Los cambios deben ser pequeños, reversibles y con evidencia. Este ticket es de diagnóstico/aceptación: **no autoriza** una migración ni cambiar cadencias sin medición.\n\n## Evidencia comprobada (20/11/2026)\n- Base consultada: `9c176df6718b9a47c0aafd145a371cb597cd9bec`.\n- El push muestra Vercel bloqueado por cuenta en cuota Hobby (estado Vercel: failure). No intentar desplegar como solución de una prueba rota.\n- Workflow [ATRIA 5 Experimental Game](https://github.com/javierdario48-star/ATRIA/actions/runs/44846888444): pruebas completadas con éxito de `actual-http-multiplayer-browser`, `real-cooperative-team-browser (3)`, `durable-cooperative-browser`, `competitive-browser (2)`, `competitive-browser (3)`, `competitive-browser (4)`, `lobby-social-acceptance` y `continuous-ward-browser` (corte de inspección; resto todavía en ejecución).\n- Ya existe una falla reproducida en CI: `npc-personality-certification` → `qa/tests/patient-personality-longitudinal.test.mjs:20`, `assert(stable)`, escenario **competitive persists ... across server recovery**. No atribuir al gasto CPU ni modificar el motor clínico para optimización hasta investigarla.\n- Código actual: [cooperative-link.js](https://github.com/javierdario48-star/ATRIA/blob/atria-5.0-core-rebuild-experimental/src/v5/social/cooperative-link.js) usa presencia y roster cada 260 ms, mensajes de sala cada 320 ms y estado de sala cada 1000 ms (cadencias máximas sujetas a solicitudes en vuelo). [durable-cooperative-replica.js](https://github.com/javierdario48-star/ATRIA/blob/atria-5.0-core-rebuild-experimental/src/v5/social/durable-cooperative-replica.js) hace sincronización clínica limitada a 900 ms. Aún falta medición real por endpoint, función y jugador; **no afirmar causalidad exclusiva de ATRIA** en los 4h13m de CPU.\n\n## Orden de trabajo y criterios de aceptación\n- [ ] P0: obtener conclusión de todas las tareas de CI del commit de referencia, registrar fallos y corregir **únicamente** fallos deterministas antes de un cambio de red. No disimular tests fallidos, no bajar aserciones.\n- [ ] P0: construir perfil de tráfico reproducible de lobby / sala / guardia / reconexión para 1, 2 y 4 clientes; medir requests por endpoint por minuto, latencia, CPU si se dispone, errores, mensajes duplicados, fase y Android. Establecer línea base antes/después.\n- [ ] P1: identificar si `/api/lobby-sync`, `/api/lobby`, `/api/rooms/:id/messages` y `/api/clinical` son responsables del tráfico; separar 1) sincronización espacial, 2) señalización WebRTC, 3) estado clínico duradero. No juntar responsabilidades.\n- [ ] P1: proponer el cambio más pequeño posible, con flag **OFF por defecto**, rollback al comportamiento exacto previo y sin despliegue automático de producción.\n- [ ] P1: validar contra la misma batería de CI, además de sesiones de dos y cuatro clientes, pérdida/reconexión, progreso clínico, chat, enfermería, pistas Dr. Vega, XP, guardado/recuperación, modos solo/aprendiz/cooperativo/competitivo y uso Android real.\n- [ ] P1: aceptar solo con menor consumo **medido** y métricas de fluidez/latencia no deterioradas. Si hay regresión, revertir el cambio de optimización y conservar evidencia.\n- [ ] P2: recién tras la aceptación comparar costo Vercel Hobby / Pro / alternativas con las cifras medibles y una prueba de carga.\n\n## Contratos inviolables\n- Mantener autoridad clínica única; nunca sustituir integridad clínica por cambios de transporte.\n- Las optimizaciones no dependen de que la cuota de Vercel se restablezca: código y tests en GitHub/entorno local. Verificar integración pública cuando vuelva a funcionar un despliegue de prueba.\n- Conservar archivos de prueba, logs y rutas reproducibles. No declarar «resuelto» hasta observación funcional real.",
+    "state": "open",
+    "user": {
+      "login": "javierdario48-star",
+      "name": "javierdario48-star",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/324186723?v=4",
+      "id": 324186723
+    },
+    "assignees": null,
+    "labels": null,
+    "milestone": null,
+    "state_reason": null,
+    "comments": 0,
+    "created_at": "2026-11-21T00:58:18Z",
+    "updated_at": "2026-11-21T00:58:18Z",
+    "closed_at": null,
+    "display_url": "https://github.com/javierdario48-star/ATRIA/issues/1",
+    "display_title": "ATRIA 5.0 — Recuperar CI verde y medir tráfico/CPU antes de optimizar multijugador"
+  },
+  "comments": []
+}

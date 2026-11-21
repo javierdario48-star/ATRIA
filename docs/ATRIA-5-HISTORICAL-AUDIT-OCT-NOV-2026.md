@@ -8,7 +8,7 @@ Fecha de corte de solicitudes: **1 de octubre–20 de noviembre de 2026 inclusiv
 
 **La recuperación histórica es parcial y no se presenta como exhaustiva.** Se buscaron el proyecto, sus nombres anteriores Clinical Shift/Night Shift, síntomas y solicitudes informales, con consultas temporales y por subsistema. Se recuperaron extractos, entregas y archivos locales; no se pudieron abrir todas las conversaciones ni ejecuciones íntegras. No existe evidencia suficiente para reconstruir la redacción y asignación individual original de 1–60. La matriz conserva cada número y las correspondencias documentadas, sin inventar 60 títulos ni sumar 60 tareas ficticias.
 
-El inventario tiene **87 entradas de seguimiento**: conserva 20 IDs de familias anteriores, amplía criterios y áreas recuperadas, incluye 2 especificaciones reemplazadas y 3 entradas de continuidad/recuperación. Son entradas con criterios de aceptación, **no 87 citas originales independientes** ni un porcentaje de finalización. Las condiciones sucesivas de cada solicitud están reunidas en su entrada. [Datos con criterios/evidencias](evidence/historical-audit-2026-11-20/requirements.json) · [Matriz](ATRIA-5-REQUIREMENTS-TRACEABILITY.md) · [Plan](ATRIA-5-EXECUTION-PLAN.md).
+El inventario tiene **88 entradas de seguimiento**: conserva 20 IDs de familias anteriores, amplía criterios y áreas recuperadas, incluye 2 especificaciones reemplazadas y 3 entradas de continuidad/recuperación. Son entradas con criterios de aceptación, **no 88 citas originales independientes** ni un porcentaje de finalización. Las condiciones sucesivas de cada solicitud están reunidas en su entrada. [Datos con criterios/evidencias](evidence/historical-audit-2026-11-20/requirements.json) · [Matriz](ATRIA-5-REQUIREMENTS-TRACEABILITY.md) · [Plan](ATRIA-5-EXECUTION-PLAN.md).
 
 ## Método y jerarquía de evidencia
 
@@ -46,7 +46,7 @@ Se consultó el log completo accesible de la rama desde octubre (**2.152 commits
 | DOC-CONTINUIDAD | 2026-10-26 | Prompt/entrega derivada | ATRIA-5.0-prompt-continuidad.md; libfile_b0e3d18b0a348191a40f242d44b11752 | Sí | Checkpoint257a0a1; no contiene todo el historial. |
 | GIT-13 | 2026-11-12/13 | Implementación primaria | Ocho commits 7afa707..162d0cf posteriores a1b17484; Git | Sí, diffs dirigidos | Ninguna modificación remota posterior al13/11al comienzo de esta ejecución. |
 | RUN-HEAD | 2026-11-13; consultado2026-11-20 | Ejecución primaria | Actions43435355473,43435355500,43435355599 y logsdejobs fallidos; GitHub | Sí | Lista de runs por API pública porque conector solo devuelve pull-request runs. |
-| LOCAL-WORK | workspacesprevios | Trabajo local | Siete checkouts anteriores, dos con cambios funcionales sincommit; Scratch disponible | Sí, estado/diffs dirigidos | No tocar/limpiar esos workspaces; algunos cambios están integrados de otra forma. |
+| LOCAL-WORK | workspacesprevios | Trabajo local | Siete checkouts anteriores, dos con cambios funcionales sin commit; Scratch disponible | Sí, estado/diffs dirigidos | No tocar/limpiar esos workspaces; algunos cambios están integrados de otra forma. |
 | PC-01 | 2026-10-01 | Solicitud documentada indirectamente | Extractos de recuperación contextual; consulta history_1; Sin URL/ID canónico de conversación | Parcial | No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos. |
 | PC-02 | 2026-10-02 | Solicitud documentada indirectamente | Extractos de recuperación contextual; consulta discovery_1; Sin URL/ID canónico de conversación | Parcial | No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos. |
 | PC-03-07 | 2026-10-03..07 | Solicitud documentada indirectamente | Extractos de recuperación contextual; consulta deep_1; Sin URL/ID canónico de conversación | Parcial | No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos. |
@@ -61,6 +61,7 @@ Se consultó el log completo accesible de la rama desde octubre (**2.152 commits
 | PC-SOCIAL | 2026-10..11 | Solicitud documentada indirectamente | Extractos de recuperación contextual; consulta next_4; Sin URL/ID canónico de conversación | Parcial | No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos. |
 | PC-03-04 | 2026-10-03..04 | Solicitud documentada indirectamente | Extractos de recuperación contextual; consulta history_final_0; Sin URL/ID canónico de conversación | Parcial | No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos. |
 | PC-09-10 | 2026-11-09..10 | Solicitud documentada indirectamente | Extractos de recuperación contextual; consulta history_final_1; Sin URL/ID canónico de conversación | Parcial | No se abrió chat íntegro. No usar referencias c0/c1 locales como IDs canónicos; pueden mezclar títulos/otros proyectos. |
+| ISSUE-01 | 20/11 21:58:18 BA | Ticket; solicitud documentada indirectamente | Issue #1 y copia github-issue-1.json | Íntegro, 0 comentarios | Fuente nueva durante esta sesión; no demuestra causa de CPU ni recupera el chat original. |
 
 Se leyeron 47 resultados de textos guardados, incluidos informesV4, continuidadV5 y archivos de transferencia de arte. Parte del registro crudo extenso de bots quedó en lectura parcial; no se utiliza para inventar peticiones. Los archivos de imagen/HTML/ZIP encontrados por búsqueda son metadatos o evidencias técnicas, no transcripciones completas. La imagen «Dos médicos sobre fondo oscuro.png» no devolvió texto legible: sus requisitos no se atribuyen a una lectura inexistente; se contrastan con contratos/entregas de Git.
 
@@ -70,9 +71,9 @@ Fuentes inaccesibles o incompletas:
 - Lista literal original 1–60 y su fecha/título/ID canónico. El primer documentoGit recuperado conserva rangos y reconoce la pérdida de correspondencia individual. Cada número se reserva con texto individual **NO VERIFICABLE**.
 - Todos los estados internos de ejecuciones Work interrumpidas. Siete checkouts anteriores sí están disponibles; no equivalen al registro conversacional de esas ejecuciones.
 - Dispositivo Android físico, Gboard/parlante/cuentas afectadas y red móvil. Chromium Pixel emulado no acredita esos entornos. WebKit/iPhone tampoco se verificaron en esta ejecución.
-- Índice íntegro del libro original y aceptación estética definitiva del nuevo mapaSQM. No se presume cobertura de todo el libro por tener55casos.
+- Índice íntegro del libro original y aceptación estética definitiva del nuevo mapa SQM. No se presume cobertura de todo el libro por tener55casos.
 
-Issues yPR: búsquedas de todo el repositorio devolvieron0 resultados en ambos casos. La consulta inicial de issues por fecha también devolvió0. No se afirma revisión de comentarios inexistentes/devueltos en vacío ni cobertura de recursos que el conector no pudiera devolver.
+Issues y PR: la búsqueda inicial devolvió 0 en ambos casos. Durante esta ejecución apareció el [issue #1](https://github.com/javierdario48-star/ATRIA/issues/1), creado el 20/11 a las 21:58:18 de Buenos Aires (21/11 00:58:18 UTC), después del primer commit documental 9c176df. Se leyó íntegro y se consultaron sus comentarios: 0. Añade perfilado de tráfico/CPU, separación de responsabilidades de red, flag OFF, rollback y costo posterior a medición. Se incorpora como PERF-01 y amplía QA-01/DEPLOY-01; no se afirma que fuera accesible antes de crearse. El ticket es evidencia documental, no la transcripción de su conversación de origen. [Copia verificable](evidence/historical-audit-2026-11-20/github-issue-1.json).
 
 ## Cronología de solicitudes y correcciones
 
@@ -112,6 +113,7 @@ Las fechas de extractos son las indicadas por recuperación; pueden serUTC, mien
 | 12–13/11 | PC-12-20; GIT-13 | Anamnesis incompleta no bloquea cierre; alergia preexiste; alta/observación mantienen evolución y penalización; XP se pausa al salir, rival independiente; estudios seriados y rescates. | CLOSE-01, SAFE-01, XP-COOP, COMP-01, LAB-01, VAR-03 | Ocho commits después del handoff: no hay base para decir que Work no publicó nada. |
 | 14–19/11 | GIT-13; PC-12-20 | No hay commits nuevos en la rama ni transcripciones recuperadas de estos días para confirmar solicitudes adicionales. | CONT-02 | Silencio de Git no acredita ausencia de peticiones o de trabajo local. |
 | 20/11 | PC-12-20; U-AUDIT | Encontrar último Work bloqueado; reconstruir todas las solicitudes desde octubre, conservar historia/60 referencias, contrastar código y publicar auditoría, matriz, inventario, plan y traspaso; corregir P0 seguros. | CONT-01/02/03, QA-01 | Solo el mensaje actual está disponible íntegro como solicitud original; el resto se etiqueta según fuente. |
+| 20/11, 21:58 BA | ISSUE-01 | Recuperar conclusión de CI y medir tráfico/CPU en lobby/sala/guardia/reconexión con 1/2/4 clientes antes de optimizar; separar espacio/WebRTC/clínica; flag OFF, rollback y aceptación antes de comparar costos. | PERF-01, QA-01, DEPLOY-01, LAT-01 | Fuente creada durante esta sesión. El ticket llama P0 a los prerrequisitos de optimización; aquí se registra P1 sin inventar bloqueo jugable. Vercel bloqueado no equivale a motor defectuoso. |
 
 ## Ocho correcciones que el traspaso del 12/11 no reflejaba
 
@@ -128,44 +130,62 @@ Las fechas de extractos son las indicadas por recuperación; pueden serUTC, mien
 
 ## Solicitudes olvidadas y pérdida de condiciones
 
-La letraA significa ausencia como criterio explícito en el **inventario recuperado**; sin la lista original literal no se puede afirmar que nunca haya aparecido en los60originales.
+La letra A significa ausencia como criterio explícito en el **inventario recuperado**; sin la lista original literal no se puede afirmar que nunca haya aparecido en los 60 originales.
 
 | Tipo | Hallazgo | Evidencia / consecuencia | Seguimiento |
 | --- | --- | --- | --- |
-| A | Chat privado de amigos minimizable durante guardia. | Equipo existe solo dentro deCooperativo; tarjeta social no tiene hilo directo ni ruta de mensajes entre amigos. | SOCIAL-01 |
-| A | Voz dictada y voz/PTT entre jugadores; desbloqueo de bata; acción de café; mapaSQM; cobertura por capítulos. | Legacy y planes contienen requisitos que la lista de 20 áreas no seguía explícitamente. No reintroducirlos como si ya hubieran sido aceptados en V5. | VOICE-01/02,XP-02,WORLD-03/05,CASE-01 |
-| B | XP cooperativa simplificada a créditos de cierre. | El usuario pidió compartir incluso pistas; ledger yrewardFor conservan conteo/penalización por médico. Pausa/resume sí se añadió. | XP-COOP |
-| B | Pistas coherentes simplificadas a55cierresguiados. | No equivale a cada destino/alternativa/control/estado adverso; motor es compartido pero cobertura longitudinal requiere evidencia. | VEGA-COHERENCE-01,LAB-01 |
-| C | Módulos de voz ydocencia antigua sin integraciónV5 completa. | No hay control de dictado/PTT enapplication/index; vegaGuidance remite a pista sin todo el diálogo/delegaciónC09. | VOICE-01/02,VEGA-02/03 |
-| D | Pruebas publicadas antes de ser ejecutadas; nuevas correcciones posteriores con suites rojas. | Checkpoints11/11 lo reconocen. Pruebas posteriores verdes no cubren automáticamente cambios13/11. Se reproducen3fallos locales y cancelacionesNode 22 en CI. | QA-01,QA-03 |
-| E | Privacidad competitiva corregida dos veces. | 33f85e3 protegió cama liberada;f2b104a también cama nunca tomada;775ccda preservó visibilidad pública. Matriz43289556288 terminó6/8;43435355500sí 8/8. | COMP-01 |
+| A | Chat privado de amigos minimizable durante guardia. | Equipo existe solo dentro de Cooperativo; tarjeta social no tiene hilo directo ni ruta de mensajes entre amigos. | SOCIAL-01 |
+| A | Voz dictada y voz/PTT entre jugadores; desbloqueo de bata; acción de café; mapa SQM; cobertura por capítulos. | Legacy y planes contienen requisitos que la lista de 20 áreas no seguía explícitamente. No reintroducirlos como si ya hubieran sido aceptados en V5. | VOICE-01/02,XP-02,WORLD-03/05,CASE-01 |
+| B | XP cooperativa simplificada a créditos de cierre. | El usuario pidió compartir incluso pistas; ledger y rewardFor conservan conteo/penalización por médico. Pausa/resume sí se añadió. | XP-COOP |
+| B | Pistas coherentes simplificadas a 55 cierres guiados. | No equivale a cada destino/alternativa/control/estado adverso; motor es compartido pero cobertura longitudinal requiere evidencia. | VEGA-COHERENCE-01,LAB-01 |
+| C | Módulos de voz y docencia antigua sin integración V5 completa. | No hay control de dictado/PTT en application/index; vegaGuidance remite a pista sin todo el diálogo/delegación C09. | VOICE-01/02,VEGA-02/03 |
+| D | Pruebas publicadas antes de ser ejecutadas; nuevas correcciones posteriores con suites rojas. | Checkpoints 11/11 lo reconocen. Pruebas posteriores verdes no cubren automáticamente cambios 13/11. Se reprodujeron 3 fallos locales y cancelaciones Node 22 en CI. | QA-01,QA-03 |
+| E | Privacidad competitiva corregida dos veces. | 33f85e3 protegió cama liberada;f2b104a también cama nunca tomada;775ccda preservó visibilidad pública. Matriz43289556288 terminó 6/8;43435355500sí 8/8. | COMP-01 |
 | E | Reportes repetidos de recuperación, Enfermería, selección y pistas tras entregas satisfactorias. | El prompt actual mantiene esas observaciones. Su reproducción física posterior no está accesible; quedan pendientes de aceptación/diagnóstico, no completados definitivamente. | REC-01,NUR-01,LAT-01,VEGA-AUTO-01 |
 | F | Paridad perdida o sustitución consciente incompleta. | Voz/tutor no están completamente migrados. No se demuestra que fuera eliminación accidental. Teclado y multiplicadores sí fueron sustituidos explícitamente. | VOICE-01/02,VEGA-02/03,KEYBOARD-OLD,SELECT-OLD |
 | G | Trabajo local sin publicar existe, pero parte ya está integrado. | Ver comparación de workspaces. No aplicar parches viejos por igualdad de nombre/ausencia de commit. | CONT-03 |
 
 ## Trabajo de Work recuperado sin sobrescribirlo
 
-Se inspeccionaron siete checkouts anteriores. Dos conservan modificaciones funcionales sincommit:
+Se inspeccionaron siete checkouts anteriores. Dos conservan modificaciones funcionales sin commit:
 
-- `81946b15abba/ATRIA` en23ce429: harness, certificador, cierre/políticas, compilador, bienvenida y archivosQA nuevos. El compilador y test de registro coinciden conHEAD; el resto requiere comparación semántica. `qa/v5/rtc-diagnostics.mjs` no existe en el árbolGit actual: es auxiliar local, no prueba de funcionalidad pedida perdida.
-- `bd5f051b931b/ATRIA` en52cedd4: ledger,revelación,guard-session,angio-TC yregresiones. El ledger ytestdurable coinciden byte por byte con HEAD; guard-session/vocabulario difieren porque hubo correcciones posteriores. No es correcto afirmar que nada llegóaGitHub.
+- `81946b15abba/ATRIA` en 23ce429: harness, certificador, cierre/políticas, compilador, bienvenida y archivosQA nuevos. El compilador y test de registro coinciden con HEAD; el resto requiere comparación semántica. `qa/v5/rtc-diagnostics.mjs` no existe en el árbol Git actual: es auxiliar local, no prueba de funcionalidad pedida perdida.
+- `bd5f051b931b/ATRIA` en 52cedd4: ledger, revelación, guard-session, angio-TC y regresiones. El ledger y test durable coinciden byte por byte con HEAD; guard-session/vocabulario difieren porque hubo correcciones posteriores. No es correcto afirmar que nada llegó a GitHub.
 
-Los otros checkouts son referencias técnicas de susSHA. No se limpiaron, no se publicaron binarios antiguos y no se hizo reset de trabajo ajeno. La edición se realizó en uncheckoutaislado basado en elHEADremoto.
+Los otros checkouts son referencias técnicas de sus SHA. No se limpiaron, no se publicaron binarios antiguos y no se hizo reset de trabajo ajeno. La edición se realizó en un checkout aislado basado en el HEAD remoto.
 
 ## Estado de verificación real
 
 | Ámbito | SHA | Resultado | Alcance |
 | --- | --- | --- | --- |
-| Suite localV5,Node 24.22.3 | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | 3164/3167;3 fallos,0 canceladas | Sin ocultar fallos: personalidad competitiva, harness de mortalidad competitivo, expectativa de evaluación NPO. |
-| BuildV5/core y frontera | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | Aprobados;217 archivos,190 módulos | No prueban servidor desplegado ni teléfono. |
-| CIExperimentalGame43435355473 | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | 28/30jobsaprueban | Clean-core yNPC fallan;Clean-core incluye cancelaciónNode 22enrecoverytests. |
-| CIClinicalTransfers43435355599 | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | 7/11jobsaprueban | Wrong-dx,missing-dx,wrong-destination,insufficient-preparation fallan por expectativas de initialRefusal. |
-| CINativeClinicalMatrix43435355500 | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | 8/8jobsaprueban | 550 recorridos planeados por manifiesto; no se descargaron/releyeron todos los8ZIPen estaejecución. No se afirma550certificadosclínicosestrictos. |
-| Matriz histórica43289556288 | 9db7037 | 6/8jobsaprueban;2fallan | Elhandoff12/11 la dejaba encola; ya no está encola. |
+| Suite local V5, Node 24.22.3 | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | 3164/3167;3 fallos,0 canceladas | Sin ocultar fallos: personalidad competitiva, harness de mortalidad competitivo, expectativa de evaluación NPO. |
+| Build V5/core y frontera | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | Aprobados;217 archivos,190 módulos | No prueban servidor desplegado ni teléfono. |
+| CI Experimental Game 43435355473 | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | 28/30 jobs aprueban | Clean-core y NPC fallan;Clean-core incluye cancelaciónNode 22 en pruebas de recuperación. |
+| CI Clinical Transfers 43435355599 | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | 7/11 jobs aprueban | Wrong-dx,missing-dx,wrong-destination,insufficient-preparation fallan por expectativas de initialRefusal. |
+| CI Native Clinical Matrix 43435355500 | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | 8/8 jobs aprueban | 550 recorridos planeados por manifiesto; no se descargaron/releyeron todos los8ZIPen estaejecución. No se afirma550certificadosclínicosestrictos. |
+| Matriz histórica43289556288 | 9db7037 | 6/8 jobs aprueban;2fallan | Elhandoff12/11 la dejaba encola; ya no está encola. |
 | Estado combinado de Vercel | 162d0cf24a936e302e2a3efadcc168e1459d86d5 | success | DeployexitosonoequivaleaCIglobalverde. |
 | Preview/multicuenta/Android físicoactual | HEAD de estas salidas | No ejecutado aquí | Se reutiliza evidencia por SHAde CI/entregas; no se inventa aceptación nueva. |
 
-Los fallos de certificación exigen diagnóstico, no una reversión automática del motor. Dos fixturesleen datos que el nuevo control de privacidad retira hasta elclaim; alimentación cambia el puntaje al cambiar una indicación. Los bots de traslados todavía esperan rechazo genérico, incompatible con alta insegura ejecutada y evaluación separada. La cancelación de reintentosNode 22requiere reproducir el ciclo de espera antes de clasificarlo como defecto del jugador.
+Los fallos de certificación exigen diagnóstico, no una reversión automática del motor. Dos fixtures leen datos que el nuevo control de privacidad retira hasta el claim; alimentación cambia el puntaje al cambiar una indicación. Los bots de traslados todavía esperan rechazo genérico, incompatible con alta insegura ejecutada y evaluación separada. La cancelación de reintentos Node 22 requiere reproducir el ciclo de espera antes de clasificarlo como defecto del jugador.
+
+## Resultado posterior a la auditoría: corrección y publicación
+
+La auditoría inicial se publicó en `9c176df6718b9a47c0aafd145a371cb597cd9bec`. Después se publicó `7cde6fa905e81ed3d548cf256f1b5201a281ec94`, limitado a tres archivos de QA:
+
+- Personalidad competitiva: verificar ausencia de datos privados antes de tomar la cama y comprobar personalidad, relaciones y memoria después del claim autorizado.
+- Mortalidad: no registrar vitales privados durante el acercamiento; la primera observación autorizada conserva su minuto real y el replay sigue comprobando muerte irreversible y administraciones.
+- Nutrición: distinguir elegibilidad de calidad al revocar ayuno; comprobar retirada del crédito de NPO, persistencia y ausencia de administraciones duplicadas.
+
+**No se cambiaron reglas clínicas ni controles de privacidad para hacer pasar pruebas.** Verificación dirigida: 26/26. Recuperación en Node 24: 24/24. Suite completa después de los cambios: **3.167/3.167, 0 fallos, 0 cancelaciones**, 276.614,532 ms, Node 24.22.3. El resultado de base 3.164/3.167 se conserva arriba como historia, no como estado actual local.
+
+NUR-01, PHYS-05 y VAR-02 pasan de «IMPLEMENTADO CON DEFECTOS» de certificación a «IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN». QA-01/QA-03 mantienen pendientes de CI/Node 22/traslados. No se declaró aceptación Android ni se reprodujo un P0 de juego que justificara cambiar el motor.
+
+El estado Vercel del commit de código es `failure` con enlace `deployment-blocked`; el issue atribuye el bloqueo a cuota Hobby. No se deduce que una versión previa esté caída. Los nuevos workflows se registran por SHA y pueden seguir en cola o ejecución; el nuevo workflow de traslados 44847181875 conserva 4 perfiles fallidos de 11; wrong-dx pasa 47/55 y falla en 8 casos por «missing initial refusal». El run de preview 44847181991 falla al esperar la versión de autoridad/aplicación/audio/CSS del checkout, antes de probar el flujo. Se conservan como pendientes con [extractos de logs](evidence/historical-audit-2026-11-20/post-audit-log-excerpts.json). [Verificación](evidence/historical-audit-2026-11-20/verification.json) · [Runs posteriores](evidence/historical-audit-2026-11-20/post-audit-workflow-runs.json) · [Jobs posteriores](evidence/historical-audit-2026-11-20/post-audit-workflow-jobs.json).
+
+PERF-01 añade una condición recuperada después del primer inventario: el tráfico real por endpoint/fase no se deduce de los intervalos de polling. Presencia/roster 260 ms, mensajes 320 ms, sala 1000 ms y clínica 900 ms están en código; la causalidad de 4h13m de CPU no está demostrada. No se cambió transporte, proveedor ni cadencia.
+
+La siguiente tarea ejecutable es completar B0 (Node 22 y contratos de certificación de traslados), después establecer línea base PERF-01/B1 y reproducir los fallos de latencia/recuperación. Las fuentes conversacionales inaccesibles siguen impidiendo certificar exhaustividad histórica.
 
 ## Causas raíz y prioridades
 
@@ -181,8 +201,8 @@ Los fallos de certificación exigen diagnóstico, no una reversión automática 
 | B7 | Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. | P3 | MIXTA |
 | B8 | No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA. | P1 | BLOQUEADA |
 
-**P0 confirmado de juego:** no se reprodujo en esta auditoría una pérdida de progreso, fuga de expediente actual, doble administración o imposibilidad real de recuperar una guardia. REC-01 conserva prioridadP0por impacto del reporte del usuario y aceptación pendiente. No se inventa unP0para justificar un parche clínico. LaCI roja es un bloqueo de certificaciónP1y se atiende tras completar esta matriz.
+**P0 confirmado de juego:** no se reprodujo en esta auditoría una pérdida de progreso, fuga de expediente actual, doble administración o imposibilidad real de recuperar una guardia. REC-01 conserva prioridad P0 por impacto del reporte del usuario y aceptación pendiente. No se inventa un P0 para justificar un parche clínico. La CI roja es un bloqueo de certificación P1 y se atiende tras completar esta matriz.
 
-**Siguiente ejecución:** B0 reparación dirigida de fixtures y contratos, después B1 medición/recuperación y B2 evidencia/cierre. Implementación acotada y pruebasNode sonChatGPT normal; Work solo para aceptación de navegador/cuentas/entorno que las herramientas disponibles no puedan reproducir. Android físico y fuentes de chats íntegros siguen bloqueados por acceso/dispositivo, aunque se utiliceWork.
+**Siguiente ejecución:** B0 restante (Node 22 y contratos de traslados), después B1 medición/recuperación/consumo y B2 evidencia/cierre. Los tres fixtures locales se corrigieron en 7cde6fa. Implementación acotada y pruebas Node son ChatGPT normal; Work solo para aceptación de navegador/cuentas/entorno que las herramientas disponibles no puedan reproducir. Android físico y fuentes de chats íntegros siguen bloqueados por acceso/dispositivo, aunque se utilice Work.
 
-La auditoría puede ampliarse sin rehacerla: nueva fuente→mismaentradaoIDnuevo→evidencia→estado→matriz. No se infiere resolución porque un problema dejó de mencionarse. Los criterios de finalización de la misión relativos a todas las conversaciones y redacción1–60 **no se dan por cumplidos** con el acceso actual.
+La auditoría puede ampliarse sin rehacerla: nueva fuente → misma entrada o ID nuevo → evidencia → estado → matriz. No se infiere resolución porque un problema dejó de mencionarse. Los criterios de finalización de la misión relativos a todas las conversaciones y redacción 1–60 **no se dan por cumplidos** con el acceso actual.

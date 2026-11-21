@@ -1,0 +1,19 @@
+[
+  {
+    "job_id": 136669667211,
+    "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+    "excerpts": [
+      "2026-11-21T01:00:31.6124627Z ATRIA LIVE AUTHORITY PRESENCE FAIL {\"passed\":false,\"origin\":\"https://night-shift-clinical-git-atria-50-c-fd8524-javierdario4878-7324.vercel.app\",\"stage\":\"wait for the checked-out preview\",\"error\":\"the preview must serve the checked-out clinical authority, application, audio graph and CSS\",\"checks\":[],\"failures\":[],\"errors\":[],\"diagnostics\":[]}",
+      "2026-11-21T01:00:32.1080588Z AssertionError [ERR_ASSERTION]: the preview must serve the checked-out clinical authority, application, audio graph and CSS"
+    ],
+    "scope": "Extractos dirigidos; no se descargaron todos los artefactos del workflow."
+  },
+  {
+    "job_id": 136669667527,
+    "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+    "excerpts": [
+      "2026-11-21T00:57:47.1587946Z {\"revision\":\"7cde6fa905e81ed3d548cf256f1b5201a281ec94\",\"certificationFingerprint\":\"0901dd0c055be6546a60aa2851dd26f11d8f98acbc18ffc05eb4bfa5fb90b9bc\",\"caseCount\":55,\"cases\":[\"CIRR-001\",\"PANC-001\",\"CROHN-001\",\"HDA-001\",\"COLON-001\",\"PERI-PBE-001\",\"PERI-SEC-001\",\"PERI-TER-001\",\"APP-001\",\"CHOLE-001\",\"ILEO-001\",\"MESI-001\",\"CHOLANG-001\",\"VARIX-001\",\"ENCEF-001\",\"UC-AS-001\",\"CDI-001\",\"DIVERT-001\",\"LGIB-001\",\"HEPAT-001\",\"DIARR-001\",\"FECAL-001\",\"PUD-001\",\"CELIAC-001\",\"ACAL-001\",\"RESP-01\",\"RESP-02\",\"RESP-03\",\"RESP-04\",\"RESP-05\",\"RESP-06\",\"RESP-07\",\"RESP-08\",\"RESP-09\",\"RESP-10\",\"CARD-01\",\"CARD-02\",\"CARD-03\",\"CARD-04\",\"CARD-05\",\"CARD-06\",\"CARD-07\",\"CARD-08\",\"CARD-09\",\"CARD-10\",\"NEUR-01\",\"NEUR-02\",\"NEUR-03\",\"NEUR-04\",\"NEUR-05\",\"NEUR-06\",\"NEUR-07\",\"NEUR-08\",\"NEUR-09\",\"NEUR-10\"],\"profiles\":[\"wrong-dx\"],\"executions\":55,\"executedNow\":55,\"reusedPassedCheckpoints\":0,\"passed\":47,\"certifiedCases\":47,\"outcomes\":{\"accepted-destination\":55,\"native-death\":0,\"alive-unclosed\":0},\"failures\":[{\"caseId\":\"COLON-001\",\"profile\":\"wrong-dx\",\"failures\":[\"missing initial refusal\"],\"missing\":[\"La atención terminó o el paciente falleció.\"]},{\"caseId\":\"DIVERT-001\",\"profile\":\"wrong-dx\",\"failures\":[\"missing initial refusal\"],\"missing\":[\"Atención finalizada.\"]},{\"caseId\":\"HEPAT-001\",\"profile\":\"wrong-dx\",\"failures\":[\"missing initial refusal\"],\"missing\":[\"Atención finalizada.\"]},{\"caseId\":\"FECAL-001\",\"profile\":\"wrong-dx\",\"failures\":[\"missing initial refusal\"],\"missing\":[\"Atención finalizada.\"]},{\"caseId\":\"PUD-001\",\"profile\":\"wrong-dx\",\"failures\":[\"missing initial refusal\"],\"missing\":[\"Atención finalizada.\"]},{\"caseId\":\"CELIAC-001\",\"profile\":\"wrong-dx\",\"failures\":[\"missing initial refusal\"],\"missing\":[\"Atención finalizada.\"]},{\"caseId\":\"ACAL-001\",\"profile\":\"wrong-dx\",\"failures\":[\"missing initial refusal\"],\"missing\":[\"Atención finalizada.\"]},{\"caseId\":\"RESP-01\",\"profile\":\"wrong-dx\",\"failures\":[\"missing initial refusal\"],\"missing\":[\"Atención finalizada.\"]}]}"
+    ],
+    "scope": "Extractos dirigidos; no se descargaron todos los artefactos del workflow."
+  }
+]

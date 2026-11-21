@@ -3,7 +3,7 @@
   "audit_date": "2026-11-20",
   "base_head": "162d0cf24a936e302e2a3efadcc168e1459d86d5",
   "date_policy": "Fechas de fuente conservadas; las de recuperación no acreditan fecha original. Corte civil America/Argentina/Buenos_Aires.",
-  "legacy_policy": "1–60 son referencias históricas reservadas, no60textosinventados ni60tareasadicionales.",
+  "legacy_policy": "1–60 son referencias históricas reservadas; no se inventan textos ni 60 tareas adicionales.",
   "requirements": [
     {
       "id": "ARCH-01",
@@ -34,7 +34,16 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "scripts/import-clinical-case-pack.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "LAB-01",
@@ -67,7 +76,18 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "1–3, 5–6, 9",
       "history": "11/11 adquisición/PCR; 12/11 rechazo seguro de controles no modelados; 13/11 enlace de órdenes seriadas a muestras disponibles. La limitación de un control no significa que el estudio basal falte.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/studies-policy.test.js",
+          "src/v5/clinical/study-orders.test.js",
+          "src/v5/clinical/study-collections.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "LAB-02",
@@ -99,7 +119,18 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "4, 7",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/study-orders.test.js",
+          "src/v5/ui/clinical-autocomplete.test.js",
+          "qa/tests/v5-nurse-study-autocomplete.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "ANAM-01",
@@ -131,7 +162,17 @@
       "root_cause": "Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado.",
       "legacy": "10–13, 16–17",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/patient-dialogue.test.js",
+          "qa/tests/patient-personality-integration.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "NUR-01",
@@ -140,7 +181,7 @@
       "source": "DOC-INVENTARIO;PC-08-14;PC-NOV;U-AUDIT",
       "origin": "SOLICITUD DOCUMENTADA INDIRECTAMENTE",
       "request": "Enfermería contesta y ejecuta órdenes naturales/combinadas; alergias es consulta, ayuno es conducta; pregunta alimentación una vez y conserva decisiones.",
-      "status": "IMPLEMENTADO CON DEFECTOS",
+      "status": "IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN",
       "files": [
         "src/v5/core/speech-router.js",
         "src/v5/clinical/guard-session.js",
@@ -152,8 +193,8 @@
         "src/v5/core/nurse-diagnosis-speech.test.js",
         "src/v5/clinical/nursing-nutrition.test.js"
       ],
-      "evidence": "Consultas/NPO/seguimiento y proactividad están integrados. Se reproduce fallo de contrato de nutrición: permitir comer cambia calidad/fulfilledTreatmentIds frente a expectativa antigua de igualdad.",
-      "pending": "Resolver contrato de prueba sin volver a bloquear destino por NPO; reproducir silencio con frase, UID, cola y recibo en teléfono.",
+      "evidence": "La prueba de nutrición se corrigió en 7cde6fa: cambiar ayuno por alimentación oral conserva administraciones y elegibilidad, modifica calidad y recupera ese estado sin duplicar recibos. Las 26 pruebas dirigidas pasan.",
+      "pending": "Reproducir silencio con frase, UID, cola y recibo en teléfono; validar alimentación, alergias, oxígeno y seguimiento en Android físico.",
       "acceptance": "Cada orden queda reconocida, en tarea o rechazada con motivo; una sola pregunta y un recibo recuperable, sin confirmación de administración anticipada.",
       "block": "B2",
       "priority": "P1",
@@ -163,8 +204,26 @@
       "dependencies": "B0; recibos existentes",
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "18–19, 21–24",
-      "history": "Errores de vías/monitor/una sola tarea 10/10; 13–14/10 correcciones de chat; 11–12/11 alergias, ayuno y alimentación. La queja repetida no se cierra por tests de otras frases.",
-      "forgotten": ""
+      "history": "Errores de vías/monitor/una sola tarea 10/10; 13–14/10 correcciones de chat; 11–12/11 alergias, ayuno y alimentación. La queja repetida no se cierra por tests de otras frases. Checkpoint del 20/11: corrección dirigida de certificación publicada en 7cde6fa; no cambió reglas clínicas.",
+      "forgotten": "",
+      "verification_history": [
+        {
+          "head": "162d0cf24a936e302e2a3efadcc168e1459d86d5",
+          "status": "IMPLEMENTADO CON DEFECTOS",
+          "evidence": "Consultas/NPO/seguimiento y proactividad están integrados. Se reproduce fallo de contrato de nutrición: permitir comer cambia calidad/fulfilledTreatmentIds frente a expectativa antigua de igualdad."
+        }
+      ],
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/physical-nursing.test.js",
+          "src/v5/core/nurse-diagnosis-speech.test.js",
+          "src/v5/clinical/nursing-nutrition.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "CLOSE-01",
@@ -197,7 +256,18 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "25–32",
       "history": "24/10 cierre al aceptar Cirugía; 26/10 seguimiento era gate; 4–12/11 libertad/alta insegura; 12–13/11 entrevista y seguimiento pasan a calidad. El requisito antiguo de bloqueo absoluto queda sustituido dentro de esta misma entrada.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/accepted-transfer.test.js",
+          "src/v5/clinical/automatic-transfer-runtime.test.js",
+          "src/v5/clinical/receiver-transfer-contract.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VEGA-01",
@@ -228,7 +298,17 @@
       "root_cause": "Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado.",
       "legacy": "8, 33–34, 53",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/clinical-hints.test.js",
+          "src/v5/ui/clinical-hint-presenter.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "DIALOG-AUTO-01",
@@ -259,7 +339,18 @@
       "root_cause": "Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/patient-dialogue.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/patient-dialogue-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VEGA-AUTO-01",
@@ -282,7 +373,7 @@
       "pending": "Medir del toque al texto y cobro en teléfono; validar paciente cambiado durante entrega.",
       "acceptance": "No cobrar oferta descartada/no pintada; una ayuda conocida no vuelve a descontar tras recarga.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -290,7 +381,17 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/clinical-hint-ledger.test.js",
+          "src/v5/server/clinical-hints-durable.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VEGA-COHERENCE-01",
@@ -321,7 +422,17 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/clinical-hints.test.js",
+          "src/v5/clinical/closure-catalog-audit.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "LAT-01",
@@ -345,7 +456,7 @@
       "pending": "Medir cola/HTTP/CAS/recibo/render antes de optimizar; «pendiente de confirmación» reportado otra vez no demuestra un fix aceptado.",
       "acceptance": "Misma red/carga antes/después, IDs estables, cero dosis duplicadas, interacción local inmediata y confirmación autoritativa veraz.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -353,7 +464,21 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "45, 54–55, 58, 60",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "related_ids": [
+        "PERF-01"
+      ],
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/social/durable-cooperative-replica.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/shared-guard-auth-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "MP-01",
@@ -378,7 +503,7 @@
       "pending": "Verificar primer minuto con 2–4 cuentas, red móvil, abandono y retorno; no asumir que login/lobby acredita guardia.",
       "acceptance": "Médicos autorizados ven mismos recibos y pacientes, una autoridad y revocación válida, sin relajar RLS.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -386,7 +511,19 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "44–46",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/server/supabase-social-room-persistence.test.js",
+          "src/v5/clinical/cooperative-care.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/shared-guard-preview.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "XP-COOP",
@@ -418,7 +555,17 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "39–43, 47",
       "history": "5/11 usuario pide compartir incluso pistas; 12/11 se añade pausa/resume. La implementación de créditos de cierre no sustituye el pedido de compartir penalizaciones.",
-      "forgotten": "B: el resumen de XP compartida pierde la condición «incluidas pistas»."
+      "forgotten": "B: el resumen de XP compartida pierde la condición «incluidas pistas».",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/server/clinical-reward.test.js",
+          "src/v5/server/clinical-hints-durable.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "DX-REVEAL",
@@ -449,7 +596,17 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "35–38",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/clinical-hint-ledger.test.js",
+          "src/v5/server/clinical-hints-durable.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "FAM-01",
@@ -481,7 +638,18 @@
       "root_cause": "Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado.",
       "legacy": "14–15, 20",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/patient-dialogue.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/patient-dialogue-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "REC-01",
@@ -514,7 +682,19 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "48–52",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/guard-recovery.test.js",
+          "src/v5/social/durable-cooperative-replica.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/guard-recovery-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "SEL-00",
@@ -545,7 +725,17 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "59",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/app/patient-selection.test.js",
+          "src/v5/social/durable-cooperative-replica.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "DX-01",
@@ -568,7 +758,7 @@
       "pending": "Preview con red perdida, nueva instancia del editor para mismo UID, borrado y Android físico.",
       "acceptance": "No esperar red para cerrar editor, no cerrar uno nuevo por ACK viejo, error conserva borrador y badge refleja recibo.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -576,7 +766,18 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "56–58",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/diagnostic-impression.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/diagnosis-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "UI-01",
@@ -608,7 +809,18 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "qa/tests/v5-guard-score-position.test.mjs"
+        ],
+        "not_rerun_here": [
+          "qa/v5/navigation-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "SAFE-01",
@@ -639,7 +851,17 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/clinical-execution-freedom.test.js",
+          "src/v5/clinical/medication-harms-487.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "ARCH-02",
@@ -670,7 +892,17 @@
       "root_cause": "Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/app/build.test.js",
+          "src/v5/render/hospital.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "ARCH-03",
@@ -699,7 +931,16 @@
       "root_cause": "Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/app/build.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "ARCH-04",
@@ -729,7 +970,16 @@
       "root_cause": "Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/core/room-authority.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "PHYS-01",
@@ -759,7 +1009,17 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/native-medications-packs.test.js",
+          "src/v5/clinical/medication-exposure.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "PHYS-02",
@@ -790,7 +1050,17 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/guard-session-infusion.test.js",
+          "src/v5/clinical/morphine-487.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "PHYS-03",
@@ -821,7 +1091,17 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/legacy-pharmacology-sanity.test.js",
+          "src/v5/clinical/oxygen-physiology.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "PHYS-04",
@@ -851,7 +1131,17 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Octubre pasó de 3+2 min a crédito máximo hasta 480s documentado. No se crean tareas separadas para cada versión temporal.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/peritonitis-care.test.js",
+          "src/v5/clinical/tertiary-care.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "PHYS-05",
@@ -860,9 +1150,8 @@
       "source": "PC-17-23;DOC-MORTALITY",
       "origin": "SOLICITUD DOCUMENTADA INDIRECTAMENTE",
       "request": "Deterioro, rescate y muerte plausibles; no resurrección tras recargar y penalización solo por daño causal atribuible.",
-      "status": "IMPLEMENTADO CON DEFECTOS",
+      "status": "IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN",
       "files": [
-        "src/v5/clinical/survival-487-bridge.js",
         "src/v5/clinical/survival-487-bridge.js",
         "qa/v5/mortality-regression.mjs"
       ],
@@ -870,19 +1159,36 @@
         "src/v5/clinical/mortality-regression.test.js",
         "src/v5/clinical/native-death-room.test.js"
       ],
-      "evidence": "166 escenarios/62 muertes históricos; suite actual falla harness competitivo por leer liveVitals privado antes del claim. No prueba que muerte clínica esté rota.",
-      "pending": "Reparar harness bajo privacidad actual y repetir escenarios afectados; conservar causalidad.",
+      "evidence": "El harness competitivo de mortalidad se corrigió en 7cde6fa: no observa fisiología privada antes del claim. El primer registro autorizado conserva su tiempo real. Muerte, reinicio SQLite, vitales/administraciones y rechazo post mortem pasan en Cooperativo y Competitivo.",
+      "pending": "Mantener regresión del harness y aceptar escenarios adversos físicos cuando corresponda; no atribuir aceptación del teléfono a esta prueba Node.",
       "acceptance": "Tras restauración, mismos vitales/administraciones/muerte, cero XP de cierre y rechazo post mortem.",
       "block": "B0",
       "priority": "P1",
-      "environment": "CHATGPT NORMAL",
+      "environment": "MIXTA",
       "effort": "2–4 días",
       "risk": "medio",
       "dependencies": "ninguna",
       "root_cause": "Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad.",
       "legacy": "",
-      "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "history": "Vigente; no se recuperó sustitución explícita. Checkpoint del 20/11: corrección dirigida de certificación publicada en 7cde6fa; no cambió reglas clínicas.",
+      "forgotten": "",
+      "verification_history": [
+        {
+          "head": "162d0cf24a936e302e2a3efadcc168e1459d86d5",
+          "status": "IMPLEMENTADO CON DEFECTOS",
+          "evidence": "166 escenarios/62 muertes históricos; suite actual falla harness competitivo por leer liveVitals privado antes del claim. No prueba que muerte clínica esté rota."
+        }
+      ],
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/mortality-regression.test.js",
+          "src/v5/clinical/native-death-room.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "PHYS-06",
@@ -913,7 +1219,17 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/ecg-morphology.test.js",
+          "src/v5/ui/ecg-sweep.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "NUR-02",
@@ -944,7 +1260,17 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/engine/nurse-dispatcher.test.js",
+          "src/v5/clinical/physical-nursing.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "NUR-03",
@@ -966,7 +1292,7 @@
       "pending": "Android con background/reload mientras hay tareas.",
       "acceptance": "Ruta fallida libera recurso y explica fallo; replay mantiene una administración y permite reintento autorizado.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -974,7 +1300,17 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/engine/nurse-dispatcher.test.js",
+          "src/v5/engine/nurse-dispatcher.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "MED-01",
@@ -1004,7 +1340,17 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/native-medication-eligibility.test.js",
+          "src/v5/clinical/clinical-execution-freedom.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "MED-02",
@@ -1035,7 +1381,17 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/accepted-transfer.test.js",
+          "src/v5/clinical/studies-policy.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "DX-02",
@@ -1065,7 +1421,18 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/diagnostic-impression.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/diagnosis-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "DX-03",
@@ -1096,7 +1463,17 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/case-debrief.test.js",
+          "src/v5/clinical/accepted-transfer.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VEGA-02",
@@ -1126,7 +1503,16 @@
       "root_cause": "Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "C/F: paridad docente incompleta; intención de eliminación no recuperable."
+      "forgotten": "C/F: paridad docente incompleta; intención de eliminación no recuperable.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/core/nurse-diagnosis-speech.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VEGA-03",
@@ -1155,7 +1541,16 @@
       "root_cause": "Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "C: docencia y delegación quedaron fuera del inventario reciente."
+      "forgotten": "C: docencia y delegación quedaron fuera del inventario reciente.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/core/nurse-diagnosis-speech.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "XP-01",
@@ -1186,7 +1581,17 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/progression.test.js",
+          "src/v5/server/account-movement.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "XP-02",
@@ -1217,7 +1622,17 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "A: desbloqueo de vestimenta no está explícito en inventario recuperado."
+      "forgotten": "A: desbloqueo de vestimenta no está explícito en inventario recuperado.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/avatar-creator.test.js",
+          "src/v5/app/avatar-appearance.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "XP-03",
@@ -1248,7 +1663,17 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/guard-scoreboard.test.js",
+          "src/v5/ui/case-debrief.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "COMP-01",
@@ -1270,7 +1695,7 @@
       "pending": "Aceptar red móvil y 2–4 cuentas; tests de fixtures que leen privado antes del claim fallan y deben corregirse.",
       "acceptance": "Visibilidad pública de cama no concede historia privada; propiedad/XP nunca se duplican.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -1278,7 +1703,17 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Regresión de privacidad reproducida12/11, fix adicional13/11. El estado actual no se infiere del verde anterior.",
-      "forgotten": "E: corrección de cama liberada no cubría cama nunca tomada."
+      "forgotten": "E: corrección de cama liberada no cubría cama nunca tomada.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/server/competitive-durable.test.js",
+          "qa/tests/clinical-case-certification.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "LOBBY-01",
@@ -1309,7 +1744,17 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/lobby-directory.test.js",
+          "src/v5/social/player-profile.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "SOCIAL-01",
@@ -1337,7 +1782,14 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "A/C: Equipo fue presentado como mejora social, pero no satisface mensajes directos de amigos."
+      "forgotten": "A/C: Equipo fue presentado como mejora social, pero no satisface mensajes directos de amigos.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [],
+        "scope": "Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación."
+      }
     },
     {
       "id": "SOCIAL-02",
@@ -1360,7 +1812,7 @@
       "pending": "Teléfono de ambas cuentas con pestaña inactiva y presencia atrasada.",
       "acceptance": "Una invitación basta; miembro revocado pierde acceso y no reentra por replay.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -1368,7 +1820,17 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/server/supabase-social-room-persistence.test.js",
+          "src/v5/social/cooperative-link.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "CHAT-01",
@@ -1391,7 +1853,7 @@
       "pending": "Primer minuto en2–4 cuentas bajo red móvil: pertenencia, hydrate, stream de eventos y pestañas.",
       "acceptance": "Mensaje de colega visible desde primer envío; actividad conserva orden/UID tras recuperar.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -1399,7 +1861,17 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/guard-communication.test.js",
+          "src/v5/ui/guard-communication-view.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "CHAT-02",
@@ -1430,7 +1902,17 @@
       "root_cause": "Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado.",
       "legacy": "",
       "history": "Historial único clínico inicial; petición posterior de Equipo/Actividad añade vistas. No interpretar historial único como prohibición vigente del canal solicitado después.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/spatial-ward-speech.test.js",
+          "src/v5/core/nurse-diagnosis-speech.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "TURN-01",
@@ -1454,7 +1936,7 @@
       "pending": "Aceptar turno completo del preview actual en teléfono; no repetir reloj real local sin cambio que lo justifique.",
       "acceptance": "No se pierden pacientes/órdenes al terminar; no confundir clock HUD con cinética.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -1462,7 +1944,19 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/guard-day-clock.test.js",
+          "src/v5/clinical/shift-flow-chaos.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/full-guard-24h.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "TURN-02",
@@ -1484,7 +1978,7 @@
       "pending": "Aceptar consenso2 cuentas, salida de uno, desconexión y siguiente turno en Android.",
       "acceptance": "Continuar extiende turno sin duplicar cierre/XP; guardar no fuerza reingreso ni borra atención.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -1492,7 +1986,18 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/guard-turn-continuity.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/guard-recovery-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "SELECT-01",
@@ -1523,7 +2028,17 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "",
       "history": "×5/×3/×1 de4/10 fue sustituido explícitamente por×1,5/×1,2/×1,0 el27/10; no son dos pendientes.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/server/guard-selection-integration.test.js",
+          "src/v5/server/guard-selection-integration.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "SELECT-OLD",
@@ -1551,7 +2066,16 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "",
       "history": "Sustituido por SELECT-01; fila histórica excluida del total de pendientes.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/server/guard-selection-integration.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "UI-02",
@@ -1583,7 +2107,17 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/engine/interactions.test.js",
+          "src/v5/ui/clinical-bedside-ux.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "EXAM-01",
@@ -1614,7 +2148,17 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/physical-exam.test.js",
+          "src/v5/ui/examination-feedback.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "WORLD-01",
@@ -1645,7 +2189,17 @@
       "root_cause": "Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/app/avatar-appearance.test.js",
+          "src/v5/engine/navigation.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "WORLD-02",
@@ -1669,7 +2223,7 @@
       "pending": "Reproducir con RTT/jitter reales y medir salto remoto; no aplicar la misma solución al lag local sin traza.",
       "acceptance": "No se confunde pose de lobby con guardia y no desaparece remoto autorizado.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -1677,7 +2231,18 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [
+          "src/social/remote-motion-continuity.test.js",
+          "src/social/remote-generation-order.test.js",
+          "qa/v5/competitive-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "WORLD-03",
@@ -1707,7 +2272,16 @@
       "root_cause": "Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "A/C: propuesta independiente omitida por inventario clínico reciente."
+      "forgotten": "A/C: propuesta independiente omitida por inventario clínico reciente.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/engine/navigation.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "WORLD-04",
@@ -1738,7 +2312,17 @@
       "root_cause": "Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/engine/navigation.test.js",
+          "src/v5/ui/spatial-ward-speech.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "WORLD-05",
@@ -1750,12 +2334,12 @@
       "status": "PARCIALMENTE IMPLEMENTADO",
       "files": [
         "src/v5/ui/reception-board.js",
-        "src/v5/ui/patient-actions.js",
+        "src/v5/ui/bedside-guidance.js",
         "src/v5/app/application.js"
       ],
       "tests": [
         "src/v5/ui/reception-board.test.js",
-        "src/v5/ui/clinical-bedside-ux.test.js"
+        "src/v5/ui/bedside-guidance.test.js"
       ],
       "evidence": "Recepción y glow disponibles integrados; no se identificó acción de café en el coordinador V5.",
       "pending": "Recuperar aceptación del gesto de café y decidir su migración; mantener recepción ya funcional.",
@@ -1769,7 +2353,17 @@
       "root_cause": "Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "A/C: acción de café heredada sin ruta V5 identificable."
+      "forgotten": "A/C: acción de café heredada sin ruta V5 identificable.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/reception-board.test.js",
+          "src/v5/ui/bedside-guidance.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "AUDIO-01",
@@ -1802,7 +2396,19 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/hospital-audio.test.js",
+          "src/v5/ui/audio-assets.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/audio-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "AUDIO-02",
@@ -1831,7 +2437,16 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/hospital-audio.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VOICE-01",
@@ -1863,7 +2478,17 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "C/F: funcionalidad previa sin integración en V5; eliminación accidental no demostrada."
+      "forgotten": "C/F: funcionalidad previa sin integración en V5; eliminación accidental no demostrada.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [
+          "src/voice/revision-buffer.test.js",
+          "src/voice/android-v2-active-adapter.test.js"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VOICE-02",
@@ -1893,7 +2518,16 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "C: voz social no figura como pendiente independiente en inventario anterior."
+      "forgotten": "C: voz social no figura como pendiente independiente en inventario anterior.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [
+          "src/social/voice-session.test.js"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "KEYBOARD-01",
@@ -1924,7 +2558,18 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "1/10 teclado normal;14–16/10 preferencia explícita teclado propio compacto. No hay dos implementaciones pendientes alternativas.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/atria-keyboard.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/keyboard-camera-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "KEYBOARD-OLD",
@@ -1952,7 +2597,16 @@
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Sustituido por KEYBOARD-01; excluido de pendientes activos.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/atria-keyboard.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "ANDROID-01",
@@ -1976,14 +2630,24 @@
       "acceptance": "Registrar modelo/navegador/orientación/red, SHA y latencias del primer contacto, pista, selección/diagnóstico y recuperación.",
       "block": "B5",
       "priority": "P1",
-      "environment": "MIXTA",
+      "environment": "BLOQUEADA",
       "effort": "5–10 días",
       "risk": "medio/alto",
       "dependencies": "B1; permisos de audio; Android físico",
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [
+          "qa/v5/keyboard-camera-browser.mjs",
+          "qa/v5/shared-guard-preview.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "ANDROID-02",
@@ -2005,14 +2669,23 @@
       "acceptance": "Mismo flujo legible y sin captura/audio/teclado bloqueados en entorno declarado.",
       "block": "B5",
       "priority": "P2",
-      "environment": "MIXTA",
+      "environment": "BLOQUEADA",
       "effort": "5–10 días",
       "risk": "medio/alto",
       "dependencies": "B1; permisos de audio; Android físico",
       "root_cause": "Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [
+          "qa/v5/navigation-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "BOTS-01",
@@ -2043,7 +2716,17 @@
       "root_cause": "Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "qa/tests/clinical-case-certification.test.mjs",
+          "qa/tests/clinical-integral-matrix.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "BOTS-02",
@@ -2069,7 +2752,14 @@
       "root_cause": "No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [],
+        "scope": "Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación."
+      }
     },
     {
       "id": "CASE-01",
@@ -2092,14 +2782,23 @@
       "acceptance": "Cada caso tiene fuente/versión y recorrido jugable; sin fuente no afirmar cobertura de capítulo.",
       "block": "B6",
       "priority": "P1",
-      "environment": "CHATGPT NORMAL",
+      "environment": "BLOQUEADA",
       "effort": "5–10 días por conjunto de mecanismos",
       "risk": "alto",
       "dependencies": "B0/B2 y referencias del caso",
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "A: cobertura por libro no equivale a tener55 casos."
+      "forgotten": "A: cobertura por libro no equivale a tener55 casos.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "scripts/import-clinical-case-pack.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "CASE-02",
@@ -2130,7 +2829,16 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "16/10 no nuevos casos durante migración;27–28/10 expansión explícita posterior. No es infracción de la restricción ya sustituida.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "qa/tests/clinical-case-certification.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VAR-01",
@@ -2161,7 +2869,17 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/content/patient-variation.test.js",
+          "src/v5/content/guard-patient-variation.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VAR-02",
@@ -2170,7 +2888,7 @@
       "source": "DOC-CONTRATO;DOC-INVENTARIO",
       "origin": "SOLICITUD DOCUMENTADA INDIRECTAMENTE",
       "request": "Personalidad multidimensional y relación por médico heredadas automáticamente; conversación específica se combina sin cambiar hechos.",
-      "status": "IMPLEMENTADO CON DEFECTOS",
+      "status": "IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN",
       "files": [
         "src/v5/content/patient-behavior.js",
         "src/v5/content/patient-language.js",
@@ -2180,19 +2898,35 @@
       "tests": [
         "qa/tests/patient-personality-longitudinal.test.mjs"
       ],
-      "evidence": "Motor integrado, banco y memoria; test competitivo falla al leer conducta antes de claim ahora privado. Persistencia después del claim no se invalida por esa lectura incorrecta.",
-      "pending": "Corregir fixture y certificar privacidad+misma personalidad después de tomar, recuperar y replay.",
+      "evidence": "7cde6fa comprueba ausencia de personalidad privada antes del claim y conservación posterior en cuatro modos, replay y recuperación del servidor. Pruebas dirigidas 26/26, sin modificar contenido ni privacidad.",
+      "pending": "Aceptar naturalidad, contexto por médico y recuperación de personalidad en dispositivo físico; mantener la restricción de datos antes de tomar la cama.",
       "acceptance": "No adquirir datos clínicos sin permiso; tras tomar, conducta/relación persisten y otro médico tiene contexto propio.",
       "block": "B0",
       "priority": "P1",
-      "environment": "CHATGPT NORMAL",
+      "environment": "MIXTA",
       "effort": "2–4 días",
       "risk": "medio",
       "dependencies": "ninguna",
       "root_cause": "Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad.",
       "legacy": "",
-      "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "history": "Vigente; no se recuperó sustitución explícita. Checkpoint del 20/11: corrección dirigida de certificación publicada en 7cde6fa; no cambió reglas clínicas.",
+      "forgotten": "",
+      "verification_history": [
+        {
+          "head": "162d0cf24a936e302e2a3efadcc168e1459d86d5",
+          "status": "IMPLEMENTADO CON DEFECTOS",
+          "evidence": "Motor integrado, banco y memoria; test competitivo falla al leer conducta antes de claim ahora privado. Persistencia después del claim no se invalida por esa lectura incorrecta."
+        }
+      ],
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "qa/tests/patient-personality-longitudinal.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "VAR-03",
@@ -2223,13 +2957,23 @@
       "root_cause": "Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/medication-harms-487.test.js",
+          "qa/tests/clinical-case-certification.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "QA-01",
       "subsystem": "Certificación y pruebas",
       "date": "2026-10-07→11-20",
-      "source": "MIG-PLAN;DOC-INVENTARIO;RUN-HEAD",
+      "source": "MIG-PLAN;DOC-INVENTARIO;RUN-HEAD;ISSUE-01",
       "origin": "SOLICITUD DOCUMENTADA INDIRECTAMENTE",
       "request": "Pruebas pertinentes ejecutadas y CI por SHA; no llamar terminado al código publicado o a test no corrido.",
       "status": "IMPLEMENTADO CON DEFECTOS",
@@ -2243,8 +2987,8 @@
         "src/v5/clinical/nursing-nutrition.test.js",
         "src/v5/clinical/mortality-regression.test.js"
       ],
-      "evidence": "HEAD local3167:3164pasan/3fallan; build/frontera pasan. CI43435355473:28/30 jobs; transfers43435355599:7/11; native matrix43435355500:8/8.",
-      "pending": "Resolver fallos reales de harness/regresión y no reportar verde global por Vercelsuccess o matriz sola.",
+      "evidence": "Base 162d0cf: 3164/3167 local, CI Experimental 28/30 y Transfers 7/11. Corrección 7cde6fa: suite local completa 3167/3167 y 26/26 dirigidas; recuperación Node 24, 24/24. El estado final del nuevo CI se registra por run/SHA: no se infiere verde global de Node local ni de Vercel.",
+      "pending": "Reproducir cancelaciones Node 22, revisar certificación de traslados y obtener conclusión de CI del código publicado. El perfilado de red no debe ocultar fallos deterministas.",
       "acceptance": "Registros identifican ámbito ySHA; una suite fallida nunca se describe como aprobada.",
       "block": "B0",
       "priority": "P1",
@@ -2254,8 +2998,19 @@
       "dependencies": "ninguna",
       "root_cause": "Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad.",
       "legacy": "",
-      "history": "Resultados3137del 12/11 no describen162d0cf del 13/11; matriz43289556288 terminó6/8, luego43435355500sí8/8.",
-      "forgotten": ""
+      "history": "Resultados3137del 12/11 no describen162d0cf del 13/11; matriz43289556288 terminó6/8, luego43435355500sí8/8. El 20/11 se corrigieron tres fixtures/harness en 7cde6fa; no se modificaron reglas clínicas. Suite final completa aprobada.",
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "qa/tests/patient-personality-longitudinal.test.mjs",
+          "src/v5/clinical/nursing-nutrition.test.js",
+          "src/v5/clinical/mortality-regression.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "QA-02",
@@ -2273,11 +3028,11 @@
       "tests": [
         "qa/v5/shared-guard-preview.mjs"
       ],
-      "evidence": "CIbrowserHEAD mayoritariamente verde; previews previos por SHA documentados. No se abrió preview nuevo ni se crearon cuentas aquí.",
+      "evidence": "CIbrowserHEAD mayoritariamente verde; previews previos por SHA documentados. No se abrió preview nuevo ni se crearon cuentas aquí. Nuevo run 44847181991 falla al esperar que el preview sirva la autoridad/aplicación/audio/CSS del checkout, antes de aceptación funcional; no demuestra un defecto de navegación del jugador.",
       "pending": "Aceptación dirigida solo para contrato modificado ySHAactual; cuota429de tercera cuenta histórica no prueba fallo de clínica.",
       "acceptance": "Enlace/metadataSHAytraza demuestran flujo exacto; emulación no se declara Android físico.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -2285,7 +3040,16 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [
+          "qa/v5/shared-guard-preview.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "QA-03",
@@ -2302,7 +3066,7 @@
       "tests": [
         "qa/tests/clinical-case-certification.test.mjs"
       ],
-      "evidence": "4 perfiles fallan por «missing initial refusal»; no se puede asumir misma política de rechazo para alta insegura registrada y destino seguro sin anamnesis.",
+      "evidence": "4 perfiles fallan por «missing initial refusal»; no se puede asumir misma política de rechazo para alta insegura registrada y destino seguro sin anamnesis. En el nuevo código 7cde6fa, run 44847181875 conserva 4 perfiles fallidos de 11; el log wrong-dx certifica 47/55 y 8 fallan por missing initial refusal.",
       "pending": "Separar rechazo técnico, decisión insegura ejecutada y cierre válido; investigar efectos reales antes de ajustar expectativas.",
       "acceptance": "Prueba adversa exige consecuencias/recepción/XP acordes; no reinstala gate clínico antiguo para hacerCIverde.",
       "block": "B0",
@@ -2314,13 +3078,22 @@
       "root_cause": "Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "qa/tests/clinical-case-certification.test.mjs"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "DEPLOY-01",
       "subsystem": "Despliegue y persistencia",
       "date": "2026-10-01→11-20",
-      "source": "PC-01;MIG-PLAN;U-AUDIT",
+      "source": "PC-01;MIG-PLAN;U-AUDIT;ISSUE-01",
       "origin": "SOLICITUD DOCUMENTADA INDIRECTAMENTE",
       "request": "Gratis para usuarios, sin Replit; publicar solo experimental y no modificar main/V4/estables ni sobrescribir trabajo concurrente.",
       "status": "IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN",
@@ -2330,19 +3103,26 @@
         "docs/ATRIA-5-CHATGPT-HANDOFF.md"
       ],
       "tests": [],
-      "evidence": "Vercel+Supabase actuales y rama dedicada; cuotasfree de proveedor no desaparecen por preferencia. No existe cobro a usuarios identificado.",
-      "pending": "Mantener control de HEAD/fast-forward y costos de infraestructura explícitos si limitan servicio.",
+      "evidence": "Rama dedicada y servicios Vercel/Supabase existentes. El estado Vercel de 7cde6fa es failure con enlace deployment-blocked; Issue #1 lo atribuye a cuota Hobby. No acredita por sí solo caída de una versión previa. El registro de CI/preview se conserva separado de la suite local.",
+      "pending": "Resolver la disponibilidad de un preview utilizable y aceptar su entrada real cuando el servicio permita desplegar; medir consumo antes de comparar planes. No migrar proveedor ni contratar servicios por esta auditoría.",
       "acceptance": "Publicación queda en experimental; no se promete ausencia universal de límites gratuitos del proveedor.",
       "block": "B8",
       "priority": "P1",
-      "environment": "BLOQUEADA",
+      "environment": "CHATGPT NORMAL",
       "effort": "1–3 días tras obtener fuentes",
       "risk": "bajo",
-      "dependencies": "historial completo/exportación disponible",
+      "dependencies": "Servicios de despliegue disponibles para aceptación pública; cambios en GitHub no dependen de restablecer cuota.",
       "root_cause": "No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA.",
       "legacy": "",
-      "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "history": "Vigente; no se recuperó sustitución explícita. Issue #1 del 20/11 añade diagnóstico de cuota y comparación de costo posterior a medición; no autoriza migración.",
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [],
+        "scope": "Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación."
+      }
     },
     {
       "id": "AUTH-01",
@@ -2374,7 +3154,17 @@
       "root_cause": "Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/server/account-gateway.test.js",
+          "src/v5/server/account-clinical-integration.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "AUTH-02",
@@ -2397,7 +3187,7 @@
       "pending": "Aceptar sesiones del usuario, caducidad y nueva instancia con red móvil.",
       "acceptance": "Solicitud vieja no reabre guardia liberada ni mueve otro actor; progreso previo se conserva sin fabricarXP.",
       "block": "B1",
-      "priority": "P0",
+      "priority": "P1",
       "environment": "MIXTA",
       "effort": "3–6 días + aceptación física",
       "risk": "alto",
@@ -2405,7 +3195,17 @@
       "root_cause": "Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/server/durable-guard-authority.test.js",
+          "src/v5/server/account-gateway.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "SCALE-01",
@@ -2435,7 +3235,16 @@
       "root_cause": "Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/social/cooperative-link.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "CONT-01",
@@ -2456,14 +3265,21 @@
       "acceptance": "Antes de editar compararHEAD, no inferir pérdida por pantalla Work cargando y dejar siguiente tareaejecutable.",
       "block": "B8",
       "priority": "P1",
-      "environment": "BLOQUEADA",
+      "environment": "CHATGPT NORMAL",
       "effort": "1–3 días tras obtener fuentes",
       "risk": "bajo",
       "dependencies": "historial completo/exportación disponible",
       "root_cause": "No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [],
+        "scope": "Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación."
+      }
     },
     {
       "id": "CONT-02",
@@ -2490,7 +3306,14 @@
       "root_cause": "No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [],
+        "scope": "Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación."
+      }
     },
     {
       "id": "CONT-03",
@@ -2511,14 +3334,21 @@
       "acceptance": "No sepierdeunapeticiónnilarecuperaciónrevierte8 fixes publicados; hipótesis de trabajos perdidos se etiquetan.",
       "block": "B8",
       "priority": "P2",
-      "environment": "BLOQUEADA",
+      "environment": "CHATGPT NORMAL",
       "effort": "1–3 días tras obtener fuentes",
       "risk": "bajo",
       "dependencies": "historial completo/exportación disponible",
       "root_cause": "No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": "G: hay material local no publicado; no todo representa funcionalidad pendiente."
+      "forgotten": "G: hay material local no publicado; no todo representa funcionalidad pendiente.",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [],
+        "not_rerun_here": [],
+        "scope": "Sin prueba automatizada identificada; ver evidencia documental y criterio de aceptación."
+      }
     },
     {
       "id": "CLIN-HEPAT-01",
@@ -2548,7 +3378,21 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "entry_kind": "criterio de regresión específico, sin tarea de implementación duplicada",
+      "related_ids": [
+        "LAB-01",
+        "VEGA-COHERENCE-01"
+      ],
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/clinical-hints.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "CLIN-CARD08-01",
@@ -2579,7 +3423,22 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "entry_kind": "criterio de regresión específico, sin tarea de implementación duplicada",
+      "related_ids": [
+        "CLOSE-01",
+        "VEGA-COHERENCE-01"
+      ],
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/receiver-transfer-contract.test.js",
+          "src/v5/clinical/clinical-policy-closure.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "CLIN-VARIX-01",
@@ -2610,7 +3469,22 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "entry_kind": "criterio de regresión específico, sin tarea de implementación duplicada",
+      "related_ids": [
+        "CLOSE-01",
+        "NUR-04"
+      ],
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/automatic-transfer-runtime.test.js",
+          "src/v5/clinical/accepted-transfer.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "CLIN-HDA-01",
@@ -2641,7 +3515,22 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "entry_kind": "criterio de regresión específico, sin tarea de implementación duplicada",
+      "related_ids": [
+        "CLOSE-01",
+        "SAFE-01"
+      ],
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/ui/diagnostic-impression.test.js",
+          "src/v5/clinical/accepted-transfer.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     },
     {
       "id": "NUR-04",
@@ -2672,7 +3561,65 @@
       "root_cause": "Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución.",
       "legacy": "",
       "history": "Vigente; no se recuperó sustitución explícita.",
-      "forgotten": ""
+      "forgotten": "",
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/clinical/automatic-transfer-runtime.test.js",
+          "src/v5/clinical/accepted-transfer.test.js"
+        ],
+        "not_rerun_here": [],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
+    },
+    {
+      "id": "PERF-01",
+      "subsystem": "Android y rendimiento",
+      "date": "2026-11-20 21:58:18 America/Argentina/Buenos_Aires",
+      "source": "ISSUE-01",
+      "origin": "SOLICITUD DOCUMENTADA INDIRECTAMENTE",
+      "request": "Medir tráfico y CPU antes de optimizar: lobby/sala/guardia/reconexión con 1, 2 y 4 clientes; distinguir movimiento, señalización WebRTC y clínica durable; cambio mínimo con flag OFF, rollback y comparación reproducible.",
+      "status": "NO IMPLEMENTADO",
+      "files": [
+        "src/v5/social/cooperative-link.js",
+        "src/v5/social/durable-cooperative-replica.js"
+      ],
+      "tests": [
+        "qa/v5/shared-guard-auth-browser.mjs",
+        "src/v5/social/durable-cooperative-replica.test.js"
+      ],
+      "evidence": "Issue #1 leído íntegro y sin comentarios. Código confirma presencia/roster 260 ms, mensajes 320 ms, sala 1000 ms y clínica 900 ms, sujetos a solicitudes en vuelo. No se identificó un perfil reproducible completo por endpoint, fase y 1/2/4 clientes ni medición causal de CPU. Las cadencias no son una medición de consumo.",
+      "pending": "Medir requests por endpoint/minuto, p50/p95, CPU si está disponible, errores y duplicados; validar 2/4 clientes, desconexión, progreso, chat, Enfermería, Vega, XP y recuperación en cuatro modos. Comparar costo después de aceptar métricas; no atribuir 4h13m de CPU exclusivamente a ATRIA.",
+      "acceptance": "Misma carga y batería antes/después; menor consumo medido sin peor fluidez ni latencia, integridad clínica intacta. Flag desactivado por defecto y rollback al comportamiento previo. Sin migración, cambio de cadencias o despliegue de producción no justificado.",
+      "block": "B1",
+      "priority": "P1",
+      "environment": "MIXTA",
+      "effort": "2–4 días de perfilado y diagnóstico; aceptación Android bloqueada por dispositivo",
+      "risk": "alto si se altera transporte",
+      "dependencies": "B0: CI y fallos deterministas investigados antes de optimización; entorno de perfilado reproducible",
+      "root_cause": "Falta de línea base por endpoint/fase/carga; polling social, señalización y clínica son responsabilidades diferentes.",
+      "legacy": "",
+      "history": "Issue creado durante esta sesión tras 9c176df: se incorpora sin fingir que estaba disponible en la búsqueda inicial. El ticket llama P0 a CI y perfilado como prerrequisitos de optimización; en esta auditoría se prioriza P1 al no demostrar bloqueo actual del juego.",
+      "forgotten": "A: la condición de consumo medido, flag OFF y rollback no estaba explícita en el inventario anterior. LAT-01 conserva percepción de latencia; PERF-01 solo añade la condición de consumo/medición.",
+      "related_ids": [
+        "LAT-01",
+        "MP-01",
+        "QA-01",
+        "DEPLOY-01"
+      ],
+      "test_execution": {
+        "code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+        "local_suite": "3167/3167, Node 24.22.3",
+        "included_test_files": [
+          "src/v5/social/durable-cooperative-replica.test.js"
+        ],
+        "not_rerun_here": [
+          "qa/v5/shared-guard-auth-browser.mjs"
+        ],
+        "scope": "La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado."
+      }
     }
-  ]
+  ],
+  "current_code_head": "7cde6fa905e81ed3d548cf256f1b5201a281ec94"
 }

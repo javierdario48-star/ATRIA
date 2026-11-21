@@ -1,10 +1,24 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
-## Vigente · Auditoría histórica del 20/11/2026
+## Checkpoint publicado después de la auditoría inicial
+
+HEAD de código confirmado: `7cde6fa905e81ed3d548cf256f1b5201a281ec94`; padre documental `9c176df6718b9a47c0aafd145a371cb597cd9bec`. Esta actualización documental es posterior; obtener su SHA con `git log -1 --format=%H -- docs/ATRIA-5-CHATGPT-HANDOFF.md` y verificar siempre el remoto antes de escribir.
+
+**Ejecutado:** tres correcciones de fixtures/harness (personalidad privada, observación de mortalidad tras claim y calidad de NPO). Sin cambios clínicos de producción. 26/26 dirigidas, recuperación Node 24 24/24 y suite V5 completa **3.167/3.167**, cero fallos/cancelaciones. No repetir campañas costosas por una edición documental. Resultados y hashes en `docs/evidence/historical-audit-2026-11-20/verification.json`.
+
+**Pendiente real:** CI nuevo de traslados falla, Node 22 aún necesita reproducción y la entrada al preview nuevo falló. Experimental Game y Native Matrix pueden seguir en cola/ejecución según snapshot; no declarar CI global verde. Vercel devuelve `failure: deployment-blocked`; el issue lo atribuye a cuota Hobby. Esto no impide análisis, correcciones ni publicación de código en GitHub y no autoriza migrar proveedor.
+
+**Fuente nueva durante la sesión:** [issue #1](https://github.com/javierdario48-star/ATRIA/issues/1), creado 20/11 21:58 BA, posterior a 9c176df. Se incorpora PERF-01: línea base por endpoint/fase en 1/2/4 clientes, separar espacio/WebRTC/clínica, flag OFF, rollback y consumo medido sin empeorar fluidez antes de comparar costo. No atribuir CPU exclusivamente a ATRIA. Hay **88 entradas**, conservando las 60 referencias originales sin inventar su texto.
+
+**Siguiente tarea concreta:** B0 restante: reproducir cancelación de `durable-cooperative-replica.test.js` en Node 22 y revisar `runTransferBot`/perfiles en `qa/v5/transfer-certification.mjs`, manteniendo libertad clínica, efectos y XP. Después PERF-01/B1: medición antes de optimización. REC-01 conserva P0 por impacto del reporte, sin pérdida actual reproducida. No rehacer selección, pistas, recuperación ni motor.
+
+## Base histórica de esta auditoría — conservada con resultados de entonces
+
+### Auditoría inicial del 20/11/2026 — superada por el checkpoint anterior
 
 Repositorio `javierdario48-star/ATRIA`; única rama autorizada `atria-5.0-core-rebuild-experimental`. HEAD inicial auditado: `162d0cf24a936e302e2a3efadcc168e1459d86d5`, remoto verificado. Su código es del 13/11 y contiene ocho correcciones posteriores al traspaso `1b17484` del 12/11. Comparar el HEAD remoto antes de continuar. El commit documental se obtiene con `git log -1 --format=%H -- docs/ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md`.
 
-**Entregables:** [auditoría histórica](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md), [inventario](ATRIA-5-REMAINING-TASKS.md), [matriz](ATRIA-5-REQUIREMENTS-TRACEABILITY.md), [plan](ATRIA-5-EXECUTION-PLAN.md) y datos en `docs/evidence/historical-audit-2026-11-20/`. Se conservan 20 IDs y 60 referencias numéricas; hay 87 entradas de seguimiento, incluidas dos sustituidas. No equivalen a 87 citas originales: la lista literal individual 1–60 y todos los chats íntegros no son accesibles. No afirmar exhaustividad conversacional.
+**Entregables:** [auditoría histórica](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md), [inventario](ATRIA-5-REMAINING-TASKS.md), [matriz](ATRIA-5-REQUIREMENTS-TRACEABILITY.md), [plan](ATRIA-5-EXECUTION-PLAN.md) y datos en `docs/evidence/historical-audit-2026-11-20/`. Se conservan 20 IDs y 60 referencias numéricas; hay 88 entradas de seguimiento, incluidas dos sustituidas. No equivalen a 88 citas originales: la lista literal individual 1–60 y todos los chats íntegros no son accesibles. No afirmar exhaustividad conversacional.
 
 **Hallazgos principales:** chat privado de amigos sin integrar; dictado/PTT de V5 y tutor/delegación de Vega incompletos; XP cooperativa comparte créditos de cierre, pero ayudas y débitos siguen por actor; mapa SQM aún en propuesta. Selección directa, pista en un toque, cuentas, cierres y recuperación ya tienen implementación publicada: no rehacerlos. Las quejas reiteradas de latencia/Android requieren aceptación real.
 

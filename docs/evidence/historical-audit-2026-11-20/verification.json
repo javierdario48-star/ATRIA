@@ -23,10 +23,48 @@
   "browser": "No new preview acceptance; prior CI/browser evidence explicitly scoped",
   "physical_android": "unavailable",
   "document_checks": {
-    "unique_requirement_ids": 87,
+    "unique_requirement_ids": 88,
     "all_original_numbers": 60,
     "file_and_test_paths": "all exist",
     "original_documents": "preserved verbatim",
     "links": "resolved"
+  },
+  "post_audit_checkpoint": {
+    "audit_commit": "9c176df6718b9a47c0aafd145a371cb597cd9bec",
+    "code_commit": "7cde6fa905e81ed3d548cf256f1b5201a281ec94",
+    "scope": "Solo fixtures/harness; sin cambios de producción o reglas clínicas.",
+    "changed_code_files": [
+      "qa/tests/patient-personality-longitudinal.test.mjs",
+      "qa/v5/mortality-regression.mjs",
+      "src/v5/clinical/nursing-nutrition.test.js"
+    ],
+    "directed": {
+      "command": "node --test qa/tests/patient-personality-longitudinal.test.mjs src/v5/clinical/mortality-regression.test.js src/v5/clinical/nursing-nutrition.test.js",
+      "tests": 26,
+      "pass": 26,
+      "fail": 0,
+      "log_sha256": "43f508c50919d9fcd82ca6178d6af2856a4cc400039dfc71f68e291d07b7491b"
+    },
+    "recovery_node24": {
+      "tests": 24,
+      "pass": 24,
+      "fail": 0,
+      "log_sha256": "5373d1a84f2bfdd1fc58aa9b431eda4e56e8b82fb0ceb8e40611e500152dfe22"
+    },
+    "local_v5": {
+      "command": "npm run test:v5",
+      "runtime": "Node 24.22.3",
+      "tests": 3167,
+      "pass": 3167,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "duration_ms": 276614.531862,
+      "log_sha256": "b25fadf828c5059762945a65ef19b681e6182d1e208051c85235724de78bd066"
+    },
+    "ci": "Ver post-audit-workflow-runs.json y post-audit-workflow-jobs.json; la suite local no implica CI global aprobado.",
+    "vercel": "failure: deployment-blocked en el commit de código; fuente directa combined status y atribución de cuota en Issue #1.",
+    "acceptance": "Sin nueva aceptación del juego en preview ni Android físico. Se comprobó el render público del informe documental."
   }
 }
