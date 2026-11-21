@@ -10,6 +10,7 @@ import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js'
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 import {clinicalTransferContinuation} from './transfer-continuation.js';
 import {nativeMedicationDoseFraction} from './native-medications.js';
+import {complicationDispositionRequirements} from './clinical-disposition-safety.js';
 
 const text = value => typeof value === 'string' && value.trim().length > 0;
 const norm = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -99,18 +100,12 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   need('treatment',{anyOf:requiredTreatmentGroups},'Confirmar las intervenciones imprescindibles y su ejecución real.');
  if (target === 'alta' && (rule.dischargeTreatments || []).some(id => !done.has(id)))
   need('treatment',{anyOf:[rule.dischargeTreatments]},'Documentar el tratamiento y plan de seguimiento antes del alta.');
- // Opt-in V2 safety gate, driven by native complication receipts and state.
- // Other clinical cases preserve their V1 eligibility unchanged.
- if (['alta','observacion','sala'].includes(target) && rule.dischargeRequiresResolvedComplications === true) {
-  for (const episode of patient.policyState?.complications || []) {
-   if (episode.status === 'recovered') continue;
-   const definition = (caseData.clinicalPolicy.complications || []).find(item => item.id === episode.id);
-   const rescue = definition?.rescueAllOf || [];
-   if (rescue.length && !rescue.every(id => done.has(id)))
-    need('treatment',{anyOf:[rescue]},'Completar el rescate confirmado de la complicación antes del destino.');
-   else if(target==='alta') need('wait',{reason:'complication'},'Esperar resolución fisiológica confirmada antes del alta.');
-  }
- }
+ // All declarative cases apply the same episode/administration safety gates.
+ // Stabilization to transfer is distinct from full recovery needed for alta.
+ for (const requirement of complicationDispositionRequirements({
+  patient,caseData,destination:target,fulfilled:done,continuation
+ })) need(requirement.type,requirement.type==='treatment'?{anyOf:requirement.anyOf,reason:requirement.reason}:
+  {reason:requirement.reason},requirement.message);
  const reassessment = patient.lastReassessment;
  const reassessed = Number(patient.reassessments) > 0 && text(reassessment?.eventId) && finiteMinute(reassessment?.nativeMinute) &&
   reassessment.nativeMinute <= minute && confirmed.every(row =>
