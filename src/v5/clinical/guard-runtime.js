@@ -123,6 +123,19 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
  async function flush(){for(const s of sessions.values())await s.flush();}
  function clinicalView(actorId,session=activeSession(actorId)){
   const state=session.read(actorId),rows=shift.records();
+  // Competitive progression is private to the acting physician. A patient's
+  // previous doctor's rejected disposition must never debit the new owner.
+  // This is a projection only: room receipts and XP authority stay unchanged.
+  if(mode==='competitive'){
+   const ownReceipts=state.progress.receipts.filter(row=>row.actorId===actorId);
+   const ownPenalties=state.progress.penalties.filter(row=>row.actorId===actorId);
+   const earned=[...claims.values()].filter(row=>row.actorId===actorId)
+    .reduce((sum,row)=>sum+Number(row.xp||0),0);
+   const lost=ownPenalties.reduce((sum,row)=>sum+Number(row.loss||0),0);
+   const net=Math.max(0,earned-lost);
+   state.progress={...state.progress,receipts:ownReceipts,penalties:ownPenalties,
+    xp:net,xpDebt:Math.max(0,lost-earned),level:1+Math.floor(net/200)};
+  }
   const patientStates=new Map(rows.map(record=>[record.uid,record.uid===state.patient.uid?state:
    sessions.get(record.uid).read(actorId,{includeChecklist:false})]));
   state.hintBinding.selectionRevision=focusVersions.get(actorId)||0;
