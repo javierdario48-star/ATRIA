@@ -13,7 +13,12 @@ import {resp01V2Candidate} from '../src/v5/content/packs/respiratory-v2-candidat
 import {respiratoryPack} from '../src/v5/content/packs/respiratory-pack.js';
 
 test('an immutable rules snapshot is versioned, recoverable and safe to export without changing contents',()=>{
- const c=loadAtriaRules('1.0.0');
+ const c=loadAtriaRules('1.0.1');
+ const historical=loadAtriaRules('1.0.0');
+ assert.equal(historical.version,'1.0.0');
+ assert.notEqual(historical.clinical.legacyPartialClosure,c.clinical.legacyPartialClosure,
+  'old published contract must be preserved when rules change');
+ assert.equal(c.releaseGates.v2PartialClosureSafe,true);
  assert.equal(c.status,'experimental-no-go');
  assert.equal(c.clinical.physiologyOwner,'existing native clinical physiology and nursing-time engine');
  assert.deepEqual(Object.keys(c.modes).sort(),['apprentice','competitive','coop','solo']);
@@ -21,12 +26,12 @@ test('an immutable rules snapshot is versioned, recoverable and safe to export w
  assert.throws(()=>loadAtriaRules('../latest'));
  const tmp=mkdtempSync(join(tmpdir(),'atria-rules-'));
  try{
-  const out=exportAtriaRules('1.0.0',tmp);
+  const out=exportAtriaRules('1.0.1',tmp);
   assert(existsSync(out));assert.deepEqual(JSON.parse(readFileSync(out,'utf8')),c);
  }finally{rmSync(tmp,{recursive:true,force:true});}
 });
 test('four-mode immutable rules agree with native time, permitted participants and XP ownership contracts',()=>{
- const c=loadAtriaRules();
+ const c=loadAtriaRules('1.0.1');
  assert.equal(SHIFT_DURATION_SECONDS,c.sharedShift.seconds);
  assert.deepEqual(SHIFT_ARRIVAL_SECONDS,c.sharedShift.arrivalSeconds);
  assert.equal(PATIENT_PERSONALITIES.length,7);
