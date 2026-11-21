@@ -39,6 +39,11 @@ test('V2 complications are reproducible by seed; configured chance is not 100%',
   const b=generatePatientVariation(v2.variation,seed);
   assert.deepEqual(a.complicationCandidates,b.complicationCandidates);
   assert.equal(a.personality,b.personality);
+  const original=generatePatientVariation(v1.variation,seed);
+  assert.equal(a.name,original.name,'V2 must not reroll patient identity');
+  assert.equal(a.age,original.age,'V2 must not reroll age');
+  assert.equal(a.personality,original.personality,'V2 must not reroll personality');
+  assert.deepEqual(a.backgroundHistory,original.backgroundHistory,'V2 must not reroll background history');
   if(a.complicationCandidates.some(x=>x.id===complication))selected++;
  }
  assert(selected>15&&selected<90,'seeded distribution outside broad game-design sanity interval: '+selected);
@@ -56,6 +61,8 @@ test('unresolved complication specifically blocks V2 alta; V1 is not changed',()
  const active=evaluateClinicalPolicyDisposition(patient,v2,'alta');
  assert.equal(active.ready,false);
  assert(active.missing.some(x=>/rescate confirmado/i.test(x)),active.missing.join(' | '));
+ const observed=evaluateClinicalPolicyDisposition(patient,v2,'observacion');
+ assert(observed.missing.some(x=>/rescate confirmado/i.test(x)),'observation must also request rescue during active deterioration');
  const recovered=evaluateClinicalPolicyDisposition(
   {...patient,policyState:{...patient.policyState,complications:[{id:complication,status:'recovered'}]}},v2,'alta');
  assert(!recovered.missing.some(x=>/rescate confirmado|resolución fisiológica confirmada/i.test(x)));
