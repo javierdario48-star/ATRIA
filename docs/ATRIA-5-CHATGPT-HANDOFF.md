@@ -1,5 +1,14 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
+## B0 · Segunda certificación — causa única y prueba corregida (`b3750a6`)
+
+- [ATRIA 5 Experimental Game #1080](https://github.com/javierdario48-star/ATRIA/actions/runs/44854297473) para `dcab2ac`: 29/30 jobs `SUCCESS`; `clean-core-contract` falla en `src/v5/clinical/accepted-transfer.test.js:41`, subcaso `PERI-PBE-001`, `quality.history`: **10 real frente a 0 esperado**. Resultado Node: **3165 pass, 2 fail** (subprueba y contenedor), **0 cancelled**. El fallo ocurre en la fase de tests unitarios, antes de caracterización posterior.
+- [Clinical Transfers](https://github.com/javierdario48-star/ATRIA/actions/runs/44854297515) del mismo SHA: 10/11 trabajos exitosos; únicamente `transfer-regressions` cae por **la misma aserción**. No representa un segundo defecto de transferencia.
+- **Causa:** contrato de scoring V19 `history=Math.max(history,10)` solo cuando `safeHandoff` es verdadero, restaurado correctamente en `dcab2ac`; el test transversal de cinco casos seguía exigiendo `history===0` en todos los casos con cero respuestas. Para PBE, una derivación de urgencia confirmada concede 10 de calidad sin crear `intentHistory` artificial.
+- **Corrección publicada:** [`b3750a6`](https://github.com/javierdario48-star/ATRIA/commit/b3750a6c08605d70a6509cc57bcce5022a732ea1) modifica únicamente `src/v5/clinical/accepted-transfer.test.js`: mantiene `intentHistory.length===0` y verifica `quality.history===10` para `PERI-PBE-001`; los otros cuatro casos siguen exigiendo 0. No altera reglas clínicas, XP, red, UI, V4 ni producción.
+- **Pendiente:** [CI core del commit vigente](https://github.com/javierdario48-star/ATRIA/actions/runs/44856218209), [traslados](https://github.com/javierdario48-star/ATRIA/actions/runs/44856218283), [matriz clínica](https://github.com/javierdario48-star/ATRIA/actions/runs/44856218215). **No declarar verde B0** hasta completarlas, ni confundir aceptación Playwright con Android físico; tampoco cambiar cadencias o desplegar por este arreglo. Documentación con `[skip ci]` para no duplicar runs.
+
+
 ## B0 · Paridad de calidad peritonitis — corrección candidata `dcab2ac`
 
 **Origen confirmado del último fallo de [CI 44850152584](https://github.com/javierdario48-star/ATRIA/actions/runs/44850152584):** 29/30 jobs verdes; `clean-core-contract` ya completó 3.167/3.167 unitarias sin cancelaciones en Node 22 y ejecutó los contratos históricos hasta `qa/v5/characterize-peritonitis-quality.mjs:62`. `emergency-minimum` comparaba `74` en V5 contra `84` en la referencia nativa. El único diferencial era `history: 0` frente a `history: 10`. La regla original está escrita en `src/integration/peritonitis-487.js`: `b.history=Math.max(b.history||0,10)` **únicamente tras un handoff seguro**. No se trata de inventar respuestas clínicas: es crédito histórico por entrevista aplazada durante emergencia transferida correctamente.
