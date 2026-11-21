@@ -1,5 +1,9 @@
 # ATRIA 5.0 — Inventario maestro de requisitos
 
+## B0 · Paridad histórica de peritonitis · corrección `dcab2ac` (aceptación CI pendiente)
+
+En el [run 44850152584](https://github.com/javierdario48-star/ATRIA/actions/runs/44850152584), 29/30 jobs aprobaron; los 3.167 tests Node 22 no presentaron fallos ni cancelaciones y el competitivo de 4 jugadores aprobó. Falló **solo** la caracterización V19 `emergency-minimum/score` (74 V5 ≠ 84 nativo). Causa verificada: falta aplicar el mínimo histórico de `history:10` tras derivación urgente segura; la fuente original `src/integration/peritonitis-487.js` hace `b.history=Math.max(b.history||0,10)`. La modificación mínima `dcab2ac` incorpora exclusivamente ese piso en `safeHandoff`, con expectativa física determinista corregida. Test **aislado de la función real** contra cinco escenarios históricos: 5/5 desgloses correctos (84/87/95/94/90). Sigue **pendiente** la certificación integrada del nuevo SHA: QA-01 mantiene su estado sin cambiar el recuento de los 88 requisitos; no declarar B0 resuelto ni Android validado por una prueba aislada.
+
 ## Adenda de ejecución B0 · ChatGPT normal · 20/11/2026
 
 Esta adenda **conserva los 88 IDs** y actualiza únicamente QA-03 tras su certificación de CI verde; QA-01 y la aceptación competitiva/Android permanecen pendientes. La modificación fallida del timer (`174c95a`) fue explícitamente revertida en `81a73c2`; la solución de Node 22 vigente está solo en el harness (`01d35b4`). HEAD de partida `9436882a312e4826ec0fa9b8851fe0b1572779b4`; commits de código `174c95a`, `ae360e7`, `f79ffdc`, `b8d4ee5`. El traspaso actualizado contiene la trazabilidad por archivo.

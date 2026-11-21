@@ -1,5 +1,16 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
+## B0 · Paridad de calidad peritonitis — corrección candidata `dcab2ac`
+
+**Origen confirmado del último fallo de [CI 44850152584](https://github.com/javierdario48-star/ATRIA/actions/runs/44850152584):** 29/30 jobs verdes; `clean-core-contract` ya completó 3.167/3.167 unitarias sin cancelaciones en Node 22 y ejecutó los contratos históricos hasta `qa/v5/characterize-peritonitis-quality.mjs:62`. `emergency-minimum` comparaba `74` en V5 contra `84` en la referencia nativa. El único diferencial era `history: 0` frente a `history: 10`. La regla original está escrita en `src/integration/peritonitis-487.js`: `b.history=Math.max(b.history||0,10)` **únicamente tras un handoff seguro**. No se trata de inventar respuestas clínicas: es crédito histórico por entrevista aplazada durante emergencia transferida correctamente.
+
+**Corrección publicada:** [`dcab2ac`](https://github.com/javierdario48-star/ATRIA/commit/dcab2ac4eaa709cf3c03bdf6416208c1c9a855d6) restaura ese mínimo de anamnesis exclusivamente cuando `safeHandoff===true` en `src/v5/clinical/peritonitis-care.js`, y actualiza la prueba física determinista `peritonitis-care.test.js` (historia 10, calidad 87, XP 118 donde antes la migración calculaba 4/81/112). No toca requisitos de destino, administración, fisiología, autoría, red ni fórmula de XP.
+
+**Verificación dirigida efectuada:** se aisló y ejecutó la **función de puntuación real** obtenida del código recién publicado, con los datos de `PERI-SEC-001` y los 5 escenarios del artefacto histórico `docs/evidence/c3a/peritonitis-quality-parity.json`. Coincidencia **5/5** de los siete campos `score/diagnosis/history/safety/studies/treatment/efficiency`: `84,87,95,94,90`. El mismo scorer sin `safeHandoff` no concede los 10 puntos (historia 0 ó 4 según entrevista). **Limitación:** la comparación aislada no ejecuta el camino de cierre, el pago real XP ni las suites integrales.
+
+**Estado:** QA-01 sigue pendiente de CI **del nuevo commit `dcab2ac`**. [Experimental Game](https://github.com/javierdario48-star/ATRIA/actions/runs/44854297473) y [Clinical Transfers](https://github.com/javierdario48-star/ATRIA/actions/runs/44854297515) fueron encolados. No declarar B0, Android ni Vercel verde sin esos resultados. La evidencia anterior 29/30 aplica a `01d35b4`, no a `dcab2ac`. No reabrir B1 o modificar red.
+
+
 ## Certificación posterior — run 44850152584 (Node 22, commit 01d35b4)
 
 **Resultado comprobado:** 29/30 jobs verdes, 1 rojo. El grupo `clean-core-contract` ejecutó el test suite V5 **3.167/3.167 con 0 fallos y 0 cancelaciones**; los jobs `competitive-browser (2)`, `(3)` y `(4)`, `actual-http-multiplayer-browser` y `durable-guard-recovery` finalizaron **SUCCESS**. Esto confirma el arreglo del harness de Node 22 y el caso de cuatro jugadores en CI, **no** aceptación física Android ni despliegue público.
