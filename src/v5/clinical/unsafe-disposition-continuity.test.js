@@ -117,3 +117,19 @@ test('unsafe alta and observation each incur one durable penalty per doctor; lat
  assert.equal(saved.read().xp,55);
  assert.equal(saved.read().xpDebt,0);
 });
+
+
+test('wrong observation after measured vitals does not manufacture a phantom reassessment',async()=>{
+ const {s,send}=fixture('no-phantom-observation');
+ try{
+  const vital=await send('A','measured','/signos');
+  assert.equal(vital.clinical?.[0]?.status,'executed');
+  assert.equal(s.read().patient.reassessments,0);
+  const before=structuredClone(s.read().patient);
+  const bad=await send('A','wrong-obs-after-vitals','/disposicion observacion');
+  checkRebuke(bad,'observacion','clinical.unsafe-observation');
+  assert.deepEqual(s.read().patient,before,'unsafe choice must never insert a fabricated routine reassessment');
+  assert.equal(s.read().patient.reassessments,0);
+  assert.equal(s.read().progress.xpDebt,15);
+ }finally{s.dispose();}
+});
