@@ -1,5 +1,14 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
+## Certificación posterior — run 44850152584 (Node 22, commit 01d35b4)
+
+**Resultado comprobado:** 29/30 jobs verdes, 1 rojo. El grupo `clean-core-contract` ejecutó el test suite V5 **3.167/3.167 con 0 fallos y 0 cancelaciones**; los jobs `competitive-browser (2)`, `(3)` y `(4)`, `actual-http-multiplayer-browser` y `durable-guard-recovery` finalizaron **SUCCESS**. Esto confirma el arreglo del harness de Node 22 y el caso de cuatro jugadores en CI, **no** aceptación física Android ni despliegue público.
+
+**Nuevo y único bloqueo de ese run:** el paso `node qa/v5/characterize-peritonitis-quality.mjs` falla con `AssertionError [ERR_ASSERTION]: emergency-minimum/score`, **74 !== 84**, en la línea 62, al comparar `migrated.quality.score` con `ctx.csBreakdown().score`. La prueba intenta conservar paridad con la puntuación nativa V19 para `PERI-SEC-001` con anamnesis mínima; no hay evidencia suficiente para decidir si el desajuste proviene del fixture de referencia, de los datos de los recibos o del adaptador de calidad. **No cambiar pesos, reglas clínicas, aserciones ni expectativas numéricas sin aislar el desglose de ambos lados.** El fallo aparece después de completar los 3.167 tests Node, no en ellos. [Ejecución y logs](https://github.com/javierdario48-star/ATRIA/actions/runs/44850152584).
+
+**Próximo paso B0:** reproducir únicamente la caracterización de calidad, comparar por componente `diagnosis/history/safety/studies/treatment/efficiency`, y comprobar la procedencia de ambos snapshots y recibos. Aplicar el cambio mínimo solo después de justificar el origen del diferencial de 10 puntos; rerun dirigido, auditoría de frontera y CI pertinente. No abrir B1 hasta que el contrato de calidad esté reconciliado. Esta anotación documental lleva `[skip ci]` para no volver a encolar 30 jobs.
+
+
 ## Checkpoint B0 adicional · 20/11/2026 · ChatGPT normal
 
 **Rama exclusiva:** `atria-5.0-core-rebuild-experimental`. HEAD verificado antes de intervenir: `9436882a312e4826ec0fa9b8851fe0b1572779b4`. Último cambio de código B0 al actualizar: `01d35b498469d11ec469a5544abe7f987862ba3b`. No se tocaron `main`, V4 ni despliegues. La CI de estos cambios estaba en cola; **no declarar verde, validado en Android ni publicado en Vercel**.
