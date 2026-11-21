@@ -66,6 +66,13 @@ test('unresolved complication specifically blocks V2 alta; V1 is not changed',()
  const recovered=evaluateClinicalPolicyDisposition(
   {...patient,policyState:{...patient.policyState,complications:[{id:complication,status:'recovered'}]}},v2,'alta');
  assert(!recovered.missing.some(x=>/rescate confirmado|resolución fisiológica confirmada/i.test(x)));
+ const wardWithoutDeterioration=evaluateClinicalPolicyDisposition({
+  ...patient,policyState:{...patient.policyState,complications:[]}},v2,'sala');
+ assert(wardWithoutDeterioration.requirements.some(x=>x.reason==='destination-not-indicated'),
+  'the stable, uncomplicated outpatient must not be admitted to ward for full credit');
+ const wardDuringDeterioration=evaluateClinicalPolicyDisposition(patient,v2,'sala');
+ assert(!wardDuringDeterioration.requirements.some(x=>x.reason==='destination-not-indicated'),
+  'manifested complication may justify a ward transfer after preparation');
  const old=evaluateClinicalPolicyDisposition(patient,v1,'alta');
  assert(!old.missing.some(x=>/rescate confirmado|resolución fisiológica confirmada/i.test(x)));
 });
