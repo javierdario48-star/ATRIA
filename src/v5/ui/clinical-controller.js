@@ -2,7 +2,7 @@ import {patientHTML,vitalsHTML,therapyHTML,monitorHTML,historyHTML,esc} from './
 import {examinationHTML,renderExamination} from './examination-panel.js';
 import {EXAM_REGIONS,isExaminationKind,examinationRegionCommands} from '../clinical/exam-contract.js';
 import {clinicalWorkflow} from './clinical-workflow.js';
-import {closureDecisionHTML} from './clinical-closure-panel.js';
+import {closureDecisionHTML,unsafeDispositionVegaHTML} from './clinical-closure-panel.js';
 import {setHTML} from './render-content.js';
 import {ecgPresentation} from '../clinical/ecg-morphology.js';
 import {caseDebriefHTML} from './case-debrief.js';
@@ -146,6 +146,15 @@ export function createClinicalInterface({document,session,open,close,send,onTalk
    // One authoritative command owns consultation, acceptance and closure.
    // Reconnection or closing this panel cannot interrupt a browser-side chain.
    const reply=await post('/disposicion '+id);
+   const rebuke=reply?.clinical?.find(row=>
+    ['clinical.unsafe-discharge','clinical.unsafe-observation'].includes(row.receipt?.disposition?.kind));
+   if(rebuke){
+    // The authority already rejected the decision, debited XP, and kept the
+    // patient alive in the same encounter. This is only a visual Dr Vega card.
+    open(unsafeDispositionVegaHTML(rebuke.receipt),'vega-reprimand');
+    ui('modalContent').dataset.patientUid=patientUid;
+    return;
+   }
    const refusal=reply?.clinical?.find(row=>['rejected','unconfirmed'].includes(row.status));
    if(refusal||reply?.status==='rejected'||reply?.routeError)
     notify(refusal?.receipt?.message||'No se pudo confirmar el destino. Revisá la respuesta clínica y reintentá.');
