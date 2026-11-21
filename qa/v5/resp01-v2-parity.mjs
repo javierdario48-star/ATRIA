@@ -14,7 +14,7 @@ import {CLINICAL_POLICY_REGISTRIES} from '../../src/v5/clinical/clinical-policy-
 import {clinicalCertificationContent,runClinicalCaseScenario} from './certify-clinical-cases.mjs';
 
 const smoke=process.argv.includes('--smoke');
-if(process.argv.some(x=>x!=='--smoke'))throw Error('only --smoke supported');
+if(process.argv.slice(2).some(x=>x!=='--smoke'))throw Error('only --smoke supported');
 const old=respiratoryPack.cases.find(c=>c.id==='RESP-01');
 assert(old&&resp01V2Candidate);
 assert.equal(old.id,resp01V2Candidate.id);
