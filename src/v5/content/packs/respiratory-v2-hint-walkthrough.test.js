@@ -62,7 +62,8 @@ test('Dr Vega guides a competent physician from untouched encounter to authorize
  const finished=await walkthrough(sample);
  assert.equal(finished.state.patient.caseEnded,true);
  assert.equal(finished.state.patient.closure?.destination,'alta');
- assert.equal(finished.state.patient.closure?.quality?.diagnosticFactor,1);
+ assert.equal(finished.state.patient.closure?.quality?.diagnosis,15,
+  'the sole closure evaluator must award full authored diagnosis points');
  assert.equal(finished.state.progress?.receipts?.length,1);
 });
 test('Vega-guided care checks one authority and can process a seeded complication instead of blindly discharging',async()=>{
