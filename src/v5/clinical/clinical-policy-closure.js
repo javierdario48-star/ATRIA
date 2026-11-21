@@ -108,7 +108,7 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
    const rescue = definition?.rescueAllOf || [];
    if (rescue.length && !rescue.every(id => done.has(id)))
     need('treatment',{anyOf:[rescue]},'Completar el rescate confirmado de la complicación antes del alta.');
-   else need('wait',{reason:'complication'},'Esperar resolución fisiológica confirmada antes del alta.');
+   else if(target==='alta') need('wait',{reason:'complication'},'Esperar resolución fisiológica confirmada antes del alta.');
   }
  }
  const reassessment = patient.lastReassessment;
