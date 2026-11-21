@@ -579,7 +579,20 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     !p.pendingConsults.some(row=>row.id===service)&&second-(consulted.get(service)??-Infinity)>=15){
     await action('/consulta '+service);consulted.set(service,second);
    }
-   if(competent&&second>=nextReassessment){await action('/reevaluar');nextReassessment=second+15;}
+   // Paired V2 bot: avoid repeating a completed reevaluation while the
+   // *only* remaining issue is minimum timed observation. This does not skip
+   // observation of an active episode or an unconfirmed intervention.
+   const observationMin=c.clinicalPolicy?.closure?.minimumObservationMinutes||0;
+   const lastAdministration=Math.max(0,...(p.administrationLog||[]).map(row=>
+    row.completedAtNativeMinute??row.administeredAtNativeMinute??0));
+   const waitingForObservation=preferredDestination!==null&&observationMin>0&&
+    s.clock.nativeMinute<observationMin&&p.reassessments>0&&
+    (p.lastReassessment?.nativeMinute??-1)>=lastAdministration&&
+    !(p.pendingTreatments||[]).length&&!(p.pendingConsults||[]).length&&
+    !(p.policyState?.complications||[]).some(episode=>episode.status!=='recovered');
+   if(competent&&second>=nextReassessment&&!waitingForObservation){
+    await action('/reevaluar');nextReassessment=second+15;
+   }
    // Rescue is triggered by an observed native complication. No seed, flag,
    // physiology or complication candidate is assigned to force it to occur.
    if(competent&&c.clinicalPolicy){
@@ -633,7 +646,10 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     return episode?episode.status==='recovered'||transferredRescueIds(definition,transferredProcedures).length>0:
      current.clock.nativeMinute>=complicationObservationMinute;
    });
-   if(profile!=='abandon'&&canAttempt&&complicationObservationComplete&&
+   const acceptsCurrentDestination=preferredDestination===null||
+    !['competent','slow','no-allergy-question','complication-rescue'].includes(profile)||
+    current.eligibleDestinations?.includes(plan.destination);
+   if(profile!=='abandon'&&canAttempt&&acceptsCurrentDestination&&complicationObservationComplete&&
     (profile==='negligent'||second>=plan.minimumObservationSeconds)&&second-lastCloseAttempt>=15){
     await action('/reevaluar');await action('/disposicion '+plan.destination);lastCloseAttempt=second;
    }
