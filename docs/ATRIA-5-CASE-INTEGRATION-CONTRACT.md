@@ -126,3 +126,82 @@ La planilla tendrá una **fila índice por enfermedad** (ID lógico, fuente V1 y
 
 **Puerta de avance:** diseñar el primer caso V2 aislado ya es posible; **activarlo públicamente no** hasta contar con selector versionado verificado, estabilidad de plataforma y Preview de Vercel/Android real.
 
+## Contrato transversal del flujo clínico y receptor ciego a la verdad (21/11/2026)
+
+**Estado:** norma de diseño y casos de prueba, NO implementación certificada. Mantener las 55 enfermedades V1, el único motor de fisiología, cierre/XP y autoría de recibos. No tocar main, V4, producción ni activar V2.
+
+### Regla central: tres decisiones separadas
+
+- **Verdad oculta:** diagnóstico real, semilla, variantes, deterioro, fisiología, resultados y daño causal pertenecen al motor autoritativo y evaluación final. Jamás se filtran a los servicios receptores.
+- **Criterio del receptor:** se decide SOLO con diagnóstico presuntivo escrito por el jugador, hallazgos y resultados comunicados, signos vitales reales, tratamientos administrados, preparación mínima, riesgos vigentes, capacidad y pertinencia del servicio. Dos condiciones: (1) indicación declarada compatible con servicio y datos visibles; (2) preparación mínima de transferencia suficiente. La aceptación de receptor es una tercera confirmación asíncrona, no una operación realizada.
+- **Puntuación al cierre:** tras recibir aceptación o alta válida, contrastar contra verdad y recibos para diagnóstico, anamnesis, examen, estudios, tratamiento, eficiencia, latencias, omisiones e iatrogenia. Aceptar un traslado NO valida la exactitud del diagnóstico: diagnóstico falso puede resultar en cero XP o penalización causal, sin anular retroactivamente la recepción. No crear otro scorer.
+
+### Grafo general de decisiones (no fuerza secuencia de acciones)
+
+~~~mermaid
+flowchart TD
+  A["Paciente ingresa: enfermedad real oculta"] --> B["Atención libre: signos, anamnesis, examen, estudios"]
+  B --> C["Impresión presuntiva escrita y editable"]
+  B --> D["Órdenes y administración real"]
+  D --> E["Fisiología temporal: respuesta, omisión, complicación, iatrogenia o muerte"]
+  E --> B
+  C --> F["Solicitar destino: alta, observación, sala, UTI, procedimiento, quirófano"]
+  D --> F
+  F --> G{"¿Destino sin receptor externo?"}
+  G -- Sí --> H{"¿Seguridad, condiciones de cierre y plan suficientes?"}
+  G -- No --> I{"¿Impresión declarada y evidencia visible justifican el servicio?"}
+  I -- No --> J["Rechazo con motivo; diagnóstico o destino pueden corregirse"]
+  I -- Sí --> K{"¿Estudios indispensables y preparación mínima completos?"}
+  K -- No --> L["Rechazo con faltantes de preparación, sin cierre"]
+  K -- Sí --> M["Consultar receptor, esperar respuesta y registrar aceptación"]
+  M --> N["Cierre único del cuidado inicial"]
+  H -- Sí --> N
+  H -- No --> L
+  L --> B
+  J --> B
+  N --> O["Evaluación contra verdad oculta y recibos"]
+  O --> P["XP/descuentos/penalización; un solo recibo"]
+~~~
+
+La fisiología y las tareas continúan en paralelo durante entrevistas, estudios y esperas. En urgencia no se retrasan acciones salvadoras para completar etapas optativas del diagrama.
+
+### Comportamiento universal por caso
+
+1. **Anamnesis:** permitir todo el vocabulario de preguntas y repreguntas del juego a cualquier paciente; mantener respuestas coherentes con sus hechos, edad, variante, gravedad, memoria y capacidad de responder. Lo irrelevante no bloquea; no preguntar temas importantes reduce calidad, pero no debe bloquear arbitrariamente cierre si están garantizados seguridad y destino.
+2. **Estudios, examen y tratamientos:** todos los controles y catálogos globales están disponibles para todos los pacientes aunque la elección no esté indicada. No inventar resultado ni administración para una capacidad aún no modelada. Los estudios dirigidos informan, los omitidos reducen calidad salvo que sean indispensables para seguridad/destino, y los innecesarios consumen recursos y pueden descontar XP. No penalizar estudios razonables del diferencial o de cambios clínicos.
+3. **Diagnóstico presuntivo:** debe registrarse antes de cierre electivo, no completarse automáticamente con la verdad. La recepción interpreta impresión y datos compartidos. La puntuación final compara contra diagnóstico real. Excepción urgente, sindromática o de incapacidad solamente con criterio público y trazable, nunca con acceso al diagnóstico oculto.
+4. **Farmacología:** medicamento administrable no significa indicado. Fármacos condicionales o diferidos, como antibióticos, deben acreditar una intervención y modificar la evolución solo por mecanismos y ventanas autoradas; los expansores, oxígeno y soporte actúan según dinámica real, dosis y contexto. Ni antibiótico cura instantáneamente ni marcar orden mejora vitales. Omisión, exceso, alergia, error y retraso pueden producir deterioro real, con recuperación y rescate plausibles.
+5. **Dos niveles de requisito:** A) bloqueantes por seguridad o recepción (indicación declarada, pruebas indispensables según gravedad/urgencia, estabilización mínima, tratamiento urgente, confirmación receptor); B) oportunidades para calidad (anamnesis adicional, examen/estudio orientador no indispensable, eficiencia, precisión). La falta de B nunca impide por sí sola cierre. Estabilizar para transporte NO exige curar definitivamente una enfermedad antes de que la trate el receptor.
+6. **Cierres:** conservar los seis destinos oficiales. Observación activa no es cierre formal en observación. Traslado aceptado cierra cuidado inicial, sin ejecutar automáticamente cirugía, reperfusión o endoscopia. Rechazo deja caso abierto y reintentable. Un UID, un cierre y un premio idempotente.
+7. **Dr. Vega:** leer requisitos pendientes y recibos del MISMO evaluador de cierre, sugerir una única acción realizable con control exacto o espera gratuita. No revelar verdad clínica, no puntuar y no confundir recomendaciones opcionales con bloqueos. Repetir pista no vuelve a penalizar.
+
+### Pruebas obligatorias del receptor y de puntuación
+
+| Impresión comunicada | Preparación mínima | Veredicto de recepción | Resultado posterior |
+| --- | --- | --- | --- |
+| Indicación compatible y diagnóstico verdadero | suficiente | aceptar | calidad según conducta |
+| Indicación compatible pero diagnóstico falso frente a verdad oculta | suficiente, sin contradicciones ostensibles comunicadas | **puede aceptar sin conocer verdad** | cero crédito de diagnóstico y potencial XP nula/negativa por daño o error según política de puntuación |
+| Indicación compatible | insuficiente | rechazar con faltantes concretos | no cerrar |
+| Indicación incompatible con servicio | suficiente o no | rechazar indicando falta de indicación | no cerrar |
+| Ausencia de impresión | cualquiera | rechazar cierre electivo salvo vía sindromática urgente explícita | nunca adivinar diagnóstico |
+| Datos comunicados contradicen de manera clara la impresión | cualquiera | rechazar o exigir aclaración motivada por evidencia visible | no inferir rechazo por ID oculto |
+
+Ejemplo: paciente con enfermedad real distinta de apendicitis, diagnosticado erróneamente como apendicitis. Cirugía puede recibirlo si la indicación y preparación son defendibles desde lo conocido por el receptor, y el médico pierde calidad/XP al contrastar con la verdad. En cambio escribir una patología que no requiere intervención quirúrgica no basta para conseguir recepción. Estudios contradictorios **visibles** sí justifican duda o rechazo.
+
+### Diferencia detectada en el motor vigente y protección de regresiones
+
+El sistema **ya** soporta consultas asíncronas, preparación, estabilización, recibos, penalización por estudios extras, respuestas de Dr. Vega y XP únicos. No reconstruirlo. Pero en src/v5/clinical/consultation-evidence.js la compatibilidad aún se calcula con assessDiagnosticImpression(c, p.diagnosis), donde c es la enfermedad real; src/v5/clinical/surgical-consultation.js también limita las rutas y servicios usando c.clinicalPolicy/caseId. Una excepción ya acepta discrepancia diagnóstica en ciertas urgencias con estudios confirmados. **Todavía no existe prueba suficiente del contrato general de recepción ciega al diagnóstico verdadero**. Separar el modelo de recepción por datos visibles del evaluador real de calidad y mantener salvaguardas por evidencia objetiva, gravedad y recursos sin abrir bypass general. No modificar tests clínicos históricos para ocultar discrepancias.
+
+### Matriz de migración y certificación individual de 55 casos
+
+Aplicar en una única planilla C1, una enfermedad/revisión por ciclo, sin duplicar inventarios: 25 casos digestivos + 10 respiratorios + 10 cardiológicos + 10 neurológicos. Los 550 recorridos históricos de bots verifican la arquitectura previa, **no** este contrato nuevo.
+
+Por cada caso, y variantes con semillas distintas:
+- Anamnesis completa, omisa y de intención global, examen y estudios pertinentes/irrelevantes, diagnóstico exacto/sindromático/erróneo.
+- Tratamiento correcto, alternativo, ausente, tardío, excesivo o contraindicado, con signos vitales, recibos y recuperación comprobables.
+- Alta, observación, sala, UTI, procedimiento o quirófano según la impresión declarada y la capacidad del receptor; aceptación/rechazo basados en evidencia comunicada y preparación mínima.
+- Cierre con bajo puntaje sin bloquear por anamnesis opcional; estudios extras penalizados pero diferenciales razonables no; error grave diagnóstico penalizado tras aceptación; imposibilidad de cerrar tras rechazo.
+- Pistas Dr. Vega para cada faltante real, espera/repetición gratuita; pruebas de dos médicos, reintento idéntico, reconexión, cierre/XP único y no ejecución ficticia del procedimiento receptor.
+- Guardar para cada prueba ID/semilla/versión/SHA, acción, evidencia, respuesta receptor, signos, puntuación, fallo o éxito, y rollback. CI del SHA antes de Preview Android físico.
+
+**Puerta de implementación:** primera contraprueba cruzada con APP-001 y un paciente no quirúrgico diagnosticado como apendicitis; después RESP-01 V2 aislado. Revisar antes de modificar las rutas GI heredadas y los casos con urgencias de recepción objetiva. No activar V2 ni reescribir en masa los 55 casos hasta cerrar contrato y regresiones.
