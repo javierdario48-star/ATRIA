@@ -6,6 +6,7 @@ import {parseSpecialIVDose487} from './iv-dose-contracts-487.js';
 import {CLINICAL_TREATMENTS} from '../content/clinical-treatment-definitions.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {clinicalInterventionEligibility,clinicalInterventionCapability} from './native-medication-eligibility.js';
+import {medicationIndicationReview} from './medication-indication-review.js';
 import {REFERENCE_DOSES_487} from '../../clinical/pharmacology-registry-487.js';
 export const IV_MEDICINES=Object.freeze({
  fluid:Object.freeze({id:'fluid',label:'Cristaloides / reposición de volumen',seconds:.8}),
@@ -176,6 +177,10 @@ const exposureMessages={
 function medicationAdvisories(patient,caseData,id,medicine,dose,reference,clock,eventId){
  const out=[],issue=patient&&clinicalInterventionEligibility(patient,caseData,id,clock);
  if(issue)out.push({code:issue.reason,message:issue.message});
+ // Indication review never blocks an action; it becomes a quality penalty
+ // ONLY after native administration evidence is confirmed.
+ const indication=medicationIndicationReview(patient,caseData,id);
+ if(indication&&!out.some(a=>a.code===indication.code))out.push(indication);
  const ref=medicine.regimen.infusion?.unit===dose.unit?medicine.regimen.infusion:reference??medicine.dose;
  const min=medicine.min??ref?.amount,max=medicine.max??ref?.amount;
  // Crystalloid bolus volume is reviewed by the existing perfusion/overload
