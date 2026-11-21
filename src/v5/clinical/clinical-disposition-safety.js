@@ -7,13 +7,18 @@ export function complicationDispositionRequirements({patient,caseData,destinatio
  if(!handledDestinations.has(destination)||!caseData?.clinicalPolicy)return [];
  const definitions=new Map((caseData.clinicalPolicy.complications||[]).map(x=>[x.id,x]));
  const done=new Set(fulfilled||[]),deferred=new Set(continuation?.deferredTreatmentIds||[]);
+ const receiver=(caseData.clinicalPolicy.closure?.consult?.[destination]||[]).length>0;
+ const definitive=receiver?new Set([
+  ...(caseData.clinicalPolicy.definitiveInterventions||[]),
+  ...(caseData.clinicalPolicy.closure?.definitiveTreatmentIds||[])
+ ]):new Set();
  const requirements=[];
  for(const episode of patient?.policyState?.complications||[]){
   const def=definitions.get(episode.id);
   // An unrecognized or not-yet-manifest complication candidate cannot
   // modify disposition or disclose the future random draw to the physician.
   if(!def||!alive(episode.status)||!Number.isFinite(episode.onsetAt))continue;
-  const rescue=(def.rescueAllOf||[]).filter(x=>!deferred.has(x));
+  const rescue=(def.rescueAllOf||[]).filter(x=>!deferred.has(x)&&!definitive.has(x));
   const outstanding=rescue.filter(x=>!done.has(x));
   if(outstanding.length){
    requirements.push({
