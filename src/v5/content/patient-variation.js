@@ -97,7 +97,9 @@ export function generatePatientVariation(input,seed,context={}){
   // Retain authored reaction type, severity and disclosure. Intolerance never
   // silently becomes hypersensitivity or severe allergy.
   allergies:(v.allergies||[]).filter(a=>r()<a.probability).map(({probability,...a})=>({...a})),
-  complicationCandidates:(v.complications||[]).filter(c=>r()<c.probability).map(c=>({id:c.id,progressionId:c.progressionId,rescueId:c.rescueId})),
+  complicationCandidates:(v.complications||[]).filter(c=>(v.independentComplicationDraws===true?
+   random(String(seed)+':complication:'+String(c.id))():r())<c.probability)
+   .map(c=>({id:c.id,progressionId:c.progressionId,rescueId:c.rescueId})),
   // Draw after existing clinical candidates so adding authored background
   // alternatives never rerolls a patient's existing reaction facts.
   ...(v.backgroundHistory?.length?{backgroundHistory:structuredClone(choose(v.backgroundHistory,r))}:{})
