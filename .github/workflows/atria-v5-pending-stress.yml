@@ -1,0 +1,147 @@
+name: ATRIA 5 Pending Inventory and Adversarial Stress
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - '.github/workflows/atria-v5-pending-stress.yml'
+      - 'qa/v5/pending-stress-audit.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atria-v5-pending-stress-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  requirement-census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse all 88 original requirements without changing their statuses
+        run: node qa/v5/pending-stress-audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-pending-inventory-88
+          path: qa/v5-pending-stress-report/
+          if-no-files-found: error
+          retention-days: 30
+
+  clinical-decision-stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [competent, missing-dx, wrong-dx, insufficient-preparation, wrong-destination, slow, iatrogenic, nursing-recovery, closure-recovery, multiplayer]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Real clinical sessions, 55 patients, correctness, errors, harm, recovery and deduplication
+        run: node qa/v5/transfer-certification.mjs --profiles "${{ matrix.profile }}" --output qa/v5-stress-profile
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-stress-${{ matrix.profile }}
+          path: qa/v5-stress-profile/
+          if-no-files-found: error
+          retention-days: 30
+
+  physical-behavior-stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [coop-four, competitive-four, account-recovery-two]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser driver
+        run: npm install --prefix "$RUNNER_TEMP/atria-stress-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Build the same V5 game bundle in the GitHub runner
+        run: npm run build:v5
+      - name: Stress actual buttons, multi-browser care and persistent restoration
+        env:
+          V5_COOP_PLAYERS: '4'
+          V5_COMPETITIVE_PLAYERS: '4'
+          PLAYWRIGHT_MODULE_PATH: ${{ runner.temp }}/atria-stress-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+          V5_QA_OUTPUT: qa/v5-stress-browser
+        run: |
+          set -euo pipefail
+          case "${{ matrix.test }}" in
+            coop-four) node qa/v5/cooperative-team-browser.mjs ;;
+            competitive-four) node qa/v5/competitive-browser.mjs ;;
+            account-recovery-two) node qa/v5/shared-guard-auth-browser.mjs ;;
+          esac
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-stress-browser-${{ matrix.test }}
+          path: qa/v5-stress-browser/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  harm-and-mortality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Repeatable adverse physiology and death/iatrogenic harm using actual native receipts
+        run: node qa/v5/mortality-regression.mjs --solo --local-only
+      - name: Record historical care, abandonment and cumulative overdose characterization
+        run: |
+          mkdir -p qa/v5-stress-harm
+          node qa/v5/clinical-trajectory-bots.mjs | tee qa/v5-stress-harm/trajectory-characterization.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-stress-harm
+          path: |
+            qa/v5-stress-harm/
+            qa/v5-mortality-results/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  merged-result:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    needs: [requirement-census, clinical-decision-stress, physical-behavior-stress, harm-and-mortality]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download all per-profile clinical receipts and evidence summaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: atria-v5-stress-*
+          path: qa/v5-pending-stress-profiles/
+          merge-multiple: false
+      - name: Aggregate 550 runs and original 88 requirements, keeping uncertainty explicit
+        env:
+          STRESS_BROWSER_RESULT: ${{ needs.physical-behavior-stress.result }}
+          STRESS_HARM_RESULT: ${{ needs.harm-and-mortality.result }}
+        run: node qa/v5/pending-stress-audit.mjs --aggregate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-stress-88-master-result
+          path: qa/v5-pending-stress-report/
+          if-no-files-found: error
+          retention-days: 30
