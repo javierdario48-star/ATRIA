@@ -121,6 +121,20 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  const observationStart = finiteMinute(patient.policyState?.startedAtNativeMinute) ? patient.policyState.startedAtNativeMinute : 0;
  if (minute - observationStart < (rule.minimumObservationMinutes || 0))
   need('wait',{reason:'observation'},'Completar el tiempo de observación clínica requerido antes del destino.');
+ // Optional indication gate: avoid rewarding an unnecessary hospital transfer.
+ // Escalation is justified by *manifested* clinical deterioration, never by
+ // a random candidate that has not occurred or by an undisclosed diagnosis.
+ if (rule.escalationDestinations?.includes(target)) {
+  const visibleInstability=Number.isFinite(vitals.spo2)&&vitals.spo2<94 ||
+   Number.isFinite(vitals.rr)&&vitals.rr>24 ||
+   Number.isFinite(vitals.sys)&&vitals.sys<100;
+  const manifestedEpisode=(patient.policyState?.complications||[]).some(episode=>
+   Number.isFinite(episode.onsetAt)&&
+   (caseData.clinicalPolicy.complications||[]).some(def=>def.id===episode.id)&&
+   ['active','recovering','recovered'].includes(episode.status));
+  if (!visibleInstability&&!manifestedEpisode)
+   need('stability',{reason:'destination-not-indicated'},'Sin deterioro documentado ni criterios de internación: este destino no está indicado.');
+ }
  if (!rule.destinations.includes(target)) missing.push('Destino no autorizado para este paciente.');
  const consultsDone = acceptedConsultations(patient), receivers = rule.consult?.[target] || [];
  if ((receivers.length || ['sala', 'uti', 'quirofano', 'procedimiento'].includes(target)) && !receivers.some(id => consultsDone.includes(id)))
