@@ -1,0 +1,48 @@
+name: ATRIA 5 Downloadable Solo HTML
+
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - 'scripts/build-v5-solo-compact.mjs'
+      - 'scripts/verify-v5-solo-compact.mjs'
+      - '.github/workflows/atria-v5-solo-html.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atria-v5-solo-html-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-solo-html:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated one-file bundler and test browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/atria-html-builder" --no-save esbuild@0.25.12
+          npm install --prefix "$RUNNER_TEMP/atria-html-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Package original V5 in a self-contained HTML
+        env:
+          ATRIA_ESBUILD_MODULE: ${{ runner.temp }}/atria-html-builder/node_modules/esbuild
+          ATRIA_SOURCE_SHA: ${{ github.sha }}
+        run: node scripts/build-v5-solo-compact.mjs
+      - name: Verify browser, lobby and solo guard on Chrome and emulated Android
+        env:
+          ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node scripts/verify-v5-solo-compact.mjs
+      - name: Publish downloadable HTML and smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: atria-v5-solo-html
+          path: out-solo-html/
+          if-no-files-found: error
+          retention-days: 30
