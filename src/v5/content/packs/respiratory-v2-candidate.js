@@ -54,6 +54,9 @@ closure.consult={sala:['clinica']};
 // simply by temporarily raising SpO2. Existing V1 cases do not enable it.
 closure.dischargeRequiresResolvedComplications=true;
 closure.minimumObservationMinutes=5;
+// Hospitalization needs observed deterioration or a manifested complication.
+// Merely having pneumonia is not sufficient to hospitalize a stable patient.
+closure.escalationDestinations=['sala'];
 closure.summary='Evaluar NAC, tratamiento apropiado confirmado y reevaluación. Una complicación hipoxémica seleccionada por semilla puede aparecer incluso con antibiótico correcto. No dar de alta durante complicación activa; rescate fisiológico real y observación o sala según respuesta. La aceptación de Clínica no sustituye la estabilización ni el plan de seguimiento.';
 
 export const resp01V2Candidate=defineClinicalCase(candidate);
