@@ -17,7 +17,10 @@ export function closureDecisionHTML(state){
  const pendingDebit=debits.some(row=>row.creditStatus==='pending');
  const loss=debits.filter(row=>row.creditStatus!=='pending'&&
   (row.creditStatus==='credited'||state.room?.mode!=='coop')).reduce((n,row)=>n+Number(row.loss||0),0);
- const consequence=debits.length?'<p class="note" role="status">Decisión de cierre insegura registrada. La atención sigue disponible.'+
+ const kinds=new Set(debits.map(row=>row.kind));
+ const label=kinds.size>1?'Decisiones inseguras registradas':kinds.has('clinical.unsafe-discharge')?
+  'Alta insegura registrada':'Observación insegura registrada';
+ const consequence=debits.length?'<p class="note" role="status">'+label+'. La atención sigue disponible.'+
   (pendingDebit?' Confirmando el descuento de XP…':'')+
   (loss?' <strong class="score-loss">−'+loss+' XP</strong>':'')+'</p>':'';
  const pending=steps.filter(s=>s.status==='pending'||s.status==='partial'||s.status==='attention')
