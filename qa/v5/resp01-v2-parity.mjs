@@ -69,6 +69,7 @@ for(const x of base){
   const start=performance.now();
   const row=await runClinicalCaseScenario(clinicalCase,{
    content,profile:x.profile,mode:x.mode,seed,horizon:720,recovery:true,
+   preferredDestination:label==='v2'?(x.profile==='complication-rescue'?'sala':'alta'):null,
    traceEvery:10,source:{comparison:'resp01-v1-v2',revision:label,staging:true}
   });
   const summarized=digest(row);
