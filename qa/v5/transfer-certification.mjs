@@ -51,6 +51,22 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
  const factory=checkpoint=>createGuardSession({...base,patient,checkpoint,
   ...(world?{nursing:{enqueue:t=>world.enqueueNurseJourney(t),takeArrivals:()=>world.takeNurseArrivals(uid),accept:r=>world.acceptNurseClinicalResult(r)}}:{})});
  const read=()=>s.read();
+ // An unsafe discharge remains an executable physician decision. The native
+ // authority records a unique clinical.unsafe-discharge penalty rather than
+ // reporting a transport rejection. The bot must validate BOTH legitimate
+ // outcomes without silently accepting an early close or a missing receipt.
+ function unsafeAttemptHandled(ack){
+  const state=read(),event=(ack.clinical||[]).find(x=>x.kind==='case.close');
+  if(!event||state.patient.caseEnded||state.progress.receipts.length!==0||state.progress.xp!==0)return false;
+  if(event.status==='rejected')return true;
+  const disposition=event.receipt?.disposition;
+  return event.status==='executed'&&disposition?.kind==='clinical.unsafe-discharge'&&
+   disposition.closed===false&&typeof disposition.reason==='string'&&
+   disposition.patientUid===uid&&disposition.actorId==='doctor'&&
+   disposition.eventId===event.receipt?.eventId&&
+   state.progress.penalties.some(p=>p.kind===disposition.kind&&p.patientUid===uid&&
+    p.actorId==='doctor'&&p.eventId===disposition.penaltyEventId);
+ }
  async function send(text,id='bot-'+(++sequence)){
   const ack=await s.post({id,text});
   commands.push({id,text,status:ack.status,clinical:copy(ack.clinical||[]),routeError:ack.routeError});
@@ -81,7 +97,8 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
   if(profile==='missing-dx'||profile==='wrong-dx'){
    if(profile==='wrong-dx')await send('/diagnostico resfriado comun');
    const ack=await send('/disposicion '+plan.destination);
-   checks.initialRefusal=ack.clinical?.some(x=>x.status==='rejected')&&read().progress.xp===0&&!read().patient.caseEnded;
+   checks.initialRefusal=ack.clinical?.some(x=>x.status==='rejected')??false;
+   checks.initialUnsafeActionHandled=unsafeAttemptHandled(ack);
   }
   const diagnosis=c.id==='VARIX-001'&&profile==='missing-dx'?'Hemorragia digestiva alta':plan.diagnosis;
   await send('/diagnostico '+diagnosis);
@@ -89,11 +106,13 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
    const rule=c.clinicalPolicy?.closure||GASTRO_CASE_RULES[c.id]||CASE_CLOSURE_RULES_487[c.id];
    const wrong=['alta','quirofano','procedimiento','uti','sala','observacion'].find(id=>!(rule?.destinations||[plan.destination]).includes(id));
    const ack=await send('/disposicion '+wrong);
-   checks.initialRefusal=ack.clinical?.some(x=>x.status==='rejected')&&!read().patient.caseEnded;
+   checks.initialRefusal=ack.clinical?.some(x=>x.status==='rejected')??false;
+   checks.initialUnsafeActionHandled=unsafeAttemptHandled(ack);
   }
   if(profile==='insufficient-preparation'){
    const ack=await send('/disposicion '+plan.destination);
-   checks.initialRefusal=ack.clinical?.some(x=>x.status==='rejected')&&!read().patient.caseEnded;
+   checks.initialRefusal=ack.clinical?.some(x=>x.status==='rejected')??false;
+   checks.initialUnsafeActionHandled=unsafeAttemptHandled(ack);
   }
   if(profile==='iatrogenic'){
    await send('Enfermera una vía');
@@ -152,7 +171,8 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
   if(!adversarial&&!checks.closed)failures.push('competent recovery route did not close');
   if(!adversarial&&!checks.xp)failures.push('missing unique closure XP');
   if(!checks.noDuplicateXP)failures.push('duplicate XP');
-  if(['missing-dx','wrong-dx','insufficient-preparation','wrong-destination'].includes(profile)&&!checks.initialRefusal)failures.push('missing initial refusal');
+  if(['missing-dx','wrong-dx','insufficient-preparation','wrong-destination'].includes(profile)&&!checks.initialUnsafeActionHandled)
+   failures.push('unsafe destination neither rejected nor executed with a verified non-closing penalty');
   if(nursing&&(!checks.recovery||world.nurseJourneySnapshot().some(t=>['queued','travelling','at-bed'].includes(t.stage))))failures.push('nursing recovery not settled');
   if(profile==='iatrogenic'&&!checks.physiologyChanged)failures.push('no observed physiological response');
   return {caseId:c.id,profile,mode,passed:!failures.length,authority:'createGuardSession',checks,failures,
