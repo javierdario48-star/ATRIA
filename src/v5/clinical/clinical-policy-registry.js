@@ -80,6 +80,7 @@ function validateClosure(c) {
  if (!text(rule.summary)) errors.push('clinical closure summary required');
  if (rule.minimumObservationMinutes !== undefined && (!nonnegative(rule.minimumObservationMinutes) || rule.minimumObservationMinutes > 10080)) errors.push('invalid minimumObservationMinutes');
  if (rule.urgentStudyBypass !== undefined && typeof rule.urgentStudyBypass !== 'boolean') errors.push('invalid urgentStudyBypass');
+ if (rule.dischargeRequiresResolvedComplications !== undefined && typeof rule.dischargeRequiresResolvedComplications !== 'boolean') errors.push('invalid dischargeRequiresResolvedComplications');
  if (rule.consult !== undefined && !record(rule.consult)) errors.push('invalid closure receiver policy');
  else for (const [destination, receivers] of Object.entries(rule.consult || {}))
   if (!rule.destinations?.includes(destination) || !strings(receivers) || receivers.some(id => !services.has(id))) errors.push('invalid closure receiver ' + destination);
