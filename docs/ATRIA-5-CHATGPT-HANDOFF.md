@@ -1,5 +1,19 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
+## Checkpoint B0 adicional · 20/11/2026 · ChatGPT normal
+
+**Rama exclusiva:** `atria-5.0-core-rebuild-experimental`. HEAD verificado antes de intervenir: `9436882a312e4826ec0fa9b8851fe0b1572779b4`. Último cambio de código B0 al redactar: `b8d4ee581a60de25c3179aff65a7a1643e67ae0d`. No se tocaron `main`, V4 ni despliegues. La CI de estos cambios estaba en cola; **no declarar verde, validado en Android ni publicado en Vercel**.
+
+**Cambios publicados, sin alterar autoridad clínica, propiedad multijugador ni cadencias de red:**
+- `174c95a`: `src/v5/social/durable-cooperative-replica.js`, `waitForRetry` usa un `setTimeout` acotado, vinculado al `AbortSignal` del intento y limpiado tras completar/abortar. La cancelación anterior de **12 tests** en CI Node 22 comenzó en `durable-cooperative-replica.test.js:204`: temporizadores no referenciados de `AbortSignal.timeout` permitían terminar el event loop con una promesa pendiente; verificar en CI nuevo, no inferir éxito.
+- `ae360e7` + `f79ffdc`: `src/v5/ui/reception-board.js` y `src/v5/app/application.js`. El reloj se actualiza sin reemplazar filas si no cambió su estructura. La prueba competitiva de 4 clientes anterior falló por botón `reception-approach` desanclado varias veces en `qa/v5/competitive-browser.mjs:137`; comparar nuevo run de 4 clientes, no sustituir por `force click` ni una llamada clínica artificial.
+- `b8d4ee5`: `qa/v5/transfer-certification.mjs` distingue `case.close` rechazado de `clinical.unsafe-discharge` realmente **ejecutado con penalización y sin cierre**. El bot valida recibo `eventId`, `actorId`, `patientUid`, penalización nativa, ausencia de cierre, XP aún cero. Mantiene `checks.initialRefusal` como diagnóstico histórico, añade `checks.initialUnsafeActionHandled` como criterio correcto y NO modifica el evaluador clínico. Artefactos previos muestran **46** discrepancias de `wrong-destination` y **8 por perfil** (`missing-dx`, `wrong-dx`, `insufficient-preparation`), todas con `alta` ejecutada y `clinical.unsafe-discharge`/closed:false; no eran altas aceptadas. [Run original y artefactos](https://github.com/javierdario48-star/ATRIA/actions/runs/44847181875).
+
+**Pruebas pendientes de observación:** CI del SHA nuevo, especialmente `clean-core-contract` (12 cancelaciones Node 22), `competitive-browser (4)`, `clinical-bots` para todos los 55 casos y los 4 perfiles, y regresiones `transfer-regressions`. Antes de estas correcciones, CI tenía 3.155 pases/12 cancelaciones en `clean-core-contract`, un timeout Playwright con 4 clientes y rechazos esperados incorrectamente. El run `Live Preview Guard Entry` sigue afectado por el despliegue Vercel bloqueado en cuota Hobby y debe etiquetarse **bloqueo externo**, no certificado.
+
+**Estado B0:** correcciones candidatas publicadas; **QA-01 y QA-03 permanecen IMPLEMENTADO CON DEFECTOS** hasta evidencia verde específica; `PHYS-05` y `VAR-02` conservan la evidencia local anterior, sin aceptar Android físico automáticamente. No empezar B1, migración o ajuste de sincronización antes de completar esta aceptación.
+
+
 ## Checkpoint publicado después de la auditoría inicial
 
 HEAD de código confirmado: `7cde6fa905e81ed3d548cf256f1b5201a281ec94`; padre documental `9c176df6718b9a47c0aafd145a371cb597cd9bec`. Esta actualización documental es posterior; obtener su SHA con `git log -1 --format=%H -- docs/ATRIA-5-CHATGPT-HANDOFF.md` y verificar siempre el remoto antes de escribir.
