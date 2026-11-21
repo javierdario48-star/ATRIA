@@ -1,5 +1,17 @@
 # ATRIA 5.0 — Inventario maestro de requisitos
 
+## Adenda de ejecución B0 · ChatGPT normal · 20/11/2026
+
+Esta adenda **no modifica los 88 IDs ni sus estados de aceptación**: registra correcciones candidatas que todavía necesitan CI. HEAD de partida `9436882a312e4826ec0fa9b8851fe0b1572779b4`; commits de código `174c95a`, `ae360e7`, `f79ffdc`, `b8d4ee5`. El traspaso actualizado contiene la trazabilidad por archivo.
+
+- **QA-01 — IMPLEMENTADO CON DEFECTOS (sin cambio de estado):** 12 cancelaciones `cancelledByParent` de Node 22 empiezan en `src/v5/social/durable-cooperative-replica.test.js:204` tras un reintento CAS. Ajustado el temporizador de espera con limpieza por aborto. **Aceptar solamente** si el nuevo `clean-core-contract` ejecuta todas las pruebas sin cancelaciones en Node 22.
+- **QA-01 / COMP-01 — pendiente de aceptación:** la prueba `competitive-browser (4)` sufrió `TimeoutError` con repetidos `element was detached from the DOM` en `reception-approach`. Evitado reconstruir los botones por cambios exclusivos del reloj. **Aceptar solamente** tras probar 4 clientes reales de Playwright con el nuevo SHA sin perder asignación, privacidad ni respuesta clínica.
+- **QA-03 — IMPLEMENTADO CON DEFECTOS (sin cambio de estado):** artefactos del [run 44847181875](https://github.com/javierdario48-star/ATRIA/actions/runs/44847181875) prueban que 46 intentos de destino incorrecto y 8 de cada perfil `wrong-dx`, `missing-dx` e `insufficient-preparation` recibían `case.close` ejecutado **sin cerrar el caso** y con penalización `clinical.unsafe-discharge`. La certificación exigía equivocadamente un rechazo técnico; se introdujo `initialUnsafeActionHandled` que verifica el recibo de la decisión insegura y su penalización nativa o un rechazo clínico sin cierre. Ningún cambio al evaluador o XP. **Aceptar solamente** con los perfiles de 55 casos del nuevo CI y sin cierres anticipados, pérdida de XP o penalizaciones ficticias.
+- **Infraestructura externa:** Live Preview Guard Entry / Vercel sigue bloqueado por cuota Hobby. No declararlo bug de clínico ni éxito de producción.
+
+Permanecen las mismas prioridades B0 → B1 y los mismos contratos de seguridad. El checkpoint local previo 3.167/3.167 se refiere a `7cde6fa`, **no** a los commits B0 añadidos. No repetir campañas costosas solo por estas modificaciones de documentación.
+
+
 ## Estado vigente · 20 de noviembre de 2026
 
 Base auditada `162d0cf24a936e302e2a3efadcc168e1459d86d5`. Corrección de certificación publicada en `7cde6fa905e81ed3d548cf256f1b5201a281ec94`; **3.167/3.167 pruebas locales aprobadas**. [Auditoría histórica y sus límites](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md) · [Matriz de trazabilidad y referencias 1–60](ATRIA-5-REQUIREMENTS-TRACEABILITY.md) · [Plan por causas raíz](ATRIA-5-EXECUTION-PLAN.md).
