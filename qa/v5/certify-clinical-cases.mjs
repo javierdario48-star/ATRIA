@@ -395,7 +395,7 @@ function finalEvidence(row,view,checkpoint,c,plan){
 /** One real player journey. The runtime owns fixed world steps and the native
  * clinical rate. Advancing wall time never assigns its native clock directly. */
 export async function runClinicalCaseScenario(c,{content,mode='solo',profile='competent',
- seed='clinical-certification-v1',horizon=1440,recovery=false,traceEvery=10,source={},
+ seed='clinical-certification-v1',horizon=1440,recovery=false,traceEvery=10,source={},preferredDestination=null,
  wrongMedicationCommand='Enfermera furosemida 40 mg'}={}){
  if(!CLINICAL_CERTIFICATION_PROFILES.includes(profile)||!CLINICAL_CERTIFICATION_MODES.includes(mode)||
   !Number.isFinite(horizon)||horizon<=0||horizon>1440)throw Error('invalid clinical certification scenario');
@@ -409,7 +409,18 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
   content??=await clinicalCertificationContent([c]);
   c=content.cases.find(candidate=>candidate.id===c.id)||c;
   row.source.caseDefinitionDigest=hash(c);
-  const plan=deriveClinicalCertificationPlan(c,content);row.plan=copy(plan);
+  const plan=deriveClinicalCertificationPlan(c,content);
+  // Testing-only destination selection: a stable outpatient should not be
+  // admitted merely because the case also supports a complicated pathway.
+  // Real gameplay retains the player's ordinary choice and care receipts.
+  if(preferredDestination!==null){
+   const rule=c.clinicalPolicy?.closure;
+   if(!rule?.destinations.includes(preferredDestination))throw Error('invalid bot destination '+preferredDestination);
+   plan.destination=preferredDestination;
+   plan.treatmentIds=unique([...firstAllowedTreatmentGroup(c,preferredDestination),...(rule.dischargeTreatments||[])]);
+   plan.consults=unique(rule.consult?.[preferredDestination]||[]);
+  }
+  row.plan=copy(plan);
   // The authored receiving surgical pathway is a handoff, not an operation
   // performed at the bedside. Keep the native complication active until an
   // actual procedural receipt exists; never queue that operation across transfer.
