@@ -50,6 +50,10 @@ async function boot(browser,label,options,{clock=false}={}){
  assert(await page.locator('#enterButton').isVisible(),'practice profile form must be visible');
  return {context,page};
 }
+async function openHudMenu(page){
+ const menu=page.locator('#hudMenu');
+ if(!await menu.evaluate(el=>el.open))await menu.locator('summary').click();
+}
 async function lobby(page){
  await page.locator('#enterButton').click();
  await page.waitForFunction(()=>window.atriaV5?.snapshot()?.phase==='lobby');
@@ -104,23 +108,28 @@ try{
    },page);
    await record(label+' music toggle',async()=>{
     const button=page.locator('#musicToggleButton');
+    if(!await button.isVisible()){
+     // Mobile hides the compact HUD music toggle; Audio menu stays available.
+     assert((await page.evaluate(()=>innerWidth))<=600,'music toggle unexpectedly hidden on wide screen');
+     return {compactHudMusicHidden:true};
+    }
     const before=await button.getAttribute('aria-pressed');
     await button.click();
     assert.notEqual(await button.getAttribute('aria-pressed'),before,'music toggle must change');
    },page);
    await record(label+' profile panel and save',async()=>{
-    await page.locator('#hudMenu summary').click();
+    await openHudMenu(page);
     await page.locator('#profileButton').click();
     assert(await page.locator('#modal').evaluate(el=>el.open));
     await page.locator('#aliasChoice').fill('Médico Auditor');
     await page.locator('[data-action="save-profile"]').click();
-    await page.locator('#hudMenu summary').click();
+    await openHudMenu(page);
     await page.locator('#profileButton').click();
     assert.equal(await page.locator('#aliasChoice').inputValue(),'Médico Auditor');
     await page.locator('#modalClose').click();
    },page);
    await record(label+' audio panel',async()=>{
-    await page.locator('#hudMenu summary').click();
+    await openHudMenu(page);
     await page.locator('#audioButton').click();
     assert(await page.locator('#modal').evaluate(el=>el.open));
     assert(await page.locator('#modalContent').innerText().then(t=>/Audio|audio|Música|música/.test(t)));
@@ -168,10 +177,19 @@ try{
     assert(await target.isEnabled(),'first patient not selectable');
     await target.click();
     assert.equal(await page.locator('#modal').evaluate(el=>el.open),false,'approach must close the modal');
-    // Walking/arrival may complete before the next frame. Verify an action is
-    // initiated, not an exact scene coordinate that depends on artwork.
-    const feedback=await page.locator('#toast').innerText();
-    assert(/Yendo|asign|lleg|box|ruta|paciente/i.test(feedback),'approach feedback missing: '+feedback);
+    // Toast confirmation alone is not an actual arrival.
+    await page.waitForFunction(()=>{
+     const s=atriaV5.snapshot(),p=s.patients[0],d=Math.hypot(s.player.x-p.x,s.player.y-p.y);
+     return d<=150||(!s.player.moving&&!s.player.target&&/No llegaste|No hay una ruta/.test(document.getElementById('toast').textContent));
+    },null,{timeout:13000});
+    const outcome=await page.evaluate(()=>{
+     const s=atriaV5.snapshot(),p=s.patients[0];
+     return {distance:Math.hypot(s.player.x-p.x,s.player.y-p.y),
+      player:{x:s.player.x,y:s.player.y,moving:s.player.moving,target:s.player.target},
+      patient:{x:p.x,y:p.y},toast:document.getElementById('toast').textContent};
+    });
+    assert(outcome.distance<=150,'Reception did not reach the actual patient bedside: '+JSON.stringify(outcome));
+    return outcome;
    },page);
    await record(label+' nurse and chat controls',async()=>{
     await page.locator('#nurseQuickButton').click();
@@ -180,13 +198,15 @@ try{
     await input.fill('Enfermera, hemograma');
     await page.locator('#chatForm [type="submit"]').click();
     assert.equal(await input.inputValue(),'','send must clear input');
+    const before=await page.locator('#recipientButton').innerText();
     await page.locator('#recipientButton').click();
-    assert(!/Enfermera/.test(await page.locator('#recipientButton').innerText()),'recipient toggle must restore patient');
+    assert.notEqual(await page.locator('#recipientButton').innerText(),before,'recipient button must switch its displayed target');
+    assert.match(await page.locator('#chatHistory').innerText(),/Enfermera, hemograma/,'outgoing clinical message missing from history');
     const diagnostics=await page.evaluate(()=>atriaV5.diagnostics());
     assert.equal(diagnostics.raf,1,'app must continue rendering after nursing input');
    },page);
    await record(label+' clinical history button',async()=>{
-    await page.locator('#hudMenu summary').click();
+    await openHudMenu(page);
     await page.locator('#peopleButton').click();
     assert(await page.locator('#modal').evaluate(el=>el.open),'history panel did not open');
     await page.locator('#modalClose').click();
