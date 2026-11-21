@@ -64,10 +64,12 @@ test('RESP-01 V2: dialogue, history, directed examination and all five authored 
 
 test('RESP-01 V2: Dr Vega button has actual one-action offer and a unique 5% XP cost',async()=>{
  const {s,send}=create('resp01-v2-e2e-vega-ledger');
- const b=s.hintBinding('doctor'),ask=(op,id,other={})=>s.hint({...b,op,requestId:id,...other},'doctor');
+ const b=s.hintBinding('doctor'),ask=(op,id,other={})=>s.hint({...b,op,requestId:id,...other});
  async function display(n){
   const p=await ask('prepare','v2-prepare-'+n);
-  assert.equal(p.status,'verified','must prepare real executable hint');
+  assert.equal(p.status,'prepared','must prepare real executable hint');
+  const v=await ask('revalidate','v2-verify-'+n,{offerId:p.offerId});
+  assert.equal(v.status,'verified','same state must verify offer before charging');
   const d=await ask('displayed','v2-display-'+n,{offerId:p.offerId});
   assert.equal(d.status,'displayed');
   return d;
