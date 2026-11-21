@@ -36,6 +36,10 @@ on:
       - 'scripts/export-atria-v5-rules.mjs'
       - 'scripts/export-atria-v5-rules.test.mjs'
       - 'docs/contracts/ATRIA-V5-RULES-v1.0.0.json'
+      - 'docs/contracts/ATRIA-V5-RULES-v1.0.1.json'
+      - 'docs/contracts/README.md'
+      - 'src/v5/clinical/accepted-transfer.test.js'
+      - 'qa/v5/transfer-certification.mjs'
       - 'src/v5/core/disposition-receipt.js'
       - '.github/workflows/atria-v5-resp01-v2-candidate.yml'
   workflow_dispatch:
@@ -57,6 +61,8 @@ jobs:
         run: node --test src/v5/content/packs/respiratory-v2-candidate.test.js src/v5/content/packs/respiratory-v2-e2e-audit.test.js src/v5/content/packs/respiratory-v2-personality-audit.test.js src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js src/v5/clinical/clinical-disposition-safety.test.js src/v5/clinical/public-receiver-policy.test.js src/v5/clinical/unsafe-disposition-continuity.test.js src/v5/clinical/unsafe-disposition-runtime.test.js src/v5/clinical/progression.test.js src/v5/ui/clinical-bedside-ux.test.js src/v5/content/packs/respiratory-v2-observation-flow.test.js
       - name: Existing policy closure regression
         run: node --test src/v5/clinical/clinical-policy-closure.test.js
+      - name: Historical partial disposition and universal transfer regressions
+        run: node --test src/v5/clinical/accepted-transfer.test.js src/v5/clinical/partial-closure.test.js
       - name: Universal medication freedom and scoring certification
         run: node --test src/v5/clinical/medication-indication-review.test.js src/v5/clinical/clinical-risk-regression.test.js src/v5/clinical/clinical-freedom.test.js src/v5/clinical/hidden-requirements-scoring.test.js
       - name: Universal clinical regression (medication harm, delayed physiology, dialogue, Vega, rescue)
@@ -99,10 +105,12 @@ jobs:
       - name: Certify extractable immutable clinical and four-mode contract
         run: node --test scripts/export-atria-v5-rules.test.mjs
       - name: Export recoverable rules artifact without modifying sources
-        run: node scripts/export-atria-v5-rules.mjs --version 1.0.0 --out qa/v5-rule-snapshots
+        run: |
+          node scripts/export-atria-v5-rules.mjs --version 1.0.0 --out qa/v5-rule-snapshots
+          node scripts/export-atria-v5-rules.mjs --version 1.0.1 --out qa/v5-rule-snapshots
       - uses: actions/upload-artifact@v4
         with:
-          name: atria-v5-immutable-rules-1.0.0
+          name: atria-v5-immutable-rules-1.0.0-and-1.0.1
           path: qa/v5-rule-snapshots/
           if-no-files-found: error
           retention-days: 90
@@ -124,3 +132,19 @@ jobs:
           path: qa/v5-resp01-v2-modes/
           if-no-files-found: warn
           retention-days: 30
+
+  vercel-build-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build modular ATRIA 5 bundle without deployment
+        run: npm run build:v5
+      - name: Verify Vercel target is coherent with built output
+        run: |
+          test -s out-v5/index.html
+          test -s out-v5/manifest.json
+          node -e "const fs=require('fs'); const v=JSON.parse(fs.readFileSync('vercel.json','utf8')); if(v.outputDirectory!=='out-v5')process.exit(1)"
