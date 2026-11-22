@@ -8,7 +8,8 @@ import {resp01V2Candidate as c} from '../../src/v5/content/packs/respiratory-v2-
 import {clinicalCertificationContent,runClinicalCaseScenario} from './certify-clinical-cases.mjs';
 const modes=['solo','apprentice','coop','competitive'];
 const profiles=['competent','slow','complication-rescue','wrong-medication',
- 'no-allergy-question','inexperienced','negligent','omit-studies','abandon'];
+ 'no-allergy-question','inexperienced','negligent','omit-studies','abandon',
+ 'wrong-diagnosis'];
 const content=await clinicalCertificationContent([c]);
 const cases=content.cases.filter(x=>x.id===c.id);
 if(cases.length!==1||cases[0].clinicalRevision!=='v2-candidate')throw Error('V2 catalog is not isolated');
@@ -18,7 +19,7 @@ const summary={schema:'atria.v5.resp01-all-modes.v1',caseId:c.id,revision:c.clin
 for(const mode of modes)for(const profile of profiles){
  const seed='atria:v5:resp01:v2:all-modes:20261121:'+mode+':'+profile;
  const preferredDestination=profile==='complication-rescue'?'sala':
-  ['competent','slow','no-allergy-question'].includes(profile)?'alta':null;
+  ['competent','slow','no-allergy-question','wrong-diagnosis'].includes(profile)?'alta':null;
  let run;
  try{run=await runClinicalCaseScenario(c,{content,mode,profile,seed,horizon:720,
   recovery:true,traceEvery:12,preferredDestination,
@@ -54,6 +55,13 @@ for(const mode of modes)for(const profile of profiles){
  if(profile==='complication-rescue'&&!((run.complications||[]).length))
   problems.push('complication-rescue scenario did not exhibit a real manifested episode');
  if(profile==='abandon'&&(rewards.length||p.closed))problems.push('abandoned encounter minted closure XP');
+ // A wrong explicit hypothesis must not silently satisfy the hidden
+ // diagnosis contract or mint a safe outpatient closure reward.
+ if(profile==='wrong-diagnosis'){
+  if(!commands.some(row=>row.text==='/diagnostico neumotorax espontaneo'))
+   problems.push('wrong diagnosis command was not submitted');
+  if(p.closed||rewards.length)problems.push('wrong diagnosis incorrectly minted a safe closure');
+ }
  if(profile==='wrong-medication'){
   if(!performed.length)problems.push('wrong but technically valid medication did not actually reach patient');
   if(performed.length&&closure?.quality?.penalty===0)
