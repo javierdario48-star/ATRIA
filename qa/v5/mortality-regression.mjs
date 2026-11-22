@@ -160,7 +160,22 @@ export async function runLocalMortalityScenario(spec,{mode='solo',horizon=1440}=
    if(spec.bot==='competent'&&!closed&&second>=plans[spec.caseId].wait){
     await send('/reevaluar');
     const close=await send('/disposicion '+plans[spec.caseId].dest);
-    assert.equal(close.ack.clinical[0].status,'executed',spec.caseId+' competent closure did not execute');closed=true;
+    const requested=close.ack.clinical[0];
+    assert(['executed','pending'].includes(requested?.status),
+     spec.caseId+' competent closure was not accepted by the native authority');
+    if(requested.status==='pending'){
+     // A procedure/OR handoff needs a real receiver response. Advance only
+     // the native scheduler; never fabricate completion, surgery or XP.
+     for(let tick=0;tick<15&&!session.read().patient.caseEnded&&!session.read().patient.patientDied;tick++){
+      session.advance(1);await session.flush();observe(false);
+     }
+     const completed=session.read().room.events.filter(e=>e.type==='clinical.completed'&&e.commandId===close.id&&
+      e.clinical?.some(x=>x.kind==='case.close'&&x.status==='executed'));
+     assert.equal(completed.length,1,spec.caseId+' pending disposition requires one real completion receipt');
+    }
+    assert.equal(session.read().patient.caseEnded,true,spec.caseId+' competent closure did not settle');
+    assert.equal(session.read().progress.receipts.length,1,spec.caseId+' closure must award XP exactly once');
+    closed=true;
    }
    session.advance(Math.min(1,horizon-second));await session.flush();observe(false);
   }

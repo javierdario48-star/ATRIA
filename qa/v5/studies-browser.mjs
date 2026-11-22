@@ -56,7 +56,14 @@ try{
  assert.match(await page.locator('[data-study="hemograma"]').innerText(),/Anemia leve y trombocitopenia/);
  state=await page.evaluate(()=>atriaV5.snapshot().clinical);
  const completions=state.room.events.filter(e=>e.type==='clinical.completed'&&e.clinical[0]?.kind==='study.request');assert.equal(completions.length,2);
- assert.deepEqual(completions.map(e=>e.commandId),['message-3','message-4'],'both pending requests settle under their own message');
+ // Durable message IDs include a document UUID after offline recovery.
+ // Verify the exact two request IDs rather than an obsolete naming scheme.
+ const requested=state.room.events.filter(e=>e.message?.text==='Enfermera hemograma').map(e=>e.commandId);
+ assert.equal(requested.length,2,'two documented hemogram requests');
+ assert.equal(new Set(requested).size,2,'each request has its own distinct ID');
+ assert(requested.every(id=>typeof id==='string'&&id.length>0));
+ assert.deepEqual(completions.map(e=>e.commandId).sort(),requested.slice().sort(),
+  'both pending requests settle under their original documented message');
  assert(completions.every(e=>e.patientUid===patient.uid));
  assert.equal(new Set(completions.map(e=>e.clinical[0].receipt.sourceEventId)).size,1,'one physical result');
  assert.equal(state.messages.filter(m=>m.id.startsWith('completion:')&&/hemograma/i.test(m.text)).length,1,'one study result announcement');

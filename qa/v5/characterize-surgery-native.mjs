@@ -46,7 +46,9 @@ for(const scenario of scenarios){
  session.advance(.01);await session.flush();
  const migrated=session.read().patient.consults.at(-1);
  const expected={
-  'missing-diagnosis':'diagnosis-missing','broad-diagnosis':'diagnosis-incompatible',
+  // The broad public abdominal hypothesis is compatible with surgical syndromes,
+  // but lacks specificity for this destination; it is not an incompatible claim.
+  'missing-diagnosis':'diagnosis-missing','broad-diagnosis':'diagnosis-specificity',
   'wrong-diagnosis':'diagnosis-incompatible','missing-exam':'examination-incomplete',
   'documented-awaiting-preparation':'indispensable-study-pending','medical-focus':'destination-not-indicated',
   'secondary-missing-diagnosis':'diagnosis-missing','secondary-urgent-specific':'examination-incomplete',
