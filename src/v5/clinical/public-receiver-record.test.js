@@ -70,3 +70,22 @@ test('wrong but publicly prepared surgical hypothesis can be received on a diffe
   await f.post('/disposicion quirofano');assert.equal(f.s.read().progress.receipts.length,1);
  }finally{f.s.dispose();}
 });
+test('a prepared specialty critical-care destination retains its published receiving team without a generic ICU refusal',async()=>{
+ const c=content.cases.find(c=>c.id==='CARD-02'),uid='patient';
+ const s=createGuardSession({roomId:'hint-bot-CARD-02',mode:'solo',actorId:'hint-bot',actorName:'QA',content,
+  patient:{uid,caseId:c.id},resolveContext:()=>({patientUid:uid})});
+ let seq=0;
+ try{
+  for(let n=0;n<120&&!s.read().patient.caseEnded;n++){
+   const action=s.clinicalHint().action;assert(action,'the prepared pathway must remain actionable');
+   if(action.kind==='wait'){s.advance(2);await s.flush();continue;}
+   for(const text of action.kind==='examination'?action.commands:action.kind==='diagnosis'?['/diagnostico '+c.dx[0]]:[action.command]){
+    const reply=await s.post({id:'step-'+(++seq),text});assert(!reply.clinical.some(x=>x.status==='rejected'),JSON.stringify(reply.clinical));
+   }
+   s.advance(.25);await s.flush();
+  }
+  assert.equal(s.read().patient.closure?.destination,'uti');
+  assert(s.read().patient.consults.some(x=>x.id==='cardiologia'&&x.accepted));
+  assert.equal(s.read().progress.receipts.length,1);
+ }finally{s.dispose();}
+});

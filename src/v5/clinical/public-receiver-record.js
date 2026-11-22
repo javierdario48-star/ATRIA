@@ -106,7 +106,10 @@ export function evaluatePublicReceiver(record,catalog,{destination=null,service,
     decision:'REJECTED_DIAGNOSIS_INSUFFICIENT',reason:'El informe comunicado contradice explícitamente la hipótesis; aclarar el diagnóstico antes de esta recepción.'};continue;
   }
   if(transfer&&assessment?.requirements?.some(x=>x.reason==='destination-not-indicated')){firstIssue??=refusal;continue;}
-  if(target==='uti'){
+  // A critical destination may be received by a specialty team (e.g. a
+  // coronary unit). Preserve its published protocol rather than replacing
+  // that team's judgement with the generic ICU acuity filter.
+  if(option.service==='uti'){
    const traits=protocol.clinicalPolicy?.traits||[];
    const criticalIllness=traits.some(t=>['neuromuscularWeakness','intracranialBleed','statusEpilepticus','convulsiveStatusEpilepticus','respiratoryFailure','ards'].includes(t))||
     record.treatments.some(t=>t.patientUid===record.uid&&['intubation','lung_protective_ventilation','temporary_pacing'].includes(t.id)&&t.kind==='procedure.performed');
