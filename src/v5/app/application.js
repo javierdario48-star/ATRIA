@@ -21,6 +21,7 @@ import {createDurableCooperativeReplica,CLINICAL_REQUEST_TIMEOUT_MS} from '../so
 import {createClinicalConnectionNotice} from '../social/clinical-connection-notice.js';
 import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecycle.js';
 import {createProgressionLedger} from '../clinical/progression.js';
+import {applyClinicalPenalties} from './apply-clinical-penalties.js';
 import {createLocalShift} from './local-shift.js';
 import {createReceptionAssignment} from './reception-assignment.js';
 import {createDirectPatientSelection,directPatientIntent,resolveClinicalMessageTarget} from './patient-selection.js';
@@ -764,10 +765,11 @@ export async function createApplication({document,window,content,signal}){
   clinicalUI.render();
   const closure=clinicalState.caseReward||clinicalState.patient.closure;
   const doctor=clinicalState.hintBinding?.actorId;
-  const penalties=(clinicalState.progress?.penalties||[]).filter(p=>p.kind==='clinical.unsafe-discharge'&&
-   p.actorId===doctor&&p.patientUid===patientId);
-  if(!durableClient&&coopRoomId)for(const penalty of penalties)
-   progress.penalizeUnsafeDischarge(penalty);
+  const confirmedPenalties=clinicalState.progress?.penalties||[];
+  const penalties=!durableClient&&coopRoomId?
+   applyClinicalPenalties(progress,confirmedPenalties,{actorId:doctor,
+    shared:clinicalState.competition?.mode!=='competitive'}):
+   confirmedPenalties.filter(p=>p.actorId===doctor&&p.patientUid===patientId);
   if(!durableClient&&closure?.closed){
    if(localAdmissions)settleLocalPatient(closure);
    if(coopRoomId){
@@ -786,8 +788,8 @@ export async function createApplication({document,window,content,signal}){
   updateHud();
   const debits=durableClient?(clinicalState.dischargeRewards||[]).filter(r=>r.creditStatus==='credited'):
    practice.penalties.filter(r=>penalties.some(p=>p.eventId===r.eventId));
-  for(const debit of debits)if(animateExperience(debit.eventId,-debit.loss))
-   toast('Alta insegura registrada · −'+debit.loss+' XP');
+  for(const debit of debits)if(debit.kind!=='clinical.death'&&animateExperience(debit.eventId,-debit.loss))
+   toast((debit.kind==='clinical.unsafe-observation'?'Observación insegura registrada':'Alta insegura registrada')+' · −'+debit.loss+' XP');
   if(closure?.closed&&(!durableClient||closure.creditStatus==='credited'))animateExperience(closure.eventId,closure.xp);
   if(closure?.closed&&announcedClosure===closure.eventId&&dialog.dataset.panel==='outcome'){
    const outcome=dialog.querySelector('#caseResult'),html=caseDebriefHTML(closure);
