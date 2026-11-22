@@ -1,0 +1,205 @@
+{
+  "schema": "atria.v5.extractable-rules.v1",
+  "version": "1.0.3",
+  "date": "2026-11-21",
+  "scope": "ATRIA 5.0 core, RESP-01 V2 experimental validation",
+  "status": "experimental-no-go",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "immutableRule": "Create a new versioned snapshot on changes; never rewrite prior snapshots",
+  "master": "docs/contracts/ATRIA-5-REGLAMENTO-MAESTRO-2026-11-21-v1.0.2.md",
+  "clinical": {
+    "freedom": "Allow any medically inappropriate action supported technically by the validated formulary/clinical controls; never veto using hidden true case ID",
+    "technicalLimits": "Reject impossible routes, unparseable dose dimensions and absent required physical access; these are not medical-indication gates",
+    "physiologyOwner": "existing native clinical physiology and nursing-time engine",
+    "effects": [
+      "only confirmed receipts and actual elapsed native time affect physiology",
+      "pending orders, random candidates alone and chat declarations have no effect",
+      "random complication onset is eligible by measured state plus seeded candidate",
+      "recover only after delivered effective rescue and elapsed recovery"
+    ],
+    "diagnosis": "physician declares their own hypothesis, not prefilled by Dr Vega",
+    "historyAndExam": "free interview and directed physical exam with authored patient personalities; actual receipts required",
+    "nursing": "single physical nursing executor and authoritative queue, with durable completion",
+    "hints": "Dr Vega provides exactly one actionable prioritized suggestion; -5% per distinct displayed usable hint, cumulative to zero; repeats/waits/stale/impossible are free; same authority and real control in every mode; cooperative financial penalty is shared by all active members, regardless of requesting actor",
+    "clinicalScore": "Only authored hidden case requirements contribute positive quality points upon actual safe closure. No points for extra unnecessary acts; confirmed wrong care, delays, iatrogenia, overtesting harm lower quality. Minimum safety gates are distinct from quality. Single native scoring/XP owner.",
+    "unsafeElectiveDestination": "Doctor is free to try unsafe alta/observacion or old partial command in V2; Dr Vega rebukes, verified -15 XP, NO CLOSURE, patient and all observations preserved and claimable by same or other authorized doctor; active monitoring is not closing.",
+    "activeObservation": "observación clínica is not formal closure and never triggers inappropriate-disposition penalty",
+    "legacyPartialClosure": "V1 historical partial-close may award reduced score for incomplete but allowed care. V2 incomplete elective alta/observation cannot bypass native safety or Dr Vega. Preserve V1; no other scenario-specific switch.",
+    "transfer": "real receiver acceptance and safe handoff required; receiver should use publicly declared diagnosis and communicated evidence, never true hidden case ID",
+    "continuity": "persist patient UID, measured vitals, treatments, orders, complications, chat, native clock, medical actions and unique XP receipts across reconnect",
+    "physiologicalParameterization": "case files provide only declarative trajectory, eligibility, pharmacology response, complication probability and rescue rules; no case-specific executor fork",
+    "patientVariability": "Reproducible seeded names, age, 7 personalities, histories, allergies, dialogue and plausible complication candidates; no reveal of unpublished facts or random future.",
+    "studiesExam": "Patient first-person natural history; physical exams per region/technique shown in exam panel only; studies with real delays, synonyms, patient-bound results and no hidden spoilers.",
+    "nursingStates": [
+      "received",
+      "preparing",
+      "executing",
+      "completed",
+      "rejected",
+      "recoverable-error"
+    ],
+    "receiver": "Receiving service accepts/refuses only clinically communicated presumed diagnosis, measured vitals, exams, studies, stabilisation and capacity; must not read true hidden case ID; accepted consultation is not surgery/procedure done."
+  },
+  "modes": {
+    "solo": {
+      "participants": {
+        "min": 1,
+        "max": 1
+      },
+      "care": "independent",
+      "patientClaim": "bedside",
+      "xpMultiplier": 1.2,
+      "shiftSeconds": 1440
+    },
+    "apprentice": {
+      "participants": {
+        "min": 1,
+        "max": 1
+      },
+      "care": "independent with instructional tools",
+      "patientClaim": "bedside",
+      "xpMultiplier": 1,
+      "shiftSeconds": 1440
+    },
+    "coop": {
+      "participants": {
+        "min": 2,
+        "max": 4
+      },
+      "care": "shared clinical history and physical nursing",
+      "patientClaim": "shared bedside",
+      "reward": "SHARED team career and XP among active participants: gains, errors, causally attributable death, and -5% Dr Vega new displayed hint requested by ANY teammate. No credit for inactive absence; reconcile on rejoin. This supersedes per-actor hint deductions in 1.0.0/1.0.1.",
+      "shiftSeconds": 1440,
+      "hints": "Distinct valid hint shown to any active doctor penalizes entire active team once; repeated/wait/stale hints free; per-player display history allowed but not independent personal XP debt.",
+      "ownership": "No exclusive claim. Both/all active physicians can perform real actions on any patient; independent repeated medication orders produce separate exposures; network duplicate IDs are idempotent."
+    },
+    "competitive": {
+      "participants": {
+        "min": 2,
+        "max": 4
+      },
+      "care": "exclusive patient owner, with private clinical chart outside permitted access",
+      "patientClaim": "one physician at a time; release upon unsafe elective disposition",
+      "reward": "Individual XP, errors, causally attributable patient-death penalty and hints. Only verified owner earns the case, rival penalty never crosses account.",
+      "shiftSeconds": 1440,
+      "ownership": "Exclusive bedside claim, one clinical owner at a time; after unsafe formal alta/observation patient released, same patient preserved and claimable by same physician or another authorized competitor."
+    }
+  },
+  "sharedShift": {
+    "seconds": 1440,
+    "arrivalSeconds": [
+      0,
+      180,
+      420,
+      720,
+      1020,
+      1260
+    ],
+    "continuation": "persisted decision after all active participants agree; otherwise save or exit",
+    "gameMinutes": 1440,
+    "afterEnd": "Guardia finalizada: Continuar otra guardia (24 minutes) OR Guardar y salir; preserve XP, history, unfinished cases, pending procedures, deaths/penalties, multiplayer and exactly-once rewards.",
+    "acuity": "Reception green/amber/red according to actually evolved native physiology, never queue-wait fabricated vitals."
+  },
+  "sources": {
+    "game": "src/v5/clinical/guard-runtime.js",
+    "shift": "src/v5/clinical/shift-flow.js",
+    "room": "src/v5/core/room-authority.js",
+    "sessions": "src/v5/clinical/guard-session.js",
+    "caseData": "src/v5/content/packs/respiratory-v2-candidate.js",
+    "physiology": "src/v5/clinical/clinical-policy-effects.js",
+    "nursing": "src/v5/engine/nurse-dispatcher.js",
+    "medication": "src/v5/clinical/native-medications.js",
+    "medicationIndication": "src/v5/clinical/medication-indication-review.js",
+    "clinicalRisk": "src/v5/clinical/clinical-risk.js",
+    "closureQuality": "src/clinical/case-completion-487.js",
+    "dispositions": "src/v5/clinical/clinical-policy-closure.js",
+    "receiptValidation": "src/v5/core/disposition-receipt.js",
+    "hints": "src/v5/clinical/clinical-hint-ledger.js",
+    "modeTurns": "src/v5/clinical/guard-turn-control.js",
+    "publicReceiver": "src/v5/clinical/public-receiver-policy.js",
+    "ci": ".github/workflows/atria-v5-resp01-v2-candidate.yml"
+  },
+  "releaseGates": {
+    "candidateIsolationRequired": true,
+    "sameNativePhysiologyRequired": true,
+    "noCaseIdPatchesRequired": true,
+    "allFourModesNeedPassingCI": true,
+    "sharedCoopXpIncludingHintRequired": true,
+    "wrongMedicineConsequencesRequired": true,
+    "noFakeInterventionOrStudyRequired": true,
+    "oneNativeScoreOwnerRequired": true,
+    "unsafeChoiceContinuationRequired": true,
+    "blindReceiverRequired": true,
+    "durableSqlPenaltyDebtRequired": true,
+    "AndroidPhysicalRequired": true,
+    "matchingShaVercelPreviewRequired": true,
+    "existingV1NotModifiedRequired": true
+  },
+  "notes": [
+    "1.0.2 is an authoritative specification of user requirements, not certification.",
+    "Never infer test pass from releaseGates booleans: all fields are explicit REQUIRED, not complete.",
+    "Supersedes 1.0.0/1.0.1 only on documented historical conflicts; prior versions remain immutable.",
+    "Coop shared XP and hint policy requires an implementation change; no production go until integration proof.",
+    "Source details: docs/contracts/ATRIA-5-REGLAMENTO-MAESTRO-2026-11-21-v1.0.2.md, docs/contracts/ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md",
+    "1.0.3 technical erratum: physical nursing authority is src/v5/engine/nurse-dispatcher.js. The 1.0.2 source pointer erroneously named a non-existent implementation file. Rules and user decisions unchanged."
+  ],
+  "historicalRulePrecedence": [
+    "latest explicit creator instruction",
+    "older explicit creator instructions not superseded",
+    "confirmed 4.8.7 functionality creator asked to preserve",
+    "current proven code",
+    "older reports or assistant suggestions"
+  ],
+  "extraRules": {
+    "guardSelection": {
+      "random": 1.5,
+      "specialty": 1.2,
+      "specific": 1
+    },
+    "controls": "Compact four-row ATRIA mobile keyboard, explicit clinical autocomplete (never auto-send or silently change doses/drugs), bedside checklist, exam panels, reachable controls and Android landscape/portrait.",
+    "communication": "Private Team messages separated from clinical Activity, true first-person patient and nurse conversation, proximity and UID isolation.",
+    "music": "~2.5 second crossfade, ~250ms silence fade, do not change an unchanged track, classic guard default, new lobby music, persist user options, keep effects/alerts.",
+    "interface": "2D map, original sprites/camera, reception, live monitor synchronized to native heart rate, compact score/level, visible XP animations Tibia style.",
+    "account": "Persistent secure doctors, unique normalized display names, preserve pre-existing accounts, authenticated same-account explicit handoff, no stealing sessions.",
+    "deployment": "Production/main/4.8.7 unchanged. Modular GitHub branch only, preview of approved SHA with rollback, future portable to Vercel in requested 21-day horizon conditional on real tests.",
+    "testMandate": "At least 10 meaningful bot profiles x 55 historical cases, 4-mode V2 integration, equal-seed V1 vs V2, meds/wrong doses/delay/rescue/death, long guard, concurrency 2/3/4, Android physical devices and real Vercel/Supabase persistence"
+  },
+  "historicalConflicts": [
+    {
+      "topic": "Cooperative hint and XP",
+      "older": "1.0.0/1.0.1 show actor-scoped hint penalties",
+      "bindingLatest": "2026-11-05 later user directive: ALL XP consequences in cooperative are team-shared; + inactive-member restriction 2026-11-12",
+      "codeAudit": "clinical-hint-ledger is per actor; needs implementation audit and 2-4-player integration"
+    },
+    {
+      "topic": "Unsafe discharge outcome",
+      "older": "Some earlier statements/reports imply patient lost or reset",
+      "bindingLatest": "2026-11-21: reprimand + XP debit but patient intact and available to current or another doctor"
+    },
+    {
+      "topic": "UI destinations",
+      "older": "Older manual instructed hiding unavailable choices",
+      "bindingLatest": "2026-11-21: all six choices can be attempted; readiness guidance only"
+    },
+    {
+      "topic": "Legacy partial closure",
+      "older": "V1 intentionally allows some partial closures",
+      "bindingLatest": "V2 must use actual safety adjudication for premature elective close; preserve V1"
+    }
+  ],
+  "validation": {
+    "overall": "NO_GO",
+    "headAtReview": "cfc13978d0b8ac71f7377b8a194560d47354d572",
+    "githubRun": "44963189193",
+    "lastReadOfRun": "queued (not evidence of pass)",
+    "historicalStaging": "29/34 passed at former SHA; five failures then found; code changes not yet green-certified",
+    "configuredV2Bots": 36,
+    "executedV2BotsOnLatestHead": "not yet verified; queued",
+    "historicalV1Competent": "52/55 on previous SHA 1505a376; 3 had XP reconciliation failures then",
+    "liveOnlinePersistence": "NOT verified for observation penalty/debt in Supabase",
+    "modeSharedXP": "KNOWN DOCUMENTATION/CODE MISMATCH; awaiting implementation and tests",
+    "blindReceiver": "pure policy exists but not confirmed integrated into active receiver",
+    "physicalAndroid": "NOT verified",
+    "vercelPreviewOfHead": "NOT verified"
+  }
+}
