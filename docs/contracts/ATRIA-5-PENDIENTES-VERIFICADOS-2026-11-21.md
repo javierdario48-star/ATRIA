@@ -63,3 +63,35 @@
 5. Solo tras puertas verdes, activar experimentalmente RESP-01 V2 sin borrar V1. Migrar otras enfermedades progresivamente con los contratos versionados.
 
 **NO GO mientras algún P0 permanezca sin pruebas aprobadas.** Este listado es el registro de trabajo pendiente y debe actualizarse con evidencia, no con intenciones de código.
+
+
+## Bitácora posterior — certificación RESP-01 V2, 21/11/2026 (Argentina; ejecuciones UTC 22/11)
+
+**Esta sección es un registro de ejecución, no una alteración del reglamento maestro ni una certificación GO.** Se preserva íntegramente el inventario histórico precedente.
+
+### Cambios pequeños publicados en la rama experimental
+
+- `02c2109f98e6e20ea089b085531fc8d5d79d4137`: la verificación V2 de checkpoint deja de exigir replay cuando no hubo comando; comprueba indicadores de recuperación individualmente.
+- `d8ef514d8d8fdbceb312ddeb2967a44e4a39db00`: la regresión de ceftriaxona usa los contratos reales de VARIX-001 y COLON-001; la profilaxis autorizada no se interpreta como antibiótico sin indicación.
+- `a1123b25db2f1a8e07d71025ebe219aa7f88aefd`: `clinical-risk.js` excluye únicamente exposiciones pertenecientes a otro paciente de su evaluación local; `medication-exposure.js` conserva la validación estricta de dosis, identificadores y duplicados en exposiciones propias.
+- `df3550327ff6d903fed7371bbc63258761cae100`: se agrega el perfil de bot `wrong-diagnosis` a la herramienta compartida de certificación, sin alterar la lógica del juego.
+- `d38cfcc0e23f1087aafcee441b7601e90bedb791`: RESP-01 V2 configura **diez perfiles × cuatro modos = 40 recorridos**, incluyendo hipótesis errónea que no debe emitir cierre seguro ni XP.
+
+**Separación V2/V1:** los cambios afectan dos ficheros del verificador QA, un test de riesgo y el evaluador compartido de riesgo. No se ha editado RESP-01 V1, los 55 casos de catálogo, el calendario de admisiones, las reglas de los cuatro modos, el reloj de 24 minutos ni Production. La revisión del evaluador compartido sigue sujeta a regresiones de los casos existentes.
+
+### Evidencia efectivamente revisada
+
+- [V2 en `02c2109`, ejecución 44968095264](https://github.com/javierdario48-star/ATRIA/actions/runs/44968095264): **36/36** escenarios de cuatro modos aprobaron, así como paridad nativa, exportación de reglas y build previo. El job `staging-contract` falló por **dos pruebas de farmacología** (fixture VARIX sin tratamiento profiláctico declarado y entrada de administración atribuida a paciente ajeno). Por eso la ejecución global es **FAILURE**, no GO.
+- [`a1123b2`, ejecución 44968879157](https://github.com/javierdario48-star/ATRIA/actions/runs/44968879157): `staging-contract` **SUCCESS** tras las correcciones clínicas anteriores; otros trabajos de ese SHA quedaron cancelados o en curso por commits nuevos, por lo que **no prueba aprobación integral**.
+- [`d38cfcc0`, ejecución 44968933396](https://github.com/javierdario48-star/ATRIA/actions/runs/44968933396): **matriz de 40 escenarios lanzada, sin resultado aprobado al último chequeo**. No dar por ejecutados/aprobados los 40 sin obtener logs del mismo SHA.
+- [ATRIA 5 integral previa, ejecución 44968095234](https://github.com/javierdario48-star/ATRIA/actions/runs/44968095234): fallos en `clean-core-contract`, `independent-game-browser` y `durable-guard-recovery`. Los logs incluyen discrepancia de XP **118 frente a 133** en CIRR-001 y expectativas no satisfechas para un perfil DIARR-001. **Son incidencias generales**; no hay evidencia de que RESP-01 V2 las provocara. Deben auditarse por separado.
+- [Censo ATRIA 4.8.7 de `02c2109`, ejecución 44968095276](https://github.com/javierdario48-star/ATRIA/actions/runs/44968095276): **SUCCESS**. El censo del último SHA deberá verificarse igualmente.
+
+### Puertas aún abiertas, sin duplicar trabajo
+
+1. Obtener resultados del **SHA exacto d38cfcc0** en matriz V2 de 40, paridad, farmacología y test de legado; corregir solo fallos reproducibles, no modificar expectativas para forzar verde.
+2. Probar concurrencia con **2, 3 y 4 participantes reales** para V2 y la persistencia SQL/recepción; un bot de cuatro modos no reemplaza estas pruebas de red.
+3. Mantener como dependencias **globales separadas** la XP de Cooperativo completamente compartida, receptor ciego al diagnóstico verdadero y sanciones/SQL no certificados, sin rehacerlos dentro de RESP-01.
+4. Confirmar la revisión en Preview Vercel del mismo SHA y Android físico antes de activación. Ningún build `READY` o preflight equivale a prueba de usuario real.
+
+**Estado al redactar: NO GO.** RESP-01 V2 conserva su aislamiento experimental. Esta bitácora no modifica normas ni contratos JSON ya publicados.
