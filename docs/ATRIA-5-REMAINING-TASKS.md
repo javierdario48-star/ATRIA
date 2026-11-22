@@ -1,5 +1,8 @@
 # ATRIA 5.0 — Inventario maestro de requisitos
 
+> **TRASPASO HISTÓRICO OPERATIVO (21/11/2026):** [Registro consolidado de los 88 IDs, errores de jugabilidad, diagrama de flujo RESP-01 V2, bots y HTML offline](ATRIA-5-REGISTRO-HISTORICO-JUGABILIDAD-V2-OFFLINE-2026-11-21.md). Este archivo sigue siendo **la única fuente mutable de estado por ID**. Los estados y porcentajes históricos más abajo requieren contraste con el SHA más reciente; nunca confundir «pendiente de aceptación» con «bug actual». Orden del creador: cerrar errores históricos → grafo clínico V2 → bots → HTML offline manual; conservar portabilidad a Vercel en 21 días.
+
+
 > **Estado vigente de esta continuación, 21/11/2026:** conservar los **88 IDs históricos** y sus referencias originales. Último código `629a33ba2a529ade4c30c5501c25a6d23ead40e8`. El estado operativo de liberación y las pruebas nuevas están en [pendientes verificados](contracts/ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md) y el [informe permanente de cierre](contracts/ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md). Los recuentos/checkpoints inferiores son históricos; no invalidan estas evidencias posteriores.
 
 | ID existente | Actualización verificada | Pendiente vigente |
