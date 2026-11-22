@@ -31,6 +31,8 @@ test('two actual local patient checkpoints restore one ledger, debt, clock, stud
   await sessions[0].post({id:'pending-study',text:'/estudio renal'});
   sessions[0].advance(2);await sessions[0].flush();
   const checkpoints=await Promise.all(sessions.map(s=>s.checkpoint()));
+  assert(checkpoints[0].pendingNurseJobs.length>0,'travelling nursing is owned by the session transport, before native preparation starts');
+  assert(world.checkpoint().nursing.tasks.length>0,'the spatial nursing queue remains unfinished');
   const record={roomId,mode:'solo',profile,world:world.checkpoint(),admissions:admissions.checkpoint(),shift:shift.snapshot(),
    progress:progress.read(),focusedUid:first.uid,sessions:checkpoints};
   store.save(record);const saved=store.read(),ledger=createProgressionLedger(saved.progress);

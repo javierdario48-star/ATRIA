@@ -56,7 +56,9 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1120,height:800}}],
    const key=Object.keys(localStorage).find(k=>k.includes('resp01-v2-offline:atria.v5.local-guard.v1:'));
    return key?JSON.parse(localStorage.getItem(key)):null;});
   assert(saved,'explicit save must create a complete guard checkpoint');assert.equal(saved.focusedUid,uid);
-  assert(saved.sessions[0].patient.pendingTreatments.length>0,'save captures a genuine unfinished nursing order');
+  assert(saved.sessions[0].pendingNurseJobs.length>0||saved.sessions[0].patient.pendingTreatments.length>0,
+   'save captures unfinished bedside travel or an already preparing treatment');
+  assert(saved.world.nursing.tasks.length>0,'the physical nursing dispatcher must also be saved');
   phase='reload and resume';await page.reload();await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#enterButton').click();await clickHudAction(page,'guardButton');
   await page.locator('[data-action="resume-local-guard"]').click();await page.waitForFunction(()=>atriaV5.snapshot().phase==='guard');
@@ -90,7 +92,8 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1120,height:800}}],
    grossXP:final.patient.closure.xp,hintAdjustedXP:final.caseReward.xp,unsafeDebit:15,netXP:final.progress.xp,
    administrations:final.patient.administrationLog,complications:final.patient.policyState?.complications,
    controls:'avatar, mode, reception, movement, chat, history, exam, studies, medication, hint, save, recovery, closure, XP'});
- }catch(error){report.scenarios.push({name,passed:false,phase,error:String(error.stack||error),errors});
+ }catch(error){report.scenarios.push({name,passed:false,phase,error:String(error.stack||error),errors,
+   clinical:await state().catch(()=>null)});
   await page.screenshot({path:out+'/'+name+'-failed.png'}).catch(()=>{});
  }finally{await context.close();}
 }}finally{await browser.close();await writeFile(out+'/report.json',JSON.stringify(report,null,2)+'\n');}

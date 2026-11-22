@@ -288,3 +288,8 @@ Se reutiliza el empaquetador modular existente: HTML V1 con 55 casos y HTML expe
 Pruebas dirigidas locales: **5/5** de persistencia de dos pacientes, deuda, idempotencia, reloj, estudios y Enfermería en tránsito; **45/45** del área aplicación. La frontera modular conserva un único RAF, sin nuevo temporizador/motor clínico. Se añade a CI una partida `file://` por controles reales en escritorio y Pixel emulado: recepción, diálogo, examen, estudios, Enfermería pendiente, pista, guardado, recarga, recuperación, cierre y XP neta. El resultado de ese navegador se registra después de publicar. Build por sí solo no equivale a GO OFFLINE.
 
 IDs afectados del inventario único: REC-01, NUR-03, TURN-01, TURN-02, XP-01, XP-03, CASE-01, QA-01, QA-02, DEPLOY-01. Supabase alojado, Preview exacto, voz entre usuarios y Android físico siguen separados.
+
+
+#### Evidencia del primer recorrido de HTML · CI 45019485612
+
+El SHA `ef4b06f` aprobó arranque `file://` en escritorio/Pixel y **53/53** comprobaciones de plataforma, sin errores de navegador. El nuevo recorrido clínico se detuvo por una aserción del harness: buscaba la orden pendiente únicamente en `patient.pendingTreatments`, aunque la enfermera seguía viajando y todavía no había comenzado la preparación nativa. Reproducción con el ejecutor real: recibo `pending`, cola espacial encolada y `pendingNurseJobs` presente antes de `pendingTreatments`. Se corrige la comprobación para exigir la cola clínica/espacial realmente pendiente; se conserva la exigencia de recuperación de la misma orden y una sola dosis. No se cambia el motor ni se da esa CI fallida por aprobada.
