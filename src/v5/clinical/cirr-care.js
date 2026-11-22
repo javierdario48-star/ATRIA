@@ -12,6 +12,7 @@ import {EXAM_TECHNIQUES,initializeExamination,executePhysicalExam} from './physi
 import {executeObservation,executeVenousAccess,executeOxygenSupport,recordClinicalReassessment,prepareDispositionReassessment,postInterventionReassessments,assessDischarge} from './observations.js';
 import {initialCaseEcg} from './ecg-morphology.js';
 import {createSurgicalConsultation} from './surgical-consultation.js';
+import {publicReceiverRecord} from './public-receiver-record.js';
 
 const copy=x=>structuredClone(x);
 export const CIRR_EXAM_NAMES=EXAM_TECHNIQUES;
@@ -27,7 +28,7 @@ export function closureSnapshot(p,c,destination){return {
 /** One migrated native care executor, operating on the SAME patient as C1.
  * No UI, timers, global binding, pharmacology wrapper or alternate patient state.
  */
-export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null,clinicalClock}){
+export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,publicReceiverCases=cases,checkpoint=null,clinicalClock,nursingWorkPending=()=>false}){
  if(c.id!=='CIRR-001')throw Error('C2 care only supports CIRR-001');
  Object.assign(p,{liveVitals:initialCirrVitals(c),baselineVitals:initialCirrVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,lastVitalsKnown:null,
   diagnosis:'',reassessments:0,lastReassessment:null,pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,consults:[],pendingConsults:[],caseEnded:false,closure:null});
@@ -42,7 +43,23 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
   administeredAtRealSecond:t.administeredAtRealSecond,administeredAtNativeMinute:t.administeredAtNativeMinute,reused,
   message:(reused?'Ya ejecutado por la indicación original: ':t.action==='stop'?'Suspensión confirmada: ':t.id==='sal_restriccion'?'Conducta registrada: ':'Administración confirmada: ')+t.label+(t.dose?' · '+t.dose.display:'')+'.'});
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,proof:txReceipt,rejected,checkpoint:checkpoint?.iv});
- const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,checkpoint:checkpoint?.surgery});
+ function finalize(cmd,evaluation){
+  const xp=nativeCaseXP({score:evaluation.quality.score,mode});
+  const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,caseId:c.id,
+   destination:cmd.intent.id,quality:copy(evaluation.quality),debrief:createClosureDebrief(p,c,evaluation.quality),xp,closed:true};
+  progress.award(receipt);p.caseEnded=true;p.closure=copy(receipt);
+  return executed(cmd,{closure:copy(receipt),message:'Caso cerrado: '+cmd.intent.id+' · '+evaluation.quality.score+'/100 · +'+xp+' XP.'});
+ }
+ const surgery=createSurgicalConsultation(p,c,{cases,publicReceiverCases,executed,readiness,nursingWorkPending,
+  previewReadiness:(_destination,cmd,clock)=>{const proposed=copy(p);prepareDispositionReassessment(proposed,clock,cmd);return publicReceiverRecord(proposed);},
+  prepareTransfer:(cmd,clock)=>prepareDispositionReassessment(p,clock,cmd),
+  acceptTransfer:(cmd,consult)=>{
+   if(p.caseEnded||p.patientDied)return rejected(cmd,'patient-not-active');
+   if(p.pendingTreatments.length||nursingWorkPending())return rejected(cmd,'pending-clinical-treatment');
+   if(unrescuedTransferReactions(p,c,clinicalClock?.().nativeMinute??p.phys?.lastNativeMinute??0).length)return rejected(cmd,'stabilization-insufficient');
+   const evaluation=partialDisposition(p,c,cmd.intent.id,readiness(cmd.intent.id),{cases,receiverAcceptance:consult});
+   return evaluation.ready?finalize(cmd,evaluation):rejected(cmd,'closure-not-ready',evaluation.missing.join(' '));
+  },checkpoint:checkpoint?.surgery});
  function readiness(destination,patient=p){
   const out=evaluateHistoricalGastroDisposition(closureSnapshot(patient,c,destination));
   if(unrescuedTransferReactions(p,c,clinicalClock?.().nativeMinute??p.phys?.lastNativeMinute??0).length){
@@ -94,12 +111,7 @@ export function createCirrCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=
     const strict=intent.id==='alta'?assessDischarge(p,clock,cmd,readiness):readiness(intent.id);
     const evaluation=intent.partial?partialDisposition(p,c,intent.id,strict,{cases}):strict;
     if(!evaluation?.ready)return rejected(cmd,'closure-not-ready',(evaluation?.missing||['Destino no disponible.']).join(' '));
-    const xp=nativeCaseXP({score:evaluation.quality.score,mode});
-    const receipt={kind:'clinical.closure',eventId:cmd.eventId,patientUid:p.uid,actorId:cmd.actorId,caseId:c.id,
-     destination:intent.id,quality:copy(evaluation.quality),
-     debrief:createClosureDebrief(p,c,evaluation.quality),xp,closed:true};
-    progress.award(receipt);p.caseEnded=true;p.closure=copy(receipt);
-    return executed(cmd,{closure:copy(receipt),message:'Caso cerrado: '+(intent.id==='sala'?'internación en sala':'observación')+' · '+evaluation.quality.score+'/100 · +'+xp+' XP.'});
+    return finalize(cmd,evaluation);
    }
    return rejected(cmd,'clinical-action-not-migrated');
   },

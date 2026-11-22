@@ -27,20 +27,24 @@ export function diagnosticMultiplier(p,c,cases){
  if(csDxMatchesCase487(cases,c.id,p.diagnosis))return 1;
  return BROAD_DIAGNOSIS[c.id]?.test(value)?0.6:0;
 }
-export function partialDisposition(p,c,destination,assessment,{cases}={}){
+export function partialDisposition(p,c,destination,assessment,{cases,receiverAcceptance=null}={}){
  if(p.caseEnded||p.patientDied)return {ready:false,missing:['Atención ya finalizada.']};
  const rule=c.clinicalPolicy?.closure||gastroClosureRule(c.id)||CASE_CLOSURE_RULES_487[c.id];
  const allowed=rule?.destinations||[PERITONITIS_DESTINATIONS[c.id]?.({
   sys:p.liveVitals.sys,spo2:p.liveVitals.spo2,baselineVitals:p.baselineVitals
  })].filter(Boolean);
- if(!allowed.includes(destination))return {ready:false,
+ const proof=receiverAcceptance?.receiverProof;
+ const received=receiverAcceptance?.accepted===true&&receiverAcceptance.status==='done'&&
+  receiverAcceptance.patientUid===p.uid&&proof?.version===1&&proof.patientUid===p.uid&&
+  proof.destination===destination&&proof.sourceEventId===receiverAcceptance.sourceEventId&&!!proof.publicProtocolId;
+ if(!received&&!allowed.includes(destination))return {ready:false,
   missing:['El servicio o destino solicitado no corresponde al estado actual del paciente.']};
  if((destination==='alta'||destination==='sala'||destination==='observacion')&&
   (p.liveVitals.sys<90||p.liveVitals.spo2<90))
   return {ready:false,missing:['El paciente está inestable; no corresponde cerrar con ese destino.']};
- if(destination==='quirofano'&&!assessment?.objectiveReceiverIndication&&!assessDiagnosticImpression(c,p.diagnosis).sufficient)
+ if(!received&&destination==='quirofano'&&!assessment?.objectiveReceiverIndication&&!assessDiagnosticImpression(c,p.diagnosis).sufficient)
   return {ready:false,missing:['Cirugía rechaza el traslado: la impresión diagnóstica no justifica la indicación.']};
- if(rule?.consult?.[destination]?.length||['quirofano','uti','procedimiento'].includes(destination)){
+ if(!received&&(rule?.consult?.[destination]?.length||['quirofano','uti','procedimiento'].includes(destination))){
   const services=rule?.consult?.[destination]||[destination==='quirofano'?'cirugia':destination==='uti'?'uti':'gastro'];
   if(!p.consults?.some(x=>services.includes(x.id)&&x.status==='done'&&x.accepted))
    return {ready:false,missing:['El servicio receptor aún no aceptó la derivación. Solicitá la interconsulta y aguardá su respuesta.']};

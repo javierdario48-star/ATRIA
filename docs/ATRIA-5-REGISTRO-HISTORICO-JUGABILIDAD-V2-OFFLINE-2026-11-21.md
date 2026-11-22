@@ -254,3 +254,12 @@ Usar un bloque fechado por intervención, **solo al finalizar una tanda sustanci
 ### 22/11/2026 — primera tanda: recepción y saldo CIRR
 
 HEAD inicial confirmado `05b1597e7cc50dd26e4ad786f638e2d9f9b1cb9b`; sin commits remotos posteriores al inicio. Se conservó el trabajo local al reanudar. Corregidos el comparador de markup de recepción (normalización de atributos booleanos) y las dos aserciones antiguas de saldo 133 en la segunda guardia CIRR; saldo correcto 118, sin devolver la sanción. IDs revisados: COMP-01, SEL-00, XP-01, QA-01. Recepción: 5/5 pruebas dirigidas. Chromium local no inicia por `socket() failed: Operation not permitted`; aceptación real asignada a Actions. No se declaró GO offline por esta tanda y no se repitió la auditoría histórica.
+
+
+### 2026-11-22 · Receptor ciego integrado y regresiones locales
+
+El ejecutor receptor usa ahora `publicReceiverRecord` (lista explícita de datos comunicados) y los protocolos publicados. No recibe el caso verdadero ni ejecuta su checklist oculto para decidir la recepción. Se conserva la autoridad de fisiología, tratamiento, estabilización, Enfermería, traslado y evaluación nativa. El diagnóstico verdadero sigue usándose después para la calidad/XP. Una recepción con hipótesis incorrecta no se convierte en diagnóstico correcto ni en cirugía realizada.
+
+Evidencia local: suite `npm run test:v5` **3219/3219**, cero fallos; **139/139** dirigidas de traslados/seguridad y **6/6** pruebas de frontera incluyendo los dos contraejemplos originales, expediente negativo comunicado y traslado CIRR con hipótesis APP y **0 XP** diagnóstica. Las cifras corresponden a campañas diferentes y no se suman como pruebas únicas. Se reforzaron tres fixtures que antes declaraban preparación con un callback falso: ahora ejecutan estudios, medicaciones y procedimientos reales. La negativa ante una presunción ajena al servicio es `destination-not-indicated`, sin comparación con la verdad oculta.
+
+IDs vinculados: SAFE-01, MED-01, MED-02, DX-03, CLIN-CARD08-01, QA-01, QA-02, CASE-01. El alcance es verificación local del componente; no acredita aceptación de Supabase alojado, Preview exacto, multicuenta externa ni Android físico. Se mantienen los estados de aceptación externos. La nueva matriz V2 se ejecuta una vez por este cambio compartido; las aprobaciones históricas no se borran.

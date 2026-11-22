@@ -5,6 +5,9 @@
 import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 import {CASE_CLOSURE_RULES_487} from '../../clinical/case-completion-487.js';
 import {gastroClosureRule} from './gastro-expansion-policies.js';
+import {LEGACY_RECEIVER_PROTOCOLS} from '../content/legacy-receiver-protocols.js';
+export const RECEIVER_SERVICE_LABELS=Object.freeze({uti:'UTI',cirugia:'Cirugía',gastro:'Gastroenterología',clinica:'Clínica médica',
+ cardiologia:'Cardiología',cardiovascular:'Cirugía cardiovascular',neurology:'Neurología',neurosurgery:'Neurocirugía'});
 
 const nonBlank=x=>typeof x==='string'&&x.trim().length>0;
 // For older case definitions without directed-exam metadata, infer the
@@ -18,9 +21,9 @@ function reportedExamDomain(publicCase){
   return ['neurological:neurological'];
  return [];
 }
-function ruleFor(publicCase){
+export function publicClosureRule(publicCase){
  return publicCase.clinicalPolicy?.closure||gastroClosureRule(publicCase.id)||
-  CASE_CLOSURE_RULES_487[publicCase.id]||null;
+  CASE_CLOSURE_RULES_487[publicCase.id]||LEGACY_RECEIVER_PROTOCOLS[publicCase.id]||null;
 }
 function publicServices(rule,destination){
  const declared=rule?.consult?.[destination];
@@ -39,7 +42,7 @@ export function publicReceiverIndication({diagnosis,destination,service,catalog}
   if(!published||!Array.isArray(published.dx))continue;
   const candidate=assessDiagnosticImpression(published,diagnosis);
   if(!candidate.sufficient)continue;
-  const rule=ruleFor(published);
+  const rule=publicClosureRule(published);
   if(!rule?.destinations?.includes(destination)||!publicServices(rule,destination).includes(service))continue;
   matches.push({publicDiagnosis:published.dx[0],publicCaseId:published.id,
    specificity:candidate.level,urgentStudyBypass:rule.urgentStudyBypass===true,

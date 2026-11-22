@@ -13,9 +13,10 @@ import {createSurgicalConsultation} from './surgical-consultation.js';
 import {GASTRO_CASE_CONDUCTS} from './gastro-expansion-policies.js';
 import {GASTRO_CONDUCT_DOSES} from './gastro-medication-rules.js';
 import {clinicalTransferContinuation,unrescuedTransferReactions} from './transfer-continuation.js';
+import {publicReceiverRecord} from './public-receiver-record.js';
 
 const copy=x=>structuredClone(x);
-export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint=null,clinicalClock,nursingWorkPending},policy){
+export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,publicReceiverCases=cases,checkpoint=null,clinicalClock,nursingWorkPending},policy){
  Object.assign(p,{liveVitals:policy.initialVitals(c),baselineVitals:policy.initialVitals(c),ecg:initialCaseEcg(c),intentHistory:[],exam:{},examDone:false,
   lastVitalsKnown:null,diagnosis:'',reassessments:0,lastReassessment:null,
   pendingTreatments:[],administrationLog:[],procedures:{},venousAccessCount:0,
@@ -59,13 +60,13 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
  const ivMedicines=createIVAdministration(p,{doses:defaultDoses,caseData:c,
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
   proof,rejected,checkpoint:checkpoint?.iv});
- const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,
+ const surgery=createSurgicalConsultation(p,c,{cases,publicReceiverCases,executed,readiness,
   previewReadiness:(destination,cmd,clock)=>{
    // Formal observation can require an external receiver too. Preview the
    // same native routine handoff check without recording a reassessment on
    // a rejected decision; commit it only with actual receiver acceptance.
    const proposed=copy(p);prepareDispositionReassessment(proposed,clock,cmd);
-   return readiness(destination,proposed);
+   return publicReceiverRecord(proposed);
   },
   prepareTransfer:(cmd,clock)=>prepareDispositionReassessment(p,clock,cmd),
   acceptTransfer:completeAcceptedTransfer,nursingWorkPending,checkpoint:checkpoint?.surgery});
@@ -87,10 +88,12 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   // A confirmed pending drug is not discarded while the patient is leaving.
   if(clinicalTransferContinuation(p,c,cmd.intent.id).pendingBlockers.length)return rejected(cmd,'pending-clinical-treatment',
    'Esperá la administración pendiente antes de completar el traslado.');
-  const assessed=readiness(cmd.intent.id);
-  if(!cmd.intent.partial&&!assessed?.ready)
+  if(unrescuedTransferReactions(p,c,clinicalClock?.().nativeMinute??p.policyState?.nativeMinute??0).length)
+   return rejected(cmd,'stabilization-insufficient','Resolver el rescate confirmado antes del traslado.');
+  const assessed=readiness(cmd.intent.id),receiverAcceptance=consult.receiverProof?consult:null;
+  if(!receiverAcceptance&&!cmd.intent.partial&&!assessed?.ready)
    return rejected(cmd,'closure-not-ready',(assessed?.missing||['Destino no disponible.']).join(' '));
-  const evaluation=partialDisposition(p,c,cmd.intent.id,assessed,{cases});
+  const evaluation=partialDisposition(p,c,cmd.intent.id,assessed,{cases,receiverAcceptance});
   if(!evaluation.ready)return rejected(cmd,'transfer-not-authorized',evaluation.missing.join(' '));
   return finalize(cmd,evaluation);
  }

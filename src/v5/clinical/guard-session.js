@@ -98,7 +98,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
  }
  const options={mode,defaultDoses:content.defaultDoses,
   progress:{...progress,award:receipt=>progress.award(rewardFor(receipt,receipt.actorId))},
-  cases:content.cases,checkpoint:checkpoint?.care,clinicalClock:()=>clock,
+  cases:content.cases,publicReceiverCases:content.receiverCases||content.cases,checkpoint:checkpoint?.care,clinicalClock:()=>clock,
   nursingWorkPending:()=>nursingWorkPending()};
  // Every case inherits the validated global formulary (including cases that
  // do not yet have an active clinical executor). This is a PURE interpreter,
@@ -201,7 +201,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     const dispositionAttempt=!!care&&['alta','observacion'].includes(intent.id)&&
      (!intent.partial||v2SafetyContract);
     let assessment;
-    if(rule&&!rule.destinations.includes(intent.id))assessment={status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
+    if(rule&&!rule.destinations.includes(intent.id)&&!['uti','procedimiento','quirofano'].includes(intent.id))assessment={status:'rejected',patientUid,eventId,reason:'destination-not-indicated',
      receipt:{patientUid,eventId,decision:'REJECTED_NO_INDICATION',reasonCode:'destination-not-indicated',
       message:'El destino solicitado no está indicado con la situación clínica actual. Revisá la necesidad de vigilancia, tratamiento y nivel de cuidado.'}};
     else if(unrescuedTransferReactions(nativePatient,caseData,clock.nativeMinute).length)
@@ -238,7 +238,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     }
     if(assessment)return assessment;
     if(nursingWorkPending())return {status:'rejected',patientUid,eventId,reason:'nursing-work-in-progress'};
-    if(!intent.partial){
+    if(!intent.partial&&!['uti','procedimiento','quirofano'].includes(intent.id)&&!rule?.consult?.[intent.id]?.length){
      const receiver=rule?.consult?.[intent.id]?.length;
      const assessment=receiver?closureReadiness(intent.id):null;
      const issue=consultationEvidenceReview(nativePatient,caseData,rule,{objectiveReceiverIndication:assessment?.objectiveReceiverIndication});

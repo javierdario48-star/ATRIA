@@ -165,7 +165,7 @@ test('CARD-08 service identifies diagnosis, monitoring, examination and essentia
  try{
   assert.equal((await opinion()).reasonCode,'diagnosis-missing');
   await f.post('/diagnostico neumonia');
-  assert.equal((await opinion()).reasonCode,'diagnosis-incompatible');
+  assert.equal((await opinion()).reasonCode,'destination-not-indicated');
   await f.post('/diagnostico diseccion aortica');
   assert.equal((await opinion()).reasonCode,'diagnosis-specificity');
   await f.post('/diagnostico diseccion aortica tipo A');

@@ -44,7 +44,7 @@ test('surgical reply uses the original 3500ms delay and rejects an unsubstantiat
 test('a rejected consultation can be corrected, accepted and reused without performing surgery or authorizing premature handoff',async()=>{
  const f=fixture();
  await f.send('/diagnostico cirrosis');await f.send('/consulta cirugia');await f.advance(3.5);
- assert.equal(f.s.read().patient.consults.at(-1).reviewStatus,'unsubstantiated');
+ assert.equal(f.s.read().patient.consults.at(-1).reviewStatus,'no-indication','public indication concerns the requested service, not secret diagnostic compatibility');
  await f.send('/diagnostico apendicitis aguda');await f.send('/consulta cirugia');await f.advance(3.5);
  assert.equal(f.s.read().patient.consults.at(-1).reasonCode,'vitals-missing');
  await examine(f);await f.send('/estudio app_us');await f.send('Enfermera una vía');

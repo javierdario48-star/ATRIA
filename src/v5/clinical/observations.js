@@ -25,6 +25,7 @@ export function monitorMeasurement(p,clock){
 }
 export function recordVitalMeasurement(p,clock,eventId,source){
  p.lastVitalsKnown={patientUid:p.uid,vitals:source==='monitor'?monitorMeasurement(p,clock):copy(p.liveVitals),nativeMinute:clock.nativeMinute,eventId,source};
+ p.firstVitalsKnown??=copy(p.lastVitalsKnown);
 }
 export function hasRecordedVitals(p){
  return p.lastVitalsKnown?.patientUid===p.uid&&!!p.lastVitalsKnown.eventId;

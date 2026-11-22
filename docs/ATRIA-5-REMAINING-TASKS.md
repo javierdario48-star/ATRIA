@@ -2494,3 +2494,12 @@ HEAD inicial `e92c351eaa36d6e47a6613a5c29bfb5a1cf802e6` confirmado idéntico. Se
 - **Pruebas publicadas, NO ejecutadas en este entorno.** Falta ejecutar `node --test src/v5/server/supabase-social-room-persistence.test.js`, suites sociales, `npm run build:v5` y aceptación de dos cuentas contra despliegue. Revisar limpieza/TTL de registros persistentes antes de considerar MP-01 cerrado. Conservar los 20 grupos y 60 requisitos y DIALOG-AUTO-01, VEGA-AUTO-01, VEGA-COHERENCE-01. CHOLE-001, ILEO-001 y LAB-01 continúan pendientes.
 
 </details>
+
+
+### 2026-11-22 · Receptor ciego integrado y regresiones locales
+
+El ejecutor receptor usa ahora `publicReceiverRecord` (lista explícita de datos comunicados) y los protocolos publicados. No recibe el caso verdadero ni ejecuta su checklist oculto para decidir la recepción. Se conserva la autoridad de fisiología, tratamiento, estabilización, Enfermería, traslado y evaluación nativa. El diagnóstico verdadero sigue usándose después para la calidad/XP. Una recepción con hipótesis incorrecta no se convierte en diagnóstico correcto ni en cirugía realizada.
+
+Evidencia local: suite `npm run test:v5` **3219/3219**, cero fallos; **139/139** dirigidas de traslados/seguridad y **6/6** pruebas de frontera incluyendo los dos contraejemplos originales, expediente negativo comunicado y traslado CIRR con hipótesis APP y **0 XP** diagnóstica. Las cifras corresponden a campañas diferentes y no se suman como pruebas únicas. Se reforzaron tres fixtures que antes declaraban preparación con un callback falso: ahora ejecutan estudios, medicaciones y procedimientos reales. La negativa ante una presunción ajena al servicio es `destination-not-indicated`, sin comparación con la verdad oculta.
+
+IDs vinculados: SAFE-01, MED-01, MED-02, DX-03, CLIN-CARD08-01, QA-01, QA-02, CASE-01. El alcance es verificación local del componente; no acredita aceptación de Supabase alojado, Preview exacto, multicuenta externa ni Android físico. Se mantienen los estados de aceptación externos. La nueva matriz V2 se ejecuta una vez por este cambio compartido; las aprobaciones históricas no se borran.

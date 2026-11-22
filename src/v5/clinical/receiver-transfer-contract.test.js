@@ -116,7 +116,7 @@ for (const id of ['CARD-01', 'CARD-08', 'CARD-10', 'RESP-07']) test(id+': the em
   await f.care('/diagnostico bronquitis aguda');
   const premature = (await f.post(request)).clinical[0];
   assert.equal(premature.status, 'rejected');
-  assert.equal(premature.receipt.reasonCode, 'diagnosis-incompatible');
+  assert.equal(premature.receipt.reasonCode, 'destination-not-indicated');
   assert(!f.s.read().patient.caseEnded);
   await f.workup();
   await f.care('/diagnostico bronquitis aguda');

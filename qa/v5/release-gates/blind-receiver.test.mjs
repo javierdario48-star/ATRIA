@@ -9,7 +9,7 @@ async function surgicalOpinion(caseId,diagnosis='apendicitis aguda',hiddenDiagno
  const candidateContent=hiddenDiagnosis?{...content,cases:content.cases.map(c=>
   c.id===caseId?{...c,dx:[hiddenDiagnosis]}:c)}:content;
  const s=createGuardSession({roomId:'blind-'+caseId,mode:'solo',actorId:'doctor',actorName:'Doctor',
-  content:candidateContent,patient:{uid:'P',caseId},resolveContext:()=>({patientUid:'P'})});
+  content:{...candidateContent,receiverCases:content.cases},patient:{uid:'P',caseId},resolveContext:()=>({patientUid:'P'})});
  let seq=0;const send=text=>s.post({id:'msg-'+(++seq),text});
  try{
   await send('/diagnostico '+diagnosis);await send('/signos');
