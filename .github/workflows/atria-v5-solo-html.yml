@@ -7,6 +7,9 @@ on:
       - 'scripts/build-v5-solo-compact.mjs'
       - 'scripts/verify-v5-solo-compact.mjs'
       - 'scripts/audit-v5-solo-compact.mjs'
+      - 'scripts/verify-v5-offline-v2-journey.mjs'
+      - 'src/v5/clinical/**'
+      - 'src/v5/content/**'
       - 'src/v5/app/**'
       - 'src/v5/ui/**'
       - 'src/v5/render/**'
@@ -24,7 +27,7 @@ concurrency:
 jobs:
   build-solo-html:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 24
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,7 +41,11 @@ jobs:
         env:
           ATRIA_ESBUILD_MODULE: ${{ runner.temp }}/atria-html-builder/node_modules/esbuild
           ATRIA_SOURCE_SHA: ${{ github.sha }}
-        run: node scripts/build-v5-solo-compact.mjs
+        run: |
+          node scripts/build-v5-solo-compact.mjs
+          node scripts/build-v5-solo-compact.mjs --resp01-v2
+      - name: Verify atomic local checkpoint owners before the browser
+        run: node --test src/v5/app/local-guard-checkpoint.test.js src/v5/app/local-shift.test.js
       - name: Verify browser, lobby and solo guard on Chrome and emulated Android
         env:
           ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright
@@ -49,6 +56,11 @@ jobs:
           ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node scripts/audit-v5-solo-compact.mjs
+      - name: Complete genuine offline V2 care, pending nursing save, reload, recovery, closure and XP on desktop and Pixel
+        env:
+          ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node scripts/verify-v5-offline-v2-journey.mjs
       - name: Publish downloadable HTML and smoke evidence
         if: always()
         uses: actions/upload-artifact@v4

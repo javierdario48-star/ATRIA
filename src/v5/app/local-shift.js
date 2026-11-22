@@ -34,6 +34,14 @@ export function createLocalShift({caseIds=[],rotationCaseIds=caseIds,limitMinute
  };
  return Object.freeze({
   begin,record,canContinue,nextCase,reset:()=>{state=null;},
+  restore(saved){
+   if(!saved||!Number.isFinite(saved.elapsedBefore)||saved.elapsedBefore<0||saved.elapsedBefore>limitMinutes||
+    !Array.isArray(saved.seenCases)||!saved.seenCases.length||saved.seenCases.some(id=>!options.includes(id))||
+    !Array.isArray(saved.outcomes)||new Set(saved.outcomes.map(x=>x.patientUid)).size!==saved.outcomes.length||
+    saved.outcomes.some(x=>!x.patientUid||x.closed!==true||!Number.isFinite(x.xp)||x.xp<0))throw Error('invalid local shift checkpoint');
+   state={elapsedBefore:saved.elapsedBefore,seenCases:[...saved.seenCases],
+    outcomes:new Map(saved.outcomes.map(x=>[x.patientUid,{...x}]))};return true;
+  },
   active:()=>!!state,
   elapsedBefore:()=>state?.elapsedBefore||0,
   totalMinutes:elapsed=>Math.min(limitMinutes,(state?.elapsedBefore||0)+Math.max(0,Number(elapsed)||0)),

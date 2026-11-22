@@ -277,3 +277,14 @@ IDs CASE-01, CASE-02, VAR-01, SAFE-01, MED-01, VEGA-01, QA-01, QA-02: RESP-01 V2
 Tras el cambio compartido del receptor se ejecutó una campaña: **40/40** escenarios V2, cuatro modos; **15 pares V1/V2 sin errores**; **8/8** recorridos adicionales (dos por modo) para alta/observación inseguras, reintento idempotente, cero dosis rechazada, dosis posible excesiva real de morfina, alergia preexistente, adrenalina y oxígeno reales, Dr. Vega, recuperación y observación legal. **27/27 aristas declaradas** observadas en la unión. Los 40 escenarios solos dejaban seis aristas sin cobertura; no se les atribuye esa cobertura retrospectivamente. Esta cifra no significa todas las combinaciones clínicas posibles. Los resultados adversos legítimos se conservan.
 
 Evidencias permanentes: [resumen](evidence/resp01-v2-graph-2026-11-22/summary.json) y `native-evidence.jsonl.gz` con semilla, comandos, muestras fisiológicas, recibos, complicaciones, XP y trazas por recorrido. Pruebas de contrato/compilación: **29/29**. La CI del SHA final y la partida real offline se registran por separado; esta tanda por sí sola no autoriza GO ONLINE/PRODUCTION. Se mantienen 55 identidades de catálogo, V1 sin modificaciones y los cuatro modos existentes.
+
+
+### 2026-11-22 · Copias HTML offline y recuperación local
+
+Se reutiliza el empaquetador modular existente: HTML V1 con 55 casos y HTML experimental V2 con las mismas 55 identidades (solo RESP-01 cambia dentro de esa copia aislada). Ningún archivo V1 del catálogo se modifica. Recursos y audio embebidos; APIs de cuentas/servidor explícitamente deshabilitadas en la copia. Aprendiz/Solitario disponibles; el multijugador conserva su código y exige servidor.
+
+`Guardar y salir` captura los checkpoints de los dueños existentes: mundo/Enfermería, sesiones clínicas, reloj, ingresos/turno y una única progresión compartida. `Hacer guardia > Retomar guardia guardada` restaura la misma atención. Se aíslan V1/V2 y cada SHA para no sobrescribir sesiones de otra revisión. Guardar explícitamente antes de cerrar; no se promete persistencia ante un cierre abrupto sin guardar.
+
+Pruebas dirigidas locales: **5/5** de persistencia de dos pacientes, deuda, idempotencia, reloj, estudios y Enfermería en tránsito; **45/45** del área aplicación. La frontera modular conserva un único RAF, sin nuevo temporizador/motor clínico. Se añade a CI una partida `file://` por controles reales en escritorio y Pixel emulado: recepción, diálogo, examen, estudios, Enfermería pendiente, pista, guardado, recarga, recuperación, cierre y XP neta. El resultado de ese navegador se registra después de publicar. Build por sí solo no equivale a GO OFFLINE.
+
+IDs afectados del inventario único: REC-01, NUR-03, TURN-01, TURN-02, XP-01, XP-03, CASE-01, QA-01, QA-02, DEPLOY-01. Supabase alojado, Preview exacto, voz entre usuarios y Android físico siguen separados.

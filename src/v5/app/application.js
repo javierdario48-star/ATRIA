@@ -23,6 +23,7 @@ import {createCooperativeLifecycle,outcomeId} from '../social/cooperative-lifecy
 import {createProgressionLedger} from '../clinical/progression.js';
 import {applyClinicalPenalties} from './apply-clinical-penalties.js';
 import {createLocalShift} from './local-shift.js';
+import {scopedStorage,createLocalGuardStore} from './local-guard-checkpoint.js';
 import {createReceptionAssignment} from './reception-assignment.js';
 import {createDirectPatientSelection,directPatientIntent,resolveClinicalMessageTarget} from './patient-selection.js';
 import {createReceptionOnboarding} from '../ui/reception-onboarding.js';
@@ -72,17 +73,20 @@ export function readProfile(storage){
 }
 
 /** Exactly one owner for boot, input listeners, RAF and all mode transitions. */
-export async function createApplication({document,window,content,signal}){
+export async function createApplication({document,window,content,signal,offline=null}){
+ const storage=scopedStorage(window.localStorage,offline?.storageScope||'');
+ const sessionStorage=scopedStorage(window.sessionStorage,offline?.storageScope||'');
+ const localGuardStore=createLocalGuardStore({storage,buildId:offline?.buildId||'modular-v5'});
  const playableIds=new Set(playableClinicalCaseIds(content.cases));
  const rootLifecycle=new Lifecycle(),scope=rootLifecycle.enter('application');
  const account=createAccountClient({window});
- let progress;try{progress=createProgressionLedger(JSON.parse(window.localStorage.getItem(PROGRESS_KEY)||'{}'));}catch{progress=createProgressionLedger();}
+ let progress;try{progress=createProgressionLedger(JSON.parse(storage.getItem(PROGRESS_KEY)||'{}'));}catch{progress=createProgressionLedger();}
  let savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;
  const animatedExperience=new Set();
  const career=()=>account.read()||progress.read();
  let accountTransition=Promise.resolve();
  let guardRecovery=null;
- let profile=readProfile(window.localStorage),world=createWorld(content,profile),destroyed=false,raf=null,
+ let profile=readProfile(storage),world=createWorld(content,profile),destroyed=false,raf=null,
   toastUntil=0,focusedNpc=null,focusedPatientUid=null,draftMode='solo',composition=false,deferredRecipient=null,drag=null,frames=0,
   guardSession=null,lastPanelUpdate=0,messageNumber=0,lastClinicalFrame=null,clinicalTyping=false,
   announcedDeathUid=null,pendingPatientAction=null,announcedClosure=null,coopCaseId=null,coopGuardSelection=null,
@@ -116,10 +120,10 @@ export async function createApplication({document,window,content,signal}){
  });
  const messageEpoch=window.crypto.randomUUID(),cooperativeFlow=createCooperativeLifecycle();let pendingCoopLeave=false;
  let invitingColleagues=false,savingShift=false;
- let restoreRoomId=null;try{restoreRoomId=window.localStorage.getItem('atria.v5.coop.room');}catch{}
+ let restoreRoomId=null;try{restoreRoomId=storage.getItem('atria.v5.coop.room');}catch{}
  const ui=id=>document.getElementById(id),input=ui('dieInput'),canvas=ui('game'),dialog=ui('modal');
  const scheduler=new FrameScheduler({mobileRenderHz:60}),listeners=[];
- const hospitalAudio=createHospitalAudio({window,storage:window.localStorage});
+ const hospitalAudio=createHospitalAudio({window,storage:storage});
  // Attempt immediately; a blocked browser context is retried inside the first
  // trusted pointer/keyboard gesture, including gestures outside menu buttons.
  listen(document,'pointerdown',()=>hospitalAudio.unlock(),{capture:true,passive:true});
@@ -210,9 +214,9 @@ export async function createApplication({document,window,content,signal}){
     }});
  }
  const history=[],transcript=createChatTranscript({document,element:ui('chatHistory'),history}),
-  guardChannels=createGuardChannelView({storage:window.sessionStorage}),
-  guardSpeech=createGuardSpeechMemory({storage:window.sessionStorage}),
-  wardChatHistory=createWardChatHistory({storage:window.sessionStorage}),
+  guardChannels=createGuardChannelView({storage:sessionStorage}),
+  guardSpeech=createGuardSpeechMemory({storage:sessionStorage}),
+  wardChatHistory=createWardChatHistory({storage:sessionStorage}),
   seenLobbyMessages=new Set(),seenGuardMessages=new Set(),seenNpcMessages=new Set(),
   seenNurseCues=new Set(),nurseCueRows=[];let lastNurseCueAt=-Infinity,lastPatientSpeechAt=-Infinity,selectedLobbyPlayerId=null,selectedLobbyCardState=null;
  function listen(target,type,handler,options){scope.listen(target,type,handler,options);listeners.push(type);}
@@ -386,7 +390,9 @@ export async function createApplication({document,window,content,signal}){
   }
   if(coopRoomId&&social.isHost()&&outcomeId(guardSession?.read().patient)&&!outcomeDelivered()){
    pendingCoopLeave=true;publishCooperativeState(window.performance.now(),true);toast('Esperando que tus colegas reciban el resultado. Si están desconectados, deben reconectarse.');return;
-  }enterLobby(true);
+  }
+  if(localAdmissions){if(!await saveLocalGuard())return;enterLobby(true);toast('Guardia guardada en este navegador. Retomala desde Hacer guardia.');return;}
+  enterLobby(true);
  }
  function cancelSharedIntent(){cooperativeFlow.cancel();coopCaseId=null;coopGuardSelection=null;pendingCoopLeave=false;social.leave();}
  function presentGuardTurn(clinical){
@@ -424,7 +430,7 @@ export async function createApplication({document,window,content,signal}){
   let client;
   const connectionNotice=createClinicalConnectionNotice();
   client=createDurableCooperativeReplica({window,roomId:room.id,clientKey:credentials.clientKey,actorId,
-   authorization:()=>social.credentials().authorization,storage:window.sessionStorage,
+   authorization:()=>social.credentials().authorization,storage:sessionStorage,
    onCommitted:epoch=>{
     if(durableClient===client&&coopRoomId===room.id&&!destroyed)
      social.publishClinicalCommit(epoch).catch(()=>{});
@@ -468,7 +474,7 @@ export async function createApplication({document,window,content,signal}){
      try{progress.award(receipt);}catch{/* persisted receipt wins */}
     }
     if(progress.read().receipts.length+progress.read().penalties.length!==savedRewardCount){
-     try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));
+     try{storage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));
       savedRewardCount=progress.read().receipts.length+progress.read().penalties.length;}catch{}
     }
     const count=value.clinical.shift?.patients.length||1;
@@ -633,7 +639,7 @@ export async function createApplication({document,window,content,signal}){
    lastReceivedPatientCount=1;lastSelectedPatientUid=packet.clinical.patient.uid;shiftEndedAnnounced=false;
    world=createWorld(content,{...profile,id:social.state().user.id});world.enterGuard({mode:'coop',caseId:packet.clinical.patient.caseId,
     patientUid:packet.clinical.patient.uid,members:room.members.map(x=>({id:x.userId,name:x.name})),authoritative:false});
-   replica=createCooperativeReplica({roomId:room.id,hostId:sender,send:social.send,storage:window.sessionStorage,onSnapshot:value=>{
+   replica=createCooperativeReplica({roomId:room.id,hostId:sender,send:social.send,storage:sessionStorage,onSnapshot:value=>{
     world.applySharedSpatial(value.spatial,window.performance.now());
     const revision=JSON.stringify([value.clinical.room.revision,value.clinical.diagnosisReveal?.requestId]);
     if(revision!==lastRemoteRevision){lastRemoteRevision=revision;clinicalChanged();}
@@ -771,7 +777,7 @@ export async function createApplication({document,window,content,signal}){
   }
   const practice=progress.read(),rewardCount=practice.receipts.length+practice.penalties.length;
   if(rewardCount!==savedRewardCount){
-   try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(practice));savedRewardCount=rewardCount;}
+   try{storage.setItem(PROGRESS_KEY,JSON.stringify(practice));savedRewardCount=rewardCount;}
    catch{toast('Progreso confirmado en esta sesión; no se pudo guardar en este dispositivo.');}
   }
   updateHud();
@@ -819,7 +825,7 @@ export async function createApplication({document,window,content,signal}){
  function advanceClinicalTo(now){
   now=Math.max(lastClinicalFrame??now,now);
   const previous=lastClinicalFrame;lastClinicalFrame=now;
-  if(!guardSession||previous===null)return;
+  if(!guardSession||previous===null||savingShift)return;
   // The durable session's physiology runs only on the server. Its advance()
   // is a no-op; cloning a complete clinical snapshot 60 times/second here
   // blocked the mobile render loop. Death is handled on fresh snapshots.
@@ -889,7 +895,7 @@ export async function createApplication({document,window,content,signal}){
   const receptionPatients=(clinical?.shift||localReceptionSnapshot())?.patients||[];
   unassignedGlow.update(s.phase,s.mode,s.patients,receptionPatients,focusedPatientUid);
   if(guard&&patientWheel.isOpen())guidePatientWheel();
-  ui('guardButton').textContent=guard?'Volver al lobby':'Hacer guardia';
+  ui('guardButton').textContent=guard?(localAdmissions?'Guardar y salir':'Volver al lobby'):'Hacer guardia';
   ui('receptionButton').hidden=!guard;
   receptionOnboarding.update({
    phase:s.phase,mode:s.mode,patients:receptionPatients,
@@ -936,12 +942,13 @@ export async function createApplication({document,window,content,signal}){
   ui('splash').hidden=true;ui('hud').hidden=false;ui('chatDock').hidden=false;updateHud();maybeRecoverStoredRoom();
  }
 
- function createLocalPatientSession(r){
+ function createLocalPatientSession(r,checkpoint=null){
   if(!world.snapshot().patients.some(p=>p.uid===r.uid))world.addPatient({uid:r.uid,caseId:r.caseId,bedId:r.bedId});
   const patient=world.snapshot().patients.find(p=>p.uid===r.uid);
   if(!patient)return null;
   const session=createGuardSession({roomId:localRoomId,mode:world.snapshot().mode,
-   actorId:'local-player',actorName:profile.name,progress,patient,content,
+   actorId:'local-player',actorName:checkpoint?.actorName||profile.name,progress,patient,content,
+   checkpoint,sharedCheckpointProgress:!!checkpoint,
    nursing:{enqueue:task=>world.enqueueNurseJourney(task),
     takeArrivals:()=>world.takeNurseArrivals(r.uid),accept:v=>world.acceptNurseClinicalResult(v)},
    resolveContext:({targetPatientUid})=>({
@@ -951,6 +958,48 @@ export async function createApplication({document,window,content,signal}){
     renderGuardCommunication();
    }});
   localSessions.set(r.uid,session);return session;
+ }
+ async function saveLocalGuard(){
+  if(!localAdmissions||!guardSession||savingShift)return false;
+  advanceClinicalTo(window.performance.now());savingShift=true;
+  try{
+   await Promise.all([...localSessions.values()].map(s=>s.flush()));
+   const sessions=await Promise.all([...localSessions.values()].map(s=>s.checkpoint()));
+   localGuardStore.save({roomId:localRoomId,mode:world.snapshot().mode,profile,
+    world:world.checkpoint(),admissions:localAdmissions.checkpoint(),shift:localShift.snapshot(),
+    progress:progress.read(),focusedUid:guardSession.read().patient.uid,sessions});
+   storage.setItem(PROGRESS_KEY,JSON.stringify(progress.read()));return true;
+  }catch(error){toast('No se pudo guardar esta guardia: '+error.message+'. La copia anterior se conserva.');return false;}
+  finally{savingShift=false;lastClinicalFrame=window.performance.now();}
+ }
+ async function resumeLocalGuard(){
+  if(world.snapshot().phase==='guard'||savingShift)return false;
+  let saved,restoredSessions=[];savingShift=true;
+  const oldWorld=world,oldProgress=progress;
+  try{
+   saved=localGuardStore.read();if(!saved)return false;
+   const admissions=createShiftFlow({content,mode:saved.mode,roomId:saved.roomId,
+    firstCaseId:saved.admissions.records[0].caseId,snapshot:saved.admissions});
+   const restoredWorld=createWorld(content,saved.profile,saved.world),ledger=createProgressionLedger(saved.progress);
+   localShift.restore(saved.shift);world=restoredWorld;progress=ledger;profile=saved.profile;
+   localRoomId=saved.roomId;localAdmissions=admissions;draftMode=saved.mode;
+   for(const checkpoint of saved.sessions){
+    const record=admissions.record(checkpoint.patient.uid);
+    const session=createLocalPatientSession(record,checkpoint);if(!session)throw Error('paciente ausente');
+    restoredSessions.push(session);
+   }
+   guardSession=localSessions.get(saved.focusedUid);if(!guardSession)throw Error('paciente seleccionado ausente');
+   announcedClosure=null;announcedDeathUid=null;shiftEndedAnnounced=false;
+   directSelection.cancel();clinicalUI.reset();patientWheel.hide();patientClinical.hide();clinicalChecklist.hide();
+   seenGuardMessages.clear();seenNpcMessages.clear();seenNurseCues.clear();nurseCueRows.length=0;
+   close();resetChat('Guardia local recuperada. El tiempo estuvo pausado mientras el archivo estaba cerrado.');
+   guardSpeech.seed(guardSession.read(),localRoomId,'local-player');renderGuardCommunication();updateHud();
+   lastClinicalFrame=window.performance.now();return true;
+  }catch(error){
+   for(const session of restoredSessions)session.dispose();localSessions.clear();guardSession=null;
+   localAdmissions=null;localRoomId=null;localShift.reset();world=oldWorld;progress=oldProgress;
+   toast('No se pudo recuperar la guardia: '+error.message+'. El guardado sigue disponible.');return false;
+  }finally{savingShift=false;}
  }
  function settleLocalPatient(closure){
   if(!localAdmissions||!closure?.closed)return false;
@@ -1019,10 +1068,11 @@ export async function createApplication({document,window,content,signal}){
   if(world.snapshot().phase!=='lobby')enterLobby();
  }
  async function guardSetup({inspect=true}={}){
-  if(inspect&&await guardRecovery.show())return;
+  if(inspect&&!offline&&await guardRecovery.show())return;
   if(world.snapshot().phase==='guard')return;
   if(['coop','competitive'].includes(draftMode))socialEnabled=true;
-  open(`<h2>Hacer guardia</h2><p>Elegí la modalidad y el caso de práctica.</p><div class="modes">
+  let savedLocal=null,localSaveError=null;try{savedLocal=localGuardStore.read();}catch(error){localSaveError=error.message;}
+  open(`<h2>Hacer guardia</h2>${offline?'<p class="note">'+esc(offline.label)+' · Sin conexión. Aprendiz y Solitario disponibles; los modos de equipo requieren servidor.</p>':''}${savedLocal?'<p>Guardia local guardada: '+esc(savedLocal.savedAt)+' · '+esc(savedLocal.mode)+'</p><button class="primary" data-action="resume-local-guard">Retomar guardia guardada</button>':''}${localSaveError?'<p>Hay un guardado incompatible o dañado. Se conserva: '+esc(localSaveError)+'</p>':''}<p>Elegí la modalidad y el caso de práctica. ${savedLocal?'Una guardia nueva reemplazará este guardado cuando elijas Guardar y salir.':''}</p><div class="modes">
    <button class="mode ${draftMode==='apprentice'?'active':''}" data-mode="apprentice"><b>Aprendiz</b><small>Con Dr. Vega. Navegación disponible; tutor clínico en migración.</small></button>
    <button class="mode ${draftMode==='solo'?'active':''}" data-mode="solo"><b>Solitario</b><small>Explorá el hospital con los recursos originales.</small></button>
    <button class="mode ${draftMode==='coop'?'active':''}" data-mode="coop"><b>Cooperativo</b><small>2–4 médicos comparten la misma atención.</small></button>
@@ -1237,7 +1287,7 @@ export async function createApplication({document,window,content,signal}){
   account.accept(a);profile={id:a.actorId,name:a.name,sex:a.sex,scrubColor:a.scrubColor,level:a.level};
   social.setProfile(profile);social.useAccount(a,{restore});world=createWorld(content,profile);
   if(!restore||!social.state().recovering)restoreRoomId=null;
-  try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
+  try{storage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
  }
  async function startPersonalAccountGuard(caseId,mode=draftMode,guardSelection=null){
   if(durableStarting||coopRoomId)return;
@@ -1321,7 +1371,7 @@ export async function createApplication({document,window,content,signal}){
   event.preventDefault();hospitalAudio.unlock();if(welcome.avatarSubmit())return;profile={...profile,name:ui('playerName').value.trim().slice(0,32)||'Médico',
    sex:avatarCreator.read().sex,scrubColor:avatarCreator.read().color};
   social.setProfile(profile);
-  try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{/* session still usable */}
+  try{storage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{/* session still usable */}
   world=createWorld(content,profile);enterLobby();
  });
  listen(ui('notificationsButton'),'click',showPeople);
@@ -1410,6 +1460,7 @@ export async function createApplication({document,window,content,signal}){
   }
   if(button.dataset.action==='close'){dismissModal();return;}
   if(button.dataset.action==='return-lobby'){requestLobby();return;}
+  if(button.dataset.action==='resume-local-guard'){await resumeLocalGuard();return;}
   if(button.dataset.action==='save-shift'){await requestLobby();return;}
   if(button.dataset.action==='continue-shift'){await controlGuardTurn('continue');return;}
   if(button.dataset.action==='resume-shift'){await controlGuardTurn('resume');return;}
@@ -1418,6 +1469,8 @@ export async function createApplication({document,window,content,signal}){
    await acceptCooperativeInvitation(button.dataset.room);return;
   }
   if(button.dataset.action==='start-guard'){
+   if(offline&&['coop','competitive'].includes(draftMode)){toast('Esta copia offline permite Aprendiz y Solitario. Los modos de equipo requieren un servidor.');return;}
+
    const scope=document.querySelector('input[name="guardScope"]:checked')?.value||'random';
    const selection=scope==='specific'?ui('caseChoice').value:scope==='specialty'?ui('guardSpecialty').value:'';
    const allowedCases=eligibleGuardCases(content.cases,[...playableIds],scope,selection);
@@ -1463,7 +1516,7 @@ export async function createApplication({document,window,content,signal}){
    }
    world.setAppearance(next);profile={...profile,...next};
    social.setProfile(profile);
-   try{window.localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
+   try{storage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{}
    close();updateHud();
   }
   if(button.dataset.action==='account-login')showAccountForm('login');
@@ -1609,7 +1662,7 @@ export async function createApplication({document,window,content,signal}){
    renderMusic();
   }
   stage='scheduler';
-  scheduler.tick(now,{simulate:dt=>{stage='simulation';world.step(dt,now);presentation.advance(world.snapshot());},maintain:()=>{stage='maintenance';if(localSessions.size)for(const s of localSessions.values())s.finishNurseArrivals();
+  scheduler.tick(now,{simulate:dt=>{stage='simulation';if(!savingShift)world.step(dt,now);presentation.advance(world.snapshot());},maintain:()=>{stage='maintenance';if(savingShift)return;if(localSessions.size)for(const s of localSessions.values())s.finishNurseArrivals();
    else guardSession?.finishNurseArrivals();
    const s=world.snapshot();if(s.phase!=='title'&&(socialEnabled||coopRoomId||social.state().recovering))social.maintain(now,{...s.player,phase:s.phase,roomId:coopRoomId});
    // Admission can retry while RTC signaling is stalled inside social.poll.

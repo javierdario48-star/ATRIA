@@ -61,7 +61,7 @@ const routeReason={
  */
 export function createGuardSession({roomId,mode,actorId,actorName,patient,content,resolveContext,onChange=()=>{},progress=createProgressionLedger(),nursing=null,
  members=[{id:actorId,name:actorName}],authenticate=null,checkpoint=null,
- sharedRewards=mode==='coop',activeParticipants=()=>members.map(m=>m.id)}){
+ sharedRewards=mode==='coop',activeParticipants=()=>members.map(m=>m.id),sharedCheckpointProgress=false}){
  if(!['solo','apprentice','coop'].includes(mode)||typeof resolveContext!=='function')throw Error('supported clinical mode/context required');
  if(mode==='coop'&&(members.length<2||members.length>4||!members.some(x=>x.id===actorId)))throw Error('cooperative roster requires two to four doctors');
  const memberNames=new Map(members.map(x=>[x.id,String(x.name||x.id).slice(0,32)]));
@@ -71,7 +71,9 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   checkpoint.roomId!==roomId||checkpoint.mode!==mode||checkpoint.actorId!==actorId||
   checkpoint.patient.uid!==patient.uid||checkpoint.patient.caseId!==caseData.id||
   JSON.stringify(checkpoint.members)!==JSON.stringify(members)))throw Error('incompatible clinical checkpoint room/patient/model');
- if(checkpoint)progress=createProgressionLedger(checkpoint.progress);
+ if(checkpoint&&!sharedCheckpointProgress)progress=createProgressionLedger(checkpoint.progress);
+ if(checkpoint&&sharedCheckpointProgress&&JSON.stringify(progress.read())!==JSON.stringify(checkpoint.progress))
+  throw Error('incompatible shared checkpoint progression');
  const resolvedPatient=materializeGuardPatient(patient,caseData,checkpoint);
  const nativePatient={uid:patient.uid,caseId:patient.caseId,orders:[],treatments:[],
   allergyHistory:copy(resolvedPatient.allergyHistory||[]),intolerances:copy(resolvedPatient.intolerances||[]),
