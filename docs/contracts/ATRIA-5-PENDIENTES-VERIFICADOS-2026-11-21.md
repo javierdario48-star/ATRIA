@@ -125,3 +125,10 @@ Evidencia recuperada: `docs/evidence/resp01-v2-release-2026-11-21/baseline-ci.js
 - **Pruebas históricas actualizadas con justificación:** el perfil obligatorio `wrong-diagnosis` ya existía; faltaba en la lista esperada de un test. PBE conserva daño renal medido y rescate; su aviso ahora proviene de la lista fisiológica genérica de fármacos desaconsejados, sin prometer una palabra concreta en el texto. No se modificó su fisiología ni su puntuación para obtener verde.
 - El primer barrido integral local del HEAD anterior produjo 3206/3209; identificó esos tres fallos (lista de perfiles, texto PBE, cierre con Enfermería). Solo el tercero era un defecto nuevo de ejecución clínica. Se conserva ese resultado, pendiente del barrido integral del código final.
 - **NO GO:** estas correcciones no resuelven la recepción ciega, ni certifican SQL alojado, Preview o Android físico.
+
+### Checkpoint — contrato SQL preparado, con límites explícitos
+
+- P0-04 pasa de «sin implementación SQL» a **migración preparada + 9/9 pruebas PostgreSQL local**, todavía **pendiente de Supabase staging**. Fuente y procedimiento reversible: `ATRIA-5-REWARD-MIGRATION-STAGING-2026-11-21.md`.
+- Se cubren dos autores distintos del mismo error, cohortes activas, deuda a saldo cero, pago posterior, muerte causal realmente producida por el motor nativo, cuatro modos, recibos falsos e invoker/RLS. No se confunde ejecución serial local con concurrencia alojada.
+- P0-03 queda reproducido con mayor precisión: manteniendo diagnóstico declarado, signos, examen, estudios y administraciones idénticos, cambiar únicamente la etiqueta diagnóstica oculta cambia el juicio receptor. Las dos pruebas explícitas de liberación continúan rojas. La suite de contenido V2 no constituye certificación de ese receptor.
+- La proyección de deuda de carrera en el adaptador REST y su aceptación tras volver a iniciar sesión siguen pendientes del despliegue versionado en staging. No se aplicó DDL alojado.

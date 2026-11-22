@@ -1,0 +1,43 @@
+name: ATRIA V5 Cooperative Reward SQL (local PostgreSQL)
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - '.github/workflows/atria-v5-reward-sql.yml'
+      - 'supabase/migrations/**'
+      - 'qa/v5/persistence/**'
+      - 'src/v5/clinical/guard-runtime.js'
+      - 'src/v5/clinical/guard-session.js'
+      - 'src/v5/clinical/progression.js'
+      - 'src/v5/clinical/clinical-hint-ledger.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atria-v5-reward-sql-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-checkpoint-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated PostgreSQL test interpreter
+        run: npm install --prefix "$RUNNER_TEMP/atria-sql" --no-save --ignore-scripts @electric-sql/pglite@0.5.17
+      - name: Apply real migrations and settle actual native checkpoints
+        env:
+          ATRIA_PGLITE_MODULE: ${{ runner.temp }}/atria-sql/node_modules/@electric-sql/pglite/dist/index.js
+        run: |
+          set -o pipefail
+          mkdir -p qa/v5-reward-sql-results
+          node --test qa/v5/persistence/cooperative-reward-sql.test.mjs | tee qa/v5-reward-sql-results/postgres.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-local-postgres-reward-contract
+          path: qa/v5-reward-sql-results/
+          if-no-files-found: error
+          retention-days: 30
