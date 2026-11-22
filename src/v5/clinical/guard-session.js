@@ -208,6 +208,10 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      assessment={status:'rejected',patientUid,eventId,reason:'stabilization-insufficient',
       receipt:{patientUid,eventId,decision:'REJECTED_STABILIZATION_INSUFFICIENT',reasonCode:'stabilization-insufficient',
        message:'Reacción alérgica grave activa: falta un rescate confirmado posterior al desencadenante antes del traslado.'}};
+    else if(dispositionAttempt&&nursingWorkPending())
+     assessment={status:'rejected',patientUid,eventId,reason:'closure-not-ready',
+      receipt:{patientUid,eventId,decision:'REJECTED_PREPARATION_INCOMPLETE',reasonCode:'nursing-work-in-progress',
+       message:'Enfermería todavía está completando acciones reales a pie de cama. Esperar su confirmación antes del destino formal.'}};
     if(dispositionAttempt){
      // Both commands use the native assessment. The patient's course and any
      // outstanding care survive a decision that does not resolve the case.

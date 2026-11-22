@@ -94,7 +94,8 @@ test('a harmful PBE aminoglycoside remains executable and reduces renal reserve 
   assert.equal(p.administrationLog[0].id,'amikacin');assert(p.phys.renalReserve<c.phys.renalReserve-.01);
   assert(p.phys.renalStress>0);assert.equal(p.coverage.score,0);
   const missteps=confirmedClinicalMissteps(p,content.cases.find(c=>c.id===p.caseId));
-  assert(missteps.flags.some(x=>/Amikacina.*renal/i.test(x)),'native renal contraindication must affect safety scoring');
+  assert(missteps.flags.some(x=>/Amikacina.*contraindicado.*perfil fisiológico/i.test(x)),
+   'the authored avoid-list must affect safety scoring; renal harm is independently measured above');
   await treat(bad,{fluid:true});await bad.advance(60);
   assert(bad.s.read().patient.liveVitals.sys>p.liveVitals.sys);
   assert(!bad.s.read().patient.patientDied);

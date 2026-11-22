@@ -60,6 +60,13 @@ export function createAcuteCare(p,c,{mode,defaultDoses,progress,cases,checkpoint
   labels:id=>c.interventions.find(x=>x.id===id)?.label,
   proof,rejected,checkpoint:checkpoint?.iv});
  const surgery=createSurgicalConsultation(p,c,{cases,executed,readiness,
+  previewReadiness:(destination,cmd,clock)=>{
+   // Formal observation can require an external receiver too. Preview the
+   // same native routine handoff check without recording a reassessment on
+   // a rejected decision; commit it only with actual receiver acceptance.
+   const proposed=copy(p);prepareDispositionReassessment(proposed,clock,cmd);
+   return readiness(destination,proposed);
+  },
   prepareTransfer:(cmd,clock)=>prepareDispositionReassessment(p,clock,cmd),
   acceptTransfer:completeAcceptedTransfer,nursingWorkPending,checkpoint:checkpoint?.surgery});
  function finalize(cmd,evaluation){

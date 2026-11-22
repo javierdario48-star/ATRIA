@@ -149,7 +149,8 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
    // Adversarial profiles retain full freedom and receive native sanctions.
    const preparedProfile=['competent','slow','nursing-recovery','closure-recovery','multiplayer'].includes(profile);
    const localElective=['alta','observacion'].includes(plan.destination);
-   const attemptAllowed=!preparedProfile||!localElective||read().eligibleDestinations.includes(plan.destination);
+   const attemptAllowed=!preparedProfile||!localElective||read().eligibleDestinations.includes(plan.destination)||
+    read().clinicalChecklist?.destination==='ready';
    if(at>=plan.minimumObservationSeconds&&at-lastAttempt>=10&&attemptAllowed){
     const command={id:'destination-'+(++sequence),text:'/disposicion '+plan.destination};
     const ack=await send(command.text,command.id);lastAttempt=at;

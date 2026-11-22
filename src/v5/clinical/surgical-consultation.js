@@ -36,7 +36,7 @@ export function surgicalReviewSnapshot(p,c,cases=[c]){
   imagingDone:p.orders.some(o=>o.status==='done'&&/^(peri_ct|peri_rx|ter_ct)|ct|rx|imagen|radiografia|tomografia/i.test(o.id))};
 }
 export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,prepareTransfer,acceptTransfer,
- nursingWorkPending=()=>false,checkpoint=null}){
+ previewReadiness=null,nursingWorkPending=()=>false,checkpoint=null}){
  // Native transfer callback is optional: CIRR's historical consultations have
  // no direct transfer finalizer and must retain their existing behavior.
  const pending=new Set(structuredClone(checkpoint?.pending??[]));
@@ -50,14 +50,15 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,pre
   id==='uti'?'uti':id==='gastro'?'procedimiento':'quirofano';
  const noIndication=id=>({accepted:false,status:'no-indication',reasonCode:'destination-not-indicated',decision:'REJECTED_NO_INDICATION',
   reason:(serviceLabels[id]||id)+': con los hallazgos actuales no hay una indicación de recepción por este servicio. Continuar manejo médico y reevaluar el destino.'});
- function reviewFor(id,{transfer=false}={}){
+ function reviewFor(id,{transfer=false,command,clock}={}){
   if(p.caseEnded||p.patientDied)return {accepted:false,status:'inactive',reasonCode:'patient-not-active',
    decision:'REJECTED_NO_INDICATION',reason:'La atención ya finalizó.'};
   if(declared&&!declaredServices.has(id))return noIndication(id);
   if(!declared&&id!=='uti'&&!(id==='cirugia'&&
    ((c.keyInterventions||[]).some(key=>['source_control','surgery'].includes(key))||['MESI-001','ILEO-001','PERI-TER-001'].includes(c.id))))
    return noIndication(id);
-  const destination=destinationFor(id),assessment=readiness(destination);
+  const destination=destinationFor(id),assessment=transfer&&previewReadiness?
+   previewReadiness(destination,command,clock):readiness(destination);
   const evidence=consultationEvidenceReview(p,c,rule,{objectiveReceiverIndication:assessment?.objectiveReceiverIndication});
   if(evidence)return evidence;
   if(id==='uti'){
@@ -108,7 +109,7 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,pre
    if(destination&&clinicalTransferContinuation(p,c,destination).pendingBlockers.length)
     return {status:'rejected',patientUid:p.uid,eventId:cmd.eventId,reason:'pending-clinical-treatment'};
    const id=resolveService(service||intent.id);
-   const review=evaluate(id,{transfer:!!destination});
+   const review=evaluate(id,{transfer:!!destination,command:cmd,clock});
    const prior=p.consults.findLast(x=>x.id===id&&x.status==='done'&&x.accepted);
    if(prior&&review.accepted)return destination?acceptTransfer(cmd,prior):receipt(cmd,prior,true);
    // Check the clinical basis when the transfer is REQUESTED, not 3.5s
@@ -136,8 +137,9 @@ export function createSurgicalConsultation(p,c,{cases=[c],executed,readiness,pre
    p.pendingConsults=p.pendingConsults.filter(x=>x.sourceEventId!==task.sourceEventId);
    if(p.caseEnded||p.patientDied)return task.commands.map(cmd=>({status:'rejected',patientUid:p.uid,eventId:cmd.eventId,reason:'patient-not-active'}));
    const transfer=transferCommand(task);
-   if(transfer)prepareTransfer?.(transfer,{clinicalMinute:at,nativeMinute});
-   const review=evaluate(task.id,{transfer:!!transfer});
+   const clock={clinicalMinute:at,nativeMinute};
+   const review=evaluate(task.id,{transfer:!!transfer,command:transfer,clock});
+   if(transfer&&review.accepted)prepareTransfer?.(transfer,clock);
    const consult={id:task.id,patientUid:p.uid,sourceEventId:task.sourceEventId,
     status:review.decision==='ERROR_RECOVERABLE'?'error':review.accepted?'done':'rejected',accepted:review.accepted,
     decision:review.decision,reasonCode:review.reasonCode,

@@ -226,7 +226,7 @@ test('policy plans use authored treatment alternatives, exact case regimen, requ
  assert(!plan.treatmentIds.includes('different_drug'));
  assert(plan.exams.includes('/examen thorax auscultation'));
  assert(plan.history.some(x=>x.intentId==='allergies'));
- assert.deepEqual(CLINICAL_CERTIFICATION_PROFILES,['competent','slow','inexperienced','negligent','omit-studies','wrong-medication','no-allergy-question','abandon','complication-rescue']);
+ assert.deepEqual(CLINICAL_CERTIFICATION_PROFILES,['competent','slow','inexperienced','negligent','omit-studies','wrong-medication','no-allergy-question','abandon','complication-rescue','wrong-diagnosis']);
 });
 
 test('policy vasopressor orders identify the actual molecule and obtain a real administration',async()=>{
