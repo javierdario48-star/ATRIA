@@ -41,8 +41,15 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1120,height:800}}],
   // The hint is displayed and charged through its actual patient menu.
   const xy=await page.evaluate(()=>{const e=atriaV5.snapshot().entities.find(x=>x.kind==='patient'),r=atriaV5.diagnostics().renderer;
    return {x:(e.x-r.camera.x)*r.scale+r.anchorX,y:(e.y-r.camera.y)*r.scale+r.anchorY};});
-  await page.locator('#game').click({position:xy});
-  await page.locator('#patientWheel [data-patient-action="hint"]').click();
+  // Reception may already have opened the actual bedside wheel. Clicking
+  // the canvas in that case can dismiss it, especially on a compact screen.
+  // Open only when hidden; never force-click or bypass the hint/XP authority.
+  const wheel=page.locator('#patientWheel');
+  if(!await wheel.isVisible())await page.locator('#game').click({position:xy});
+  await wheel.waitFor({state:'visible'});
+  const hint=wheel.locator('[data-patient-action="hint"]');
+  await hint.waitFor({state:'visible'});
+  await hint.click();
   await page.locator('#vegaClinicalHint').waitFor({state:'visible'});await page.waitForFunction(()=>atriaV5.snapshot().clinical.hintCount===1);
   await page.locator('#vegaClinicalHint button').click();
   phase='real care';

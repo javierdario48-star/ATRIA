@@ -151,7 +151,8 @@ try{
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.consults.length===1);
  const consult=(await state()).patient.consults[0];
  assert.equal(consult.accepted,false,'an undocumented diagnosis must receive the original clinical refusal');
- assert.equal(consult.reviewStatus,'missing-dx');
+ assert.equal(consult.reviewStatus,'no-indication','an undocumented diagnosis cannot justify surgical reception');
+ assert.equal(consult.reasonCode,'diagnosis-missing','the refusal must identify the absent impression');
  assert.match(await page.locator('#chatHistory').innerText(),/Falta registrar una impresión/i);
  assert.equal((await state()).eligibleDestinations.includes('quirofano'),false,'refused surgical consult cannot unlock destination');
  await clickHudAction(page,'peopleButton'); // the clinical chart remains available when the floating badge is safely hidden
