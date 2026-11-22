@@ -5,6 +5,9 @@ on:
     paths:
       - '.github/workflows/atria-v5-pending-stress.yml'
       - 'qa/v5/pending-stress-audit.mjs'
+      - 'qa/v5/characterize-surgery-native.mjs'
+      - 'qa/v5/mortality-regression.mjs'
+      - 'qa/v5/studies-browser.mjs'
   workflow_dispatch:
 
 permissions:
