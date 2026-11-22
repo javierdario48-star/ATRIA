@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {confirmedClinicalMissteps} from './clinical-risk.js';
+import {clinicalContent} from '../server/content.js';
 
 // A no-medication patient and a completed medication are separate states.
 // None of these checks can invent administration, change vitals, or mint XP.
@@ -20,10 +21,16 @@ test('risk evaluation is pure and safe without administration (all clinical case
  }
 });
 test('confirmed prophylactic ceftriaxone is not a false variceal adverse event',()=>{
- const {patient,c}=sample('VARIX-001','ceftriaxone');
- assert.deepEqual(confirmedClinicalMissteps(patient,c).flags,[]);
+ // Use the authored clinical definitions: VARIX-001 explicitly requires
+ // prophylactic ceftriaxone, whereas COLON-001 does not.
+ const varix=clinicalContent.cases.find(c=>c.id==='VARIX-001');
+ const colon=clinicalContent.cases.find(c=>c.id==='COLON-001');
+ assert(varix?.keyInterventions.includes('ceftriaxone'));
+ assert(colon&&!colon.keyInterventions.includes('ceftriaxone'));
+ const treated=sample('VARIX-001','ceftriaxone');
+ assert.deepEqual(confirmedClinicalMissteps(treated.patient,varix).flags,[]);
  const untreated=sample('COLON-001','ceftriaxone');
- assert(confirmedClinicalMissteps(untreated.patient,untreated.c).flags
+ assert(confirmedClinicalMissteps(untreated.patient,colon).flags
   .some(x=>x.includes('sin foco infeccioso')));
 });
 test('unrelated confirmed IV administration never escapes medicine loop',()=>{
