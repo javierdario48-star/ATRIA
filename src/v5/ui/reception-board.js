@@ -1,5 +1,21 @@
 // Reception only reads confirmed admission and clinical triage state.
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[x]));
+const renderedBoards=new WeakMap();
+const withoutClock=html=>html.replace(/<span data-reception-clock(?:="")?>[^<]*<\/span>/g,'<span data-reception-clock></span>');
+/** Compare authored markup with authored markup. The DOM serializes boolean
+ * attributes (disabled -> disabled="") and entities differently; comparing it
+ * with the source detached the same button on EVERY multiplayer snapshot.
+ * A different dialog root invalidates the cache even for the same patient list.
+ */
+export function updateReceptionBoard(host,html){
+ const key=withoutClock(html),prior=renderedBoards.get(host);
+ if(!prior||prior.root!==host.firstElementChild||prior.key!==key){
+  host.innerHTML=html;renderedBoards.set(host,{key,root:host.firstElementChild});return true;
+ }
+ const clock=host.querySelector('[data-reception-clock]'),label=html.match(/<span data-reception-clock>([^<]*)<\/span>/)?.[1];
+ if(clock&&label!==undefined&&clock.textContent!==label)clock.textContent=label;
+ return false;
+}
 export function receptionBoardHTML(shift,cases=[],selfId=null){
  if(!shift)return '<h2>Recepción</h2><p>Sin guardia activa.</p>';
  const lookup=new Map(cases.map(c=>[c.id,c]));

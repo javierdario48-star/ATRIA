@@ -131,7 +131,7 @@ try{
  await clickHudAction(page,'peopleButton');await page.locator('[data-action="treatment"]').click();
  await page.locator('#therapyOrder').fill('paracentesis terapéutica');await page.locator('[data-action="order-therapy"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.liveVitals.hr<93.9&&atriaV5.snapshot().clinical.patient.liveVitals.rr<19.9);
- const procedure=await state();assert.deepEqual(procedure.patient.treatments.map(t=>t.id),['paracentesis_ter']);assert.equal(procedure.progress.xp,133);
+ const procedure=await state();assert.deepEqual(procedure.patient.treatments.map(t=>t.id),['paracentesis_ter']);assert.equal(procedure.progress.xp,netXP);
  // Separate second guard exercises user-reported IV + Ringer without changing
  // the canonical 100/100 CIRR closing treatment path above.
  await send('enfermera vias y ringer');
@@ -142,7 +142,7 @@ try{
  assert.equal(afterFluid.patient.administrationLog.find(t=>t.id==='fluid').dose.amount,500);
  assert.match(await page.locator('#chatHistory').innerText(),/Administración confirmada: Cristaloides/i);
  assert.equal(afterFluid.patient.treatments.some(t=>t.id==='ceftriaxone'),false);
- assert.equal(afterFluid.progress.xp,133);
+ assert.equal(afterFluid.progress.xp,netXP,'a second unclosed guard does not refund an earlier unsafe discharge');
  await clickHudAction(page,'peopleButton');await page.locator('[data-action="record-vitals"]').click();
  await page.screenshot({path:out+'/cirr-native-procedure-response.png'});await page.locator('#modalClose').click();await page.locator('#guardButton').click();
  assert.deepEqual(errors,[]);
@@ -150,9 +150,10 @@ try{
   authenticHistory:true,allFiveExamTechniques:true,actualNativeAdministration:t,realElapsedStudies:true,
   nativeSpironolactoneVitalEffects:'none (characterized original model)',closure:closed.patient.closure,
   nativeProcedureResponse:procedure.patient.liveVitals,explicitNativeProcedure:true,
+  grossXP:closed.patient.closure.xp,unsafeDebit:unsafe[0].loss,netXP,
   exactlyOnceXP:true,persistedAfterReload:true,cleanReturnToLobby:true,errors};
  await fs.writeFile(out+'/cirr-summary.json',JSON.stringify(report,null,2));
- console.log('CIRR COMPLETE REAL UI PASS',JSON.stringify({score:100,xp:133,administrations:1,physicalAndroid:false,url:report.url}));
+ console.log('CIRR COMPLETE REAL UI PASS',JSON.stringify({score:100,grossXP:133,unsafeDebit:15,netXP,administrations:1,physicalAndroid:false,url:report.url}));
  await context.close();
 }catch(error){
  if(inspectedPage){

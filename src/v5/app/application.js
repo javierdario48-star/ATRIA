@@ -27,7 +27,7 @@ import {createReceptionAssignment} from './reception-assignment.js';
 import {createDirectPatientSelection,directPatientIntent,resolveClinicalMessageTarget} from './patient-selection.js';
 import {createReceptionOnboarding} from '../ui/reception-onboarding.js';
 import {createShiftFlow,receptionAcuity} from '../clinical/shift-flow.js';
-import {receptionBoardHTML} from '../ui/reception-board.js';
+import {receptionBoardHTML,updateReceptionBoard} from '../ui/reception-board.js';
 import {canHearWardDoctor,canHearWardPatient} from '../ui/spatial-ward-speech.js';
 import {createAtriaKeyboard} from '../ui/atria-keyboard.js';
 import {createHospitalAudio} from '../ui/hospital-audio.js';
@@ -498,18 +498,7 @@ export async function createApplication({document,window,content,signal}){
     }
     if(dialog.open&&dialog.dataset.panel==='reception'){
      const host=ui('modalContent'),next=receptionBoardHTML(value.clinical.shift,content.cases,self);
-     // Server snapshots advance the countdown frequently. Replacing the entire
-     // reception DOM each time detaches a real user's button mid-click (notably
-     // with four physicians). Keep the actionable rows stable for clock-only
-     // changes, but still render assignment, ownership and triage changes.
-     const withoutClock=html=>html.replace(/<span data-reception-clock(?:="")?>[^<]*<\/span>/g,
-      '<span data-reception-clock></span>');
-     if(withoutClock(host.innerHTML)!==withoutClock(next))host.innerHTML=next;
-     else{
-      const clock=host.querySelector('[data-reception-clock]'),
-       label=next.match(/<span data-reception-clock>([^<]*)<\/span>/)?.[1];
-      if(clock&&label!==undefined&&clock.textContent!==label)clock.textContent=label;
-     }
+     updateReceptionBoard(host,next);
     }
     presentGuardTurn(value.clinical);
     const terminal=outcomeId(value.clinical.patient);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {receptionBoardHTML} from './reception-board.js';
+import {receptionBoardHTML,updateReceptionBoard} from './reception-board.js';
 test('reception shows two independent boxes, labels and countdown',()=>{
  const h=receptionBoardHTML({mode:'competitive',remainingSeconds:1260,patients:[
  {uid:'a',bedId:'B1',caseId:'X',triage:{state:'critical',label:'CRÍTICO'}},
@@ -30,4 +30,31 @@ test('competitive reception distinguishes available patients, owned beds and riv
  assert.match(h,/data-patient-uid="mine"[^>]*>Volver a mi box/);
  assert.match(h,/data-patient-uid="busy" disabled>Ocupado/);
  assert.match(h,/A cargo de otro médico/);
+});
+
+// Minimal browser-serialization fixture: disabled attributes and empty data
+// attributes are serialized differently from their authored HTML. Root identity
+// represents the button subtree a user is actually pressing.
+function serializedHost(){
+ let html='',root=null,writes=0;const clock={textContent:''};
+ return {get innerHTML(){return html;},set innerHTML(value){
+  html=value.replace(/ disabled(?=>)/g,' disabled=""').replace(/data-reception-clock>/g,'data-reception-clock="">');
+  root={};writes++;
+ },get firstElementChild(){return root;},querySelector(){return clock;},get writes(){return writes;},clock};
+}
+test('four-doctor reception keeps a button subtree through normalized disabled attributes and 100 countdown snapshots',()=>{
+ const host=serializedHost(),shift={mode:'competitive',remainingSeconds:1200,patients:[
+  {uid:'rival',ownerId:'other',bedId:'B1'}, {uid:'available',bedId:'B2'}]};
+ updateReceptionBoard(host,receptionBoardHTML(shift,[],'me'));const root=host.firstElementChild;
+ for(let i=1;i<=100;i++){
+  assert.equal(updateReceptionBoard(host,receptionBoardHTML({...shift,remainingSeconds:1200-i},[],'me')),false);
+  assert.equal(host.firstElementChild,root,'polling must not detach the action subtree');
+ }
+ assert.equal(host.writes,1);assert.equal(host.clock.textContent,'18:20');
+ assert.equal(updateReceptionBoard(host,receptionBoardHTML({...shift,patients:[...shift.patients,{uid:'new',bedId:'B3'}]},[],'me')),true);
+});
+test('leaving and reopening another dialog invalidates cached reception even if its markup is unchanged',()=>{
+ const host=serializedHost(),html=receptionBoardHTML({mode:'coop',remainingSeconds:1200,patients:[]});
+ updateReceptionBoard(host,html);host.innerHTML='<h2>Otro panel</h2>';
+ assert.equal(updateReceptionBoard(host,html),true);assert.match(host.innerHTML,/Recepción/);
 });

@@ -572,6 +572,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Verificación 22/11/2026 — tanda de jugabilidad:** Revisión 22/11: la corrección compartida de identidad del DOM de recepción se documenta en COMP-01; no se ha cambiado asignación, proximidad ni autoridad para ocultar el timeout.
+
 ### DX-01 · Diagnóstico y evaluación
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-23;PC-09-10.
@@ -1082,6 +1084,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Verificación 22/11/2026 — tanda de jugabilidad:** CIRR navegador: corregidas dos expectativas restantes en la segunda guardia. Se verifican 133 brutos, recibo −15, saldo persistido 118; una nueva guardia sin cerrar no devuelve la sanción. No se cambió el motor ni el débito. Prueba real de navegador pendiente de CI: Chromium local aborta por sockets no permitidos.
+
 ### XP-02 · XP y progresión
 
 **Fecha y origen:** 2026-10-02 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-02.
@@ -1157,6 +1161,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Evolución y sustituciones:** Regresión de privacidad reproducida12/11, fix adicional13/11. El estado actual no se infiere del verde anterior.
 
 **Condición recuperada/olvidada:** E: corrección de cama liberada no cubría cama nunca tomada.
+
+**Verificación 22/11/2026 — tanda de jugabilidad:** Reproducido en Actions 44974712154: botón de recepción desprendido reiteradamente. Causa: comparar HTML serializado por el navegador (`disabled=""`) con HTML fuente (`disabled`). `updateReceptionBoard` conserva el subárbol entre snapshots equivalentes y actualiza el reloj sin reemplazarlo; invalida caché al cambiar de diálogo. Pruebas dirigidas de recepción: 5/5. Aceptación Chromium de cuatro médicos pendiente de CI del cambio.
 
 ### LOBBY-01 · Lobby y presencia
 
@@ -1939,6 +1945,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad. B0. **Dependencias:** ninguna. **Impacto:** Reproducir cancelaciones Node 22, revisar certificación de traslados y obtener conclusión de CI del código publicado. El perfilado de red no debe ocultar fallos deterministas. **Riesgo:** medio. **Esfuerzo:** 2–4 días.
 
 **Evolución y sustituciones:** Resultados3137del 12/11 no describen162d0cf del 13/11; matriz43289556288 terminó6/8, luego43435355500sí8/8. El 20/11 se corrigieron tres fixtures/harness en 7cde6fa; no se modificaron reglas clínicas. Suite final completa aprobada.
+
+**Verificación 22/11/2026 — tanda de jugabilidad:** CI previa 44974712154 recuperada: 28/30 SUCCESS; fallaban CIRR navegador (dos aserciones restantes bruto/neto) y Competitivo 4 (DOM inestable). Correcciones dirigidas sin borrar pruebas, sin subir el timeout ni devolver XP. No declarar la nueva CI verde hasta observar su conclusión.
 
 ### QA-02 · Certificación y pruebas
 

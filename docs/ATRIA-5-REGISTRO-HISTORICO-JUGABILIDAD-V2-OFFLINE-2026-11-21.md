@@ -250,3 +250,7 @@ Usar un bloque fechado por intervención, **solo al finalizar una tanda sustanci
 - **Pendientes confirmados prioritarios:** dos contraejemplos del receptor ciego; navegador CIRR 118/133; receptor/botón Competitivo 4 DOM inestable; GO offline y HTML V2 aún requieren prueba manual/de navegación; Supabase staging/Preview/Android continúan externos.
 - **Nueva instrucción del creador incorporada:** corregir primero jugabilidad histórica, después grafo V2 con bots, después entregar HTML offline para prueba personal; preparar Vercel sin adelantar hosting.
 
+
+### 22/11/2026 — primera tanda: recepción y saldo CIRR
+
+HEAD inicial confirmado `05b1597e7cc50dd26e4ad786f638e2d9f9b1cb9b`; sin commits remotos posteriores al inicio. Se conservó el trabajo local al reanudar. Corregidos el comparador de markup de recepción (normalización de atributos booleanos) y las dos aserciones antiguas de saldo 133 en la segunda guardia CIRR; saldo correcto 118, sin devolver la sanción. IDs revisados: COMP-01, SEL-00, XP-01, QA-01. Recepción: 5/5 pruebas dirigidas. Chromium local no inicia por `socket() failed: Operation not permitted`; aceptación real asignada a Actions. No se declaró GO offline por esta tanda y no se repitió la auditoría histórica.
