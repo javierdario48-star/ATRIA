@@ -1,0 +1,97 @@
+{
+  "sourceSha": "906e50e34fe815a616fb12daa74e3e3a167024b6",
+  "source": "file:// self-contained HTML",
+  "acceleratedClock": false,
+  "physicalAndroid": false,
+  "server": false,
+  "scenarios": [
+    {
+      "name": "desktop",
+      "passed": true,
+      "patientUid": "guard-273a5e0a-5d11-4125-89d4-8f4ed93942b5:patient",
+      "sourceSha": "906e50e34fe815a616fb12daa74e3e3a167024b6",
+      "savedPendingNursing": true,
+      "recoveredSamePatient": true,
+      "closed": true,
+      "destination": "alta",
+      "grossXP": 133,
+      "hintAdjustedXP": 126,
+      "unsafeDebit": 15,
+      "netXP": 111,
+      "administrations": [
+        {
+          "id": "amoxicillin",
+          "label": "Amoxicilina oral",
+          "dose": {
+            "amount": 1000,
+            "display": "1 g oral cada 8 h",
+            "unit": "mg",
+            "defaultApplied": false
+          },
+          "sourceEventId": "guard-273a5e0a-5d11-4125-89d4-8f4ed93942b5:local-player:message-a5cfd6a6-6f14-4c43-acbe-f58d83b47a8b-15:0",
+          "actorId": "local-player",
+          "patientUid": "guard-273a5e0a-5d11-4125-89d4-8f4ed93942b5:patient",
+          "route": "oral",
+          "administeredAtRealSecond": 9.6745,
+          "regimen": {
+            "intervalMinutes": 480,
+            "duration": "Curso orientado por estabilidad y reevaluación; inicialmente 5 días en NAC ambulatoria.",
+            "dose": {
+              "amount": 1000,
+              "display": "1 g oral cada 8 h",
+              "unit": "mg"
+            },
+            "route": "oral"
+          },
+          "administeredAtNativeMinute": 1.0908209999999998
+        }
+      ],
+      "complications": [],
+      "controls": "avatar, mode, reception, movement, chat, history, exam, studies, medication, hint, save, recovery, closure, XP"
+    },
+    {
+      "name": "android-emulated",
+      "passed": true,
+      "patientUid": "guard-824fc845-b7f1-4532-abd9-cd7dcb9d9607:patient",
+      "sourceSha": "906e50e34fe815a616fb12daa74e3e3a167024b6",
+      "savedPendingNursing": true,
+      "recoveredSamePatient": true,
+      "closed": true,
+      "destination": "alta",
+      "grossXP": 133,
+      "hintAdjustedXP": 126,
+      "unsafeDebit": 15,
+      "netXP": 111,
+      "administrations": [
+        {
+          "id": "amoxicillin",
+          "label": "Amoxicilina oral",
+          "dose": {
+            "amount": 1000,
+            "display": "1 g oral cada 8 h",
+            "unit": "mg",
+            "defaultApplied": false
+          },
+          "sourceEventId": "guard-824fc845-b7f1-4532-abd9-cd7dcb9d9607:local-player:message-18d0c114-ae89-4b8a-b662-20cf867e7bf3-15:0",
+          "actorId": "local-player",
+          "patientUid": "guard-824fc845-b7f1-4532-abd9-cd7dcb9d9607:patient",
+          "route": "oral",
+          "administeredAtRealSecond": 9.733899999999998,
+          "regimen": {
+            "intervalMinutes": 480,
+            "duration": "Curso orientado por estabilidad y reevaluación; inicialmente 5 días en NAC ambulatoria.",
+            "dose": {
+              "amount": 1000,
+              "display": "1 g oral cada 8 h",
+              "unit": "mg"
+            },
+            "route": "oral"
+          },
+          "administeredAtNativeMinute": 1.0905779999999998
+        }
+      ],
+      "complications": [],
+      "controls": "avatar, mode, reception, movement, chat, history, exam, studies, medication, hint, save, recovery, closure, XP"
+    }
+  ]
+}

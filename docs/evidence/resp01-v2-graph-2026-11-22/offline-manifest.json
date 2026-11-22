@@ -1,0 +1,23 @@
+{
+  "repository": "javierdario48-star/ATRIA",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "sourceSha": "906e50e34fe815a616fb12daa74e3e3a167024b6",
+  "run": 45020275964,
+  "artifactId": 14753636884,
+  "fileProtocolTested": "file://",
+  "localHttpServerRequired": false,
+  "physicalAndroidAccepted": false,
+  "multiplayerOffline": false,
+  "files": [
+    {
+      "name": "ATRIA-5-RESP01-V2-Experimental.html",
+      "bytes": 13939951,
+      "sha256": "13aeff54ff16593a5e52fca044151d8f1db1db7ff868844d48fabe512a6c90da"
+    },
+    {
+      "name": "ATRIA-5-Solitario.html",
+      "bytes": 13872322,
+      "sha256": "262bfd02e0f0010eba302493df56166a20b3ca09eb6da6d31bd678a37a74723e"
+    }
+  ]
+}

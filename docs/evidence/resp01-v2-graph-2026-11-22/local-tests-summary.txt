@@ -1,0 +1,47 @@
+Node: v24.22.3
+
+npm run test:v5; base clínica ef4b06f
+✔ native wardrobe and settings changes click once while sliders and text typing remain quiet (0.1677ms)
+ℹ tests 3224
+ℹ suites 0
+ℹ pass 3224
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 275862.053693
+
+node --test src/v5/app/*.test.js; después del ajuste IDs 906e50e
+✔ ward appearance keeps authorized sex/color after any clinical snapshot (1.403866ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 45
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11039.118284
+
+node --test receptor público + dos contraejemplos
+✔ a prepared specialty critical-care destination retains its published receiving team without a generic ICU refusal (149.573983ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 895.861478
+
+node --test local-guard-checkpoint.test.js; cola espacial confirmada
+✔ two actual local patient checkpoints restore one ledger, debt, clock, studies and travelling nursing without duplicate XP (270.571375ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 571.053394
+
+Los alcances se solapan: no sumar como pruebas únicas. CI y SHA exactos se documentan separadamente.

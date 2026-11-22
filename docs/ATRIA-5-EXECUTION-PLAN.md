@@ -1,5 +1,8 @@
 # ATRIA 5.0 — Plan técnico de ejecución
 
+> **Dirección vigente22/11/2026:** receptor ciego, recepción/CIRR y grafo/HTML están publicados y aceptados en su ámbito. [Entrega y siguiente acción](ATRIA-5-ENTREGA-OFFLINE-2026-11-22.md). Último código entregado906e50e; GO OFFLINE/V2local, NO GO ONLINE/PRODUCTION. Primero concluir/reproducir QA-01/REC-01online con CI45020275953; staging/Preview/Android son gates externos. No rehacer los bloques ya probados ni reabrir40/550por cambios documentales. Los estados de 88 IDs viven en el inventario maestro.
+
+
 Base auditada: `162d0cf24a936e302e2a3efadcc168e1459d86d5`. Corrección publicada: `7cde6fa905e81ed3d548cf256f1b5201a281ec94`; suite local final 3.167/3.167. Corte de solicitudes: 20/11/2026, Buenos Aires. [Inventario y aceptación por ID](ATRIA-5-REMAINING-TASKS.md) · [Matriz](ATRIA-5-REQUIREMENTS-TRACEABILITY.md) · [Límites históricos](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md).
 
 ## Dirección operativa actual — plataforma jugable primero, casos por planilla después

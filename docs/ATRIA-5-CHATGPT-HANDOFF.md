@@ -1,6 +1,28 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
-> **Continuación vigente, 21/11/2026:** último código publicado `629a33ba2a529ade4c30c5501c25a6d23ead40e8`, rama exclusiva `atria-5.0-core-rebuild-experimental`. **RESP-01 V2: NO GO**, conservando aprobación automatizada 40/40 y paridad 15 pares en [CI 5/5 `44973929079`](https://github.com/javierdario48-star/ATRIA/actions/runs/44973929079), SHA `78f260f`. Leer primero [informe de cierre](contracts/ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md) y [estado operativo de pendientes](contracts/ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md). Esto sustituye la dirección operativa de los checkpoints inferiores.
+## Continuación vigente · 22/11/2026
+
+Último código entregado/certificado para HTML: **`906e50e34fe815a616fb12daa74e3e3a167024b6`**, exclusivamente `atria-5.0-core-rebuild-experimental`. El commit documental que contiene este traspaso se distingue del SHA del artefacto. [Entrega sencilla](ATRIA-5-ENTREGA-OFFLINE-2026-11-22.md), [uso/descarga del HTML](ATRIA-5-OFFLINE-USO.md), [inventario único de 88 IDs](ATRIA-5-REMAINING-TASKS.md).
+
+**GO OFFLINE y GO V2 EXPERIMENTAL local; NO GO ONLINE/PRODUCTION.** No reimplementar receptor ciego, recepción estable, XP bruta/neta, guardado local ni grafo: ya están publicados y probados. No modificar main/V4.8.7/Production.
+
+- Corregido receptor ciego con expediente explícito + protocolos públicos; calidad sigue contrastando verdad clínica. Regresión CARD-02 corregida conservando la recepción por Cardiología.
+- Corregidos botones DOM inestables y dos expectativas CIRR:133 brutos−15=118 netos.
+- Grafo declarativo V2, compilador y observador sin nuevo motor:27 aristas;40/40V2,15 pares sin errores y8/8extra, cuatro modos. [CI5/5ef4b06f](https://github.com/javierdario48-star/ATRIA/actions/runs/45019485610). [Traslados550/550,11/11](https://github.com/javierdario48-star/ATRIA/actions/runs/45019485594), [Vega55/55](https://github.com/javierdario48-star/ATRIA/actions/runs/45020275902). Núcleo clínico/contenido idénticos por treeSHA entre ef4b06f y906e50e.
+- HTML V1/V2 separados,55 identidades, recursos/audio embebidos y APIs offline aisladas en la entrada. Guardar/restaurar usa checkpoints existentes y una carrera compartida, no otro sistema clínico.
+- Defecto real recuperado en navegador: después de recargar se reutilizaba `message-1`.906e50e incluye UUID de documento también en local; reintentos anteriores siguen idempotentes. [HTML exacto aprobado](https://github.com/javierdario48-star/ATRIA/actions/runs/45020275964):53/53 plataforma,2/2 partidas completas por file://, Enfermería pendiente y misma identidad recuperadas, nuevas órdenes, cierre y111 XPnetos (133−pista→126−15).
+- Suite integrada local3224/3224 antes del ajuste de IDs, luego45/45aplicación y partida real. SQL9/9local, sin aplicar a Supabase alojado. No sumar campañas como pruebas únicas.
+
+**Primera tarea ejecutable:** consultar [CIgeneral906e50e45020275953](https://github.com/javierdario48-star/ATRIA/actions/runs/45020275953), pendiente al corte. Si falla recuperación online, abrir el job`authenticated-shared-guard-browser` y reproducir `qa/v5/guard-recovery-browser.mjs` (fallo previo45016869358: esperar leave después de acciones canceladas). Registrar statusHTTP y participación real; no asumir que es el mismo fallo de IDs offline ya corregido, ni subir timeout/borrar aserciones. No rehacer auditoría histórica ni campañas40/550por documentación.
+
+**Bloqueos externos:** Supabase staging accesible (lectura previa28P01; sin rama staging), deployment Vercel exacto ([previewfallido45020275929](https://github.com/javierdario48-star/ATRIA/actions/runs/45020275929)), teléfono Android y comunicación multicuenta real. El build web modular sigue operativo; horizonte12/12/2026, sin activar Production. Archivo offline abre directamente en escritorio; teléfono real y content://aún requieren aceptación. Guardar explícitamente antes de cerrar y conservar el HTML del mismo SHA para retomar.
+
+**88 IDs:**10verificados en su ámbito,52pendientes de aceptación,16parciales,1defectuoso,3no implementados,4no verificables y2reemplazados. El detalle vive solo en el inventario maestro; este traspaso resume sin duplicar sus estados. Contratos JSON anteriores e historial intactos.
+
+## Traspasos anteriores conservados
+
+
+> **Checkpoint conservado, 21/11/2026 (sustituido por la actualización anterior):** último código publicado `629a33ba2a529ade4c30c5501c25a6d23ead40e8`, rama exclusiva `atria-5.0-core-rebuild-experimental`. **RESP-01 V2: NO GO**, conservando aprobación automatizada 40/40 y paridad 15 pares en [CI 5/5 `44973929079`](https://github.com/javierdario48-star/ATRIA/actions/runs/44973929079), SHA `78f260f`. Leer primero [informe de cierre](contracts/ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md) y [estado operativo de pendientes](contracts/ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md). Esto sustituye la dirección operativa de los checkpoints inferiores.
 
 **Hecho:** XP/pistas compartidas por cohorte, integración de sanciones en carrera local, receptor de Observación NEUR-03, cierre con Enfermería pendiente, módulo faltante de build, verificaciones CIRR bruto/neto y Observación DIARR. Regresión local: **3210/3210** en `78f260f`; después **14/14 dirigidas** y build de 220 módulos en `629a33b`. SQL: **9/9 PostgreSQL local** en [CI `44973929154`](https://github.com/javierdario48-star/ATRIA/actions/runs/44973929154), sin aplicar a proyecto alojado. [Traslados `44973637288`](https://github.com/javierdario48-star/ATRIA/actions/runs/44973637288): 550/550. [Vega `44973637286`](https://github.com/javierdario48-star/ATRIA/actions/runs/44973637286): 55/55.
 

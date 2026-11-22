@@ -1,5 +1,7 @@
 # ATRIA 5.0 — Registro histórico único de jugabilidad y protocolo de cierre V2 / HTML offline
 
+> **Actualización22/11/2026:** entrega offline exacta906e50e aprobada en navegador; [HTML/uso](ATRIA-5-OFFLINE-USO.md) e [informe de cierre](ATRIA-5-ENTREGA-OFFLINE-2026-11-22.md). GO OFFLINE y GO V2 EXPERIMENTAL local; NO GO ONLINE/PRODUCTION. Las indicaciones de partida y pendientes al crear este registro son históricas; leer la bitácora nueva y el inventario maestro antes de intervenir.
+
 **Documento de entrada para ChatGPT Work y próximas sesiones.** Corte de recuperación de solicitudes: **1 de octubre a 21 de noviembre de 2026** (Buenos Aires). Fuente de los 88 IDs: [inventario maestro](ATRIA-5-REMAINING-TASKS.md). Fuente histórica: [auditoría octubre–noviembre](ATRIA-5-HISTORICAL-AUDIT-OCT-NOV-2026.md) y [matriz de trazabilidad](ATRIA-5-REQUIREMENTS-TRACEABILITY.md). Último código comprobado al crear este registro: `629a33ba2a529ade4c30c5501c25a6d23ead40e8`; HEAD documental de partida: `29fabc349db377eb564d4fa142cb028cd613354f`. **NO GO de activación V2 y Production.**
 
 > **Regla de fuente única:** este documento reúne el histórico, las incidencias concretas, las novedades expresas del creador y el orden de trabajo. La tabla maestra **`docs/ATRIA-5-REMAINING-TASKS.md` es la única fuente mutable del estado de los 88 IDs**. La copia de sus 88 definiciones al final de este archivo es una foto de recuperación histórica, **no un segundo inventario de estados vivos**. Work debe actualizar primero el inventario maestro cuando verifique un ítem, y registrar aquí únicamente una bitácora de ejecución con enlaces. No borrar entradas antiguas ni crear IDs duplicados para el mismo problema.
@@ -300,3 +302,14 @@ El SHA `ef4b06f` aprobó arranque `file://` en escritorio/Pixel y **53/53** comp
 [CI45019789015](https://github.com/javierdario48-star/ATRIA/actions/runs/45019789015), SHA31f15e8: arranque2/2 y plataforma53/53 aprobados; partidaV2 se detuvo al enviar `/reevaluar` después de recuperar. Enfermería sí completó la amoxicilina guardada. Causa: `submitText` usaba `message-1`, `message-2`, etc. para modo local y reservaba el UUID de documento para multijugador. Tras recarga, la sala recuperada conservaba esos IDs y rechazaba/reproducía el nuevo mensaje.
 
 Corrección mínima compartida: incluir el `messageEpoch` ya existente en TODOS los mensajes clínicos, también Solitario/Aprendiz. No se borra la bitácora de idempotencia, no se reinicia el paciente y los reintentos con el mismo ID siguen siendo idempotentes. La partida de navegador sin cambios constituye la regresión dirigida de recepción de órdenes nuevas después de guardar/recargar. IDsREC-01, NUR-03, LAT-01, TURN-02, QA-01.
+
+
+### Cierre de la tanda · 22/11/2026
+
+Código entregado906e50e; [HTML CI45020275964](https://github.com/javierdario48-star/ATRIA/actions/runs/45020275964): SUCCESS. Arranque2/2, plataforma53/53y partida clínica real2/2con reloj real. Se descargó el artefacto14753636884, se verificaron ZIP/SHA256y ambos HTML; el V2 entregado coincide byte a byte con el aprobado.133 XPbrutos,126 tras pista,−15y111 netos, misma identidad y Enfermería pendiente recuperadas, órdenes nuevas sin conflictos y una única dosis/cierre. Android físico no probado.
+
+CI V2ef4b06f45019485610:5/5 trabajos,40/40,15 pares sin errores y8/8extra. Traslados45019485594:11/11,550/550; se guardaron los diez resúmenes de55 casos. Vega906e50e45020275902:SUCCESS. Frontera201módulos/un RAF, suite integrada3224/3224(baseef4b06f)y45/45aplicación después del ajuste de IDs. El núcleo clínico/contenido entre ef4b06f/906e50e coincide por treeSHA; las campañas no se atribuyen a un SHA distinto sin declararlo.
+
+El inventario único se actualizó en sus 88 fichas y conserva condiciones/historial:10verificados,52pendientes de aceptación,16parciales,1defectuoso,3no implementados,4no verificables,2reemplazados. QA-03 se cierra para la certificación automatizada550/550; XP-COOP queda implementado pendiente de aceptación externa. No se declara que los 88estén terminados.
+
+[Informe permanente](ATRIA-5-ENTREGA-OFFLINE-2026-11-22.md), [instrucciones](ATRIA-5-OFFLINE-USO.md), [matriz27 aristas](ATRIA-5-RESP01-V2-GRAPH-COVERAGE-2026-11-22.md), manifiesto y evidencias en `docs/evidence/resp01-v2-graph-2026-11-22/`. Siguiente trabajo: CIgeneral45020275953/recuperación online; luego staging, Preview exacto y teléfono físico. No volver a empezar por receptor ciego ni repetir40+550sin cambio clínico.

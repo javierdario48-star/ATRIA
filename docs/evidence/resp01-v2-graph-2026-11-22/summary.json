@@ -57,7 +57,26 @@
       "unsupported-destination"
     ]
   },
-  "exactShaCI": "pending final publication; see mission log for run references",
+  "exactShaCI": {
+    "sha": "ef4b06f2e27ff9c8ab48c1330f032a97f3573d81",
+    "run": 45019485610,
+    "jobs": "5/5 success",
+    "scenarios": "40/40",
+    "extra": "8/8",
+    "parity": "15 pairs; errors[]"
+  },
   "production": false,
-  "androidPhysical": false
+  "androidPhysical": false,
+  "offlineCI": {
+    "sha": "906e50e34fe815a616fb12daa74e3e3a167024b6",
+    "run": 45020275964,
+    "artifact": 14753636884,
+    "platform": "53/53",
+    "journeys": "2/2 desktop and Pixel emulated",
+    "clock": "real; no clinical fast forward",
+    "fileProtocol": "file://",
+    "production": false
+  },
+  "clinicalTreeSha": "5a9b3193f5de76bd39a74d1312ee30a4f8ce1fdf",
+  "contentTreeSha": "5658afc021322623c6d7e4303414c1feb58b63c2"
 }

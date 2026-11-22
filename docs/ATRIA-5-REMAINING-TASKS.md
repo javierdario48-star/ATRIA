@@ -1,21 +1,16 @@
 # ATRIA 5.0 — Inventario maestro de requisitos
 
-> **TRASPASO HISTÓRICO OPERATIVO (21/11/2026):** [Registro consolidado de los 88 IDs, errores de jugabilidad, diagrama de flujo RESP-01 V2, bots y HTML offline](ATRIA-5-REGISTRO-HISTORICO-JUGABILIDAD-V2-OFFLINE-2026-11-21.md). Este archivo sigue siendo **la única fuente mutable de estado por ID**. Los estados y porcentajes históricos más abajo requieren contraste con el SHA más reciente; nunca confundir «pendiente de aceptación» con «bug actual». Orden del creador: cerrar errores históricos → grafo clínico V2 → bots → HTML offline manual; conservar portabilidad a Vercel en 21 días.
+**Estado operativo vigente · 22/11/2026.** Única fuente mutable del estado de los 88 IDs. Último código entregado: `906e50e34fe815a616fb12daa74e3e3a167024b6`, rama exclusiva `atria-5.0-core-rebuild-experimental`. [Informe sencillo y evidencias](ATRIA-5-ENTREGA-OFFLINE-2026-11-22.md), [HTML e instrucciones](ATRIA-5-OFFLINE-USO.md), [grafo y aristas](ATRIA-5-RESP01-V2-GRAPH-COVERAGE-2026-11-22.md).
 
+**GO OFFLINE y GO V2 EXPERIMENTAL local. NO GO ONLINE y NO GO PRODUCTION.** No se activó ningún despliegue ni se aplicó una migración alojada. V1 conserva55 casos y V2 está aislado en su HTML experimental; los cuatro modos conservan su motor/autoridad. El archivo offline permite Solitario/Aprendiz; multijugador exige backend.
 
-> **Estado vigente de esta continuación, 21/11/2026:** conservar los **88 IDs históricos** y sus referencias originales. Último código `629a33ba2a529ade4c30c5501c25a6d23ead40e8`. El estado operativo de liberación y las pruebas nuevas están en [pendientes verificados](contracts/ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md) y el [informe permanente de cierre](contracts/ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md). Los recuentos/checkpoints inferiores son históricos; no invalidan estas evidencias posteriores.
+**Resultado comprobado:** suite clínica local3224/3224 (baseef4b06f), receptor/urgencias139 dirigidas, CItraslados550/550 ([45019485594](https://github.com/javierdario48-star/ATRIA/actions/runs/45019485594)); V2 [45019485610](https://github.com/javierdario48-star/ATRIA/actions/runs/45019485610)5/5 trabajos,40/40 escenarios,15 paresV1/V2 sin errores y8 recorridos extra. Grafo27/27 aristas declaradas observadas, sin afirmar todas las combinaciones clínicas. HTML exacto906e50e [45020275964](https://github.com/javierdario48-star/ATRIA/actions/runs/45020275964):53/53 plataforma y2/2 partidas reales por `file://`, guardado/recarga/recuperación/órdenes nuevas/Enfermería/XP. Escritorio y Pixel emulado; Android físico no aceptado. Las cifras de campañas distintas no se suman como pruebas únicas.
 
-| ID existente | Actualización verificada | Pendiente vigente |
-| --- | --- | --- |
-| XP-COOP / XP-01 / DX-REVEAL | Coste de pistas/revelación compartido entre activos; privacidad conservada. Alta/Observación y muerte causal mantienen cohorte y autor; la carrera local ya conecta ambas decisiones inseguras y no fusiona dos autores. | Aceptación con cuentas alojadas, deuda entre guardias y concurrencia. |
-| CLOSE-01 / NUR-01 | Corregido cierre de Observación con Enfermería pendiente y bloqueo circular NEUR-03; paciente intacto y recuperación probados. | Validación física y receptor ciego aún abierto. |
-| VEGA-COHERENCE-01 / VEGA-01 | Recorridos 55/55 aprobados en CI `44973637286`; NEUR-03 ya termina. | Latencia real y aceptación Android. |
-| QA-03 | Traslados `44973637288`: 11/11 trabajos, 10 perfiles ×55 =550/550. CIRR distingue bruto/deuda; DIARR valida recibo de Observación. | Escenario CIRR de navegador corregido pendiente de CI final. |
-| QA-01 | Regresión local 3210/3210 en `78f260f`; 14 pruebas dirigidas posteriores para carrera local. V2 40/40 y paridad 15 pares, 5/5 CI `44973929079`. | CI general `44974712154` y matriz longitudinal `44973637290` deben concluir; no confundirlos con pruebas ya aprobadas. |
-| MED-01 / MED-02 | Contrato V2 y regresiones nativas de medicación/seguridad aprobados; PBE conserva daño renal y rescate medidos. | Aceptación externa; cobertura futura declarativa no certificada globalmente. |
-| DEPLOY-01 / ANDROID-01 / ANDROID-02 / MP-01 / COMP-01 | Migración preparada +9/9 PostgreSQL local; build modular/frontera aprobados; CI multijugador previa conserva su evidencia. | Supabase staging accesible, deuda REST versionada, deployment exacto y Android físico. |
+**Recuento de las 88 fichas:**10 COMPLETADO Y VERIFICADO;52 IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN;16 PARCIALMENTE IMPLEMENTADO;1 IMPLEMENTADO CON DEFECTOS;3 NO IMPLEMENTADO;4 NO VERIFICABLE;2 REEMPLAZADO. Son76 IDs vigentes sin cierre completo. Se actualizó XP-COOP a implementado pendiente de aceptación y QA-03 a completado/verificado en Node/CI. Las condiciones completas y los antecedentes se conservan por ficha.
 
-**RESP-01 V2 sigue NO GO:** recepción ciega no resuelta, staging/Preview/Android pendientes y CI general final aún sin aceptación. No se rehízo la auditoría histórica ni se añadieron requisitos duplicados. La aprobación original `44968933396` y la nueva `44973929079` se conservan como aprobaciones del alcance automatizado de contenido V2.
+**Siguiente trabajo:** QA-01/REC-01online: concluir [CIgeneral906e50e](https://github.com/javierdario48-star/ATRIA/actions/runs/45020275953) y reproducir el `native leave did not commit` de45016869358 con requests/recibos/estado de participación. No reabrir recepción ciega ni repetir40+550sin cambio clínico que lo justifique. Backend staging, deployment exacto y aceptación física siguen enQA-02/DEPLOY-01/ANDROID-01/02. Las nuevas órdenes después de recuperación offline ya se corrigieron y aceptaron; no confundir ambos recorridos.
+
+**Alcance de revisión:** se contrastaron las 88 fichas existentes con sus archivos y pruebas identificados;250archivos de prueba entran en `test:v5`. Las fichas señalan cuáles corresponden a esa suite y cuáles requieren otra evidencia. No se recuperaron chats completos ni el texto literal1–60 antes inaccesible. No se afirma auditoría histórica exhaustiva ni aceptación física por pruebas automatizadas. Las aprobaciones históricas siguen conservadas.
 
 ## Historial conservado
 
@@ -77,7 +72,7 @@ Se conservan los 20 IDs de familias anteriores y las 60 referencias numéricas. 
 | VEGA-COHERENCE-01 | Dr. Vega | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | La pista lee recibos y requisitos reales de cierre, respeta alternativas y no repite estudios o intervenciones confirmados. | Probar pista→orden→recibo→pista por destino, alternativas y controles nuevos indicados. B2 / MIXTA |
 | LAT-01 | Android y rendimiento · 45, 54–55, 58, 60 | PARCIALMENTE IMPLEMENTADO | Respuestas, órdenes, selección, pistas y diagnóstico ágiles; eliminar espera real y textos técnicos persistentes. | Medir cola/HTTP/CAS/recibo/render antes de optimizar; «pendiente de confirmación» reportado otra vez no demuestra un fix aceptado. B1 / MIXTA |
 | MP-01 | Cooperativo · 44–46 | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Cooperativo 2–4 comparte pacientes sin propiedad exclusiva; invitados, chat, Enfermería, estado y reconexión funcionan desde inicio. | Verificar primer minuto con 2–4 cuentas, red móvil, abandono y retorno; no asumir que login/lobby acredita guardia. B1 / MIXTA |
-| XP-COOP | XP y progresión · 39–43, 47 | PARCIALMENTE IMPLEMENTADO | Compartir en Cooperativo XP, débitos y pistas; participación pausa al salir y vuelve al reconectar; Competitivo conserva independencia. | Integrar política cooperativa solicitada y animación por recibo; documentar compatibilidad de recibos previos y causalidad de muerte. B4 / MIXTA |
+| XP-COOP | XP y progresión · 39–43, 47 | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Compartir en Cooperativo XP, débitos y pistas; participación pausa al salir y vuelve al reconectar; Competitivo conserva independencia. | Aceptar cohorte ya implementada, deuda/animación y salida/reconexión en staging multicuenta. B4 / MIXTA |
 | DX-REVEAL | Diagnóstico y evaluación · 35–38 | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Revelar diagnóstico correcto del caso por 50% XP, sin reemplazar impresión propia ni cerrar atención. | Aceptar preview/Android del HEAD, incluir composición con política cooperativa XP-COOP. B4 / MIXTA |
 | FAM-01 | Familiares y acompañantes · 14–15, 20 | PARCIALMENTE IMPLEMENTADO | Paciente incapaz activa familiar/enfermería con fuente explícita; acompañante seleccionable, respuestas/repreguntas y atribución propias. | Completar aparición/intervención espontánea donde haya informante declarado, segunda presentación y aceptación táctil; nunca inventar familiares. B3 / MIXTA |
 | REC-01 | Recuperación de guardias · 48–52 | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Retomar, Finalizar y Después independientes; X/Escape/lobby disponibles; conservar progreso, sin imponer recuperación ni bloquear navegación. | Investigar cancelación Node 22 y probar las cuentas/dispositivo del usuario con ACK perdido y red móvil. No hay P0 jugable reproducido aquí. B1 / MIXTA |
@@ -137,9 +132,9 @@ Se conservan los 20 IDs de familias anteriores y las 60 referencias numéricas. 
 | VAR-01 | Variabilidad clínica | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Identidad/edad/comorbilidades/severidad/alergias/evolución con semillas reproducibles, sin contradicciones fijas y persistiendo por paciente. | Validar plausibilidad de nuevas variantes y banco de antecedentes, sin confundir volumen combinatorio con aceptación clínica. B6 / CHATGPT NORMAL |
 | VAR-02 | Variabilidad clínica | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Personalidad multidimensional y relación por médico heredadas automáticamente; conversación específica se combina sin cambiar hechos. | Aceptar naturalidad, contexto por médico y recuperación de personalidad en dispositivo físico; mantener la restricción de datos antes de tomar la cama. B0 / MIXTA |
 | VAR-03 | Variabilidad clínica | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Complicaciones, prevención y rescate causales; alergia≠intolerancia, no preguntar no cambia susceptibilidad. | Aceptar trayectorias adversas de variantes nuevas y distinguir no activada/tratada/rescatada. B6 / CHATGPT NORMAL |
-| QA-01 | Certificación y pruebas | IMPLEMENTADO CON DEFECTOS | Pruebas pertinentes ejecutadas y CI por SHA; no llamar terminado al código publicado o a test no corrido. | Reproducir cancelaciones Node 22, revisar certificación de traslados y obtener conclusión de CI del código publicado. El perfilado de red no debe ocultar fallos deterministas. B0 / CHATGPT NORMAL |
+| QA-01 | Certificación y pruebas | IMPLEMENTADO CON DEFECTOS | Pruebas pertinentes ejecutadas y CI por SHA; no llamar terminado al código publicado o a test no corrido. | Concluir CIgeneral del código actual y reproducir el timeout de recuperación online documentado en45016869358. V2,traslados550/550 y suite3224/3224 tienen evidencias separadas. B0 / CHATGPT NORMAL |
 | QA-02 | Certificación y pruebas | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Aceptar preview del mismoSHA,2–4 cuentas, recuperación, cuatro modos y controles; conservar fallos/reintentos sin repetir campañas costosas. | Aceptación dirigida solo para contrato modificado ySHAactual; cuota429de tercera cuenta histórica no prueba fallo de clínica. B1 / MIXTA |
-| QA-03 | Certificación y pruebas | COMPLETADO Y VERIFICADO | Certificar traslados correctos/erróneos, preparación, diagnóstico omitido/equivocado, rescate y cierre con libertad clínica vigente. | CI `b8d4ee5`: [11/11 jobs verdes](https://github.com/javierdario48-star/ATRIA/actions/runs/44849860676), 55 casos × 10 perfiles y regresiones; se comprobó decisión insegura ejecutada con penalización sin cierre, además de rechazo técnico cuando corresponde. Alcance Node/CI, no Android físico. B0 / CHATGPT NORMAL |
+| QA-03 | Certificación y pruebas | COMPLETADO Y VERIFICADO | Certificar traslados correctos/erróneos, preparación, diagnóstico omitido/equivocado, rescate y cierre con libertad clínica vigente. | CI45019485594, SHAef4b06f:11/11 trabajos,55 casos× 10 perfiles,550/550; resúmenes recuperados. Mantener regresión, aceptación externa separada. B0 / CHATGPT NORMAL |
 | DEPLOY-01 | Despliegue y persistencia | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Gratis para usuarios, sin Replit; publicar solo experimental y no modificar main/V4/estables ni sobrescribir trabajo concurrente. | Resolver la disponibilidad de un preview utilizable y aceptar su entrada real cuando el servicio permita desplegar; medir consumo antes de comparar planes. No migrar proveedor ni contratar servicios por esta auditoría. B8 / CHATGPT NORMAL |
 | AUTH-01 | Despliegue y persistencia | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Bienvenida con ilustración original sin globosDr/Darío; nombre único normalizado/reserva atómica, personalización y contraseña≥12; volver desde otro dispositivo. | Aceptar ilustración/creación/volver/migración de cuenta en móvil y otro dispositivo. B4 / MIXTA |
 | AUTH-02 | Despliegue y persistencia | IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN | Persistencia multiinstanciaCAS/RLS, controlador único por cuenta, transferencia explícita de dispositivo, no perder amigos/XP históricos. | Aceptar sesiones del usuario, caducidad y nueva instancia con red móvil. B1 / MIXTA |
@@ -182,6 +177,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`scripts/import-clinical-case-pack.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### LAB-01 · Estudios y resultados
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;GIT-13;U-AUDIT.
@@ -205,6 +202,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Inventariar controles aún sin modelo (radiografía RESP-07, PEF, lactato y protocolos cualitativos); medir reportes originales del usuario con IDs. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
 
 **Evolución y sustituciones:** 11/11 adquisición/PCR; 12/11 rechazo seguro de controles no modelados; 13/11 enlace de órdenes seriadas a muestras disponibles. La limitación de un control no significa que el estudio basal falte.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/studies-policy.test.js`, `src/v5/clinical/study-orders.test.js`, `src/v5/clinical/study-collections.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### LAB-02 · Voz, teclado y autocompletado
 
@@ -230,6 +229,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/study-orders.test.js`, `src/v5/ui/clinical-autocomplete.test.js`, `qa/tests/v5-nurse-study-autocomplete.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### ANAM-01 · Anamnesis y diálogo
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-08-14;PC-NOV.
@@ -253,6 +254,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Probar preguntas exactas del usuario en móvil, ampliar antecedentes documentados y evaluar naturalidad sin prefijos repetidos. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/patient-dialogue.test.js`, `qa/tests/patient-personality-integration.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### NUR-01 · Enfermería
 
@@ -280,6 +283,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Estado anterior conservado:** 162d0cf24a936e302e2a3efadcc168e1459d86d5 — IMPLEMENTADO CON DEFECTOS: Consultas/NPO/seguimiento y proactividad están integrados. Se reproduce fallo de contrato de nutrición: permitir comer cambia calidad/fulfilledTreatmentIds frente a expectativa antigua de igualdad.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/physical-nursing.test.js`, `src/v5/core/nurse-diagnosis-speech.test.js`, `src/v5/clinical/nursing-nutrition.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### CLOSE-01 · Diagnóstico y evaluación
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-NOV;GIT-13.
@@ -303,6 +308,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Aceptar rutas alternativas y condiciones reales repetidas del usuario; actualizar certificación de disposición sin debilitar seguridad física. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
 
 **Evolución y sustituciones:** 24/10 cierre al aceptar Cirugía; 26/10 seguimiento era gate; 4–12/11 libertad/alta insegura; 12–13/11 entrevista y seguimiento pasan a calidad. El requisito antiguo de bloqueo absoluto queda sustituido dentro de esta misma entrada.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/accepted-transfer.test.js`, `src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/receiver-transfer-contract.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### VEGA-01 · Dr. Vega
 
@@ -328,6 +335,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/clinical-hints.test.js`, `src/v5/ui/clinical-hint-presenter.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### DIALOG-AUTO-01 · Anamnesis y diálogo
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-11-20.
@@ -351,6 +360,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Probar primer contacto y pregunta normal en preview y teléfono con cronómetro. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/patient-dialogue.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/patient-dialogue-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### VEGA-AUTO-01 · Dr. Vega
 
@@ -376,6 +387,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/clinical-hint-ledger.test.js`, `src/v5/server/clinical-hints-durable.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### VEGA-COHERENCE-01 · Dr. Vega
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-NOV.
@@ -399,6 +412,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Probar pista→orden→recibo→pista por destino, alternativas y controles nuevos indicados. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/clinical-hints.test.js`, `src/v5/clinical/closure-catalog-audit.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### LAT-01 · Android y rendimiento
 
@@ -426,6 +441,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Resolver conjuntamente con:** PERF-01.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/social/durable-cooperative-replica.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/shared-guard-auth-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### MP-01 · Cooperativo
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-SOCIAL;PC-11-20.
@@ -450,15 +467,17 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/server/supabase-social-room-persistence.test.js`, `src/v5/clinical/cooperative-care.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/shared-guard-preview.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### XP-COOP · XP y progresión
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-NOV;PC-12-20.
 
 **Solicitud final:** Compartir en Cooperativo XP, débitos y pistas; participación pausa al salir y vuelve al reconectar; Competitivo conserva independencia.
 
-**Estado:** PARCIALMENTE IMPLEMENTADO. **Prioridad:** P2. **Entorno:** MIXTA.
+**Estado:** IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN. **Prioridad:** P2. **Entorno:** MIXTA.
 
-**Evidencia:** 7eed9e2 fija elegibilidad al cierre y pausa por salida. rewardFor usa hintLedger.count(doctorId), revelación y daño por actor: compartir todos los descuentos no está implementado.
+**Evidencia:** Política por cohorte activa publicada en `f6acbe7` y sanciones locales en `629a33b`: pistas/revelación, errores y muertes atribuibles comparten beneficiarios; cada recibo conserva autor. Salida pausa participación y Competitivo conserva independencia. Suite integrada3224/3224; SQL local9/9 en CI45019485559. No se aplicó a Supabase alojado.
 
 **Archivos responsables:** `src/v5/clinical/guard-runtime.js`, `src/v5/clinical/guard-session.js`, `src/v5/clinical/clinical-hint-ledger.js`, `src/v5/server/clinical-reward.js`.
 
@@ -466,7 +485,7 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `src/v5/server/clinical-reward.test.js`, `src/v5/server/clinical-hints-durable.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
 
-**Pendiente:** Integrar política cooperativa solicitada y animación por recibo; documentar compatibilidad de recibos previos y causalidad de muerte.
+**Pendiente:** Aceptación multicuenta con salidas/reconexión en staging, composición con deuda persistida y animación deduplicada XP-03; no reimplementar la cohorte compartida.
 
 **Criterio de aceptación:** Dos cooperantes reciben exactamente la política compartida vigente por evento, salida no gana cierres nuevos y rival no hereda pérdidas.
 
@@ -475,6 +494,10 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Evolución y sustituciones:** 5/11 usuario pide compartir incluso pistas; 12/11 se añade pausa/resume. La implementación de créditos de cierre no sustituye el pedido de compartir penalizaciones.
 
 **Condición recuperada/olvidada:** B: el resumen de XP compartida pierde la condición «incluidas pistas».
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/server/clinical-reward.test.js`, `src/v5/server/clinical-hints-durable.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
+**Estado anterior conservado:** PARCIALMENTE IMPLEMENTADO en el inventario original; la evidencia entonces usaba ayudas por actor. La política financiera ya cambió y su aceptación externa sigue abierta.
 
 ### DX-REVEAL · Diagnóstico y evaluación
 
@@ -500,6 +523,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/clinical-hint-ledger.test.js`, `src/v5/server/clinical-hints-durable.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### FAM-01 · Familiares y acompañantes
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-NOV.
@@ -524,6 +549,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/patient-dialogue.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/patient-dialogue-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### REC-01 · Recuperación de guardias
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-11-20;PC-12-20;U-AUDIT.
@@ -547,6 +574,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Investigar cancelación Node 22 y probar las cuentas/dispositivo del usuario con ACK perdido y red móvil. No hay P0 jugable reproducido aquí. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/guard-recovery.test.js`, `src/v5/social/durable-cooperative-replica.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/guard-recovery-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### SEL-00 · Interfaz clínica
 
@@ -574,6 +603,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Verificación 22/11/2026 — tanda de jugabilidad:** Revisión 22/11: la corrección compartida de identidad del DOM de recepción se documenta en COMP-01; no se ha cambiado asignación, proximidad ni autoridad para ocultar el timeout.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/app/patient-selection.test.js`, `src/v5/social/durable-cooperative-replica.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### DX-01 · Diagnóstico y evaluación
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;PC-23;PC-09-10.
@@ -597,6 +628,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Preview con red perdida, nueva instancia del editor para mismo UID, borrado y Android físico. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/diagnostic-impression.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/diagnosis-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### UI-01 · Interfaz clínica
 
@@ -622,6 +655,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`qa/tests/v5-guard-score-position.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/navigation-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### SAFE-01 · Medicación y seguridad
 
 **Fecha y origen:** ≤2026-11-11; fecha original no recuperada; SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-CONTRATO;PC-08-14;PC-NOV.
@@ -645,6 +680,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Aceptar combinaciones, omisiones y rescates por mecanismo; alcance no es farmacología general universal. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/clinical-execution-freedom.test.js`, `src/v5/clinical/medication-harms-487.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### ARCH-02 · Arquitectura y motor clínico
 
@@ -670,6 +707,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/app/build.test.js`, `src/v5/render/hospital.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### ARCH-03 · Arquitectura y motor clínico
 
 **Fecha y origen:** 2026-10-07→16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-07;MIG-PLAN.
@@ -693,6 +732,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad. B0. **Dependencias:** ninguna. **Impacto:** Conservar fuente original y rama exclusiva. **Riesgo:** medio. **Esfuerzo:** 2–4 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/app/build.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### ARCH-04 · Arquitectura y motor clínico
 
@@ -718,6 +759,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/core/room-authority.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### PHYS-01 · Fisiología y evolución temporal
 
 **Fecha y origen:** 2026-10-10 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-FARMACOS;MIG-MANUAL.
@@ -741,6 +784,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Conservar límites por fármaco al ampliar catálogo. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/native-medications-packs.test.js`, `src/v5/clinical/medication-exposure.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### PHYS-02 · Fisiología y evolución temporal
 
@@ -766,6 +811,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/guard-session-infusion.test.js`, `src/v5/clinical/morphine-487.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### PHYS-03 · Fisiología y evolución temporal
 
 **Fecha y origen:** 2026-10-10→26; SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-FARMACOS;DOC-QA26.
@@ -790,6 +837,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/legacy-pharmacology-sanity.test.js`, `src/v5/clinical/oxygen-physiology.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### PHYS-04 · Fisiología y evolución temporal
 
 **Fecha y origen:** 2026-10-10 (original indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-08-14;LIB-STABILIZATION.
@@ -813,6 +862,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Prueba física de tiempo de atención pertenece a ANDROID-01; no reintroducir vitales artificiales. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
 
 **Evolución y sustituciones:** Octubre pasó de 3+2 min a crédito máximo hasta 480s documentado. No se crean tareas separadas para cada versión temporal.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/peritonitis-care.test.js`, `src/v5/clinical/tertiary-care.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### PHYS-05 · Fisiología y evolución temporal
 
@@ -840,6 +891,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Estado anterior conservado:** 162d0cf24a936e302e2a3efadcc168e1459d86d5 — IMPLEMENTADO CON DEFECTOS: 166 escenarios/62 muertes históricos; suite actual falla harness competitivo por leer liveVitals privado antes del claim. No prueba que muerte clínica esté rota.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/mortality-regression.test.js`, `src/v5/clinical/native-death-room.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### PHYS-06 · Fisiología y evolución temporal
 
 **Fecha y origen:** 2026-10-04→23; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-17-23.
@@ -863,6 +916,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Aceptar trazado/color en pantalla real; ampliar solo ritmos autorados necesarios. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/ecg-morphology.test.js`, `src/v5/ui/ecg-sweep.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### NUR-02 · Enfermería
 
@@ -888,6 +943,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/engine/nurse-dispatcher.test.js`, `src/v5/clinical/physical-nursing.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### NUR-03 · Enfermería
 
 **Fecha y origen:** 2026-10-10/30; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-08-14;PC-24-31.
@@ -911,6 +968,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Android con background/reload mientras hay tareas. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/engine/nurse-dispatcher.test.js`, `src/v5/engine/nurse-dispatcher.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### MED-01 · Medicación y seguridad
 
@@ -936,6 +995,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/native-medication-eligibility.test.js`, `src/v5/clinical/clinical-execution-freedom.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### MED-02 · Medicación y seguridad
 
 **Fecha y origen:** 2026-10-24→11-05 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-CONTRATO;PC-24-31;DOC-INVENTARIO.
@@ -959,6 +1020,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Prueba dirigida de omisión, alternativa, reacción y recuperación con evidencia del segundo médico. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/accepted-transfer.test.js`, `src/v5/clinical/studies-policy.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### DX-02 · Diagnóstico y evaluación
 
@@ -984,6 +1047,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/diagnostic-impression.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/diagnosis-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### DX-03 · Diagnóstico y evaluación
 
 **Fecha y origen:** 2026-10-16→11-12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-MANUAL;PC-12-20.
@@ -1007,6 +1072,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Revisar desglose por destino alternativo y animación en teléfono. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/case-debrief.test.js`, `src/v5/clinical/accepted-transfer.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### VEGA-02 · Dr. Vega
 
@@ -1034,6 +1101,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Condición recuperada/olvidada:** C/F: paridad docente incompleta; intención de eliminación no recuperable.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/core/nurse-diagnosis-speech.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### VEGA-03 · Dr. Vega
 
 **Fecha y origen:** 2026-10-02/04→16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-02;PC-03-04;MIG-PLAN.
@@ -1059,6 +1128,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 **Condición recuperada/olvidada:** C: docencia y delegación quedaron fuera del inventario reciente.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/core/nurse-diagnosis-speech.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### XP-01 · XP y progresión
 
@@ -1086,6 +1157,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Verificación 22/11/2026 — tanda de jugabilidad:** CIRR navegador: corregidas dos expectativas restantes en la segunda guardia. Se verifican 133 brutos, recibo −15, saldo persistido 118; una nueva guardia sin cerrar no devuelve la sanción. No se cambió el motor ni el débito. Prueba real de navegador pendiente de CI: Chromium local aborta por sockets no permitidos.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/progression.test.js`, `src/v5/server/account-movement.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### XP-02 · XP y progresión
 
 **Fecha y origen:** 2026-10-02 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-02.
@@ -1112,6 +1185,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Condición recuperada/olvidada:** A: desbloqueo de vestimenta no está explícito en inventario recuperado.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/avatar-creator.test.js`, `src/v5/app/avatar-appearance.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### XP-03 · XP y progresión
 
 **Fecha y origen:** 2026-11-09→12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-09-10;DOC-INVENTARIO.
@@ -1135,6 +1210,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Deduplicar animación por médico/recibo/dispositivo y verificar dos cuentas, pistas y reconexión. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/guard-scoreboard.test.js`, `src/v5/ui/case-debrief.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### COMP-01 · Competitivo
 
@@ -1164,6 +1241,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Verificación 22/11/2026 — tanda de jugabilidad:** Reproducido en Actions 44974712154: botón de recepción desprendido reiteradamente. Causa: comparar HTML serializado por el navegador (`disabled=""`) con HTML fuente (`disabled`). `updateReceptionBoard` conserva el subárbol entre snapshots equivalentes y actualiza el reloj sin reemplazarlo; invalida caché al cambiar de diálogo. Pruebas dirigidas de recepción: 5/5. Aceptación Chromium de cuatro médicos pendiente de CI del cambio.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/server/competitive-durable.test.js`, `qa/tests/clinical-case-certification.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### LOBBY-01 · Lobby y presencia
 
 **Fecha y origen:** 2026-10-05→11-12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-SOCIAL;DOC-RPG.
@@ -1187,6 +1266,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Presencia tardía, regreso al lobby y notificación de amistad en teléfonos. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/lobby-directory.test.js`, `src/v5/social/player-profile.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### SOCIAL-01 · Amigos y chat
 
@@ -1214,6 +1295,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Condición recuperada/olvidada:** A/C: Equipo fue presentado como mejora social, pero no satisface mensajes directos de amigos.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### SOCIAL-02 · Amigos y chat
 
 **Fecha y origen:** 2026-10-20→11-11; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-SOCIAL;PC-11-20.
@@ -1237,6 +1320,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Teléfono de ambas cuentas con pestaña inactiva y presencia atrasada. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/server/supabase-social-room-persistence.test.js`, `src/v5/social/cooperative-link.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### CHAT-01 · Cooperativo
 
@@ -1262,6 +1347,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/guard-communication.test.js`, `src/v5/ui/guard-communication-view.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### CHAT-02 · Interfaz clínica
 
 **Fecha y origen:** 2026-10-01→14; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-01;PC-02;PC-08-14;MIG-MANUAL.
@@ -1285,6 +1372,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Intenciones finitas y datos redactados; docencia antigua no migrada por completo; fuente indirecta limitada al contenido declarado. B3. **Dependencias:** B1/B2 para medición y checklist. **Impacto:** Probar proximidad, Box2B, paciente distinto y lectura de historial con teclado. **Riesgo:** medio. **Esfuerzo:** 4–8 días.
 
 **Evolución y sustituciones:** Historial único clínico inicial; petición posterior de Equipo/Actividad añade vistas. No interpretar historial único como prohibición vigente del canal solicitado después.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/spatial-ward-speech.test.js`, `src/v5/core/nurse-diagnosis-speech.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### TURN-01 · Guardia de 24 minutos
 
@@ -1310,6 +1399,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/guard-day-clock.test.js`, `src/v5/clinical/shift-flow-chaos.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/full-guard-24h.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### TURN-02 · Guardia de 24 minutos
 
 **Fecha y origen:** 2026-11 (original parcial); SOLICITUD DOCUMENTADA INDIRECTAMENTE; U-AUDIT;DOC-INVENTARIO.
@@ -1333,6 +1424,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Aceptar consenso2 cuentas, salida de uno, desconexión y siguiente turno en Android. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/guard-turn-continuity.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/guard-recovery-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### SELECT-01 · Selección de guardias y especialidades
 
@@ -1358,6 +1451,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** ×5/×3/×1 de4/10 fue sustituido explícitamente por×1,5/×1,2/×1,0 el27/10; no son dos pendientes.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/server/guard-selection-integration.test.js`, `src/v5/server/guard-selection-integration.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### SELECT-OLD · Selección de guardias y especialidades
 
 **Fecha y origen:** 2026-10-04→27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-24-31.
@@ -1381,6 +1476,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Ninguna tarea; conservar antecedente en SELECT-01. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
 
 **Evolución y sustituciones:** Sustituido por SELECT-01; fila histórica excluida del total de pendientes.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/server/guard-selection-integration.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### UI-02 · Interfaz clínica
 
@@ -1406,6 +1503,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/engine/interactions.test.js`, `src/v5/ui/clinical-bedside-ux.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### EXAM-01 · Interfaz clínica
 
 **Fecha y origen:** 2026-10-04→26; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;DOC-QA26;MIG-MANUAL.
@@ -1429,6 +1528,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Aceptar maniobras/scroll/proximidad y acceso físico a todos los controles. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/physical-exam.test.js`, `src/v5/ui/examination-feedback.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### WORLD-01 · Mundo RPG, movimiento y gráficos
 
@@ -1454,6 +1555,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/app/avatar-appearance.test.js`, `src/v5/engine/navigation.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### WORLD-02 · Mundo RPG, movimiento y gráficos
 
 **Fecha y origen:** 2026-10-06→23; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-07;PC-SOCIAL.
@@ -1477,6 +1580,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Operaciones serializadas, CAS, plazos/reintentos y selección confirmada; causa dominante en teléfono todavía sin traza. B1. **Dependencias:** B0 para certificación. **Impacto:** Reproducir con RTT/jitter reales y medir salto remoto; no aplicar la misma solución al lag local sin traza. **Riesgo:** alto. **Esfuerzo:** 3–6 días + aceptación física.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. Pendientes de evidencia específica actual: `src/social/remote-motion-continuity.test.js`, `src/social/remote-generation-order.test.js`, `qa/v5/competitive-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### WORLD-03 · Mundo RPG, movimiento y gráficos
 
@@ -1504,6 +1609,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Condición recuperada/olvidada:** A/C: propuesta independiente omitida por inventario clínico reciente.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/engine/navigation.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### WORLD-04 · Mundo RPG, movimiento y gráficos
 
 **Fecha y origen:** 2026-10-26 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-SQM.
@@ -1527,6 +1634,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. B7. **Dependencias:** B1; decisión visual pendiente para nuevo mapa. **Impacto:** Completar tras WORLD-03; mantener transformaciones/anclajes de huellas rotadas y nav única. **Riesgo:** alto. **Esfuerzo:** 2–5 semanas para mapa modular completo.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/engine/navigation.test.js`, `src/v5/ui/spatial-ward-speech.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### WORLD-05 · Mundo RPG, movimiento y gráficos
 
@@ -1554,6 +1663,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Condición recuperada/olvidada:** A/C: acción de café heredada sin ruta V5 identificable.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/reception-board.test.js`, `src/v5/ui/bedside-guidance.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### AUDIO-01 · Audio y música
 
 **Fecha y origen:** 2026-10-29; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-AUDIO.
@@ -1578,6 +1689,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/hospital-audio.test.js`, `src/v5/ui/audio-assets.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/audio-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### AUDIO-02 · Audio y música
 
 **Fecha y origen:** 2026-10-03/04/27; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04;PC-SOCIAL;DOC-RPG.
@@ -1601,6 +1714,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Aceptar volumen percibido Android y límites de alarma en guardia larga. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/hospital-audio.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### VOICE-01 · Voz, teclado y autocompletado
 
@@ -1628,6 +1743,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Condición recuperada/olvidada:** C/F: funcionalidad previa sin integración en V5; eliminación accidental no demostrada.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. Pendientes de evidencia específica actual: `src/voice/revision-buffer.test.js`, `src/voice/android-v2-active-adapter.test.js`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### VOICE-02 · Voz, teclado y autocompletado
 
 **Fecha y origen:** 2026-10-06/07; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-07;PC-SOCIAL.
@@ -1654,6 +1771,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Condición recuperada/olvidada:** C: voz social no figura como pendiente independiente en inventario anterior.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. Pendientes de evidencia específica actual: `src/social/voice-session.test.js`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### KEYBOARD-01 · Voz, teclado y autocompletado
 
 **Fecha y origen:** 2026-10-01→16; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-01;PC-08-14;MIG-PLAN.
@@ -1677,6 +1796,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Gboard real en campos nativos, rotación, caret, borrar, Enter y botón enviar. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
 
 **Evolución y sustituciones:** 1/10 teclado normal;14–16/10 preferencia explícita teclado propio compacto. No hay dos implementaciones pendientes alternativas.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/atria-keyboard.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/keyboard-camera-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### KEYBOARD-OLD · Voz, teclado y autocompletado
 
@@ -1702,6 +1823,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Sustituido por KEYBOARD-01; excluido de pendientes activos.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/atria-keyboard.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### ANDROID-01 · Android y rendimiento
 
 **Fecha y origen:** 2026-10-04→11-20; SOLICITUD DOCUMENTADA INDIRECTAMENTE; LIB-ANDROID;PC-08-14;DOC-INVENTARIO;U-AUDIT.
@@ -1725,6 +1848,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Módulos históricos de voz sin entrada V5; teclado y Web Audio emulados no certifican IME, parlante ni red móvil. B5. **Dependencias:** B1; permisos de audio; Android físico. **Impacto:** Dispositivo/cuentas concretas. Work tampoco sustituye hardware ausente. **Riesgo:** medio/alto. **Esfuerzo:** 5–10 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. Pendientes de evidencia específica actual: `qa/v5/keyboard-camera-browser.mjs`, `qa/v5/shared-guard-preview.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### ANDROID-02 · Android y rendimiento
 
@@ -1750,6 +1875,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. Pendientes de evidencia específica actual: `qa/v5/navigation-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### BOTS-01 · Bots médicos
 
 **Fecha y origen:** 2026-10-02→11-12; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-02;PC-03-04;PC-24-31;DOC-INVENTARIO.
@@ -1774,6 +1901,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`qa/tests/clinical-case-certification.test.mjs`, `qa/tests/clinical-integral-matrix.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### BOTS-02 · Bots médicos
 
 **Fecha y origen:** 2026-10-04 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-03-04.
@@ -1797,6 +1926,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA. B8. **Dependencias:** historial completo/exportación disponible. **Impacto:** No obliga a instalar servicio ni pagar. Recuperar resultado del intento; bots existentes cumplen pruebas técnicas de otro origen. **Riesgo:** bajo. **Esfuerzo:** 1–3 días tras obtener fuentes.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### CASE-01 · Importación de casos
 
@@ -1824,6 +1955,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Condición recuperada/olvidada:** A: cobertura por libro no equivale a tener55 casos.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`scripts/import-clinical-case-pack.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### CASE-02 · Importación de casos
 
 **Fecha y origen:** 2026-10-16→28; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-15-23;PC-24-31;DOC-CONTRATO.
@@ -1848,6 +1981,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** 16/10 no nuevos casos durante migración;27–28/10 expansión explícita posterior. No es infracción de la restricción ya sustituida.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`qa/tests/clinical-case-certification.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### VAR-01 · Variabilidad clínica
 
 **Fecha y origen:** 2026-10-24→29; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-CONTRATO.
@@ -1871,6 +2006,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Cobertura mecanística acotada: catálogo/metadata, administración, exposición y efecto no son equivalentes. B6. **Dependencias:** B0/B2 y referencias del caso. **Impacto:** Validar plausibilidad de nuevas variantes y banco de antecedentes, sin confundir volumen combinatorio con aceptación clínica. **Riesgo:** alto. **Esfuerzo:** 5–10 días por conjunto de mecanismos.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/content/patient-variation.test.js`, `src/v5/content/guard-patient-variation.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### VAR-02 · Variabilidad clínica
 
@@ -1898,6 +2035,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Estado anterior conservado:** 162d0cf24a936e302e2a3efadcc168e1459d86d5 — IMPLEMENTADO CON DEFECTOS: Motor integrado, banco y memoria; test competitivo falla al leer conducta antes de claim ahora privado. Persistencia después del claim no se invalida por esa lectura incorrecta.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`qa/tests/patient-personality-longitudinal.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### VAR-03 · Variabilidad clínica
 
 **Fecha y origen:** 2026-10-28→11-13; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-CONTRATO;GIT-13.
@@ -1922,6 +2061,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/medication-harms-487.test.js`, `qa/tests/clinical-case-certification.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### QA-01 · Certificación y pruebas
 
 **Fecha y origen:** 2026-10-07→11-20; SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-PLAN;DOC-INVENTARIO;RUN-HEAD;ISSUE-01.
@@ -1930,7 +2071,7 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Estado:** IMPLEMENTADO CON DEFECTOS. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
 
-**Evidencia:** Base 162d0cf: 3164/3167 local, CI Experimental 28/30 y Transfers 7/11. Corrección 7cde6fa: suite local completa 3167/3167 y 26/26 dirigidas; recuperación Node 24, 24/24. El estado final del nuevo CI se registra por run/SHA: no se infiere verde global de Node local ni de Vercel.
+**Evidencia:** CIRR y Competitivo4 aprobaron en45016869358, que falló en otro escenario de recuperación online (`native leave did not commit`). CI clínica/V2/HTML actuales y suite3224/3224 están separadas y aprobadas en su ámbito. CIgeneral906e50e45020275953 todavía sin conclusión al corte. El inventario no declara una aprobación general inexistente.
 
 **Archivos responsables:** `.github/workflows/atria-v5-core.yml`, `.github/workflows/atria-v5-integral.yml`, `.github/workflows/atria-v5-transfers.yml`.
 
@@ -1938,7 +2079,7 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `qa/tests/patient-personality-longitudinal.test.mjs`, `src/v5/clinical/nursing-nutrition.test.js`, `src/v5/clinical/mortality-regression.test.js`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
 
-**Pendiente:** Reproducir cancelaciones Node 22, revisar certificación de traslados y obtener conclusión de CI del código publicado. El perfilado de red no debe ocultar fallos deterministas.
+**Pendiente:** Concluir45020275953 y reproducir el fallo de recuperación online con statusHTTP, requestId, receipt y participación antes de cambiar lógica. No repetir ni rebajar las pruebas V2/traslados ya aprobadas.
 
 **Criterio de aceptación:** Registros identifican ámbito ySHA; una suite fallida nunca se describe como aprobada.
 
@@ -1947,6 +2088,10 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Evolución y sustituciones:** Resultados3137del 12/11 no describen162d0cf del 13/11; matriz43289556288 terminó6/8, luego43435355500sí8/8. El 20/11 se corrigieron tres fixtures/harness en 7cde6fa; no se modificaron reglas clínicas. Suite final completa aprobada.
 
 **Verificación 22/11/2026 — tanda de jugabilidad:** CI previa 44974712154 recuperada: 28/30 SUCCESS; fallaban CIRR navegador (dos aserciones restantes bruto/neto) y Competitivo 4 (DOM inestable). Correcciones dirigidas sin borrar pruebas, sin subir el timeout ni devolver XP. No declarar la nueva CI verde hasta observar su conclusión.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`qa/tests/patient-personality-longitudinal.test.mjs`, `src/v5/clinical/nursing-nutrition.test.js`, `src/v5/clinical/mortality-regression.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
+**Antecedente de evidencia conservado:** Base 162d0cf: 3164/3167 local, CI Experimental 28/30 y Transfers 7/11. Corrección 7cde6fa: suite local completa 3167/3167 y 26/26 dirigidas; recuperación Node 24, 24/24. El estado final del nuevo CI se registra por run/SHA: no se infiere verde global de Node local ni de Vercel.
 
 ### QA-02 · Certificación y pruebas
 
@@ -1972,15 +2117,17 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. Pendientes de evidencia específica actual: `qa/v5/shared-guard-preview.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### QA-03 · Certificación y pruebas
 
 **Fecha y origen:** 2026-10-30→11-20; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;RUN-HEAD.
 
 **Solicitud final:** Certificar traslados correctos/erróneos, preparación, diagnóstico omitido/equivocado, rescate y cierre con libertad clínica vigente.
 
-**Estado:** IMPLEMENTADO CON DEFECTOS. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
+**Estado:** COMPLETADO Y VERIFICADO. **Prioridad:** P1. **Entorno:** CHATGPT NORMAL.
 
-**Evidencia:** 4 perfiles fallan por «missing initial refusal»; no se puede asumir misma política de rechazo para alta insegura registrada y destino seguro sin anamnesis. En el nuevo código 7cde6fa, run 44847181875 conserva 4 perfiles fallidos de 11; el log wrong-dx certifica 47/55 y 8 fallan por missing initial refusal.
+**Evidencia:** CI [45019485594](https://github.com/javierdario48-star/ATRIA/actions/runs/45019485594), SHAef4b06f: 11/11 trabajos, diez perfiles por cada uno de los55 casos, **550/550**. Se recuperaron los diez resúmenes del log:55 ejecuciones y0fallos por perfil; sin inferir los resultados adversos como defectos. [Resúmenes por perfil](evidence/resp01-v2-graph-2026-11-22/ci-transfers.json). El núcleo clínico/contenido de906e50e es idéntico por treeSHA al deef4b06f; la aceptación de plataforma se informa por separado.
 
 **Archivos responsables:** `qa/v5/transfer-certification.mjs`, `.github/workflows/atria-v5-transfers.yml`.
 
@@ -1988,13 +2135,17 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Ejecución comprobada:** Incluidas y aprobadas en la suite local 7cde6fa: `qa/tests/clinical-case-certification.test.mjs`. La ejecución de un archivo no prueba por sí sola todos los criterios de la solicitud; preview, multicuenta externa y Android se declaran por separado.
 
-**Pendiente:** Separar rechazo técnico, decisión insegura ejecutada y cierre válido; investigar efectos reales antes de ajustar expectativas.
+**Pendiente:** Ninguna para esta certificación automatizada de traslados. Mantener regresiones ante cambios compartidos. Supabase/Preview/Android y CI general son QA-02/DEPLOY-01/ANDROID-01, no se les atribuye esta aceptación.
 
 **Criterio de aceptación:** Prueba adversa exige consecuencias/recepción/XP acordes; no reinstala gate clínico antiguo para hacerCIverde.
 
 **Causa / bloque:** Fixtures leen expedientes privados antes del claim; expectativas de rechazo incompatibles con libertad clínica; cambios NPO sin actualizar contrato de calidad. B0. **Dependencias:** ninguna. **Impacto:** Separar rechazo técnico, decisión insegura ejecutada y cierre válido; investigar efectos reales antes de ajustar expectativas. **Riesgo:** medio. **Esfuerzo:** 2–4 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`qa/tests/clinical-case-certification.test.mjs`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
+**Estado anterior conservado:** IMPLEMENTADO CON DEFECTOS; 4 perfiles fallan por «missing initial refusal»; no se puede asumir misma política de rechazo para alta insegura registrada y destino seguro sin anamnesis. En el nuevo código 7cde6fa, run 44847181875 conserva 4 perfiles fallidos de 11; el log wrong-dx certifica 47/55 y 8 fallan por missing initial refusal. Esa evidencia pertenece al checkpoint antiguo y queda sustituida por el run550/550 anterior.
 
 ### DEPLOY-01 · Despliegue y persistencia
 
@@ -2020,6 +2171,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita. Issue #1 del 20/11 añade diagnóstico de cuota y comparación de costo posterior a medición; no autoriza migración.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### AUTH-01 · Despliegue y persistencia
 
 **Fecha y origen:** 2026-10-27 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;DOC-WELCOME;DOC-RPG.
@@ -2043,6 +2196,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Elegibilidad de crédito y ayudas se resuelven por actor; falta el hilo de mensajes directos entre amigos en el flujo V5. B4. **Dependencias:** B1; política XP del usuario. **Impacto:** Aceptar ilustración/creación/volver/migración de cuenta en móvil y otro dispositivo. **Riesgo:** alto. **Esfuerzo:** 4–7 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/server/account-gateway.test.js`, `src/v5/server/account-clinical-integration.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### AUTH-02 · Despliegue y persistencia
 
@@ -2068,6 +2223,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/server/durable-guard-authority.test.js`, `src/v5/server/account-gateway.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### SCALE-01 · Lobby y presencia
 
 **Fecha y origen:** 2026-10-16→27 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; MIG-PLAN;MIG-MANUAL.
@@ -2091,6 +2248,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Fondo hospitalario monolítico y malla; objetos/colliders independientes siguen siendo una propuesta. B7. **Dependencias:** B1; decisión visual pendiente para nuevo mapa. **Impacto:** Carga medida y presupuesto por sala antes de prometer lobby masivo/TURN/WAN. **Riesgo:** alto. **Esfuerzo:** 2–5 semanas para mapa modular completo.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/social/cooperative-link.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### CONT-01 · Continuidad y recuperación histórica
 
@@ -2116,6 +2275,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### CONT-02 · Continuidad y recuperación histórica
 
 **Fecha y origen:** 2026-11-20 (solicitud original actual); SOLICITUD ORIGINAL RECUPERADA; U-AUDIT.
@@ -2139,6 +2300,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** No hay transcripciones completas ni correspondencia literal individual de 1–60; documentos antiguos conservan estados de su SHA. B8. **Dependencias:** historial completo/exportación disponible. **Impacto:** Requiere fuentes conversacionales completas accesibles; no bloquear auditoría/repo ni fabricar60títulos. **Riesgo:** bajo. **Esfuerzo:** 1–3 días tras obtener fuentes.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### CONT-03 · Continuidad y recuperación histórica
 
@@ -2166,6 +2329,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Condición recuperada/olvidada:** G: hay material local no publicado; no todo representa funcionalidad pendiente.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Esta entrada no tiene una prueba pertinente incluida en esa suite local; no se le atribuye cobertura por el total agregado. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### CLIN-HEPAT-01 · Estudios y resultados
 
 **Fecha y origen:** 2026-11 (documentada); SOLICITUD DOCUMENTADA INDIRECTAMENTE; DOC-INVENTARIO;DOC-HANDOFF.
@@ -2191,6 +2356,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 **Resolver conjuntamente con:** LAB-01, VEGA-COHERENCE-01.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/clinical-hints.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### CLIN-CARD08-01 · Diagnóstico y evaluación
 
@@ -2218,6 +2385,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Resolver conjuntamente con:** CLOSE-01, VEGA-COHERENCE-01.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/receiver-transfer-contract.test.js`, `src/v5/clinical/clinical-policy-closure.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### CLIN-VARIX-01 · Diagnóstico y evaluación
 
 **Fecha y origen:** 2026-10-30→11-04; SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-24-31;PC-NOV;DOC-INVENTARIO.
@@ -2243,6 +2412,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
 
 **Resolver conjuntamente con:** CLOSE-01, NUR-04.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/accepted-transfer.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### CLIN-HDA-01 · Diagnóstico y evaluación
 
@@ -2270,6 +2441,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 
 **Resolver conjuntamente con:** CLOSE-01, SAFE-01.
 
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/ui/diagnostic-impression.test.js`, `src/v5/clinical/accepted-transfer.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 ### NUR-04 · Enfermería
 
 **Fecha y origen:** 2026-11-04 (indirecta); SOLICITUD DOCUMENTADA INDIRECTAMENTE; PC-NOV;DOC-HANDOFF.
@@ -2293,6 +2466,8 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Causa / bloque:** Confundir muestra con alias, diagnóstico con aptitud de traslado, calidad con requisito indispensable y decisión con ejecución. B2. **Dependencias:** B0; recibos existentes. **Impacto:** Distinguir medición rutinaria, reevaluación clínica deliberada y condición indispensable por caso; ligar la primera a Enfermería/recibo sin fabricar examen médico. **Riesgo:** alto. **Esfuerzo:** 4–8 días.
 
 **Evolución y sustituciones:** Vigente; no se recuperó sustitución explícita.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/clinical/automatic-transfer-runtime.test.js`, `src/v5/clinical/accepted-transfer.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
 
 ### PERF-01 · Android y rendimiento
 
@@ -2321,6 +2496,9 @@ Los esfuerzos son estimaciones del bloque o del alcance indicado; no sumarlos po
 **Resolver conjuntamente con:** LAT-01, MP-01, QA-01, DEPLOY-01.
 
 **Condición recuperada/olvidada:** A: la condición de consumo medido, flag OFF y rollback no estaba explícita en el inventario anterior. LAT-01 conserva percepción de latencia; PERF-01 solo añade la condición de consumo/medición.
+
+**Revisión de continuidad 22/11/2026:** archivos y pruebas de esta ficha siguen presentes. Las pruebas locales pertinentes identificadas (`src/v5/social/durable-cooperative-replica.test.js`) están incluidas en la suite integrada **3224/3224**, cero fallos/cancelaciones, ejecutada tras esta tanda. Pendientes de evidencia específica actual: `qa/v5/shared-guard-auth-browser.mjs`. El resultado local no sustituye el criterio completo ni la aceptación en el entorno indicado. Se conserva el historial anterior.
+
 
 ## Historial íntegro anterior — conservado, superado por la auditoría vigente
 
@@ -2512,3 +2690,24 @@ IDs CASE-01, CASE-02, VAR-01, SAFE-01, MED-01, VEGA-01, QA-01, QA-02: RESP-01 V2
 Tras el cambio compartido del receptor se ejecutó una campaña: **40/40** escenarios V2, cuatro modos; **15 pares V1/V2 sin errores**; **8/8** recorridos adicionales (dos por modo) para alta/observación inseguras, reintento idempotente, cero dosis rechazada, dosis posible excesiva real de morfina, alergia preexistente, adrenalina y oxígeno reales, Dr. Vega, recuperación y observación legal. **27/27 aristas declaradas** observadas en la unión. Los 40 escenarios solos dejaban seis aristas sin cobertura; no se les atribuye esa cobertura retrospectivamente. Esta cifra no significa todas las combinaciones clínicas posibles. Los resultados adversos legítimos se conservan.
 
 Evidencias permanentes: [resumen](evidence/resp01-v2-graph-2026-11-22/summary.json) y `native-evidence.jsonl.gz` con semilla, comandos, muestras fisiológicas, recibos, complicaciones, XP y trazas por recorrido. Pruebas de contrato/compilación: **29/29**. La CI del SHA final y la partida real offline se registran por separado; esta tanda por sí sola no autoriza GO ONLINE/PRODUCTION. Se mantienen 55 identidades de catálogo, V1 sin modificaciones y los cuatro modos existentes.
+
+
+## Snapshot operativo conservado del21/11/2026 · no vigente
+
+
+> **TRASPASO HISTÓRICO OPERATIVO (21/11/2026):** [Registro consolidado de los 88 IDs, errores de jugabilidad, diagrama de flujo RESP-01 V2, bots y HTML offline](ATRIA-5-REGISTRO-HISTORICO-JUGABILIDAD-V2-OFFLINE-2026-11-21.md). Este archivo sigue siendo **la única fuente mutable de estado por ID**. Los estados y porcentajes históricos más abajo requieren contraste con el SHA más reciente; nunca confundir «pendiente de aceptación» con «bug actual». Orden del creador: cerrar errores históricos → grafo clínico V2 → bots → HTML offline manual; conservar portabilidad a Vercel en 21 días.
+
+
+> **Estado vigente de esta continuación, 21/11/2026:** conservar los **88 IDs históricos** y sus referencias originales. Último código `629a33ba2a529ade4c30c5501c25a6d23ead40e8`. El estado operativo de liberación y las pruebas nuevas están en [pendientes verificados](contracts/ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md) y el [informe permanente de cierre](contracts/ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md). Los recuentos/checkpoints inferiores son históricos; no invalidan estas evidencias posteriores.
+
+| ID existente | Actualización verificada | Pendiente vigente |
+| --- | --- | --- |
+| XP-COOP / XP-01 / DX-REVEAL | Coste de pistas/revelación compartido entre activos; privacidad conservada. Alta/Observación y muerte causal mantienen cohorte y autor; la carrera local ya conecta ambas decisiones inseguras y no fusiona dos autores. | Aceptación con cuentas alojadas, deuda entre guardias y concurrencia. |
+| CLOSE-01 / NUR-01 | Corregido cierre de Observación con Enfermería pendiente y bloqueo circular NEUR-03; paciente intacto y recuperación probados. | Validación física y receptor ciego aún abierto. |
+| VEGA-COHERENCE-01 / VEGA-01 | Recorridos 55/55 aprobados en CI `44973637286`; NEUR-03 ya termina. | Latencia real y aceptación Android. |
+| QA-03 | Traslados `44973637288`: 11/11 trabajos, 10 perfiles ×55 =550/550. CIRR distingue bruto/deuda; DIARR valida recibo de Observación. | CI45019485594, SHAef4b06f:11/11 trabajos,55 casos× 10 perfiles,550/550; resúmenes recuperados. Mantener regresión, aceptación externa separada. B0 / CHATGPT NORMAL |
+| QA-01 | Regresión local 3210/3210 en `78f260f`; 14 pruebas dirigidas posteriores para carrera local. V2 40/40 y paridad 15 pares, 5/5 CI `44973929079`. | Concluir CIgeneral del código actual y reproducir el timeout de recuperación online documentado en45016869358. V2,traslados550/550 y suite3224/3224 tienen evidencias separadas. B0 / CHATGPT NORMAL |
+| MED-01 / MED-02 | Contrato V2 y regresiones nativas de medicación/seguridad aprobados; PBE conserva daño renal y rescate medidos. | Aceptación externa; cobertura futura declarativa no certificada globalmente. |
+| DEPLOY-01 / ANDROID-01 / ANDROID-02 / MP-01 / COMP-01 | Migración preparada +9/9 PostgreSQL local; build modular/frontera aprobados; CI multijugador previa conserva su evidencia. | Supabase staging accesible, deuda REST versionada, deployment exacto y Android físico. |
+
+**RESP-01 V2 sigue NO GO:** recepción ciega no resuelta, staging/Preview/Android pendientes y CI general final aún sin aceptación. No se rehízo la auditoría histórica ni se añadieron requisitos duplicados. La aprobación original `44968933396` y la nueva `44973929079` se conservan como aprobaciones del alcance automatizado de contenido V2.
