@@ -49,7 +49,8 @@ for(const scenario of scenarios){
   // The broad public abdominal hypothesis is compatible with surgical syndromes,
   // but lacks specificity for this destination; it is not an incompatible claim.
   'missing-diagnosis':'diagnosis-missing','broad-diagnosis':'diagnosis-specificity',
-  'wrong-diagnosis':'diagnosis-incompatible','missing-exam':'examination-incomplete',
+  // An unrelated public diagnosis has no indication for Surgery, independently of the hidden case.
+  'wrong-diagnosis':'destination-not-indicated','missing-exam':'examination-incomplete',
   'documented-awaiting-preparation':'indispensable-study-pending','medical-focus':'destination-not-indicated',
   'secondary-missing-diagnosis':'diagnosis-missing','secondary-urgent-specific':'examination-incomplete',
   'secondary-broad-diagnosis':'diagnosis-specificity','secondary-documented-focus':'stabilization-insufficient'
