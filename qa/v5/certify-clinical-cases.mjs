@@ -16,7 +16,7 @@ import {diagnosticRequirements} from '../../src/v5/clinical/diagnostic-evidence.
 
 export const CLINICAL_CERTIFICATION_PROFILES=Object.freeze([
  'competent','slow','inexperienced','negligent','omit-studies','wrong-medication',
- 'no-allergy-question','abandon','complication-rescue'
+ 'no-allergy-question','abandon','complication-rescue','wrong-diagnosis'
 ]);
 export const CLINICAL_CERTIFICATION_MODES=Object.freeze(['solo','apprentice','coop','competitive']);
 const checkNames=['history','exam','studies','treatment','trajectory','closure','xp'];
@@ -524,7 +524,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    await action('/signos');
    if(!['inexperienced','negligent'].includes(profile))await action('/monitor conectar');
    for(const text of profile==='negligent'?[]:profile==='inexperienced'?plan.exams.slice(0,2):plan.exams)await action(text);
-   if(profile!=='negligent')await action('/diagnostico '+plan.diagnosis);
+   if(profile!=='negligent')await action('/diagnostico '+(profile==='wrong-diagnosis'?
+    'neumotorax espontaneo':plan.diagnosis));
    if(!['omit-studies','inexperienced','negligent'].includes(profile))for(const id of plan.studyIds)if(canRequestStudy(id,view.clinical)){
     await action('/estudio '+id);requestedStudies.add(id);
    }
