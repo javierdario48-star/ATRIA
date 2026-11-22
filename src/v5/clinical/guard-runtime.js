@@ -69,6 +69,7 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
    throw Error('bed placement failed');
   const patient=world.snapshot().patients.find(p=>p.uid===r.uid);
   const session=createGuardSession({roomId,mode:['solo','apprentice'].includes(mode)?mode:'coop',actorId:hostId,actorName:host.name,members,patient,content,
+   sharedRewards:mode==='coop',activeParticipants:()=>members.filter(m=>turn.participating(m.id)).map(m=>m.id),
    checkpoint:savedSessions.get(r.uid)||null,
    authenticate:id=>members.some(m=>m.id===id)?{id,roomId}:null,
    resolveContext:({actorId,targetPatientUid})=>({patientUid:world.patientInRangeFor(actorId,targetPatientUid||r.uid)}),
@@ -121,14 +122,19 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
   }
  }
  async function flush(){for(const s of sessions.values())await s.flush();}
+ function penaltiesFor(actorId){
+  return [...sessions.values()].flatMap(s=>s.progressRead().penalties).filter(p=>
+   mode==='coop'&&Array.isArray(p.beneficiaryIds)?p.beneficiaryIds.includes(actorId):p.actorId===actorId)
+   .map(p=>p.actorId===actorId?p:{...p,sourceActorId:p.actorId,actorId});
+ }
  function clinicalView(actorId,session=activeSession(actorId)){
   const state=session.read(actorId),rows=shift.records();
   // Competitive progression is private to the acting physician. A patient's
   // previous doctor's rejected disposition must never debit the new owner.
   // This is a projection only: room receipts and XP authority stay unchanged.
-  if(mode==='competitive'){
-   const ownReceipts=state.progress.receipts.filter(row=>row.actorId===actorId);
-   const ownPenalties=state.progress.penalties.filter(row=>row.actorId===actorId);
+  if(mode==='competitive'||mode==='coop'){
+   const ownReceipts=[...claims.values()].filter(row=>row.actorId===actorId);
+   const ownPenalties=penaltiesFor(actorId);
    const earned=[...claims.values()].filter(row=>row.actorId===actorId)
     .reduce((sum,row)=>sum+Number(row.xp||0),0);
    const lost=ownPenalties.reduce((sum,row)=>sum+Number(row.loss||0),0);
@@ -324,14 +330,9 @@ export async function createGuardRuntime({content,roomId,caseId,members,hostId,m
     catalog=[];
    }
    const scene=world.snapshot();
-   const deaths=[],dischargePenalties=[];
-   for(const state of patientStates.values()){
-    const p=state.patient;
-    if(p.patientDied&&p.deathAttribution?.classification==='treatment-contributed'&&p.deathAttribution.actorIds?.includes(actorId))
-     deaths.push({kind:'clinical.death',actorId,patientUid:p.uid,eventId:roomId+':death:'+p.uid});
-    dischargePenalties.push(...state.progress.penalties.filter(p=>
-     ['clinical.unsafe-discharge','clinical.unsafe-observation'].includes(p.kind)&&p.actorId===actorId));
-   }
+   const penalties=penaltiesFor(actorId);
+   const deaths=penalties.filter(p=>p.kind==='clinical.death');
+   const dischargePenalties=penalties.filter(p=>['clinical.unsafe-discharge','clinical.unsafe-observation'].includes(p.kind));
    return clone({clinical,catalog,
     spatial:{nurses:scene.nurses,doctors:[{...scene.player,id:hostId,kind:'doctor'},...scene.others],expert:scene.expert},
     motionReceipts:[...motionReceipts],claims:[...claims].filter(([,claim])=>mode!=='competitive'||claim.actorId===actorId),

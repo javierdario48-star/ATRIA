@@ -15,7 +15,7 @@ test('session binds offers to room encounter patient and authenticated physician
  const s=createGuardSession(options),b=s.hintBinding('a');
  assert.equal((await s.hint({...b,actorId:'b',op:'prepare',requestId:'spoof'},'a')).status,'rejected');
  assert.equal((await s.hint({...b,patientUid:'wrong',op:'prepare',requestId:'wrong'},'a')).status,'rejected');
- await reveal(s);assert.equal(s.hintCount('a'),1);assert.equal(s.hintCount('b'),0);s.dispose();
+ await reveal(s);assert.equal(s.hintCount('a'),1);assert.equal(s.hintCount('b'),1);s.dispose();
 });
 test('history survives restart and the same clinical action remains free',async()=>{
  let s=createGuardSession(options);await reveal(s);const saved=await s.checkpoint();s.dispose();
@@ -27,12 +27,12 @@ test('changed evidence invalidates prepared hints without a fee',async()=>{
  assert.equal((await s.hint({...b,op:'revalidate',requestId:'verify',offerId:p.offerId},'a')).status,'stale');
  assert.equal(s.hintCount('a'),0);s.dispose();
 });
-test('individual reward applies hint factor without changing clinical score or another doctor',async()=>{
+test('cooperative reward applies the same financial hint factor without changing clinical quality',async()=>{
  const s=createGuardSession(options);await reveal(s,'a');const raw={xp:133,quality:{score:100},actorId:'a'};
  assert.equal(s.rewardFor(raw,'a').xp,126);assert.equal(s.rewardFor(raw,'a').quality.score,100);
- assert.equal(s.rewardFor(raw,'b').xp,133);s.dispose();
+ assert.equal(s.rewardFor(raw,'b').xp,126);s.dispose();
 });
-test('both doctors see the same canonical clinical closure with separate XP projections',async()=>{
+test('both doctors see the same canonical clinical closure and shared XP discount',async()=>{
  const s=createGuardSession(options);
  await reveal(s,'a');
  await s.post({id:'dx',text:'/diagnostico cirrosis descompensada'},'b');
@@ -40,7 +40,8 @@ test('both doctors see the same canonical clinical closure with separate XP proj
  const a=s.read('a'),b=s.read('b');
  assert.equal(b.patient.closure.actorId,'b');
  assert.deepEqual(a.patient,b.patient);
- assert.equal(a.caseReward.xp,Math.floor(b.caseReward.xp*95/100));
+ assert.equal(a.caseReward.xp,b.caseReward.xp);
+ assert.equal(a.caseReward.xp,Math.floor(a.patient.closure.xp*95/100));
  assert.equal(a.caseReward.quality.score,b.caseReward.quality.score);
  const late=await s.hint({...s.hintBinding('a'),op:'prepare',requestId:'closed-encounter'},'a');
  assert.equal(late.reason,'patient-not-active');assert.equal(s.hintCount('a'),1);

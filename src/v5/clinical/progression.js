@@ -20,16 +20,23 @@ export function createProgressionLedger(saved={}){
   if(typeof p.patientUid!=='string'||!p.patientUid||typeof p.eventId!=='string'||
    !['clinical.death','clinical.unsafe-discharge','clinical.unsafe-observation'].includes(p.kind)||
    ['clinical.unsafe-discharge','clinical.unsafe-observation'].includes(p.kind)&&(typeof p.actorId!=='string'||!p.actorId)||
+   p.beneficiaryIds!==undefined&&(!Array.isArray(p.beneficiaryIds)||p.beneficiaryIds.length>4||
+    new Set(p.beneficiaryIds).size!==p.beneficiaryIds.length||p.beneficiaryIds.some(id=>typeof id!=='string'||!id))||
    !Number.isSafeInteger(p.loss)||p.loss<0||p.loss>15||penalties.has(penaltyKey(p)))
    throw Error('invalid or duplicate clinical penalty');
   penalties.set(penaltyKey(p),structuredClone(p));
  }
- function penalize(kind,{patientUid,eventId,actorId}){
+ function penalize(kind,{patientUid,eventId,actorId,beneficiaryIds}){
   if(typeof patientUid!=='string'||!patientUid||typeof eventId!=='string'||!eventId||
    typeof actorId!=='string'||!actorId)throw Error('invalid clinical penalty');
   const receipt={kind,patientUid,eventId,actorId},key=penaltyKey(receipt);
   if(penalties.has(key))return structuredClone(penalties.get(key));
   if(receipts.has(patientUid))throw Error('cannot penalize a successfully closed patient');
+  if(beneficiaryIds!==undefined){
+   if(!Array.isArray(beneficiaryIds)||new Set(beneficiaryIds).size!==beneficiaryIds.length||
+    beneficiaryIds.some(id=>typeof id!=='string'||!id))throw Error('invalid penalty beneficiaries');
+   receipt.beneficiaryIds=[...beneficiaryIds];
+  }
   // A premature discharge/observation incurs a durable penalty even when no
   // XP has been earned. Future awards service that debt; XP cannot be negative.
   // Historical death penalties remain capped at available XP.

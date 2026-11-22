@@ -60,7 +60,8 @@ const routeReason={
  * care mutate the same owned patient through one port; UI never mutates it.
  */
 export function createGuardSession({roomId,mode,actorId,actorName,patient,content,resolveContext,onChange=()=>{},progress=createProgressionLedger(),nursing=null,
- members=[{id:actorId,name:actorName}],authenticate=null,checkpoint=null}){
+ members=[{id:actorId,name:actorName}],authenticate=null,checkpoint=null,
+ sharedRewards=mode==='coop',activeParticipants=()=>members.map(m=>m.id)}){
  if(!['solo','apprentice','coop'].includes(mode)||typeof resolveContext!=='function')throw Error('supported clinical mode/context required');
  if(mode==='coop'&&(members.length<2||members.length>4||!members.some(x=>x.id===actorId)))throw Error('cooperative roster requires two to four doctors');
  const memberNames=new Map(members.map(x=>[x.id,String(x.name||x.id).slice(0,32)]));
@@ -85,10 +86,12 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
    (labels.get(id)||id)+(nativePatient.severeAllergies.includes(id)?' (reacción grave)':'')).join(', ')+'.';
  }
  const encounterId=checkpoint?.encounterId||roomId+':care:'+nativePatient.uid;
- const hintLedger=createClinicalHintLedger({roomId,encounterId,patientUid:nativePatient.uid},checkpoint?.hints);
+ const penaltyBeneficiaries=()=>sharedRewards?{beneficiaryIds:activeParticipants()}:{};
+ const hintLedger=createClinicalHintLedger({roomId,encounterId,patientUid:nativePatient.uid,
+  ...(sharedRewards?{activeParticipants}:{})},checkpoint?.hints);
  function rewardFor(receipt,doctorId){
   if(!receipt)return receipt;
-  const baseXP=receipt.baseXP??receipt.xp,count=hintLedger.count(doctorId),revealed=!!hintLedger.diagnosisReveal(doctorId);
+  const baseXP=receipt.baseXP??receipt.xp,count=hintLedger.count(doctorId),revealed=hintLedger.diagnosisDiscount(doctorId);
   return {...copy(receipt),actorId:doctorId,baseXP,hintCount:count,
    ...(revealed?{diagnosisRevealed:true}:{}),hintPenaltyPercent:hintPenaltyPercent(count),
    xp:hintAdjustedXP(baseXP,count,revealed)};
@@ -212,8 +215,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
      if(assessment.status!=='rejected'||!['closure-not-ready','destination-not-indicated','stabilization-insufficient'].includes(assessment.reason))
       return assessment;
      const penalty=intent.id==='observacion'?
-      progress.penalizeUnsafeObservation({eventId,actorId,patientUid}):
-      progress.penalizeUnsafeDischarge({eventId,actorId,patientUid});
+      progress.penalizeUnsafeObservation({eventId,actorId,patientUid,...penaltyBeneficiaries()}):
+      progress.penalizeUnsafeDischarge({eventId,actorId,patientUid,...penaltyBeneficiaries()});
      const reused=penalty.eventId!==eventId;
      const destination=intent.id;
      const disposition={kind:penalty.kind,eventId,patientUid,actorId,destination,
@@ -486,6 +489,7 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
   hintCount:doctorId=>hintLedger.count(doctorId),
   closureReceipt:()=>copy(nativePatient.closure),
   rewardFor,
+  progressRead:()=>progress.read(),
   async hint(request,authenticatedCredentials=credentials){
    if(disposed)return {status:'rejected',reason:'room-disposed'};
    await authority.flush();
@@ -591,7 +595,8 @@ export function createGuardSession({roomId,mode,actorId,actorName,patient,conten
     deathPublished=true;
     if(nativePatient.deathAttribution?.classification==='treatment-contributed')
      progress.penalizeDeath({patientUid:nativePatient.uid,
-      actorId:nativePatient.deathAttribution.actorIds?.[0]||actorId,eventId:roomId+':death:'+nativePatient.uid});
+      actorId:nativePatient.deathAttribution.actorIds?.[0]||actorId,eventId:roomId+':death:'+nativePatient.uid,
+      ...penaltyBeneficiaries()});
     care.dispose(); // cancel native medication and consultation preparations
     const reject=eventId=>port.complete({eventId,patientUid:nativePatient.uid,
      status:'rejected',reason:'patient-not-active'});

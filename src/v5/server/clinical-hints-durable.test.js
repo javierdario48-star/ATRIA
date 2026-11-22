@@ -28,14 +28,14 @@ test('changing focus invalidates an older offer even after returning to the same
   assert.equal(r.view('a').clinical.hintCount,0);
  }finally{r.dispose();}
 });
-test('cooperative history and fees remain private and persistent across runtime recreation',async()=>{
+test('cooperative financial fees remain shared and persistent across runtime recreation',async()=>{
  let r=await fixture();r.claim('b','hint-runtime:patient');
  const offer=await r.hint('a',req(r,'a','prepare'));
  await r.hint('a',req(r,'a','revalidate',{offerId:offer.offerId}));
  await r.hint('a',req(r,'a','displayed',{offerId:offer.offerId}));
- assert.equal(r.view('a').clinical.hintCount,1);assert.equal(r.view('b').clinical.hintCount,0);
+ assert.equal(r.view('a').clinical.hintCount,1);assert.equal(r.view('b').clinical.hintCount,1);
  const cp=await r.checkpoint();r.dispose();r=await createGuardRuntime({roomId:'hint-runtime',checkpoint:cp,content,nowMs:20000});
- try{assert.equal(r.view('a').clinical.hintCount,1);assert.equal(r.view('b').clinical.hintCount,0);}
+ try{assert.equal(r.view('a').clinical.hintCount,1);assert.equal(r.view('b').clinical.hintCount,1);}
  finally{r.dispose();}
 });
 test('hint acknowledgement is committed by the existing durable CAS before delivery',async()=>{
@@ -57,7 +57,7 @@ test('hint acknowledgement is committed by the existing durable CAS before deliv
  }finally{store.close();}
 });
 
-for(const mode of ['coop','competitive'])test(mode+' credits only the actor’s own revealed hints when a recovered case closes',async()=>{
+for(const mode of ['coop','competitive'])test(mode+' respects the mode financial policy when a recovered case closes',async()=>{
  let r=await fixture(mode);
  try{
   if(mode==='coop')assert(r.claim('b','hint-runtime:patient'));
@@ -73,7 +73,7 @@ for(const mode of ['coop','competitive'])test(mode+' credits only the actor’s 
   assert.deepEqual(a.claims.find(([id])=>id==='a')[1],a.clinical.caseReward);
   if(mode==='coop'){
    assert.equal(a.clinical.caseReward.quality.score,b.clinical.caseReward.quality.score);
-   assert.equal(b.clinical.caseReward.xp,native);assert.equal(b.clinical.caseReward.hintCount,0);
+   assert.equal(b.clinical.caseReward.xp,Math.floor(native*.95));assert.equal(b.clinical.caseReward.hintCount,1);
    assert.deepEqual(b.claims.find(([id])=>id==='b')[1],b.clinical.caseReward);
   }else{
    assert.equal(b.clinical.caseReward,null,'a rival receives its own patient view without private reward/hint details');
@@ -139,7 +139,8 @@ test('a diagnosis reveal is private, survives reload and discounts one later clo
   assert.equal(a.clinical.caseReward.xp,Math.floor(base*95/200));
   assert.equal(a.clinical.caseReward.diagnosisRevealed,true);
   assert.equal(a.clinical.caseReward.hintCount,1);
-  assert.equal(b.clinical.caseReward.xp,base);
+  assert.equal(b.clinical.caseReward.xp,Math.floor(base*95/200));
+  assert.equal(b.clinical.diagnosisReveal,null,'sharing a fee does not reveal the diagnosis to another doctor');
   assert.deepEqual(a.claims.find(([id])=>id==='a')[1],a.clinical.caseReward);
  }finally{r.dispose();}
 });

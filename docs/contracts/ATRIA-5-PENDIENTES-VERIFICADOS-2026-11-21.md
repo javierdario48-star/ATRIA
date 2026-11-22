@@ -95,3 +95,16 @@
 4. Confirmar la revisión en Preview Vercel del mismo SHA y Android físico antes de activación. Ningún build `READY` o preflight equivale a prueba de usuario real.
 
 **Estado al redactar: NO GO.** RESP-01 V2 conserva su aislamiento experimental. Esta bitácora no modifica normas ni contratos JSON ya publicados.
+
+
+## Checkpoint de cierre — XP cooperativa y recuperación de CI existente
+
+**Base remota comprobada:** `bc4fb505bf5cf4f17d73d9311fa4a24cf12f05f5`. Se revisó directamente GitHub Actions: [44968933396](https://github.com/javierdario48-star/ATRIA/actions/runs/44968933396), código `d38cfcc0e23f1087aafcee441b7601e90bedb791`, terminó **SUCCESS, cinco trabajos de cinco**, incluidos **40/40 escenarios** y paridad V1/V2. Esto supera las notas anteriores que lo dejaban en cola. No repetir esa certificación para recuperar su estado; los cambios compartidos posteriores sí necesitan su regresión.
+
+**P0-01, corrección local implementada:** el ledger existente registra beneficiarios financieros al mostrar la pista o producir la sanción. Los activos de Cooperativo comparten descuento; repetir la misma acción con otro médico es gratis. La autoría clínica se conserva. Las ausencias no adquieren retrospectivamente deuda o costo de pistas; el regreso usa el mismo checkpoint. Competitivo conserva el ámbito individual. La revelación del diagnóstico sigue siendo privada, con su efecto financiero compartido en Cooperativo.
+
+Reproducción previa: cuatro pruebas nuevas fallan porque B observa 0 pistas donde A ya tiene 1. Después de corregir: **38/38 pruebas dirigidas** de ledger, sesión, runtime, recuperación durable, progresión y sanción competitiva; **12/12 pruebas de contenido V2**. Los tests anteriores que exigían costo independiente en Cooperativo se actualizaron conforme a R1.5/R7.4; no se cambiaron aserciones clínicas ni puntajes para ocultar un defecto.
+
+**Límite de P0-01/P0-04:** esta corrección no certifica el RPC online antiguo. Las filas previas sin lista de beneficiarios conservan su evidencia por actor: no se inventa quién estaba activo históricamente. Los claims ya cerrados no se reescriben. Supabase solo devuelve el proyecto activo `atria-clinical`; la consulta de ramas devuelve **0 ramas de desarrollo**. No ejecutar pruebas con escrituras sobre ese proyecto como si fuera staging. Sigue pendiente staging independiente, migración/compatibilidad SQL, deudas y concurrencia. NO GO.
+
+Evidencia recuperada: `docs/evidence/resp01-v2-release-2026-11-21/baseline-ci.json`. Próximo bloque: receptor activo ciego al diagnóstico oculto, manteniendo la autoridad nativa de cierre y calidad.

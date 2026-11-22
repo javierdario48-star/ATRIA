@@ -1,5 +1,6 @@
 // Persistent reveal accounting only. This ledger cannot touch physiology,
-// case quality, clinical commands, another encounter or another physician.
+// case quality, clinical commands or another encounter. Cooperative financial
+// beneficiaries are captured by the authoritative runtime, never by the client.
 const XP_PERCENT_PER_HINT=5;
 export const hintPenaltyPercent=count=>Math.min(100,count*XP_PERCENT_PER_HINT);
 export function hintAdjustedXP(xp,count,diagnosisRevealed=false){
@@ -13,8 +14,14 @@ export function createClinicalHintLedger(binding,saved={}){
  if(![roomId,encounterId,patientUid].every(validText))throw Error('invalid hint encounter binding');
  if(saved.roomId&&[roomId,encounterId,patientUid].some((value,i)=>value!==saved[['roomId','encounterId','patientUid'][i]]))throw Error('wrong hint checkpoint encounter');
  const offers=new Map(copy(saved.offers||[])),requests=new Map(copy(saved.requests||[])),history=copy(saved.history||[]);
+ if(history.some(row=>row.beneficiaryIds!==undefined&&(!Array.isArray(row.beneficiaryIds)||
+  !row.beneficiaryIds.length||row.beneficiaryIds.length>4||new Set(row.beneficiaryIds).size!==row.beneficiaryIds.length||
+  !row.beneficiaryIds.every(validText))))throw Error('invalid saved hint beneficiaries');
+ const shared=typeof binding.activeParticipants==='function';
+ const beneficiaries=()=>shared?{beneficiaryIds:[...new Set(binding.activeParticipants())]}:{};
+ const applies=(row,actorId)=>Array.isArray(row.beneficiaryIds)?row.beneficiaryIds.includes(actorId):row.actorId===actorId;
  const diagnosisReveal=actorId=>history.find(r=>r.actorId===actorId&&r.kind==='diagnosis-reveal')??null;
- const count=actorId=>new Set(history.filter(r=>r.actorId===actorId&&r.kind!=='diagnosis-reveal'&&
+ const count=actorId=>new Set(history.filter(r=>applies(r,actorId)&&r.kind!=='diagnosis-reveal'&&
   typeof r.key==='string'&&r.key).map(r=>r.key)).size;
  const reject=(reason='invalid-hint-request')=>({status:'rejected',reason});
  const verified=offer=>({status:'verified',offerId:offer.offerId,roomId,encounterId,patientUid,
@@ -22,6 +29,7 @@ export function createClinicalHintLedger(binding,saved={}){
  return Object.freeze({
   count,
   diagnosisReveal:actorId=>copy(diagnosisReveal(actorId)),
+  diagnosisDiscount:actorId=>history.some(r=>r.kind==='diagnosis-reveal'&&applies(r,actorId)),
   history:actorId=>copy(history.filter(r=>r.actorId===actorId)),
   checkpoint:()=>copy({version:1,roomId,encounterId,patientUid,offers:[...offers],requests:[...requests],history}),
   request(r,hint){
@@ -38,7 +46,8 @@ export function createClinicalHintLedger(binding,saved={}){
    if(r.op==='reveal-diagnosis'){
     const prior=diagnosisReveal(r.actorId);
     if(!prior&&!validText(hint?.diagnosis))return remember({status:'unavailable',reason:'diagnosis-unavailable'});
-    const receipt=prior??{kind:'diagnosis-reveal',actorId:r.actorId,requestId:r.requestId,diagnosis:hint.diagnosis};
+    const receipt=prior??{kind:'diagnosis-reveal',actorId:r.actorId,requestId:r.requestId,diagnosis:hint.diagnosis,
+     ...beneficiaries()};
     if(!prior)history.push(receipt);
     return remember({status:'revealed',roomId,encounterId,patientUid,actorId:r.actorId,
      selectionRevision:r.selectionRevision??0,diagnosis:receipt.diagnosis,newReveal:!prior});
@@ -66,8 +75,9 @@ export function createClinicalHintLedger(binding,saved={}){
     return remember(verified(offer));
    }
    if(!['verified','displayed'].includes(offer.stage))return remember(reject('hint-not-verified'));
-   const isNew=offer.hint.chargeable&&!history.some(row=>row.actorId===r.actorId&&row.key===offer.hint.key);
-   if(isNew)history.push({actorId:r.actorId,key:offer.hint.key,offerId:offer.offerId,requestId:r.requestId});
+   const isNew=offer.hint.chargeable&&!history.some(row=>(shared||row.actorId===r.actorId)&&row.key===offer.hint.key);
+   if(isNew)history.push({actorId:r.actorId,key:offer.hint.key,offerId:offer.offerId,requestId:r.requestId,
+    ...beneficiaries()});
    offer.stage='displayed';
    return remember({status:'displayed',offerId:offer.offerId,newHint:!!isNew,hintCount:count(r.actorId)});
   }

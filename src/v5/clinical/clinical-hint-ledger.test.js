@@ -58,3 +58,22 @@ test('a combined verified offer remains free until display and preserves idempot
  assert.equal(l.request(request('displayed',{offerId:stale.offerId}),{...hint,key:'different'}).status,'stale');
  assert.equal(l.count('a'),1);assert.equal(l.count('b'),0);
 });
+
+test('shared financial beneficiaries are authoritative, frozen at display and never inferred for historical actor-only rows',()=>{
+ let active=['a','b'];
+ const shared={...binding,activeParticipants:()=>active};
+ let l=createClinicalHintLedger(shared);
+ reveal(l);assert.equal(l.count('a'),1);assert.equal(l.count('b'),1);assert.equal(l.count('c'),0);
+ active=['a','c'];reveal(l,{...binding,actorId:'c'});
+ assert.equal(l.count('c'),0,'a repeated action does not charge late arrivals');
+ reveal(l,{...binding,actorId:'c'},{...hint,key:'next-action'});
+ assert.equal(l.count('a'),2);assert.equal(l.count('b'),1);assert.equal(l.count('c'),1);
+ const cp=l.checkpoint();l=createClinicalHintLedger(shared,cp);
+ assert.equal(l.count('c'),1);
+ cp.history[0].beneficiaryIds=['a','a'];
+ assert.throws(()=>createClinicalHintLedger(shared,cp),/beneficiaries/);
+ const legacy=createClinicalHintLedger(binding);reveal(legacy);
+ const recovered=createClinicalHintLedger(shared,legacy.checkpoint());
+ assert.equal(recovered.count('a'),1);assert.equal(recovered.count('b'),0,
+  'old checkpoints contain no evidence of another doctor participation at display');
+});

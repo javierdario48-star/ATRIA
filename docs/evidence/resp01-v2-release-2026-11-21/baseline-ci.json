@@ -1,0 +1,42 @@
+{
+  "head": "bc4fb505bf5cf4f17d73d9311fa4a24cf12f05f5",
+  "certified_code": "d38cfcc0e23f1087aafcee441b7601e90bedb791",
+  "run": 44968933396,
+  "jobs": [
+    {
+      "id": 137044272475,
+      "name": "vercel-build-preflight",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 137044272649,
+      "name": "four-mode-native-bots",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 137044272696,
+      "name": "versioned-mode-rules",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 137044272711,
+      "name": "paired-native-bot",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 137044272745,
+      "name": "staging-contract",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "clinical_matrix": {
+    "scenarios": 40,
+    "passed": 40
+  },
+  "scope": "Certificación recuperada de GitHub, no pendiente ni nueva ejecución local."
+}
