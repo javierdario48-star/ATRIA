@@ -1,5 +1,8 @@
 # ATRIA 5.0 — contratos extraíbles y versionados
 
+> **Entrada de continuidad para Work:** [Registro histórico 88 IDs y plan real de jugabilidad / RESP-01 V2 / bots / HTML offline](../ATRIA-5-REGISTRO-HISTORICO-JUGABILIDAD-V2-OFFLINE-2026-11-21.md). Para cambios de estado de cada incidencia, editar únicamente [inventario maestro](../ATRIA-5-REMAINING-TASKS.md); este enlace conserva el barrido histórico y las instrucciones nuevas, no certifica los pendientes.
+
+
 **Repositorio:** `javierdario48-star/ATRIA` · **rama experimental:** `atria-5.0-core-rebuild-experimental`.
 
 **Continuación actual:** [informe de cierre RESP-01 V2](ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md), [pendientes con CI real](ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md) y [migración de recompensas preparada para staging](ATRIA-5-REWARD-MIGRATION-STAGING-2026-11-21.md). V2 conserva 40/40 y paridad aprobadas; estado de liberación **NO GO** por puertas pendientes. Los snapshots 1.0.0–1.0.3 permanecen intactos: esta continuación implementa/verifica reglas existentes, no crea una versión clínica nueva.
