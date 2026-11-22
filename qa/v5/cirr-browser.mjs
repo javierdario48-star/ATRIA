@@ -98,15 +98,21 @@ try{
  await page.locator('#modalClose').click();await send('/disposicion alta');assert(!(await state()).patient.caseEnded);
  await clickHudAction(page,'peopleButton');await page.locator('[data-destination="sala"]').click();
  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
- const closed=await state();assert.equal(closed.patient.closure.quality.score,100);assert.equal(closed.progress.xp,133);
+ const closed=await state();assert.equal(closed.patient.closure.quality.score,100);
+ assert.equal(closed.patient.closure.xp,133,'correct care retains its gross clinical reward');
+ const unsafe=closed.progress.penalties.filter(p=>p.kind==='clinical.unsafe-discharge');
+ assert.equal(unsafe.length,1);assert.equal(unsafe[0].loss,15);
+ assert.equal(unsafe[0].patientUid,closed.patient.uid);
+ const netXP=closed.patient.closure.xp-unsafe[0].loss;
+ assert.equal(closed.progress.xp,netXP,'the deliberately unsafe alta is not free');
  assert.equal(closed.progress.receipts.length,1);assert.equal(closed.room.patients[0].closed,true);
  assert.match(await page.locator('#caseResult').innerText(),/100\/100/);assert.match(await page.locator('#caseResult').innerText(),/133 XP/);
  await page.screenshot({path:out+'/cirr-closed-xp.png'});await page.locator('#modalClose').click();
- await send('/disposicion sala');await send('Enfermera espironolactona');assert.equal((await state()).progress.xp,133);
+ await send('/disposicion sala');await send('Enfermera espironolactona');assert.equal((await state()).progress.xp,netXP);
  assert.equal((await state()).patient.administrationLog.length,1);await page.locator('#guardButton').click();
- assert.equal(await state(),null);assert.match(await page.locator('#playerProgress').innerText(),/133/);
+ assert.equal(await state(),null);assert.match(await page.locator('#playerProgress').innerText(),new RegExp(String(netXP)));
  await page.reload();await page.waitForFunction(()=>document.body.dataset.boot==='ready');await page.locator('#enterButton').click();
- assert.match(await page.locator('#playerProgress').innerText(),/133/,'XP survives reload separately from production profile');
+ assert.match(await page.locator('#playerProgress').innerText(),new RegExp(String(netXP)),'net XP survives reload separately from production profile');
  // A separate explicitly requested native procedure verifies real physiological
  // changes too. It is not automatically added to the completed CIRR regimen.
  await page.locator('#guardButton').click();await page.locator('input[name="guardScope"][value="specific"]').check();await page.locator('#caseChoice').selectOption('CIRR-001');await page.locator('[data-action="start-guard"]').click();
