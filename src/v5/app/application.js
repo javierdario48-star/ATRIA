@@ -1161,7 +1161,10 @@ export async function createApplication({document,window,content,signal,offline=
   // Never suppress all messages based on its owner. The authority selects
   // this speaker's physical bedside and enforces that bed's ownership.
   advanceClinicalTo(window.performance.now());
-  const id='message-'+(coopRoomId?messageEpoch+'-':'')+(++messageNumber);
+  // Local checkpoint recovery keeps the original room's idempotency ledger.
+  // Every document lifetime needs its own epoch, including solo/apprentice:
+  // restarting at message-1 would replay/conflict with pre-save commands.
+  const id='message-'+messageEpoch+'-'+(++messageNumber);
   const session=guardSession;
   try{
    const actorId=social.state().user?.id,nearbyUids=durableClient?world.nearbyPatientsFor(actorId):null;

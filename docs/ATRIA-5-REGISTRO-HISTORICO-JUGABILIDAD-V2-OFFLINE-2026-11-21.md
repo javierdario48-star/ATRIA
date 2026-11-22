@@ -293,3 +293,10 @@ IDs afectados del inventario único: REC-01, NUR-03, TURN-01, TURN-02, XP-01, XP
 #### Evidencia del primer recorrido de HTML · CI 45019485612
 
 El SHA `ef4b06f` aprobó arranque `file://` en escritorio/Pixel y **53/53** comprobaciones de plataforma, sin errores de navegador. El nuevo recorrido clínico se detuvo por una aserción del harness: buscaba la orden pendiente únicamente en `patient.pendingTreatments`, aunque la enfermera seguía viajando y todavía no había comenzado la preparación nativa. Reproducción con el ejecutor real: recibo `pending`, cola espacial encolada y `pendingNurseJobs` presente antes de `pendingTreatments`. Se corrige la comprobación para exigir la cola clínica/espacial realmente pendiente; se conserva la exigencia de recuperación de la misma orden y una sola dosis. No se cambia el motor ni se da esa CI fallida por aprobada.
+
+
+### 2026-11-22 · Defecto real tras recuperar guardia local
+
+[CI45019789015](https://github.com/javierdario48-star/ATRIA/actions/runs/45019789015), SHA31f15e8: arranque2/2 y plataforma53/53 aprobados; partidaV2 se detuvo al enviar `/reevaluar` después de recuperar. Enfermería sí completó la amoxicilina guardada. Causa: `submitText` usaba `message-1`, `message-2`, etc. para modo local y reservaba el UUID de documento para multijugador. Tras recarga, la sala recuperada conservaba esos IDs y rechazaba/reproducía el nuevo mensaje.
+
+Corrección mínima compartida: incluir el `messageEpoch` ya existente en TODOS los mensajes clínicos, también Solitario/Aprendiz. No se borra la bitácora de idempotencia, no se reinicia el paciente y los reintentos con el mismo ID siguen siendo idempotentes. La partida de navegador sin cambios constituye la regresión dirigida de recepción de órdenes nuevas después de guardar/recargar. IDsREC-01, NUR-03, LAT-01, TURN-02, QA-01.

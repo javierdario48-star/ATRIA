@@ -45,6 +45,9 @@ test('two actual local patient checkpoints restore one ledger, debt, clock, stud
   for(let i=0;i<2;i++){assert.deepEqual(restored[i].read().patient,sessions[i].read().patient);assert.deepEqual(restored[i].read().clock,sessions[i].read().clock);}
   assert.deepEqual(w.checkpoint().nursing,world.checkpoint().nursing);
   await restored[0].post({id:'unsafe',text:'/disposicion alta'});assert.equal(ledger.read().penalties.length,1);
+  const beforeNew=restored[0].read().room.transcript.length;
+  await restored[0].post({id:'message-new-document-1',text:'/signos'});
+  assert(restored[0].read().room.transcript.length>beforeNew,'a newly identified post-recovery command executes in the original room');
   const reward={kind:'clinical.closure',eventId:'other-closure',patientUid:'other',actorId:'local-player',closed:true,xp:133};
   ledger.award(reward);ledger.award(reward);
   assert.equal(restored[0].read().progress.xp,118);assert.equal(restored[1].read().progress.xp,118,'all restored sessions still share one career');
