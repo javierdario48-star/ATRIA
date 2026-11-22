@@ -145,3 +145,88 @@ jobs:
           path: qa/v5-pending-stress-report/
           if-no-files-found: error
           retention-days: 30
+
+
+  # Historic game regression != V2 coverage: run actual native paths.
+  # Kept separate from the historical 88-ID census; no fabricated acceptance.
+  resp01-v2-graph-and-adversarial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exercise 40 V2 player profiles, 15 V1/V2 pairs and all observable graph branches
+        run: |
+          node qa/v5/resp01-v2-all-modes.mjs
+          node qa/v5/resp01-v2-parity.mjs
+          node qa/v5/resp01-v2-graph-branches.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-historical-v2-graph-qa
+          path: |
+            qa/v5-resp01-v2-modes/
+            qa/v5-resp01-v2-parity/
+            qa/v5-resp01-v2-graph/
+          if-no-files-found: warn
+          retention-days: 30
+
+  # Browser UI tests the delivered file:// artifact, not only the clinical API.
+  offline-v2-player-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated HTML bundler and browser test driver
+        run: |
+          npm install --prefix "$RUNNER_TEMP/atria-html-builder" --no-save esbuild@0.25.12
+          npm install --prefix "$RUNNER_TEMP/atria-html-browser" --no-save --ignore-scripts playwright@1.58.2
+      - name: Build unchanged V1 and candidate V2 HTML from this exact checkout
+        env:
+          ATRIA_ESBUILD_MODULE: ${{ runner.temp }}/atria-html-builder/node_modules/esbuild
+          ATRIA_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          node scripts/build-v5-solo-compact.mjs
+          node scripts/build-v5-solo-compact.mjs --resp01-v2
+      - name: Play desktop and emulated Android through visible UI, nursing, recovery and closure
+        env:
+          ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: |
+          node scripts/verify-v5-solo-compact.mjs
+          node scripts/audit-v5-solo-compact.mjs
+          node scripts/verify-v5-offline-v2-journey.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-historical-offline-player-qa
+          path: out-solo-html/
+          if-no-files-found: warn
+          retention-days: 30
+
+  # Keep known red gates visible instead of masking them with successful generic bots.
+  clinical-receiver-and-native-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Receptor decisions must not infer the patient's hidden diagnosis
+        run: node --test qa/v5/release-gates/blind-receiver.test.mjs
+      - name: Native surgical characterization, including diagnostic specificity
+        if: always()
+        run: node qa/v5/characterize-surgery-native.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v5-historical-receiver-qa
+          path: qa/v5-browser-results/
+          if-no-files-found: warn
+          retention-days: 30
