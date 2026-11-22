@@ -67,9 +67,12 @@ for(const [index,caseId] of caseIds.entries())for(const profile of CLINICAL_BOT_
     for(const text of commands)await post(text);
     const attempted=await post('/disposicion '+plans[caseId].dest);
     const decision=attempted.acknowledgements[0].clinical[0];
-    if(plans[caseId].dest==='alta'){
+    if(['alta','observacion'].includes(plans[caseId].dest)){
      assert.equal(decision.status,'executed');
      assert.equal(decision.receipt.disposition.closed,false);
+     assert.equal(decision.receipt.disposition.kind,plans[caseId].dest==='alta'?
+      'clinical.unsafe-discharge':'clinical.unsafe-observation');
+     assert.equal(attempted.clinical.progress.xpDebt,15);
      assert.equal(attempted.clinical.shift.patients.find(row=>row.uid===uid).ownerId,null);
     }else assert(['rejected','pending'].includes(decision.status));
     // A requested handoff can start a consultation; pending is not an

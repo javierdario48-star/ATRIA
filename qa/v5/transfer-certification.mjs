@@ -12,6 +12,7 @@ import {clinicalInterventionEligibility} from '../../src/v5/clinical/native-medi
 import {confirmedClinicalTreatment} from '../../src/v5/clinical/receipts.js';
 import {GASTRO_CASE_RULES} from '../../src/v5/clinical/gastro-expansion-policies.js';
 import {CASE_CLOSURE_RULES_487} from '../../src/clinical/case-completion-487.js';
+import {dispositionProof} from '../../src/v5/core/disposition-receipt.js';
 import {deriveClinicalCertificationPlan,treatmentCommand,runClinicalCaseScenario} from './certify-clinical-cases.mjs';
 export const TRANSFER_BOT_PROFILES=['competent','missing-dx','wrong-dx','insufficient-preparation','wrong-destination','slow','iatrogenic','nursing-recovery','closure-recovery','multiplayer'];
 const copy=x=>structuredClone(x);
@@ -51,16 +52,16 @@ export async function runTransferBot(c,{profile='competent',mode='solo'}={}){
  const factory=checkpoint=>createGuardSession({...base,patient,checkpoint,
   ...(world?{nursing:{enqueue:t=>world.enqueueNurseJourney(t),takeArrivals:()=>world.takeNurseArrivals(uid),accept:r=>world.acceptNurseClinicalResult(r)}}:{})});
  const read=()=>s.read();
- // An unsafe discharge remains an executable physician decision. The native
- // authority records a unique clinical.unsafe-discharge penalty rather than
+ // Unsafe alta and formal observation remain executable physician decisions.
+ // The native authority records a unique verified non-closing penalty rather than
  // reporting a transport rejection. The bot must validate BOTH legitimate
  // outcomes without silently accepting an early close or a missing receipt.
  function unsafeAttemptHandled(ack){
   const state=read(),event=(ack.clinical||[]).find(x=>x.kind==='case.close');
   if(!event||state.patient.caseEnded||state.progress.receipts.length!==0||state.progress.xp!==0)return false;
   if(event.status==='rejected')return true;
-  const disposition=event.receipt?.disposition;
-  return event.status==='executed'&&disposition?.kind==='clinical.unsafe-discharge'&&
+  const disposition=dispositionProof({...event,patientUid:uid,eventId:event.receipt?.eventId},event.id,'doctor');
+  return event.status==='executed'&&disposition&&
    disposition.closed===false&&typeof disposition.reason==='string'&&
    disposition.patientUid===uid&&disposition.actorId==='doctor'&&
    disposition.eventId===event.receipt?.eventId&&

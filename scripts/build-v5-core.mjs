@@ -9,6 +9,7 @@ const files=[
  'src/v5/clinical/exam-contract.js',
  'src/v5/clinical/nursing-access-plan.js',
  'src/v5/clinical/native-medications.js',
+ 'src/v5/clinical/medication-indication-review.js',
  'src/v5/clinical/native-medication-eligibility.js',
  'src/v5/clinical/study-evidence.js',
  'src/v5/clinical/study-order-vocabulary.js',

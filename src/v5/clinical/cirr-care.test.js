@@ -59,11 +59,15 @@ test('one CIRR case closes through the real executor only after evaluation, resu
  const ack=await f.send('/disposicion sala','close'),state=f.s.read();
  assert.equal(ack.clinical[0].status,'executed');assert(state.patient.caseEnded);
  assert.equal(state.patient.closure.destination,'sala');assert.equal(state.patient.closure.quality.score,100);
- assert.equal(state.progress.xp,133);assert.equal(state.progress.receipts.length,1);
+ assert.equal(state.patient.closure.xp,133,'full clinical care still earns the native gross reward');
+ assert.equal(state.progress.penalties.length,1);
+ assert.equal(state.progress.penalties[0].eventId,discharge.receipt.disposition.penaltyEventId);
+ assert.equal(state.progress.penalties[0].loss,15,'the earlier unsafe alta remains a real debt');
+ assert.equal(state.progress.xp,133-15);assert.equal(state.progress.receipts.length,1);
  assert.equal(state.room.patients[0].closed,true);
  assert.deepEqual(await f.send('/disposicion sala','close'),ack);
  assert.equal((await f.send('/disposicion sala','close-again')).clinical[0].status,'rejected');
- assert.equal(f.s.read().progress.xp,133);assert.equal(f.s.read().progress.receipts.length,1);
+ assert.equal(f.s.read().progress.xp,133-15);assert.equal(f.s.read().progress.receipts.length,1);
  assert.equal(f.s.read().patient.administrationLog.filter(x=>x.id==='espironolactona').length,1);f.s.dispose();
 });
 test('return/disposal cancels unadministered native work; no late completion',async()=>{

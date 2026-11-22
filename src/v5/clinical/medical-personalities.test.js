@@ -43,9 +43,13 @@ async function scenario(bot,caseId,mode,skill){
   const current=s.read();
   assert.equal(current.progress.xp,0,'partial clinical exam must not mint XP');
   assert(!current.patient.closure,'incomplete work cannot create a closure');
-  if(plan.dest==='alta'){
+  if(['alta','observacion'].includes(plan.dest)){
    assert.equal(attempt.clinical[0]?.status,'executed');
    assert.equal(attempt.clinical[0]?.receipt.disposition.closed,false);
+   assert.equal(attempt.clinical[0]?.receipt.disposition.kind,
+    plan.dest==='alta'?'clinical.unsafe-discharge':'clinical.unsafe-observation');
+   assert.equal(current.progress.penalties.length,1);
+   assert.equal(current.progress.xpDebt,15);
   }else assert(['rejected','pending'].includes(attempt.clinical[0]?.status));
   report.push({caseId,mode,skill,missing:current.closure?.missing?.length??0,xp:0});
   return;
