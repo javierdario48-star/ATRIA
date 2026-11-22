@@ -38,8 +38,15 @@ for(const mode of modes)for(const profile of profiles){
  if(p.closed&&!closure?.closed)problems.push('false local closure state');
  if(p.closed&&closure&&(!Number.isFinite(closure.quality?.score)||closure.quality.score<0||
    closure.quality.score>100))problems.push('invalid hidden quality');
- if(run.recovery&&(!run.recovery.sameClinicalPatient||!run.recovery.sameIdentity||
-   !run.recovery.replayUnchanged))problems.push('broken checkpoint/replay');
+ // Report the failing checkpoint field precisely. A replay assertion only
+ // applies if the scenario actually replayed a command (e.g. abandon has none).
+ const recoveryKeys=['samePatient','sameClinicalPatient','sameAdministrations',
+  'sameXP','sameEventIds','sameClock','sameClaims','sameIdentity'];
+ const recoveryIssues=run.recovery?recoveryKeys.filter(key=>run.recovery[key]!==true):
+  ['no recovery checkpoint evidence'];
+ if(run.recovery?.replayedCommandId&&run.recovery.replayUnchanged!==true)
+  recoveryIssues.push('replayUnchanged');
+ if(recoveryIssues.length)problems.push('broken checkpoint/replay: '+recoveryIssues.join(', '));
  if(profile==='competent'||profile==='slow'||profile==='complication-rescue'){
   if(run.passed!==true)problems.push('competent actor did not satisfy real native checks: '+(run.failures||[]).join('|'));
   if(!p.closed)problems.push('prepared actor never closes');
