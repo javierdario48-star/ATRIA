@@ -4,6 +4,10 @@ on:
     branches: [atria-5.0-core-rebuild-experimental]
     paths:
       - 'src/v5/content/packs/respiratory-v2-candidate.js'
+      - 'src/v5/content/packs/respiratory-v2-graph.js'
+      - 'src/v5/clinical/clinical-graph-observer*'
+      - 'src/v5/clinical/public-receiver-record*'
+      - 'qa/v5/resp01-v2-graph-branches.mjs'
       - 'src/v5/content/packs/respiratory-v2-candidate.test.js'
       - 'src/v5/content/packs/respiratory-v2-e2e-audit.test.js'
       - 'src/v5/content/packs/respiratory-v2-personality-audit.test.js'
@@ -129,11 +133,15 @@ jobs:
           node-version: '22'
       - name: Exercise V2 in solo, apprentice, cooperative and competitive, nine profiles each
         run: node qa/v5/resp01-v2-all-modes.mjs
+      - name: Exercise additional graph branches with unsafe choices, real excessive dose, allergy, rescue, observation, Vega and recovery
+        run: node qa/v5/resp01-v2-graph-branches.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: atria-resp01-v2-36-native-scenarios
-          path: qa/v5-resp01-v2-modes/
+          path: |
+            qa/v5-resp01-v2-modes/
+            qa/v5-resp01-v2-graph/
           if-no-files-found: warn
           retention-days: 30
 

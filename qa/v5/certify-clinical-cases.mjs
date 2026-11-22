@@ -404,7 +404,7 @@ function finalEvidence(row,view,checkpoint,c,plan){
  * clinical rate. Advancing wall time never assigns its native clock directly. */
 export async function runClinicalCaseScenario(c,{content,mode='solo',profile='competent',
  seed='clinical-certification-v1',horizon=1440,recovery=false,traceEvery=10,source={},preferredDestination=null,
- wrongMedicationCommand='Enfermera furosemida 40 mg'}={}){
+ wrongMedicationCommand='Enfermera furosemida 40 mg',onObservation=null}={}){
  if(!CLINICAL_CERTIFICATION_PROFILES.includes(profile)||!CLINICAL_CERTIFICATION_MODES.includes(mode)||
   !Number.isFinite(horizon)||horizon<=0||horizon>1440)throw Error('invalid clinical certification scenario');
  const options={mode,profile},row={caseId:c.id,profile,mode,seed:String(seed),authority:'createGuardRuntime',
@@ -479,6 +479,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    for(const episode of view.clinical.patient.policyState?.complications||[])if(!row.complicationObservations.some(x=>x.id===episode.id))
     row.complicationObservations.push({id:episode.id,atRealSecond:sample.atRealSecond,atNativeMinute:sample.atNativeMinute,
      onsetAt:episode.onsetAt,status:episode.status});
+   onObservation?.(copy({...view.clinical,checkpointRecovered:row.recovery?.sameClinicalPatient===true}));
    return view;
   };
   const recoveryEvidence=(before,after)=>({samePatient:after.clinical.patient.uid===before.clinical.patient.uid,

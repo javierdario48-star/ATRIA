@@ -4,11 +4,13 @@
 // Logical ID remains RESP-01; compare against V1 in an isolated test catalog.
 import {defineClinicalCase} from '../clinical-case-definition.js';
 import {respiratoryCaseDefinitions} from './respiratory-pack.js';
+import {resp01V2Graph} from './respiratory-v2-graph.js';
 
 const original=respiratoryCaseDefinitions.find(c=>c.id==='RESP-01');
 if(!original)throw Error('RESP-01 V1 source missing');
 const candidate=structuredClone(original);
 candidate.clinicalRevision='v2-candidate';
+candidate.clinicalGraph=resp01V2Graph;
 // Dedicated complication draw preserves age, identity, personality and history
 // under the same seed when comparing the V1 and V2 clinical revisions.
 candidate.variation.independentComplicationDraws=true;

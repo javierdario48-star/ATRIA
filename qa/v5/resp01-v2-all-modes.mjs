@@ -6,6 +6,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {resp01V2Candidate as c} from '../../src/v5/content/packs/respiratory-v2-candidate.js';
 import {clinicalCertificationContent,runClinicalCaseScenario} from './certify-clinical-cases.mjs';
+import {createClinicalGraphObserver} from '../../src/v5/clinical/clinical-graph-observer.js';
 const modes=['solo','apprentice','coop','competitive'];
 const profiles=['competent','slow','complication-rescue','wrong-medication',
  'no-allergy-question','inexperienced','negligent','omit-studies','abandon',
@@ -20,13 +21,15 @@ for(const mode of modes)for(const profile of profiles){
  const seed='atria:v5:resp01:v2:all-modes:20261121:'+mode+':'+profile;
  const preferredDestination=profile==='complication-rescue'?'sala':
   ['competent','slow','no-allergy-question','wrong-diagnosis'].includes(profile)?'alta':null;
+ const graph=createClinicalGraphObserver(c.clinicalGraph);
  let run;
  try{run=await runClinicalCaseScenario(c,{content,mode,profile,seed,horizon:720,
-  recovery:true,traceEvery:12,preferredDestination,
+  recovery:true,traceEvery:12,preferredDestination,onObservation:state=>graph.observe(state),
   source:{kind:'v2-multimode-independent-certification',revision:'v2-candidate'}});
  }catch(err){
   summary.errors.push(mode+'/'+profile+': '+String(err.message||err));continue;
  }
+ run.graphCoverage=graph.read();
  const problems=[];
  const p=run.final||{},closure=run.closureReceipt,commands=run.commands||[];
  const performed=(run.administrations||[]).filter(x=>x.id==='furosemide'&&x.status!=='pending');
@@ -77,13 +80,17 @@ for(const mode of modes)for(const profile of profiles){
   hintActions:commands.filter(x=>/pista|vega/i.test(x.text)).length,
   verifiedRewardCount:rewards.length,penalties:penalties.length,
   invalidReceipts:invalid.length,checkpointRecovered:run.recovery?.sameClinicalPatient??null,
-  failures:run.failures||[],problems};
+  failures:run.failures||[],graphCovered:run.graphCoverage.covered,problems};
  summary.results.push(entry);summary.scenarioCount++;
  if(problems.length)summary.errors.push(mode+'/'+profile+': '+problems.join(' | '));
  await writeFile(resolve(out,mode+'-'+profile+'.json'),JSON.stringify(run,null,2)+'\n');
  console.log(JSON.stringify(entry));
 }
 await writeFile(resolve(out,'summary.json'),JSON.stringify(summary,null,2)+'\n');
+const covered=[...new Set(summary.results.flatMap(x=>x.graphCovered||[]))];
+await writeFile(resolve(out,'graph-coverage.json'),JSON.stringify({graphId:c.clinicalGraph.id,
+ scenarioCount:summary.scenarioCount,covered,uncovered:c.clinicalGraph.edges.filter(e=>!covered.includes(e.id)).map(e=>e.id),
+ semantics:c.clinicalGraph.semantics,source:'40 native scenario runs; no fabricated transitions'},null,2)+'\n');
 console.log('ATRIA_V2_FOUR_MODE_SUMMARY '+JSON.stringify({scenarioCount:summary.scenarioCount,
  passed:summary.results.filter(x=>x.passed).length,errors:summary.errors}));
 if(summary.errors.length)process.exitCode=1;

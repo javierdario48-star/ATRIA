@@ -1,6 +1,7 @@
 // Strict, browser-safe content compilation. This prepares a playable definition;
 // only an injected runtime certification runner can certify clinical behavior.
 import {validateVariation} from './patient-variation.js';
+import {validateClinicalGraph} from '../clinical/clinical-graph-observer.js';
 
 const compiledStates = new WeakMap();
 const own = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
@@ -148,6 +149,7 @@ function validateCollection(c, field, itemFields, at, errors) {
 }
 function validateCase(c, at, errors, seen) {
  if (!record(c)) { errors.push(at + ': case object required'); return false; }
+ if(c.clinicalGraph)errors.push(...validateClinicalGraph(c.clinicalGraph).map(message=>at+'.clinicalGraph: '+message));
  if (!/^[A-Z][A-Z0-9-]{2,63}$/.test(c.id || '')) errors.push(at + ': invalid case id');
  else if (seen.has(c.id)) errors.push(at + ': duplicate/existing case ' + c.id);
  else seen.add(c.id);

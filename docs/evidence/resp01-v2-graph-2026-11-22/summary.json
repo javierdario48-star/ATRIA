@@ -1,0 +1,63 @@
+{
+  "recordedAt": "2026-11-22T11:50:30.721974+00:00",
+  "scope": "local native motor; observational declared graph, not all possible clinical combinations",
+  "v2": {
+    "scenarios": 40,
+    "passed": 40,
+    "errors": []
+  },
+  "additional": {
+    "scenarios": 8,
+    "passed": 8,
+    "failures": []
+  },
+  "parity": {
+    "pairs": 15,
+    "errors": []
+  },
+  "graph": {
+    "id": "RESP-01@v2:clinical-graph:1",
+    "declaredEdges": 27,
+    "covered": [
+      "administration",
+      "checkpoint",
+      "close-alta",
+      "close-observation",
+      "close-ward",
+      "death",
+      "deterioration",
+      "examination",
+      "history",
+      "hypothesis",
+      "iatrogenia",
+      "nursing-pending",
+      "receiver-accepted",
+      "receiver-rejected",
+      "receiver-request",
+      "reevaluation",
+      "rescue",
+      "study-request",
+      "study-result",
+      "time",
+      "triage",
+      "unsafe-alta",
+      "unsafe-observation",
+      "unsafe-recoverable",
+      "unsupported-destination",
+      "vega",
+      "xp-once"
+    ],
+    "uncovered": [],
+    "uncoveredInOriginal40": [
+      "vega",
+      "unsafe-alta",
+      "unsafe-observation",
+      "unsafe-recoverable",
+      "close-observation",
+      "unsupported-destination"
+    ]
+  },
+  "exactShaCI": "pending final publication; see mission log for run references",
+  "production": false,
+  "androidPhysical": false
+}

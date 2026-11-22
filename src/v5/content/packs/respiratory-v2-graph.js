@@ -1,0 +1,35 @@
+// Declarative interpretation of native RESP-01 V2 care. No effect vectors,
+// score arithmetic, timer or disease-specific executor lives in this graph.
+const nodes=[['encounter','Ingreso'],['triage','Triaje'],['history','Anamnesis'],['exam','Exploración'],
+ ['hypothesis','Hipótesis'],['studies','Estudios pendientes'],['results','Resultados'],['nursing','Enfermería pendiente'],
+ ['treated','Tratamiento confirmado'],['evolution','Evolución temporal'],['complication','Complicación'],
+ ['iatrogenia','Iatrogenia'],['rescue','Rescate confirmado'],['reassessment','Reevaluación'],['mentor','Dr. Vega'],
+ ['unsafe','Decisión insegura'],['recoverable','Atención recuperable'],['receiver','Recepción solicitada'],
+ ['accepted','Servicio acepta'],['rejected','Servicio rechaza'],['alta','Alta'],['observacion','Observación'],
+ ['sala','Sala'],['unsupported','Destino no indicado'],['death','Muerte'],['recovery','Recuperación de sesión'],['reward','Cierre y XP']];
+const routes=[
+ ['triage','encounter','triage','measured'],['history','encounter','history','history'],
+ ['examination','encounter','exam','examined'],['hypothesis','encounter','hypothesis','hypothesis'],
+ ['study-request','hypothesis','studies','ordered'],['study-result','studies','results','results'],
+ ['nursing-pending','encounter','nursing','nursing'],['administration','nursing','treated','administered'],
+ ['time','encounter','evolution','elapsed'],['deterioration','evolution','complication','complication'],
+ ['iatrogenia','treated','iatrogenia','iatrogenia'],['rescue','complication','rescue','rescued'],
+ ['reevaluation','evolution','reassessment','reassessed'],['vega','encounter','mentor','mentor'],
+ ['unsafe-alta','encounter','unsafe','unsafeAlta'],['unsafe-observation','encounter','unsafe','unsafeObservation'],
+ ['unsafe-recoverable','unsafe','recoverable','recoverable'],['receiver-request','reassessment','receiver','requestedReceiver'],
+ ['receiver-accepted','receiver','accepted','acceptedReceiver'],['receiver-rejected','receiver','rejected','rejectedReceiver'],
+ ['close-alta','reassessment','alta','alta'],['close-observation','reassessment','observacion','observacion'],
+ ['close-ward','accepted','sala','sala'],['unsupported-destination','encounter','unsupported','unsupportedDestination'],
+ ['death','evolution','death','death'],['checkpoint','encounter','recovery','recoveredCheckpoint'],
+ ['xp-once','encounter','reward','reward']
+];
+export const resp01V2Graph=Object.freeze({schemaVersion:1,id:'RESP-01@v2:clinical-graph:1',
+ semantics:'observational; independent edges; free action order; native executor is authoritative',
+ evolutionFamilies:{E0:'presentación basal',E1:'respuesta terapéutica',E2:'demora o enfermedad',E3:'complicación',E4:'iatrogenia y rescate'},
+ treatmentFamilies:{T1:{applicable:true,meaning:'vigilancia'},T2:{applicable:true,meaning:'medicación'},
+  T3:{applicable:true,meaning:'soporte'},T4:{applicable:false,reason:'sin procedimiento indicado en este piloto'},
+  T5:{applicable:false,reason:'sin reperfusión indicada'},T6:{applicable:false,reason:'sin cirugía indicada'}},
+ destinations:{alta:'native-safety-and-closure',observacion:'native-safety-and-closure',sala:'blind-receiver-and-native-closure',
+  uti:'reject-unless-public-evidence-supports-another-protocol',procedimiento:'reject-unless-public-evidence-supports-another-protocol',
+  quirofano:'reject-unless-public-evidence-supports-another-protocol'},
+ nodes:nodes.map(([id,label])=>({id,label})),edges:routes.map(([id,from,to,when])=>({id,from,to,when}))});
