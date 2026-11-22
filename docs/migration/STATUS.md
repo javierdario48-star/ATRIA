@@ -1,3 +1,5 @@
+> **REGLAS ACTUALES Y PENDIENTES (21-11-2026):** [Reglamento maestro](../contracts/ATRIA-5-REGLAMENTO-MAESTRO-2026-11-21-v1.0.2.md) · [JSON extraíble 1.0.3](../contracts/ATRIA-V5-RULES-v1.0.3.json) · [Backlog GO/NO GO](../contracts/ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md). Este STATUS conserva su historial; el reglamento de última fecha prevalece en conflictos de Coop XP/pistas, Vega y libertad médica. No confundir un CI histórico con la certificación del HEAD.
+
 # ATRIA 5.0 — Registro de checkpoints y continuidad
 
 **Plan vinculante:** [ATRIA_50_MIGRATION_MASTER_PLAN.md](../ATRIA_50_MIGRATION_MASTER_PLAN.md).
