@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-22T02:16:00.893Z",
+  "repository": "javierdario48-star/ATRIA",
+  "branch": "atria-5.0-core-rebuild-experimental",
+  "releaseDecision": "NO GO",
+  "startHead": "bc4fb505bf5cf4f17d73d9311fa4a24cf12f05f5",
+  "lastCodeHead": "629a33ba2a529ade4c30c5501c25a6d23ead40e8",
+  "v2": {
+    "sha": "78f260f5509c3f73106c82854f1b28bf034228d9",
+    "run": 44973929079,
+    "status": "completed",
+    "conclusion": "success",
+    "scenarioCount": 40,
+    "passed": 40,
+    "parityPairs": 15,
+    "parityErrors": [],
+    "jobs": [
+      {
+        "id": 137059554139,
+        "name": "four-mode-native-bots",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 137059554324,
+        "name": "vercel-build-preflight",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 137059554352,
+        "name": "versioned-mode-rules",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 137059554370,
+        "name": "staging-contract",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 137059554384,
+        "name": "paired-native-bot",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "transfer": {
+    "sha": "ef959019039eeb6380f5a7f5dd670aad55f7b993",
+    "run": 44973637288,
+    "jobs": 11,
+    "success": 11,
+    "profiles": 10,
+    "cases": 55,
+    "scenarios": 550
+  },
+  "hints": {
+    "sha": "ef959019039eeb6380f5a7f5dd670aad55f7b993",
+    "run": 44973637286,
+    "jobs": 2,
+    "success": 2,
+    "caseTrajectories": 55
+  },
+  "postgres": {
+    "sha": "78f260f5509c3f73106c82854f1b28bf034228d9",
+    "run": 44973929154,
+    "passed": 9,
+    "failed": 0,
+    "scope": "PGlite 0.5.17 executing actual migrations; NOT hosted Supabase, PostgREST, Auth or concurrent connections"
+  },
+  "local": {
+    "full": {
+      "sha": "78f260f5509c3f73106c82854f1b28bf034228d9",
+      "command": "npm run test:v5",
+      "tests": 3210,
+      "pass": 3210,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "node": "24.22.3"
+    },
+    "appDirected": {
+      "sha": "629a33ba2a529ade4c30c5501c25a6d23ead40e8",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "scope": "career penalty projection, cooperative rewards, existing progression and settlement tests"
+    },
+    "build": {
+      "sha": "629a33ba2a529ade4c30c5501c25a6d23ead40e8",
+      "files": 220,
+      "boundaryProductionModules": 195,
+      "passed": true
+    }
+  },
+  "unresolvedCounterexamples": {
+    "file": "qa/v5/release-gates/blind-receiver.test.mjs",
+    "tests": 2,
+    "pass": 0,
+    "fail": 2,
+    "hiddenLabelCounterfactual": true
+  },
+  "longitudinalCI": {
+    "sha": "ef959019039eeb6380f5a7f5dd670aad55f7b993",
+    "run": 44973637290,
+    "jobs": [
+      {
+        "id": 137058651168,
+        "name": "native-journeys (3)",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 137058651297,
+        "name": "native-journeys (7)",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 137058651317,
+        "name": "native-journeys (4)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 137058651321,
+        "name": "native-journeys (2)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 137058651343,
+        "name": "native-journeys (6)",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 137058651413,
+        "name": "native-journeys (1)",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 137058651437,
+        "name": "native-journeys (0)",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 137058651476,
+        "name": "native-journeys (5)",
+        "status": "in_progress",
+        "conclusion": null
+      }
+    ]
+  },
+  "nativePartial": {
+    "file": "native-partial-checkpoint.jsonl.gz",
+    "recorded": 200,
+    "expected": 550,
+    "verified": true,
+    "sha256": "fda16d9fc35317d74110ac3dc52f0bb879b330660a56549857af1313e7782327",
+    "sourceDigest": "c2b79c149e51804883d42175a43af63fd535d9a190481fccd9f8df72caf606f5"
+  },
+  "latestGeneralCI": {
+    "run": 44974712154,
+    "status": "queued",
+    "conclusion": null
+  },
+  "platform": {
+    "supabaseProject": "hugqjejfyyilslbomsgi",
+    "accessibleStagingBranches": [],
+    "readOnlyMetadataError": "28P01 password authentication failed",
+    "hostedMigrationsApplied": false,
+    "vercelProject": "prj_trnID7kAMQkegKIKd8Aeqp7oy1gB",
+    "examinedSha": "7a29b280711721f1d0a33cd61ba3f7102401ecca",
+    "exactShaDeployments": 0,
+    "commitStatus": "failure: Vercel deployment account blocked",
+    "physicalAndroidEvidence": false
+  },
+  "notes": [
+    "CI named staging-contract tests local native safety; not a hosted staging certificate.",
+    "Earlier full local run at 7a29b28: 3206 passed / 3209 total, three investigated failures; retained as history.",
+    "Later application/career integration does not alter the integral dependency digest; its browser acceptance is separately pending.",
+    "No Production activation, no hosted DDL, no writes to other branches or projects."
+  ]
+}

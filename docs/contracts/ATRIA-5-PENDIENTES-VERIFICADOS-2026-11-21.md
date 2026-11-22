@@ -1,5 +1,26 @@
 # ATRIA 5.0 — Pendientes reales y puertas de aprobación al 21/11/2026
 
+## Estado operativo vigente tras la continuación
+
+**Último código: `629a33ba2a529ade4c30c5501c25a6d23ead40e8`. NO GO.** Informe simple, commits, pruebas y siguiente acción: [CIERRE RESP-01 V2](ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md). La línea base y los checkpoints inferiores se conservan como historial; no sustituyen esta tabla.
+
+| ID conservado | Estado actual y evidencia | Pendiente real |
+| --- | --- | --- |
+| P0-01 | **IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN** en runtime/carrera local. Pistas y sanciones comparten cohorte activa; dos autores no se fusionan. 38 pruebas iniciales, 14 dirigidas finales y 9 SQL local. | Certificar liquidación alojada, deuda entre sesiones y cuentas 2/3/4. |
+| P0-02 | **PARCIALMENTE IMPLEMENTADO.** V2 `44973929079` 5/5 verde en `78f260f`; regresión local 3210/3210. CI general `44974712154` del código final aún debe concluir. | No confundir verde de contenido con aprobación general del SHA final. |
+| P0-03 | **IMPLEMENTADO CON DEFECTOS / recepción ciega NO IMPLEMENTADA.** Dos contraejemplos explícitos rojos con hechos comunicados idénticos. | Separar veredicto público de verdad oculta; preservar preparación, rescate, urgencia y única autoridad. |
+| P0-04 | **PARCIALMENTE IMPLEMENTADO.** Migración nueva y 9/9 pruebas PostgreSQL local, también verdes en Actions `44973929154`. | Acceso a staging, Auth/PostgREST, concurrencia real y adaptador REST versionado de deuda. |
+| P0-05 | **Regresiones V2 APROBADAS en el alcance probado.** Medicación equivocada, formulación/dosis, alergias, daño y rescate conservan autoridad nativa; contrato V2 verde. | Aceptación externa y ampliación declarativa futura; no afirmar cobertura universal de fármacos no probados. |
+| P0-06 | **COMPLETADO Y VERIFICADO — certificación de contenido V2.** 40/40, cuatro modos, 15 pares V1/V2 sin errores, 5/5 jobs en `78f260f`. La ejecución original `44968933396` también queda aprobada. | No volver a listar esos 40 como no ejecutados. Aceptación de interfaz/cuentas se lleva en P0-01/P0-04/P0-08. |
+| P0-07 | **IMPLEMENTADO, PENDIENTE DE ACEPTACIÓN externa.** Reprimenda/−15, paciente intacto, reintento/recuperación; defecto de cierre con Enfermería corregido. 102 pruebas relacionadas y 49 dirigidas aprobadas (superpuestas). | Staging y Android; CI del escenario CIRR bruto/neto corregido. |
+| P0-08 | **BLOQUEADO externamente.** Build modular 220 archivos y frontera estructural aprobados; Vercel rechaza deployments, no existe Preview exacta; Android físico sin acceso. | Recuperar plataforma y aceptar backend/Preview/guardia completa en dispositivos. |
+| P1-01 | **Traslados certificados: 550/550** (10 perfiles ×55 casos), run `44973637288`. Matriz longitudinal nativa separada `44973637290` en ejecución al preparar el informe. | Consultar su finalización/checkpoint antes de repetirla; separar integridad de certificado clínico estricto. |
+| P1-02 | **Recorridos de Vega: 55/55** en `44973637286`; NEUR-03 reparado. | Latencia/aceptación de usuario con red y teléfono físicos. |
+
+No se ha dado por terminada ninguna validación alojada a partir de una prueba en memoria/PostgreSQL local, ni se exige migrar las otras 54 enfermedades a V2 para certificar RESP-01.
+
+## Línea base histórica preservada — anterior a esta continuación
+
 **Estado:** NO GO para activar RESP-01 V2 y NO GO para afirmar que V2 es portable a Production. **Rama:** `atria-5.0-core-rebuild-experimental`. **Contrato normativo:** [Reglamento maestro v1.0.2](ATRIA-5-REGLAMENTO-MAESTRO-2026-11-21-v1.0.2.md) y JSON [v1.0.2](ATRIA-V5-RULES-v1.0.2.json). Este archivo distingue **hecho comprobado**, **desajuste de arquitectura**, **prueba no completada**, **incidencia históricamente reportada** y **trabajo pendiente**.
 
 ## Evidencia objetiva recuperada

@@ -2,6 +2,8 @@
 
 **Repositorio:** `javierdario48-star/ATRIA` · **rama experimental:** `atria-5.0-core-rebuild-experimental`.
 
+**Continuación actual:** [informe de cierre RESP-01 V2](ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md), [pendientes con CI real](ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md) y [migración de recompensas preparada para staging](ATRIA-5-REWARD-MIGRATION-STAGING-2026-11-21.md). V2 conserva 40/40 y paridad aprobadas; estado de liberación **NO GO** por puertas pendientes. Los snapshots 1.0.0–1.0.3 permanecen intactos: esta continuación implementa/verifica reglas existentes, no crea una versión clínica nueva.
+
 Las reglas de juego se guardan como **snapshots JSON inmutables**. Para impedir que una mejora elimine una decisión previa, **nunca se modifica un archivo ya publicado**: se crea una versión semántica nueva y se registra el cambio. El código compartido puede cambiar solamente con pruebas y sin usar parches por ID de enfermedad. La V1 activa y producción no se activan con estos snapshots.
 
 | Versión | Contenido | Archivo inmutable |

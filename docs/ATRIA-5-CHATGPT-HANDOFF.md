@@ -1,5 +1,17 @@
 # ATRIA 5.0 · Traspaso a ChatGPT
 
+> **Continuación vigente, 21/11/2026:** último código publicado `629a33ba2a529ade4c30c5501c25a6d23ead40e8`, rama exclusiva `atria-5.0-core-rebuild-experimental`. **RESP-01 V2: NO GO**, conservando aprobación automatizada 40/40 y paridad 15 pares en [CI 5/5 `44973929079`](https://github.com/javierdario48-star/ATRIA/actions/runs/44973929079), SHA `78f260f`. Leer primero [informe de cierre](contracts/ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md) y [estado operativo de pendientes](contracts/ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md). Esto sustituye la dirección operativa de los checkpoints inferiores.
+
+**Hecho:** XP/pistas compartidas por cohorte, integración de sanciones en carrera local, receptor de Observación NEUR-03, cierre con Enfermería pendiente, módulo faltante de build, verificaciones CIRR bruto/neto y Observación DIARR. Regresión local: **3210/3210** en `78f260f`; después **14/14 dirigidas** y build de 220 módulos en `629a33b`. SQL: **9/9 PostgreSQL local** en [CI `44973929154`](https://github.com/javierdario48-star/ATRIA/actions/runs/44973929154), sin aplicar a proyecto alojado. [Traslados `44973637288`](https://github.com/javierdario48-star/ATRIA/actions/runs/44973637288): 550/550. [Vega `44973637286`](https://github.com/javierdario48-star/ATRIA/actions/runs/44973637286): 55/55.
+
+**Primera tarea ejecutable por ChatGPT normal:** recepción ciega. Ejecutar `node --test qa/v5/release-gates/blind-receiver.test.mjs` (dos rojos confirmados), extraer expediente público en `surgical-consultation.js`/`consultation-evidence.js` y conectar `public-receiver-policy.js` sin relajar urgencias/preparación ni crear otro motor. El intento anterior que rompía disección/taponamiento/colangitis/pancreatitis/íleo se revirtió **antes de publicar**. Conservar esos escenarios como regresiones obligatorias.
+
+**Antes de repetir campañas:** comprobar [CI general del último código](https://github.com/javierdario48-star/ATRIA/actions/runs/44974712154), [matriz longitudinal histórica](https://github.com/javierdario48-star/ATRIA/actions/runs/44973637290) y el checkpoint de evidencia del informe. No aprobarlos por estar queued/in_progress. `5a5d20e` corrige el escenario CIRR de navegador: 133 brutos, −15, 118 netos; su aceptación depende de CI (Chromium local no pudo iniciar por prohibición de sockets).
+
+**Bloqueos externos:** staging Supabase sin ramas/acceso SQL (`28P01`), Vercel sin deployment exacto por bloqueo de cuenta, Android físico no accesible. Procedimiento seguro de migración y reversión en [REWARD-MIGRATION-STAGING](contracts/ATRIA-5-REWARD-MIGRATION-STAGING-2026-11-21.md). No aplicar migración a la base pública, alterar Production ni pedir migrar las 54 enfermedades restantes.
+
+## Checkpoints anteriores conservados
+
 > **Estado operativo vigente (20–21/11/2026):** usar como índice y secuencia [ATRIA-5-EXECUTION-PLAN.md](ATRIA-5-EXECUTION-PLAN.md), sección «Dirección operativa actual». B0 de juego [30/30 CI verde](https://github.com/javierdario48-star/ATRIA/actions/runs/44856218209); [traslados verdes](https://github.com/javierdario48-star/ATRIA/actions/runs/44856218283). Matriz clínica aún sin conclusión al último control; preview real bloqueado por Vercel. **Ahora J1 plataforma de juego; casos individuales después en planilla C1.** Las notas históricas de B0 más abajo reflejan checkpoints anteriores y no reemplazan el estado operativo actual.
 
 

@@ -1,5 +1,21 @@
 # ATRIA 5.0 — Inventario maestro de requisitos
 
+> **Estado vigente de esta continuación, 21/11/2026:** conservar los **88 IDs históricos** y sus referencias originales. Último código `629a33ba2a529ade4c30c5501c25a6d23ead40e8`. El estado operativo de liberación y las pruebas nuevas están en [pendientes verificados](contracts/ATRIA-5-PENDIENTES-VERIFICADOS-2026-11-21.md) y el [informe permanente de cierre](contracts/ATRIA-5-CIERRE-RESP-01-V2-2026-11-21.md). Los recuentos/checkpoints inferiores son históricos; no invalidan estas evidencias posteriores.
+
+| ID existente | Actualización verificada | Pendiente vigente |
+| --- | --- | --- |
+| XP-COOP / XP-01 / DX-REVEAL | Coste de pistas/revelación compartido entre activos; privacidad conservada. Alta/Observación y muerte causal mantienen cohorte y autor; la carrera local ya conecta ambas decisiones inseguras y no fusiona dos autores. | Aceptación con cuentas alojadas, deuda entre guardias y concurrencia. |
+| CLOSE-01 / NUR-01 | Corregido cierre de Observación con Enfermería pendiente y bloqueo circular NEUR-03; paciente intacto y recuperación probados. | Validación física y receptor ciego aún abierto. |
+| VEGA-COHERENCE-01 / VEGA-01 | Recorridos 55/55 aprobados en CI `44973637286`; NEUR-03 ya termina. | Latencia real y aceptación Android. |
+| QA-03 | Traslados `44973637288`: 11/11 trabajos, 10 perfiles ×55 =550/550. CIRR distingue bruto/deuda; DIARR valida recibo de Observación. | Escenario CIRR de navegador corregido pendiente de CI final. |
+| QA-01 | Regresión local 3210/3210 en `78f260f`; 14 pruebas dirigidas posteriores para carrera local. V2 40/40 y paridad 15 pares, 5/5 CI `44973929079`. | CI general `44974712154` y matriz longitudinal `44973637290` deben concluir; no confundirlos con pruebas ya aprobadas. |
+| MED-01 / MED-02 | Contrato V2 y regresiones nativas de medicación/seguridad aprobados; PBE conserva daño renal y rescate medidos. | Aceptación externa; cobertura futura declarativa no certificada globalmente. |
+| DEPLOY-01 / ANDROID-01 / ANDROID-02 / MP-01 / COMP-01 | Migración preparada +9/9 PostgreSQL local; build modular/frontera aprobados; CI multijugador previa conserva su evidencia. | Supabase staging accesible, deuda REST versionada, deployment exacto y Android físico. |
+
+**RESP-01 V2 sigue NO GO:** recepción ciega no resuelta, staging/Preview/Android pendientes y CI general final aún sin aceptación. No se rehízo la auditoría histórica ni se añadieron requisitos duplicados. La aprobación original `44968933396` y la nueva `44973929079` se conservan como aprobaciones del alcance automatizado de contenido V2.
+
+## Historial conservado
+
 > **Estado operativo vigente (20–21/11/2026):** usar como índice y secuencia [ATRIA-5-EXECUTION-PLAN.md](ATRIA-5-EXECUTION-PLAN.md), sección «Dirección operativa actual». B0 de juego [30/30 CI verde](https://github.com/javierdario48-star/ATRIA/actions/runs/44856218209); [traslados verdes](https://github.com/javierdario48-star/ATRIA/actions/runs/44856218283). Matriz clínica aún sin conclusión al último control; preview real bloqueado por Vercel. **Ahora J1 plataforma de juego; casos individuales después en planilla C1.** Las notas históricas de B0 más abajo reflejan checkpoints anteriores y no reemplazan el estado operativo actual.
 
 
