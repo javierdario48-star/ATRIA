@@ -759,7 +759,7 @@ test('follow-ups disclose an authored dose, surgical course or known negative al
 
 test('natural onset phrasing on a phone retrieves authored disease chronology',async()=>{
  const c=respiratoryPack.cases.find(x=>x.id==='RESP-01');
- const f=setup(c.id,'mobile-onset',{...content,cases:[c]});
+ const f=setup(c.id,'mobile-onset',serverContent);
  try{
   const reply=await f.send('cómo iniciaron los síntomas');
   assert.equal(reply.clinical[0].status,'executed');

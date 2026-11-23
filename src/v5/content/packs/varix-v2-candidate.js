@@ -54,6 +54,8 @@ source.clinicalPolicy={
  }],
  closure:{
   destinations:['procedimiento','uti'],
+  // Both laboratory alternatives remain valid; no mandatory bedside endoscopy.
+  requiredStudies:[],
   study:[['g_varix_cbc'],['g_varix_group']],
   // Do not block urgent transfer on endoscopy results; hemostasis belongs to
   // the receiving team. Medication still must be CONFIRMED, not merely ordered.

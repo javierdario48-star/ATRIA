@@ -287,6 +287,16 @@ export function executePatientDialogue(p,c,cmd,clock){
     }
     continue;
    }
+   // If a doctor asks when the presenting symptom began, return the authored
+   // onset rather than an unrelated generic symptom-duration fallback. A
+   // separate, secondary fever/vomiting question still uses its own fact.
+   const chief=normalize(c.chief+' '+c.opening);
+   const primary={fever:/fiebre|febril|escalofri/,vomit:/vomit|nause|hematemes|arcadas/,
+    diarrhea:/diarrea|deposiciones liquidas|heces liquidas/,jaundice:/icteric|amarill/};
+   if(duration&&!explicitPain&&/\b(?:empezo|comenzo|arranco|inicio)\b/.test(clause)&&
+    named.some(([id])=>primary[id]?.test(chief))&&profile.onset){
+    disclose('chiefComplaint','onset',profile.onset,'case.history.onset');continue;
+   }
    if(named.length){for(const [id] of named)symptom(id,duration);if(!explicitPain)continue;}
    let matches=dimensions.filter(([,re])=>re.test(clause));
    if(!matches.length&&speaker.topic==='pain'&&/^(como es|que tan fuerte|cuanto)$/.test(clause))
