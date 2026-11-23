@@ -1,7 +1,10 @@
 import {awaitAbortable} from '../core/abortable-operation.js';
 
 export const CLINICAL_REQUEST_TIMEOUT_MS=12000;
+// Recovery-only CAS retries preserve the exact serialized command and IDs.
+// AbortSignal bounds a persistently busy authority; ordinary play is unchanged.
 const RECOVERY_CAS_BACKOFF_MS=[100,250,500,1000];
+const RECOVERY_REQUEST_TIMEOUT_MS=24000;
 
 async function waitForRetry(ms,signal){
  const pause=AbortSignal.any([signal,AbortSignal.timeout(ms)]);
@@ -95,7 +98,7 @@ export function createDurableCooperativeReplica({
  }
  async function request(action,extra={}, {controller=new AbortController(),signal:caller,retryBusy=false}={}){
   controllers.add(controller);
-  const signals=[controller.signal,AbortSignal.timeout(requestTimeoutMs)];
+  const signals=[controller.signal,AbortSignal.timeout(retryBusy?Math.max(requestTimeoutMs,RECOVERY_REQUEST_TIMEOUT_MS):requestTimeoutMs)];
   if(caller)signals.push(caller);
   const signal=AbortSignal.any(signals);
   try{
@@ -111,8 +114,8 @@ export function createDurableCooperativeReplica({
     if(response.ok)return value;
     const error=Object.assign(Error(value?.error||'clinical-'+response.status),
      {status:response.status,code:value?.code||'unavailable'});
-    const delay=RECOVERY_CAS_BACKOFF_MS[attempt];
-    if(!retryBusy||error.status!==409||error.code!=='busy'||delay===undefined)throw error;
+    const delay=RECOVERY_CAS_BACKOFF_MS[Math.min(attempt,RECOVERY_CAS_BACKOFF_MS.length-1)];
+    if(!retryBusy||error.status!==409||error.code!=='busy')throw error;
     await waitForRetry(delay,signal);
    }
   }finally{controllers.delete(controller);}

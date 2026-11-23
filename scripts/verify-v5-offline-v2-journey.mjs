@@ -39,14 +39,15 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1120,height:800}}],
   phase='unsafe decision';await send('/disposicion alta');
   assert.equal((await state()).patient.caseEnded,false);assert.equal((await state()).progress.penalties.length,1);
   // The hint is displayed and charged through its actual patient menu.
-  const xy=await page.evaluate(()=>{const e=atriaV5.snapshot().entities.find(x=>x.kind==='patient'),r=atriaV5.diagnostics().renderer;
-   return {x:(e.x-r.camera.x)*r.scale+r.anchorX,y:(e.y-r.camera.y)*r.scale+r.anchorY};});
-  // Reception may already have opened the actual bedside wheel. Clicking
-  // the canvas in that case can dismiss it, especially on a compact screen.
-  // Open only when hidden; never force-click or bypass the hint/XP authority.
+  // A compact Android viewport can make canvas-center taps miss the patient.
+  // Use the visible Reception > Approach action, never hidden DOM controls.
   const wheel=page.locator('#patientWheel');
-  if(!await wheel.isVisible())await page.locator('#game').click({position:xy});
-  await wheel.waitFor({state:'visible'});
+  if(!await wheel.isVisible()){
+   await clickHudAction(page,'receptionButton');
+   await page.locator('[data-action="reception-approach"]').first().click();
+  }
+  await wheel.waitFor({state:'visible',timeout:30000});
+  await page.screenshot({path:out+'/'+name+'-hint-wheel.png'});
   const hint=wheel.locator('[data-patient-action="hint"]');
   await hint.waitFor({state:'visible'});
   await hint.click();

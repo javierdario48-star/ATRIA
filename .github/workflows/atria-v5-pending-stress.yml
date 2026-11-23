@@ -8,6 +8,8 @@ on:
       - 'qa/v5/characterize-surgery-native.mjs'
       - 'qa/v5/mortality-regression.mjs'
       - 'qa/v5/studies-browser.mjs'
+      - 'src/v5/social/durable-cooperative-replica.js'
+      - 'scripts/verify-v5-offline-v2-journey.mjs'
   workflow_dispatch:
 
 permissions:

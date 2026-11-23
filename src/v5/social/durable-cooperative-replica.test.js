@@ -231,15 +231,40 @@ test('recovery retries the same request after CAS contention through the final l
  }finally{replica.dispose();}
 });
 
-for(const [code,attempts] of [['busy',5],['fenced',1]])test('recovery '+code+' ends after '+attempts+' attempt(s)',async()=>{
- let sent=0;
- const replica=createDurableCooperativeReplica({roomId,clientKey,window:{crypto,fetch:async()=>{
-  sent++;return {ok:false,status:409,json:async()=>({code,error:'test authority rejection'})};
- }}});
+test('recovery survives more than four CAS conflicts with the identical inspection request',async()=>{
+ const sent=[];let conflicts=0;
+ const replica=createDurableCooperativeReplica({roomId,clientKey,actorId:'doctor-a',window:{crypto,
+  fetch:async(_url,options)=>{
+   const body=JSON.parse(options.body);sent.push(body);
+   if(!body.shiftRequest&&conflicts++<6)return {ok:false,status:409,json:async()=>({
+    code:'busy',error:'clinical authority changed; retry same event'})};
+   const shift=body.shiftRequest;
+   return {ok:true,json:async()=>recoveryFrame(sent.length,!shift,shift?{
+    shiftRequestId:shift.requestId,shiftAcknowledgement:{...shift,status:'accepted'}}:{})};
+  }}});
  try{
-  await assert.rejects(holdNodeEventLoop(()=>replica.recoverTurn('leave')),{code,status:409});
-  assert.equal(sent,attempts);
+  const result=await holdNodeEventLoop(()=>replica.recoverTurn('leave'));
+  assert.equal(result.clinical.shift.turn.actor.participating,false);
+  assert.equal(sent.length,8);
+  assert(sent.slice(0,7).every(row=>JSON.stringify(row)===JSON.stringify(sent[0])));
+  assert.equal(sent[7].shiftRequest.op,'leave');
+  assert(sent.every(row=>row.expectedActorId==='doctor-a'));
  }finally{replica.dispose();}
+});
+
+test('persistent CAS busy obeys caller cancellation while fenced never retries',async()=>{
+ for(const code of ['busy','fenced']){
+  let sent=0;
+  const replica=createDurableCooperativeReplica({roomId,clientKey,window:{crypto,fetch:async()=>{
+   sent++;return {ok:false,status:409,json:async()=>({code,error:'test authority rejection'})};
+  }}});
+  try{
+   await assert.rejects(holdNodeEventLoop(()=>replica.recoverTurn('leave',{signal:AbortSignal.timeout(1400)})),
+    code==='busy'?{name:'TimeoutError'}:{code,status:409});
+   if(code==='busy')assert(sent>=4,'a temporary busy condition is retried beyond the old fixed window');
+   else assert.equal(sent,1,'fenced is a permanent refusal');
+  }finally{replica.dispose();}
+ }
 });
 
 test('cancelling recovery aborts a held leave and ignores a late receipt',async()=>{
