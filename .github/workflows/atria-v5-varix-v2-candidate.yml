@@ -45,3 +45,26 @@ jobs:
           path: qa/v5-varix-v2-parity/
           if-no-files-found: warn
           retention-days: 30
+  adversarial-seeded-bots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [solo, apprentice, coop, competitive]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Seeded identities, allergies, clinical outcomes, rescue and durable native integrity
+        env:
+          VARIX_QA_MODE: ${{ matrix.mode }}
+        run: node qa/v5/varix-v2-adversarial.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-varix-v2-adversarial-${{ matrix.mode }}
+          path: qa/v5-varix-v2-adversarial/
+          if-no-files-found: warn
+          retention-days: 30
