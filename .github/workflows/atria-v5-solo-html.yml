@@ -44,6 +44,7 @@ jobs:
         run: |
           node scripts/build-v5-solo-compact.mjs
           node scripts/build-v5-solo-compact.mjs --resp01-v2
+          node scripts/build-v5-solo-compact.mjs --varix-v2
       - name: Verify atomic local checkpoint owners before the browser
         run: node --test src/v5/app/local-guard-checkpoint.test.js src/v5/app/local-shift.test.js
       - name: Verify browser, lobby and solo guard on Chrome and emulated Android

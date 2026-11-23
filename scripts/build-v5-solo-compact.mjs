@@ -2,12 +2,16 @@ import fs from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
-const experimental=process.argv.includes('--resp01-v2');
-if(process.argv.slice(2).some(x=>x!=='--resp01-v2'))throw Error('Only --resp01-v2 is supported');
+const respiratory=process.argv.includes('--resp01-v2');
+const varix=process.argv.includes('--varix-v2');
+if(respiratory&&varix||process.argv.slice(2).some(x=>!['--resp01-v2','--varix-v2'].includes(x)))
+ throw Error('Use either --resp01-v2 or --varix-v2, never both');
+const experimental=respiratory||varix;
 const sourceSha=process.env.GITHUB_SHA||execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
-const offline={buildId:sourceSha+(experimental?':resp01-v2':':v1'),
- storageScope:experimental?'resp01-v2-offline':'solo-offline-v1',
- label:experimental?'RESP-01 V2 experimental · catálogo V1 conservado en el otro HTML':'ATRIA 5 · 55 casos V1'};
+const offline={buildId:sourceSha+(respiratory?':resp01-v2':varix?':varix-v2':':v1'),
+ storageScope:respiratory?'resp01-v2-offline':varix?'varix-v2-offline':'solo-offline-v1',
+ label:respiratory?'RESP-01 V2 experimental · original conservado en el HTML V1':
+  varix?'VARIX-001 V2 experimental · original conservado en el HTML V1':'ATRIA 5 · 55 casos V1'};
 const esbuild=createRequire(import.meta.url)(process.env.ATRIA_ESBUILD_MODULE);
 const base='src/v5/content/';
 const names={map:'hospital',cases:'cases',algorithms:'algorithms',examSegments:'exam-segments',therapies:'therapies',defaultDoses:'default-doses',beds:'beds',colors:'colors',assets:'assets',certifiedCatalog:'certified-case-packs'};
@@ -21,7 +25,8 @@ const code=`import {createClinicalContent} from '../content/clinical-content.js'
 import {readCertifiedCaseCatalog} from '../content/certified-case-catalog.js';
 import {CLINICAL_POLICY_REGISTRIES} from '../clinical/clinical-policy-registry.js';
 import {createApplication} from './application.js';
-${experimental?"import {resp01V2Candidate,resp01V2ExperimentalPack} from '../content/packs/respiratory-v2-candidate.js';\nimport {compileClinicalCasePack} from '../content/compile-clinical-case-pack.js';":''}
+${respiratory?"import {resp01V2Candidate,resp01V2ExperimentalPack} from '../content/packs/respiratory-v2-candidate.js';\nimport {compileClinicalCasePack} from '../content/compile-clinical-case-pack.js';":
+ varix?"import {varixV2Candidate,varixV2ExperimentalPack} from '../content/packs/varix-v2-candidate.js';\nimport {compileClinicalCasePack} from '../content/compile-clinical-case-pack.js';":''}
 const raw=${JSON.stringify(raw)},assets=${JSON.stringify(assets)};
 const fetchOriginal=window.fetch.bind(window);
 window.fetch=(input,opts)=>{
@@ -40,11 +45,12 @@ const abort=new AbortController();
 const c=readCertifiedCaseCatalog(certifiedCatalog,{...CLINICAL_POLICY_REGISTRIES,existingCaseIds:content.cases.map(c=>c.id)});
 if(!c.ok)throw Error('Catalogo no certificado: '+c.errors.join('; '));
 let additionalCases=c.cases;
-${experimental?"const staged=compileClinicalCasePack(resp01V2ExperimentalPack,CLINICAL_POLICY_REGISTRIES);if(!staged.ok)throw Error(staged.errors.join('; '));\nadditionalCases=c.cases.filter(x=>x.id!==resp01V2Candidate.id).concat(staged.cases);":''}
+${respiratory?"const staged=compileClinicalCasePack(resp01V2ExperimentalPack,CLINICAL_POLICY_REGISTRIES);if(!staged.ok)throw Error(staged.errors.join('; '));\nadditionalCases=c.cases.filter(x=>x.id!==resp01V2Candidate.id).concat(staged.cases);":
+ varix?"const staged=compileClinicalCasePack(varixV2ExperimentalPack,{...CLINICAL_POLICY_REGISTRIES,existingCaseIds:[...content.cases.filter(x=>x.id!==varixV2Candidate.id).map(x=>x.id),...c.cases.map(x=>x.id)]});if(!staged.ok)throw Error(staged.errors.join('; '));\ncontent.cases=content.cases.map(x=>x.id===varixV2Candidate.id?staged.cases[0]:x);":''}
 const composed=createClinicalContent(content,{additionalCases});
 if(composed.cases.length!==55||new Set(composed.cases.map(c=>c.id)).size!==55)throw Error('Offline catalog must retain 55 unique logical cases');
 const app=await createApplication({document,window,content:composed,signal:abort.signal,offline:${JSON.stringify(offline)}});
-document.body.dataset.clinicalRevision=${JSON.stringify(experimental?'resp01-v2-experimental':'v1')};
+document.body.dataset.clinicalRevision=${JSON.stringify(respiratory?'resp01-v2-experimental':varix?'varix-v2-experimental':'v1')};
 Object.defineProperty(window,'atriaV5',{value:app,writable:false});document.body.dataset.boot='ready';}
 catch(e){abort.abort();document.body.dataset.boot='failed';document.getElementById('fatalText').textContent=e.message;document.getElementById('fatal').hidden=false;console.error(e);}})();`;
 try{await fs.writeFile(entry,code);
@@ -65,9 +71,12 @@ html=html.replace('src="'+welcomeSrc+'"','src="'+await uri('assets/welcome-docto
 const script=/<script type="module" src="\.\/src\/v5\/app\/main\.js" onerror="[^"]*"><\/script>/;
 if(!script.test(html))throw Error('Entry changed');
 html=html.replace(script,()=>'<script>'+js.replaceAll('</script','<\\/script')+'</script>');
-html=html.replace('</head>','<meta name="atria-source-sha" content="'+sourceSha+'"><meta name="atria-clinical-revision" content="'+(experimental?'resp01-v2-experimental':'v1')+'"></head>');
-await fs.mkdir('out-solo-html',{recursive:true});const out='out-solo-html/'+(experimental?'ATRIA-5-RESP01-V2-Experimental.html':'ATRIA-5-Solitario.html');await fs.writeFile(out,html);
+html=html.replace('</head>','<meta name="atria-source-sha" content="'+sourceSha+'"><meta name="atria-clinical-revision" content="'+(respiratory?'resp01-v2-experimental':varix?'varix-v2-experimental':'v1')+'"></head>');
+await fs.mkdir('out-solo-html',{recursive:true});const out='out-solo-html/'+(respiratory?'ATRIA-5-RESP01-V2-Experimental.html':
+ varix?'ATRIA-5-VARIX-V2-Experimental.html':'ATRIA-5-Solitario.html');await fs.writeFile(out,html);
 const hash=createHash('sha256').update(html).digest('hex');await fs.writeFile(out+'.sha256',hash+'  '+out.split('/').at(-1)+'\n');
-await fs.writeFile('out-solo-html/README.txt',`ATRIA 5 — pruebas personales offline\nSHA de fuentes: ${sourceSha}\n\nATRIA-5-Solitario.html: 55 casos V1.\nATRIA-5-RESP01-V2-Experimental.html (si incluido): mismo catálogo de 55 identidades, RESP-01 V2 aislado; V1 permanece en el otro archivo.\n\nAbrir el HTML en Chrome de escritorio. No requiere Vercel ni servidor HTTP. En Android la apertura depende del navegador/gestor (file:// o content://); el teléfono físico sigue pendiente de aceptación.\nAprendiz/Solitario disponibles. Cooperativo/Competitivo conservan su implementación compartida y requieren servidor: esta copia no simula otros médicos.\n\nPara RESP-01 V2: Hacer guardia > Solitario > Caso específico > neumonía de bajo riesgo. Entrar, Recepción, elegir paciente; usar menú del paciente para historia, examen, estudios, medicación y Dr. Vega.\nGuardar y salir desde menú o fin de turno; Hacer guardia > Retomar guardia guardada. El tiempo se pausa al cerrar. Guardar explícitamente antes de cerrar la pestaña.\nGuardado y XP son locales a este navegador, archivo/revisión y perfil. Las dos copias usan espacios separados y no sobrescriben el progreso de la otra. Conservar el HTML original para recuperar guardias guardadas por esa revisión. No trasladar XP local a una cuenta como recompensa verificada.\n\nSin conexión no se certifican cuentas, backend, voz entre jugadores, Supabase, Preview ni Android físico. No es una autorización de Production.\nCada HTML tiene un archivo .sha256; el manifiesto de CI contiene evidencia de interfaz, jugabilidad y recuperación del mismo SHA.\n`);
+await fs.writeFile('out-solo-html/README.txt',`ATRIA 5 — pruebas personales offline\nSHA de fuentes: ${sourceSha}\n\nATRIA-5-Solitario.html: 55 casos V1.\nATRIA-5-RESP01-V2-Experimental.html (si incluido): mismo catálogo de 55 identidades, RESP-01 V2 aislado; V1 permanece en el otro archivo.
+ATRIA-5-VARIX-V2-Experimental.html (si incluido): mismo catálogo de 55 identidades, VARIX-001 V2 aislado; V1 permanece en ATRIA-5-Solitario.html.\n\nAbrir el HTML en Chrome de escritorio. No requiere Vercel ni servidor HTTP. En Android la apertura depende del navegador/gestor (file:// o content://); el teléfono físico sigue pendiente de aceptación.\nAprendiz/Solitario disponibles. Cooperativo/Competitivo conservan su implementación compartida y requieren servidor: esta copia no simula otros médicos.\n\nPara RESP-01 V2: Hacer guardia > Solitario > Caso específico > neumonía de bajo riesgo.
+Para VARIX-001 V2: Hacer guardia > Solitario > Caso específico > cirrosis y hematemesis masiva. Entrar, Recepción, elegir paciente; usar menú del paciente para historia, examen, estudios, medicación y Dr. Vega.\nGuardar y salir desde menú o fin de turno; Hacer guardia > Retomar guardia guardada. El tiempo se pausa al cerrar. Guardar explícitamente antes de cerrar la pestaña.\nGuardado y XP son locales a este navegador, archivo/revisión y perfil. Las dos copias usan espacios separados y no sobrescriben el progreso de la otra. Conservar el HTML original para recuperar guardias guardadas por esa revisión. No trasladar XP local a una cuenta como recompensa verificada.\n\nSin conexión no se certifican cuentas, backend, voz entre jugadores, Supabase, Preview ni Android físico. No es una autorización de Production.\nCada HTML tiene un archivo .sha256; el manifiesto de CI contiene evidencia de interfaz, jugabilidad y recuperación del mismo SHA.\n`);
 console.log('BUILT '+out+' bytes='+Buffer.byteLength(html)+' sha256='+hash);
 }finally{await fs.rm(entry,{force:true});}
