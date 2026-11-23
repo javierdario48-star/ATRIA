@@ -66,7 +66,7 @@ test('bad premature discharge is attempted, debited exactly once, and patient st
   assert.equal(state.progress.penalties[0].loss,15);
   assert.equal(state.progress.xp,0);
   assert.equal(state.progress.xpDebt,15);
-  assert.equal(state.patient.closure?.closed,true?false:false);
+  assert.notEqual(state.patient.closure?.closed,true);
   const replay=await s.post({id:'qa-1',text:'/disposicion alta'});
   assert.deepEqual(replay,first);
   assert.equal(s.read().progress.penalties.length,1);
@@ -92,7 +92,7 @@ test('the vasoactive drug is not a magic procedure: only actual native receipts 
    assert(additionalCaseTargets(after,candidate,minute+100).hr <
     additionalCaseTargets(untreated,candidate,minute+100).hr);
   }
-  assert.equal(after.procedures?.endoscopy?.performed,true?false:false,
+  assert.notEqual(after.procedures?.endoscopy?.performed,true,
    'vasoactive medication never performs an endoscopic ligation');
  }finally{s.dispose();}
 });
