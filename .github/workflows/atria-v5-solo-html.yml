@@ -8,6 +8,7 @@ on:
       - 'scripts/verify-v5-solo-compact.mjs'
       - 'scripts/audit-v5-solo-compact.mjs'
       - 'scripts/verify-v5-offline-v2-journey.mjs'
+      - 'scripts/verify-v5-offline-varix-v2.mjs'
       - 'src/v5/clinical/**'
       - 'src/v5/content/**'
       - 'src/v5/app/**'
@@ -62,6 +63,11 @@ jobs:
           ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright
           CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node scripts/verify-v5-offline-v2-journey.mjs
+      - name: Verify VARIX V2 native admissions, shock, unsafe decision, false endoscopy and recovery on Chrome/Pixel
+        env:
+          ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright
+          CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
+        run: node scripts/verify-v5-offline-varix-v2.mjs
       - name: Publish downloadable HTML and smoke evidence
         if: always()
         uses: actions/upload-artifact@v4
