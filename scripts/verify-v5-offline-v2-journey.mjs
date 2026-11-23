@@ -38,6 +38,20 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1120,height:800}}],
   if(await page.locator('#patientWheel').isVisible())await page.locator('#patientWheel [data-patient-action="talk"]').click();
   phase='unsafe decision';await send('/disposicion alta');
   assert.equal((await state()).patient.caseEnded,false);assert.equal((await state()).progress.penalties.length,1);
+  await page.waitForFunction(()=>document.getElementById('guardScoreboard')?.textContent?.includes('Sanciones −15 XP'));
+  assert.match(await page.locator('#guardScoreboard').innerText(),/EXP neta/);
+  // Ask a deliberately unrecognised question. A real user tap chooses a
+  // question; the ordinary patient authority must provide the real answer.
+  phase='patient follow-ups';await send('¿Cuál es la capital de Marte?');
+  await page.waitForFunction(()=>atriaV5.snapshot().clinical.messages.some(m=>
+   m.role==='patient'&&m.text.includes('No entendí la pregunta')));
+  const quick=page.locator('#chatHistory .chat-followups button');
+  assert.deepEqual(await quick.allTextContents(),['Inicio','Síntomas','Antecedentes']);
+  await quick.first().click();
+  await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.intentHistory.some(e=>e.id==='onset'));
+  assert.match((await state()).messages.filter(m=>m.role==='patient').at(-1).text,/tres días/i);
+  await send('cómo iniciaron los síntomas');
+  assert.match((await state()).messages.filter(m=>m.role==='patient').at(-1).text,/tres días/i);
   // The hint is displayed and charged through its actual patient menu.
   // A compact Android viewport can make canvas-center taps miss the patient.
   // Use the visible Reception > Approach action, never hidden DOM controls.
@@ -90,6 +104,11 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1120,height:800}}],
   phase='closure';await send('/disposicion alta');await page.waitForFunction(()=>atriaV5.snapshot().clinical.patient.caseEnded);
   const final=await state();assert.equal(final.patient.closure.destination,'alta');assert.equal(final.progress.receipts.length,1);
   assert.equal(final.progress.penalties.length,1);assert.equal(final.progress.xp,final.caseReward.xp-15);
+  assert.match(await page.locator('#guardScoreboard').innerText(),/Sanciones −15 XP/);
+  const debrief=await page.locator('#caseResult').innerText();
+  assert.match(debrief,/Decisiones inseguras ya descontadas/);
+  assert.match(debrief,/Balance neto de esta atención/);
+  assert(debrief.includes('+'+String(final.caseReward.xp-15)+' XP'));
   assert.equal(final.patient.administrationLog.filter(x=>x.id==='amoxicillin').length,1,'pending nursing restore must not duplicate a dose');
   await page.screenshot({path:out+'/'+name+'-closed.png'});await page.locator('#modalClose').click();
   await clickHudAction(page,'guardButton');await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');
