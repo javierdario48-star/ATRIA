@@ -15,6 +15,10 @@ source.specialty='Gastroenterología · hemorragia digestiva';
 source.title='Hemorragia digestiva variceal con shock';
 source.difficulty='avanzada';
 source.ageRange=[45,68];
+// V1 mis-modeled an upper endoscopy as an ordinary lab result available
+// inside the emergency box after waiting. V2 requires the actual Gastro
+// receiving consultation; neither ordering nor waiting executes ligation.
+source.studies=source.studies.filter(study=>study.id!=='g_varix_egd');
 source.history={
  onset:'Empecé a vomitar mucha sangre hace pocas horas; desde entonces estoy muy mareado.',
  pmh:'Tengo cirrosis con ascitis desde hace años y me habían hablado de várices esofágicas.',

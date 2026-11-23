@@ -25,6 +25,9 @@ test('VARIX-001 V2 is isolated from its existing 55-case V1 and compiles with th
  assert.equal(candidate.id,legacy.id);
  assert.notDeepEqual(candidate.clinicalPolicy,legacy.clinicalPolicy);
  assert.deepEqual(candidate.vitals,legacy.vitals);
+ assert(legacy.studies.some(x=>x.id==='g_varix_egd'));
+ assert(!candidate.studies.some(x=>x.id==='g_varix_egd'),
+  'no invented bedside endoscopy with a fabricated completed result');
  assert.equal(content.cases.length,clinicalContent.cases.length);
  assert.equal(new Set(content.cases.map(c=>c.id)).size,55);
  assert.deepEqual(validateClinicalGraph(candidate.clinicalGraph),[]);
