@@ -32,9 +32,17 @@ for(const {mode,profile} of total){
   try{
    const scenario=await runClinicalCaseScenario(caseData,{content,profile,mode,seed,
     horizon:720,recovery:true,traceEvery:15,
-    preferredDestination:'procedimiento',
+    // The original legacy VARIX V1 owns its own destination policy.
+    // Forcing the V2 override on V1 previously aborted all V1 comparisons.
+    preferredDestination:revision==='v2'?'procedimiento':null,
     ...(observer?{onObservation:s=>observer.observe(s)}:{}),
     source:{caseId:'VARIX-001',revision,kind:'isolated-native-comparison'}});
+   if(!scenario.initial||!scenario.final)
+    report.errors.push(mode+'/'+profile+'/'+revision+': bot never reached the real native scenario');
+   for(const [gate,value] of Object.entries(scenario.integrityChecks||{}))
+    if(value===false)report.errors.push(mode+'/'+profile+'/'+revision+': native integrity failed '+gate);
+   if(['competent','slow'].includes(profile)&&scenario.outcome!=='accepted-destination')
+    report.errors.push(mode+'/'+profile+'/'+revision+': competent care did not reach accepted destination');
    const patient=scenario.final||{},reward=scenario.progress?.receipts||[],
     penalties=scenario.progress?.penalties||[],admin=scenario.administrations||[],
     p=scenario.closureReceipt;
@@ -78,5 +86,5 @@ report.limitations=[
 ];
 await writeFile(resolve(out,'summary.json'),JSON.stringify(report,null,2)+'\n');
 console.log('VARIX_V1_V2_PAIRED_SUMMARY '+JSON.stringify({pairs:report.pairs.length,
- errors:report.errors,completed:report.pairs.filter(x=>x.rows.v2&&!x.rows.v2.error).length}));
+ errors:report.errors,completedBoth:report.pairs.filter(x=>x.rows.v1?.outcome&&x.rows.v2?.outcome).length}));
 if(report.errors.length)process.exitCode=1;
