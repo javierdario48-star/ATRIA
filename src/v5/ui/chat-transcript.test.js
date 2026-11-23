@@ -4,7 +4,8 @@ import {createChatTranscript} from './chat-transcript.js';
 
 function fakeDom(){
  class Element{
-  constructor(tag){this.tag=tag;this.className='';this.dataset={};this.textContent='';this.children=[];this.scrollHeight=10;this.scrollTop=0;}
+  constructor(tag){this.tag=tag;this.className='';this.dataset={};this.attributes={};this.textContent='';this.children=[];this.scrollHeight=10;this.scrollTop=0;}
+  setAttribute(name,value){this.attributes[name]=String(value);}
   append(...items){for(const x of items)if(x.tag==='fragment')this.children.push(...x.children);else this.children.push(x);}
   replaceChildren(...items){this.children=[];this.append(...items);}
   get firstChild(){return this.children[0];}
