@@ -30,3 +30,13 @@ test('diagnosis reveal has its own visible 50% discount alongside Vega',()=>{
  assert.match(html,/Diagnóstico revelado<\/span><b[^>]*>−50% · −63 XP/);
  assert.match(html,/XP final obtenida<\/span><b[^>]*>63 XP/);
 });
+
+test('closure summary shows its already applied native debit without charging twice',()=>{
+ const html=caseDebriefHTML({patientUid:'P',destination:'alta',quality:{score:50},xp:48},{
+  penalties:[{patientUid:'P',loss:15,kind:'clinical.unsafe-discharge'},
+   {patientUid:'Other',loss:15,kind:'clinical.unsafe-observation'}]});
+ assert.match(html,/Decisiones inseguras ya descontadas/);
+ assert.match(html,/−15 XP/);
+ assert.match(html,/Balance neto de esta atención/);
+ assert.match(html,/\+33 XP/);
+});

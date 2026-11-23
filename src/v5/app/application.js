@@ -787,7 +787,7 @@ export async function createApplication({document,window,content,signal,offline=
    toast((debit.kind==='clinical.unsafe-observation'?'Observación insegura registrada':'Alta insegura registrada')+' · −'+debit.loss+' XP');
   if(closure?.closed&&(!durableClient||closure.creditStatus==='credited'))animateExperience(closure.eventId,closure.xp);
   if(closure?.closed&&announcedClosure===closure.eventId&&dialog.dataset.panel==='outcome'){
-   const outcome=dialog.querySelector('#caseResult'),html=caseDebriefHTML(closure);
+   const outcome=dialog.querySelector('#caseResult'),html=caseDebriefHTML(closure,{penalties:confirmedPenalties});
    if(outcome&&outcome.innerHTML!==html)outcome.innerHTML=html;
   }
   if(closure?.closed&&announcedClosure!==closure.eventId){announcedClosure=closure.eventId;
@@ -796,7 +796,7 @@ export async function createApplication({document,window,content,signal,offline=
     const p=localSessions.get(r.uid)?.read().patient;
     return r.uid!==closure.patientUid&&!r.closed&&!p?.caseEnded&&!p?.patientDied;
    });
-   open('<div id="caseResult">'+caseDebriefHTML(closure)+'</div><div class="actions">'+
+   open('<div id="caseResult">'+caseDebriefHTML(closure,{penalties:confirmedPenalties})+'</div><div class="actions">'+
     (canNext?'<button class="primary" data-action="next-local-patient">Recibir otro paciente</button>':'')+
     '<button data-action="reception">Recepción</button>'+
     '<button data-action="return-lobby">Volver al lobby</button>'+
@@ -866,6 +866,9 @@ export async function createApplication({document,window,content,signal,offline=
  }
  function updateHud(){
   const s=world.snapshot(),guard=s.phase==='guard',clinical=guardSession?.read();
+  const activeUids=new Set((clinical?.shift?.patients||localAdmissions?.records()||[]).map(p=>p.uid));
+  if(clinical?.patient?.uid)activeUids.add(clinical.patient.uid);
+  const scorePenalties=(clinical?.progress?.penalties||[]).filter(p=>activeUids.has(p.patientUid));
   const scoreHost=ui('guardScoreboard');
   if(scoreHost){
    scoreHost.hidden=!guard;
@@ -874,7 +877,7 @@ export async function createApplication({document,window,content,signal,offline=
      mode:s.mode,patient:clinical?.caseReward?{...clinical.patient,closure:clinical.caseReward}:clinical?.patient,
      players:s.mode==='competitive'?(social.state().room?.members||[]).map(p=>({id:p.userId,name:p.name})):[],
      ownerId:clinical?.competition?.ownerId||null,
-     outcomes:clinical?.shift?.outcomes||localShift.outcomes()}));
+     outcomes:clinical?.shift?.outcomes||localShift.outcomes(),penalties:scorePenalties}));
     if(score!==scoreMarkup){scoreHost.innerHTML=score;scoreMarkup=score;}
    }else{scoreMarkup='';scoreHost.replaceChildren();}
   }

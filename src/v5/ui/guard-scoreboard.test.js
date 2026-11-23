@@ -50,3 +50,17 @@ test('pending account credit is visibly pending instead of showing a provisional
  assert.match(guardScoreboardHTML(model),/EXP pendiente/);
  assert.doesNotMatch(guardScoreboardHTML(model),/EXP 0/);
 });
+
+test('net guard experience is earned XP minus native penalties',()=>{
+ const outcome={patientUid:'P',closed:true,survived:true,score:50,xp:48};
+ const penalties=[{kind:'clinical.unsafe-discharge',patientUid:'P',actorId:'doctor',loss:15}];
+ const model=guardScoreModelV5({mode:'solo',outcomes:[outcome],penalties});
+ assert.equal(model.xp,33);assert.equal(model.grossXP,48);assert.equal(model.penaltyXP,15);
+ const html=guardScoreboardHTML(model);
+ assert.match(html,/EXP neta/);assert.match(html,/\+33/);assert.match(html,/−15 XP/);
+ assert.equal(guardScoreModelV5({mode:'solo',penalties}).xp,-15,
+  'guard-only debt is visible before reward while career XP cannot be negative');
+ const competitive=guardScoreModelV5({mode:'competitive',players:[{id:'doctor'},{id:'other'}],
+  outcomes:[{...outcome,ownerId:'doctor'}],penalties});
+ assert.equal(competitive.players[0].xp,33);assert.equal(competitive.players[1].xp,0);
+});

@@ -2,7 +2,7 @@
 // divisions used in ATRIA 4.8.7. Source is the unique native closure receipt.
 import {esc} from './clinical-panels.js';
 import {GUARD_SCOPES} from '../clinical/guard-selection-policy.js';
-export function caseDebriefHTML(closure){
+export function caseDebriefHTML(closure,{penalties=[]}={}){
  if(!closure)return '';
  const q=closure.quality||{},b=closure.debrief;
  const dest={quirofano:'Derivación a quirófano',sala:'Internación en sala',
@@ -19,6 +19,8 @@ export function caseDebriefHTML(closure){
  const hints=closure.hintCount??0,penalty=closure.hintPenaltyPercent??0;
  const scope=GUARD_SCOPES[closure.rewardScope]?.label;
  const beforeHints=Math.round(base*factor),afterHints=Math.floor(beforeHints*(100-penalty)/100);
+ const caseLoss=penalties.filter(p=>p.patientUid===closure.patientUid&&p.kind!=='clinical.death')
+  .reduce((total,p)=>total+Math.max(0,Number(p.loss)||0),0);
  const lost=beforeHints-afterHints,revealLoss=afterHints-closure.xp;
  const discount=(percent,xp)=>'−'+percent+'%'+(closure.creditStatus!=='pending'&&xp>0?' · −'+xp+' XP':'');
  const hintDiscount=penalty?discount(penalty,lost):'0%';
@@ -31,7 +33,10 @@ export function caseDebriefHTML(closure){
    row('Penalización por pistas',hintDiscount,penalty?'score-loss':'')+
    (closure.diagnosisRevealed?row('Diagnóstico revelado',discount(50,revealLoss),'score-loss'):'')+
    (closure.creditStatus==='pending'?'<p class="case-score-empty">XP pendiente de acreditación.</p>':
-    row('XP final obtenida',closure.xp+' XP','score-gain')))+
+    row('XP final obtenida',closure.xp+' XP','score-gain')+
+    (caseLoss?row('Decisiones inseguras ya descontadas','−'+caseLoss+' XP','score-loss')+
+     row('Balance neto de esta atención',(closure.xp-caseLoss>=0?'+':'')+
+      (closure.xp-caseLoss)+' XP',closure.xp-caseLoss<0?'score-loss':'score-gain'):'') ))+
   '</section>';
  return '<div class="case-scorecard"><h3>Caso cerrado</h3>'+
   '<p>'+esc(dest)+' · Puntuación clínica: '+esc(q.score)+'/100</p>'+experience+
