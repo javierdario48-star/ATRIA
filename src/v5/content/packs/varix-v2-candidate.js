@@ -6,6 +6,7 @@
 // https://www.journal-of-hepatology.eu/article/S0168-8278%2826%2902778-9/fulltext
 import rawCases from '../cases.json' with {type:'json'};
 import {defineClinicalCase} from '../clinical-case-definition.js';
+import {withPatientVariation} from '../legacy-patient-variation.js';
 import {varixV2Graph} from './varix-v2-graph.js';
 
 const old=rawCases.find(x=>x.id==='VARIX-001');
@@ -14,7 +15,9 @@ const source=structuredClone(old);
 source.specialty='Gastroenterología · hemorragia digestiva';
 source.title='Hemorragia digestiva variceal con shock';
 source.difficulty='avanzada';
-source.ageRange=[45,68];
+// A paired V1/V2 seed keeps its original age and medicine-reaction draws.
+// V2 adds only authored histories and a new independently seeded relapse.
+source.ageRange=[47,63];
 // V1 mis-modeled an upper endoscopy as an ordinary lab result available
 // inside the emergency box after waiting. V2 requires the actual Gastro
 // receiving consultation; neither ordering nor waiting executes ligation.
@@ -27,7 +30,7 @@ source.history={
  risk:'Tengo cirrosis y ascitis. Me habían advertido que podía sangrar por várices.',
  bleeding:'Vomité sangre roja dos veces y desde ayer hago deposiciones negras.'
 };
-source.variation={backgroundHistory:[
+source.variation={...withPatientVariation(old).variation,backgroundHistory:[
  {id:'varices-sin-ligadura',history:{pmh:'Tengo cirrosis y ascitis desde hace años. Me habían hablado de várices esofágicas, pero no recuerdo una ligadura previa.'}},
  {id:'paracentesis-remote',history:{pmh:'Tengo cirrosis y ascitis desde hace años. Me realizaron una paracentesis meses atrás. Me habían hablado de várices esofágicas.'}},
  {id:'fractura-remote',history:{pmh:'Tengo cirrosis y ascitis desde hace años. Hace años tuve una fractura de muñeca ya curada. Me habían hablado de várices esofágicas.'}}
