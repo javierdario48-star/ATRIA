@@ -6,12 +6,15 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {clinicalContent} from '../../src/v5/server/content.js';
 import {varixV2Candidate as v2} from '../../src/v5/content/packs/varix-v2-candidate.js';
-import {clinicalCertificationContent,runClinicalCaseScenario} from './certify-clinical-cases.mjs';
+import {runClinicalCaseScenario} from './certify-clinical-cases.mjs';
 import {createClinicalGraphObserver} from '../../src/v5/clinical/clinical-graph-observer.js';
 const v1=clinicalContent.cases.find(c=>c.id==='VARIX-001');
 assert(v1&&v2&&v1.id===v2.id&&v1.clinicalPolicy===undefined);
-const v1Content=await clinicalCertificationContent([v1]);
-const v2Content=await clinicalCertificationContent([v2]);
+// VARIX-001 is one of the ORIGINAL JSON cases, unlike RESP-01 which
+// belongs to an additional pack. Replacing it in an immutable view avoids
+// accidentally appending a second VARIX-001 or shrinking the 55-case catalog.
+const v1Content=clinicalContent;
+const v2Content={...clinicalContent,cases:clinicalContent.cases.map(c=>c.id===v2.id?v2:c)};
 assert.equal(v1Content.cases.length,55);assert.equal(v2Content.cases.length,55);
 const modes=['solo','apprentice','coop','competitive'];
 const profiles=['competent','slow','wrong-medication','wrong-diagnosis','negligent','abandon'];
