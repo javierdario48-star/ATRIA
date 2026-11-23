@@ -704,3 +704,19 @@ body.atria-keyboard-open .chat-suggestions:not([hidden]){max-height:34px;padding
 .guard-chat-tabs [data-channel-unread]{margin-left:3px;padding:1px 4px;border-radius:8px;background:#a4ddc3;color:#102f2d;font-size:10px}
 .vega-clinical-hint button{align-self:flex-start;min-width:34px;min-height:34px;padding:0;background:transparent;border:0;color:inherit;font-size:23px}
 @media(max-height:500px){.vega-clinical-hint{top:58px;right:8px;width:min(340px,calc(100vw - 16px));padding:9px}.vega-hint-portrait{height:40px}}
+
+/* Confirmed clinical XP receipts and native one-tap follow-up prompts. */
+.brand>div:has(#hudXpBar){position:relative}
+.guard-score-breakdown{margin-top:3px;text-align:center;font-size:9px;line-height:1.3;color:#b7d9d5}
+.guard-score-loss{color:#ffd1ad!important}
+.hud-xp-change{position:absolute;top:100%;left:0;z-index:25;white-space:nowrap;
+ pointer-events:none;padding:2px 7px;border-radius:7px;font-size:12px;font-weight:800;
+ border:1px solid #76d0ae;background:#0b423c;color:#c7ffe8;
+ animation:atria-xp-receipt 2.2s ease-out both}
+.hud-xp-change.negative{border-color:#ed9676;background:#4b252b;color:#ffe0c9}
+@keyframes atria-xp-receipt{0%{opacity:0;transform:translateY(5px)}15%,70%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-17px)}}
+#chatHistory .chat-followups{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 1px}
+#chatHistory .chat-followups button{min-height:30px;padding:5px 10px;border-radius:999px;
+ background:#174e53;color:#d9fff0;border:1px solid #73cdbf;font-size:12px;font-weight:750;
+ cursor:pointer;touch-action:manipulation}
+#chatHistory .chat-followups button:focus-visible{outline:2px solid #eddb95;outline-offset:2px}

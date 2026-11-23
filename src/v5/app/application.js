@@ -852,9 +852,16 @@ export async function createApplication({document,window,content,signal,offline=
  function animateExperience(eventId,delta){
   if(!eventId||!Number.isSafeInteger(delta)||!delta||animatedExperience.has(eventId))return false;
   animatedExperience.add(eventId);
-  if(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
-   ui('hudXpBar')?.animate?.([{filter:'brightness(1)'},{filter:delta<0?'sepia(1) saturate(3)':'brightness(1.8)'},
+  const bar=ui('hudXpBar'),holder=bar?.parentElement;
+  if(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
+   bar?.animate?.([{filter:'brightness(1)'},{filter:delta<0?'sepia(1) saturate(3)':'brightness(1.8)'},
     {filter:'brightness(1)'}],{duration:480,easing:'ease-out'});
+   if(holder){
+    const marker=document.createElement('span');marker.className='hud-xp-change'+(delta<0?' negative':'');
+    marker.textContent=(delta>0?'+':'')+delta+' XP';holder.append(marker);
+    marker.addEventListener('animationend',()=>marker.remove(),{once:true});
+   }
+  }
   return true;
  }
  function updateHud(){
@@ -1120,6 +1127,17 @@ export async function createApplication({document,window,content,signal,offline=
   const prefix={nurse:'Enfermera, ',vega:'Vega, ',companion:'Acompañante, '}[kind]||'';
   input.value=prefix+text;updateHud();input.focus({preventScroll:true});input.setSelectionRange(prefix.length,prefix.length);updateTypingAssistance();
  }
+ listen(ui('chatHistory'),'click',event=>{
+  const button=event.target.closest?.('button[data-patient-followup]');
+  if(!button||!ui('chatHistory').contains(button)||!guardSession||
+     world.snapshot().phase!=='guard'||guardChannels.state().active!=='clinical')return;
+  const state=guardSession.read(),patientUid=state?.patient?.uid;
+  if(!patientUid||state.patient.caseEnded||state.patient.patientDied||state.canEdit===false)return;
+  // A real intentional tap posts through the same patient authority, not
+  // a synthetic reply or a bypass of bedside range and ownership.
+  focusedNpc=null;focusedPatientUid=patientUid;updateHud();
+  void submitText(button.dataset.patientFollowup,{patientUid,clinical:true});
+ });
  function notifyClinicalRejection(receipt){
   if(receipt?.status==='rejected')
    toast(clinicalRejectionMessages[receipt.reason]||'El servidor rechazó el mensaje. No se ejecutó ninguna orden.');

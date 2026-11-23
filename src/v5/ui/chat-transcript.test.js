@@ -53,3 +53,17 @@ test('an unchanged clinical poll preserves the DOM and reading position',()=>{
  assert.equal(element.scrollTop,120);
  assert.equal(element.children.length,2);
 });
+
+test('unknown patient question provides three safe selectable follow-ups',()=>{
+ const {document,element}=fakeDom(),r=createChatTranscript({document,element,history:[]});
+ r.replace([{id:'u',role:'patient',name:'Paciente',
+  text:'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'}]);
+ const choices=element.children[0].children.at(-1);
+ assert.equal(choices.className,'chat-followups');
+ assert.deepEqual(choices.children.map(b=>b.textContent),['Inicio','Síntomas','Antecedentes']);
+ assert.deepEqual(choices.children.map(b=>b.dataset.patientFollowup),[
+  '¿Desde cuándo empezaron los síntomas?','¿Qué otros síntomas tiene?','¿Qué antecedentes personales tiene?']);
+ r.replace([{id:'p',role:'player',name:'Doctor',
+  text:'No entendí la pregunta. Podés preguntarme por el inicio, síntomas o antecedentes.'}]);
+ assert.equal(element.children[0].children.length,2,'doctors do not gain patient actions from arbitrary text');
+});
