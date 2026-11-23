@@ -1,0 +1,47 @@
+name: ATRIA 5 VARIX-001 V2 Isolated Clinical Pilot
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - 'src/v5/content/packs/varix-v2-*'
+      - 'qa/v5/varix-v2-*'
+      - '.github/workflows/atria-v5-varix-v2-candidate.yml'
+      - 'src/v5/clinical/clinical-policy-closure.js'
+      - 'src/v5/clinical/clinical-policy-effects.js'
+      - 'src/v5/clinical/surgical-consultation.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atria-v5-varix-v2-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  isolated-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Contract, real clinical dialogue, graph, unsafe discharge and native treatment
+        run: node --test src/v5/content/packs/varix-v2-candidate.test.js
+      - name: Historical variceal handoff and anticoagulant harm regressions
+        run: node --test src/v5/clinical/gastro-bleeding-harm-bots.test.js src/v5/clinical/accepted-transfer.test.js src/v5/clinical/surgical-consultation.test.js
+  paired-four-modes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Paired V1 and V2 native bot characterization across all four game modes
+        run: node qa/v5/varix-v2-parity.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-varix-v1-v2-native-traces
+          path: qa/v5-varix-v2-parity/
+          if-no-files-found: warn
+          retention-days: 30
