@@ -89,7 +89,11 @@ export function generatePatientVariation(input,seed,context={}){
   firstName=firstNames[Math.floor(nameIndex/lastNames.length)];lastName=lastNames[nameIndex%lastNames.length];
  }
  const age=v.ageRange[0]+Math.floor(r()*(v.ageRange[1]-v.ageRange[0]+1));
- const personality=choose(v.personalities,r),opening=choose(v.openings,r);
+ const sampledPersonality=choose(v.personalities,r),opening=choose(v.openings,r);
+ // Distinct archetypes across the first patients in one guard, without
+ // changing the seeded draws that determine clinical complications or allergies.
+ const personality=context.patientIndex===undefined?sampledPersonality:
+  v.personalities[(hash(String(context.guardSeed??seed)+':personality-offset')+context.patientIndex)%v.personalities.length];
  return {
   seed:String(seed),name:firstName+' '+lastName,age,personality,opening,
   behavior:buildBehaviorProfile(seed,normalizePatientPersonality(personality)),
@@ -103,7 +107,9 @@ export function generatePatientVariation(input,seed,context={}){
    .map(c=>({id:c.id,progressionId:c.progressionId,rescueId:c.rescueId})),
   // Draw after existing clinical candidates so adding authored background
   // alternatives never rerolls a patient's existing reaction facts.
-  ...(v.backgroundHistory?.length?{backgroundHistory:structuredClone(choose(v.backgroundHistory,r))}:{})
+  ...(v.backgroundHistory?.length?{backgroundHistory:structuredClone(context.patientIndex===undefined?
+   choose(v.backgroundHistory,r):v.backgroundHistory[(hash(String(context.guardSeed??seed)+':background-offset')+
+    context.patientIndex)%v.backgroundHistory.length])}:{})
  };
 }
 

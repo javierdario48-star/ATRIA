@@ -756,3 +756,15 @@ test('follow-ups disclose an authored dose, surgical course or known negative al
   assert.match(answer(await surgical.send('¿Cuáles?')),/operaron varias veces/i);
  }finally{cardio.s.dispose();surgical.s.dispose();s.dispose();}
 });
+
+test('natural onset phrasing on a phone retrieves authored disease chronology',async()=>{
+ const c=respiratoryPack.cases.find(x=>x.id==='RESP-01');
+ const f=setup(c.id,'mobile-onset',{...content,cases:[c]});
+ try{
+  const reply=await f.send('cómo iniciaron los síntomas');
+  assert.equal(reply.clinical[0].status,'executed');
+  assert.match(answer(reply),/hace tres d[ií]as/i);
+  assert.doesNotMatch(answer(reply),/No entend[ií]/);
+  assert(f.s.read().patient.intentHistory.some(x=>x.id==='onset'));
+ }finally{f.s.dispose();}
+});

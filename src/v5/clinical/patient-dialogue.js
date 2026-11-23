@@ -23,6 +23,7 @@ export function openHistoryIntent(raw){
  if(/^(?:me podes|me puedes|puedes|podes) (?:decir|contar|explicar)(?:me)? (?:que te pasa|que te paso|que le pasa|que siente|que sentis|que sientes)$/.test(n))return 'reason';
  if(/^(?:contame|cuentame|digame|decime) (?:que te pasa|que te paso|que le pasa|que siente|que sentis|que sientes|por que viniste|por que vino)$/.test(n))return 'reason';
  if(/^(?:en que puedo ayudarte|en que puedo ayudarle|para que viniste|para que vino|que motivo te trajo)$/.test(n))return 'reason';
+ if(/^(?:como (?:se )?(?:iniciaron|empezaron|comenzaron)|de que manera (?:empezaron|comenzaron)) (?:los|tus|sus|estos) sintomas(?: de la enfermedad)?$/.test(n))return 'onset';
  if(/^(?:como|que tal)\s+(?:(?:te|se)\s+)?(?:encuentras|encuentra|estas|esta|sentis|sientes|siente|andas)(?:\s+(?:ahora|hoy|desde que llegaste|actualmente))?$/.test(n))return 'status';
  return null;
 }
@@ -186,6 +187,9 @@ export function executePatientDialogue(p,c,cmd,clock){
     disclose('chiefComplaint','interview:symptoms',profile.symptoms,'native.patient-profile.symptoms');continue;
    }
    if(openQuestion==='status'&&!companion){remember('status');answers.push(subjective());continue;}
+   if(openQuestion==='onset'&&!companion){
+    disclose('chiefComplaint','onset',profile.onset,'case.history.onset');continue;
+   }
    if(!companion&&/como (?:estas|esta|te (?:sientes|sentis)|se siente)\b|(?:te|se) (?:sientes|sentis|siente) (?:mejor|peor)\b|estas (?:mejor|peor)\b|como (?:sigues|sigue|vas)\b|\b(?:mejoraste|mejoro)\b/.test(clause)){
     remember('status');answers.push(subjective());continue;
    }

@@ -76,3 +76,17 @@ test('malformed background histories cannot enter the deterministic patient stat
   [{id:'blank',history:{pmh:' '}}],[{id:'duplicate',history:{pmh:'A'}},{id:'duplicate',history:{pmh:'B'}}]])
   assert(validateVariation({...v,backgroundHistory}).includes('invalid backgroundHistory'));
 });
+
+test('same shift cycles personality and authored background, preserving all clinical draws',()=>{
+ const profile={...v,personalities:['calm','anxious','reserved'],backgroundHistory:[
+  {id:'a',history:{pmh:'Healed fracture'}},{id:'b',history:{pmh:'Healed sprain'}}]};
+ const make=i=>generatePatientVariation(profile,'shift-a:patient-'+i,{guardSeed:'shift-a',patientIndex:i});
+ const patients=Array.from({length:3},(_,i)=>make(i));
+ assert.equal(new Set(patients.map(x=>x.personality)).size,3);
+ assert.notEqual(patients[0].backgroundHistory.id,patients[1].backgroundHistory.id);
+ assert.deepEqual(make(1),patients[1]);
+ const base=generatePatientVariation({...profile,backgroundHistory:undefined},'shift-a:patient-0',
+  {guardSeed:'shift-a',patientIndex:0});
+ assert.deepEqual(patients[0].allergies,base.allergies);
+ assert.deepEqual(patients[0].complicationCandidates,base.complicationCandidates);
+});
