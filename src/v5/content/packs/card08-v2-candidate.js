@@ -3,10 +3,12 @@
 // No active catalog registration or parallel executor.
 import {defineClinicalCase} from '../clinical-case-definition.js';
 import {cardiologyPack} from './cardiology-pack.js';
+import {withPatientVariation} from '../legacy-patient-variation.js';
 import {card08V2Graph} from './card08-v2-graph.js';
 const original=cardiologyPack.cases.find(c=>c.id==='CARD-08');
 if(!original)throw Error('CARD-08 V1 source missing');
-const candidate=structuredClone(original);
+// Match the active catalog's shared enrichment (including optional intolerance).
+const candidate=structuredClone(withPatientVariation(original));
 candidate.clinicalRevision='v2-candidate';
 candidate.revisionSource='atria-cardiology@1.0.0:CARD-08';
 candidate.clinicalGraph=card08V2Graph;
