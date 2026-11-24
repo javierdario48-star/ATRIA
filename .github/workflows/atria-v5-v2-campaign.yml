@@ -1,0 +1,96 @@
+name: ATRIA V2 Native Campaign 10000
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - 'qa/v5/v2-campaign*.mjs'
+      - '.github/workflows/atria-v5-v2-campaign.yml'
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Run all 10000 after the pilot passes
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: atria-v2-campaign-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        start: [0, 60, 120, 180]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test qa/v5/v2-campaign-plan.test.mjs
+      - name: 60 independent native scenarios
+        env:
+          CAMPAIGN_START: ${{ matrix.start }}
+          CAMPAIGN_COUNT: 60
+        run: node qa/v5/v2-campaign.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v2-campaign-${{ matrix.start }}
+          path: qa/v5-campaign-${{ matrix.start }}/
+          if-no-files-found: error
+          retention-days: 30
+  expansion:
+    needs: pilot
+    if: ${{ success() && (github.event_name == 'push' || inputs.full) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        start: [240, 484, 728, 972, 1216, 1460, 1704, 1948, 2192, 2436, 2680, 2924, 3168, 3412, 3656, 3900, 4144, 4388, 4632, 4876, 5120, 5364, 5608, 5852, 6096, 6340, 6584, 6828, 7072, 7316, 7560, 7804, 8048, 8292, 8536, 8780, 9024, 9268, 9512, 9756]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 244 independent native scenarios
+        env:
+          CAMPAIGN_START: ${{ matrix.start }}
+          CAMPAIGN_COUNT: 244
+        run: node qa/v5/v2-campaign.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v2-campaign-${{ matrix.start }}
+          path: qa/v5-campaign-${{ matrix.start }}/
+          if-no-files-found: error
+          retention-days: 30
+  aggregate:
+    if: always()
+    needs: [pilot, expansion]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: atria-v2-campaign-*
+          path: campaign-artifacts
+      - name: Reconcile exact scenario IDs and actual evidence
+        env:
+          CAMPAIGN_EXPECTED: ${{ (github.event_name == 'workflow_dispatch' && !inputs.full) && 240 || 10000 }}
+        run: node qa/v5/v2-campaign-aggregate.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v2-campaign-final-report
+          path: campaign-report.json
+          if-no-files-found: error
+          retention-days: 45

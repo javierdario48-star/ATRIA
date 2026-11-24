@@ -405,7 +405,7 @@ function finalEvidence(row,view,checkpoint,c,plan){
 export async function runClinicalCaseScenario(c,{content,mode='solo',profile='competent',
  seed='clinical-certification-v1',horizon=1440,recovery=false,traceEvery=10,source={},preferredDestination=null,
  wrongMedicationCommand='Enfermera furosemida 40 mg',onObservation=null,
- preferredTreatmentGroupIndex=null,preferredStudyId=null}={}){
+ preferredTreatmentGroupIndex=null,preferredStudyId=null,qaPerturbation=null}={}){
  if(!CLINICAL_CERTIFICATION_PROFILES.includes(profile)||!CLINICAL_CERTIFICATION_MODES.includes(mode)||
   !Number.isFinite(horizon)||horizon<=0||horizon>1440)throw Error('invalid clinical certification scenario');
  const options={mode,profile},row={caseId:c.id,profile,mode,seed:String(seed),authority:'createGuardRuntime',
@@ -445,6 +445,23 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     ...(c.clinicalPolicy.eligibility?.[id]?.requiredStudies||[]),
     ...(c.clinicalPolicy.eligibility?.[id]?.requiresStudiesAfterTreatments||[]).map(x=>x.studyId)])]);
    plan.studyIds=unique([...plan.studyIds.filter(id=>!alternatives.includes(id)),...mandatory,preferredStudyId]);
+  }
+  // Developer-only perturbations affect the bot's choices, never the motor.
+  // Keep independent actions permutable; preserve treatment dependency order.
+  const perturb=qaPerturbation||{};
+  const maxDelay=perturb.actionDelayMax??0,wrongInterval=perturb.wrongRepeatInterval??10,
+   wrongUntil=perturb.wrongRepeatUntil??120;
+  if(!Number.isFinite(maxDelay)||maxDelay<0||maxDelay>5||
+   !Number.isFinite(wrongInterval)||wrongInterval<5||wrongInterval>20||
+   !Number.isFinite(wrongUntil)||wrongUntil<50||wrongUntil>120)
+   throw Error('invalid QA timing strategy');
+  if(qaPerturbation){
+   const rng=random(seed+':order');
+   const shuffle=list=>{const a=[...list];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+   if(perturb.shuffleHistory)plan.history=shuffle(plan.history);
+   if(perturb.shuffleExams)plan.exams=shuffle(plan.exams);
+   if(perturb.shuffleStudies)plan.studyIds=shuffle(plan.studyIds);
+   row.qaPerturbation=copy(perturb);
   }
   row.plan=copy(plan);
   // The authored receiving surgical pathway is a handoff, not an operation
@@ -530,7 +547,7 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    if(row.reception.confirmedFocusPatientUid!==uid)throw Error('no real bedside reception claim');
   }
   const competent=['competent','complication-rescue','no-allergy-question','slow','omit-studies'].includes(profile);
-  const pace=profile==='slow'?()=>3+seeded()*7:()=>0;
+  const pace=profile==='slow'?()=>3+seeded()*7+seeded()*maxDelay:()=>maxDelay?seeded()*maxDelay:0;
   const action=async text=>{const out=await send(text),delay=pace();if(delay)await advance(delay);return out;};
   const omitHistory=profile==='no-allergy-question'?['allergies']:[];
   const history=plan.history.filter(x=>!omitHistory.includes(x.intentId));
@@ -641,8 +658,8 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
     if(oxygen&&s.clock.nativeMinute-oxygen.administeredAtNativeMinute>=5&&p.liveVitals.spo2<85&&
      c.interventions.some(x=>x.id==='intubation'))await requestRescue('intubation');
    }
-   if(profile==='wrong-medication'&&second>=wrongRepeatAt&&second<120){
-    await send(wrongMedicationCommand);wrongRepeatAt=second+10;
+   if(profile==='wrong-medication'&&second>=wrongRepeatAt&&second<wrongUntil){
+    await send(wrongMedicationCommand);wrongRepeatAt=second+wrongInterval;
    }
    if(recovery&&!recovered&&firstOrder&&second>=firstOrder.issuedAtRealSecond+1){
     const saved=await runtime.checkpoint(),before=runtime.view(actorId),beforeP=before.clinical.patient;
