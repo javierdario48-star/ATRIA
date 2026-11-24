@@ -105,9 +105,11 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
  // Stabilization to transfer is distinct from full recovery needed for alta.
  for (const requirement of [
   ...complicationDispositionRequirements({patient,caseData,destination:target,fulfilled:done,continuation}),
-  ...observedStabilizationRequirements({patient,caseData,fulfilled:done})
- ]) need(requirement.type,requirement.type==='treatment'?{anyOf:requirement.anyOf,reason:requirement.reason}:
-  {reason:requirement.reason},requirement.message);
+  ...observedStabilizationRequirements({patient,caseData,fulfilled:done,destination:target})
+ ]) need(requirement.type,requirement.type==='treatment'?
+  {anyOf:requirement.anyOf,reason:requirement.reason,...(requirement.origins?{origins:requirement.origins}:{})}:
+  {reason:requirement.reason,...(requirement.origins?{origins:requirement.origins}:{})},
+  requirement.message);
  const reassessment = patient.lastReassessment;
  const reassessed = Number(patient.reassessments) > 0 && text(reassessment?.eventId) && finiteMinute(reassessment?.nativeMinute) &&
   reassessment.nativeMinute <= minute && confirmed.every(row =>
