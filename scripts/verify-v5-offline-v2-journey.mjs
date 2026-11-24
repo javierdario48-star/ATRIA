@@ -6,8 +6,9 @@ import {pathToFileURL} from 'node:url';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {clickHudAction} from '../qa/v5/hud-actions.mjs';
 const {chromium,devices}=createRequire(import.meta.url)(process.env.ATRIA_PLAYWRIGHT_MODULE);
-const out='out-solo-html/qa-v2-journey';await mkdir(out,{recursive:true});
-const url=pathToFileURL(process.cwd()+'/out-solo-html/ATRIA-5-RESP01-V2-Experimental.html').href;
+const combined=process.env.ATRIA_OFFLINE_COMBINED==='1';
+const out=combined?'out-solo-html/qa-lab-resp':'out-solo-html/qa-v2-journey';await mkdir(out,{recursive:true});
+const url=pathToFileURL(process.cwd()+'/out-solo-html/'+(combined?'ATRIA-5-V2-Laboratorio.html':'ATRIA-5-RESP01-V2-Experimental.html')).href;
 const report={sourceSha:process.env.GITHUB_SHA||null,source:'file:// self-contained HTML',
  acceleratedClock:false,physicalAndroid:false,server:false,scenarios:[]};
 const browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE_PATH||'/usr/bin/google-chrome',headless:true});
@@ -24,7 +25,7 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1120,height:800}}],
  };
  try{
   await page.goto(url);await page.waitForFunction(()=>document.body.dataset.boot==='ready',null,{timeout:90000});
-  assert.equal(await page.locator('meta[name="atria-clinical-revision"]').getAttribute('content'),'resp01-v2-experimental');
+  assert.equal(await page.locator('meta[name="atria-clinical-revision"]').getAttribute('content'),combined?'all-v2-experimental':'resp01-v2-experimental');
   if(report.sourceSha)assert.equal(await page.locator('meta[name="atria-source-sha"]').getAttribute('content'),report.sourceSha);
   await page.locator('#enterButton').click();await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');
   await clickHudAction(page,'guardButton');await page.locator('[data-mode="solo"]').click();

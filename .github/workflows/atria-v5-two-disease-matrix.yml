@@ -1,9 +1,13 @@
-name: ATRIA V5 Two-Disease Exhaustive Finite Flow Matrix
+name: ATRIA V5 Cross-Disease Exhaustive Finite Flow Matrix
 on:
   push:
     branches: [atria-5.0-core-rebuild-experimental]
     paths:
       - 'qa/v5/v2-cross-disease-flow.mjs'
+      - 'qa/v5/certify-clinical-cases.mjs'
+      - 'src/v5/content/packs/*-v2-*.js'
+      - 'src/v5/content/packs/v2-staging-candidates.js'
+      - 'src/v5/clinical/**'
       - 'src/v5/clinical/v2-combinatorial-flow.test.js'
       - '.github/workflows/atria-v5-two-disease-matrix.yml'
   workflow_dispatch:
