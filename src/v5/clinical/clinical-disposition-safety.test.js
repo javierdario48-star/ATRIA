@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {complicationDispositionRequirements as required} from './clinical-disposition-safety.js';
+import {clinicalRescueAlternatives} from './clinical-rescue-logic.js';
 import {respiratoryPack} from '../content/packs/respiratory-pack.js';
 import {cardiologyPack} from '../content/packs/cardiology-pack.js';
 import {neurologyPack} from '../content/packs/neurology-pack.js';
@@ -24,12 +25,13 @@ test('universal rule is complete and readonly across all declared respiratory, c
    const active=assess(c,{id:def.id});
    assert(active.some(x=>x.type==='treatment'&&x.reason==='manifested-complication-rescue'),
     c.id+': active native complication requires actual initial rescue');
-   assert.deepEqual(active[0].anyOf,[def.rescueAllOf],
-    c.id+': prescription must be authored and not invented');
-   const rescued=assess(c,{id:def.id,done:def.rescueAllOf});
+   assert.deepEqual(active[0].anyOf,clinicalRescueAlternatives(def),
+    c.id+': rescue requirements must match the SAME native AND/OR policy');
+   const complete=[...def.rescueAllOf,...(def.rescueAnyOf||[]).slice(0,1)];
+   const rescued=assess(c,{id:def.id,done:complete});
    assert(rescued.some(x=>x.type==='wait'&&x.reason==='manifested-complication-recovery'),
     c.id+': rescue alone cannot justify elective alta');
-   const transferred=assess(c,{id:def.id,done:def.rescueAllOf,dest:'uti'});
+   const transferred=assess(c,{id:def.id,done:complete,dest:'uti'});
    assert.equal(transferred.length,0,c.id+': stable prepared transfer does not require completing recovery at bedside');
    assert.equal(assess(c,{id:def.id,status:'recovered'}).length,0);
   }
