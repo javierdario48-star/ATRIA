@@ -40,7 +40,7 @@ for(const c of cases){
     // Never simulate competitive play by pretending the solo session is equivalent.
     const members=[{id:'host',name:'QA host'},{id:'doctor',name:'QA doctor'}];
     let nowMs=1700000000000;
-    runtime=createGuardRuntime({content,roomId:uid,mode,caseId:c.id,members,
+    runtime=await createGuardRuntime({content,roomId:uid,mode,caseId:c.id,members,
      hostId:'host',nowMs});
     const first=runtime.view('doctor').clinical;
     const patientUid=first.patient.uid;
