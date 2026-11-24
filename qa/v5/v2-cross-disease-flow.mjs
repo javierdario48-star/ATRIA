@@ -8,14 +8,13 @@ import {createGuardSession} from '../../src/v5/clinical/guard-session.js';
 import {createGuardRuntime} from '../../src/v5/clinical/guard-runtime.js';
 import {createNavigation} from '../../src/v5/engine/navigation.js';
 import {createClinicalGraphObserver,validateClinicalGraph} from '../../src/v5/clinical/clinical-graph-observer.js';
-import {resp01V2Candidate as resp} from '../../src/v5/content/packs/respiratory-v2-candidate.js';
-import {varixV2Candidate as varix} from '../../src/v5/content/packs/varix-v2-candidate.js';
-import {runClinicalCaseScenario} from './certify-clinical-cases.mjs';
+import {stagedV2Candidates} from '../../src/v5/content/packs/v2-staging-candidates.js';
+import {runClinicalCaseScenario,treatmentCommand} from './certify-clinical-cases.mjs';
 
 const mode=process.env.V2_MATRIX_MODE;
 assert(['solo','apprentice','coop','competitive'].includes(mode),'V2_MATRIX_MODE required');
 const allDestinations=['alta','observacion','sala','uti','procedimiento','quirofano'];
-const cases=[resp,varix],content={...clinicalContent,cases:clinicalContent.cases.map(c=>
+const cases=stagedV2Candidates,content={...clinicalContent,cases:clinicalContent.cases.map(c=>
  cases.find(v=>v.id===c.id)||c)};
 assert.equal(content.cases.length,55);
 const report={schema:'atria.v2-cross-disease-flow-matrix.1',mode,sourceSha:process.env.GITHUB_SHA||'local',
@@ -26,7 +25,12 @@ const report={schema:'atria.v2-cross-disease-flow-matrix.1',mode,sourceSha:proce
 ]};
 const out='qa/v5-v2-cross-disease-'+mode;await mkdir(out,{recursive:true});
 function fail(label,error){report.errors.push(label+': '+String(error?.stack||error));}
-const modes=[mode];
+// Adversarial inputs are QA fixtures, not clinical rules or motor exceptions.
+const wrongInputs={
+ 'RESP-01':{drug:'furosemide',harm:'diuretic-volume-depletion'},
+ 'VARIX-001':{drug:'aspirin',harm:'antithrombotic-bleeding'},
+ 'CARD-08':{drug:'aspirin',harm:'antithrombotic-bleeding'}
+};
 for(const c of cases){
  try{assert.deepEqual(validateClinicalGraph(c.clinicalGraph,c),[]);}
  catch(e){fail(c.id+'/graph-contract',e);}
@@ -83,18 +87,17 @@ for(const c of cases){
     e.id===id&&allDestinations.includes(e.when)));
    assert.deepEqual(terminal,[],'rejected destination cannot light terminal graph route');
    report.attempts.push({caseId:c.id,destination,allowed:c.clinicalPolicy.closure.destinations.includes(destination),
-    replyStatus:reply.clinical?.[0]?.status||reply.status,closed:false,xp:0,graphTerminals:terminal});
+    replyStatus:reply.clinical?.[0]?.status||reply.status,closed:false,xp:0,graphTerminals:terminal,
+    graphEdgeIds:graph.read().covered});
   }catch(e){fail(c.id+'/premature-'+destination,e);}
   finally{session?.dispose();runtime?.dispose();}
  }
- const positives=c.id===resp.id?[
-  {destination:'alta',profile:'competent'},
-  {destination:'observacion',profile:'competent'},
-  {destination:'sala',profile:'complication-rescue'}
- ]:[
-  {destination:'procedimiento',profile:'competent'},
-  {destination:'uti',profile:'competent'}
- ];
+ const positives=c.clinicalPolicy.closure.destinations.map(destination=>({
+  destination,profile:c.clinicalPolicy.closure.escalationDestinations?.includes(destination)?
+   'complication-rescue':'competent'
+ }));
+ const wrong=wrongInputs[c.id];
+ assert(wrong,'missing adversarial QA input for '+c.id);
  const negatives=[
   {destination:null,profile:'wrong-medication'},
   {destination:null,profile:'abandon'}
@@ -106,7 +109,7 @@ for(const c of cases){
    const run=await runClinicalCaseScenario(c,{content,mode,profile:scenario.profile,
     seed:'cross-v2-closure:'+label,horizon:720,recovery:true,traceEvery:20,
     ...(scenario.destination?{preferredDestination:scenario.destination}:{}),
-    wrongMedicationCommand:c.id==='VARIX-001'?'Enfermera heparina 5000 UI IV':'Enfermera furosemida 40 mg',
+    wrongMedicationCommand:treatmentCommand(c,content,wrong.drug),
     onObservation:state=>graph.observe(state),
     source:{kind:'cross-v2-closure-branch-certification'}});
    const coverage=graph.read(),terminal=coverage.covered.filter(id=>c.clinicalGraph.edges.some(e=>
@@ -146,12 +149,21 @@ for(const c of cases){
     assert.deepEqual(terminal,[],'negative outcome may not light closure edge');
     if(scenario.profile==='abandon')assert.equal((run.administrations||[]).length,0,
      'abandoned patient cannot acquire a treatment receipt');
+    if(scenario.profile==='wrong-medication'){
+     const doses=(run.administrations||[]).filter(x=>x.id===wrong.drug&&x.sourceEventId&&
+      Number.isFinite(x.administeredAtNativeMinute)&&x.dose?.amount>0);
+     assert(doses.length,'wrong-medication path lacks delivered medication: '+wrong.drug);
+     assert((run.adverseEvents||[]).some(e=>e.kind===wrong.harm&&
+      doses.some(d=>d.sourceEventId===e.sourceEventId&&d.patientUid===e.patientUid)),
+      'wrong-medication path lacks native harm linked to actual dose: '+wrong.harm);
+     assert(coverage.covered.includes('iatrogenia'),'native harm not observed in graph');
+    }
    }
    const entry={caseId:c.id,mode,profile:scenario.profile,destination:scenario.destination,
     outcome:run.outcome,passed:true,terminal,complications:run.complicationObservations?.length||0,
     harms:(run.adverseEvents||[]).filter(e=>e.status==='active').length,
     administrations:(run.administrations||[]).length,rawXP:run.xpReceipts?.length||0,
-    graphEdgesCovered:coverage.covered.length,graphEdgesUncovered:coverage.uncovered};
+    graphEdgesCovered:coverage.covered.length,graphEdgeIds:coverage.covered,graphEdgesUncovered:coverage.uncovered};
    report.paths.push(entry);
    await writeFile(out+'/'+c.id+'-'+scenario.profile+'-'+(scenario.destination||'default')+'.json',
     JSON.stringify({...run,graphCoverage:coverage},null,2)+'\n');
@@ -163,7 +175,9 @@ report.passed=report.errors.length===0;
 report.coverage={cases:cases.map(x=>x.id),mode,prematureDestinations:report.attempts.length,
  nativePaths:report.paths.length,positive:report.paths.filter(x=>x.destination).length,
  negative:report.paths.filter(x=>!x.destination).length,
- graphEdges:[...new Set(report.paths.flatMap(x=>x.graphEdgesCovered))].length};
+ graphEdges:[...new Set([...report.paths,...report.attempts].flatMap(x=>(x.graphEdgeIds||[]).map(id=>x.caseId+'/'+id)))].length,
+ graphByCase:cases.map(c=>{const covered=[...new Set([...report.paths,...report.attempts].filter(x=>x.caseId===c.id).flatMap(x=>x.graphEdgeIds||[]))];
+  return {caseId:c.id,covered,total:c.clinicalGraph.edges.length,uncovered:c.clinicalGraph.edges.map(e=>e.id).filter(id=>!covered.includes(id))};})};
 await writeFile(out+'/summary.json',JSON.stringify(report,null,2)+'\n');
 console.log('ATRIA_CROSS_CASE_FLOW_SUMMARY '+JSON.stringify({
  mode,passed:report.passed,coverage:report.coverage,errors:report.errors}));

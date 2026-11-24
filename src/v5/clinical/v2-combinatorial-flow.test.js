@@ -2,8 +2,7 @@
 // has finitely many possibilities. Shared owners only; no synthetic executor.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resp01V2Candidate as resp} from '../content/packs/respiratory-v2-candidate.js';
-import {varixV2Candidate as varix} from '../content/packs/varix-v2-candidate.js';
+import {stagedV2Candidates} from '../content/packs/v2-staging-candidates.js';
 import {clinicalContent} from '../server/content.js';
 import {createGuardSession} from './guard-session.js';
 import {evaluateClinicalPolicyDisposition} from './clinical-policy-closure.js';
@@ -13,7 +12,7 @@ import {observedStabilizationRequirements} from './clinical-stabilization-requir
 import {clinicalRescueAlternatives,outstandingClinicalRescue} from './clinical-rescue-logic.js';
 import {validateClinicalGraph,createClinicalGraphObserver} from './clinical-graph-observer.js';
 
-const cases=[resp,varix],modes=['solo','apprentice','coop','competitive'];
+const cases=stagedV2Candidates,modes=['solo','apprentice','coop','competitive'];
 const destinations=['alta','observacion','sala','uti','procedimiento','quirofano'];
 const episodeStates=['none','candidate','incipient','active','recovering','recovered','future','unrecognized'];
 const staged={...clinicalContent,cases:clinicalContent.cases.map(c=>cases.find(v=>v.id===c.id)||c)};
@@ -46,8 +45,14 @@ test('every 6-destination decision cross every 8 manifestation states uses one c
       fulfilled:[],continuation:{deferredTreatmentIds:[]}});
     const active=['active','incipient','recovering'].includes(status);
     if(!active)assert.deepEqual(direct,[],c.id+': '+status+' must not invent active complication');
-    else assert(direct.some(x=>x.reason==='manifested-complication-rescue'),
-     c.id+': '+status+' must request actual authored rescue');
+    else {
+     const deferred=c.clinicalPolicy.closure.consult?.[destination]?.length?
+      [...c.clinicalPolicy.definitiveInterventions||[],...c.clinicalPolicy.closure.definitiveTreatmentIds||[]]:[];
+     const pending=outstandingClinicalRescue(def,deferred);
+     if(pending.length)assert.deepEqual(direct[0]?.anyOf,pending,
+      c.id+': '+status+' must request actual authored rescue');
+     else assert.deepEqual(direct,[],'definitive receiver care must not be simulated at bedside');
+    }
     assert.deepEqual(p,before,'policy and closure are read-only');
     checked++;
    }
@@ -71,7 +76,10 @@ test('every authored V2 rescue subset is monotonic and exact for every possible 
      const before=structuredClone(patient);
      const rules=complicationDispositionRequirements({
       patient,caseData:c,destination,fulfilled:done,continuation:{deferredTreatmentIds:[]}});
-     if(!fulfilled)assert.deepEqual(rules[0]?.anyOf,left);
+     const deferred=c.clinicalPolicy.closure.consult?.[destination]?.length?
+      [...c.clinicalPolicy.definitiveInterventions||[],...c.clinicalPolicy.closure.definitiveTreatmentIds||[]]:[];
+     const pending=outstandingClinicalRescue(def,new Set([...done,...deferred]));
+     if(pending.length)assert.deepEqual(rules[0]?.anyOf,pending);
      else if(destination==='alta')
       assert(rules.some(r=>r.type==='wait'&&r.reason==='manifested-complication-recovery'));
      else assert.deepEqual(rules,[]);
@@ -134,7 +142,7 @@ test('enumerate all 24 medically consistent joint-origin combinations for each V
   }
 });
 
-test('all closure branches of both graphs are exclusive and supported by the native disposition state',()=>{
+test('all closure branches of staged graphs are exclusive and supported by the native disposition state',()=>{
  for(const c of cases){
   const supported=c.clinicalPolicy.closure.destinations;
   for(const target of destinations){
@@ -191,7 +199,7 @@ test('the same executable contract survives all four game modes with fresh patie
 test('matrix exercised a declared finite number of clinical permutations',()=>{
  // Includes 2x6x8 dispositions, each authored rescue subset across 6
  // destinations, 2x24 causal combinations and 2x6 graph paths, four modes.
- assert(checked>=200,'finite cross-product coverage regressed: '+checked);
+ assert(checked>=cases.length*100,'finite cross-product coverage regressed: '+checked);
  console.log('ATRIA_V2_FINITE_MATRIX '+JSON.stringify({checked,caseCount:cases.length,
   modes:modes.length,destinations:destinations.length,origins:5,
   graphIds:cases.map(c=>c.clinicalGraph.id)}));
