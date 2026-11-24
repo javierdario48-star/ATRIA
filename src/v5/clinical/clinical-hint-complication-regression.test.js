@@ -77,7 +77,8 @@ for(const {c,destination,immediate,secondary} of cases){
    'Vega must recommend the immediate support intervention before ordinary closure care');
   assert.equal(urgent.hint.action.kind,'treatment');
   assert(urgent.hint.action.command.startsWith('Enfermera'),'rescue must be a real executable nursing control');
-  assert.notEqual(urgent.hint.key,baseline.hint?.key);
+  assert.notEqual(urgent.hint?.requirement,baseline.hint?.requirement,
+   'the hint must become an explicit complication rescue even if the same lifesaving action was already appropriate');
   // The post-recovery state must return to the ordinary checklist; the
   // actual recovery transitions are already covered by native physiology QA.
   p.policyState.complications.find(x=>x.id===c.clinicalPolicy.complications[0].id).status='recovered';

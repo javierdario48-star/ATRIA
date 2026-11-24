@@ -52,7 +52,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
  const severity=clinicalAcuity(p.liveVitals,{rhythm:p.ecg?.rhythm}),v=p.liveVitals||{},
   shock=v.sys<90||(v.sys+2*v.dia)/3<65,hypoxemia=v.spo2<90;
  const candidates=[],errors=[],waiting=[];
- let rescuePending=false;
+ let rescuePending=null;
  const action=(kind,id)=>clinicalActionDescriptor(kind,id,context);
  const activeReactions=unrescuedTransferReactions(p,c,minute);
  if(activeReactions.length){
@@ -158,7 +158,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
    if(groups.some(g=>!g.length))continue;
    // An already running acceptable strategy outranks ordering another one.
    if(groups.some(g=>g.every(id=>pending.has(id)))){
-    waiting.push('treatment');if(rescue)rescuePending=true;continue;
+    waiting.push('treatment');if(rescue)rescuePending=r.reason;continue;
    }
    const usable=groups.filter(g=>g.every(id=>!matchesMedicationAllergy487(p,id)&&
     !(hasMedicationSafetyMetadata487(id)?medicationSafety487(c,p,id):{}).contraindicated&&!['clinical-contraindication','clinical-indication-not-supported','clinical-onset-window-exceeded']
@@ -182,7 +182,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
     if(found)break;
    }
    if(!found){
-    if(rescue&&waiting.includes('treatment'))rescuePending=true;
+    if(rescue&&waiting.includes('treatment'))rescuePending=r.reason;
     else errors.push('no-executable-treatment-alternative');
    }
   }else if(r.type==='reassess'){
@@ -196,7 +196,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
  if(rescuePending&&(!next||next.priority<1200)){
   const wait=action('wait','execution');
   return {text:wait.text,action:wait,chargeable:false,key:'wait:clinical-stabilization',
-   requirement:'clinical-stabilization'};
+   requirement:rescuePending};
  }
  if(next)return {text:next.action.text,action:next.action,chargeable:true,
   key:semanticHintKey(next.action,p,c),requirement:next.requirement,severity:severity.state};
