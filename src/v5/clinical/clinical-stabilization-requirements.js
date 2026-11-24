@@ -27,8 +27,12 @@ export function observedStabilizationRequirements({patient:p,caseData:c,fulfille
   Number.isFinite(v.rr)&&v.rr<10;
  const needsOxygen=respiratory||respiratoryHarm&&(
   Number.isFinite(v.spo2)&&v.spo2<94||Number.isFinite(v.rr)&&v.rr<12);
- const needsBlood=traits.has('bleed')&&(shock||
-  bleedingHarm&&Number.isFinite(v.sys)&&v.sys<105);
+ // A bleeding diagnosis and low pressure alone cannot override the
+ // case's authored emergency alternatives (fluid OR blood). Native manifested
+ // relapses already supply their own transfusion rescueAllOf. An additional
+ // blood requirement here is justified only by confirmed iatrogenic bleeding.
+ const needsBlood=traits.has('bleed')&&bleedingHarm&&
+  Number.isFinite(v.sys)&&v.sys<105;
  const needsVolume=shock&&!needsBlood&&traits.has('infection')&&!overload&&
   !kinds.has('vasopressor-excess-response');
  const suggested=[

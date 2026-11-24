@@ -102,6 +102,26 @@ test('unattended progression: actual worsening, authored time and absent causal 
  admin(p,'amoxicillin','antibiotic-confirmed',1);
  assert.equal(origins({patient:p,caseData:c}).some(x=>x.origin==='unattended'),false);
 });
+test('VARIX V2: native shock with accepted fluid rescue cannot force an extra transfusion',()=>{
+ const c=hemorrhage,p=baseline(c);
+ p.liveVitals={...p.liveVitals,sys:83,dia:47,hr:128,spo2:95};
+ const direct=observedStabilizationRequirements({patient:p,caseData:c,
+  fulfilled:['iv','fluid','ceftriaxone','terlipressin'],destination:'procedimiento'});
+ assert.deepEqual(direct,[], 'routine accepted handoff may use the validated fluid alternative');
+ p.policyState.complications=[{id:c.clinicalPolicy.complications[0].id,status:'active',onsetAt:1}];
+ assert.deepEqual(observedStabilizationRequirements({patient:p,caseData:c,
+  fulfilled:['fluid'],destination:'procedimiento'}),[],
+  'the random-episode owner, not this generic layer, must enforce its authored transfusion rescue');
+ p.policyState.complications=[];
+ admin(p,'anticoagulation','damaging-heparin');
+ p.adverseEvents=[{kind:'anticoagulant-bleeding',status:'active',
+  sourceEventId:'damaging-heparin',patientUid:p.uid,drugId:'anticoagulation',atNativeMinute:1}];
+ const harm=observedStabilizationRequirements({patient:p,caseData:c,
+  fulfilled:['iv','fluid','ceftriaxone','terlipressin'],destination:'procedimiento'});
+ assert.equal(harm[0].reason,'iatrogenic-deterioration-rescue');
+ assert.deepEqual(harm[0].anyOf,[['transfusion']],
+  'confirmed iatrogenic hemorrhage still requires its individualized rescue');
+});
 test('simultaneous origins remain additive evidence, never duplicate a native episode or harm',()=>{
  const c=hemorrhage,p=baseline(c),id=c.clinicalPolicy.complications[0].id;
  p.policyState.complications=[{id,onsetAt:1,status:'recovering'}];
