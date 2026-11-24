@@ -6,11 +6,16 @@ import {createGuardRuntime} from '../../src/v5/clinical/guard-runtime.js';
 import {createClinicalGraphObserver} from '../../src/v5/clinical/clinical-graph-observer.js';
 import {createNavigation} from '../../src/v5/engine/navigation.js';
 import {generatePatientVariation} from '../../src/v5/content/patient-variation.js';
-import {resp01V2Candidate as c} from '../../src/v5/content/packs/respiratory-v2-candidate.js';
+import {stagedV2Candidates} from '../../src/v5/content/packs/v2-staging-candidates.js';
 import {clinicalCertificationContent,runClinicalCaseScenario} from './certify-clinical-cases.mjs';
-const content=await clinicalCertificationContent([c]),out='qa/v5-resp01-v2-graph';await mkdir(out,{recursive:true});
+const caseId=process.env.V2_GRAPH_CASE||'RESP-01';
+const c=stagedV2Candidates.find(c=>c.id===caseId);
+assert(c,'known isolated V2 graph required');
+const content=await clinicalCertificationContent([c]),out='qa/v5-'+caseId.toLowerCase().replace('-','')+'-v2-graph';await mkdir(out,{recursive:true});
+const modes=process.env.V2_GRAPH_MODE?[process.env.V2_GRAPH_MODE]:['solo','apprentice','coop','competitive'];
+assert(modes.every(mode=>['solo','apprentice','coop','competitive'].includes(mode)));
 const results=[];
-for(const mode of ['solo','apprentice','coop','competitive']){
+for(const mode of modes){
  const graph=createClinicalGraphObserver(c.clinicalGraph),members=['coop','competitive'].includes(mode)?
   [{id:'doctor',name:'Doctora'},{id:'colleague',name:'Colega'}]:[{id:'doctor',name:'Doctora'}];
  let roomId;
@@ -49,7 +54,7 @@ for(const mode of ['solo','apprentice','coop','competitive']){
   }
   await send('/signos');await send('/diagnostico '+c.dx[0]);
   for(const method of ['general','inspection','auscultation','percussion','palpation'])await send('/examen '+method);
-  for(const destination of ['uti','procedimiento','quirofano']){
+  for(const destination of ['sala','uti','procedimiento','quirofano'].filter(d=>!c.clinicalPolicy.closure.destinations.includes(d))){
    const result=await send('/disposicion '+destination);assert(!runtime.view('doctor').clinical.patient.caseEnded);
    assert(result.clinical.some(x=>x.status==='rejected'),JSON.stringify(result));
   }
@@ -81,15 +86,17 @@ for(const mode of ['solo','apprentice','coop','competitive']){
   await writeFile(out+'/'+mode+'-branches.json',JSON.stringify(row,null,2)+'\n');
  }catch(error){results.push({mode,passed:false,error:String(error.stack||error),covered:graph.read().covered});}
  finally{runtime?.dispose();}
+ if(c.clinicalPolicy.closure.destinations.includes('observacion')){
  const observationGraph=createClinicalGraphObserver(c.clinicalGraph);
  const run=await runClinicalCaseScenario(c,{content,mode,profile:'competent',seed:'graph-observation-'+mode,
   preferredDestination:'observacion',horizon:300,recovery:true,onObservation:s=>observationGraph.observe(s)});
  results.push({mode,kind:'legal-observation',passed:run.passed&&run.final?.destination==='observacion',
   failures:run.failures,covered:observationGraph.read().covered});
  await writeFile(out+'/'+mode+'-observation.json',JSON.stringify({...run,graphCoverage:observationGraph.read()},null,2)+'\n');
+ }
 }
 const covered=[...new Set(results.flatMap(x=>x.covered))],summary={graphId:c.clinicalGraph.id,results,covered,
  uncovered:c.clinicalGraph.edges.filter(e=>!covered.includes(e.id)).map(e=>e.id),passed:results.every(x=>x.passed),
- note:'Union this coverage with the existing 40-scenario matrix. Uncovered edges remain explicit.'};
+ note:'Union this coverage with the cross-disease matrix. Uncovered edges remain explicit; receiver-owned definitive care is not a performed rescue.'};
 await writeFile(out+'/summary.json',JSON.stringify(summary,null,2)+'\n');console.log(JSON.stringify(summary));
 if(!summary.passed)process.exitCode=1;

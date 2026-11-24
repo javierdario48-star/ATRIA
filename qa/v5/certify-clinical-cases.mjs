@@ -404,7 +404,8 @@ function finalEvidence(row,view,checkpoint,c,plan){
  * clinical rate. Advancing wall time never assigns its native clock directly. */
 export async function runClinicalCaseScenario(c,{content,mode='solo',profile='competent',
  seed='clinical-certification-v1',horizon=1440,recovery=false,traceEvery=10,source={},preferredDestination=null,
- wrongMedicationCommand='Enfermera furosemida 40 mg',onObservation=null}={}){
+ wrongMedicationCommand='Enfermera furosemida 40 mg',onObservation=null,
+ preferredTreatmentGroupIndex=null,preferredStudyId=null}={}){
  if(!CLINICAL_CERTIFICATION_PROFILES.includes(profile)||!CLINICAL_CERTIFICATION_MODES.includes(mode)||
   !Number.isFinite(horizon)||horizon<=0||horizon>1440)throw Error('invalid clinical certification scenario');
  const options={mode,profile},row={caseId:c.id,profile,mode,seed:String(seed),authority:'createGuardRuntime',
@@ -427,6 +428,23 @@ export async function runClinicalCaseScenario(c,{content,mode='solo',profile='co
    plan.destination=preferredDestination;
    plan.treatmentIds=unique([...firstAllowedTreatmentGroup(c,preferredDestination),...(rule.dischargeTreatments||[])]);
    plan.consults=unique(rule.consult?.[preferredDestination]||[]);
+  }
+  // Optional QA strategy selection is limited to alternatives declared by
+  // the real policy. It never modifies policy, physiology or closure rules.
+  const rule=c.clinicalPolicy?.closure;
+  if(preferredTreatmentGroupIndex!==null){
+   const groups=rule?.treatmentByDestination?.[plan.destination]||rule?.treatment||[];
+   if(!Number.isInteger(preferredTreatmentGroupIndex)||!groups[preferredTreatmentGroupIndex])
+    throw Error('invalid authored QA treatment group');
+   plan.treatmentIds=unique([...groups[preferredTreatmentGroupIndex],...(rule.dischargeTreatments||[])]);
+  }
+  if(preferredStudyId!==null){
+   const alternatives=(rule?.study||[]).flat();
+   if(!alternatives.includes(preferredStudyId))throw Error('invalid authored QA study alternative');
+   const mandatory=unique([...(rule.requiredStudies||[]),...plan.treatmentIds.flatMap(id=>[
+    ...(c.clinicalPolicy.eligibility?.[id]?.requiredStudies||[]),
+    ...(c.clinicalPolicy.eligibility?.[id]?.requiresStudiesAfterTreatments||[]).map(x=>x.studyId)])]);
+   plan.studyIds=unique([...plan.studyIds.filter(id=>!alternatives.includes(id)),...mandatory,preferredStudyId]);
   }
   row.plan=copy(plan);
   // The authored receiving surgical pathway is a handoff, not an operation
