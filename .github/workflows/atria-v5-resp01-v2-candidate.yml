@@ -14,6 +14,9 @@ on:
       - 'src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js'
       - 'src/v5/content/packs/respiratory-v2-observation-flow.test.js'
       - 'src/v5/clinical/clinical-policy-closure.js'
+      - 'src/v5/clinical/clinical-deterioration-causes.js'
+      - 'src/v5/clinical/clinical-stabilization-requirements.js'
+      - 'src/v5/clinical/clinical-deterioration-causes.test.js'
       - 'src/v5/clinical/medication-indication-review.js'
       - 'src/v5/clinical/medication-indication-review.test.js'
       - 'src/v5/clinical/hidden-requirements-scoring.test.js'
@@ -68,7 +71,7 @@ jobs:
       - name: Verify candidate is isolated and obeys native policy
         run: node --test src/v5/content/packs/respiratory-v2-candidate.test.js src/v5/content/packs/respiratory-v2-e2e-audit.test.js src/v5/content/packs/respiratory-v2-personality-audit.test.js src/v5/content/packs/respiratory-v2-hint-walkthrough.test.js src/v5/clinical/clinical-disposition-safety.test.js src/v5/clinical/public-receiver-policy.test.js src/v5/clinical/unsafe-disposition-continuity.test.js src/v5/clinical/unsafe-disposition-runtime.test.js src/v5/clinical/progression.test.js src/v5/ui/clinical-bedside-ux.test.js src/v5/content/packs/respiratory-v2-observation-flow.test.js
       - name: Existing policy closure regression
-        run: node --test src/v5/clinical/clinical-policy-closure.test.js
+        run: node --test src/v5/clinical/clinical-policy-closure.test.js src/v5/clinical/clinical-deterioration-causes.test.js
       - name: Historical partial disposition and universal transfer regressions
         run: node --test src/v5/clinical/accepted-transfer.test.js src/v5/clinical/partial-closure.test.js
       - name: Universal medication freedom and scoring certification
