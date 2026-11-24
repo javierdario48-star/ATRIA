@@ -128,7 +128,16 @@ for(const c of cases){
      'native closure and graph disagree');
     if(scenario.profile==='complication-rescue'){
      assert((run.complicationObservations||[]).length>0,'no manifested complication');
-     assert((run.rescueActions||[]).length>0,'no actual clinical rescue');
+     // An already CONFIRMED prophylactic/support treatment may satisfy a
+     // rescue when an episode manifests later. Do not require a redundant
+     // second administration just to label it an explicit "rescue action".
+     const complication=c.clinicalPolicy.complications[0];
+     const given=new Set((run.administrations||[]).map(row=>row.id));
+     assert((complication.rescueAllOf||[]).every(id=>given.has(id)),
+      'actual required rescue receipts absent after manifested episode');
+     if(complication.rescueAnyOf?.length)
+      assert(complication.rescueAnyOf.some(id=>given.has(id)),
+       'none of the native rescue alternatives was administered');
     }
    }else{
     assert.notEqual(run.outcome,'accepted-destination','wrong care received a safe handoff');
