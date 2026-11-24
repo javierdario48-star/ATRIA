@@ -11,6 +11,7 @@ import {assessDiagnosticImpression} from './diagnostic-assessment.js';
 import {clinicalTransferContinuation} from './transfer-continuation.js';
 import {nativeMedicationDoseFraction} from './native-medications.js';
 import {complicationDispositionRequirements} from './clinical-disposition-safety.js';
+import {observedStabilizationRequirements} from './clinical-stabilization-requirements.js';
 
 const text = value => typeof value === 'string' && value.trim().length > 0;
 const norm = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -102,9 +103,10 @@ export function evaluateClinicalPolicyDisposition(patient, caseData, destination
   need('treatment',{anyOf:[rule.dischargeTreatments]},'Documentar el tratamiento y plan de seguimiento antes del alta.');
  // All declarative cases apply the same episode/administration safety gates.
  // Stabilization to transfer is distinct from full recovery needed for alta.
- for (const requirement of complicationDispositionRequirements({
-  patient,caseData,destination:target,fulfilled:done,continuation
- })) need(requirement.type,requirement.type==='treatment'?{anyOf:requirement.anyOf,reason:requirement.reason}:
+ for (const requirement of [
+  ...complicationDispositionRequirements({patient,caseData,destination:target,fulfilled:done,continuation}),
+  ...observedStabilizationRequirements({patient,caseData,fulfilled:done})
+ ]) need(requirement.type,requirement.type==='treatment'?{anyOf:requirement.anyOf,reason:requirement.reason}:
   {reason:requirement.reason},requirement.message);
  const reassessment = patient.lastReassessment;
  const reassessed = Number(patient.reassessments) > 0 && text(reassessment?.eventId) && finiteMinute(reassessment?.nativeMinute) &&

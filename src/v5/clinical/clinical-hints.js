@@ -152,7 +152,8 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
    const id=groups.sort((a,b)=>a.length-b.length)[0]?.find(id=>!requested.has(id));
    if(id)study(id,priority.study,'study');
   }else if(r.type==='treatment'){
-   const rescue=r.reason==='manifested-complication-rescue';
+   const rescue=['manifested-complication-rescue','observed-instability-rescue',
+    'iatrogenic-deterioration-rescue'].includes(r.reason);
    const groups=(r.anyOf||[]).map(g=>g.filter(id=>!done.has(id)));
    if(groups.some(g=>!g.length))continue;
    // An already running acceptable strategy outranks ordering another one.
@@ -171,7 +172,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
      // A running rescue never hides a second REQUIRED rescue intervention.
      if(rescue&&pending.has(id)){waiting.push('treatment');continue;}
      const before=candidates.length;
-     if(treatment(id,rank(id),rescue?'manifested-complication-rescue':'treatment',new Set())){
+     if(treatment(id,rank(id),rescue?r.reason:'treatment',new Set())){
       // A pending prerequisite is a wait, not evidence that the remaining
       // rescue actions can be ignored.
       if(rescue&&candidates.length===before)continue;
@@ -194,8 +195,8 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
  const next=candidates.sort((a,b)=>b.priority-a.priority)[0];
  if(rescuePending&&(!next||next.priority<1200)){
   const wait=action('wait','execution');
-  return {text:wait.text,action:wait,chargeable:false,key:'wait:manifested-complication-rescue',
-   requirement:'manifested-complication-rescue'};
+  return {text:wait.text,action:wait,chargeable:false,key:'wait:clinical-stabilization',
+   requirement:'clinical-stabilization'};
  }
  if(next)return {text:next.action.text,action:next.action,chargeable:true,
   key:semanticHintKey(next.action,p,c),requirement:next.requirement,severity:severity.state};
