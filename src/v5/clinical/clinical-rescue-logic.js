@@ -20,8 +20,12 @@ export function outstandingClinicalRescue(definition,completed=[]){
  const groups=clinicalRescueAlternatives(definition).map(g=>g.filter(id=>!done.has(id)));
  if(groups.some(g=>!g.length))return [];
  const seen=new Set();
- return groups.filter(g=>{
+ const unique=groups.filter(g=>{
   const key=JSON.stringify(g);if(seen.has(key))return false;
   seen.add(key);return true;
  });
+ // Boolean absorption: A OR (A AND B) is just A. Do not surface extra
+ // mandatory interventions or misleading longer paths to Dr. Vega.
+ return unique.filter(group=>!unique.some(other=>other.length<group.length&&
+  other.every(id=>group.includes(id))));
 }
