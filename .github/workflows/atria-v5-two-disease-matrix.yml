@@ -1,0 +1,55 @@
+name: ATRIA V5 Two-Disease Exhaustive Finite Flow Matrix
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - 'qa/v5/v2-cross-disease-flow.mjs'
+      - 'src/v5/clinical/v2-combinatorial-flow.test.js'
+      - '.github/workflows/atria-v5-two-disease-matrix.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: atria-v5-cross-disease-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  finite-policy-and-graph:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exhaust all finite destination, episode, rescue subsets, evidence origins and graphs
+        run: |
+          node --test src/v5/clinical/v2-combinatorial-flow.test.js \
+            src/v5/clinical/clinical-rescue-logic.test.js \
+            src/v5/clinical/clinical-deterioration-causes.test.js \
+            src/v5/clinical/clinical-disposition-safety.test.js \
+            src/v5/clinical/clinical-graph-observer.test.js \
+            src/v5/clinical/clinical-policy-registry.test.js
+  native-four-mode-flow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [solo, apprentice, coop, competitive]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Execute every terminal disposition and both positive and negative treatment journeys
+        env:
+          V2_MATRIX_MODE: ${{ matrix.mode }}
+        run: node qa/v5/v2-cross-disease-flow.mjs
+      - name: Upload actual native event/physiology/receiver/XP and flow diagram evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-v2-cross-disease-${{ matrix.mode }}
+          path: qa/v5-v2-cross-disease-${{ matrix.mode }}/
+          if-no-files-found: warn
+          retention-days: 45
