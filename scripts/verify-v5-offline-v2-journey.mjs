@@ -5,6 +5,7 @@ import {createRequire} from 'node:module';
 import {pathToFileURL} from 'node:url';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {clickHudAction} from '../qa/v5/hud-actions.mjs';
+import {scopedStorage,createLocalGuardStore} from '../src/v5/app/local-guard-checkpoint.js';
 const {chromium,devices}=createRequire(import.meta.url)(process.env.ATRIA_PLAYWRIGHT_MODULE);
 const combined=process.env.ATRIA_OFFLINE_COMBINED==='1';
 const out=combined?'out-solo-html/qa-lab-resp':'out-solo-html/qa-v2-journey';await mkdir(out,{recursive:true});
@@ -77,11 +78,19 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1120,height:800}}],
   await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');
   // Check the exact independent revision's namespace, not the RESP-only one.
   const expectedScope=combined?'all-v2-offline':'resp01-v2-offline';
-  const saved=await page.evaluate(scope=>{
-   const prefix=scope+':atria.v5.local-guard.v1:';
-   const keys=Object.keys(localStorage).filter(k=>k.startsWith(prefix));
-   if(keys.length!==1)return null;
-   return JSON.parse(localStorage.getItem(keys[0]));},expectedScope);
+  const sourceSha=await page.locator('meta[name="atria-source-sha"]').getAttribute('content');
+  const buildId=sourceSha+(combined?':all-v2':':resp01-v2');
+  // Resolve the physical key through the same production storage adapter.
+  // A recording storage double derives the address only; actual checkpoint
+  // bytes must come from the browser's real localStorage.
+  let physicalKey=null;
+  const recorder={getItem(key){physicalKey=key;return null;}};
+  createLocalGuardStore({storage:scopedStorage(recorder,expectedScope),buildId}).read();
+  assert(physicalKey,'checkpoint storage adapter must resolve an address');
+  const saved=await page.evaluate(key=>{
+   const bytes=localStorage.getItem(key);
+   return bytes===null?null:JSON.parse(bytes);},physicalKey);
+  assert.equal(saved?.buildId,buildId,'saved checkpoint must belong to this exact HTML build');
   assert(saved,'explicit save must create a complete guard checkpoint');assert.equal(saved.focusedUid,uid);
   assert(saved.sessions[0].pendingNurseJobs.length>0||saved.sessions[0].patient.pendingTreatments.length>0,
    'save captures unfinished bedside travel or an already preparing treatment');
