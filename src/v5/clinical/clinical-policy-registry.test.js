@@ -138,3 +138,14 @@ test('generic complication dependencies execute real bounded progression and rec
  assert.equal(rescue.execute(candidate, 30), 0);
  assert.equal(row(r.progressions, 'invented-progression'), undefined);
 });
+
+test('V2 compiler rejects diagrams that confuse receiver acceptance with final disposition',async()=>{
+ const {resp01V2ExperimentalPack}=await import('../content/packs/respiratory-v2-candidate.js');
+ const pack=structuredClone(resp01V2ExperimentalPack);
+ const baseline=compileClinicalCasePack(pack,registries());
+ assert.equal(baseline.ok,true,baseline.errors.join('\n'));
+ pack.cases[0].clinicalGraph.edges.find(e=>e.id==='close-alta').when='acceptedReceiver';
+ const invalid=compileClinicalCasePack(pack,registries());
+ assert.equal(invalid.ok,false);
+ assert(invalid.errors.some(e=>/actual closure receipt|missing native closure/.test(e.message||String(e))));
+});

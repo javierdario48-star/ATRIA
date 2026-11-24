@@ -6,6 +6,7 @@ import {summarizeIVExposures} from './medication-exposure.js';
 import {matchesMedicationAllergy487} from './medication-safety-487.js';
 import {evaluateComplicationCandidate} from './complication-eligibility.js';
 import {nativeMedicationDoseFraction} from './native-medications.js';
+import {confirmedClinicalRescue} from './clinical-rescue-logic.js';
 
 export const CLINICAL_AXES=Object.freeze(['temp','hr','rr','sys','dia','spo2']);
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
@@ -103,14 +104,12 @@ export function advanceClinicalComplications(patient,caseData,minute){
   }
   if(episode.status==='recovered')continue;
   const adequate=row=>nativeMedicationDoseFraction(row,caseData)>=1;
-  const all=(candidate.rescueAllOf||[]).map(id=>currentClinicalTreatment(patient,id,minute,adequate));
-  const any=(candidate.rescueAnyOf||[]).map(id=>currentClinicalTreatment(patient,id,minute,adequate)).filter(Boolean);
-  const rescued=(all.length||candidate.rescueAnyOf?.length)&&all.every(Boolean)&&(!candidate.rescueAnyOf?.length||any.length);
+  const {rescued,evidence}=confirmedClinicalRescue(candidate,id=>
+   currentClinicalTreatment(patient,id,minute,adequate));
   const previousAt=episode.lastEvaluatedAt??Math.max(episode.onsetAt,previousNativeMinute);
   let remaining=episode.recoveryRemaining??(episode.rescueAt===undefined?1:
    rescueClinicalComplication(candidate,Math.max(0,previousAt-episode.rescueAt)));
   if(rescued){
-   const evidence=[...all,...(any.length?[any.reduce((a,b)=>a.administeredAtNativeMinute<b.administeredAtNativeMinute?a:b)]:[])];
    const evidenceAt=Math.max(episode.onsetAt,...evidence.map(t=>t.completedAtNativeMinute??t.administeredAtNativeMinute));
    episode.rescueAt??=evidenceAt;
    episode.rescueEvents=evidence.map(t=>t.sourceEventId);episode.status='recovering';

@@ -28,3 +28,26 @@ test('graph observes native care in any order without altering the patient, cloc
   assert.throws(()=>graph.observe({patient:{uid:'other'}}),/patient changed/);
  }finally{s.dispose();}
 });
+
+test('accepted receiver is not a case closure and cannot illuminate two terminal outcomes',async()=>{
+ const {varixV2Candidate:varix}=await import('../content/packs/varix-v2-candidate.js');
+ assert.deepEqual(validateClinicalGraph(varix.clinicalGraph,varix),[]);
+ assert.deepEqual(validateClinicalGraph(c.clinicalGraph,c),[]);
+ const observer=createClinicalGraphObserver(varix.clinicalGraph);
+ const patient={uid:'patient-demo',consults:[{accepted:true,status:'done',id:'gastro'}]};
+ const state={patient,clock:{nativeMinute:1,clinicalMinute:1}};
+ observer.observe(state);
+ assert(observer.read().covered.includes('receiver-accepted'));
+ assert(!observer.read().covered.includes('close-procedure'));
+ assert(!observer.read().covered.includes('close-uti'));
+ patient.closure={closed:true,destination:'procedimiento',eventId:'confirmed-native-close'};
+ observer.observe(state);
+ assert(observer.read().covered.includes('close-procedure'));
+ assert(!observer.read().covered.includes('close-uti'));
+ const incorrect=structuredClone(varix.clinicalGraph);
+ incorrect.edges.find(e=>e.id==='close-procedure').when='acceptedReceiver';
+ assert(validateClinicalGraph(incorrect,varix).some(e=>/actual closure receipt|missing native closure/.test(e)));
+ const wrong=structuredClone(c.clinicalGraph);
+ wrong.edges.find(e=>e.id==='close-alta').to='sala';
+ assert(validateClinicalGraph(wrong,c).some(e=>/native closure route/.test(e)));
+});

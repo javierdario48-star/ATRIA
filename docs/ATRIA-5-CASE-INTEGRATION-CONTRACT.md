@@ -93,6 +93,14 @@ Cada V2 declara cero, una o varias de estas familias, sin crear un ejecutor nuev
 
 **E0 curso basal sin intervención**, **E1 respuesta al tratamiento efectivamente ejecutado**, **E2 deterioro por enfermedad, omisión o demora**, **E3 complicación intercurrente o recurrencia por variante/semilla**, **E4 iatrogenia y posible rescate**. Cada transición especifica desencadenante, tiempo, signos/resultados, contraindicaciones, acciones de rescate, irreversibilidad y desenlace. No todos los casos requieren E3/E4 como episodio real, pero sí deben probarse las decisiones erróneas sin inventar daños no sustentados. Complicación resuelta, incompleta, muerte o cierre seguro son resultados del motor, no atajos del diagrama.
 
+### Contrato ejecutable único y diagramas observacionales (23/11/2026)
+
+Los grafos `clinicalGraph` de ATRIA V2 son una **proyección observable** del flujo clínico, nunca un segundo motor, un catálogo de autorizaciones ni un orden de acciones obligatorio. La autoridad para tratar, complicarse, rescatar, evolucionar, trasladar y otorgar XP vive en `clinicalPolicy` y en los ejecutores, recibos y tiempos nativos existentes. El compilador V2 **rechaza** un diagrama cuya rama de cierre no corresponda a un destino permitido y a un verdadero recibo de disposición; la aceptación del receptor no equivale al cierre ni puede encender dos desenlaces.
+
+**Rescate declarativo AND/OR:** `rescueAllOf` significa completar todas las intervenciones; `rescueAnyOf` significa completar una de las alternativas. El único intérprete puro `clinical-rescue-logic.js` alimenta tanto la recuperación fisiológica nativa como los requisitos de cierre y las pistas de Dr. Vega. Los cuidados diferidos sólo se tienen por satisfechos en el flujo de transferencia aceptado que los documenta. Ningún heurístico general puede convertir un tratamiento alternativo autorizado en una segunda prescripción obligatoria por detectar simplemente una enfermedad o un signo aislado.
+
+**Regla de escalabilidad:** las particularidades de una patología se declaran como datos clínicos validados; los contratos, las alternativas, la semántica del rescate y los destinos permanecen transversales. No crear decisiones `if (caseId === ...)` en módulos universales. Antes de aceptar otra V2, verificar que dos políticas con identidades distintas y las mismas reglas producen exactamente las mismas decisiones de rescate, que el diagrama corresponde a la política, y que un cierre único requiere un recibo auténtico.
+
 ### Diagrama de flujo obligatorio por enfermedad
 
 Cada candidata V2 tendrá un **grafo de decisiones trazable** (no solamente una ilustración) con estos nodos de referencia, saltos urgentes permitidos y condiciones explícitas:

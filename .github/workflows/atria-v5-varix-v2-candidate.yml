@@ -7,6 +7,11 @@ on:
       - 'qa/v5/varix-v2-*'
       - '.github/workflows/atria-v5-varix-v2-candidate.yml'
       - 'src/v5/clinical/clinical-policy-closure.js'
+      - 'src/v5/clinical/clinical-rescue-logic.js'
+      - 'src/v5/clinical/clinical-rescue-logic.test.js'
+      - 'src/v5/clinical/clinical-graph-observer.js'
+      - 'src/v5/clinical/clinical-graph-observer.test.js'
+      - 'src/v5/clinical/clinical-policy-registry.js'
       - 'src/v5/clinical/clinical-deterioration-causes.js'
       - 'src/v5/clinical/clinical-stabilization-requirements.js'
       - 'src/v5/clinical/clinical-deterioration-causes.test.js'
@@ -28,7 +33,7 @@ jobs:
         with:
           node-version: '22'
       - name: Contract, real clinical dialogue, graph, unsafe discharge and native treatment
-        run: node --test src/v5/content/packs/varix-v2-candidate.test.js src/v5/clinical/clinical-deterioration-causes.test.js
+        run: node --test src/v5/content/packs/varix-v2-candidate.test.js src/v5/clinical/clinical-rescue-logic.test.js src/v5/clinical/clinical-graph-observer.test.js src/v5/clinical/clinical-policy-registry.test.js src/v5/clinical/clinical-deterioration-causes.test.js
       - name: Historical variceal handoff and anticoagulant harm regressions
         run: node --test src/v5/clinical/gastro-bleeding-harm-bots.test.js src/v5/clinical/accepted-transfer.test.js src/v5/clinical/surgical-consultation.test.js
   paired-four-modes:

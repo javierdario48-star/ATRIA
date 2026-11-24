@@ -12,6 +12,7 @@ import {IV_MEDICINES} from './native-medications.js';
 import {GASTRO_CASE_CONDUCTS} from './gastro-expansion-policies.js';
 import {CLINICAL_CONSULT_SERVICES} from './surgical-consultation.js';
 import {complicationStateEligible, progressClinicalComplication, rescueClinicalComplication} from './clinical-policy-effects.js';
+import {validateClinicalGraph} from './clinical-graph-observer.js';
 
 const text = value => typeof value === 'string' && value.trim().length > 0;
 const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -212,6 +213,9 @@ export function validateClinicalPolicyCase(c) {
   else if (registry === 'progressions' && id !== 'offset-ramp-v1' || registry === 'rescues' && id !== 'confirmed-rescue-v1') errors.push('unknown executable ' + registry + '.' + id);
  }
  errors.push(...validateStudies(c), ...validateClosure(c), ...validateComplications(c), ...validateEligibility(c),...validateObservationResponses(c));
+ // Every experimental V2 flow must agree with its real closure receipts.
+ if(/^v2(?:$|[-.])/.test(String(c.clinicalRevision||'')))
+  errors.push(...validateClinicalGraph(c.clinicalGraph,c));
  return [...new Set(errors)];
 }
 const descriptor = (execute, validateCase, extra = {}) => Object.freeze({version: '1.0.0', execute, validateCase, ...extra});

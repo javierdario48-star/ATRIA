@@ -1,6 +1,8 @@
 // Read-only graph coverage. This module never executes care, alters a clock,
 // approves a destination or awards XP. Native patient/receipt owners decide.
 const list=x=>Array.isArray(x)?x:[];
+const closureDestinations=new Set(['alta','observacion','sala','uti','procedimiento','quirofano']);
+const closedTo=(s,d)=>s.patient?.closure?.closed===true&&s.patient.closure.destination===d;
 const signals=Object.freeze({
  admitted:s=>!!s.patient?.uid,
  measured:s=>!!s.patient?.lastVitalsKnown,
@@ -12,7 +14,8 @@ const signals=Object.freeze({
  nursing:s=>list(s.patient?.pendingTreatments).length>0,
  administered:s=>list(s.patient?.administrationLog).length>0||list(s.patient?.treatments).length>0,
  elapsed:s=>s.clock?.nativeMinute>0,
- complication:s=>list(s.patient?.policyState?.complications).some(x=>x.status!=='recovered'),
+ complication:s=>list(s.patient?.policyState?.complications).some(x=>
+  Number.isFinite(x.onsetAt)&&['active','incipient','recovering'].includes(x.status)),
  iatrogenia:s=>list(s.patient?.adverseEvents).length>0,
  rescued:s=>list(s.patient?.policyState?.complications).some(x=>Number.isFinite(x.rescueAt))||
   list(s.patient?.adverseEvents).some(x=>x.kind==='severe-drug-allergy'&&list(s.patient?.administrationLog).some(r=>
@@ -26,15 +29,18 @@ const signals=Object.freeze({
  requestedReceiver:s=>list(s.patient?.pendingConsults).length>0||list(s.patient?.consults).length>0,
  acceptedReceiver:s=>list(s.patient?.consults).some(x=>x.accepted&&x.status==='done'),
  rejectedReceiver:s=>list(s.patient?.consults).some(x=>!x.accepted&&x.status==='rejected'),
- alta:s=>s.patient?.closure?.closed&&s.patient.closure.destination==='alta',
- observacion:s=>s.patient?.closure?.closed&&s.patient.closure.destination==='observacion',
- sala:s=>s.patient?.closure?.closed&&s.patient.closure.destination==='sala',
+ alta:s=>closedTo(s,'alta'),
+ observacion:s=>closedTo(s,'observacion'),
+ sala:s=>closedTo(s,'sala'),
+ uti:s=>closedTo(s,'uti'),
+ procedimiento:s=>closedTo(s,'procedimiento'),
+ quirofano:s=>closedTo(s,'quirofano'),
  unsupportedDestination:s=>list(s.room?.events).some(x=>x.clinical?.some(c=>c.kind==='case.close'&&['uti','quirofano','procedimiento'].includes(c.id)&&c.status==='rejected')),
  death:s=>s.patient?.patientDied===true,
  recoveredCheckpoint:s=>s.checkpointRecovered===true,
  reward:s=>s.patient?.closure?.closed&&list(s.progress?.receipts).some(x=>x.patientUid===s.patient.uid)
 });
-export function validateClinicalGraph(graph){
+export function validateClinicalGraph(graph,caseData){
  const errors=[],nodes=new Set(list(graph?.nodes).map(x=>x.id)),ids=new Set();
  if(graph?.schemaVersion!==1||!graph?.id||!nodes.has('encounter'))errors.push('invalid clinical graph identity');
  for(const edge of list(graph?.edges)){
@@ -43,6 +49,26 @@ export function validateClinicalGraph(graph){
   if(!Object.hasOwn(signals,edge.when))errors.push('unknown graph predicate: '+edge.when);
  }
  if(!ids.size)errors.push('clinical graph requires edges');
+ // The diagram observes the executable policy, never grants treatment or
+ // closes a case. An accepting receiver cannot light two terminal branches.
+ const allowed=caseData?.clinicalPolicy?.closure?.destinations;
+ if(Array.isArray(allowed)){
+  for(const destination of allowed){
+   if(!nodes.has(destination)||!list(graph?.edges).some(e=>
+    e.to===destination&&e.when===destination))
+    errors.push('missing native closure route '+destination);
+   if(!Object.hasOwn(graph?.destinations||{},destination))
+    errors.push('missing graph destination declaration '+destination);
+  }
+  for(const edge of list(graph?.edges)){
+   if(closureDestinations.has(edge.when)&&
+    (edge.to!==edge.when||!allowed.includes(edge.when)))
+    errors.push('unsupported or mismatched native closure route '+edge.id);
+   if(closureDestinations.has(edge.to)&&allowed.includes(edge.to)&&
+    edge.when!==edge.to)
+    errors.push('destination edge without actual closure receipt '+edge.id);
+  }
+ }
  return errors;
 }
 export function createClinicalGraphObserver(graph){
