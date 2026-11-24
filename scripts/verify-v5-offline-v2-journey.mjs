@@ -75,9 +75,13 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1120,height:800}}],
   await send('Enfermera amoxicilina 1000 mg oral');
   phase='save pending nursing';await clickHudAction(page,'guardButton');
   await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');
-  const saved=await page.evaluate(()=>{
-   const key=Object.keys(localStorage).find(k=>k.includes('resp01-v2-offline:atria.v5.local-guard.v1:'));
-   return key?JSON.parse(localStorage.getItem(key)):null;});
+  // Check the exact independent revision's namespace, not the RESP-only one.
+  const expectedScope=combined?'all-v2-offline':'resp01-v2-offline';
+  const saved=await page.evaluate(scope=>{
+   const prefix=scope+':atria.v5.local-guard.v1:';
+   const keys=Object.keys(localStorage).filter(k=>k.startsWith(prefix));
+   if(keys.length!==1)return null;
+   return JSON.parse(localStorage.getItem(keys[0]));},expectedScope);
   assert(saved,'explicit save must create a complete guard checkpoint');assert.equal(saved.focusedUid,uid);
   assert(saved.sessions[0].pendingNurseJobs.length>0||saved.sessions[0].patient.pendingTreatments.length>0,
    'save captures unfinished bedside travel or an already preparing treatment');

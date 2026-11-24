@@ -768,3 +768,27 @@ test('natural onset phrasing on a phone retrieves authored disease chronology',a
   assert(f.s.read().patient.intentHistory.some(x=>x.id==='onset'));
  }finally{f.s.dispose();}
 });
+
+// Regression: explicit disease chronology must not accidentally inherit PMH
+// context; routine versus recent medicines remain independent clinical facts.
+test('shuffled interview keeps onset independent of background and distinguishes recent medication',async()=>{
+ for(const caseId of ['RESP-01','CARD-08']){
+  const f=setup(caseId,'campaign-context-'+caseId,serverContent);
+  try{
+   await f.send('¿Qué le pasó?');
+   await f.send('¿Antecedentes?');
+   const onset=await f.send('¿Cómo iniciaron los síntomas?');
+   assert.match(answer(onset),caseId==='RESP-01'?/hace tres d[ií]as/i:/45 minutos/i);
+   assert(f.s.read().patient.intentHistory.some(x=>x.id==='onset'));
+   const routine=await f.send('¿Qué medicación toma habitualmente?');
+   if(caseId==='RESP-01'){
+    assert.match(answer(routine),/no recuerdo/i);
+    assert(!f.s.read().patient.intentHistory.some(x=>x.id==='meds'));
+   }else assert.match(answer(routine),/losart[aá]n/i);
+   const recent=await f.send('¿Qué medicamentos tomó recientemente?');
+   if(caseId==='RESP-01')assert.match(answer(recent),/paracetamol/i);
+   assert(f.s.read().patient.intentHistory.some(x=>x.id==='meds'),
+    'required medication history must derive from an actually disclosed fact');
+  }finally{f.s.dispose();}
+ }
+});

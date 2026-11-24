@@ -63,6 +63,12 @@ export async function clinicalCertificationContent(additionalCases=[]){
 
 function historyQuestions(c){
  return unique([...(c.requiredHistory||[]),'allergies','meds','pmh']).flatMap(id=>{
+  // A shuffled interview cannot rely on the previous conversational topic.
+  // Ask separately about routine and recent medication; an authored recent
+  // exposure is not a statement about routine treatment.
+  if(c.clinicalPolicy&&id==='onset')return [{intentId:id,text:'¿Cómo iniciaron los síntomas?'}];
+  if(c.clinicalPolicy&&id==='meds')return [{intentId:id,text:'¿Qué medicación toma habitualmente?'},
+   {intentId:id,text:'¿Qué medicamentos tomó recientemente?'}];
   const intent=c.intents?.find(x=>x.id===id),key=intent?.keys?.[0];
   if(key)return [{intentId:id,text:'¿'+key+(!c.clinicalPolicy&&id==='onset'?' empezó el dolor':'')+'?'}];
   const generic={allergies:'¿Tiene alergias?',meds:'¿Qué medicación toma?',pmh:'¿Qué antecedentes tiene?'}[id];

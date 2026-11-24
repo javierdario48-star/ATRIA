@@ -4,6 +4,9 @@ on:
     branches: [atria-5.0-core-rebuild-experimental]
     paths:
       - 'qa/v5/v2-campaign*.mjs'
+      - 'qa/v5/certify-clinical-cases.mjs'
+      - 'src/v5/clinical/patient-dialogue*.js'
+      - 'src/v5/clinical/patient-question-context.js'
       - '.github/workflows/atria-v5-v2-campaign.yml'
   workflow_dispatch:
     inputs:
@@ -30,7 +33,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test qa/v5/v2-campaign-plan.test.mjs
+      - run: node --test qa/v5/v2-campaign-plan.test.mjs src/v5/clinical/patient-dialogue.test.js
       - name: 60 independent native scenarios
         env:
           CAMPAIGN_START: ${{ matrix.start }}
