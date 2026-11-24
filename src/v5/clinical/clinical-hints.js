@@ -12,6 +12,14 @@ import {antimicrobialRegimens487} from './antimicrobial-regimens-487.js';
 import {clinicalTransferContinuation,unrescuedTransferReactions} from './transfer-continuation.js';
 import {patientStudyOrders,studyEvidenceId} from './study-evidence.js';
 
+// A manifested complication outranks routine closure steps. The safety adapter
+// already supplies its authored rescue IDs; this selector only ranks controls.
+// No new physiology, treatment permission, diagnosis or mortality authority.
+const IMMEDIATE_RESCUE_SUPPORT=new Set([
+ 'oxygen','intubation','niv','lung_protective_ventilation',
+ 'transfusion','fluid','vasopressor','synchronized_cardioversion',
+ 'temporary_pacing','pericardiocentesis','needle_decompression','chest_drain'
+]);
 function semanticHintKey(action,p,c){
  const base=action.kind+':'+action.id;
  if(action.kind==='reassess')return base+':'+JSON.stringify([...new Set([
@@ -44,6 +52,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
  const severity=clinicalAcuity(p.liveVitals,{rhythm:p.ecg?.rhythm}),v=p.liveVitals||{},
   shock=v.sys<90||(v.sys+2*v.dia)/3<65,hypoxemia=v.spo2<90;
  const candidates=[],errors=[],waiting=[];
+ let rescuePending=false;
  const action=(kind,id)=>clinicalActionDescriptor(kind,id,context);
  const activeReactions=unrescuedTransferReactions(p,c,minute);
  if(activeReactions.length){
@@ -107,7 +116,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   const a=action('treatment',id);if(!a)return false;
   add(a,priority,reason);return true;
  }
- function therapyPriority(id,urgent){
+ function therapyPriority(id,urgent,rescue=false){
   let rank=urgent?800:priority.treatment;
   if(hypoxemia&&['oxygen','intubation','niv','lung_protective_ventilation','needle_decompression','chest_drain'].includes(id))rank=1100;
   if(shock&&['fluid','transfusion','vasopressor','synchronized_cardioversion','temporary_pacing','pericardiocentesis','needle_decompression'].includes(id))rank=1000;
@@ -115,6 +124,9 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   for(const response of c.clinicalPolicy?.responses||[])
    if([...(response.allOf||[]),...(response.anyOf||[])].includes(id)&&
     (hypoxemia&&response.offsets?.[5]>0||shock&&response.offsets?.[3]>0))rank=Math.max(rank,900);
+  // Only an ALREADY MANIFESTED, native-documented episode can produce this
+  // requirement; a random future complication is never disclosed.
+  if(rescue)rank=Math.max(rank,1200)+(IMMEDIATE_RESCUE_SUPPORT.has(id)?100:0);
   return rank;
  }
  // Ask the actual handoff adapter whether verified monitoring would allow an
@@ -140,21 +152,38 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
    const id=groups.sort((a,b)=>a.length-b.length)[0]?.find(id=>!requested.has(id));
    if(id)study(id,priority.study,'study');
   }else if(r.type==='treatment'){
+   const rescue=r.reason==='manifested-complication-rescue';
    const groups=(r.anyOf||[]).map(g=>g.filter(id=>!done.has(id)));
    if(groups.some(g=>!g.length))continue;
    // An already running acceptable strategy outranks ordering another one.
-   if(groups.some(g=>g.every(id=>pending.has(id)))){waiting.push('treatment');continue;}
+   if(groups.some(g=>g.every(id=>pending.has(id)))){
+    waiting.push('treatment');if(rescue)rescuePending=true;continue;
+   }
    const usable=groups.filter(g=>g.every(id=>!matchesMedicationAllergy487(p,id)&&
     !(hasMedicationSafetyMetadata487(id)?medicationSafety487(c,p,id):{}).contraindicated&&!['clinical-contraindication','clinical-indication-not-supported','clinical-onset-window-exceeded']
      .includes(clinicalInterventionEligibility(p,c,id,clock)?.reason)));
    usable.sort((a,b)=>a.filter(id=>!pending.has(id)).length-b.filter(id=>!pending.has(id)).length);
    let found=false;
    for(const group of usable){
-    const ids=[...group].sort((a,b)=>therapyPriority(b,r.urgent)-therapyPriority(a,r.urgent));
-    for(const id of ids)if(treatment(id,therapyPriority(id,r.urgent),'treatment',new Set())){found=true;break;}
+    const rank=id=>therapyPriority(id,r.urgent,rescue);
+    const ids=[...group].sort((a,b)=>rank(b)-rank(a));
+    for(const id of ids){
+     // A running rescue never hides a second REQUIRED rescue intervention.
+     if(rescue&&pending.has(id)){waiting.push('treatment');continue;}
+     const before=candidates.length;
+     if(treatment(id,rank(id),rescue?'manifested-complication-rescue':'treatment',new Set())){
+      // A pending prerequisite is a wait, not evidence that the remaining
+      // rescue actions can be ignored.
+      if(rescue&&candidates.length===before)continue;
+      found=true;break;
+     }
+    }
     if(found)break;
    }
-   if(!found)errors.push('no-executable-treatment-alternative');
+   if(!found){
+    if(rescue&&waiting.includes('treatment'))rescuePending=true;
+    else errors.push('no-executable-treatment-alternative');
+   }
   }else if(r.type==='reassess'){
    if(!blocking)add(action('reassess'),priority.reassess,'reassess');else waiting.push('reassessment');
   }else if(r.type==='closure'){
@@ -163,6 +192,11 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
  }
  if(!requirements.length&&!blocking)add(action('closure',destination),priority.closure,'closure');
  const next=candidates.sort((a,b)=>b.priority-a.priority)[0];
+ if(rescuePending&&(!next||next.priority<1200)){
+  const wait=action('wait','execution');
+  return {text:wait.text,action:wait,chargeable:false,key:'wait:manifested-complication-rescue',
+   requirement:'manifested-complication-rescue'};
+ }
  if(next)return {text:next.action.text,action:next.action,chargeable:true,
   key:semanticHintKey(next.action,p,c),requirement:next.requirement,severity:severity.state};
  if(waiting.length||blocking){
