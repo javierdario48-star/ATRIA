@@ -158,7 +158,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
    if(groups.some(g=>!g.length))continue;
    // An already running acceptable strategy outranks ordering another one.
    if(groups.some(g=>g.every(id=>pending.has(id)))){
-    waiting.push('treatment');if(rescue)rescuePending=r.reason;continue;
+    waiting.push('treatment');if(rescue)rescuePending??=r.reason;continue;
    }
    const usable=groups.filter(g=>g.every(id=>!matchesMedicationAllergy487(p,id)&&
     !(hasMedicationSafetyMetadata487(id)?medicationSafety487(c,p,id):{}).contraindicated&&!['clinical-contraindication','clinical-indication-not-supported','clinical-onset-window-exceeded']
@@ -182,7 +182,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
     if(found)break;
    }
    if(!found){
-    if(rescue&&waiting.includes('treatment'))rescuePending=r.reason;
+    if(rescue&&waiting.includes('treatment'))rescuePending??=r.reason;
     else errors.push('no-executable-treatment-alternative');
    }
   }else if(r.type==='reassess'){
