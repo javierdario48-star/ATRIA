@@ -52,7 +52,7 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
  const severity=clinicalAcuity(p.liveVitals,{rhythm:p.ecg?.rhythm}),v=p.liveVitals||{},
   shock=v.sys<90||(v.sys+2*v.dia)/3<65,hypoxemia=v.spo2<90;
  const candidates=[],errors=[],waiting=[];
- let rescuePending=null;
+ let rescuePending=null,recoveryWait=null;
  const action=(kind,id)=>clinicalActionDescriptor(kind,id,context);
  const activeReactions=unrescuedTransferReactions(p,c,minute);
  if(activeReactions.length){
@@ -189,7 +189,11 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
    if(!blocking)add(action('reassess'),priority.reassess,'reassess');else waiting.push('reassessment');
   }else if(r.type==='closure'){
    if(!blocking&&requirements.every(item=>item.type==='closure'))add(action('closure',r.destination||destination),priority.closure,'closure');
-  }else if(r.type==='wait')waiting.push(r.reason||'execution');
+  }else if(r.type==='wait'){
+   waiting.push(r.reason||'execution');
+   if(['manifested-complication-recovery','active-adverse-recovery'].includes(r.reason))
+    recoveryWait??=r.reason;
+  }
  }
  if(!requirements.length&&!blocking)add(action('closure',destination),priority.closure,'closure');
  const next=candidates.sort((a,b)=>b.priority-a.priority)[0];
@@ -197,6 +201,19 @@ export function selectClinicalHint({patient:p,caseData:c,requirements=[],content
   const wait=action('wait','execution');
   return {text:wait.text,action:wait,chargeable:false,key:'wait:clinical-stabilization',
    requirement:rescuePending};
+ }
+ if(recoveryWait&&(!next||next.priority<1200)){
+  // Ongoing instability cannot be handled with a passive "just wait" hint;
+  // re-evaluate it and use the actual receiving/disposition policy.
+  if(severity.priority>=2){
+   const reassess=action('reassess');
+   return {text:'Persisten signos de inestabilidad tras el soporte. '+reassess.text,
+    action:reassess,chargeable:true,key:semanticHintKey(reassess,p,c),
+    requirement:recoveryWait,severity:severity.state};
+  }
+  const wait=action('wait','recovery');
+  return {text:wait.text,action:wait,chargeable:false,
+   key:'wait:clinical-recovery',requirement:recoveryWait,severity:severity.state};
  }
  if(next)return {text:next.action.text,action:next.action,chargeable:true,
   key:semanticHintKey(next.action,p,c),requirement:next.requirement,severity:severity.state};

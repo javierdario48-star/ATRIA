@@ -101,3 +101,30 @@ test('unknown, future and unlinked adverse records cannot invent a rescue',async
    'legacy case policies must not be changed by staging-only rescue rules');
  }finally{s.dispose();}
 });
+
+test('Vega blocks routine checklist while native injury remains active, without charging passive recovery',async()=>{
+ const {s}=await fixture(resp01V2Candidate,'active-recovery');
+ try{
+  const c=resp01V2Candidate,content=staged(c),p=s.read().patient;
+  const choose=()=>selectClinicalHint({patient:p,caseData:c,content,
+   clock:{nativeMinute:0,clinicalMinute:0},destination:'alta',
+   requirements:[{type:'wait',reason:'active-adverse-recovery'},
+    {type:'diagnosis'}],fulfilledTreatmentIds:['oxygen']});
+  const before=structuredClone(p);
+  p.liveVitals={...p.liveVitals,spo2:96,hr:85,rr:18,sys:118,dia:72,temp:37};
+  const hold=choose();
+  assert.equal(hold?.requirement,'active-adverse-recovery');
+  assert.equal(hold?.action?.kind,'wait');
+  assert.equal(hold?.action?.id,'recovery');
+  assert.equal(hold?.chargeable,false);
+  assert.match(hold?.text,/recuperación fisiológica/);
+  p.liveVitals.spo2=85;
+  const escalation=choose();
+  assert.equal(escalation?.requirement,'active-adverse-recovery');
+  assert.equal(escalation?.action?.kind,'reassess');
+  assert.match(escalation?.text,/inestabilidad/);
+  assert.equal(escalation?.severity,'critical');
+  assert.equal(p.treatments.length,before.treatments.length,
+   'Vega recommendations must never administer treatment');
+ }finally{s.dispose();}
+});
