@@ -18,7 +18,11 @@ export function complicationDispositionRequirements({patient,caseData,destinatio
   const def=definitions.get(episode.id);
   // An unrecognized or not-yet-manifest complication candidate cannot
   // modify disposition or disclose the future random draw to the physician.
-  if(!def||!alive(episode.status)||!Number.isFinite(episode.onsetAt))continue;
+  if(!def||!alive(episode.status)||!Number.isFinite(episode.onsetAt)||
+   Number.isFinite(patient?.policyState?.nativeMinute)&&
+   episode.onsetAt>patient.policyState.nativeMinute)continue;
+  // A future event must never gate closure or disclose a probabilistic draw.
+
   const effective=new Set([...done,...deferred,...definitive]);
   const alternatives=outstandingClinicalRescue(def,effective);
   if(alternatives.length){

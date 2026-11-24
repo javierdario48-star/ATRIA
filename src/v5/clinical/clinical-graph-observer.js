@@ -15,7 +15,10 @@ const signals=Object.freeze({
  administered:s=>list(s.patient?.administrationLog).length>0||list(s.patient?.treatments).length>0,
  elapsed:s=>s.clock?.nativeMinute>0,
  complication:s=>list(s.patient?.policyState?.complications).some(x=>
-  Number.isFinite(x.onsetAt)&&['active','incipient','recovering'].includes(x.status)),
+  Number.isFinite(x.onsetAt)&&
+  (!Number.isFinite(s.patient?.policyState?.nativeMinute)||
+   x.onsetAt<=s.patient.policyState.nativeMinute)&&
+  ['active','incipient','recovering'].includes(x.status)),
  iatrogenia:s=>list(s.patient?.adverseEvents).length>0,
  rescued:s=>list(s.patient?.policyState?.complications).some(x=>Number.isFinite(x.rescueAt))||
   list(s.patient?.adverseEvents).some(x=>x.kind==='severe-drug-allergy'&&list(s.patient?.administrationLog).some(r=>

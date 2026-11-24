@@ -5,6 +5,8 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {clinicalContent} from '../../src/v5/server/content.js';
 import {createGuardSession} from '../../src/v5/clinical/guard-session.js';
+import {createGuardRuntime} from '../../src/v5/clinical/guard-runtime.js';
+import {createNavigation} from '../../src/v5/engine/navigation.js';
 import {createClinicalGraphObserver,validateClinicalGraph} from '../../src/v5/clinical/clinical-graph-observer.js';
 import {resp01V2Candidate as resp} from '../../src/v5/content/packs/respiratory-v2-candidate.js';
 import {varixV2Candidate as varix} from '../../src/v5/content/packs/varix-v2-candidate.js';
@@ -30,13 +32,49 @@ for(const c of cases){
  catch(e){fail(c.id+'/graph-contract',e);}
  for(const destination of allDestinations){
   const uid='negative-close-'+mode+'-'+c.id+'-'+destination;
-  const s=createGuardSession({roomId:uid,mode,actorId:'doctor',actorName:'QA',patient:{uid,caseId:c.id},
-   content,resolveContext:()=>({patientUid:uid})});
+  let session,runtime;
   try{
-   const before=s.read(),graph=createClinicalGraphObserver(c.clinicalGraph);
+   let before,after,reply;
+   if(mode==='competitive'){
+    // Competitive permissions/claims exist ONLY in createGuardRuntime.
+    // Never simulate competitive play by pretending the solo session is equivalent.
+    const members=[{id:'host',name:'QA host'},{id:'doctor',name:'QA doctor'}];
+    let nowMs=1700000000000;
+    runtime=createGuardRuntime({content,roomId:uid,mode,caseId:c.id,members,
+     hostId:'host',nowMs});
+    const first=runtime.view('doctor').clinical;
+    const patientUid=first.patient.uid;
+    const bedId=first.shift.patients.find(x=>x.uid===patientUid)?.bedId;
+    const bed=content.beds.find(x=>x.id===bedId);
+    assert(bed,'real competitive patient bed required');
+    const nav=createNavigation(content.map),point=nav.center(...bed.approach);
+    assert(runtime.motion('doctor',[point.x,point.y],1));
+    let claimed=false;
+    for(let n=0;n<180&&!claimed;n++){
+     claimed=!!runtime.claim('doctor',patientUid);
+     if(!claimed){
+      nowMs+=250;
+      let task=await runtime.advanceTo(nowMs);
+      while(task.recovering)task=await runtime.advanceTo(nowMs);
+     }
+    }
+    assert(claimed,'competitive physician must claim the real bedside patient');
+    before=runtime.view('doctor').clinical;
+    reply=await runtime.post('doctor',{id:'attempt-'+destination,
+     text:'/disposicion '+destination,targetPatientUid:patientUid});
+    after=runtime.view('doctor').clinical;
+   }else{
+    const members=mode==='coop'?[{id:'doctor',name:'QA doctor'},{id:'peer',name:'QA colleague'}]:
+     [{id:'doctor',name:'QA doctor'}];
+    session=createGuardSession({roomId:uid,mode,members,actorId:'doctor',
+     actorName:'QA',patient:{uid,caseId:c.id},content,resolveContext:()=>({patientUid:uid})});
+    before=session.read();
+    reply=await session.post({id:'attempt-'+destination,text:'/disposicion '+destination});
+    after=session.read();
+   }
+   const graph=createClinicalGraphObserver(c.clinicalGraph);
    graph.observe(before);
-   const reply=await s.post({id:'attempt-'+destination,text:'/disposicion '+destination});
-   const after=s.read(),p=after.patient;
+   const p=after.patient;
    assert.equal(p.caseEnded,false,'unprepared patient may not close');
    assert.notEqual(p.closure?.closed,true,'unprepared patient may not close');
    assert.equal(after.progress.receipts.length,0,'no XP for unprepared disposition');
@@ -47,7 +85,7 @@ for(const c of cases){
    report.attempts.push({caseId:c.id,destination,allowed:c.clinicalPolicy.closure.destinations.includes(destination),
     replyStatus:reply.clinical?.[0]?.status||reply.status,closed:false,xp:0,graphTerminals:terminal});
   }catch(e){fail(c.id+'/premature-'+destination,e);}
-  finally{s.dispose();}
+  finally{session?.dispose();runtime?.dispose();}
  }
  const positives=c.id===resp.id?[
   {destination:'alta',profile:'competent'},
