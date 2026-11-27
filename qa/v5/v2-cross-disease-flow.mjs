@@ -29,7 +29,8 @@ function fail(label,error){report.errors.push(label+': '+String(error?.stack||er
 const wrongInputs={
  'RESP-01':{drug:'furosemide',harm:'diuretic-volume-depletion'},
  'VARIX-001':{drug:'aspirin',harm:'antithrombotic-bleeding'},
- 'CARD-08':{drug:'aspirin',harm:'antithrombotic-bleeding'}
+ 'CARD-08':{drug:'aspirin',harm:'antithrombotic-bleeding'},
+ 'NEUR-01':{drug:'furosemide',harm:'diuretic-volume-depletion'}
 };
 for(const c of cases){
  try{assert.deepEqual(validateClinicalGraph(c.clinicalGraph,c),[]);}

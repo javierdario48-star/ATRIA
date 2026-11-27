@@ -1,21 +1,9 @@
-// Third isolated pilot. The V1 policy is already declarative; preserve its
-// physiology, treatments, variant facts and surgical handoff semantics.
-// No active catalog registration or parallel executor.
-import {defineClinicalCase} from '../clinical-case-definition.js';
+// Isolated V2; preserve all native V1 physiology, handoff and seeded identity.
 import {cardiologyPack} from './cardiology-pack.js';
-import {withPatientVariation} from '../legacy-patient-variation.js';
 import {card08V2Graph} from './card08-v2-graph.js';
-const original=cardiologyPack.cases.find(c=>c.id==='CARD-08');
-if(!original)throw Error('CARD-08 V1 source missing');
-// Match the active catalog's shared enrichment (including optional intolerance).
-const candidate=structuredClone(withPatientVariation(original));
-candidate.clinicalRevision='v2-candidate';
-candidate.revisionSource='atria-cardiology@1.0.0:CARD-08';
-candidate.clinicalGraph=card08V2Graph;
-// Separate complication lottery from identity/history/personality draws.
-candidate.variation.independentComplicationDraws=true;
-export const card08V2Candidate=defineClinicalCase(candidate);
-export const card08V2ExperimentalPack=Object.freeze({
- schemaVersion:1,packId:'atria-cardiology-card08-v2-staging',
- version:'2.0.0-candidate.1',cases:[card08V2Candidate]
+import {createV2Revision} from './v2-revision-template.js';
+export const card08V2ExperimentalPack=createV2Revision(cardiologyPack.cases.find(c=>c.id==='CARD-08'),{
+ source:'atria-cardiology@1.0.0:CARD-08',packId:'atria-cardiology-card08-v2-staging',graph:card08V2Graph,
+ historyAliases:{pmh:['hipertension','presion alta','tension alta']}
 });
+export const card08V2Candidate=card08V2ExperimentalPack.cases[0];

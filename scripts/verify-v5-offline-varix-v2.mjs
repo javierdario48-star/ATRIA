@@ -9,8 +9,9 @@ import {clickHudAction} from '../qa/v5/hud-actions.mjs';
 const {chromium,devices}=createRequire(import.meta.url)(process.env.ATRIA_PLAYWRIGHT_MODULE);
 const combined=process.env.ATRIA_OFFLINE_COMBINED==='1';
 const card=process.env.ATRIA_OFFLINE_CASE==='CARD-08';
-const caseId=card?'CARD-08':'VARIX-001';
-const out=card?'out-solo-html/qa-lab-card':combined?'out-solo-html/qa-lab-varix':'out-solo-html/qa-varix-v2';await mkdir(out,{recursive:true});
+const stroke=process.env.ATRIA_OFFLINE_CASE==='NEUR-01';
+const caseId=stroke?'NEUR-01':card?'CARD-08':'VARIX-001';
+const out=stroke?'out-solo-html/qa-lab-stroke':card?'out-solo-html/qa-lab-card':combined?'out-solo-html/qa-lab-varix':'out-solo-html/qa-varix-v2';await mkdir(out,{recursive:true});
 const url=pathToFileURL(process.cwd()+'/out-solo-html/'+(combined?'ATRIA-5-V2-Laboratorio.html':'ATRIA-5-VARIX-V2-Experimental.html')).href;
 const report={sourceSha:process.env.GITHUB_SHA||null,physicalAndroid:false,server:false,
  contentSource:'real downloaded HTML, not an injected application',scenarios:[]};
@@ -49,8 +50,10 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1150,height:820}}],
    return p&&!s.player.moving&&Math.hypot(p.x-s.player.x,p.y-s.player.y)<100;},null,{timeout:90000});
   if(await page.locator('#patientWheel').isVisible())
    await page.locator('#patientWheel [data-patient-action="talk"]').click();
-  phase='dialogue';await send(card?'¿Tiene hipertensión?':'¿Tiene cirrosis?');
-  assert((await snapshot()).messages.some(x=>x.role==='patient'&&(card?/hipertensi|presión|presion/i:/cirrosis/i).test(x.text)));
+  phase='dialogue';await send(stroke?'¿Cómo iniciaron los síntomas?':card?'¿Tiene hipertensión?':'¿Tiene cirrosis?');
+  const history=(await snapshot()).patient.intentHistory;
+  assert(history.some(x=>x.patientUid===uid&&(stroke?x.id==='onset'&&/80 minutos/i.test(x.answer):
+   card?x.id==='pmh'&&/hipertensi/i.test(x.answer):/cirrosis/i.test(x.answer))),JSON.stringify(history));
   phase='unsafe discharge';await send('/disposicion alta');
   assert.equal((await snapshot()).progress.penalties.length,1);
   assert.equal((await snapshot()).patient.caseEnded,false);
@@ -58,11 +61,12 @@ try{for(const [name,options] of [['desktop',{viewport:{width:1150,height:820}}],
   await page.screenshot({path:out+'/'+name+'-debit.png'});
   phase='false endoscopy';
   const before=(await snapshot()).patient.orders.length;
-  await send(card?'/estudio aortic_surgery':'/estudio g_varix_egd');
+  await send(stroke?'/estudio alteplase_stroke':card?'/estudio aortic_surgery':'/estudio g_varix_egd');
   assert.equal((await snapshot()).patient.orders.length,before,
    'legacy lab disguised as a finished endoscopy must not be available in V2');
-  phase='real study';await send(card?'/estudio g_card08_cta':'/estudio g_varix_cbc');
-  assert((await snapshot()).patient.orders.some(x=>x.id===(card?'g_card08_cta':'g_varix_cbc')));
+  phase='real study';const studyId=stroke?'g_neur01_ct':card?'g_card08_cta':'g_varix_cbc';
+  await send('/estudio '+studyId);
+  assert((await snapshot()).patient.orders.some(x=>x.id===studyId));
   phase='save';await clickHudAction(page,'guardButton');await page.waitForFunction(()=>atriaV5.snapshot().phase==='lobby');
   await page.reload();await page.waitForFunction(()=>document.body.dataset.boot==='ready');
   await page.locator('#enterButton').click();await clickHudAction(page,'guardButton');

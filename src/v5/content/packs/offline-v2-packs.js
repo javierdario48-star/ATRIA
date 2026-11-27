@@ -4,7 +4,8 @@ import {varixV2ExperimentalPack} from './varix-v2-candidate.js';
 import {card08V2ExperimentalPack} from './card08-v2-candidate.js';
 import {compileClinicalCasePack} from '../compile-clinical-case-pack.js';
 import {CLINICAL_POLICY_REGISTRIES} from '../../clinical/clinical-policy-registry.js';
-export const offlineV2Packs=Object.freeze([resp01V2ExperimentalPack,varixV2ExperimentalPack,card08V2ExperimentalPack]);
+import {neur01V2ExperimentalPack} from './neur01-v2-candidate.js';
+export const offlineV2Packs=Object.freeze([resp01V2ExperimentalPack,varixV2ExperimentalPack,card08V2ExperimentalPack,neur01V2ExperimentalPack]);
 export function stageOfflineV2Packs(baseCases,additionalCases,packs=offlineV2Packs){
  const original=[...baseCases,...additionalCases], replacements=new Map();
  for(const pack of packs){

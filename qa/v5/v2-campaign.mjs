@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {mkdir,writeFile,appendFile} from 'node:fs/promises';
 import {performance} from 'node:perf_hooks';
 import {clinicalContent} from '../../src/v5/server/content.js';
-import {stagedV2Candidates as cases} from '../../src/v5/content/packs/v2-staging-candidates.js';
+import {campaignV1Candidates as cases} from '../../src/v5/content/packs/v2-staging-candidates.js';
 import {createClinicalGraphObserver} from '../../src/v5/clinical/clinical-graph-observer.js';
 import {runClinicalCaseScenario,treatmentCommand} from './certify-clinical-cases.mjs';
 import {campaignScenario,campaignRange} from './v2-campaign-plan.mjs';

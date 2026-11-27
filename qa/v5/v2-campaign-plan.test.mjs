@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {stagedV2Candidates as cases} from '../../src/v5/content/packs/v2-staging-candidates.js';
+import {campaignV1Candidates as cases} from '../../src/v5/content/packs/v2-staging-candidates.js';
 import {campaignScenario,campaignRange,CAMPAIGN_TOTAL,PILOT_TOTAL} from './v2-campaign-plan.mjs';
 test('10,000 unique seeded scenarios, all cases/modes/profiles and bounded strategies',()=>{
  const plan=campaignRange(0,CAMPAIGN_TOTAL).map(i=>campaignScenario(cases,i));
