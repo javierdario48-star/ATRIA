@@ -36,7 +36,7 @@ jobs:
           node-version: '22'
       - name: Install isolated one-file bundler and test browser
         run: |
-          npm install --prefix "$RUNNER_TEMP/atria-html-builder" --no-save esbuild@0.25.12
+          npm install --prefix "$RUNNER_TEMP/atria-html-builder" --no-save esbuild@0.25.12 sharp@0.34.5
           npm install --prefix "$RUNNER_TEMP/atria-html-browser" --no-save --ignore-scripts playwright@1.58.2
       - name: Package original V5 in a self-contained HTML
         env:
@@ -48,7 +48,7 @@ jobs:
           node scripts/build-v5-solo-compact.mjs --varix-v2
           node scripts/build-v5-solo-compact.mjs --all-v2
       - name: Verify atomic local checkpoint owners before the browser
-        run: node --test src/v5/app/local-guard-checkpoint.test.js src/v5/app/local-shift.test.js src/v5/content/packs/offline-v2-packs.test.js
+        run: node --test src/v5/app/local-guard-checkpoint.test.js src/v5/app/local-shift.test.js src/v5/content/packs/offline-v2-packs.test.js src/v5/ui/avatar-creator.test.js src/v5/render/avatar-palette.test.js
       - name: Verify browser, lobby and solo guard on Chrome and emulated Android
         env:
           ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright

@@ -7,7 +7,8 @@ export async function createHospitalRenderer(canvas,content,{signal,window}={}){
   const image=new window.Image();image.src=url;await image.decode();
   if(signal?.aborted)throw new DOMException('disposed','AbortError');return [key,image];
  })));
- if(images['player-green']&&canvas.ownerDocument?.createElement)
+ if(images['player-navy-derived'])images['player-navy']=images['player-navy-derived'];
+ else if(images['player-green']&&canvas.ownerDocument?.createElement)
   images['player-navy']=createNavyAvatar(images['player-green'],canvas.ownerDocument);
  // One compressed atlas, decoded once into draw-ready frames; no per-frame
  // asset allocation and no alternate sprite animation implementation.

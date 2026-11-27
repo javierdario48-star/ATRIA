@@ -50,7 +50,9 @@ export function createAvatarCreator({document,window,assetUrls,profile,listen,si
  };
  let revision=0;
  async function paint(){
-  const id=++revision,a=model.read(),spec=avatarAssetSpec({sex:a.sex,color:a.color});
+  const id=++revision,a=model.read(),original=avatarAssetSpec({sex:a.sex,color:a.color});
+  const spec=original.palette==='navy'&&assetUrls['player-navy-derived']?
+   {key:'player-navy-derived',frame:null}:original;
   document.getElementById('startingSex').value=a.sex;
   document.getElementById('startingColor').value=a.color;
   for(const b of document.querySelectorAll('[data-avatar-sex]'))

@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
+import {navyScrubPixels} from '../src/v5/render/avatar-palette.js';
 const respiratory=process.argv.includes('--resp01-v2');
 const varix=process.argv.includes('--varix-v2');
 const combined=process.argv.includes('--all-v2');
@@ -20,6 +21,12 @@ const raw={};for(const [key,name] of Object.entries(names))raw[key]=JSON.parse(a
 async function uri(file){let mime=file.endsWith('.webp')?'image/webp':file.endsWith('.png')?'image/png':file.endsWith('.avif')?'image/avif':file.endsWith('.wav')?'audio/wav':'audio/mp4';return 'data:'+mime+';base64,'+(await fs.readFile(base+file)).toString('base64');}
 const assets={};for(const [key,value] of Object.entries(raw.assets))assets[key]=await uri(value.path);
 assets.wardrobe=await uri('assets/player-wardrobe.avif');
+// Embed the shared palette as pixels; local content:// documents can prohibit
+// runtime canvas readback. Preview and hospital use the identical bitmap.
+const sharp=createRequire(process.env.ATRIA_ESBUILD_MODULE+'/package.json')('sharp');
+const {data,info}=await sharp(base+raw.assets['player-green'].path).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+const blue=await sharp(Buffer.from(navyScrubPixels(data)),{raw:{width:info.width,height:info.height,channels:4}}).png().toBuffer();
+assets['player-navy-derived']='data:image/png;base64,'+blue.toString('base64');
 const audio={};for(const name of ['atria-theme.m4a','atria-theme-aac.m4a','atria-click.wav'])audio[name]=await uri('audio/'+name);
 const entry='src/v5/app/__atria_solo_generated__.js';
 const code=`import {createClinicalContent} from '../content/clinical-content.js';

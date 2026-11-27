@@ -90,7 +90,28 @@ try{
     const loaded=await page.locator('.welcome-art').evaluate(img=>img.complete&&img.naturalWidth>0);
     assert(loaded,'downloadable welcome image did not load');
    },page);
-   await record(label+' avatar controls',async()=>{
+   await record(label+' male navy visible without canvas readback',async()=>{
+     await page.evaluate(()=>{
+      const p=CanvasRenderingContext2D.prototype;
+      window.__avatarAuditRead=p.getImageData;
+      p.getImageData=function(){throw new DOMException('Restricted canvas readback','SecurityError');};
+     });
+     try{
+      await page.locator('[data-avatar-sex="male"]').click();
+      for(let i=0;i<7&&(await page.locator('#avatarColorName').innerText())!=='Azul oscuro';i++)
+       await page.locator('#avatarNextColor').click();
+      await page.locator('#avatarNextColor').click();
+      await page.locator('#avatarPreviousColor').click();
+      await page.waitForFunction(()=>{
+       const c=document.getElementById('avatarPreview');
+       if(document.getElementById('avatarColorName').textContent!=='Azul oscuro')return false;
+       const d=window.__avatarAuditRead.call(c.getContext('2d'),0,0,c.width,c.height).data;
+       let blue=0;for(let j=0;j<d.length;j+=4)if(d[j+3]>150&&d[j+2]>d[j+1]*1.3&&d[j+1]>d[j]*1.2)blue++;
+       return blue>100;
+      },null,{timeout:10000});
+     }finally{await page.evaluate(()=>{CanvasRenderingContext2D.prototype.getImageData=window.__avatarAuditRead;delete window.__avatarAuditRead;});}
+    });
+    await record(label+' avatar controls',async()=>{
     const old=await page.locator('#avatarColorName').innerText();
     await page.locator('#avatarNextColor').click();
     const next=await page.locator('#avatarColorName').innerText();
