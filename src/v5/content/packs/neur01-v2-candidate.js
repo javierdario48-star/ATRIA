@@ -4,6 +4,9 @@ import {neurologyPack} from './neurology-pack.js';
 import {createV2Revision,makeV2Graph} from './v2-revision-template.js';
 export const neur01V2ExperimentalPack=createV2Revision(neurologyPack.cases.find(c=>c.id==='NEUR-01'),{
  source:'atria-neurology@1.0.0:NEUR-01',packId:'atria-neurology-neur01-v2-staging',
+ // The native ICU receiver declines stable patients. Reserve ICU for a
+ // manifested complication/critical state, rather than rewarding a bed request.
+ escalationDestinations:['uti'],
  graph:c=>makeV2Graph(c,{
  labels:{encounter:'Déficit focal discapacitante',triage:'Triaje neurológico y glucemia',exam:'Examen neurológico y NIHSS',
   results:'TC sin sangre y glucemia informadas',treated:'Reperfusión IV y plan preventivo documentados',

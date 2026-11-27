@@ -34,11 +34,15 @@ export function makeV2Graph(c,{labels={},evolutionFamilies,treatmentFamilies}){
   nodes:[...nodes,...allowed.map(d=>[d,d])].map(([id,label])=>({id,label:labels[id]||label})),
   edges:[...edges,...allowed.map(d=>[terminalIds[d],c.clinicalPolicy.closure.consult?.[d]?.length?'accepted':'reassessment',d,d])].map(([id,from,to,when])=>({id,from,to,when}))};
 }
-export function createV2Revision(original,{source,packId,graph,historyAliases={}}){
+export function createV2Revision(original,{source,packId,graph,historyAliases={},escalationDestinations}){
  if(!original||!source||!packId)throw Error('explicit V1 revision identity required');
  const candidate=structuredClone(withPatientVariation(original));
  candidate.clinicalRevision='v2-candidate';candidate.revisionSource=source;
  candidate.variation.independentComplicationDraws=true;
+ if(escalationDestinations!==undefined){
+  if(!Array.isArray(escalationDestinations)||escalationDestinations.some(d=>!candidate.clinicalPolicy.closure.destinations.includes(d)))throw Error('invalid escalation destinations');
+  candidate.clinicalPolicy.closure.escalationDestinations=[...new Set(escalationDestinations)];
+ }
  for(const [id,aliases] of Object.entries(historyAliases)){
   const intent=candidate.intents.find(x=>x.id===id);
   if(!intent||!Array.isArray(aliases)||aliases.some(x=>typeof x!=='string'||!x.trim()))throw Error('invalid authored history alias '+id);

@@ -12,7 +12,9 @@ const mode=process.env.NEUR01_QA_MODE;
 assert(['solo','apprentice','coop','competitive'].includes(mode));
 const v1=clinicalContent.cases.find(c=>c.id===v2.id);
 assert(v1&&!v1.clinicalGraph);
-assert.deepEqual(v2.clinicalPolicy,v1.clinicalPolicy,'migration must preserve V1 executable medicine');
+const {escalationDestinations,...closure}=v2.clinicalPolicy.closure;
+assert.deepEqual(escalationDestinations,['uti']);
+assert.deepEqual({...v2.clinicalPolicy,closure},v1.clinicalPolicy,'only explicit ICU escalation indication may differ from V1');
 const staged={...clinicalContent,cases:clinicalContent.cases.map(c=>c.id===v2.id?v2:c)};
 assert.equal(new Set(staged.cases.map(c=>c.id)).size,55);
 const out='qa/v5-neur01-v2-'+mode;await mkdir(out,{recursive:true});
@@ -29,7 +31,7 @@ assert(personalities.size===7&&names.size>=20&&backgrounds.size>=2);
 assert(draws>5&&draws<80,'seeded game draw not plausible');
 const cases=[
  {name:'early-ward',profile:'competent',destination:'sala'},
- {name:'early-icu',profile:'competent',destination:'uti'},
+ {name:'stable-icu-review',profile:'competent',destination:'uti',stableRejection:true},
  {name:'airway-rescue',profile:'complication-rescue',destination:'uti'},
  {name:'slow',profile:'slow',destination:'sala'},
  {name:'wrong-medication',profile:'wrong-medication',destination:'sala'},
@@ -47,7 +49,15 @@ for(const scenario of cases){
   await writeFile(out+'/'+scenario.name+'.json',JSON.stringify({...run,graphCoverage:graph?.read()},null,2)+'\n');
   assert(run.integrityChecks&&Object.values(run.integrityChecks).every(v=>v!==false),JSON.stringify(run.failures));
   assert.equal(run.patientIdentity?.identityUnchanged,true);assert.equal(run.patientIdentity?.restoredIdentityUnchanged,true);
-  if(['competent','slow','complication-rescue'].includes(scenario.profile)){
+  if(scenario.stableRejection){
+   if(run.outcome==='accepted-destination'){
+    assert(run.complicationObservations?.length,'stable ICU closure without manifested complication');
+    assert.equal(run.closureReceipt?.destination,'uti');assert.equal(run.xpReceipts?.length,1);
+   }else{
+    assert.equal(run.xpReceipts?.length,0);
+    assert(run.consultations.some(x=>x.id==='uti'&&x.status==='rejected'),'receiver refusal was not actually observed');
+   }
+  }else if(['competent','slow','complication-rescue'].includes(scenario.profile)){
    assert.equal(run.passed,true,JSON.stringify(run.failures));assert.equal(run.outcome,'accepted-destination');
    assert.equal(run.closureReceipt?.destination,scenario.destination);assert.equal(run.xpReceipts?.length,1);
    const lysis=run.administrations.find(x=>x.id==='alteplase_stroke'&&x.sourceEventId&&x.dose?.amount>0);

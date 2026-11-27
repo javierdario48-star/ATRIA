@@ -113,7 +113,11 @@ for(const c of cases){
     wrongMedicationCommand:treatmentCommand(c,content,wrong.drug),
     onObservation:state=>graph.observe(state),
     source:{kind:'cross-v2-closure-branch-certification'}});
-   const coverage=graph.read(),terminal=coverage.covered.filter(id=>c.clinicalGraph.edges.some(e=>
+   const coverage=graph.read();
+   // Persist raw evidence even when a subsequent certification assertion fails.
+   await writeFile(out+'/'+c.id+'-'+scenario.profile+'-'+(scenario.destination||'default')+'.json',
+    JSON.stringify({...run,graphCoverage:coverage},null,2)+'\n');
+   const terminal=coverage.covered.filter(id=>c.clinicalGraph.edges.some(e=>
     e.id===id&&allDestinations.includes(e.when)));
    const check=Object.entries(run.integrityChecks||{}).filter(([k,v])=>v===false).map(([k])=>k);
    assert.equal(check.length,0,'native integrity failed: '+check.join(','));
