@@ -1,0 +1,38 @@
+name: ATRIA V5 NEUR-01 V2 Admission (isolated)
+on:
+  push:
+    branches: [atria-5.0-core-rebuild-experimental]
+    paths:
+      - 'qa/v5/neur01-v2-admission.mjs'
+      - 'qa/v5/certify-clinical-cases.mjs'
+      - 'src/v5/content/packs/neur01-v2-candidate.js'
+      - 'src/v5/content/packs/v2-revision-template.js'
+      - 'src/v5/clinical/**'
+      - '.github/workflows/atria-v5-neur01-v2-candidate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [solo, apprentice, coop, competitive]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Actual native stroke trajectories and independent boundary fixtures
+        env:
+          NEUR01_QA_MODE: ${{ matrix.mode }}
+        run: node qa/v5/neur01-v2-admission.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atria-neur01-v2-${{ matrix.mode }}
+          path: qa/v5-neur01-v2-${{ matrix.mode }}/
+          if-no-files-found: error
+          retention-days: 45
