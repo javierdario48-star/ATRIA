@@ -11,7 +11,8 @@ import {createGuardSession} from '../clinical/guard-session.js';
 import {isExaminationCommand} from '../clinical/exam-contract.js';
 import {formatGuardTime} from '../ui/guard-time.js';
 import {playableClinicalCaseIds} from '../content/clinical-cases.js';
-import {eligibleGuardCases,GUARD_SCOPES,guardCaseSpecialty,guardCaseSequence} from '../clinical/guard-selection-policy.js';
+import {eligibleGuardCases,guardCaseSequence} from '../clinical/guard-selection-policy.js';
+import {renderGuardBanners,refreshGuardBanners,selectGuardBanner} from '../ui/guard-banners.js';
 import {createCooperativeLink} from '../social/cooperative-link.js';
 import {createAccountClient} from '../social/account-client.js';
 import {awaitAbortable} from '../core/abortable-operation.js';
@@ -1087,15 +1088,10 @@ export async function createApplication({document,window,content,signal,offline=
    <button class="mode ${draftMode==='solo'?'active':''}" data-mode="solo"><b>Solitario</b><small>Explorá el hospital con los recursos originales.</small></button>
    <button class="mode ${draftMode==='coop'?'active':''}" data-mode="coop"><b>Cooperativo</b><small>2–4 médicos comparten la misma atención.</small></button>
    <button class="mode ${draftMode==='competitive'?'active':''}" data-mode="competitive"><b>Competitivo</b><small>2–4 médicos · el primero que atiende al paciente lo controla; los demás observan.</small></button></div>
-   <fieldset class="field"><legend>¿Qué querés atender?</legend>
-   <label><input type="radio" name="guardScope" value="random" checked> ${GUARD_SCOPES.random.label} · ×1,5 XP</label>
-   <label><input type="radio" name="guardScope" value="specialty"> ${GUARD_SCOPES.specialty.label} · ×1,2 XP</label>
-   <label><input type="radio" name="guardScope" value="specific"> ${GUARD_SCOPES.specific.label} · ×1,0 XP</label></fieldset>
-   <label class="field" id="guardSpecialtyField" hidden>Especialidad<select id="guardSpecialty">${[...new Set(content.cases.filter(c=>playableIds.has(c.id)).map(guardCaseSpecialty))].map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}</select></label>
-   <label class="field" id="guardCaseField" hidden>Patología<select id="caseChoice">${content.cases.filter(c=>playableIds.has(c.id)).map(c=>`<option value="${esc(c.id)}">${esc(c.selector)}</option>`).join("")}</select></label>
+   ${renderGuardBanners(content.cases,playableIds,{offline:!!offline})}
    ${['coop','competitive'].includes(draftMode)?'<p>Invitar colegas conectados</p><div id="coopDoctors"></div>':''}
    <p class="note">${playableIds.size} casos clínicos con evaluación, estudios, tratamientos y decisión de destino (alta, observación, sala, UTI, procedimiento o quirófano). El cierre requiere las condiciones clínicas de cada caso; una derivación no equivale a una operación realizada.</p>
-   <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);renderSocialLists();
+   <div class="actions"><button data-action="close">Cancelar</button><button class="primary" data-action="start-guard">Entrar a la guardia</button></div>`);refreshGuardBanners(dialog);renderSocialLists();
  }
  function updateTypingAssistance(){
   if(!chatSuggestions)return;
@@ -1458,16 +1454,12 @@ export async function createApplication({document,window,content,signal,offline=
    clinicalUI.openSection(p,b.dataset.patientAction);
   });
  listen(dialog,'change',event=>{
-  if(!event.target.matches('input[name="guardScope"]'))return;
-  const scope=event.target.value;
-  const specialty=document.getElementById('guardSpecialtyField');
-  const specific=document.getElementById('guardCaseField');
-  if(specialty)specialty.hidden=scope!=='specialty';
-  if(specific)specific.hidden=scope!=='specific';
+  if(event.target.matches('input[name="guardScope"],#guardSpecialty,#caseChoice'))refreshGuardBanners(dialog);
  });
  listen(dialog,'click',async event=>{
   if(await clinicalUI.handle(event.target))return;
   const button=event.target.closest('button');if(!button)return;
+  if(selectGuardBanner(dialog,button))return;
   if(button.dataset.mode){if(!['coop','competitive'].includes(button.dataset.mode))cancelSharedIntent();draftMode=button.dataset.mode;guardSetup({inspect:false});}
   if(button.dataset.action==='inspect-player'){showLobbyPlayerCard(button.dataset.user);return;}
   if(button.dataset.action==='add-friend'||button.dataset.action==='accept-friend'){

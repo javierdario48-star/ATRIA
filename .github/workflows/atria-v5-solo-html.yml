@@ -13,6 +13,7 @@ on:
       - 'src/v5/content/**'
       - 'src/v5/app/**'
       - 'src/v5/ui/**'
+      - 'src/v5/web/**'
       - 'src/v5/render/**'
       - 'src/v5/engine/**'
       - '.github/workflows/atria-v5-solo-html.yml'
@@ -48,7 +49,7 @@ jobs:
           node scripts/build-v5-solo-compact.mjs --varix-v2
           node scripts/build-v5-solo-compact.mjs --all-v2
       - name: Verify atomic local checkpoint owners before the browser
-        run: node --test src/v5/app/local-guard-checkpoint.test.js src/v5/app/local-shift.test.js src/v5/content/packs/offline-v2-packs.test.js src/v5/ui/avatar-creator.test.js src/v5/render/avatar-palette.test.js
+        run: node --test src/v5/app/local-guard-checkpoint.test.js src/v5/app/local-shift.test.js src/v5/content/packs/offline-v2-packs.test.js src/v5/ui/avatar-creator.test.js src/v5/render/avatar-palette.test.js src/v5/ui/guard-banners.test.js
       - name: Verify browser, lobby and solo guard on Chrome and emulated Android
         env:
           ATRIA_PLAYWRIGHT_MODULE: ${{ runner.temp }}/atria-html-browser/node_modules/playwright

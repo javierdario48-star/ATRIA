@@ -175,12 +175,21 @@ try{
    },page);
    await record(label+' mode menu and solo guard',async()=>{
     await page.locator('#guardButton').click();
+    assert(await page.locator('.guard-random').isVisible());
+    assert.match(await page.locator('.guard-random').innerText(),/×1,5 XP/);
+    assert.equal(await page.locator('[data-guard-system]').count(),4);
+    const gastro=page.locator('[data-guard-system="Gastroenterología"]');
+    await gastro.click();
+    assert.equal(await gastro.getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('#guardSpecialty').inputValue(),'Gastroenterología');
+    assert.equal(await page.locator('input[name="guardScope"][value="specialty"]').isChecked(),true);
     await page.locator('input[name="guardScope"][value="specialty"]').check();
     assert(await page.locator('#guardSpecialtyField').isVisible(),'specialty selector missing');
     await page.locator('input[name="guardScope"][value="specific"]').check();
     assert(await page.locator('#guardCaseField').isVisible(),'specific case selector missing');
     await page.locator('[data-mode="solo"]').click();
     await page.locator('input[name="guardScope"][value="specific"]').check();
+    assert.equal(await page.locator('#caseChoice option[value="CIRR-001"]').innerText(),'Cirrosis descompensada');
     await page.locator('#caseChoice').selectOption('CIRR-001');
     await page.locator('[data-action="start-guard"]').click();
     await page.waitForFunction(()=>atriaV5.snapshot().phase==='guard');

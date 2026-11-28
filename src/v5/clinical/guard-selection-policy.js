@@ -9,12 +9,13 @@ export function eligibleGuardCases(cases,playableIds,scope='random',selection=''
  const eligible=cases.filter(c=>playableIds.includes(c.id));
  if(scope==='random')return eligible;
  if(scope==='specific')return eligible.filter(c=>c.id===selection);
- if(scope==='specialty')return eligible.filter(c=>guardCaseSpecialty(c).toLowerCase()===String(selection).toLowerCase());
+ if(scope==='specialty')return eligible.filter(c=>guardCaseSpecialty(c).toLowerCase()===systemName(selection).toLowerCase());
  return [];
 }
 // This is the current Gastroenterology catalogue, including older entries
 // without specialty metadata. Empty future specialties never enter the menu.
-export const guardCaseSpecialty=c=>c.specialty||c.category||'Gastroenterología';
+const systemName=value=>String(value??'').split(' · ')[0].trim();
+export const guardCaseSpecialty=c=>systemName(c.specialty||c.category||'Gastroenterología');
 export function resolveGuardSelection(cases,playableIds,input){
  const invalid=()=>{throw Object.assign(Error('invalid guard case selection'),{code:'invalid'});};
  if(!input||typeof input!=='object'||!Object.hasOwn(GUARD_SCOPES,input.scope))return invalid();
